@@ -136,7 +136,7 @@ public final class WorkflowManager extends NodeContainer {
      * semaphore will be used by all "connected" children of this node. Isolated
      * workflows create a new semaphore.
      */
-    private Object m_dirtyWorkflow;
+    private Object m_workflowMutex;
 
     /** The root of everything, a workflow with no in- or outputs.
      * This workflow holds the top level projects. */
@@ -170,12 +170,12 @@ public final class WorkflowManager extends NodeContainer {
             // be any dependencies...
             m_globalTableRepository = new HashMap<Integer, ContainerTable>();
             // ...and we do not need to synchronize across unconnected workflows
-            m_dirtyWorkflow = new Object();
+            m_workflowMutex = new Object();
         } else {
             // otherwise we may have incoming and/or outgoing dependencies...
             m_globalTableRepository = parent.m_globalTableRepository;
             // ...synchronize across border
-            m_dirtyWorkflow = parent.m_dirtyWorkflow;
+            m_workflowMutex = parent.m_workflowMutex;
         }
         // add sets for this (meta-) node's in- and output connections
         m_connectionsByDest.put(getID(), new HashSet<ConnectionContainer>());
@@ -212,8 +212,8 @@ public final class WorkflowManager extends NodeContainer {
         // add set for this (meta-) node's in- and output connections
         m_connectionsByDest.put(getID(), new HashSet<ConnectionContainer>());
         m_connectionsBySource.put(getID(), new HashSet<ConnectionContainer>());
-        m_dirtyWorkflow = m_inPorts.length == 0 
-            && m_outPorts.length == 0 ? new Object() : parent.m_dirtyWorkflow;
+        m_workflowMutex = m_inPorts.length == 0 
+            && m_outPorts.length == 0 ? new Object() : parent.m_workflowMutex;
         m_globalTableRepository = persistor.getGlobalTableRepository();
         m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
         LOGGER.info("Created subworkflow " + this.getID());
@@ -264,7 +264,7 @@ public final class WorkflowManager extends NodeContainer {
     // FIXME: I don't like this type cast warning (and the ? for that matter!)
     public NodeID createAndAddNode(final GenericNodeFactory<?> factory) {
         NodeID newID;
-        synchronized (m_dirtyWorkflow) {
+        synchronized (m_workflowMutex) {
             // TODO synchronize to avoid messing with running workflows!
             assert factory != null;
             // insert node
@@ -289,7 +289,7 @@ public final class WorkflowManager extends NodeContainer {
      * @return true if node can safely be removed.
      */
     public boolean canRemoveNode(final NodeID nodeID) {
-        synchronized (m_dirtyWorkflow) {
+        synchronized (m_workflowMutex) {
             // check to make sure we can safely remove this node
             NodeContainer nc = m_nodes.get(nodeID);
             if (nc == null) {
@@ -309,7 +309,7 @@ public final class WorkflowManager extends NodeContainer {
      */
     public void removeNode(final NodeID nodeID) {
         NodeContainer nc;
-        synchronized (m_dirtyWorkflow) {
+        synchronized (m_workflowMutex) {
             // if node does not exist, simply return
             if (m_nodes.get(nodeID) == null) {
                 return;
@@ -360,7 +360,7 @@ public final class WorkflowManager extends NodeContainer {
         }
         NodeID newID;
         WorkflowManager wfm;
-        synchronized (m_dirtyWorkflow) {
+        synchronized (m_workflowMutex) {
             newID = createUniqueID();
             wfm = new WorkflowManager(this, newID, inPorts, outPorts);
             addNodeContainer(wfm);
@@ -425,7 +425,7 @@ public final class WorkflowManager extends NodeContainer {
                     + " workflow, use createProject() instead");
         }
         NodeID id = nodeContainer.getID();
-        synchronized (m_dirtyWorkflow) {
+        synchronized (m_workflowMutex) {
             assert !m_nodes.containsKey(id) : "\"" 
                + nodeContainer.getNameWithID() + "\" already contained in flow";
             m_nodes.put(id, nodeContainer);
@@ -480,7 +480,7 @@ public final class WorkflowManager extends NodeContainer {
         ConnectionType newConnType = null;
         NodeContainer sourceNC;
         NodeContainer destNC;
-        synchronized (m_dirtyWorkflow) {
+        synchronized (m_workflowMutex) {
             if (!canAddConnection(source, sourcePort, dest, destPort)) {
                 canAddConnection(source, sourcePort, dest, destPort);
                 throw new IllegalArgumentException("Can not add connection!");
@@ -673,7 +673,7 @@ public final class WorkflowManager extends NodeContainer {
      * @param cc connection
      */
     public void removeConnection(final ConnectionContainer cc) {
-        synchronized (m_dirtyWorkflow) {
+        synchronized (m_workflowMutex) {
             // make sure both nodes (well, their connection lists) exist
             if (m_connectionsByDest.get(cc.getDest()) == null) {
                 return;
@@ -782,7 +782,7 @@ public final class WorkflowManager extends NodeContainer {
      */
     public Set<ConnectionContainer> getOutgoingConnectionsFor(final NodeID id,
             final int portIdx) {
-        synchronized (m_dirtyWorkflow) {
+        synchronized (m_workflowMutex) {
             Set<ConnectionContainer> outConnections
                 = m_connectionsBySource.get(id);
             Set<ConnectionContainer> outConsForPort
@@ -808,7 +808,7 @@ public final class WorkflowManager extends NodeContainer {
      */
     public ConnectionContainer getIncomingConnectionFor(final NodeID id,
             final int portIdx) {
-        synchronized (m_dirtyWorkflow) {
+        synchronized (m_workflowMutex) {
             Set<ConnectionContainer>inConns = m_connectionsByDest.get(id);
             if (inConns != null) {
                 for (ConnectionContainer cont : inConns) {
@@ -868,23 +868,23 @@ public final class WorkflowManager extends NodeContainer {
      * 
      * @param flag indicate if we want to set or reset the flag
      */
+    // TODO flag is ignored
     private void markForExecutionAllNodes(final boolean flag) {
-        synchronized (m_dirtyWorkflow) {
+        synchronized (m_workflowMutex) {
             for (NodeContainer nc : m_nodes.values()) {
                 switch (nc.getState()) {
                 case IDLE:
-                    // TODO: we can't do the following since we do not
-                    // clean those up if a predecessors never turns yellow
-                    // even if all his predecessors are EXECUTED.
-                    // (needs cleanup after configure in WFM?)
-//                    nc.markForExecutionAsNodeContainer(true);
-                    break;
                 case CONFIGURED:
-                    nc.markForExecutionAsNodeContainer(true);
+                    if (flag) {
+                        nc.markForExecutionAsNodeContainer(true);
+                    }
                     break;
                 case MARKEDFOREXEC:
                 case UNCONFIGURED_MARKEDFOREXEC:
-                    nc.markForExecutionAsNodeContainer(false);
+                    if (!flag) {
+                        nc.markForExecutionAsNodeContainer(false);
+                    }
+                    break;
                 default: // already running
                     // TODO other states - not really reason for warning?
                 }
@@ -938,7 +938,7 @@ public final class WorkflowManager extends NodeContainer {
      * ports only(!).
      */
     public void resetAll() {
-        synchronized (m_dirtyWorkflow) {
+        synchronized (m_workflowMutex) {
             // will contain source nodes (meta input nodes) or 0-input nodes
             ArrayList<NodeContainer> sourceNodes
                     = new ArrayList<NodeContainer>();
@@ -969,6 +969,7 @@ public final class WorkflowManager extends NodeContainer {
                 case EXECUTED:
                     // TODO clean this up - resetNode() reconfigures for every node!
                     // it would be better to use the internal reset() instead.
+                    resetSuccessors(nc.getID());
                     nc.resetAsNodeContainer();
                     break;
                 case MARKEDFOREXEC:
@@ -1075,36 +1076,38 @@ public final class WorkflowManager extends NodeContainer {
      */
     @Override
     void markForExecutionAsNodeContainer(final boolean flag) {
-        if (flag) {  // mark for execution
-            switch (getState()) {
-            case EXECUTED:
-                throw new IllegalStateException(
-                     "Workflow is already completely executed.");
-            case CONFIGURED:
-                markForExecutionAllNodes(true);
-                setState(State.MARKEDFOREXEC);
-                break;
-            case IDLE:
-                markForExecutionAllNodes(true);
-                setState(State.UNCONFIGURED_MARKEDFOREXEC);
-                break;
-            default:
-                throw new IllegalStateException("Wrong WFM state "
-                        + getState() + " in markForExecution(true)");
-            }
-        } else {
-            switch (getState()) {
-            case MARKEDFOREXEC:
-                markForExecutionAllNodes(false);
-                setState(State.CONFIGURED);
-                break;
-            case UNCONFIGURED_MARKEDFOREXEC:
-                markForExecutionAllNodes(false);
-                setState(State.IDLE);
-                break;
-            default:
-                throw new IllegalStateException("Wrong WFM state "
-                        + getState() + " in markForExecution(false)");
+        synchronized (m_workflowMutex) {
+            if (flag) {  // mark for execution
+                switch (getState()) {
+                case EXECUTED:
+                    throw new IllegalStateException(
+                    "Workflow is already completely executed.");
+                case CONFIGURED:
+                    markForExecutionAllNodes(true);
+                    setState(State.MARKEDFOREXEC);
+                    break;
+                case IDLE:
+                    markForExecutionAllNodes(true);
+                    setState(State.UNCONFIGURED_MARKEDFOREXEC);
+                    break;
+                default:
+                    throw new IllegalStateException("Wrong WFM state "
+                            + getState() + " in markForExecution(true)");
+                }
+            } else {
+                switch (getState()) {
+                case MARKEDFOREXEC:
+                    markForExecutionAllNodes(false);
+                    setState(State.CONFIGURED);
+                    break;
+                case UNCONFIGURED_MARKEDFOREXEC:
+                    markForExecutionAllNodes(false);
+                    setState(State.IDLE);
+                    break;
+                default:
+                    throw new IllegalStateException("Wrong WFM state "
+                            + getState() + " in markForExecution(false)");
+                }
             }
         }
     }
@@ -1129,7 +1132,7 @@ public final class WorkflowManager extends NodeContainer {
      */
     void doBeforeExecution(final NodeContainer nc) {
         assert !nc.getID().equals(this.getID());
-        synchronized (m_dirtyWorkflow) {
+        synchronized (m_workflowMutex) {
             LOGGER.info(nc.getNameWithID() + " doBeforeExecute (NC)");
             // allow SNC to update states etc
             if (nc instanceof SingleNodeContainer) {
@@ -1148,7 +1151,7 @@ public final class WorkflowManager extends NodeContainer {
      */
     void doAfterExecution(final NodeContainer nc, final boolean success) {
         assert !nc.getID().equals(this.getID());
-        synchronized (m_dirtyWorkflow) {
+        synchronized (m_workflowMutex) {
             String st = success ? " - success" : " - failure";
             LOGGER.info(nc.getNameWithID() + " doAfterExecute" + st);
             // allow SNC to update states etc
@@ -1361,7 +1364,7 @@ public final class WorkflowManager extends NodeContainer {
      *              executed.
      */
     public boolean canExecuteNode(final NodeID nodeID) {
-        synchronized (m_dirtyWorkflow) {
+        synchronized (m_workflowMutex) {
             NodeContainer nc = m_nodes.get(nodeID);
             if (nc == null) {
                 return false;
@@ -1412,6 +1415,9 @@ public final class WorkflowManager extends NodeContainer {
     * @return true if execution was successful
     */
     public boolean executeAllAndWaitUntilDone() {
+        if (this == ROOT) {
+            throw new IllegalStateException("Can't execute ROOT workflow");
+        }
         final Object mySemaphore = new Object();
         this.addNodeStateChangeListener(new NodeStateChangeListener() {
             /** {@inheritDoc} */
@@ -1649,9 +1655,12 @@ public final class WorkflowManager extends NodeContainer {
             remainingNodes = false;
             for (NodeContainer ncIt : m_nodes.values()) {
                 if (ncIt instanceof SingleNodeContainer) {
-                    synchronized (m_dirtyWorkflow) {
-                        if (ncIt.getState().equals(
-                                NodeContainer.State.MARKEDFOREXEC)) {
+                    synchronized (m_workflowMutex) {
+                        boolean isConfigured = true;
+                        switch (ncIt.getState()) {
+                        case UNCONFIGURED_MARKEDFOREXEC:
+                            isConfigured = false;
+                        case MARKEDFOREXEC:
                             final PortObject[] inData =
                                          new PortObject[ncIt.getNrInPorts()];
                             assembleInputData(ncIt.getID(), inData);
@@ -1661,12 +1670,17 @@ public final class WorkflowManager extends NodeContainer {
                                     dataAvailable = false;
                                 }
                             }
-                            // Check if all data is available. Important, QUEUED
-                            // does not mean the node is already executing!
                             if (dataAvailable) {
-                                ncIt.queueAsNodeContainer(inData);
-                                remainingNodes = true;
+                                if (isConfigured) { // can run it
+                                    // Important, QUEUED does not mean the 
+                                    // node is already executing!
+                                    ncIt.queueAsNodeContainer(inData);
+                                    remainingNodes = true;
+                                } else { // failed to configure, discontinue!
+                                    disableNodeForExecution(ncIt.getID());
+                                }
                             }
+                        default:
                         }
                     }
                 } else if (ncIt instanceof WorkflowManager) {
@@ -1686,7 +1700,7 @@ public final class WorkflowManager extends NodeContainer {
     public void cancelExecution(final NodeContainer nc) {
         assert nc != null;
         disableNodeForExecution(nc.getID());
-        synchronized (m_dirtyWorkflow) {
+        synchronized (m_workflowMutex) {
             if (nc.getState().executionInProgress()) {
                 nc.cancelExecutionAsNodeContainer();
             }
@@ -1766,7 +1780,7 @@ public final class WorkflowManager extends NodeContainer {
      */
     private void assembleInputData(final NodeID id,
             final PortObject[] inData) {
-        synchronized (m_dirtyWorkflow) {
+        synchronized (m_workflowMutex) {
             NodeOutPort[] ports = assemblePredecessorOutPorts(id);
             assert inData.length == ports.length;
             for (int i = 0; i < inData.length; i++) {
@@ -1791,6 +1805,7 @@ public final class WorkflowManager extends NodeContainer {
         NodeContainer nc = m_nodes.get(id);
         int nrIns = nc.getNrInPorts();
         NodeOutPort[] result = new NodeOutPort[nrIns];
+        // TODO: review, I guess this can be done within one loop
         for (int i = 0; i < nrIns; i++) {
             result[i] = null;
             Set<ConnectionContainer> incoming = m_connectionsByDest.get(id);
@@ -1883,7 +1898,7 @@ public final class WorkflowManager extends NodeContainer {
             }
             NodeContainer nc = m_nodes.get(currNode);
             assert nc != null;
-            synchronized (m_dirtyWorkflow) {
+            synchronized (m_workflowMutex) {
                 PortObjectSpec[] inSpecs =
                     new PortObjectSpec[nc.getNrInPorts()];
                 assembleInputSpecs(currNode, inSpecs);
@@ -2244,7 +2259,7 @@ public final class WorkflowManager extends NodeContainer {
         contentExec.setProgress(1.0);
         WorkflowManager manager;
         exec.setMessage("Creating workflow instance");
-        synchronized (ROOT.m_dirtyWorkflow) {
+        synchronized (ROOT.m_workflowMutex) {
             NodeID newID = ROOT.createUniqueID();
             manager = ROOT.createSubWorkflow(persistor, newID);
             result.addError(manager.loadContent(persistor, loadID, loadExec));
@@ -2331,7 +2346,8 @@ public final class WorkflowManager extends NodeContainer {
         
         m_inPortsBarUIInfo = persistor.getInPortsBarUIInfo();
         m_outPortsBarUIInfo = persistor.getOutPortsBarUIInfo();
-        Set<NodeID> failedNodes = new HashSet<NodeID>();
+        // linked set because we need reverse order later on
+        Collection<NodeID> failedNodes = new LinkedHashSet<NodeID>();
         Set<NodeID> needConfigurationNodes = new HashSet<NodeID>();
         for (NodeID bfsID : getBreathFirstListOfNodes()) {
             // failed nodes may not even be in m_nodes - we reset everything
@@ -2358,6 +2374,9 @@ public final class WorkflowManager extends NodeContainer {
                             + e.getClass().getSimpleName()
                             + "\" during node loading", e);
                 }
+                loadResult.addError("Errors reading node \"" 
+                        + cont.getNameWithID() + "\", skipping it: " 
+                        + e.getMessage());
                 needsReset = true;
             }
             sub1.setProgress(1.0);
@@ -2378,6 +2397,17 @@ public final class WorkflowManager extends NodeContainer {
             }
             needsReset |= containerPersistor.needsResetAfterLoad();
             needsReset |= hasPredecessorFailed;
+            boolean isExecuted = cont.getState().equals(State.EXECUTED);
+            // if node is executed and some input data is missing we need
+            // to reset that node as there is obviously a conflict (e.g.
+            // predecessors has been loaded as IDLE 
+            if (isExecuted && !needsReset) {
+                PortObject[] inData = new PortObject[cont.getNrInPorts()];
+                assembleInputData(bfsID, inData);
+                if (Arrays.asList(inData).contains(null)) {
+                    needsReset = true;
+                }
+            }
             if (needsReset) {
                 failedNodes.add(bfsID);
             }
@@ -2385,8 +2415,11 @@ public final class WorkflowManager extends NodeContainer {
                 needConfigurationNodes.add(bfsID);
             }
         }
-        for (NodeID id : needConfigurationNodes) {
-            resetAndConfigureNode(id);
+        // switching to list interface here in order to reverse the ordering
+        failedNodes = new ArrayList<NodeID>(failedNodes);
+        Collections.reverse((List<NodeID>)failedNodes);
+        for (NodeID failed : failedNodes) {
+            getNodeContainer(failed).resetAsNodeContainer();
         }
         for (NodeID id : needConfigurationNodes) {
             configureNodeAndSuccessors(id, true, true);
@@ -2402,7 +2435,7 @@ public final class WorkflowManager extends NodeContainer {
             throw new IOException("Can't save root workflow");
         }
         // TODO GUI must only provide directory
-        synchronized (m_dirtyWorkflow) {
+        synchronized (m_workflowMutex) {
             ReferencedFile workflowDirRef = 
                 new ReferencedFile(directory.getParentFile());
             // if it's the location associated with the workflow we will 
@@ -2532,7 +2565,7 @@ public final class WorkflowManager extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     void cleanup() {
-        synchronized (m_dirtyWorkflow) {
+        synchronized (m_workflowMutex) {
             for (NodeContainer nc : m_nodes.values()) {
                 nc.cleanup();
             }

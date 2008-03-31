@@ -103,7 +103,7 @@ public abstract class NodeContainer {
      * states. This semaphore will be used by a node alone to synchronize
      * internal changes of status etc.
      */
-    final protected Object m_dirtyNode = new Object();
+    final protected Object m_nodeMutex = new Object();
 
     /*--------- listener administration------------*/
 
@@ -378,7 +378,7 @@ public abstract class NodeContainer {
             throw new NullPointerException("State must not be null.");
         }
         boolean changesMade = false;
-        synchronized (m_dirtyNode) {
+        synchronized (m_nodeMutex) {
             if (!m_state.equals(state)) {
                 m_state = state;
                 changesMade = true;

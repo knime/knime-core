@@ -649,12 +649,19 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                             + (isMeta ? "meta " : "") + "node "
                             + "with ID suffix " + nodeIDSuffix, childResult);
                 }
-            } catch (InvalidSettingsException e) {
+            } catch (CanceledExecutionException e) {
+                throw e;
+            } catch (Exception e) {
                 String error = "Unable to load node with ID suffix " 
                         + nodeIDSuffix + " into workflow, skipping it: "
                         + e.getMessage();
+                if (e instanceof InvalidSettingsException 
+                        || e instanceof IOException) {
+                    LOGGER.error(error, e);
+                } else {
+                    LOGGER.debug(error, e);
+                }
                 loadResult.addError(error);
-                LOGGER.debug(error, e);
                 continue;
             }
             NodeContainerMetaPersistor meta = persistor.getMetaPersistor();
@@ -905,7 +912,8 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     protected boolean loadIsMetaNode(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         String factory = settings.getString("factory");
-        return factory.startsWith("org.knime.base.node.meta.");
+        return ObsoleteMetaNodeWorkflowPersistorVersion1xx.
+            OLD_META_NODES.contains(factory);
     }
 
     protected NodeSettingsRO loadSettingsForConnections(final NodeSettingsRO set)

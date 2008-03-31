@@ -27,7 +27,10 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
@@ -48,8 +51,27 @@ import org.knime.core.node.NodeModel.ModelContentWrapper;
 public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         WorkflowPersistorVersion1xx {
     
+    private enum MetaNodeType {
+        ORDINARY,
+        CROSSVALIDATION,
+        LOOPER
+    };
+    
+    public static final List<String> OLD_META_NODES = 
+        Collections.unmodifiableList(Arrays.asList(new String[]{
+                "org.knime.base.node.meta.MetaNodeFactory01",
+                "org.knime.base.node.meta.MetaNodeFactory11",
+                "org.knime.base.node.meta.MetaNodeFactory21",
+                "org.knime.base.node.meta.MetaNodeFactory12",
+                "org.knime.base.node.meta.MetaNodeFactory22",
+                "org.knime.base.node.meta.xvalidation.XValidateNodeFactory",
+                "org.knime.base.node.meta.looper.LooperFactory"
+        }));
+    
     private int[] m_dataInNodeIDs = new int[0];
     private int[] m_dataOutNodeIDs = new int[0];
+    
+    private MetaNodeType m_metaNodeType = MetaNodeType.ORDINARY;
     
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             ObsoleteMetaNodeWorkflowPersistorVersion1xx.class);
@@ -84,6 +106,21 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
             throw new IOException(
                     "Can't find file " + workflowKnime.getAbsolutePath());
         }
+        String factory = parentSettings.getString("factory");
+        if ("org.knime.base.node.meta.xvalidation.XValidateNodeFactory".equals(
+                factory)) {
+            m_metaNodeType = MetaNodeType.CROSSVALIDATION;
+        } else if ("org.knime.base.node.meta.looper.LooperFactory".equals(
+                factory)) {
+            m_metaNodeType = MetaNodeType.LOOPER;
+        } else {
+            m_metaNodeType = MetaNodeType.ORDINARY;
+        }
+        switch (m_metaNodeType) {
+        case CROSSVALIDATION:
+        case LOOPER:
+        default:
+        }
         NodeSettingsRO settings = NodeSettings.loadFromXML(
                 new BufferedInputStream(new FileInputStream(setFile)));
         NodeSettingsRO modelSet = settings.getNodeSettings("model");
@@ -91,12 +128,29 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         m_dataOutNodeIDs = modelSet.getIntArray("dataOutContainerIDs");
         result.addError(super.preLoadNodeContainer(
                 workflowKnimeRef, parentSettings));
+        String name = "Looper";
+        switch (m_metaNodeType) {
+        case CROSSVALIDATION:
+            name = "Cross Validation";
+        case LOOPER:
+            result = new LoadResult();
+            result.addError("Workflow contains obsolete \"" + name 
+                    + "\" meta node implementation, not all settings could "
+                    + "be restored, please re-configure and execute again.");
+            setNeedsResetAfterLoad();
+        default: 
+        }
         return result;
     }
     
     /** {@inheritDoc} */
     @Override
     protected boolean shouldSkipThisNode(final NodeSettingsRO settings) {
+        switch (m_metaNodeType) {
+        case LOOPER:
+            return false;
+        default:
+        }
         try {
             int idx = loadNodeIDSuffix(settings);
             return doesAnyArrayContain(idx, m_dataInNodeIDs, m_dataOutNodeIDs);
@@ -107,13 +161,28 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
     
     /** {@inheritDoc} */
     @Override
+    protected SingleNodeContainerPersistorVersion1xx 
+            createSingleNodeContainerPersistor() {
+        return new ObsoleteSpecialNodeSingleNodeContainerPersistorVersion1xx(
+                getGlobalTableRepository());
+    }
+    
+    /** {@inheritDoc} */
+    @Override
     protected String loadWorkflowName(final NodeSettingsRO set)
             throws InvalidSettingsException {
-        StringBuilder b = new StringBuilder("Obsolete Meta Node ");
-        b.append(m_dataInNodeIDs.length);
-        b.append(" : ");
-        b.append(m_dataOutNodeIDs.length);
-        return b.toString();
+        switch (m_metaNodeType) {
+        case LOOPER:
+            return "Looper";
+        case CROSSVALIDATION:
+            return "Cross Validation";
+        default:
+            StringBuilder b = new StringBuilder("Meta Node ");
+            b.append(m_dataInNodeIDs.length);
+            b.append(" : ");
+            b.append(m_dataOutNodeIDs.length);
+            return b.toString();
+        }
     }
 
     /** {@inheritDoc} */
@@ -183,8 +252,53 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         return loadOutPortTemplate(settings);
     }
     
-    protected ConnectionContainerTemplate loadConnection(final NodeSettingsRO settings)
-    throws InvalidSettingsException {
+    /** {@inheritDoc} */
+    @Override
+    protected NodeSettingsRO loadSettingsForConnections(
+            final NodeSettingsRO set) throws InvalidSettingsException {
+        NodeSettingsRO original = super.loadSettingsForConnections(set);
+        if (!m_metaNodeType.equals(MetaNodeType.LOOPER)) {
+            return original;
+        }
+        // looper nodes have two more connections (meta-in and out), faking them
+        NodeSettings fake = new NodeSettings(original.getKey());
+        original.copyTo(fake);
+        String wfmInKey;
+        int i = 0;
+        do {
+            wfmInKey = "workflow_connection" + i;
+        } while (fake.containsKey(wfmInKey));
+        NodeSettingsWO wfmIn = fake.addNodeSettings(wfmInKey);
+        // ID is not read anyway...
+        wfmIn.addInt("ID", Integer.MAX_VALUE - 1);
+        wfmIn.addInt("sourceID", -1);
+        wfmIn.addInt("sourcePort", 0);
+        wfmIn.addInt("targetID", m_dataInNodeIDs[0]);
+        wfmIn.addInt("targetPort", 0);
+        String wfmOutKey;
+        do {
+            wfmOutKey = "workflow_connection" + i++;
+        } while (fake.containsKey(wfmOutKey));
+        NodeSettingsWO wfmOut = fake.addNodeSettings(wfmOutKey);
+        // ID is not read ...
+        wfmOut.addInt("ID", Integer.MAX_VALUE - 2);
+        wfmOut.addInt("sourceID", m_dataOutNodeIDs[0]);
+        wfmOut.addInt("sourcePort", 0);
+        wfmOut.addInt("targetID", -1);
+        wfmOut.addInt("targetPort", 0);
+        return fake;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected ConnectionContainerTemplate loadConnection(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        // in the looper node the obsolete data-in and -out nodes are
+        // replaced by the loop head and end nodes (which were not present
+        // in 1.x.x)
+        if (m_metaNodeType.equals(MetaNodeType.LOOPER)) {
+            return super.loadConnection(settings);
+        }
         int sourceID = settings.getInt("sourceID");
         int destID = loadConnectionDestID(settings);
         int sourcePort = settings.getInt("sourcePort");
@@ -239,6 +353,45 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
             }
         }
         return false;
+    }
+    
+    private class ObsoleteSpecialNodeSingleNodeContainerPersistorVersion1xx
+        extends SingleNodeContainerPersistorVersion1xx {
+        
+        /**
+         * 
+         */
+        public ObsoleteSpecialNodeSingleNodeContainerPersistorVersion1xx(
+                final HashMap<Integer, ContainerTable> tableRep){
+            super(tableRep);
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        protected String loadNodeFactoryClassName(
+                final NodeSettingsRO parentSettings, 
+                final NodeSettingsRO settings) throws InvalidSettingsException {
+            String f = super.loadNodeFactoryClassName(parentSettings, settings);
+            switch (m_metaNodeType) {
+            case LOOPER:
+                String in = "org.knime.core.node.meta.DataInputNodeFactory";
+                String out = "org.knime.core.node.meta.DataOutputNodeFactory";
+                if (in.equals(f)) {
+                    f = "org.knime.base.node.meta.looper."
+                        + "ForLoopHeadNodeFactory";
+                } else if (out.equals(f)) {
+                    f = "org.knime.base.node.meta.looper."
+                        + "ForLoopTailNodeFactory";
+                }
+                break;
+            case CROSSVALIDATION:
+                // the x-partitioner and aggregator node have the same name
+                // in 1.x and 2.0 - which is good
+            default:
+            }
+            return f;
+        }
+        
     }
     
 }

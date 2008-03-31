@@ -231,7 +231,7 @@ public final class SingleNodeContainer extends NodeContainer
      */
     @Override
     boolean configureAsNodeContainer(final PortObjectSpec[] inObjectSpecs) {
-        synchronized (m_dirtyNode) {
+        synchronized (m_nodeMutex) {
             // remember old specs
             PortObjectSpec[] prevSpecs =
                     new PortObjectSpec[getNrOutPorts()];
@@ -299,7 +299,7 @@ public final class SingleNodeContainer extends NodeContainer
     /** {@inheritDoc} */
     @Override
     void resetAsNodeContainer() {
-        synchronized (m_dirtyNode) {
+        synchronized (m_nodeMutex) {
             switch (getState()) {
             case EXECUTED:
                 m_node.reset();
@@ -322,7 +322,7 @@ public final class SingleNodeContainer extends NodeContainer
     /** {@inheritDoc} */
     @Override
     void markForExecutionAsNodeContainer(final boolean flag) {
-        synchronized (m_dirtyNode) {
+        synchronized (m_nodeMutex) {
             if (flag) {  // we want to mark the node for execution!
                 switch (getState()) {
                 case CONFIGURED:
@@ -359,7 +359,7 @@ public final class SingleNodeContainer extends NodeContainer
      * @throws IllegalStateException in case of illegal entry state.
      */
     void enableReQueuing() {
-        synchronized (m_dirtyNode) {
+        synchronized (m_nodeMutex) {
             switch (getState()) {
             case EXECUTED:
                 m_node.cleanOutPorts();
@@ -381,7 +381,7 @@ public final class SingleNodeContainer extends NodeContainer
      */
     @Override
     void queueAsNodeContainer(final PortObject[] inData) {
-        synchronized (m_dirtyNode) {
+        synchronized (m_nodeMutex) {
             switch (getState()) {
             case MARKEDFOREXEC:
                 setState(State.QUEUED);
@@ -406,7 +406,7 @@ public final class SingleNodeContainer extends NodeContainer
     /** {@inheritDoc} */
     @Override
     void cancelExecutionAsNodeContainer() {
-        synchronized (m_dirtyNode) {
+        synchronized (m_nodeMutex) {
             switch (getState()) {
             case MARKEDFOREXEC:
                 setState(State.CONFIGURED);
@@ -437,7 +437,7 @@ public final class SingleNodeContainer extends NodeContainer
      * unsychronized!
      */
     void preExecuteNode() {
-        synchronized (m_dirtyNode) {
+        synchronized (m_nodeMutex) {
             switch (getState()) {
             case QUEUED:
                 // clear loop status
@@ -461,7 +461,7 @@ public final class SingleNodeContainer extends NodeContainer
      * @param success indicates if execution was successful
      */
     void postExecuteNode(final boolean success) {
-        synchronized (m_dirtyNode) {
+        synchronized (m_nodeMutex) {
             if (success) {
                 if (m_node.getLoopStatus() == null) {
                     setState(State.EXECUTED);
@@ -543,7 +543,7 @@ public final class SingleNodeContainer extends NodeContainer
     @Override
     void loadSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        synchronized (m_dirtyNode) {
+        synchronized (m_nodeMutex) {
             m_node.loadSettingsFrom(settings);
             setDirty();
         }
@@ -593,7 +593,7 @@ public final class SingleNodeContainer extends NodeContainer
      * @param st new stack
      */
     void setScopeObjectStack(final ScopeObjectStack st) {
-        synchronized (m_dirtyNode) {
+        synchronized (m_nodeMutex) {
             m_node.setScopeContextStackContainer(st);
         }
     }
@@ -602,7 +602,7 @@ public final class SingleNodeContainer extends NodeContainer
      * @return current ScopeObjectStack
      */
     ScopeObjectStack getScopeObjectStack() {
-        synchronized (m_dirtyNode) {
+        synchronized (m_nodeMutex) {
             return m_node.getScopeContextStackContainer();
         }
     }
@@ -669,7 +669,7 @@ public final class SingleNodeContainer extends NodeContainer
     /** {@inheritDoc} */
     @Override
     void loadSettingsFromDialog() throws InvalidSettingsException {
-        synchronized (m_dirtyNode) {
+        synchronized (m_nodeMutex) {
             m_node.loadSettingsFromDialog();
         }
     }
