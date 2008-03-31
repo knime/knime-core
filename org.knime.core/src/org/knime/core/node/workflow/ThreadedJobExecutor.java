@@ -23,15 +23,21 @@
  */
 package org.knime.core.node.workflow;
 
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Iterator;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.knime.core.node.NodeLogger;
 
 /** Provide a fixed pool of threads to run jobs in.
  * 
  * @author B. Wiswedel & M. Berthold, University of Konstanz
  */
 public class ThreadedJobExecutor implements JobExecutor {
+    
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(ThreadedJobExecutor.class);
 
     private class Worker extends Thread {
         private JobRunnable m_myRunnable;
@@ -93,6 +99,16 @@ public class ThreadedJobExecutor implements JobExecutor {
         for (int i = 0; i < m_worker.length; i++) {
             if (m_worker[i] == null) {
                 m_worker[i] = new Worker("Worker(threaded)_" + i);
+                m_worker[i].setUncaughtExceptionHandler(
+                        new UncaughtExceptionHandler() {
+                    /** {@inheritDoc} */
+                    public void uncaughtException(
+                            final Thread t, final Throwable e) {
+                        LOGGER.error(t.getName() + "terminated with uncaught "
+                                + e.getClass().getSimpleName(), e);
+                    }
+                    
+                });
                 m_worker[i].start();
                 m_worker[i].setNewJob(m_jobQueue.remove());
                 return;
