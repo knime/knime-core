@@ -889,6 +889,7 @@ public final class WorkflowManager extends NodeContainer {
                     // TODO other states - not really reason for warning?
                 }
             }
+            checkForNodeStateChanges();
         }
         checkForQueuableNodesInWFMonly();
     }
@@ -1084,11 +1085,9 @@ public final class WorkflowManager extends NodeContainer {
                     "Workflow is already completely executed.");
                 case CONFIGURED:
                     markForExecutionAllNodes(true);
-                    setState(State.MARKEDFOREXEC);
                     break;
                 case IDLE:
                     markForExecutionAllNodes(true);
-                    setState(State.UNCONFIGURED_MARKEDFOREXEC);
                     break;
                 default:
                     throw new IllegalStateException("Wrong WFM state "
@@ -1098,17 +1097,16 @@ public final class WorkflowManager extends NodeContainer {
                 switch (getState()) {
                 case MARKEDFOREXEC:
                     markForExecutionAllNodes(false);
-                    setState(State.CONFIGURED);
                     break;
                 case UNCONFIGURED_MARKEDFOREXEC:
                     markForExecutionAllNodes(false);
-                    setState(State.IDLE);
                     break;
                 default:
                     throw new IllegalStateException("Wrong WFM state "
                             + getState() + " in markForExecution(false)");
                 }
             }
+            checkForNodeStateChanges();
         }
     }
 
@@ -1118,7 +1116,7 @@ public final class WorkflowManager extends NodeContainer {
         assert false : "Workflow Manager can't be queued";
         switch (getState()) {
         case MARKEDFOREXEC:
-            setState(State.QUEUED);
+            checkForNodeStateChanges();
             break;
         default: throw new IllegalStateException(
                 "State change to " + State.QUEUED + " not allowed, currently "
@@ -1139,8 +1137,7 @@ public final class WorkflowManager extends NodeContainer {
             if (nc instanceof SingleNodeContainer) {
                 ((SingleNodeContainer)nc).preExecuteNode();
             }
-            // some nodes IN this WFM are executing - also update WFM state
-            setState(State.EXECUTING); // state of WFM, not nc!
+            checkForNodeStateChanges();
         }
     }
 
@@ -1640,7 +1637,7 @@ public final class WorkflowManager extends NodeContainer {
     /** semaphore to avoid multiple checks for newly executable nodes
      * to interfere / interleave with each other.
      */
-    private final Object m_currentlychecking = new Object();
+//    private final Object m_currentlychecking = new Object();
 
     private void checkForQueuableNodesEverywhere() {
         WorkflowManager wfm = this;
@@ -1708,68 +1705,75 @@ public final class WorkflowManager extends NodeContainer {
             }
         }
     }
-
     /**
      * Check if any internal nodes have changed state which might mean that
      * this WFM also needs to change its state...
      */
     private void checkForNodeStateChanges() {
-        synchronized (m_currentlychecking) {
-            int[] nrNodesInState = new int[State.values().length];
-            int nrNodes = 0;
-            for (NodeContainer ncIt : m_nodes.values()) {
-                nrNodesInState[ncIt.getState().ordinal()]++;
-                nrNodes++;
-            }
-            assert nrNodes == m_nodes.size();
-            NodeContainer.State newState = State.IDLE;
-            // check if all outports are connected
-            boolean allOutPortsConnected = 
-                getNrOutPorts() == m_connectionsByDest.get(this.getID()).size();
-            // check if we have complete Objects on outports
-            boolean allPopulated = false;
-            if (allOutPortsConnected) {
-                allPopulated = true;
-                for (int i = 0; i < getNrOutPorts(); i++) {
-                    if (getOutPort(i).getPortObject() == null) {
-                        allPopulated = false;
-                    }
-                }
-            }
-            if (nrNodes == 0) {
-                // special case: zero nodes!
-                if (allOutPortsConnected) {
-                    newState = allPopulated ? State.EXECUTED : State.CONFIGURED;
-                } else {
-                    newState = State.IDLE;
-                }
-            } else if (nrNodesInState[State.EXECUTED.ordinal()] == nrNodes) {
-                // WFM is executed only if all (>=1) nodes are executed and
-                // all output ports are connected and contain their
-                // portobjects.
-                if (allPopulated) {
-                    // all nodes in WFM done and all ports populated!
-                    newState = State.EXECUTED;
-                } else {
-                    // all executed but not all outports connected!
-                    newState = State.IDLE;
-                }
-            } else if (nrNodesInState[State.CONFIGURED.ordinal()] == nrNodes) {
-                // all (>=1) configured
-                if (allOutPortsConnected) {
-                    newState = State.CONFIGURED;
-                } else {
-                    newState = State.IDLE;
-                }
-            } else if (nrNodesInState[State.EXECUTING.ordinal()] >= 1) {
-                newState = State.EXECUTING;
-            } else if (nrNodesInState[State.EXECUTED.ordinal()]
-                       + nrNodesInState[State.CONFIGURED.ordinal()]
-                       == nrNodes) {
-                newState = State.CONFIGURED;
-            }
-            this.setState(newState);
+        // TODO enable this assertion
+//        assert Thread.holdsLock(m_workflowMutex);
+        int[] nrNodesInState = new int[State.values().length];
+        int nrNodes = 0;
+        for (NodeContainer ncIt : m_nodes.values()) {
+            nrNodesInState[ncIt.getState().ordinal()]++;
+            nrNodes++;
         }
+        assert nrNodes == m_nodes.size();
+        NodeContainer.State newState = State.IDLE;
+        // check if all outports are connected
+        boolean allOutPortsConnected = 
+            getNrOutPorts() == m_connectionsByDest.get(this.getID()).size();
+        // check if we have complete Objects on outports
+        boolean allPopulated = false;
+        if (allOutPortsConnected) {
+            allPopulated = true;
+            for (int i = 0; i < getNrOutPorts(); i++) {
+                if (getOutPort(i).getPortObject() == null) {
+                    allPopulated = false;
+                }
+            }
+        }
+        if (nrNodes == 0) {
+            // special case: zero nodes!
+            if (allOutPortsConnected) {
+                newState = allPopulated ? State.EXECUTED : State.CONFIGURED;
+            } else {
+                newState = State.IDLE;
+            }
+        } else if (nrNodesInState[State.EXECUTED.ordinal()] == nrNodes) {
+            // WFM is executed only if all (>=1) nodes are executed and
+            // all output ports are connected and contain their
+            // portobjects.
+            if (allPopulated) {
+                // all nodes in WFM done and all ports populated!
+                newState = State.EXECUTED;
+            } else {
+                // all executed but not all outports connected!
+                newState = State.IDLE;
+            }
+        } else if (nrNodesInState[State.CONFIGURED.ordinal()] == nrNodes) {
+            // all (>=1) configured
+            if (allOutPortsConnected) {
+                newState = State.CONFIGURED;
+            } else {
+                newState = State.IDLE;
+            }
+        } else if (nrNodesInState[State.EXECUTING.ordinal()] >= 1) {
+            newState = State.EXECUTING;
+        } else if (nrNodesInState[State.EXECUTED.ordinal()]
+                   + nrNodesInState[State.CONFIGURED.ordinal()]
+                   == nrNodes) {
+            newState = State.CONFIGURED;
+        } else if ((nrNodesInState[State.QUEUED.ordinal()] >= 1)
+                || (nrNodesInState[State.EXECUTING.ordinal()] >= 1)) {
+            newState = State.EXECUTING;
+        } else if (nrNodesInState[State.UNCONFIGURED_MARKEDFOREXEC.ordinal()]
+                                  >= 1) {
+            newState = State.UNCONFIGURED_MARKEDFOREXEC;
+        } else if (nrNodesInState[State.MARKEDFOREXEC.ordinal()] >= 1) {
+            newState = State.MARKEDFOREXEC;
+        }
+        this.setState(newState);
     }
 
     
@@ -2264,7 +2268,9 @@ public final class WorkflowManager extends NodeContainer {
         synchronized (ROOT.m_workflowMutex) {
             NodeID newID = ROOT.createUniqueID();
             manager = ROOT.createSubWorkflow(persistor, newID);
-            result.addError(manager.loadContent(persistor, loadID, loadExec));
+            synchronized (manager.m_workflowMutex) {
+                result.addError(manager.loadContent(persistor, loadID, loadExec));
+            }
             ROOT.addNodeContainer(manager);
         }
         BufferedDataTable.clearRepository(loadID);
