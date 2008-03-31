@@ -176,7 +176,7 @@ abstract class AbstractConfigEntry implements Serializable, TreeNode {
      */
     @Override
     public final int hashCode() {
-        return super.hashCode();
+        return m_key.hashCode() ^ m_type.name().hashCode();
     }
     
     // tree node methods
