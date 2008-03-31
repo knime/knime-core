@@ -1115,6 +1115,7 @@ public final class WorkflowManager extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     void queueAsNodeContainer(final PortObject[] inData) {
+        assert false : "Workflow Manager can't be queued";
         switch (getState()) {
         case MARKEDFOREXEC:
             setState(State.QUEUED);
@@ -1225,16 +1226,17 @@ public final class WorkflowManager extends NodeContainer {
                 configureNodeAndSuccessors(nc.getID(), false, true);
             }
             checkForQueuableNodesEverywhere();
+            checkForNodeStateChanges();
         }
-        checkForNodeStateChanges();
     }
 
     /** {@inheritDoc} */
     @Override
     void resetAsNodeContainer() {
-        resetAll();
-        // configure will be run later to fine-tune this if needed:
-        setState(State.CONFIGURED);
+        synchronized (m_workflowMutex) {
+            resetAll();
+            checkForNodeStateChanges();
+        }
     }
 
     /* ------------- node commands -------------- */
