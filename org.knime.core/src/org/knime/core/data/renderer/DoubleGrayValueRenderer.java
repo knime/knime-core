@@ -46,6 +46,9 @@ import org.knime.core.data.DoubleValue;
  */
 public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
     
+    /** Description that's returned in {@link #getDescription()}. */
+    public static final String DESCRIPTION = "Gray Scale";
+    
     private final Icon m_icon = new GrayIcon();
     private boolean m_isPaintCrossForMissing = false;
     
@@ -170,7 +173,7 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
      */
     @Override
     public String getDescription() {
-        return "Gray Scale";
+        return DESCRIPTION;
     }
     
     /** Returns <code>true</code> if the spec contains domain information 

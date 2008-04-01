@@ -34,6 +34,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -474,10 +475,19 @@ public class TableContentView extends JTable {
         DataColumnSpec headerValue = data.getDataTableSpec().getColumnSpec(i);
         aColumn.setHeaderValue(headerValue);
         DataValueRendererFamily renderer = getRendererFamily(headerValue);
-        for (String s : renderer.getRendererDescriptions()) {
-            if (renderer.accepts(s, headerValue)) {
-                renderer.setActiveRenderer(s);
-                break;
+        String[] descs = renderer.getRendererDescriptions();
+        // setting a certain column property will set a preferred renderer
+        String preferredRenderer = headerValue.getProperties().getProperty(
+                DataValueRenderer.PROPERTY_PREFERRED_RENDERER);
+        if (Arrays.asList(descs).contains(preferredRenderer)
+                && renderer.accepts(preferredRenderer, headerValue)) {
+            renderer.setActiveRenderer(preferredRenderer);
+        } else {
+            for (String s : descs) {
+                if (renderer.accepts(s, headerValue)) {
+                    renderer.setActiveRenderer(s);
+                    break;
+                }
             }
         }
         aColumn.setCellRenderer(renderer);
