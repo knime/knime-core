@@ -21,6 +21,7 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,7 +39,9 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.StringFormat;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.util.EncryptionKeySupplier;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.KnimeEncryption;
 
 /**
  * Simple utility class that takes a workflow, either in a directory or zipped
@@ -84,6 +87,7 @@ public final class BatchExecutor {
               "Usage: The following options are available:\n"
             + " -nosave => do not save the workflow after execution has finished\n"
             + " -reset => reset workflow prior to execution\n"
+            + " -password => prompt for master passwort (used in e.g. DB connector node)\n"
             + " -workflowFile=... => ZIP file with a ready-to-execute workflow in the root \n"
             + "                  of the ZIP\n"
             + " -workflowDir=... => directory with a ready-to-execute workflow\n"
@@ -147,6 +151,7 @@ public final class BatchExecutor {
         File input = null, output = null;
         boolean noSave = false;
         boolean reset = false;
+        boolean isPromptForPassword = false;
         List<Option> options = new ArrayList<Option>();
 
         for (String s : args) {
@@ -155,6 +160,8 @@ public final class BatchExecutor {
                 noSave = true;
             } else if ("-reset".equals(parts[0])) {
                 reset = true;
+            } else if ("-password".equals(parts[0])) {
+                isPromptForPassword = true;
             } else if ("-workflowFile".equals(parts[0])) {
                 if (parts.length != 2) {
                     System.err.println(
@@ -214,6 +221,31 @@ public final class BatchExecutor {
                 return 1;
             }
         }
+        EncryptionKeySupplier encryptionKeySupplier = null;
+        if (isPromptForPassword) {
+            Console cons;
+            if ((cons = System.console()) == null) {
+                System.err.println("No console for password prompt available");
+            } else {
+                char[] first, second;
+                boolean areEqual;
+                do {
+                    first = cons.readPassword("[%s]", "Password:");
+                    second = cons.readPassword("[%s]", "Reenter Password:");
+                    areEqual = Arrays.equals(first, second);
+                    if (!areEqual) {
+                        System.out.println("Passwords don't match");
+                    }
+                } while (!areEqual);
+                final String encryptionKey = new String(first);
+                encryptionKeySupplier = new EncryptionKeySupplier() {
+                    /** {@inheritDoc} */
+                    public String getEncryptionKey() {
+                        return encryptionKey;
+                    }
+                };
+            }
+        }
 
         final File workflowDir;
         if (input == null) {
@@ -237,6 +269,9 @@ public final class BatchExecutor {
         WorkflowLoadResult loadResult = WorkflowManager.load(
                 workflowFile.getParentFile(), new ExecutionMonitor());
         WorkflowManager wfm = loadResult.getWorkflowManager();
+        if (encryptionKeySupplier != null) {
+            KnimeEncryption.setEncryptionKeySupplier(encryptionKeySupplier);
+        }
         if (reset) {
             wfm.resetAll();
         }
