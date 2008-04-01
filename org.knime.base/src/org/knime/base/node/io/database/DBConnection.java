@@ -86,7 +86,8 @@ class DBConnection {
      * @throws Exception if an exception is thrown
      */
     Connection createConnection() throws Exception {
-        if (m_dbName == null || m_user == null || m_pass == null) {
+        if (m_dbName == null || m_user == null || m_pass == null
+                || m_driver == null) {
             throw new InvalidSettingsException("No settings available "
                     + "to create database connection.");
         }
@@ -99,7 +100,7 @@ class DBConnection {
             }
         } catch (Exception e) {
             throw new InvalidSettingsException("Could not register database"
-                    + " driver: " + wDriver);
+                    + " driver: " + wDriver, e);
         }
         DBDriverLoader.registerDriver(m_driver);
         String password = KnimeEncryption.decrypt(m_pass);

@@ -137,9 +137,10 @@ final class DBReaderNodeModel extends NodeModel {
             m_lastSpec = conn.getDataTableSpec();
             conn.close();
         } catch (SQLException e) {
-            throw new InvalidSettingsException(e.getMessage());
+            throw new InvalidSettingsException(e.getMessage(), e);
         } catch (Exception e) {
-            throw new InvalidSettingsException("Could not decrypt password.");
+            throw new InvalidSettingsException(
+                    "Could not decrypt password.", e);
         }
         return new DataTableSpec[]{m_lastSpec};
     }
