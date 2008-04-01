@@ -1675,9 +1675,19 @@ public final class WorkflowManager extends NodeContainer {
                                     // node is already executing!
                                     ncIt.queueAsNodeContainer(inData);
                                     remainingNodes = true;
-                                } else { // failed to configure, discontinue!
-                                    disableNodeForExecution(ncIt.getID());
                                 }
+                            }
+                            final NodeOutPort[] inPorts;
+                            inPorts = assemblePredecessorOutPorts(ncIt.getID());
+                            boolean nodeCanNeverExecute = false;;
+                            for (int i = 0; i < inData.length; i++) {
+                                if (!inPorts[i].inProgress() && inData[i] == null) {
+                                    nodeCanNeverExecute = true;
+                                }
+                            }
+                            
+                            if (nodeCanNeverExecute) { // failed to configure, discontinue!
+                                disableNodeForExecution(ncIt.getID());
                             }
                         default:
                         }
@@ -1827,26 +1837,21 @@ public final class WorkflowManager extends NodeContainer {
         int nrIns = nc.getNrInPorts();
         NodeOutPort[] result = new NodeOutPort[nrIns];
         // TODO: review, I guess this can be done within one loop
-        for (int i = 0; i < nrIns; i++) {
-            result[i] = null;
-            Set<ConnectionContainer> incoming = m_connectionsByDest.get(id);
-            for (ConnectionContainer conn : incoming) {
-                assert conn.getDest().equals(id);
-                // get info about destination
-                int destPortIndex = conn.getDestPort();
-                if (destPortIndex == i) {  // found connection to correct port
-                    int portIndex = conn.getSourcePort();
-                    if (conn.getSource() != this.getID()) {
-                        // connected to another node inside this WFM
-                        assert conn.getType() == ConnectionType.STD;
-                        result[i] =
-                            m_nodes.get(conn.getSource()).getOutPort(portIndex);
-                    } else {
-                        // connected to a WorkflowInport
-                        assert conn.getType() == ConnectionType.WFMIN;
-                        result[i] = getWorkflowIncomingPort(portIndex);
-                    }
-                }
+        Set<ConnectionContainer> incoming = m_connectionsByDest.get(id);
+        for (ConnectionContainer conn : incoming) {
+            assert conn.getDest().equals(id);
+            // get info about destination
+            int destPortIndex = conn.getDestPort();
+            int portIndex = conn.getSourcePort();
+            if (conn.getSource() != this.getID()) {
+                // connected to another node inside this WFM
+                assert conn.getType() == ConnectionType.STD;
+                result[destPortIndex] =
+                    m_nodes.get(conn.getSource()).getOutPort(portIndex);
+            } else {
+                // connected to a WorkflowInport
+                assert conn.getType() == ConnectionType.WFMIN;
+                result[destPortIndex] = getWorkflowIncomingPort(portIndex);
             }
         }
         return result;

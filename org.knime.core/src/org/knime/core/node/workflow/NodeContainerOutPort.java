@@ -85,6 +85,13 @@ implements NodeOutPort {
     /**
      * {@inheritDoc}
      */
+    public boolean inProgress() {
+        return m_snc.getState().executionInProgress();
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
     public HiLiteHandler getHiLiteHandler() {
         return m_snc.getNode().getHiLiteHandler(getPortIndex());
     }

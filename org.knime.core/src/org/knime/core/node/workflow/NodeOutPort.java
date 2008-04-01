@@ -52,6 +52,14 @@ public interface NodeOutPort extends NodePort {
      * @return PortObject the object for this port. Can be null.
      */
     public PortObject getPortObject();
+
+    /**
+     * 
+     * @return true of node of this port is still waiting to (or already)
+     *   doing something (i.e. State.executionInProgress() is true).
+     */
+    public boolean inProgress();
+    
     
     /**
      * Returns the hilite handler for this port as set by the node this port is
