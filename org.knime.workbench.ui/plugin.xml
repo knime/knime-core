@@ -147,6 +147,12 @@
             id="org.knime.workbench.ui.preferences.favorites"
             name="Favorite Nodes History">
       </page>
+      <page
+            category="org.knime.workbench.ui.preferences"
+            class="org.knime.workbench.ui.masterkey.MasterKeyPreferencePage"
+            id="org.knime.workbench.ui.preferences.masterkey"
+            name="Master Key">
+      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.preferences">

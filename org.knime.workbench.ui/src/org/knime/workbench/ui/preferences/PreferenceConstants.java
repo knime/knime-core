@@ -77,4 +77,7 @@ public class PreferenceConstants {
         = "knime.favorites.frequency";
     
     public static final String P_FAV_LAST_USED_SIZE = "knime.favorites.lastused";
+    
+    public static final String P_MASTER_KEY_DEFINED = "knime.master_key.defined";
+    public static final String P_MASTER_KEY = "knime.master_key";
 }

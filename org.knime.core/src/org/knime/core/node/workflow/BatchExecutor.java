@@ -87,7 +87,8 @@ public final class BatchExecutor {
               "Usage: The following options are available:\n"
             + " -nosave => do not save the workflow after execution has finished\n"
             + " -reset => reset workflow prior to execution\n"
-            + " -password => prompt for master passwort (used in e.g. DB connector node)\n"
+            + " -masterkey[=...] => prompt for master passwort (used in e.g. database nodes),\n"
+            + "                 if provided with argument, use argument instead of prompting\n"
             + " -workflowFile=... => ZIP file with a ready-to-execute workflow in the root \n"
             + "                  of the ZIP\n"
             + " -workflowDir=... => directory with a ready-to-execute workflow\n"
@@ -152,6 +153,7 @@ public final class BatchExecutor {
         boolean noSave = false;
         boolean reset = false;
         boolean isPromptForPassword = false;
+        String masterKey = null;
         List<Option> options = new ArrayList<Option>();
 
         for (String s : args) {
@@ -160,8 +162,16 @@ public final class BatchExecutor {
                 noSave = true;
             } else if ("-reset".equals(parts[0])) {
                 reset = true;
-            } else if ("-password".equals(parts[0])) {
-                isPromptForPassword = true;
+            } else if ("-masterkey".equals(parts[0])) {
+                if (parts.length > 1) {
+                    if (parts[1].length() == 0) {
+                        System.err.println("Master key must not be empty.");
+                        return 1;
+                    }
+                    masterKey = parts[1];
+                } else {
+                    isPromptForPassword = true;
+                }
             } else if ("-workflowFile".equals(parts[0])) {
                 if (parts.length != 2) {
                     System.err.println(
@@ -230,21 +240,24 @@ public final class BatchExecutor {
                 char[] first, second;
                 boolean areEqual;
                 do {
-                    first = cons.readPassword("[%s]", "Password:");
-                    second = cons.readPassword("[%s]", "Reenter Password:");
+                    first = cons.readPassword("%s", "Password:");
+                    second = cons.readPassword("%s", "Reenter Password:");
                     areEqual = Arrays.equals(first, second);
                     if (!areEqual) {
                         System.out.println("Passwords don't match");
                     }
                 } while (!areEqual);
-                final String encryptionKey = new String(first);
-                encryptionKeySupplier = new EncryptionKeySupplier() {
-                    /** {@inheritDoc} */
-                    public String getEncryptionKey() {
-                        return encryptionKey;
-                    }
-                };
+                masterKey = new String(first);
             }
+        } 
+        if (masterKey != null) {
+            final String encryptionKey = masterKey;
+            encryptionKeySupplier = new EncryptionKeySupplier() {
+                /** {@inheritDoc} */
+                public String getEncryptionKey() {
+                    return encryptionKey;
+                }
+            };
         }
 
         final File workflowDir;
@@ -267,11 +280,12 @@ public final class BatchExecutor {
         }
 
         WorkflowLoadResult loadResult = WorkflowManager.load(
-                workflowFile.getParentFile(), new ExecutionMonitor());
+                workflowFile, new ExecutionMonitor());
         WorkflowManager wfm = loadResult.getWorkflowManager();
         if (encryptionKeySupplier != null) {
             KnimeEncryption.setEncryptionKeySupplier(encryptionKeySupplier);
         }
+
         if (reset) {
             wfm.resetAll();
         }

@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision$ $Date$ $Author$
- * 
+/*  
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -34,8 +32,10 @@ import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.KnimeEncryption;
 import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.ui.favorites.FavoriteNodesManager;
+import org.knime.workbench.ui.masterkey.MasterKeyPreferencePage;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.osgi.framework.BundleContext;
 
@@ -76,6 +76,11 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
+        
+        // create a knime encryption supplier that reads in an encryption key
+        // from the user via a dialog
+        KnimeEncryption.setEncryptionKeySupplier(
+                MasterKeyPreferencePage.SUPPLIER);
 
         getImageRegistry().put("knime",
                 imageDescriptorFromPlugin(PLUGIN_ID, "/icons/knime.png"));

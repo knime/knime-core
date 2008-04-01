@@ -54,8 +54,6 @@ public final class KnimeEncryption {
 
     private static EncryptionKeySupplier keySupplier;
 
-    private static SecretKey secretKey;
-
     static {
 
         try {
@@ -71,12 +69,6 @@ public final class KnimeEncryption {
         // empty private default constructor as this is a static utility class
     }
 
-    private static void checkKey() {
-        if (secretKey == null) {
-            throw new RuntimeException("No proper key was provided!");
-        }
-    }
-
     /**
      * Enrypts password.
      * 
@@ -85,10 +77,13 @@ public final class KnimeEncryption {
      * @throws Exception If something goes wrong.
      */
     public static String encrypt(final char[] password) throws Exception {
-        if (secretKey == null && keySupplier != null) {
+        SecretKey secretKey = null;
+        if (keySupplier != null) {
             secretKey = createSecretKey(keySupplier.getEncryptionKey());
         }
-        checkKey();
+        if (secretKey == null) {
+            return new String(password);
+        }
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
         byte[] ciphertext = cipher.doFinal(new String(password).getBytes());
         return new BASE64Encoder().encode(ciphertext);
@@ -102,23 +97,17 @@ public final class KnimeEncryption {
      * @throws Exception If something goes wrong.
      */
     public static String decrypt(final String password) throws Exception {
-        if (secretKey == null && keySupplier != null) {
+        SecretKey secretKey = null;
+        if (keySupplier != null) {
             secretKey = createSecretKey(keySupplier.getEncryptionKey());
         }
-        checkKey();
-        cipher.init(Cipher.DECRYPT_MODE, secretKey);
+        if (secretKey == null) {
+            return password;
+        }
         // perform the decryption
         byte[] pw = new BASE64Decoder().decodeBuffer(password);
-
-        byte[] decryptedText;
-        try {
-            decryptedText = cipher.doFinal(pw);
-        } catch (Exception e) {
-            secretKey = createSecretKey(keySupplier.getEncryptionKey());
-            cipher.init(Cipher.DECRYPT_MODE, secretKey);
-            decryptedText = cipher.doFinal(pw);
-        }
-
+        cipher.init(Cipher.DECRYPT_MODE, secretKey);
+        byte[] decryptedText = cipher.doFinal(pw);
         return new String(decryptedText);
     }
 
@@ -134,44 +123,28 @@ public final class KnimeEncryption {
         keySupplier = supplier;
     }
 
-    /**
-     * Directly sets an encryption key.
-     * 
-     * @param key the encryption key to set
-     */
-    public static void setEncryptionKey(final SecretKey key) {
-        secretKey = key;
-    }
-    
-    /**
-     * Sets an encryption key given as string.
-     * The key is transformed to a {@link SecretKey} before it is set.
-     * 
-     * @param key the encryption key to set as string
-     */
-    public static void setEncryptionKeyAsString(final String key) {
-        secretKey = createSecretKey(key);
-    }
-
     private static SecretKey createSecretKey(final String keyAsString) {
-
-        SecretKey secretKey1 = null;
-        try {
-            if (keyAsString.length() < 8) {
-                throw new IllegalArgumentException(
-                        "The encryption key must be at least 8 "
-                                + "characters long.");
-            }
-            byte[] key = keyAsString.getBytes();
-
-            secretKey1 =
-                    SecretKeyFactory.getInstance("DES").generateSecret(
-                            new DESKeySpec(key));
-
-        } catch (Exception e) {
-            secretKey1 = null;
+        if (keyAsString == null || keyAsString.length() == 0) {
+            return null;
         }
-
-        return secretKey1;
+        String newKey = keyAsString;
+        if (keyAsString.length() % 8 != 0) {
+            // key is not a multiple of 8
+            do {
+                // extend key
+                newKey += keyAsString;
+            } while (newKey.length() < 8);
+            // trim key to multiple of 8
+            newKey = newKey.substring(0, ((int) newKey.length() / 8) * 8); 
+        }
+        try {
+            byte[] key = newKey.getBytes();
+            return SecretKeyFactory.getInstance("DES").generateSecret(
+                            new DESKeySpec(key));
+        } catch (Exception e) {
+            LOGGER.error(e);
+            return null;
+        }
     }
+
 }
