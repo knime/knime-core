@@ -244,7 +244,7 @@ public final class ConsoleViewAppender extends Writer {
      */
     private static class ConsoleWriteJob extends Job {
         private final LinkedList<ConsoleStringTuple> m_queueEntries;
-        
+        private static final int MAX_STACK_SIZE = 100000;
         /**
          * 
          */
@@ -261,7 +261,14 @@ public final class ConsoleViewAppender extends Writer {
         public void add(
                 final ConsoleViewAppender appender, final String str) {
             synchronized (m_queueEntries) {
-                m_queueEntries.add(new ConsoleStringTuple(appender, str));
+                if (m_queueEntries.size() > MAX_STACK_SIZE) {
+                    m_queueEntries.clear();
+                    m_queueEntries.add(new ConsoleStringTuple(WARN_APPENDER,
+                            "Console stack exceeded " 
+                            + MAX_STACK_SIZE + " messages, flushing..."));
+                } else {
+                    m_queueEntries.add(new ConsoleStringTuple(appender, str));
+                }
                 if (getState() == Job.SLEEPING || getState() == Job.NONE) {
                     wakeUp();
                     schedule();
