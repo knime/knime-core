@@ -61,6 +61,13 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
     }
 
     /**
+     * @return underlying NodeOutPort
+     */
+    NodeOutPort getUnderlyingPort() {
+        return m_underlyingPort;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public HiLiteHandler getHiLiteHandler() {

@@ -1728,7 +1728,10 @@ public final class WorkflowManager extends NodeContainer {
         if (allOutPortsConnected) {
             allPopulated = true;
             for (int i = 0; i < getNrOutPorts(); i++) {
-                if (getOutPort(i).getPortObject() == null) {
+                NodeOutPort nop = getOutPort(i).getUnderlyingPort();
+                if (nop == null) {
+                    allPopulated = false;
+                } else if (nop.getPortObject() == null) {
                     allPopulated = false;
                 }
             }
@@ -1773,14 +1776,18 @@ public final class WorkflowManager extends NodeContainer {
         } else if (nrNodesInState[State.MARKEDFOREXEC.ordinal()] >= 1) {
             newState = State.MARKEDFOREXEC;
         }
-        // check if we just finished execution of this WFM
-        boolean wfmJustDone = (!this.getState().equals(State.EXECUTED))
-                              && newState.equals(State.EXECUTED);
-        // TODO handle unsuccessful executions (what??)
+        // check if we just went from EXECUTING to something else
+        boolean wfmJustDone = (this.getState().equals(State.EXECUTING))
+                              && (!newState.executionInProgress());
+        // also find out if we went from something else to EXECUTED
+        // this should only happen if WFM contains 0 nodes and goes
+        // from configured to executed (because all "incoming" nodes are done).
+        wfmJustDone |= (!this.getState().equals(State.EXECUTED))
+                       && (newState.equals(State.EXECUTED));
         this.setState(newState);
         if (wfmJustDone && (getParent() != null)) {
             // make sure parent WFM knows about successful execution
-            getParent().doAfterExecution(this, true);
+            getParent().doAfterExecution(this, newState.equals(State.EXECUTED));
         }
     }
 
