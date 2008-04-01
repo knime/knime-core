@@ -157,7 +157,7 @@ public final class WorkflowManager extends NodeContainer {
         super(parent, id);
         m_inPorts = new WorkflowInPort[inTypes.length];
         for (int i = 0; i < inTypes.length; i++) {
-            m_inPorts[i] = new WorkflowInPort(this, i, inTypes[i]);
+            m_inPorts[i] = new WorkflowInPort(i, inTypes[i]);
         }
         m_outPorts = new WorkflowOutPort[outTypes.length];
         for (int i = 0; i < outTypes.length; i++) {
@@ -197,7 +197,7 @@ public final class WorkflowManager extends NodeContainer {
         for (int i = 0; i < inPortTemplates.length; i++) {
             WorkflowPortTemplate t = inPortTemplates[i];
             m_inPorts[i] = new WorkflowInPort(
-                    this, t.getPortIndex(), t.getPortType());
+                    t.getPortIndex(), t.getPortType());
             m_inPorts[i].setPortName(t.getPortName());
         }
         WorkflowPortTemplate[] outPortTemplates = 
@@ -1773,7 +1773,15 @@ public final class WorkflowManager extends NodeContainer {
         } else if (nrNodesInState[State.MARKEDFOREXEC.ordinal()] >= 1) {
             newState = State.MARKEDFOREXEC;
         }
+        // check if we just finished execution of this WFM
+        boolean wfmJustDone = (!this.getState().equals(State.EXECUTED))
+                              && newState.equals(State.EXECUTED);
+        // TODO handle unsuccessful executions (what??)
         this.setState(newState);
+        if (wfmJustDone && (getParent() != null)) {
+            // make sure parent WFM knows about successful execution
+            getParent().doAfterExecution(this, true);
+        }
     }
 
     

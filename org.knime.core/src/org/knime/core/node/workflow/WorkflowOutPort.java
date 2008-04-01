@@ -24,19 +24,13 @@
 package org.knime.core.node.workflow;
 
 import org.knime.core.node.PortObject;
-import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.PortType;
-import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * 
- * @author mb, University of Konstanz
+ * @author M. Berthold, University of Konstanz
  */
-public class WorkflowOutPort extends NodePortAdaptor implements NodeOutPort  {
-    
-    /** if connected, reference the outport this node is connected to.
-     */
-    private NodeOutPort m_underlyingPort;
+public class WorkflowOutPort extends NodeOutPortWrapper  {
     
     private final NodeInPort m_simulatedInPort;
     
@@ -57,17 +51,6 @@ public class WorkflowOutPort extends NodePortAdaptor implements NodeOutPort  {
         m_workflowManager = wm;
     }
 
-    /**
-     * Set a new underlying port - used when the connection inside this
-     * workflow to this outgoing port changes. The argument is the new
-     * NodeOutPort connected to the outgoing port of the WFM.
-     * 
-     * @param p new port
-     */
-    void setUnderlyingPort(final NodeOutPort p) {
-        m_underlyingPort = p;
-    }
-
     /** Return a NodeInPort for the WFM's output ports so that the Outport
      * of a node within the WFM can connect to it as an "input". Since InPorts
      * only wrap name/type this is really all it does: it wraps this information
@@ -79,103 +62,17 @@ public class WorkflowOutPort extends NodePortAdaptor implements NodeOutPort  {
         return m_simulatedInPort;
     }
     
-    /** @return the workflow manager associated with this port */
-    WorkflowManager getWorkflowManager() {
-        return m_workflowManager;
-    }
-
     /**
      * {@inheritDoc}
      */
-    public HiLiteHandler getHiLiteHandler() {
-        if (m_underlyingPort == null) {
-            return null;
-        }
-        return m_underlyingPort.getHiLiteHandler();
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public ScopeObjectStack getScopeContextStackContainer() {
-        if (m_underlyingPort == null) {
-            return null;
-        }
-        return m_underlyingPort.getScopeContextStackContainer();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
+    @Override
     public PortObject getPortObject() {
-        if (m_underlyingPort == null) {
-            return null;
+        // Test if the WFM is EXECUTED in order to be sure
+        // that we want to return this object (like the SNC does).
+        if (m_workflowManager.getState().equals(NodeContainer.State.EXECUTED)) {
+            return super.getPortObject();
         }
-        // Note that we can NOT test if the WFM is EXECUTED in order to be sure
-        // that we want to return this object (like the SNC does). This can be
-        // called twofold: inside the WFM to retrieve data from a WFM-inport
-        // (then this WFMOutPort is a member of a WFMInPort) and outside the
-        // WFM to retrieve data from WFM itself (when the WFM plays like a
-        // normal node.)
-        return m_underlyingPort.getPortObject();
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public PortObjectSpec getPortObjectSpec() {
-        if (m_underlyingPort == null) {
-            return null;
-        }
-        return m_underlyingPort.getPortObjectSpec();
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    public void openPortView(final String name) {
-        if (m_underlyingPort == null) {
-            return;
-        }
-        m_underlyingPort.openPortView(name);
-    }
-
-    ///////////////////////////
-    // Equals/HashCode/ToString
-    ///////////////////////////
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean equals(final Object obj) {
-        if (m_underlyingPort == null) {
-            return this == obj;
-        }
-        return m_underlyingPort.equals(obj);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int hashCode() {
-        if (m_underlyingPort == null) {
-            return System.identityHashCode(this);
-        }
-        return m_underlyingPort.hashCode();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String toString() {
-        if (m_underlyingPort == null) {
-            return "<<not connected>>";
-        }
-        return m_underlyingPort.toString();
+        return null;
     }
     
 }

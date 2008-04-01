@@ -36,15 +36,14 @@ public final class WorkflowInPort extends NodeInPort {
      * (Needed for connection going directly from a workflow inport
      * to the same workflow's outport - ConnectionType.WFM_THROUGH)
      */
-    private final WorkflowOutPort m_underlyingPortWrapper;
+    private final NodeOutPortWrapper m_underlyingPortWrapper;
 
     /**
      * 
      */
-    WorkflowInPort(final WorkflowManager wm, 
-            final int index, final PortType pType) {
+    WorkflowInPort(final int index, final PortType pType) {
         super(index, pType);
-        m_underlyingPortWrapper = new WorkflowOutPort(wm, index, pType);
+        m_underlyingPortWrapper = new NodeOutPortWrapper(index, pType);
     }
 
     void setUnderlyingPort(final NodeOutPort port) {
