@@ -391,11 +391,11 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
         Listener cancelListener = new Listener() {
             public void handleEvent(final Event event) {
                 MessageBox mb = new MessageBox(Display.getDefault()
-                     .getActiveShell(), SWT.ICON_WARNING | SWT.OK | SWT.CANCEL);
+                     .getActiveShell(), SWT.ICON_WARNING | SWT.YES | SWT.NO);
                 mb.setText("Warning...");
                 mb.setMessage(
                     "All passwords will be saved as plain text. Are you sure?");
-                if (mb.open() == SWT.OK) {
+                if (mb.open() == SWT.YES) {
                     masterKey[0] = null;
                     finished[0] = true;
                 } else {
