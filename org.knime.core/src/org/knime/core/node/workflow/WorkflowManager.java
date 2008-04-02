@@ -2447,7 +2447,9 @@ public final class WorkflowManager extends NodeContainer {
         failedNodes = new ArrayList<NodeID>(failedNodes);
         Collections.reverse((List<NodeID>)failedNodes);
         for (NodeID failed : failedNodes) {
-            getNodeContainer(failed).resetAsNodeContainer();
+            if (canResetNode(failed)) {
+                getNodeContainer(failed).resetAsNodeContainer();
+            }
         }
         for (NodeID id : needConfigurationNodes) {
             configureNodeAndSuccessors(id, true, true);
@@ -2467,7 +2469,7 @@ public final class WorkflowManager extends NodeContainer {
             ReferencedFile workflowDirRef = 
                 new ReferencedFile(directory.getParentFile());
             // if it's the location associated with the workflow we will 
-            // use same reference as a lock will be acquired 
+            // use same reference since a lock will be acquired 
             if (workflowDirRef.equals(getNodeContainerDirectory())) {
                 workflowDirRef = getNodeContainerDirectory();
             }
