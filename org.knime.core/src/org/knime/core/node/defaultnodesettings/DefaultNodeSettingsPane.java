@@ -113,16 +113,18 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
      * placed in that new tab. After creating a new tab the previous tab is no
      * longer accessible. If a tab with the same name was created before an
      * Exception is thrown. The new panel in the new tab has no group set (i.e.
-     * has no border).
+     * has no border). The new tab is placed at the specified position (or at
+     * the right most position, if the index is too big).
      *
      * @param tabTitle the title of the new tab to use from now on. Can't be
      *            null or empty.
+     * @param index the index to place the new tab at. Can't be negative.
      * @throws IllegalArgumentException if you specify a title that is already
      *             been used by another tab. Or if the specified title is null
      *             or empty.
      * @see #setDefaultTabTitle(String)
      */
-    public void createNewTab(final String tabTitle) {
+    public void createNewTabAt(final String tabTitle, final int index) {
         if ((tabTitle == null) || (tabTitle.length() == 0)) {
             throw new IllegalArgumentException("The title of a tab can't be "
                     + "null nor empty.");
@@ -132,12 +134,28 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
             throw new IllegalArgumentException("A tab with the specified new"
                     + " name (" + tabTitle + ") already exists.");
         }
-
         createNewPanels();
-        super.addTab(tabTitle, m_compositePanel);
-
+        super.addTabAt(index, tabTitle, m_compositePanel);
     }
 
+    /**
+     * Creates a new tab in the dialog. All components added from now on are
+     * placed in that new tab. After creating a new tab the previous tab is no
+     * longer accessible. If a tab with the same name was created before an
+     * Exception is thrown. The new panel in the new tab has no group set (i.e.
+     * has no border). The tab is placed at the right most position.
+     *
+     * @param tabTitle the title of the new tab to use from now on. Can't be
+     *            null or empty.
+     * @throws IllegalArgumentException if you specify a title that is already
+     *             been used by another tab. Or if the specified title is null
+     *             or empty.
+     * @see #setDefaultTabTitle(String)
+     */
+    public void createNewTab(final String tabTitle) {
+        createNewTabAt(tabTitle, Integer.MAX_VALUE);
+    }
+    
     /**
      * Creates a new dialog component group and closes the current one. From now
      * on the dialog components added with the addDialogComponent method are
