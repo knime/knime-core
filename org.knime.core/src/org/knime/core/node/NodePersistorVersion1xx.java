@@ -37,6 +37,7 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.Node.MemoryPolicy;
 import org.knime.core.node.Node.SettingsLoaderAndWriter;
+import org.knime.core.node.NodeModel.ModelContentWrapper;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -231,7 +232,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         }
     }
 
-    private ModelContentRO loadModelContent(final Node node,
+    private ModelContentWrapper loadModelContent(final Node node,
             final NodeSettingsRO settings, final ExecutionMonitor execMon,
             final int index) throws InvalidSettingsException, IOException,
             CanceledExecutionException {
@@ -256,7 +257,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             in = new BufferedInputStream(new FileInputStream(targetFile));
         }
         ModelContentRO pred = ModelContent.loadFromXML(in);
-        return pred;
+        return new ModelContentWrapper((ModelContent)pred);
     }
 
     private PortObjectSpec loadPortObjectSpec(final Node node,
