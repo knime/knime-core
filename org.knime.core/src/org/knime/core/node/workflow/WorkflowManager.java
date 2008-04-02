@@ -1282,7 +1282,7 @@ public final class WorkflowManager extends NodeContainer {
             }
             checkForNodeStateChanges();
             
-            // a loop was continued, we need to queue the loop head
+            // a loop is to be continued, we need to queue the loop head
             if (loopHeadNode != null) {
                 assert loopHeadNode.getState().equals(State.MARKEDFOREXEC);
                 PortObject[] ins = new PortObject[loopHeadNode.getNrInPorts()];
@@ -1953,8 +1953,7 @@ public final class WorkflowManager extends NodeContainer {
                 // one predecessor with populated output ports but one of the
                 // nodes still has not called the "doAfterExecution()" routine
                 // which might attempt to configure an already queued node again
-                NodeContainer.State ncState = nc.getState();
-                switch (ncState) {
+                switch (nc.getState()) {
                 case IDLE:
                 case UNCONFIGURED_MARKEDFOREXEC:
                 case CONFIGURED:
@@ -1985,8 +1984,8 @@ public final class WorkflowManager extends NodeContainer {
                     if (outputSpecsChanged || stackChanged) {
                         freshlyConfiguredNodes.add(nc.getID());
                     }
-                    if (ncState.equals(State.MARKEDFOREXEC)
-                        || ncState.equals(State.UNCONFIGURED_MARKEDFOREXEC)) {
+                    if (nc.getState().equals(State.UNCONFIGURED_MARKEDFOREXEC)
+                        || nc.getState().equals(State.MARKEDFOREXEC)) {
                         // check if we can queue this node!
                         final PortObject[] inData =
                             new PortObject[nc.getNrInPorts()];
@@ -1998,12 +1997,12 @@ public final class WorkflowManager extends NodeContainer {
                             }
                         }
                         if (allDataAvailable) {
-                            if (ncState.equals(State.MARKEDFOREXEC)) {
+                            if (nc.getState().equals(State.MARKEDFOREXEC)) {
                                 // Important, QUEUED does not mean the 
                                 // node is already executing!
                                 nc.queueAsNodeContainer(inData);
                             } else {
-                                assert ncState.equals(State.UNCONFIGURED_MARKEDFOREXEC);
+                                assert nc.getState().equals(State.UNCONFIGURED_MARKEDFOREXEC);
                                 // this means that all predecessors provide data
                                 // (are executed) but we still could not configure
                                 // the node: remove all (subsequent) marks!
@@ -2014,7 +2013,7 @@ public final class WorkflowManager extends NodeContainer {
                     break;
                 default:
                     throw new IllegalStateException("Wrong state in configure"
-                            + " (" + ncState + " " + nc.getNameWithID() + ")");
+                            + " (" + nc.getState() + " " + nc.getNameWithID() + ")");
                 }
             }
         }
