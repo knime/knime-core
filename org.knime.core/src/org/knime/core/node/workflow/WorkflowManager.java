@@ -1217,6 +1217,7 @@ public final class WorkflowManager extends NodeContainer {
                 ((SingleNodeContainer)nc).postExecuteNode(success);
             }
             boolean canConfigureSuccessors = true;
+            NodeContainer loopHeadNode = null;
             if (nc instanceof SingleNodeContainer) {
                 // process loop context - only for "real" nodes:
                 SingleNodeContainer snc = (SingleNodeContainer)nc;
@@ -1247,6 +1248,7 @@ public final class WorkflowManager extends NodeContainer {
                                     = m_nodes.get(sc.getOriginatingNode());
                         assert origin instanceof SingleNodeContainer;
                         ((SingleNodeContainer)origin).enableReQueuing();
+                        loopHeadNode = origin;
                         // (5) configure the nodes from start to rest (it's not
                         //     so important if we configure more than the body)
                         //     do NOT configure start of loop because otherwise
@@ -1279,6 +1281,20 @@ public final class WorkflowManager extends NodeContainer {
                 configureNodeAndSuccessors(nc.getID(), false, true);
             }
             checkForNodeStateChanges();
+            
+            // a loop was continued, we need to queue the loop head
+            if (loopHeadNode != null) {
+                assert loopHeadNode.getState().equals(State.MARKEDFOREXEC);
+                PortObject[] ins = new PortObject[loopHeadNode.getNrInPorts()];
+                assembleInputData(loopHeadNode.getID(), ins);
+                if (Arrays.asList(ins).contains(null)) {
+                    assert false : "Loop head can't be re-executed";
+                    disableNodeForExecution(loopHeadNode.getID());
+                    checkForNodeStateChanges();
+                } else {
+                    loopHeadNode.queueAsNodeContainer(ins);
+                }
+            }
         }
     }
 
@@ -1481,7 +1497,7 @@ public final class WorkflowManager extends NodeContainer {
                 }
             }
         });
-        markForExecutionAllNodes(true);
+        executeAll();
         synchronized (mySemaphore) {
             while (getState().executionInProgress()) {
                 try {
@@ -1493,6 +1509,13 @@ public final class WorkflowManager extends NodeContainer {
             }
         }
         return this.getState().equals(State.EXECUTED);
+    }
+    
+    /** Convenience method: (Try to) Execute all nodes in the workflow.
+     * This method returns immediately, leaving it to the associated
+     * executor to do the job. */
+    public void executeAll() {
+        markForExecutionAllNodes(true);
     }
 
     /////////////////////////////////////////////////////////
