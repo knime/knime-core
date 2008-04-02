@@ -577,6 +577,22 @@ public abstract class GenericNodeDialogPane {
 
     }
 
+    /**
+     * Selects the tab with the specified title. Selected tabs are in front of
+     * all the other tabs and their components are shown.
+     *
+     * @param tabTitle the title to bring to front,
+     * @return true, if it selected the specified tab, false, if a tab with this
+     *         title doesn't exist.
+     */
+    protected final boolean setSelected(final String tabTitle) {
+        int index = getTabIndex(tabTitle);
+        if (index >= 0) {
+            m_pane.setSelectedIndex(index);
+        }
+        return index >= 0;
+    }
+
     /*
      * Converts the specified and all its parent Component object to no-light
      * weight components if they are of type JComboBox, JPopupMenu, or

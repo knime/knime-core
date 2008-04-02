@@ -155,7 +155,17 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
     public void createNewTab(final String tabTitle) {
         createNewTabAt(tabTitle, Integer.MAX_VALUE);
     }
-    
+
+    /**
+     * Brings the specified tab to front and shows its components.
+     *
+     * @param tabTitle the title of the tab to select. If the specified title
+     *            doesn't exist, this method does nothing.
+     */
+    public void selectTab(final String tabTitle) {
+        setSelected(tabTitle);
+    }
+
     /**
      * Creates a new dialog component group and closes the current one. From now
      * on the dialog components added with the addDialogComponent method are
