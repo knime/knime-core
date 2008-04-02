@@ -876,7 +876,7 @@ public final class WorkflowManager extends NodeContainer {
                 case IDLE:
                 case CONFIGURED:
                     if (flag) {
-                        nc.markForExecutionAsNodeContainer(true);
+                        markAndQueueIfPossible(nc.getID(), true);
                     }
                     break;
                 case MARKEDFOREXEC:
@@ -891,7 +891,6 @@ public final class WorkflowManager extends NodeContainer {
             }
             checkForNodeStateChanges();
         }
-        checkForQueuableNodesInWFMonly();
     }
 
     /**
@@ -994,35 +993,89 @@ public final class WorkflowManager extends NodeContainer {
             throw new IllegalStateException("Can't execute " + getNodeString(nc)
                     + ", not in configured state, but " + nc.getState());
         }
-        markForExecutionOfPredecessors(id);
-        nc.markForExecutionAsNodeContainer(true);
-        // this could change some of the queuable states, so check:
-        checkForQueuableNodesEverywhere();
+        markAndQueueIfPossible(id, true);
     }
 
     /** Recursively iterates the predecessors and marks them for execution.
      * @param id The node whose predecessors are to marked for execution.
+     * @param tryMyself if true also mark/queue the argument - otherwise only
+     *   predecessors.
      */
-    private void markForExecutionOfPredecessors(final NodeID id) {
-        Set<ConnectionContainer> predConn = m_connectionsByDest.get(id);
-        for (ConnectionContainer c : predConn) {
-            NodeID predID = c.getSource();
-            NodeContainer predNC = m_nodes.get(predID);
-            if (predNC == null) {
-                assert c.getType().equals(
-                        ConnectionContainer.ConnectionType.WFMIN);
-                assert predID.equals(getID());
-                getParent().markForExecutionOfPredecessors(getID());
-            } else {
-                switch (predNC.getState()) {
-                case IDLE: throw new IllegalStateException("Can't execute \""
-                        + predNC.getNameWithID() + "\", state is IDLE");
-                case CONFIGURED:
-                    markForExecutionOfPredecessors(predID);
-                    predNC.markForExecutionAsNodeContainer(true);
-                    break;
-                default: // already run or to be run
+    private void markAndQueueIfPossible(final NodeID id, 
+            final boolean alsoMarkArgumentNode) {
+        // TODO: make sure chain of to-mark nodes has an IDLE "source"!
+        // (don't leave dangling red-marked nodes around!)
+        assert !id.equals(this.getID());
+        synchronized (m_workflowMutex) {
+            Set<ConnectionContainer> predConn = m_connectionsByDest.get(id);
+            NodeContainer nc = getNodeContainer(id);
+            if (nc.getState().equals(State.EXECUTED)
+                    || nc.getState().executionInProgress()) {
+                return;
+            }
+            if (nc.getNrInPorts() == 0) {
+                assert predConn.size() == 0;
+                // handle pipeline source (no input connections/ports!)
+                State ncState = nc.getState();
+                if (ncState.equals(State.CONFIGURED)) {
+                    nc.markForExecutionAsNodeContainer(true);
+                    assert nc.getState().equals(State.MARKEDFOREXEC);
+                    nc.queueAsNodeContainer(new PortObject[0]);
                 }
+                return;
+            }
+            assert nc.getNrInPorts() > 0;
+            if (predConn.size() < nc.getNrInPorts()) {
+                // do not deal with incompletely connected nodes!
+                return;
+            }
+            assert predConn.size() > 0;
+            assert predConn.size() == nc.getNrInPorts();
+            // now deal with nodes which are in the middle of a pipeline
+            // (A) recurse up to all predecessors of this node (mark/queue them!)
+            for (ConnectionContainer c : predConn) {
+                NodeID predID = c.getSource();
+                NodeContainer predNC = m_nodes.get(predID);
+                if (predNC == null) {
+                    // connection coming from outside this WFM
+                    assert c.getType().equals(
+                            ConnectionContainer.ConnectionType.WFMIN);
+                    assert predID.equals(getID());
+                    getParent().markAndQueueIfPossible(getID(), false);
+                } else {
+                    // just a normal node...
+                    markAndQueueIfPossible(predID, true);
+                }
+            }
+            if (!alsoMarkArgumentNode) {
+                return;
+            }
+            // (B) check if this node is markable!
+            NodeOutPort[] predPorts = assemblePredecessorOutPorts(id);
+            boolean canBeMarked = true;
+            boolean canBeQueued = true;
+            for (NodeOutPort portIt : predPorts) {
+                if (portIt.inProgress()) {
+                    canBeQueued = false;
+                } else {
+                    if (portIt.getPortObject() == null) {
+                        canBeQueued = false;
+                        canBeMarked = false;
+                    }
+                }
+            }
+            if (canBeMarked) {
+                nc.markForExecutionAsNodeContainer(true);
+            }
+            if (canBeQueued && !(nc instanceof WorkflowManager)) {
+                assert nc.getState().equals(State.MARKEDFOREXEC) 
+                    : nc.getNameWithID() + " is " + nc.getState();
+                PortObject[] po = new PortObject[predPorts.length];
+                for (int i = 0; i < po.length; i++) {
+                    po[i] = predPorts[i].getPortObject();
+                    assert (po[i] != null);
+                }
+                nc.queueAsNodeContainer(po);
             }
         }
     }
@@ -1113,6 +1166,9 @@ public final class WorkflowManager extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     void queueAsNodeContainer(final PortObject[] inData) {
+        if (true) {
+            return;
+        }
         assert false : "Workflow Manager can't be queued";
         switch (getState()) {
         case MARKEDFOREXEC:
@@ -1152,13 +1208,13 @@ public final class WorkflowManager extends NodeContainer {
         synchronized (m_workflowMutex) {
             String st = success ? " - success" : " - failure";
             LOGGER.info(nc.getNameWithID() + " doAfterExecute" + st);
-            // allow SNC to update states etc
-            if (nc instanceof SingleNodeContainer) {
-                ((SingleNodeContainer)nc).postExecuteNode(success);
-            }
             if (!success) {
                 // execution failed - clean up successors' execution-marks
                 disableNodeForExecution(nc.getID());
+            }
+            // allow SNC to update states etc
+            if (nc instanceof SingleNodeContainer) {
+                ((SingleNodeContainer)nc).postExecuteNode(success);
             }
             boolean canConfigureSuccessors = true;
             if (nc instanceof SingleNodeContainer) {
@@ -1222,7 +1278,6 @@ public final class WorkflowManager extends NodeContainer {
                 // one but then it can be treated like a SNC
                 configureNodeAndSuccessors(nc.getID(), false, true);
             }
-            checkForQueuableNodesEverywhere();
             checkForNodeStateChanges();
         }
     }
@@ -1427,7 +1482,6 @@ public final class WorkflowManager extends NodeContainer {
             }
         });
         markForExecutionAllNodes(true);
-        checkForQueuableNodesEverywhere();
         synchronized (mySemaphore) {
             while (getState().executionInProgress()) {
                 try {
@@ -1631,74 +1685,6 @@ public final class WorkflowManager extends NodeContainer {
                 }
             }
         }
-    }
-    
-
-    /** semaphore to avoid multiple checks for newly executable nodes
-     * to interfere / interleave with each other.
-     */
-//    private final Object m_currentlychecking = new Object();
-
-    private void checkForQueuableNodesEverywhere() {
-        WorkflowManager wfm = this;
-        while ((wfm.getNrInPorts() != 0) || (wfm.getNrOutPorts() != 0)) {
-            // some connection to containing WFM exists
-            wfm = wfm.getParent();
-        }
-        wfm.checkForQueuableNodesInWFMonly();
-    }
-
-    private void checkForQueuableNodesInWFMonly() {
-        boolean remainingNodes;
-        do {
-            remainingNodes = false;
-            for (NodeContainer ncIt : m_nodes.values()) {
-                if (ncIt instanceof SingleNodeContainer) {
-                    synchronized (m_workflowMutex) {
-                        boolean isConfigured = true;
-                        switch (ncIt.getState()) {
-                        case UNCONFIGURED_MARKEDFOREXEC:
-                            isConfigured = false;
-                        case MARKEDFOREXEC:
-                            final PortObject[] inData =
-                                         new PortObject[ncIt.getNrInPorts()];
-                            assembleInputData(ncIt.getID(), inData);
-                            boolean dataAvailable = true;
-                            for (int i = 0; i < inData.length; i++) {
-                                if (inData[i] == null) {
-                                    dataAvailable = false;
-                                }
-                            }
-                            if (dataAvailable) {
-                                if (isConfigured) { // can run it
-                                    // Important, QUEUED does not mean the 
-                                    // node is already executing!
-                                    ncIt.queueAsNodeContainer(inData);
-                                    remainingNodes = true;
-                                }
-                            }
-                            final NodeOutPort[] inPorts;
-                            inPorts = assemblePredecessorOutPorts(ncIt.getID());
-                            boolean nodeCanNeverExecute = false;;
-                            for (int i = 0; i < inData.length; i++) {
-                                if (!inPorts[i].inProgress() && inData[i] == null) {
-                                    nodeCanNeverExecute = true;
-                                }
-                            }
-                            
-                            if (nodeCanNeverExecute) { // failed to configure, discontinue!
-                                disableNodeForExecution(ncIt.getID());
-                            }
-                        default:
-                        }
-                    }
-                } else if (ncIt instanceof WorkflowManager) {
-                    ((WorkflowManager)ncIt).checkForQueuableNodesInWFMonly();
-                } else {
-                    assert false;
-                }
-            }
-        } while (remainingNodes);
     }
 
     /**
@@ -1976,6 +1962,32 @@ public final class WorkflowManager extends NodeContainer {
                     if (outputSpecsChanged || stackChanged) {
                         freshlyConfiguredNodes.add(nc.getID());
                     }
+                    if (ncState.equals(State.MARKEDFOREXEC)
+                        || ncState.equals(State.UNCONFIGURED_MARKEDFOREXEC)) {
+                        // check if we can queue this node!
+                        final PortObject[] inData =
+                            new PortObject[nc.getNrInPorts()];
+                        assembleInputData(nc.getID(), inData);
+                        boolean allDataAvailable = true;
+                        for (int i = 0; i < inData.length; i++) {
+                            if (inData[i] == null) {
+                                allDataAvailable = false;
+                            }
+                        }
+                        if (allDataAvailable) {
+                            if (ncState.equals(State.MARKEDFOREXEC)) {
+                                // Important, QUEUED does not mean the 
+                                // node is already executing!
+                                nc.queueAsNodeContainer(inData);
+                            } else {
+                                assert ncState.equals(State.UNCONFIGURED_MARKEDFOREXEC);
+                                // this means that all predecessors provide data
+                                // (are executed) but we still could not configure
+                                // the node: remove all (subsequent) marks!
+                                disableNodeForExecution(nc.getID());
+                            }
+                        }
+                    }
                     break;
                 default:
                     throw new IllegalStateException("Wrong state in configure"
@@ -2166,7 +2178,7 @@ public final class WorkflowManager extends NodeContainer {
                 }
             }
         }
-        assert resultList.size() == m_nodes.size() : "Did not vist all nodes";
+        assert resultList.size() == m_nodes.size() : "Did not visit all nodes";
         return resultList;
     }
 
