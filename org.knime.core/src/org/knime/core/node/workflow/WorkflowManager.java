@@ -2326,10 +2326,10 @@ public final class WorkflowManager extends NodeContainer {
         synchronized (ROOT.m_workflowMutex) {
             NodeID newID = ROOT.createUniqueID();
             manager = ROOT.createSubWorkflow(persistor, newID);
+            ROOT.addNodeContainer(manager);
             synchronized (manager.m_workflowMutex) {
                 result.addError(manager.loadContent(persistor, loadID, loadExec));
             }
-            ROOT.addNodeContainer(manager);
         }
         BufferedDataTable.clearRepository(loadID);
         exec.setProgress(1.0);
