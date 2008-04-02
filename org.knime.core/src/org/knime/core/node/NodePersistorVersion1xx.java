@@ -155,6 +155,10 @@ public class NodePersistorVersion1xx implements NodePersistor {
                             node, settings, execPort, loadID, i, tblRep);
                 } else {
                     object = loadModelContent(node, settings, execPort, i);
+                    // no separate spec for models in 1.x.x
+                    if (object != null) {
+                        setPortObjectSpec(i, object.getSpec());
+                    }
                 }
                 setPortObject(i, object);
             }
