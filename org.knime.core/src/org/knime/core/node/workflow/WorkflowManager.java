@@ -1318,9 +1318,13 @@ public final class WorkflowManager extends NodeContainer {
      * @return true if the node can safely be reset.
      */
     public boolean canResetNode(final NodeID nodeID) {
+        NodeContainer nc = m_nodes.get(nodeID);
+        if (nc == null) {
+            return false;
+        }
         // (a) this node is executed
         // (b) no successors is running or queued.
-        return (this.getState() == NodeContainer.State.EXECUTED)
+        return (nc.getState() == NodeContainer.State.EXECUTED)
                && (successorsResetable(nodeID));
     }
 
@@ -1339,7 +1343,7 @@ public final class WorkflowManager extends NodeContainer {
         }
         // else it's a node inside the WFM
         for (ConnectionContainer cc : m_connectionsBySource.get(nodeID)) {
-            NodeID succID = cc.getSource();
+            NodeID succID = cc.getDest();
             NodeContainer succNC = m_nodes.get(succID);
             State succState;
             if (succNC == null) {
@@ -2445,10 +2449,6 @@ public final class WorkflowManager extends NodeContainer {
             exec.setMessage("Loading " + cont.getNameWithID());
             subResult.addError(cont.loadContent(
                     containerPersistor, loadID, sub2));
-            if (subResult.hasErrors()) {
-                loadResult.addError("Errors reading node \"" 
-                        + cont.getNameWithID() + "\":", subResult);
-            }
             sub2.setProgress(1.0);
 
             boolean hasPredecessorFailed = false;
@@ -2469,10 +2469,19 @@ public final class WorkflowManager extends NodeContainer {
                 if (Arrays.asList(inData).contains(null)) {
                     needsReset = true;
                 }
-                PortObjectSpec[] inSpecs = 
-                    new PortObjectSpec[cont.getNrInPorts()];
-                assembleInputSpecs(bfsID, inSpecs);
-                if (Arrays.asList(inSpecs).contains(null)) {
+            }
+            if (isExecuted && !needsReset) {
+                boolean allPortsFilled = true;
+                for (int i = 0; i < cont.getNrOutPorts(); i++) {
+                    NodeOutPort p = cont.getOutPort(i);
+                    if (p.getPortObject() == null 
+                            || p.getPortObjectSpec() == null) {
+                        allPortsFilled = false;
+                    }
+                }
+                if (!allPortsFilled) {
+                    subResult.addError("Loaded as " + State.EXECUTED 
+                            + " but not all outports have data");
                     needsReset = true;
                 }
             }
@@ -2481,6 +2490,10 @@ public final class WorkflowManager extends NodeContainer {
             }
             if (!hasPredecessorFailed && needsReset) {
                 needConfigurationNodes.add(bfsID);
+            }
+            if (subResult.hasErrors()) {
+                loadResult.addError("Errors reading node \"" 
+                        + cont.getNameWithID() + "\":", subResult);
             }
         }
         // switching to list interface here in order to reverse the ordering
