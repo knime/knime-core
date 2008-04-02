@@ -2469,6 +2469,12 @@ public final class WorkflowManager extends NodeContainer {
                 if (Arrays.asList(inData).contains(null)) {
                     needsReset = true;
                 }
+                PortObjectSpec[] inSpecs = 
+                    new PortObjectSpec[cont.getNrInPorts()];
+                assembleInputSpecs(bfsID, inSpecs);
+                if (Arrays.asList(inSpecs).contains(null)) {
+                    needsReset = true;
+                }
             }
             if (needsReset) {
                 failedNodes.add(bfsID);
