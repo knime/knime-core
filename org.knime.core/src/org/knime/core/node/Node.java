@@ -285,10 +285,6 @@ public final class Node {
             }
             result.addError(error);
         }
-        for (int i = 0; i < getNrOutPorts(); i++) {
-            m_outputs[i].spec = loader.getPortObjectSpec(i);
-            m_outputs[i].object = loader.getPortObject(i);
-        }
         ReferencedFile internDirRef = loader.getNodeInternDirectory();
         if (internDirRef != null) {
             internDirRef.lock();
@@ -315,6 +311,13 @@ public final class Node {
         }
         if (m_message != null) {
             notifyMessageListeners(m_message);
+        }
+        for (int i = 0; i < getNrOutPorts(); i++) {
+            m_outputs[i].spec = loader.getPortObjectSpec(i);
+            m_outputs[i].object = loader.getPortObject(i);
+            if (m_outputs[i].object != null) {
+                m_outputs[i].hiliteHdl = m_model.getOutHiLiteHandler(i);
+            }
         }
         exec.setProgress(1.0);
         return result;
