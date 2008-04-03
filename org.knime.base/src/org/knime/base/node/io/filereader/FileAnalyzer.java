@@ -1212,6 +1212,27 @@ public final class FileAnalyzer {
             exec.setProgress("Guessing column separator");
             exec.setProgress(0.0);
 
+            // Start with a semicolon delimiter. This way we catch the German
+            // version of CSV files (they use semicolons, because comma is the
+            // decimal separator - which might not yet be specified by the user)
+            //
+            if ((userSettings.getThousandsSeparator() != ';')
+                    && (userSettings.getDecimalSeparator() != ';')) {
+                ExecutionMonitor subExec = createSubExecWithRemainder(exec);
+                try {
+                    result.removeAllDelimiters();
+                    // make sure '\n' is a row delimiter. Always.
+                    result.addRowDelimiter("\n", true);
+                    result.addDelimiterPattern(";", false, false, false);
+
+                    if (testDelimiterSettingsSetColNum(result, subExec)) {
+                        return;
+                    }
+                } catch (IllegalArgumentException iae) {
+                    // seems we've added ';' as comment before - alright then.
+                }
+            }
+
             //
             // Try out comma delimiter
             // - but only if its not the decimal or thousand separator
@@ -1292,27 +1313,6 @@ public final class FileAnalyzer {
                     }
                 } catch (IllegalArgumentException iae) {
                     // seems we've added ' ' as comment before - alright then.
-                }
-            }
-
-            //
-            // now also try the semicolon separated columns, if
-            // it's not already a single line comment character
-            //
-            if ((userSettings.getThousandsSeparator() != ';')
-                    && (userSettings.getDecimalSeparator() != ';')) {
-                ExecutionMonitor subExec = createSubExecWithRemainder(exec);
-                try {
-                    result.removeAllDelimiters();
-                    // make sure '\n' is a row delimiter. Always.
-                    result.addRowDelimiter("\n", true);
-                    result.addDelimiterPattern(";", false, false, false);
-
-                    if (testDelimiterSettingsSetColNum(result, subExec)) {
-                        return;
-                    }
-                } catch (IllegalArgumentException iae) {
-                    // seems we've added ';' as comment before - alright then.
                 }
             }
 
@@ -1438,13 +1438,19 @@ public final class FileAnalyzer {
                                 // we could fill up to this number with empty
                                 // tokens
                                 maxNumOfCols = columns;
+                                if (numOfCols > 1) {
+                                    // if we get more than one col settings
+                                    // look reasonable
+                                    useSettings = true;
+                                }
                             } else {
                                 numOfCols = columns;
-                            }
-                            if (numOfCols > 1) {
-                                // if we get more than one col settings look
-                                // reasonable
-                                useSettings = true;
+                                if (numOfCols <= 1) {
+                                    // we don't need this delimiter if we put
+                                    // everything in one column
+                                    useSettings = false;
+                                    break;
+                                }
                             }
                         } else {
                             if (settings.ignoreEmptyTokensAtEndOfRow()) {
@@ -1471,6 +1477,9 @@ public final class FileAnalyzer {
                                 if ((columns - consEmptyTokens) > numOfCols) {
                                     // Adjust the number of "hard" columns
                                     numOfCols = columns - consEmptyTokens;
+                                    if (numOfCols > 1) {
+                                        useSettings = true;
+                                    }
                                 }
                                 // "hard" columns must be less than the soft
                                 // cols
