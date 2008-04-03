@@ -26,7 +26,6 @@ package org.knime.workbench.editor2.commands;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.commands.Command;
-import org.knime.core.node.NodeLogger;
 import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
 import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
@@ -67,8 +66,6 @@ public class ChangeWorkflowPortBarCommand extends Command {
     @Override
     public boolean canExecute() {
         Dimension min = m_bar.getFigure().getMinimumSize();
-        NodeLogger.getLogger(ChangeWorkflowPortBarCommand.class).debug(
-                "min size: " + min);
         if (m_newBounds.width < min.width 
                 || m_newBounds.height < min.height) {
             return false;
