@@ -549,9 +549,6 @@ public abstract class GenericNodeModel {
     }
 
     /**
-     * This method is called by the corresponding <code>Node</code> in order
-     * to set the <code>HiLiteHandler</code> for the given input port.
-     *
      * <p>This implementation is empty. Subclasses may override this method
      * in order to be informed when the hilite handler changes at the inport,
      * e.g. when the node (or an preceding node) is newly connected.
@@ -563,6 +560,7 @@ public abstract class GenericNodeModel {
      * @throws IndexOutOfBoundsException If the <code>inIndex</code> is not in
      *          the range of inputs.
      */
+    //TODO refactor - terrible name! This is a notification really!
     protected void setInHiLiteHandler(final int inIndex,
             final HiLiteHandler hiLiteHdl) {
         assert inIndex >= 0;
@@ -572,12 +570,20 @@ public abstract class GenericNodeModel {
     /**
      * Sets a new <code>HiLiteHandler</code> for the given input.
      *
+     * This method is called by the corresponding <code>Node</code> in order
+     * to set the <code>HiLiteHandler</code> for the given input port.
+     *
      * @param in The input index.
      * @param hdl The new <code>HiLiteHandler</code>.
      *
      * @see #setInHiLiteHandler(int, HiLiteHandler)
      */
     final void setNewInHiLiteHandler(final int in, final HiLiteHandler hdl) {
+        if (m_inHiLiteHdls[in] == hdl) {
+            // only do something (calls notification and state change!)
+            // if there really is a new HiLiteHandler.
+            return;
+        }
         m_inHiLiteHdls[in] = hdl;
         setInHiLiteHandler(in, hdl);
         stateChanged();

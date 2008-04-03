@@ -47,6 +47,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.GenericNodeFactory.NodeType;
+import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.w3c.dom.Element;
 
@@ -168,6 +169,14 @@ public final class SingleNodeContainer extends NodeContainer
 
     /* ------------------ Views ---------------- */
 
+    /**
+     * Set a new HiLiteHandler for an incoming connection.
+     * 
+     */
+    void setInHiLiteHandler(final int index, final HiLiteHandler hdl) {
+        m_node.setInHiLiteHandler(index, hdl);
+    }
+    
     /** {@inheritDoc} */
     @Override
     public GenericNodeView<GenericNodeModel> getView(final int i) {

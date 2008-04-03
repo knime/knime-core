@@ -93,18 +93,7 @@ implements NodeOutPort {
      * {@inheritDoc}
      */
     public HiLiteHandler getHiLiteHandler() {
-        return m_snc.getNode().getHiLiteHandler(getPortIndex());
-    }
-
-    /**
-     * Sets a new hilite handler in the port. The port will notify all
-     * connected input ports of a really new (i.e. not equal) hightlight handler
-     * available.
-     *
-     * @param hiLiteHdl The new HiLiteHandler for this port.
-     */
-    void setHiLiteHandler(final HiLiteHandler hiLiteHdl) {
-        m_snc.getNode().setHiLiteHandler(getPortIndex(), hiLiteHdl);
+        return m_snc.getNode().getOutputHiLiteHandler(getPortIndex());
     }
 
     /**

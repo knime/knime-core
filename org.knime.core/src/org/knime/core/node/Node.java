@@ -496,14 +496,15 @@ public final class Node {
         return m_outputs[index].object;
     }
     
-    public HiLiteHandler getHiLiteHandler(final int index) {
+    public HiLiteHandler getOutputHiLiteHandler(final int index) {
         return m_outputs[index].hiliteHdl;
     }
     
-    public void setHiLiteHandler(final int index, final HiLiteHandler hdl) {
-        m_outputs[index].hiliteHdl = hdl;
+    public void setInHiLiteHandler(final int index, final HiLiteHandler hdl) {
+        m_model.setNewInHiLiteHandler(index, hdl);
     }
-    
+
+  
     public ScopeObjectStack getScopeObjectStack(final int index) {
         return m_outputs[index].scopeStackContainer;
     }
@@ -676,7 +677,7 @@ public final class Node {
                                 + ", " + "actual: "
                                 + newOutData[i].getClass().getName() + ")");
 
-                // TODO: is this redunant double checking?
+                // TODO: is this redundant double checking?
                 m_message =
                         new NodeMessage(NodeMessage.Type.ERROR,
                                 "Connection Error: Mismatch"
@@ -687,7 +688,8 @@ public final class Node {
             }
         }
 
-        // spread the newly available PortObjects to the successors
+        // spread the newly available PortObjects and HiLiteHandlers
+        // to the successors
         for (int p = 0; p < getNrOutPorts(); p++) {
             if (newOutData[p] instanceof BufferedDataTable) {
                 BufferedDataTable thisTable = (BufferedDataTable)newOutData[p];

@@ -62,6 +62,7 @@ import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.PortType;
 import org.knime.core.node.GenericNodeFactory.NodeType;
+import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
@@ -1104,6 +1105,7 @@ public final class WorkflowManager extends NodeContainer {
         configureNodeAndSuccessors(this.getID(), false, false);
         // compare old and new specs
         boolean specsChanged = false;
+        // TODO check also Stack and HiLiteHandlers!!!!!!!
         for (int i = 0; i < prevSpecs.length; i++) {
             PortObjectSpec newSpec =
                     getOutPort(i).getPortObjectSpec();
@@ -1974,9 +1976,25 @@ public final class WorkflowManager extends NodeContainer {
                             new ScopeObjectStack(currNode, scscs);
                         snc.setScopeObjectStack(scsc);
                     }
+                    // update HiLiteHandlers on inports of SNC only
+                    // TODO think about it... happens magically
+                    if (nc instanceof SingleNodeContainer) {
+                        SingleNodeContainer snc = (SingleNodeContainer)nc;
+                        NodeOutPort[] incomingPorts = assemblePredecessorOutPorts(nc.getID());
+                        for (int i = 0; i < incomingPorts.length; i++) {
+                            HiLiteHandler hdl = incomingPorts[i].getHiLiteHandler();
+                            snc.setInHiLiteHandler(i, hdl);
+                        }
+                    }
+                    // remember HiLiteHandler on OUTPORTS of all nodes!
+                    HiLiteHandler[] oldHdl = new HiLiteHandler[getNrOutPorts()];
+                    for (int i = 0; i < getNrOutPorts(); i++) {
+                        oldHdl[i] = nc.getOutPort(i).getHiLiteHandler();
+                    }
                     // configure node itself
                     boolean outputSpecsChanged
                               = nc.configureAsNodeContainer(inSpecs);
+                    // check if ScopeContextStacks have changed
                     boolean stackChanged = false;
                     if (nc instanceof SingleNodeContainer) {
                         SingleNodeContainer snc = (SingleNodeContainer)nc;
@@ -1985,7 +2003,14 @@ public final class WorkflowManager extends NodeContainer {
                           || (oldSOS != null && !oldSOS.isEmpty());
 //                            stackChanged = snc.getScopeObjectStack().equals(old_sos);
                     }
-                    if (outputSpecsChanged || stackChanged) {
+                    // check if HiLiteHandlers have changed
+                    boolean hiLiteHdlsChanged = false;
+                    for (int i = 0; i < getNrOutPorts(); i++) {
+                        HiLiteHandler hdl = nc.getOutPort(i).getHiLiteHandler();
+                        hiLiteHdlsChanged |= (hdl != oldHdl[i]);
+                    }
+                    if (outputSpecsChanged || stackChanged
+                            || hiLiteHdlsChanged) {
                         freshlyConfiguredNodes.add(nc.getID());
                     }
                     if (nc.getState().equals(State.UNCONFIGURED_MARKEDFOREXEC)
