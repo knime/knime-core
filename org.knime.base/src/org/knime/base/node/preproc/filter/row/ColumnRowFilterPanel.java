@@ -36,7 +36,9 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -71,7 +73,8 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
  *
  * @author Peter Ohl, University of Konstanz
  */
-public class ColumnRowFilterPanel extends RowFilterPanel {
+public class ColumnRowFilterPanel extends RowFilterPanel implements
+        ItemListener {
 
     /** object version for serialization. */
     static final long serialVersionUID = 1;
@@ -94,7 +97,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
 
     private JLabel m_regLabel;
 
-    private JTextField m_regExpr;
+    private JComboBox m_regExpr;
 
     private JCheckBox m_caseSensitive;
 
@@ -307,8 +310,12 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         });
         /* the regular expression stuff */
         m_regLabel = new JLabel("pattern:");
-        m_regExpr = new JTextField();
-        m_regExpr.getDocument().addDocumentListener(new DocumentListener() {
+        // it's important that the column selection is created before!
+        m_regExpr = new JComboBox(getPossibleValuesOfSelectedColumn());
+        m_regExpr.setEditable(true);
+        m_regExpr.setSelectedItem("");
+        JTextField ed = (JTextField)m_regExpr.getEditor().getEditorComponent();
+        ed.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(final DocumentEvent e) {
                 regExprChanged();
             }
@@ -321,6 +328,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
                 regExprChanged();
             }
         });
+        m_regExpr.addItemListener(this);
         m_caseSensitive = new JCheckBox("case sensitive match");
         m_isRegExpr = new JCheckBox("regular expression");
         m_hasWildCards = new JCheckBox("contains wild cards");
@@ -355,6 +363,54 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
             setErrMsg("configure (or execute) predecessor node"
                     + " to enable range checking");
         }
+    }
+
+    /**
+     * The item change listener for the regular expression box. Needs to be
+     * re-registered from time to time.
+     *
+     * @param e the item event.
+     */
+    public void itemStateChanged(final ItemEvent e) {
+        if (e.getSource() == m_regExpr) {
+            if (m_regExpr.getSelectedIndex() >= 0) {
+                // if user selected a possible value, it must match exactly
+                m_caseSensitive.setSelected(true);
+                m_isRegExpr.setSelected(false);
+                m_hasWildCards.setSelected(false);
+                regExprChanged();
+            }
+        }
+    }
+
+    /**
+     * For the selected column (from the combobox) it get the possible values,
+     * and returns a vector with the string representations for them. If no
+     * possible values are specified, an empty vector is returned.
+     *
+     * @return it returns a vector with the string representations of the
+     *         currently selected column. If that's not possible (because no
+     *         column is selected, or the selected one has no possible values)
+     *         it returns an empty vector.
+     */
+    protected Vector<String> getPossibleValuesOfSelectedColumn() {
+        Vector<String> result = new Vector<String>();
+        String col = m_colCombo.getSelectedColumn();
+        if (col == null) {
+            return result;
+        }
+        DataColumnSpec spec = m_tSpec.getColumnSpec(col);
+        if (spec == null) {
+            return result;
+        }
+        if (!spec.getDomain().hasValues()) {
+            return result;
+        }
+        // convert all data cells to string representations
+        for (DataCell v : spec.getDomain().getValues()) {
+            result.add(v.toString());
+        }
+        return result;
     }
 
     /**
@@ -456,23 +512,40 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
      * Called when the user selects a new column.
      */
     protected void selectedColChanged() {
-        // we trigger 'boundsChanged' to get bounds checked against the new
-        // column type
+
+        /*
+         * fill the regExpr combo with the new possible values
+         */
+        // de-register the item listener - we are changing the selection
+        m_regExpr.removeItemListener(this);
+
+        String oldVal = (String)m_regExpr.getEditor().getItem();
+        m_regExpr.setModel(new DefaultComboBoxModel(
+                getPossibleValuesOfSelectedColumn()));
+        m_regExpr.setSelectedItem(oldVal);
+
+        // register us again with the regExpr box
+        m_regExpr.addItemListener(this);
+        regExprChanged();
+
+        /*
+         * trigger bounds check
+         */
         boundsChanged();
     }
 
     /**
-     * Called when the user changes the regular expression.
+     * Checks the entered (or selected) regular expression and sets an error.
      */
     protected void regExprChanged() {
         setErrMsg("");
-        if (m_regExpr.getText().length() <= 0) {
+        if (((String)m_regExpr.getEditor().getItem()).length() <= 0) {
             setErrMsg("Enter valid pattern");
             validate();
             return;
         }
         try {
-            String pattern = m_regExpr.getText();
+            String pattern = (String)m_regExpr.getEditor().getItem();
             if (m_hasWildCards.isSelected()) {
                 pattern = WildcardMatcher.wildcardToRegex(pattern);
                 Pattern.compile(pattern);
@@ -510,7 +583,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
                 StringCompareRowFilter f = (StringCompareRowFilter)filter;
 
                 m_useRegExpr.setSelected(true);
-                m_regExpr.setText(f.getPattern());
+                m_regExpr.setSelectedItem(f.getPattern());
                 m_isRegExpr.setSelected(f.getIsRegExpr());
                 m_hasWildCards.setSelected(f.getHasWildcards());
                 m_caseSensitive.setSelected(f.getCaseSensitive());
@@ -565,7 +638,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
             }
         } else {
             m_useRegExpr.setSelected(true);
-            m_regExpr.setText(f.getRegExpr());
+            m_regExpr.setSelectedItem(f.getRegExpr());
             m_caseSensitive.setSelected(f.caseSensitiveMatch());
         }
 
@@ -604,12 +677,13 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         }
 
         if (m_useRegExpr.isSelected()) {
-            if (m_regExpr.getText().length() <= 0) {
-                setErrMsg("Enter a valid regular expression");
+            String regExpr = (String)m_regExpr.getEditor().getItem();
+            if (regExpr.length() <= 0) {
+                setErrMsg("Enter a valid pattern to match");
                 validate();
                 throw new InvalidSettingsException(getErrMsg());
             }
-            return new StringCompareRowFilter(m_regExpr.getText(), colName,
+            return new StringCompareRowFilter(regExpr, colName,
                     include, m_caseSensitive.isSelected(), m_hasWildCards
                             .isSelected(), m_isRegExpr.isSelected());
         }
