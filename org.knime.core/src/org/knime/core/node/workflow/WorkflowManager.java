@@ -1056,7 +1056,7 @@ public final class WorkflowManager extends NodeContainer {
             boolean canBeMarked = true;
             for (NodeOutPort portIt : predPorts) {
                 if (portIt == null || (!portIt.inProgress() 
-                        && portIt.getPortObject() != null)) {
+                       && portIt.getPortObject() == null)) {
                     canBeMarked = false;
                 }
             }
@@ -1074,6 +1074,10 @@ public final class WorkflowManager extends NodeContainer {
      * @return whether successfully queued.
      */
     private boolean queueIfQueuable(final NodeContainer nc) {
+        if (nc instanceof WorkflowManager) {
+            return false;
+        }
+        assert Thread.holdsLock(m_workflowMutex);
         switch (nc.getState()) {
         case UNCONFIGURED_MARKEDFOREXEC:
         case MARKEDFOREXEC:
@@ -1118,10 +1122,11 @@ public final class WorkflowManager extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     boolean configureAsNodeContainer(final PortObjectSpec[] specs) {
-        // TODO review: we do need to reset our internals otherwise 
+        // TODO review: do we need to reset our internals here? (otherwise 
         // executed nodes (which are contained in this WFM) will complain
-        // that they can't be configured without prior reset
-        resetSuccessors(getID());
+        // that they can't be configured without prior reset)
+        // however, triggering reset here will reset the MARK-status?
+//        resetSuccessors(getID());
         // remember old specs
         PortObjectSpec[] prevSpecs =
                 new PortObjectSpec[getNrOutPorts()];
@@ -1316,7 +1321,7 @@ public final class WorkflowManager extends NodeContainer {
             if (loopHeadNode != null) {
                 assert loopHeadNode.getState().equals(State.MARKEDFOREXEC);
                 boolean isSuccessfullyQueued = queueIfQueuable(loopHeadNode);
-                assert isSuccessfullyQueued: "Loop head can't be re-executed";
+                assert isSuccessfullyQueued : "Loop head can't be re-executed";
             }
         }
     }
@@ -2418,10 +2423,10 @@ public final class WorkflowManager extends NodeContainer {
             NodeContainer cont = getNodeContainer(bfsID);
             boolean needsReset;
             switch (cont.getState()) {
-//            case IDLE:
-//            case UNCONFIGURED_MARKEDFOREXEC:
-//                needsReset = false;
-//                break;
+            case IDLE:
+            case UNCONFIGURED_MARKEDFOREXEC:
+                needsReset = false;
+                break;
             default:
                 // we reset everything which is not fully connected
                 needsReset = !isFullyConnected(bfsID);
@@ -2431,7 +2436,7 @@ public final class WorkflowManager extends NodeContainer {
             PortObject[] portObjects = new PortObject[predPorts.length];
             for (int i = 0; i < predPorts.length; i++) {
                 NodeOutPort p = predPorts[i];
-                if (false && cont instanceof SingleNodeContainer) {
+                if (cont instanceof SingleNodeContainer) {
                     SingleNodeContainer snc = (SingleNodeContainer)cont;
                     snc.setInHiLiteHandler(i, p.getHiLiteHandler());
                 }
@@ -2498,8 +2503,13 @@ public final class WorkflowManager extends NodeContainer {
         failedNodes = new ArrayList<NodeID>(failedNodes);
         Collections.reverse((List<NodeID>)failedNodes);
         for (NodeID failed : failedNodes) {
-            if (canResetNode(failed)) {
-                getNodeContainer(failed).resetAsNodeContainer();
+            NodeContainer nc = getNodeContainer(failed);
+            // TODO would like to use canResetNode() here but that returns false
+            // for meta nodes (configured), which contain executed nodes...
+            // (this solution should also be ok since we traverse backwards)
+            if (nc.getState().equals(State.EXECUTED) 
+                    || nc instanceof WorkflowManager) {
+                nc.resetAsNodeContainer();
             }
         }
         for (NodeID id : needConfigurationNodes) {
