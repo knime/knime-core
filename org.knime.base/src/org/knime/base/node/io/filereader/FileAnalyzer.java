@@ -1214,90 +1214,106 @@ public final class FileAnalyzer {
 
             //
             // Try out comma delimiter
+            // - but only if its not the decimal or thousand separator
             //
-            // make sure '\n' is a row delimiter. Always.
-            ExecutionMonitor subExec = createSubExecWithRemainder(exec);
-            try {
-                result.addRowDelimiter("\n", true);
-                result.addDelimiterPattern(",", false, false, false);
+            if ((userSettings.getThousandsSeparator() != ',')
+                    && (userSettings.getDecimalSeparator() != ',')) {
+                // make sure '\n' is a row delimiter. Always.
+                ExecutionMonitor subExec = createSubExecWithRemainder(exec);
+                try {
+                    result.addRowDelimiter("\n", true);
+                    result.addDelimiterPattern(",", false, false, false);
 
-                if (testDelimiterSettingsSetColNum(result, subExec)) {
-                    return;
+                    if (testDelimiterSettingsSetColNum(result, subExec)) {
+                        return;
+                    }
+                } catch (IllegalArgumentException iae) {
+                    // seems they've added ',' as comment before - alright then.
                 }
-            } catch (IllegalArgumentException iae) {
-                // seems they've added ',' as comment before - alright then.
             }
-
             //
             // try tab separated columns
+            // - but only if its not the decimal or thousand separator
             //
-            subExec = createSubExecWithRemainder(exec);
-            try {
-                result.removeAllDelimiters();
-                // make sure '\n' is a row delimiter. Always.
-                result.addRowDelimiter("\n", true);
+            if ((userSettings.getThousandsSeparator() != '\t')
+                    && (userSettings.getDecimalSeparator() != '\t')) {
+                ExecutionMonitor subExec = createSubExecWithRemainder(exec);
+                try {
+                    result.removeAllDelimiters();
+                    // make sure '\n' is a row delimiter. Always.
+                    result.addRowDelimiter("\n", true);
 
-                result.addDelimiterPattern("\t", false, false, false);
+                    result.addDelimiterPattern("\t", false, false, false);
 
-                if (testDelimiterSettingsSetColNum(result, subExec)) {
-                    return;
+                    if (testDelimiterSettingsSetColNum(result, subExec)) {
+                        return;
+                    }
+                } catch (IllegalArgumentException iae) {
+                    // seems they've added '\t' as comment before - alright
+                    // then.
                 }
-            } catch (IllegalArgumentException iae) {
-                // seems they've added '\t' as comment before - alright then.
             }
-
+            //
             // Try space, ignoring additional tabs at the end of each line
-            subExec = createSubExecWithRemainder(exec);
-            try {
-                result.removeAllDelimiters();
-                // make sure '\n' is a row delimiter. Always.
-                result.addRowDelimiter("\n", true);
-
-                result.addDelimiterPattern(" ", true, false, false);
-                result.setIgnoreEmptyTokensAtEndOfRow(true);
-
-                if (testDelimiterSettingsSetColNum(result, subExec)) {
-                    return;
-                }
-            } catch (IllegalArgumentException iae) {
-                // seems they've added ' ' as comment before - alright then.
-            }
-            // restore it to false
-            result.setIgnoreEmptyTokensAtEndOfRow(false);
-
+            // - but only if its not the decimal or thousand separator
             //
-            // try space separated columns
-            //
-            subExec = createSubExecWithRemainder(exec);
-            try {
-                result.removeAllDelimiters();
-                // make sure '\n' is a row delimiter. Always.
-                result.addRowDelimiter("\n", true);
-                result.addDelimiterPattern(" ", true, false, false);
+            if ((userSettings.getThousandsSeparator() != ' ')
+                    && (userSettings.getDecimalSeparator() != ' ')) {
+                ExecutionMonitor subExec = createSubExecWithRemainder(exec);
+                try {
+                    result.removeAllDelimiters();
+                    // make sure '\n' is a row delimiter. Always.
+                    result.addRowDelimiter("\n", true);
 
-                if (testDelimiterSettingsSetColNum(result, subExec)) {
-                    return;
+                    result.addDelimiterPattern(" ", true, false, false);
+                    result.setIgnoreEmptyTokensAtEndOfRow(true);
+
+                    if (testDelimiterSettingsSetColNum(result, subExec)) {
+                        return;
+                    }
+                } catch (IllegalArgumentException iae) {
+                    // seems they've added ' ' as comment before - alright then.
                 }
-            } catch (IllegalArgumentException iae) {
-                // seems we've added ' ' as comment before - alright then.
+                // restore it to false
+                result.setIgnoreEmptyTokensAtEndOfRow(false);
+
+                //
+                // try space separated columns
+                //
+                subExec = createSubExecWithRemainder(exec);
+                try {
+                    result.removeAllDelimiters();
+                    // make sure '\n' is a row delimiter. Always.
+                    result.addRowDelimiter("\n", true);
+                    result.addDelimiterPattern(" ", true, false, false);
+
+                    if (testDelimiterSettingsSetColNum(result, subExec)) {
+                        return;
+                    }
+                } catch (IllegalArgumentException iae) {
+                    // seems we've added ' ' as comment before - alright then.
+                }
             }
 
             //
             // now also try the semicolon separated columns, if
             // it's not already a single line comment character
             //
-            subExec = createSubExecWithRemainder(exec);
-            try {
-                result.removeAllDelimiters();
-                // make sure '\n' is a row delimiter. Always.
-                result.addRowDelimiter("\n", true);
-                result.addDelimiterPattern(";", false, false, false);
+            if ((userSettings.getThousandsSeparator() != ';')
+                    && (userSettings.getDecimalSeparator() != ';')) {
+                ExecutionMonitor subExec = createSubExecWithRemainder(exec);
+                try {
+                    result.removeAllDelimiters();
+                    // make sure '\n' is a row delimiter. Always.
+                    result.addRowDelimiter("\n", true);
+                    result.addDelimiterPattern(";", false, false, false);
 
-                if (testDelimiterSettingsSetColNum(result, subExec)) {
-                    return;
+                    if (testDelimiterSettingsSetColNum(result, subExec)) {
+                        return;
+                    }
+                } catch (IllegalArgumentException iae) {
+                    // seems we've added ';' as comment before - alright then.
                 }
-            } catch (IllegalArgumentException iae) {
-                // seems we've added ';' as comment before - alright then.
             }
 
             // well - none of the above settings made sense - return without
