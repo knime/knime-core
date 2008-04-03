@@ -113,11 +113,6 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
      */
     @Override
     protected void initialize() {
-        if (SUPPLIER.m_isDefined != null) {
-            getPreferenceStore().setValue(
-                    PreferenceConstants.P_MASTER_KEY_DEFINED, 
-                    SUPPLIER.m_isDefined);
-        }
         super.initialize();
         m_masterKey.setStringValue(SUPPLIER.m_lastMasterKey);
         m_masterKeyConfirm.setStringValue(SUPPLIER.m_lastMasterKey);
@@ -206,7 +201,6 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
             + "obviously only be decrypted with the same key. \n\n";
 
     private static String openDialogAndReadKey() {
-        try {
         Shell shell = Display.getDefault().getActiveShell();
         if (shell == null) {
             shell = new Shell();
@@ -214,10 +208,6 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
         MasterKeyDialog dialog = new MasterKeyDialog(shell); 
         dialog.open();
         return dialog.getMasterKey();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
     }
     
 
