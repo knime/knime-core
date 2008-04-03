@@ -1451,6 +1451,7 @@ public final class FileAnalyzer {
                                     useSettings = false;
                                     break;
                                 }
+                                useSettings = true;
                             }
                         } else {
                             if (settings.ignoreEmptyTokensAtEndOfRow()) {
