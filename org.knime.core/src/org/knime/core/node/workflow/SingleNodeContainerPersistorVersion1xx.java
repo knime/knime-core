@@ -29,10 +29,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.GenericNodeFactory;
@@ -151,7 +153,7 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
     }
     
     /** {@inheritDoc} */
-    public LoadResult loadNodeContainer(final int loadID, 
+    public LoadResult loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep, 
             final ExecutionMonitor exec) throws InvalidSettingsException, 
             CanceledExecutionException, IOException {
         LoadResult result = new LoadResult();
@@ -171,7 +173,7 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
         NodePersistorVersion1xx nodePersistor = createNodePersistor();
         try {
             LoadResult nodeLoadResult = nodePersistor.load(
-                    m_node, nodeFile, exec, loadID, m_globalTableRepository);
+                    m_node, nodeFile, exec, tblRep, m_globalTableRepository);
             result.addError(nodeLoadResult);
         } catch (final InvalidSettingsException e) {
             String error = "Error loading node content: " + e.getMessage();

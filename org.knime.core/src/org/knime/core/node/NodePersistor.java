@@ -26,6 +26,7 @@ package org.knime.core.node;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
@@ -73,7 +74,7 @@ public interface NodePersistor {
     static final String CFG_MEMORY_POLICY = "memory_policy";
 
     LoadResult load(Node node, final ReferencedFile nodeFile, ExecutionMonitor execMon,
-            int loadID, HashMap<Integer, ContainerTable> tblRep)
+            Map<Integer, BufferedDataTable> loadTblRep, HashMap<Integer, ContainerTable> tblRep)
             throws IOException, InvalidSettingsException, CanceledExecutionException;
     
     boolean needsResetAfterLoad();

@@ -25,8 +25,10 @@
 package org.knime.core.node.workflow;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -50,7 +52,7 @@ public interface NodeContainerPersistor {
             throws InvalidSettingsException, CanceledExecutionException,
             IOException;
 
-    LoadResult loadNodeContainer(final int loadID, final ExecutionMonitor exec)
+    LoadResult loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec)
             throws InvalidSettingsException, CanceledExecutionException,
             IOException;
 }

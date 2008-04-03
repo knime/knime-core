@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
@@ -564,7 +565,7 @@ public final class SingleNodeContainer extends NodeContainer
     /** {@inheritDoc} */
     @Override
     LoadResult loadContent(final NodeContainerPersistor nodePersistor,
-            final int loadID, ExecutionMonitor exec) throws CanceledExecutionException {
+            final Map<Integer, BufferedDataTable> tblRep, ExecutionMonitor exec) throws CanceledExecutionException {
         if (!(nodePersistor instanceof SingleNodeContainerPersistor)) {
             throw new IllegalStateException("Expected " 
                     + SingleNodeContainerPersistor.class.getSimpleName() 

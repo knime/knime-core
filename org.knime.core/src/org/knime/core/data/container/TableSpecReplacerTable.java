@@ -31,6 +31,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -105,7 +106,7 @@ public class TableSpecReplacerTable implements KnowsRowCountTable {
     
     /**
      * Does nothing.
-     * @see KnowsRowCountTable#putIntoTableRepository(HashMap)
+     * {@inheritDoc}
      */
     public void putIntoTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
@@ -113,7 +114,7 @@ public class TableSpecReplacerTable implements KnowsRowCountTable {
     
     /**
      * Does nothing.
-     * @see KnowsRowCountTable#removeFromTableRepository(HashMap)
+     * {@inheritDoc}
      */
     public void removeFromTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
@@ -124,20 +125,21 @@ public class TableSpecReplacerTable implements KnowsRowCountTable {
      * or before. Not intended to be used by node implementations.
      * @param f The file to read from.
      * @param s The settings to get meta information from.
-     * @param loadID The internal node id (to get the reference table from).
+     * @param tblRep The table repository
      * @return The resulting table.
      * @throws IOException If reading the file fails.
      * @throws InvalidSettingsException If reading the settings fails.
      */
     public static TableSpecReplacerTable load11x(
             final File f, final NodeSettingsRO s, 
-            final int loadID) throws IOException, InvalidSettingsException {
+            final Map<Integer, BufferedDataTable> tblRep) 
+        throws IOException, InvalidSettingsException {
         ZipFile zipFile = new ZipFile(f);
         InputStream in = new BufferedInputStream(
                 zipFile.getInputStream(new ZipEntry(ZIP_ENTRY_SPEC)));
         NodeSettingsRO specSettings = NodeSettings.loadFromXML(in);
         DataTableSpec newSpec = DataTableSpec.load(specSettings);
-        return load(s, newSpec, loadID);
+        return load(s, newSpec, tblRep);
     }
 
     /**
@@ -145,17 +147,18 @@ public class TableSpecReplacerTable implements KnowsRowCountTable {
      * or later. Not intended to be used by node implementations.
      * @param s The settings to get meta information from.
      * @param newSpec The new table spec.
-     * @param loadID The internal node id (to get the reference table from).
+     * @param tblRep The table repository
      * @return The resulting table.
      * @throws InvalidSettingsException If reading the settings fails.
      */
     public static TableSpecReplacerTable load(final NodeSettingsRO s, 
-            final DataTableSpec newSpec, final int loadID) 
+            final DataTableSpec newSpec, 
+            final Map<Integer, BufferedDataTable> tblRep) 
         throws InvalidSettingsException {
         NodeSettingsRO subSettings = s.getNodeSettings(CFG_INTERNAL_META);
         int refID = subSettings.getInt(CFG_REFERENCE_ID);
         BufferedDataTable reference = 
-            BufferedDataTable.getDataTable(loadID, refID);
+            BufferedDataTable.getDataTable(tblRep, refID);
         return new TableSpecReplacerTable(reference, newSpec);
     }
     

@@ -30,6 +30,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import org.knime.core.data.DataTableSpec;
@@ -134,7 +135,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
     
     protected void loadPorts(final Node node,
             final ExecutionMonitor execMon, final NodeSettingsRO settings,
-            final int loadID, final HashMap<Integer, ContainerTable> tblRep)
+            final Map<Integer, BufferedDataTable> loadTblRep, final HashMap<Integer, ContainerTable> tblRep)
             throws IOException, InvalidSettingsException,
             CanceledExecutionException {
         for (int i = 0; i < node.getNrOutPorts(); i++) {
@@ -153,7 +154,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
                 PortObject object;
                 if (isDataPort) {
                     object = loadBufferedDataTable(
-                            node, settings, execPort, loadID, i, tblRep);
+                            node, settings, execPort, loadTblRep, i, tblRep);
                 } else {
                     object = loadModelContent(node, settings, execPort, i);
                     // no separate spec for models in 1.x.x
@@ -169,7 +170,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
     
     private BufferedDataTable loadBufferedDataTable(final Node node,
             final NodeSettingsRO settings, final ExecutionMonitor execMon,
-            final int loadID, final int index,
+            final Map<Integer, BufferedDataTable> loadTblRep, final int index,
             final HashMap<Integer, ContainerTable> tblRep)
             throws InvalidSettingsException, IOException,
             CanceledExecutionException {
@@ -204,7 +205,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             // dir = /data/data_i
             ReferencedFile dirRef = new ReferencedFile(dataDirRef, dataName);
             BufferedDataTable t = BufferedDataTable.loadFromFile(
-                    dirRef, portSettings, execSubData, loadID,
+                    dirRef, portSettings, execSubData, loadTblRep,
                     // we didn't have blobs in 1.1.x
                     new HashMap<Integer, ContainerTable>());
             t.setOwnerRecursively(node);
@@ -226,7 +227,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             }
             BufferedDataTable t = BufferedDataTable.loadFromFile(dirRef,
                 /* ignored in 1.2.0+ */
-                null, execMon, loadID, tblRep);
+                null, execMon, loadTblRep, tblRep);
             t.setOwnerRecursively(node);
             return t;
         }
@@ -345,7 +346,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
     }
     
     public LoadResult load(Node node,
-            final ReferencedFile configFileRef, ExecutionMonitor exec, int loadID,
+            final ReferencedFile configFileRef, ExecutionMonitor exec, Map<Integer, BufferedDataTable> loadTblRep,
             HashMap<Integer, ContainerTable> tblRep) 
             throws InvalidSettingsException, IOException, CanceledExecutionException {
         LoadResult result = new LoadResult();
@@ -435,7 +436,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         try {
             ExecutionMonitor sub = 
                 loadExec.createSubProgress(1.0 - 1.0 / loadSteps);
-            loadPorts(node, sub, settings, loadID, tblRep);
+            loadPorts(node, sub, settings, loadTblRep, tblRep);
         } catch (Exception e) {
             if (!(e instanceof InvalidSettingsException)
                     && !(e instanceof IOException)) {

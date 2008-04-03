@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -127,14 +128,15 @@ public final class ConcatenateTable implements KnowsRowCountTable {
     }
     
     public static ConcatenateTable load(final NodeSettingsRO s, 
-            final DataTableSpec spec, final int loadID) 
+            final DataTableSpec spec, 
+            final Map<Integer, BufferedDataTable> tblRep) 
         throws InvalidSettingsException {
         NodeSettingsRO subSettings = s.getNodeSettings(CFG_INTERNAL_META);
         int[] referenceIDs = subSettings.getIntArray(CFG_REFERENCE_IDS);
         int rowCount = subSettings.getInt(CFG_ROW_COUNT);
         BufferedDataTable[] tables = new BufferedDataTable[referenceIDs.length];
         for (int i = 0; i < tables.length; i++) {
-            tables[i] = BufferedDataTable.getDataTable(loadID, referenceIDs[i]);
+            tables[i] = BufferedDataTable.getDataTable(tblRep, referenceIDs[i]);
         }
         return new ConcatenateTable(tables, spec, rowCount);
     }

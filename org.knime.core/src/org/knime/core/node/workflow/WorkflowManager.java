@@ -2312,10 +2312,8 @@ public final class WorkflowManager extends NodeContainer {
                 + "\" (version \"" + version + "\" with loader class \""
                 + persistor.getClass().getSimpleName() + "\")");
         // data files are loaded using a repository of reference tables;
-        // these lines serves to init the repository so nodes can put their data
-        // into this map, the repository is deleted when the loading is done
-        int loadID = System.identityHashCode(persistor);
-        BufferedDataTable.initRepository(loadID);
+        Map<Integer, BufferedDataTable> tblRep =
+            new HashMap<Integer, BufferedDataTable>();
         WorkflowLoadResult result = new WorkflowLoadResult();
         result.addError(persistor.preLoadNodeContainer(
                 workflowknimeRef, settings));
@@ -2323,7 +2321,7 @@ public final class WorkflowManager extends NodeContainer {
         ExecutionMonitor loadExec = exec.createSubProgress(0.9);
         exec.setMessage("Loading workflow content from \"" 
                 + directory.getAbsolutePath() + "\"");
-        result.addError(persistor.loadNodeContainer(loadID, contentExec));
+        result.addError(persistor.loadNodeContainer(tblRep, contentExec));
         contentExec.setProgress(1.0);
         WorkflowManager manager;
         exec.setMessage("Creating workflow instance");
@@ -2332,10 +2330,10 @@ public final class WorkflowManager extends NodeContainer {
             manager = ROOT.createSubWorkflow(persistor, newID);
             ROOT.addNodeContainer(manager);
             synchronized (manager.m_workflowMutex) {
-                result.addError(manager.loadContent(persistor, loadID, loadExec));
+                result.addError(manager.loadContent(
+                        persistor, tblRep, loadExec));
             }
         }
-        BufferedDataTable.clearRepository(loadID);
         exec.setProgress(1.0);
         result.setWorkflowManager(manager);
         LOGGER.debug("Successfully loaded content from \"" 
@@ -2347,7 +2345,7 @@ public final class WorkflowManager extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     LoadResult loadContent(final NodeContainerPersistor nodePersistor, 
-            final int loadID, final ExecutionMonitor exec) 
+            final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec) 
         throws CanceledExecutionException {
         if (!(nodePersistor instanceof WorkflowPersistor)) {
             throw new IllegalStateException("Expected " 
@@ -2436,7 +2434,7 @@ public final class WorkflowManager extends NodeContainer {
             PortObject[] portObjects = new PortObject[predPorts.length];
             for (int i = 0; i < predPorts.length; i++) {
                 NodeOutPort p = predPorts[i];
-                if (cont instanceof SingleNodeContainer) {
+                if (cont instanceof SingleNodeContainer && p != null) {
                     SingleNodeContainer snc = (SingleNodeContainer)cont;
                     snc.setInHiLiteHandler(i, p.getHiLiteHandler());
                 }
@@ -2452,7 +2450,7 @@ public final class WorkflowManager extends NodeContainer {
             LoadResult subResult = new LoadResult();
             try {
                 subResult.addError(
-                        containerPersistor.loadNodeContainer(loadID, sub1));
+                        containerPersistor.loadNodeContainer(tblRep, sub1));
             } catch (CanceledExecutionException e) {
                 throw e;
             } catch (Exception e) {
@@ -2470,7 +2468,7 @@ public final class WorkflowManager extends NodeContainer {
             sub1.setProgress(1.0);
             exec.setMessage("Loading " + cont.getNameWithID());
             subResult.addError(cont.loadContent(
-                    containerPersistor, loadID, sub2));
+                    containerPersistor, tblRep, sub2));
             sub2.setProgress(1.0);
 
             boolean hasPredecessorFailed = false;

@@ -39,6 +39,7 @@ import java.util.TreeMap;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -525,7 +526,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     }
     
     /** {@inheritDoc} */
-    public LoadResult loadNodeContainer(final int loadID, 
+    public LoadResult loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep, 
             final ExecutionMonitor exec) 
             throws CanceledExecutionException, IOException {
         if (m_workflowDir == null || m_workflowSett == null) {

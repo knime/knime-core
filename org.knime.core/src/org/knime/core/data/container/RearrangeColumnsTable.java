@@ -120,9 +120,7 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
      * @param f The file to read from the newly appended columns.
      * @param settings The settings containing the information how to assemble
      *         the table.
-     * @param loadID The load ID to get the reference table from the global
-     *         table repository. This is a random number that is generated
-     *         when the workbench loading starts.
+     * @param tblRep The table repository (only available during start)
      * @param spec The data table spec of the resulting table. This argument
      * is <code>null</code> when the data to restore is written using 
      * KNIME 1.1.x or before.
@@ -132,14 +130,15 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
      * @throws InvalidSettingsException If the settings are invalid.
      */
     public RearrangeColumnsTable(final ReferencedFile f, 
-            final NodeSettingsRO settings,
-            final int loadID, final DataTableSpec spec, final int tableID,
+            final NodeSettingsRO settings, 
+            final Map<Integer, BufferedDataTable> tblRep, 
+            final DataTableSpec spec, final int tableID,
             final HashMap<Integer, ContainerTable> bufferRep) 
         throws IOException, InvalidSettingsException {
         NodeSettingsRO subSettings = 
             settings.getNodeSettings(CFG_INTERNAL_META);
         int refTableID = subSettings.getInt(CFG_REFERENCE_ID);
-        m_reference = BufferedDataTable.getDataTable(loadID, refTableID);
+        m_reference = BufferedDataTable.getDataTable(tblRep, refTableID);
         m_map = subSettings.getIntArray(CFG_MAP);
         m_isFromRefTable = subSettings.getBooleanArray(CFG_FLAGS);
         DataColumnSpec[] appendColSpecs;

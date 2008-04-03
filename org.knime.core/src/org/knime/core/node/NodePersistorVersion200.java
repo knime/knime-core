@@ -269,7 +269,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     @Override
     protected void loadPorts(final Node node,
             final ExecutionMonitor exec, final NodeSettingsRO settings,
-            final int loadID, final HashMap<Integer, ContainerTable> tblRep)
+            final Map<Integer, BufferedDataTable> loadTblRep, final HashMap<Integer, ContainerTable> tblRep)
             throws IOException, InvalidSettingsException,
             CanceledExecutionException {
         if (node.getNrOutPorts() == 0 || node.isAutoExecutable()) {
@@ -294,7 +294,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     new ReferencedFile(getNodeDirectory(), portDirN);
                 subProgress.setMessage("Port " + index);
                 loadPort(node, portDir, singlePortSetting, 
-                        subProgress, index, loadID, tblRep);
+                        subProgress, index, loadTblRep, tblRep);
             }
             subProgress.setProgress(1.0);
         }
@@ -302,7 +302,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
     protected void loadPort(final Node node, final ReferencedFile portDir,
             final NodeSettingsRO settings, final ExecutionMonitor exec,
-            final int portIdx, final int loadID,
+            final int portIdx, final Map<Integer, BufferedDataTable> loadTblRep,
             final HashMap<Integer, ContainerTable> tblRep) throws IOException, 
             InvalidSettingsException, CanceledExecutionException {
         String specClass = settings.getString("port_spec_class");
@@ -324,7 +324,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                             getPortObjectClass().getName() + "\"");
             }
             if (objectClass != null) {
-                object = loadBufferedDataTable(portDir, exec, loadID, tblRep);
+                object = loadBufferedDataTable(portDir, exec, loadTblRep, tblRep);
                 ((BufferedDataTable)object).setOwnerRecursively(node);
                 spec = ((BufferedDataTable)object).getDataTableSpec();
             } else if (specClass != null) {
@@ -382,7 +382,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     // for adequate port types (handled above)
                     // we leave the code here for future versions..
                     object = loadBufferedDataTable(
-                            objectDirRef, exec, loadID, tblRep);
+                            objectDirRef, exec, loadTblRep, tblRep);
                     ((BufferedDataTable)object).setOwnerRecursively(node);
                 } else if (ModelContent.class.isAssignableFrom(cl)) {
                     object = loadModelContent(objectDirRef, exec, 
@@ -419,12 +419,12 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
     private BufferedDataTable loadBufferedDataTable(
             final ReferencedFile objectDir,
-            final ExecutionMonitor exec, final int loadID,
+            final ExecutionMonitor exec, final Map<Integer, BufferedDataTable> loadTblRep,
             final HashMap<Integer, ContainerTable> tblRep)
             throws CanceledExecutionException, IOException,
             InvalidSettingsException {
         return BufferedDataTable.loadFromFile(objectDir, /* ignored in 1.2+ */
-        null, exec, loadID, tblRep);
+        null, exec, loadTblRep, tblRep);
     }
 
     private <T extends ModelContent> T loadModelContent(

@@ -22,6 +22,7 @@ package org.knime.core.data.container;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
@@ -150,20 +151,21 @@ public final class JoinedTable implements KnowsRowCountTable {
      * recreated.
      * @param s The settings object, contains tables ids.
      * @param spec The final spec.
-     * @param loadID The current load ID.
+     * @param tblRep The table repository
      * @return The restored table.
      * @throws InvalidSettingsException If the settings can't be read.
      */
     public static JoinedTable load(final NodeSettingsRO s, 
-            final DataTableSpec spec, final int loadID) 
+            final DataTableSpec spec, 
+            final Map<Integer, BufferedDataTable> tblRep) 
         throws InvalidSettingsException {
         NodeSettingsRO subSettings = s.getNodeSettings(CFG_INTERNAL_META);
         int leftID = subSettings.getInt(CFG_LEFT_TABLE_ID);
         int rightID = subSettings.getInt(CFG_RIGHT_TABLE_ID);
         BufferedDataTable leftTable = 
-            BufferedDataTable.getDataTable(loadID, leftID);
+            BufferedDataTable.getDataTable(tblRep, leftID);
         BufferedDataTable rightTable = 
-            BufferedDataTable.getDataTable(loadID, rightID);
+            BufferedDataTable.getDataTable(tblRep, rightID);
         return new JoinedTable(leftTable, rightTable, spec);
     }
     

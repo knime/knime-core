@@ -24,9 +24,11 @@
 package org.knime.core.node.workflow;
 
 import java.net.URL;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.GenericNodeDialogPane;
@@ -638,7 +640,7 @@ public abstract class NodeContainer {
     }
     
     abstract LoadResult loadContent(final NodeContainerPersistor persistor, 
-            final int loadID, final ExecutionMonitor exec)
+            final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec)
             throws CanceledExecutionException;
     
 
