@@ -1054,33 +1054,57 @@ public final class WorkflowManager extends NodeContainer {
             // (B) check if this node is markable!
             NodeOutPort[] predPorts = assemblePredecessorOutPorts(id);
             boolean canBeMarked = true;
-            boolean canBeQueued = true;
             for (NodeOutPort portIt : predPorts) {
-                if (portIt.inProgress()) {
-                    canBeQueued = false;
-                } else {
-                    if (portIt.getPortObject() == null) {
-                        canBeQueued = false;
-                        canBeMarked = false;
-                    }
+                if (portIt == null || (!portIt.inProgress() 
+                        && portIt.getPortObject() != null)) {
+                    canBeMarked = false;
                 }
             }
             if (canBeMarked) {
                 nc.markForExecutionAsNodeContainer(true);
-            }
-            if (canBeQueued && !(nc instanceof WorkflowManager)) {
-                assert nc.getState().equals(State.MARKEDFOREXEC) 
-                    : nc.getNameWithID() + " is " + nc.getState();
-                PortObject[] po = new PortObject[predPorts.length];
-                for (int i = 0; i < po.length; i++) {
-                    po[i] = predPorts[i].getPortObject();
-                    assert (po[i] != null);
-                }
-                nc.queueAsNodeContainer(po);
+                queueIfQueuable(nc);
             }
         }
     }
-
+    
+    /** Queues the argument NC if possible. Does nothing if argument is
+     * not marked. Resets marks if not is queuable (all predecessors are done)
+     * but its state is unconfigured-marked.
+     * @param nc To queue if possible
+     * @return whether successfully queued.
+     */
+    private boolean queueIfQueuable(final NodeContainer nc) {
+        switch (nc.getState()) {
+        case UNCONFIGURED_MARKEDFOREXEC:
+        case MARKEDFOREXEC:
+            break;
+        default:
+            assert false : "Queuing of " + nc.getNameWithID() + "not possible,"
+                + " node is " + nc.getState();
+            return false;
+        }
+        NodeOutPort[] ports = assemblePredecessorOutPorts(nc.getID());
+        PortObject[] inData = new PortObject[ports.length];
+        boolean allDataAvailable = true;
+        for (int i = 0; i < ports.length; i++) {
+            if (ports[i] != null) {
+                inData[i] = ports[i].getPortObject();
+            }
+            allDataAvailable &= inData[i] != null;
+        }
+        if (allDataAvailable) {
+            if (nc.getState().equals(State.MARKEDFOREXEC)) {
+                nc.queueAsNodeContainer(inData);
+                return true;
+            } else {
+                disableNodeForExecution(nc.getID());
+                checkForNodeStateChanges();
+                return false;
+            }
+        }
+        return false;
+    }
+    
     /** Returns a description of a node container,
      * e.g. '"File Reader" (id "2.3.4")'.
      * @return Such a string to be used in error messages.
@@ -1094,6 +1118,10 @@ public final class WorkflowManager extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     boolean configureAsNodeContainer(final PortObjectSpec[] specs) {
+        // TODO review: we do need to reset our internals otherwise 
+        // executed nodes (which are contained in this WFM) will complain
+        // that they can't be configured without prior reset
+        resetSuccessors(getID());
         // remember old specs
         PortObjectSpec[] prevSpecs =
                 new PortObjectSpec[getNrOutPorts()];
@@ -1287,15 +1315,8 @@ public final class WorkflowManager extends NodeContainer {
             // a loop is to be continued, we need to queue the loop head
             if (loopHeadNode != null) {
                 assert loopHeadNode.getState().equals(State.MARKEDFOREXEC);
-                PortObject[] ins = new PortObject[loopHeadNode.getNrInPorts()];
-                assembleInputData(loopHeadNode.getID(), ins);
-                if (Arrays.asList(ins).contains(null)) {
-                    assert false : "Loop head can't be re-executed";
-                    disableNodeForExecution(loopHeadNode.getID());
-                    checkForNodeStateChanges();
-                } else {
-                    loopHeadNode.queueAsNodeContainer(ins);
-                }
+                boolean isSuccessfullyQueued = queueIfQueuable(loopHeadNode);
+                assert isSuccessfullyQueued: "Loop head can't be re-executed";
             }
         }
     }
@@ -1409,11 +1430,12 @@ public final class WorkflowManager extends NodeContainer {
                 switch (nc.getState()) {
                 case EXECUTED:
                 case MARKEDFOREXEC:
+                // TODO: reset shouldn't be allowed while executing
                 case EXECUTING:
                     // first reset successors of successor
                     this.resetSuccessors(currID);
                     // ..then immediate successor itself
-                    m_nodes.get(currID).resetAsNodeContainer();
+                    nc.resetAsNodeContainer();
                     break;
                 case IDLE:
                 case CONFIGURED:
@@ -1817,28 +1839,28 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     
-    /** Assemble array of all data for the data input of a given node. The
-     * underlying NodeContainer will make sure the nodes are actually
-     * executed before it provides data != null.
-     *
-     * @param id of node
-     * @param array of data tables
-     */
-    private void assembleInputData(final NodeID id,
-            final PortObject[] inData) {
-        synchronized (m_workflowMutex) {
-            NodeOutPort[] ports = assemblePredecessorOutPorts(id);
-            assert inData.length == ports.length;
-            for (int i = 0; i < inData.length; i++) {
-                inData[i] = null;
-                if (ports[i] != null) {
-                    inData[i] = ports[i].getPortObject();
-                } else {
-                    inData[i] = null;
-                }
-            }
-        }
-    }
+//    /** Assemble array of all data for the data input of a given node. The
+//     * underlying NodeContainer will make sure the nodes are actually
+//     * executed before it provides data != null.
+//     *
+//     * @param id of node
+//     * @param array of data tables
+//     */
+//    private void assembleInputData(final NodeID id,
+//            final PortObject[] inData) {
+//        synchronized (m_workflowMutex) {
+//            NodeOutPort[] ports = assemblePredecessorOutPorts(id);
+//            assert inData.length == ports.length;
+//            for (int i = 0; i < inData.length; i++) {
+//                inData[i] = null;
+//                if (ports[i] != null) {
+//                    inData[i] = ports[i].getPortObject();
+//                } else {
+//                    inData[i] = null;
+//                }
+//            }
+//        }
+//    }
 
     /** Assemble array of all NodeOutPorts connected to the input
      * ports of a given node. This routine will make sure to skip intermediate
@@ -1851,7 +1873,6 @@ public final class WorkflowManager extends NodeContainer {
         NodeContainer nc = m_nodes.get(id);
         int nrIns = nc.getNrInPorts();
         NodeOutPort[] result = new NodeOutPort[nrIns];
-        // TODO: review, I guess this can be done within one loop
         Set<ConnectionContainer> incoming = m_connectionsByDest.get(id);
         for (ConnectionContainer conn : incoming) {
             assert conn.getDest().equals(id);
@@ -1881,17 +1902,10 @@ public final class WorkflowManager extends NodeContainer {
     private boolean isFullyConnected(final NodeID id) {
         if (id.equals(this.getID())) {
             return getParent().isFullyConnected(id);
-        } else {
-            // get node
-            NodeContainer nc = m_nodes.get(id);
-            // get incoming connections
-            Set<ConnectionContainer> incoming = m_connectionsByDest.get(id);
-            if (incoming.size() < nc.getNrInPorts()) {
-                // Note that this enforces FULLY connected nodes
-                return false;
-            }
         }
-        return true;
+        NodeContainer nc = getNodeContainer(id);
+        // Note that this enforces FULLY connected nodes
+        return m_connectionsByDest.get(id).size() == nc.getNrInPorts();
     }
     
     /**
@@ -1940,15 +1954,20 @@ public final class WorkflowManager extends NodeContainer {
             NodeContainer nc = m_nodes.get(currNode);
             assert nc != null;
             synchronized (m_workflowMutex) {
-                PortObjectSpec[] inSpecs =
-                    new PortObjectSpec[nc.getNrInPorts()];
-                assembleInputSpecs(currNode, inSpecs);
+                final int inCount = nc.getNrInPorts();
+                NodeOutPort[] predPorts = assemblePredecessorOutPorts(currNode);
+                final PortObjectSpec[] inSpecs = new PortObjectSpec[inCount];
+                final ScopeObjectStack[] scscs = new ScopeObjectStack[inCount];
+                final HiLiteHandler[] hiliteHdls = new HiLiteHandler[inCount];
                 // check for presence of input specs
                 boolean allSpecsExists = true;
-                for (PortObjectSpec pos : inSpecs) {
-                    if (pos == null) {
-                        allSpecsExists = false;
+                for (int i = 0; i < predPorts.length; i++) {
+                    if (predPorts[i] != null) {
+                        inSpecs[i] = predPorts[i].getPortObjectSpec();
+                        scscs[i] = predPorts[i].getScopeContextStackContainer();
+                        hiliteHdls[i] = predPorts[i].getHiLiteHandler();
                     }
+                    allSpecsExists &= inSpecs[i] != null;
                 }
                 if (!allSpecsExists) {
                     // only configure nodes with all Input Specs present
@@ -1961,34 +1980,27 @@ public final class WorkflowManager extends NodeContainer {
                 // which might attempt to configure an already queued node again
                 switch (nc.getState()) {
                 case IDLE:
-                case UNCONFIGURED_MARKEDFOREXEC:
                 case CONFIGURED:
+                case UNCONFIGURED_MARKEDFOREXEC:
                 case MARKEDFOREXEC:
                     // create new ScopeContextStack if this is a "real" node
                     ScopeObjectStack oldSOS = null;
                     if (nc instanceof SingleNodeContainer) {
                         SingleNodeContainer snc = (SingleNodeContainer)nc;
                         oldSOS = snc.getScopeObjectStack();
-                        ScopeObjectStack[] scscs =
-                            new ScopeObjectStack[snc.getNrInPorts()];
-                        assembleSCStackContainer(currNode, scscs);
-                        ScopeObjectStack  scsc =
+                        ScopeObjectStack scsc = 
                             new ScopeObjectStack(currNode, scscs);
                         snc.setScopeObjectStack(scsc);
-                    }
-                    // update HiLiteHandlers on inports of SNC only
-                    // TODO think about it... happens magically
-                    if (nc instanceof SingleNodeContainer) {
-                        SingleNodeContainer snc = (SingleNodeContainer)nc;
-                        NodeOutPort[] incomingPorts = assemblePredecessorOutPorts(nc.getID());
-                        for (int i = 0; i < incomingPorts.length; i++) {
-                            HiLiteHandler hdl = incomingPorts[i].getHiLiteHandler();
-                            snc.setInHiLiteHandler(i, hdl);
+                        // update HiLiteHandlers on inports of SNC only
+                        // TODO think about it... happens magically
+                        for (int i = 0; i < inCount; i++) {
+                            snc.setInHiLiteHandler(i, hiliteHdls[i]);
                         }
                     }
                     // remember HiLiteHandler on OUTPORTS of all nodes!
-                    HiLiteHandler[] oldHdl = new HiLiteHandler[getNrOutPorts()];
-                    for (int i = 0; i < getNrOutPorts(); i++) {
+                    HiLiteHandler[] oldHdl = 
+                        new HiLiteHandler[nc.getNrOutPorts()];
+                    for (int i = 0; i < oldHdl.length; i++) {
                         oldHdl[i] = nc.getOutPort(i).getHiLiteHandler();
                     }
                     // configure node itself
@@ -2005,7 +2017,7 @@ public final class WorkflowManager extends NodeContainer {
                     }
                     // check if HiLiteHandlers have changed
                     boolean hiLiteHdlsChanged = false;
-                    for (int i = 0; i < getNrOutPorts(); i++) {
+                    for (int i = 0; i < oldHdl.length; i++) {
                         HiLiteHandler hdl = nc.getOutPort(i).getHiLiteHandler();
                         hiLiteHdlsChanged |= (hdl != oldHdl[i]);
                     }
@@ -2014,35 +2026,14 @@ public final class WorkflowManager extends NodeContainer {
                         freshlyConfiguredNodes.add(nc.getID());
                     }
                     if (nc.getState().equals(State.UNCONFIGURED_MARKEDFOREXEC)
-                        || nc.getState().equals(State.MARKEDFOREXEC)) {
-                        // check if we can queue this node!
-                        final PortObject[] inData =
-                            new PortObject[nc.getNrInPorts()];
-                        assembleInputData(nc.getID(), inData);
-                        boolean allDataAvailable = true;
-                        for (int i = 0; i < inData.length; i++) {
-                            if (inData[i] == null) {
-                                allDataAvailable = false;
-                            }
-                        }
-                        if (allDataAvailable) {
-                            if (nc.getState().equals(State.MARKEDFOREXEC)) {
-                                // Important, QUEUED does not mean the 
-                                // node is already executing!
-                                nc.queueAsNodeContainer(inData);
-                            } else {
-                                assert nc.getState().equals(State.UNCONFIGURED_MARKEDFOREXEC);
-                                // this means that all predecessors provide data
-                                // (are executed) but we still could not configure
-                                // the node: remove all (subsequent) marks!
-                                disableNodeForExecution(nc.getID());
-                            }
-                        }
+                            || nc.getState().equals(State.MARKEDFOREXEC)) {
+                        queueIfQueuable(nc);
                     }
                     break;
                 default:
                     throw new IllegalStateException("Wrong state in configure"
-                            + " (" + nc.getState() + " " + nc.getNameWithID() + ")");
+                            + " (" + nc.getState() + " " 
+                            + nc.getNameWithID() + ")");
                 }
             }
         }
@@ -2069,23 +2060,6 @@ public final class WorkflowManager extends NodeContainer {
                 inSpecs[i] = ports[i].getPortObjectSpec();
             } else {
                 inSpecs[i] = null;
-            }
-        }
-    }
-
-    /**
-     * Fill array holding all ScopeStackContainers for the given node.
-     *
-     * @param id of node
-     * @param scscs return array for scopestacks of all predecessors
-     */
-    private void assembleSCStackContainer(final NodeID id,
-            final ScopeObjectStack[] scscs) {
-        NodeOutPort[] ports = assemblePredecessorOutPorts(id);
-        assert scscs.length == ports.length;
-        for (int i = 0; i < scscs.length; i++) {
-            if (ports[i] != null) {
-                scscs[i] = ports[i].getScopeContextStackContainer();
             }
         }
     }
@@ -2441,13 +2415,31 @@ public final class WorkflowManager extends NodeContainer {
         Collection<NodeID> failedNodes = new LinkedHashSet<NodeID>();
         Set<NodeID> needConfigurationNodes = new HashSet<NodeID>();
         for (NodeID bfsID : getBreathFirstListOfNodes()) {
-            // failed nodes may not even be in m_nodes - we reset everything
-            // which is not fully connected
-            boolean needsReset = !isFullyConnected(bfsID);
+            NodeContainer cont = getNodeContainer(bfsID);
+            boolean needsReset;
+            switch (cont.getState()) {
+//            case IDLE:
+//            case UNCONFIGURED_MARKEDFOREXEC:
+//                needsReset = false;
+//                break;
+            default:
+                // we reset everything which is not fully connected
+                needsReset = !isFullyConnected(bfsID);
+                break;
+            }
+            NodeOutPort[] predPorts = assemblePredecessorOutPorts(bfsID);
+            PortObject[] portObjects = new PortObject[predPorts.length];
+            for (int i = 0; i < predPorts.length; i++) {
+                NodeOutPort p = predPorts[i];
+                if (false && cont instanceof SingleNodeContainer) {
+                    SingleNodeContainer snc = (SingleNodeContainer)cont;
+                    snc.setInHiLiteHandler(i, p.getHiLiteHandler());
+                }
+                portObjects[i] = p != null ? p.getPortObject() : null;
+            }
             NodeContainerPersistor containerPersistor = persistorMap.get(bfsID);
-            NodeContainer cont = m_nodes.get(bfsID);
             exec.setMessage("Loading persistor for " + cont.getNameWithID());
-            // two steps below: loadNodeContent and loadContent
+            // two steps below: loadNodeContainer and loadContent
             ExecutionMonitor sub1 = 
                 exec.createSubProgress(1.0 / (2 * m_nodes.size()));
             ExecutionMonitor sub2 = 
@@ -2488,27 +2480,8 @@ public final class WorkflowManager extends NodeContainer {
             // if node is executed and some input data is missing we need
             // to reset that node as there is obviously a conflict (e.g.
             // predecessors has been loaded as IDLE 
-            if (isExecuted && !needsReset) {
-                PortObject[] inData = new PortObject[cont.getNrInPorts()];
-                assembleInputData(bfsID, inData);
-                if (Arrays.asList(inData).contains(null)) {
-                    needsReset = true;
-                }
-            }
-            if (isExecuted && !needsReset) {
-                boolean allPortsFilled = true;
-                for (int i = 0; i < cont.getNrOutPorts(); i++) {
-                    NodeOutPort p = cont.getOutPort(i);
-                    if (p.getPortObject() == null 
-                            || p.getPortObjectSpec() == null) {
-                        allPortsFilled = false;
-                    }
-                }
-                if (!allPortsFilled) {
-                    subResult.addError("Loaded as " + State.EXECUTED 
-                            + " but not all outports have data");
-                    needsReset = true;
-                }
+            if (isExecuted && Arrays.asList(portObjects).contains(null)) {
+                needsReset = true;
             }
             if (needsReset) {
                 failedNodes.add(bfsID);
@@ -2532,7 +2505,7 @@ public final class WorkflowManager extends NodeContainer {
         for (NodeID id : needConfigurationNodes) {
             configureNodeAndSuccessors(id, true, true);
         }
-        checkForNodeStateChanges();
+        sweep();
         return loadResult;
     }
 
@@ -2571,6 +2544,119 @@ public final class WorkflowManager extends NodeContainer {
                 workflowDirRef.unlock();
             }
         }
+    }
+    
+    boolean sweep() {
+        boolean wasClean = true;
+        synchronized (m_workflowMutex) {
+            for (NodeID id : getBreathFirstListOfNodes()) {
+                NodeContainer nc = getNodeContainer(id);
+                Set<State> allowedStates = 
+                    new HashSet<State>(Arrays.asList(State.values()));
+                Set<ConnectionContainer> conSet = m_connectionsByDest.get(id);
+                if (conSet.size() < nc.getNrInPorts()) {
+                    allowedStates.retainAll(Collections.singleton(State.IDLE));
+                }
+                for (ConnectionContainer c : conSet) {
+                    NodeID source = c.getSource();
+                    NodeContainer sourceNC = null;
+                    if (!source.equals(getID())) {
+                        // ensured to return non-null value
+                        sourceNC = getNodeContainer(source);
+                    } else {
+                        assert source.equals(getID());
+                        WorkflowManager wfm = getParent();
+                        NodeID childID = getID();
+                        int childPortIndex = c.getSourcePort();
+                        ConnectionContainer cc;
+                        do {
+                            cc = null;
+                            for (ConnectionContainer c2
+                                    : wfm.m_connectionsByDest.get(childID)) {
+                                if (c2.getDestPort() == childPortIndex) {
+                                    cc = c2;
+                                    break;
+                                }
+                            }
+                            switch (cc.getType()) {
+                            case WFMOUT:
+                            case WFMTHROUGH:
+                                assert false 
+                                    : "Connection can't be " + cc.getType();
+                                break;
+                            case STD:
+                                sourceNC = wfm.getNodeContainer(cc.getSource());
+                                break;
+                            case WFMIN:
+                                childID = wfm.getID();
+                                wfm = wfm.getParent();
+                                childPortIndex = cc.getSourcePort();
+                                break;
+                            }
+                        } while (cc != null && sourceNC == null);
+                    }
+                    if (sourceNC == null) {
+                        allowedStates.retainAll(
+                                Collections.singleton(State.IDLE));
+                    } else {
+                        switch (sourceNC.getState()) {
+                        case IDLE:
+                            allowedStates.retainAll(Arrays.asList(
+                                    State.IDLE));
+                            break;
+                        case CONFIGURED:
+                            allowedStates.retainAll(Arrays.asList(
+                                    State.CONFIGURED, State.IDLE));
+                            break;
+                        case UNCONFIGURED_MARKEDFOREXEC:
+                            allowedStates.retainAll(Arrays.asList(State.IDLE, 
+                                    State.UNCONFIGURED_MARKEDFOREXEC));
+                            break;
+                        case MARKEDFOREXEC:
+                        case QUEUED:
+                        case EXECUTING:
+                            allowedStates.retainAll(Arrays.asList(State.IDLE, 
+                                    State.UNCONFIGURED_MARKEDFOREXEC,
+                                    State.CONFIGURED, State.MARKEDFOREXEC));
+                            break;
+                        case EXECUTED:
+                        }
+                    }
+                }
+                if (!allowedStates.contains(nc.getState())) {
+                    wasClean = false;
+                    switch (nc.getState()) {
+                    case EXECUTED:
+                        resetSuccessors(nc.getID());
+                        nc.resetAsNodeContainer();
+                        break;
+                    case EXECUTING:
+                    case QUEUED:
+                    case MARKEDFOREXEC:
+                    case UNCONFIGURED_MARKEDFOREXEC:
+                        nc.cancelExecutionAsNodeContainer();
+                        break;
+                    default:
+                    }
+                    if (!allowedStates.contains(State.CONFIGURED)) {
+                        nc.setState(State.IDLE);
+                    }
+                }
+                boolean hasData = true;
+                for (int i = 0; i < nc.getNrOutPorts(); i++) {
+                    NodeOutPort p = nc.getOutPort(i);
+                    hasData &= p != null && p.getPortObject() != null 
+                        && p.getPortObjectSpec() != null;
+                }
+                if (!hasData && nc.getState().equals(State.EXECUTED)) {
+                    wasClean = false;
+                    resetSuccessors(nc.getID());
+                    nc.resetAsNodeContainer();
+                }
+            }
+        }
+        checkForNodeStateChanges();
+        return wasClean;
     }
 
     //////////////////////////////////////

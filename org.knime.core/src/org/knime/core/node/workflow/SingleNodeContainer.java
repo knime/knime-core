@@ -417,6 +417,9 @@ public final class SingleNodeContainer extends NodeContainer
     void cancelExecutionAsNodeContainer() {
         synchronized (m_nodeMutex) {
             switch (getState()) {
+            case UNCONFIGURED_MARKEDFOREXEC:
+                setState(State.IDLE);
+                break;
             case MARKEDFOREXEC:
                 setState(State.CONFIGURED);
                 break;
