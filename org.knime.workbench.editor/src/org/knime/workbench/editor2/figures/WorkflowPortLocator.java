@@ -58,7 +58,7 @@ public class WorkflowPortLocator extends PortLocator {
         }
         int yPos = (int)(parent.y + (((double)parent.height 
                 / (double) (getNrPorts() + 1)) * (getPortIndex() + 1)));
-        
+        yPos -= (AbstractPortFigure.WF_PORT_SIZE / 2);
         Rectangle portBounds = new Rectangle(new Point(xPos, yPos), 
                 new Dimension(
                         AbstractPortFigure.WF_PORT_SIZE, 
