@@ -131,6 +131,8 @@ public final class FileAnalyzer {
             result.setTableName(userSettings.getTableName());
             result.setDecimalSeparator(userSettings.getDecimalSeparator());
             result.setThousandsSeparator(userSettings.getThousandsSeparator());
+            result.setDecimalSeparatorUserSet(userSettings
+                    .decimalSeparatorUserSet());
             result.setUniquifyRowIDs(userSettings.uniquifyRowIDs());
             result.setMaximumNumberOfRowsToRead(userSettings
                     .getMaximumNumberOfRowsToRead());
@@ -1242,6 +1244,7 @@ public final class FileAnalyzer {
                 // make sure '\n' is a row delimiter. Always.
                 ExecutionMonitor subExec = createSubExecWithRemainder(exec);
                 try {
+                    result.removeAllDelimiters();
                     result.addRowDelimiter("\n", true);
                     result.addDelimiterPattern(",", false, false, false);
 

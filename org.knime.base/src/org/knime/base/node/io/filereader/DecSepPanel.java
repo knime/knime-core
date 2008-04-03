@@ -154,7 +154,7 @@ public class DecSepPanel extends JPanel {
      * @param settings the object to write settings in
      * @return true if the new settings are different from the one passed in.
      */
-    boolean overrideSettings(final FileReaderSettings settings) {
+    boolean overrideSettings(final FileReaderNodeSettings settings) {
         char oldDecSep = settings.getDecimalSeparator();
         char oldThousSep = settings.getThousandsSeparator();
         char newDecSep = m_decSep.getText().charAt(0);
@@ -162,9 +162,13 @@ public class DecSepPanel extends JPanel {
         if (m_thousandSep.getText().length() > 0) {
             newThousSep = m_thousandSep.getText().charAt(0);
         }
+        boolean changed =
+                (oldDecSep != newDecSep) || (oldThousSep != newThousSep);
         settings.setDecimalSeparator(newDecSep);
         settings.setThousandsSeparator(newThousSep);
-
-        return (oldDecSep != newDecSep) || (oldThousSep != newThousSep);
+        if (changed) {
+            settings.setDecimalSeparatorUserSet(true);
+        }
+        return changed;
     }
 }

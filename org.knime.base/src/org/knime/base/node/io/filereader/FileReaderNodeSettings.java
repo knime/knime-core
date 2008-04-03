@@ -77,6 +77,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
     private boolean m_ignoreDelimsAtEndOfRowIsSet;
 
+    private boolean m_decimalSeparatorIsSet;
+
     private boolean m_delimsAtEOLUserValue;
 
     private boolean m_commentIsSet;
@@ -135,6 +137,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         m_whiteIsSet = true;
         m_ignoreEmptyLinesIsSet = true;
         m_ignoreDelimsAtEndOfRowIsSet = true;
+        m_decimalSeparatorIsSet = true;
         m_analyzedAllRows = false;
     }
 
@@ -161,6 +164,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
        m_hasRowHeadersIsSet = clonee.m_hasRowHeadersIsSet;
        m_ignoreEmptyLinesIsSet = clonee.m_ignoreEmptyLinesIsSet;
        m_ignoreDelimsAtEndOfRowIsSet = clonee.m_ignoreDelimsAtEndOfRowIsSet;
+       m_decimalSeparatorIsSet = clonee.m_decimalSeparatorIsSet;
        m_delimsAtEOLUserValue = clonee.m_delimsAtEOLUserValue;
        m_commentIsSet = clonee.m_commentIsSet;
        m_quoteIsSet = clonee.m_quoteIsSet;
@@ -183,6 +187,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         m_hasRowHeadersIsSet = false;
         m_ignoreEmptyLinesIsSet = false;
         m_ignoreDelimsAtEndOfRowIsSet = false;
+        m_decimalSeparatorIsSet = false;
         m_delimsAtEOLUserValue = false;
         m_commentIsSet = false;
         m_quoteIsSet = false;
@@ -708,6 +713,28 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      */
     public boolean ignoreDelimsAtEORUserSet() {
         return m_ignoreDelimsAtEndOfRowIsSet;
+    }
+
+    /**
+     * Tells whether the decimal separator is set by the user or guessed by the
+     * analyzer (or still at its default).
+     *
+     * @return true, if the user explicitly set the decimal separator, false, if
+     *         the separators are still at their default, or the analyser
+     *         guessed it.
+     */
+    public boolean decimalSeparatorUserSet() {
+        return m_decimalSeparatorIsSet;
+    }
+
+    /**
+     * Sets a new value to the flag that indicates that the decimal value is
+     * explictly set by the user.
+     *
+     * @param value the new value of the flag.
+     */
+    public void setDecimalSeparatorUserSet(final boolean value) {
+        m_decimalSeparatorIsSet = value;
     }
 
     /**

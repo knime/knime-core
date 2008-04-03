@@ -240,7 +240,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
         // TODO: change it back
         //m_thousandsSeparator = '\0';
 
-        m_thousandsSeparator = ' ';
+        m_thousandsSeparator = '_';
 
         m_fileHasColumnHeaders = false;
         m_fileHasRowHeaders = false;
@@ -366,7 +366,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
             // TODO: Change it back
             // m_thousandsSeparator = cfg.getChar(CFGKEY_THOUSANDSEP, '\0');
 
-            m_thousandsSeparator = cfg.getChar(CFGKEY_THOUSANDSEP, ' ');
+            m_thousandsSeparator = cfg.getChar(CFGKEY_THOUSANDSEP, '_');
 
             if (m_decimalSeparator == m_thousandsSeparator) {
                 throw new InvalidSettingsException("Decimal separator and "
