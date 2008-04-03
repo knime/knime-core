@@ -125,16 +125,7 @@ public class ExecuteAllAction extends AbstractNodeAction {
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         LOGGER.debug("Starting execution of all nodes");
-        NodeContainerEditPart[] all = getAllNodeParts();
-        for (NodeContainerEditPart p : all) {
-            LOGGER.debug(p.getNodeContainer().getID() + " state: "
-                    + p.getNodeContainer().getState());
-            if (p.getNodeContainer().getState().equals(
-                    NodeContainer.State.CONFIGURED)) {
-                LOGGER.debug("executing: " + p.getNodeContainer().getID());
-                getManager().executeUpToHere(p.getNodeContainer().getID());
-            }
-        }
+        getManager().executeAll();
 
         try {
             // Give focus to the editor again. Otherwise the actions (selection)
