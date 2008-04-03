@@ -135,7 +135,6 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
      */
     @Override
     public boolean performOk() {
-        try {
         if (m_isMasterKey.getBooleanValue()) {
             String masterKey = m_masterKey.getStringValue();
             boolean valid = 
@@ -152,10 +151,6 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
         getPreferenceStore().setValue(PreferenceConstants.P_MASTER_KEY_DEFINED, 
                 SUPPLIER.m_isDefined);
         return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
     }
     
     /**
