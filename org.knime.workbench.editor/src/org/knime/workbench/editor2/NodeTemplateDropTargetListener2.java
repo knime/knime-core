@@ -46,8 +46,6 @@ public class NodeTemplateDropTargetListener2 implements
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             NodeTemplateDropTargetListener2.class);
 
-    private final LocalSelectionTransfer m_transfer = LocalSelectionTransfer
-        .getTransfer();
 
     private final EditPartViewer m_viewer;
 
@@ -59,7 +57,7 @@ public class NodeTemplateDropTargetListener2 implements
      * {@inheritDoc}
      */
     public Transfer getTransfer() {
-        return m_transfer;
+        return LocalSelectionTransfer.getTransfer();
     }
 
     /**
@@ -125,7 +123,8 @@ public class NodeTemplateDropTargetListener2 implements
         LOGGER.debug("drop: " + event);
         if (isNodeTemplate()) {
             NodeTemplate template = (NodeTemplate)((IStructuredSelection)
-                        m_transfer.getSelection()).getFirstElement();
+                        LocalSelectionTransfer.getTransfer().getSelection())
+                        .getFirstElement();
             CreateRequest request = new CreateRequest();
             // TODO for some reason sometimes the event contains no object - but
             // this doesn't seem to matter - dragging continues as expected
@@ -148,8 +147,11 @@ public class NodeTemplateDropTargetListener2 implements
 
 
     private boolean isNodeTemplate() {
-        Object template = ((IStructuredSelection)m_transfer.getSelection())
-            .getFirstElement();
+        if (LocalSelectionTransfer.getTransfer().getSelection() == null) {
+            return false;
+        }
+        Object template = ((IStructuredSelection)LocalSelectionTransfer
+                .getTransfer().getSelection()).getFirstElement();
         if (!(template instanceof NodeTemplate)) {
             // Last change: Ask adaptables for an adapter object
             if (template instanceof IAdaptable) {
@@ -158,7 +160,7 @@ public class NodeTemplateDropTargetListener2 implements
             }
         }
         return template instanceof NodeTemplate;
-    }
+    } 
 
     /**
      * {@inheritDoc}

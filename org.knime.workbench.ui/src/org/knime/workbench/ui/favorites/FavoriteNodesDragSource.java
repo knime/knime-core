@@ -35,7 +35,6 @@ import org.knime.workbench.repository.model.NodeTemplate;
  * @author Fabian Dill, University of Konstanz
  */
 public class FavoriteNodesDragSource implements DragSourceListener {
-
     
     private FavoritesView m_view;
    
@@ -67,6 +66,7 @@ public class FavoriteNodesDragSource implements DragSourceListener {
      */
     public void dragStart(final DragSourceEvent event) {
         IStructuredSelection sel = (IStructuredSelection)m_view.getSelection();
+        LocalSelectionTransfer.getTransfer().setSelection(sel);
         event.detail = DND.DROP_COPY;
         // cancel event, if not an NodeTemplate, or not exactly one element
         // selected

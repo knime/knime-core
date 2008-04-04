@@ -30,7 +30,6 @@ import org.eclipse.swt.dnd.DropTargetAdapter;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.views.navigator.LocalSelectionTransfer;
-import org.knime.core.node.NodeLogger;
 import org.knime.workbench.repository.model.NodeTemplate;
 
 /**
@@ -41,8 +40,8 @@ public class FavoriteNodesDropTarget extends DropTargetAdapter {
 
     private FavoritesView m_view;
     
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            FavoriteNodesDropTarget.class); 
+//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+//            FavoriteNodesDropTarget.class); 
     
     /**
      * 
@@ -59,7 +58,7 @@ public class FavoriteNodesDropTarget extends DropTargetAdapter {
     @Override
     public void dragEnter(final DropTargetEvent event) {
        event.detail = DND.DROP_COPY;
-       LOGGER.debug("event item: " + event.item);
+//       LOGGER.debug("event item: " + event.item);
     }
     
     /**
@@ -70,10 +69,8 @@ public class FavoriteNodesDropTarget extends DropTargetAdapter {
     public void dragOver(final DropTargetEvent event) {
         event.detail = DND.DROP_NONE;
         if (event.item != null & event.item instanceof TreeItem) {
-            TreeItem treeItem = (TreeItem)event.item;
-            if (treeItem.getText().equals(FavoriteNodesManager.FAV_TITLE)) {
                 event.detail = DND.DROP_COPY;
-            }
+//            }
         }
     }
     
@@ -84,7 +81,7 @@ public class FavoriteNodesDropTarget extends DropTargetAdapter {
      */
     @Override
     public void drop(final DropTargetEvent event) {
-        LOGGER.debug("drop " + event);
+//        LOGGER.debug("drop " + event);
         if (isNodeTemplate()) {
             NodeTemplate template = (NodeTemplate)((IStructuredSelection)
                     LocalSelectionTransfer.getTransfer()
