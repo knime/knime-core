@@ -81,8 +81,8 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
             }
             Display.getDefault().syncExec(new Runnable() {
                 public void run() {
-                    m_isSet = true;
                     m_lastMasterKey = openDialogAndReadKey();
+                    m_isSet = true;
                 }
             });
             return m_lastMasterKey;
@@ -145,14 +145,15 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
             boolean valid = 
                 checkMasterKeys(masterKey, m_masterKeyConfirm.getStringValue());
             if (!valid) {
-                SUPPLIER.m_isEnabled = false;
+                SUPPLIER.m_isSet = false;
                 return false;
             }
-            SUPPLIER.m_lastMasterKey = m_masterKey.getStringValue();
+            SUPPLIER.m_isEnabled = true;
+            SUPPLIER.m_lastMasterKey = masterKey;
         } else {
+            SUPPLIER.m_isEnabled = false;
             SUPPLIER.m_lastMasterKey = null;
         }
-        SUPPLIER.m_isEnabled = m_isMasterKey.getBooleanValue();
         SUPPLIER.m_isSet = true;
         getPreferenceStore().setValue(PreferenceConstants.P_MASTER_KEY_DEFINED,
                 SUPPLIER.m_isSet);
@@ -162,13 +163,6 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
         return true;        
     }
     
-    /**
-     * 
-     * @return the entered master key
-     */
-    String getMasterKey() {
-        return m_masterKey.getStringValue();
-    }
     
     private static boolean checkMasterKeys(final String masterKey, 
             final String confirmMasterKey) {
@@ -221,7 +215,7 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
         }
         MasterKeyDialog dialog = new MasterKeyDialog(shell); 
         dialog.open();
-        return dialog.getMasterKey();
+        return SUPPLIER.m_lastMasterKey;
     }
     
 

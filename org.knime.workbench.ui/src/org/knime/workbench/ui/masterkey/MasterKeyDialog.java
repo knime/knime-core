@@ -83,12 +83,5 @@ public class MasterKeyDialog extends Dialog {
         }
     }
     
-    /**
-     * 
-     * @return the entered master key
-     */
-    String getMasterKey() {
-        return m_prefPage.getMasterKey();
-    }
 
 }
