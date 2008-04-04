@@ -830,6 +830,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
                     "Can't remove <null> as row delimiter.");
         }
         if (isRowDelimiter(pattern)) {
+            m_rowDelimiters.remove(pattern);
             return removeDelimiterPattern(pattern);
         }
         return null;
@@ -859,6 +860,24 @@ public class FileReaderSettings extends FileTokenizerSettings {
                 || (getDelimiterPattern(pattern) != null);
         return m_rowDelimiters.contains(pattern);
 
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void removeAllDelimiters() {
+        super.removeAllDelimiters();
+        m_rowDelimiters.clear();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Delimiter removeDelimiterPattern(final String pattern) {
+        m_rowDelimiters.remove(pattern);
+        return super.removeDelimiterPattern(pattern);
     }
 
     /**

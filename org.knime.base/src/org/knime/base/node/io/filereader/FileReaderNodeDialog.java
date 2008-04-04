@@ -935,6 +935,11 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             }
 
         }
+
+        // make sure \n is always a row delimiter
+        if (!m_frSettings.isRowDelimiter("\n")) {
+            m_frSettings.addRowDelimiter("\n", true);
+        }
         analyzeDataFileAndUpdatePreview(true); // force re-analyze
         m_insideDelimChange = false;
     }
