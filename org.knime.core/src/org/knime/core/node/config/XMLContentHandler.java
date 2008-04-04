@@ -231,7 +231,7 @@ class XMLContentHandler extends DefaultHandler {
 
     /**
      * Escapes all forbidden XML characters so that we can save them
-     * nevertheless. They are escaped as &quot;&amp;#dd;&quot;, with dd being
+     * nevertheless. They are escaped as &quot;%%dd&quot;, with dd being
      * their decimal ASCII code.
      *
      * @param s the string to escape
@@ -246,14 +246,13 @@ class XMLContentHandler extends DefaultHandler {
         for (int i = 0; i < c.length; i++) {
             if ((c[i] < 32)
                     || ((i < c.length - 1)
-                            && (c[i] == '&') && c[i + 1] == '#')) {
-                //  if c contains '&#' we encode the '&'
-                buf.append("&#");
+                            && (c[i] == '%') && c[i + 1] == '%')) {
+                //  if c contains '%' we encode the '%'
+                buf.append("%%");
                 if (c[i] < 10) {
                     buf.append('0');
                 }
                 buf.append(Integer.toString(c[i]));
-                buf.append(';');
             } else {
                 buf.append(c[i]);
             }
@@ -278,13 +277,12 @@ class XMLContentHandler extends DefaultHandler {
         char[] c = s.toCharArray();
         StringBuilder buf = new StringBuilder();
         for (int i = 0; i < c.length; i++) {
-            if ((c[i] == '&') && (i < c.length - 4)
-                    && c[i + 1] == '#'
+            if ((c[i] == '%') && (i < c.length - 3)
+                    && c[i + 1] == '%'
                     && Character.isDigit(c[i + 2])
-                    && Character.isDigit(c[i + 3])
-                    && c[i + 4] == ';') {
+                    && Character.isDigit(c[i + 3])) {
                 buf.append((char)((c[i + 2] - '0') * 10 + (c[i + 3] - '0')));
-                i += 4;
+                i += 3;
             } else {
                 buf.append(c[i]);
             }
