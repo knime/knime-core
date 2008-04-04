@@ -71,7 +71,13 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
             m_isSet = KNIMEUIPlugin.getDefault().getPreferenceStore()
                 .getBoolean(PreferenceConstants.P_MASTER_KEY_DEFINED);
             if (m_isSet) {
-                 return (m_isEnabled ? m_lastMasterKey : null);
+                m_isEnabled = KNIMEUIPlugin.getDefault().getPreferenceStore()
+                    .getBoolean(PreferenceConstants.P_MASTER_KEY_ENABLED);
+                if (!m_isEnabled) {
+                    return null;
+                } else if (m_lastMasterKey != null) {
+                    return m_lastMasterKey;
+                }
             }
             Display.getDefault().syncExec(new Runnable() {
                 public void run() {
@@ -118,12 +124,6 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
     @Override
     protected void initialize() {
         super.initialize();
-        if (getPreferenceStore().getBoolean(
-                PreferenceConstants.P_MASTER_KEY_DEFINED)) {
-            SUPPLIER.m_isEnabled = getPreferenceStore().getBoolean(
-                    PreferenceConstants.P_MASTER_KEY_ENABLED);
-        }
-        SUPPLIER.m_isSet = true;
         m_masterKey.setStringValue(SUPPLIER.m_lastMasterKey);
         m_masterKeyConfirm.setStringValue(SUPPLIER.m_lastMasterKey);
     }
@@ -153,6 +153,7 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
             SUPPLIER.m_lastMasterKey = null;
         }
         SUPPLIER.m_isEnabled = m_isMasterKey.getBooleanValue();
+        SUPPLIER.m_isSet = true;
         getPreferenceStore().setValue(PreferenceConstants.P_MASTER_KEY_DEFINED,
                 SUPPLIER.m_isSet);
         getPreferenceStore().setValue(PreferenceConstants.P_MASTER_KEY_ENABLED, 
