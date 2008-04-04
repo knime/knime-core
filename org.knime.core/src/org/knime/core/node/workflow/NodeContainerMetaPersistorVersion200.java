@@ -82,6 +82,9 @@ class NodeContainerMetaPersistorVersion200 extends
         case UNCONFIGURED_MARKEDFOREXEC:
             state = State.IDLE.toString();
             break;
+        case EXECUTED:
+            state = State.EXECUTED.toString();
+            break;
         default:
             state = State.CONFIGURED.toString();
         }
