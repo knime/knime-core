@@ -231,8 +231,8 @@ class XMLContentHandler extends DefaultHandler {
 
     /**
      * Escapes all forbidden XML characters so that we can save them
-     * nevertheless. They are escaped as &quot;%%dd&quot;, with dd being
-     * their decimal ASCII code.
+     * nevertheless. They are escaped as &quot;%%ddddd&quot;, with ddddd being
+     * their decimal Unicode.
      *
      * @param s the string to escape
      * @return the escaped string
@@ -244,7 +244,7 @@ class XMLContentHandler extends DefaultHandler {
         char[] c = s.toCharArray();
         StringBuilder buf = new StringBuilder();
         for (int i = 0; i < c.length; i++) {
-            if ((c[i] < 32)
+            if (((c[i] < 32) || (c[i] > 0xd7ff))
                     || ((i < c.length - 1)
                             && (c[i] == '%') && c[i + 1] == '%')) {
                 //  if c contains '%' we encode the '%'
@@ -252,6 +252,16 @@ class XMLContentHandler extends DefaultHandler {
                 if (c[i] < 10) {
                     buf.append('0');
                 }
+                if (c[i] < 100) {
+                    buf.append('0');
+                }
+                if (c[i] < 1000) {
+                    buf.append('0');
+                }
+                if (c[i] < 10000) {
+                    buf.append('0');
+                }
+
                 buf.append(Integer.toString(c[i]));
             } else {
                 buf.append(c[i]);
@@ -277,12 +287,19 @@ class XMLContentHandler extends DefaultHandler {
         char[] c = s.toCharArray();
         StringBuilder buf = new StringBuilder();
         for (int i = 0; i < c.length; i++) {
-            if ((c[i] == '%') && (i < c.length - 3)
+            if ((c[i] == '%') && (i < c.length - 6)
                     && c[i + 1] == '%'
                     && Character.isDigit(c[i + 2])
-                    && Character.isDigit(c[i + 3])) {
-                buf.append((char)((c[i + 2] - '0') * 10 + (c[i + 3] - '0')));
-                i += 3;
+                    && Character.isDigit(c[i + 3])
+                    && Character.isDigit(c[i + 4])
+                    && Character.isDigit(c[i + 5])
+                    && Character.isDigit(c[i + 6])) {
+                buf.append((char)((c[i + 2] - '0') * 10000
+                        + (c[i + 3] - '0') * 1000
+                        + (c[i + 4] - '0') * 100
+                        + (c[i + 5] - '0') * 10
+                        + (c[i + 6] - '0')));
+                i += 6;
             } else {
                 buf.append(c[i]);
             }
