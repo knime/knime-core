@@ -2699,6 +2699,9 @@ public final class WorkflowManager extends NodeContainer {
                 snc.ensureOutputDataIsRead();
             }
         }
+        for (ContainerTable t : m_globalTableRepository.values()) {
+            t.ensureOpen();
+        }
     }
 
     //////////////////////////////////////
