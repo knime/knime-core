@@ -313,8 +313,27 @@ public final class Node {
             notifyMessageListeners(m_message);
         }
         for (int i = 0; i < getNrOutPorts(); i++) {
-            m_outputs[i].spec = loader.getPortObjectSpec(i);
-            m_outputs[i].object = loader.getPortObject(i);
+            Class<? extends PortObjectSpec> specClass =
+                m_outputs[i].type.getPortObjectSpecClass();
+            PortObjectSpec spec = loader.getPortObjectSpec(i);
+            if (spec != null && !specClass.isInstance(spec)) {
+                result.addError("Loaded PortObjectSpec of class \""
+                        + spec.getClass().getSimpleName() + ", expected "
+                        + specClass.getSimpleName());
+            } else {
+                m_outputs[i].spec = spec;
+            }
+            
+            Class<? extends PortObject> objClass =
+                m_outputs[i].type.getPortObjectClass();
+            PortObject obj = loader.getPortObject(i);
+            if (obj != null && !objClass.isInstance(obj)) {
+                result.addError("Loaded PortObject of class \""
+                        + obj.getClass().getSimpleName() + ", expected "
+                        + objClass.getSimpleName());
+            } else {
+                m_outputs[i].object = obj;
+            }
             if (m_outputs[i].object != null) {
                 m_outputs[i].hiliteHdl = m_model.getOutHiLiteHandler(i);
             }
