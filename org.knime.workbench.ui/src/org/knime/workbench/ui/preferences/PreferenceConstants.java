@@ -73,11 +73,22 @@ public class PreferenceConstants {
     /** Choice: log >= error events. */
     public static final String P_LOGLEVEL_ERROR = LEVEL.ERROR.toString();
     
+    /** Preference constant for the size of the favorite nodes frequency 
+     * history size.
+     */
     public static final String P_FAV_FREQUENCY_HISTORY_SIZE 
         = "knime.favorites.frequency";
-    
-    public static final String P_FAV_LAST_USED_SIZE = "knime.favorites.lastused";
-    
-    public static final String P_MASTER_KEY_DEFINED = "knime.master_key.defined";
+    /** Preference constant for the size of the favorite nodes last used
+     * history size.
+     */    
+    public static final String P_FAV_LAST_USED_SIZE 
+        = "knime.favorites.lastused";
+    /** Preference constant if the master key dialog was opened. */
+    public static final String P_MASTER_KEY_DEFINED 
+        = "knime.master_key.defined";
+    /** Preference constant if a master key should be used. */
+    public static final String P_MASTER_KEY_ENABLED 
+        = "knime.master.key.enabled";
+    /** Preference constant to store the maskter key during a session. */
     public static final String P_MASTER_KEY = "knime.master_key";
 }

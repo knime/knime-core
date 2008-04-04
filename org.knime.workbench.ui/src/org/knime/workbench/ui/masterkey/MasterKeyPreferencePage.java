@@ -50,6 +50,7 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
     private StringFieldEditor m_masterKey;
     private StringFieldEditor m_masterKeyConfirm;
     
+    
     /**
      * Static encryption key supplier registered with the eclipse framework
      * and serves as a master key provider when the preference page is opened
@@ -61,20 +62,23 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
     private static class EclipseEncryptionKeySupplier 
             implements EncryptionKeySupplier {
         private String m_lastMasterKey;
-        private Boolean m_isDefined;
+        private boolean m_isEnabled;
+        private boolean m_isSet;
         /**
          * {@inheritDoc}
          */
         public String getEncryptionKey() {
-            if (m_isDefined != null) {
-                 return (m_isDefined.booleanValue() ? m_lastMasterKey : null);
+            m_isSet = KNIMEUIPlugin.getDefault().getPreferenceStore()
+                .getBoolean(PreferenceConstants.P_MASTER_KEY_DEFINED);
+            if (m_isSet) {
+                 return (m_isEnabled ? m_lastMasterKey : null);
             }
             Display.getDefault().syncExec(new Runnable() {
                 public void run() {
+                    m_isSet = true;
                     m_lastMasterKey = openDialogAndReadKey();
                 }
             });
-            m_isDefined = (m_lastMasterKey != null);
             return m_lastMasterKey;
         }
     }
@@ -94,7 +98,7 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
     protected void createFieldEditors() {
         final Composite parent = getFieldEditorParent();
         m_isMasterKey = new BooleanFieldEditor(
-                PreferenceConstants.P_MASTER_KEY_DEFINED, 
+                PreferenceConstants.P_MASTER_KEY_ENABLED, 
                 "Enable password en-/decryption", parent);
         m_isMasterKey.load();
         super.addField(m_isMasterKey);
@@ -114,6 +118,12 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
     @Override
     protected void initialize() {
         super.initialize();
+        if (getPreferenceStore().getBoolean(
+                PreferenceConstants.P_MASTER_KEY_DEFINED)) {
+            SUPPLIER.m_isEnabled = getPreferenceStore().getBoolean(
+                    PreferenceConstants.P_MASTER_KEY_ENABLED);
+        }
+        SUPPLIER.m_isSet = true;
         m_masterKey.setStringValue(SUPPLIER.m_lastMasterKey);
         m_masterKeyConfirm.setStringValue(SUPPLIER.m_lastMasterKey);
     }
@@ -135,17 +145,20 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
             boolean valid = 
                 checkMasterKeys(masterKey, m_masterKeyConfirm.getStringValue());
             if (!valid) {
-                SUPPLIER.m_isDefined = false;
+                SUPPLIER.m_isEnabled = false;
                 return false;
             }
             SUPPLIER.m_lastMasterKey = m_masterKey.getStringValue();
         } else {
             SUPPLIER.m_lastMasterKey = null;
         }
-        SUPPLIER.m_isDefined = m_isMasterKey.getBooleanValue();
-        getPreferenceStore().setValue(PreferenceConstants.P_MASTER_KEY_DEFINED, 
-                SUPPLIER.m_isDefined);
-        return true;
+        SUPPLIER.m_isEnabled = m_isMasterKey.getBooleanValue();
+        getPreferenceStore().setValue(PreferenceConstants.P_MASTER_KEY_DEFINED,
+                SUPPLIER.m_isSet);
+        getPreferenceStore().setValue(PreferenceConstants.P_MASTER_KEY_ENABLED, 
+                SUPPLIER.m_isEnabled ? "true" : "false");        
+        m_isMasterKey.store();
+        return true;        
     }
     
     /**
