@@ -144,8 +144,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
 
     /**
      * Do not call this method! Internal use!
-     * @see KnowsRowCountTable#saveToFile(
-     * File, NodeSettingsWO, ExecutionMonitor)
+     * {@inheritDoc}
      */
     public void saveToFile(final File f, final NodeSettingsWO settings, 
             final ExecutionMonitor exec) throws IOException, 
@@ -178,7 +177,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     
     /**
      * Do not call this method! It's used internally to delete temp files. 
-     * Any iteration on the table will fail!
+     * Any subsequent iteration on the table will fail!
      * @see KnowsRowCountTable#clear()
      */
     public void clear() {
@@ -189,12 +188,18 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
         }
     }
     
+    /** Do not use this method (only invoked by the framework).
+     * {@inheritDoc} */
+    public void ensureOpen() {
+        ensureBufferOpen();
+    }
+    
     private static final BufferedDataTable[] EMPTY_ARRAY = 
         new BufferedDataTable[0];
     
     /**
      * Returns an empty array. This method is used internally.
-     * @see KnowsRowCountTable#getReferenceTables()
+     * {@inheritDoc}
      */
     public BufferedDataTable[] getReferenceTables() {
         return EMPTY_ARRAY;

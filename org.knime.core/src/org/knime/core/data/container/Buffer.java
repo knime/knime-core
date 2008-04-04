@@ -711,9 +711,15 @@ class Buffer {
                     restoreIntoMemory();
                 }
                 int bufferID = subSettings.getInt(CFG_BUFFER_ID);
-                assert bufferID == m_bufferID : "Table's buffer id is " 
-                    + "different from what has been passed in constructor ("
-                    + bufferID + " vs. " + m_bufferID + ")";
+                // the bufferIDs may be different in cases when an 1.0.0 table
+                // was read, then converted to a new version (done by 
+                // addToZipFile) and saved. Reading these tables will have a 
+                // bufferID of -1. 1.0.0 contain no blobs, so that's ok.
+                if (m_containsBlobs && bufferID != m_bufferID) { 
+                    LOGGER.error("Table's buffer id is different from what has"
+                        + " been passed in constructor (" + bufferID + " vs. " 
+                        + m_bufferID + "), unpredictable errors may occur");
+                }
             }
             String[] cellClasses = subSettings.getStringArray(CFG_CELL_CLASSES);
             m_shortCutsLookup = new Class[cellClasses.length];
@@ -1284,11 +1290,12 @@ class Buffer {
         zipOut.setLevel(Deflater.NO_COMPRESSION);
         zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_DATA));
         Class<? extends DataCell>[] shortCutsLookup;
-        if (!usesOutFile()) {
+        if (!usesOutFile() || m_version < IVERSION) {
             DCObjectOutputStream outStream = 
                 initOutFile(new NonClosableZipOutputStream(zipOut));
             int count = 1;
-            for (BlobSupportDataRow row : m_list) {
+            for (RowIterator it = iterator(); it.hasNext();) {
+                BlobSupportDataRow row = (BlobSupportDataRow)it.next();
                 exec.setProgress(count / (double)size(), "Writing row " 
                         + count + " (\"" + row.getKey() + "\")");
                 exec.checkCanceled();

@@ -608,7 +608,7 @@ public abstract class NodeContainer {
      */
     protected final void setDirty() {
         if (!m_isDirty) {
-            LOGGER.info("Setting dirty flag on " + getNameWithID());
+            LOGGER.debug("Setting dirty flag on " + getNameWithID());
         }
         m_isDirty = true;
         if (m_parent != null) {

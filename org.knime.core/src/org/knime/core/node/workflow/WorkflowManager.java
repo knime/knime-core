@@ -124,6 +124,12 @@ public final class WorkflowManager extends NodeContainer {
     
     private final List<ReferencedFile> m_deletedNodesFileLocations
         = new ArrayList<ReferencedFile>();
+    
+    /** The version string as read from workflow.knime file during load
+     * (or null if not loaded but newly created). This field is used to 
+     * determine whether the workflow needs to be converted to any newer version
+     * upon save. */
+    private String m_loadVersion;
 
     /** Listeners interested in status changes. */
     private final CopyOnWriteArrayList<WorkflowListener> m_wfmListeners;
@@ -184,7 +190,7 @@ public final class WorkflowManager extends NodeContainer {
         // initialize listener list
         m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
         // done.
-        LOGGER.info("Created subworkflow " + this.getID());
+        LOGGER.debug("Created subworkflow " + this.getID());
     }
     
     /** Constructor - create new workflow from persistor.
@@ -217,7 +223,7 @@ public final class WorkflowManager extends NodeContainer {
             && m_outPorts.length == 0 ? new Object() : parent.m_workflowMutex;
         m_globalTableRepository = persistor.getGlobalTableRepository();
         m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
-        LOGGER.info("Created subworkflow " + this.getID());
+        LOGGER.debug("Created subworkflow " + this.getID());
     }
 
     ///////////////////////////////////////
@@ -232,7 +238,7 @@ public final class WorkflowManager extends NodeContainer {
     public WorkflowManager createAndAddProject() {
         WorkflowManager wfm = createAndAddSubWorkflow(new PortType[0],
                 new PortType[0]);
-        LOGGER.info("Created project " + ((NodeContainer)wfm).getID());
+        LOGGER.debug("Created project " + ((NodeContainer)wfm).getID());
         return wfm;
     }
 
@@ -275,7 +281,7 @@ public final class WorkflowManager extends NodeContainer {
             addNodeContainer(container);
         }
         configureNodeAndSuccessors(newID, true, true);
-        LOGGER.info("Added new node " + newID);
+        LOGGER.debug("Added new node " + newID);
         setDirty();
         notifyWorkflowListeners(
                 new WorkflowEvent(WorkflowEvent.Type.NODE_ADDED,
@@ -365,7 +371,7 @@ public final class WorkflowManager extends NodeContainer {
             newID = createUniqueID();
             wfm = new WorkflowManager(this, newID, inPorts, outPorts);
             addNodeContainer(wfm);
-            LOGGER.info("Added new subworkflow " + newID);
+            LOGGER.debug("Added new subworkflow " + newID);
         }
         setDirty();
         notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_ADDED,
@@ -559,7 +565,7 @@ public final class WorkflowManager extends NodeContainer {
         // and finally notify listeners
         notifyWorkflowListeners(new WorkflowEvent(
                 WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
-        LOGGER.info("Added new connection from node " + source
+        LOGGER.debug("Added new connection from node " + source
                 + "(" + sourcePort + ")" + " to node " + dest
                 + "(" + destPort + ")");
         return newConn;
@@ -1223,7 +1229,7 @@ public final class WorkflowManager extends NodeContainer {
     void doBeforeExecution(final NodeContainer nc) {
         assert !nc.getID().equals(this.getID());
         synchronized (m_workflowMutex) {
-            LOGGER.info(nc.getNameWithID() + " doBeforeExecute (NC)");
+            LOGGER.debug(nc.getNameWithID() + " doBeforeExecute (NC)");
             // allow SNC to update states etc
             if (nc instanceof SingleNodeContainer) {
                 ((SingleNodeContainer)nc).preExecuteNode();
@@ -1242,7 +1248,7 @@ public final class WorkflowManager extends NodeContainer {
         assert !nc.getID().equals(this.getID());
         synchronized (m_workflowMutex) {
             String st = success ? " - success" : " - failure";
-            LOGGER.info(nc.getNameWithID() + " doAfterExecute" + st);
+            LOGGER.debug(nc.getNameWithID() + " doAfterExecute" + st);
             if (!success) {
                 // execution failed - clean up successors' execution-marks
                 disableNodeForExecution(nc.getID());
@@ -2359,7 +2365,8 @@ public final class WorkflowManager extends NodeContainer {
         Map<Integer, NodeID> translationMap = new HashMap<Integer, NodeID>();
         Map<NodeID, NodeContainerPersistor> persistorMap = 
             new HashMap<NodeID, NodeContainerPersistor>();
-
+        m_loadVersion = persistor.getLoadVersion();
+        
         exec.setMessage("Loading node information");
         for (Map.Entry<Integer, NodeContainerPersistor> nodeEntry
                 : persistor.getNodeLoaderMap().entrySet()) {
@@ -2534,6 +2541,16 @@ public final class WorkflowManager extends NodeContainer {
             }
             workflowDirRef.lock();
             try {
+                WorkflowPersistorVersion200 persistor = 
+                    new WorkflowPersistorVersion200(null);
+                if (m_loadVersion != null 
+                        && !m_loadVersion.equals(persistor.getSaveVersion())) {
+                    LOGGER.info("Workflow was created with a previous version "
+                            + "of KNIME (" + m_loadVersion + "), converting to "
+                            + "current version " + persistor.getSaveVersion()
+                            + ". This may take some time.");
+                    setDirtyAll();
+                }
                 if (workflowDirRef.equals(getNodeContainerDirectory())) {
                     for (ReferencedFile deletedNodeDir 
                             : m_deletedNodesFileLocations) {
@@ -2543,6 +2560,7 @@ public final class WorkflowManager extends NodeContainer {
                                     + f.getAbsolutePath() + "\" failed");
                         }
                     }
+                    m_loadVersion = persistor.getSaveVersion();
                 } else { // new location, must not clear deleted nodes dirs
                     FileUtil.deleteRecursively(workflowDirRef.getFile());
                 }
@@ -2585,6 +2603,9 @@ public final class WorkflowManager extends NodeContainer {
                                     cc = c2;
                                     break;
                                 }
+                            }
+                            if (cc == null) {
+                                break;
                             }
                             switch (cc.getType()) {
                             case WFMOUT:
@@ -2665,6 +2686,19 @@ public final class WorkflowManager extends NodeContainer {
         }
         checkForNodeStateChanges();
         return wasClean;
+    }
+    
+    private void setDirtyAll() {
+        setDirty();
+        for (NodeContainer nc : m_nodes.values()) {
+            if (nc instanceof WorkflowManager) {
+                ((WorkflowManager)nc).setDirtyAll();
+            } else {
+                SingleNodeContainer snc = (SingleNodeContainer)nc;
+                snc.setDirty();
+                snc.ensureOutputDataIsRead();
+            }
+        }
     }
 
     //////////////////////////////////////

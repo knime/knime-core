@@ -501,6 +501,17 @@ public final class BufferedDataTable implements DataTable, PortObject {
         }
         m_delegate.clear();
     }
+    
+    /** Reads table from its saved location (usually the workspace). Used
+     * to allow for later re-saving in a cleared workspace (used for
+     * version hop) */
+    void ensureOpen() {
+        BufferedDataTable[] references = m_delegate.getReferenceTables();
+        for (BufferedDataTable reference : references) {
+            reference.ensureOpen();
+        }
+        m_delegate.ensureOpen();
+    }
 
     /** Internally used interface. You won't have any benefit by implementing
      * this interface! It's used for selected classes in the KNIME core.
@@ -526,6 +537,9 @@ public final class BufferedDataTable implements DataTable, PortObject {
          * anymore.
          */
         void clear();
+        
+        /** Implementation of {@link BufferedDataTable#ensureOpen()}. */
+        void ensureOpen();
         
         /** Reference to the underlying tables, if any. A reference
          * table exists if this object is just a wrapper, such as a 

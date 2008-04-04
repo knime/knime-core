@@ -96,7 +96,7 @@ public final class Node {
     private NodeMessage m_message;
 
     /** Keeps outgoing information (specs, objects, HiLiteHandlers...). */
-    class Output {
+    static class Output {
         String name;
         PortType type;
         PortObjectSpec spec;
@@ -107,7 +107,7 @@ public final class Node {
     private final Output[] m_outputs;
 
     /** Keeps information about incoming connectors (type and name). */
-    class Input {
+    static class Input {
         String name;
         PortType type;
     }
@@ -1480,11 +1480,29 @@ public final class Node {
      * @return true if this node's model is a interruptible model
      */
     public boolean isInterruptible() {
-        if (m_model instanceof InterruptibleNodeModel) {
-            return true;
+        return (m_model instanceof InterruptibleNodeModel);
+    }
+    
+    /** Ensures that any port object is read for later saving with a 
+     * newer version, details see same method in class SingleNodeContainer. */
+    public void ensureOutputDataIsRead() {
+        for (Output p : m_outputs) {
+            if (p.object instanceof BufferedDataTable) {
+                ((BufferedDataTable)p.object).ensureOpen();
+            }
         }
-
-        return false;
+        for (ContainerTable t : m_localTempTables) {
+            t.ensureOpen();
+        }
+    }
+    
+    /** Exposes {@link BufferedDataTable#ensureOpen()} as public method. This
+     * method has been added here in order to keep the scope of the above method
+     * at a minimum.
+     * @param table To invoke this method on.
+     */
+    public static void invokeEnsureOpen(final BufferedDataTable table) {
+        table.ensureOpen();
     }
 
     // //////////////////////

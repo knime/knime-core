@@ -164,10 +164,13 @@ public class TableSpecReplacerTable implements KnowsRowCountTable {
     
     /**
      * Do not call this method! It's used internally. 
-     * @see KnowsRowCountTable#clear()
+     * {@inheritDoc}
      */
     public void clear() {
-        // empty.
+    }
+    
+    /** {@inheritDoc} */
+    public void ensureOpen() {
     }
 
     /**

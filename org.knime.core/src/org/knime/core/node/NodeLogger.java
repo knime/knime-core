@@ -315,13 +315,6 @@ public final class NodeLogger {
     private final Logger m_logger;
 
     /**
-     * Ignore configure warnings. This field is obsolete. It is a workaround to
-     * avoid the flood of configure warning during startup. This field will be
-     * deleted when the workflow manager is rewritten.
-     */
-    private static boolean isIgnoreConfigureWarning;
-    
-    /**
      * Ignore load data warnings, see {@link #setIgnoreLoadDataError(boolean)}
      * for details.
      */
@@ -385,10 +378,6 @@ public final class NodeLogger {
      * @param o The object to print.
      */
     public void warn(final Object o) {
-        if (isIgnoreConfigureWarning
-                && o.toString().startsWith("Configure failed: ")) {
-            return;
-        }
         m_logger.warn(o);
     }
 
@@ -407,9 +396,6 @@ public final class NodeLogger {
      * @param o The object to print.
      */
     public void info(final Object o) {
-        if (isIgnoreConfigureWarning && o.toString().equals("reset")) {
-            return;
-        }
         m_logger.info(o);
     }
 
@@ -726,20 +712,6 @@ public final class NodeLogger {
         }
     }
 
-    /**
-     * Ignore configure warnings. This field is obsolete. It is a workaround to
-     * avoid the flood of configure warning during startup. This field will be
-     * deleted when the workflow manager is rewritten.
-     * 
-     * @param value the isIgnoreConfigureWarning to set
-     * @deprecated Obsolete, will be removed when WFM is rewritten.
-     */
-    @Deprecated
-    public static void setIgnoreConfigureWarning(final boolean value) {
-        // FIXME: Remove when WFM is rewritten.
-        isIgnoreConfigureWarning = value;
-    }
-    
     /**
      * Ignore error messages that result from loading an exported workflow
      * without data. In the current version of KNIME, exporting a workflow

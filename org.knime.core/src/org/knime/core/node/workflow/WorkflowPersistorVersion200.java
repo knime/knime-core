@@ -47,7 +47,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     private static final String CFG_UIINFO_SUB_CONFIG = "ui_settings";
     /** Key for UI info's class name. */
     private static final String CFG_UIINFO_CLASS = "ui_classname";
-
+    
     static boolean canReadVersion(final String versionString) {
         return versionString.equals("2.0.0");
     }
@@ -55,6 +55,10 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     WorkflowPersistorVersion200(
             final HashMap<Integer, ContainerTable> tableRep) {
         super(tableRep);
+    }
+    
+    protected String getSaveVersion() {
+        return "2.0.0";
     }
     
     @Override
@@ -235,7 +239,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         }
         NodeSettings settings = 
             new NodeSettings(WorkflowPersistor.WORKFLOW_FILE);
-        settings.addString(WorkflowManager.CFG_VERSION, getSaveVersionString());
+        settings.addString(WorkflowManager.CFG_VERSION, getSaveVersion());
         saveWorkflowName(settings, wm.getName());
         
         NodeSettingsWO nodesSettings = saveSettingsForNodes(settings);
@@ -299,10 +303,6 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             wm.unsetDirty();
         }
         return WORKFLOW_FILE;
-    }
-    
-    protected String getSaveVersionString() {
-        return "2.0.0";
     }
     
     protected void saveWorkflowName(

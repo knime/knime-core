@@ -337,7 +337,7 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
             } finally {
                 container.close();
             }
-            appendTable = (ContainerTable)container.getBufferedTable();
+            appendTable = container.getBufferedTable();
             appendTableSpec = appendTable.getDataTableSpec();
         } else {
             appendTable = null;
@@ -400,6 +400,14 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     public void clear() {
         if (m_appendTable != null) {
             m_appendTable.clear();
+        }
+    }
+    
+    /** Internal use.
+     * {@inheritDoc} */
+    public void ensureOpen() {
+        if (m_appendTable != null) {
+            m_appendTable.ensureOpen();
         }
     }
 

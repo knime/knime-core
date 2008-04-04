@@ -80,6 +80,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     private UIInformation m_inPortsBarUIInfo;
     private UIInformation m_outPortsBarUIInfo;
     
+    private String m_loadVersion;
     private String m_name;
     
     private boolean m_needsResetAfterLoad;
@@ -101,234 +102,11 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             new TreeMap<Integer, NodeContainerPersistor>();
         m_connectionSet = new HashSet<ConnectionContainerTemplate>();
     }
-
-    /**
-     * Loads the complete workflow from the given file.
-     * 
-     * @param workflowFile the workflow file
-     * @param progMon a node progress monitor for reporting progress
-     * @throws IOException if the workflow file can not be found or files to
-     *             load node internals
-     * @throws InvalidSettingsException if settings cannot be read
-     * @throws CanceledExecutionException if loading was canceled
-     * @throws WorkflowInExecutionException if the workflow is currently being
-     *             executed
-     * @throws WorkflowException if an exception occurs while loading the
-     *             workflow structure
-     */
-    // public synchronized void load(final WorkflowManager wfm,
-    // final File workflowFile, final NodeProgressMonitor progMon)
-    // throws IOException, InvalidSettingsException,
-    // CanceledExecutionException, WorkflowInExecutionException,
-    // WorkflowException {
-    // checkForRunningNodes("Workflow cannot be loaded");
-    //
-    // if (!workflowFile.isFile()
-    // || !workflowFile.getName().equals(WORKFLOW_FILE)) {
-    // throw new IOException("File must be named: \"" + WORKFLOW_FILE
-    // + "\": " + workflowFile);
-    // }
-    //
-    // // ==================================================================
-    // // FIXME The following lines and the ones in the finally-block
-    // // are just hacks to omit warnings messages during loading the flow.
-    // // When the WFM is redesigned we need a proper way to do this.
-    // if (m_parent == null) { // meta nodes must not do anything here!
-    // NodeLogger.setIgnoreConfigureWarning(true);
-    // }
-    // // ==================================================================
-    // try {
-    // // load workflow topology
-    // NodeSettingsRO settings = NodeSettings
-    // .loadFromXML(new FileInputStream(workflowFile));
-    // if (settings.containsKey(CFG_VERSION)) {
-    // m_loadedVersion = settings.getString(CFG_VERSION);
-    // if (m_loadedVersion == null) {
-    // throw new WorkflowException(
-    // "Refuse to load workflow: Workflow version not available.");
-    // }
-    // // first version was only labeled with 1.0 instead of 1.0.0
-    // if (m_loadedVersion.equals("1.0")) {
-    // m_loadedVersion = "1.0.0";
-    // }
-    // } else {
-    // m_loadedVersion = "0.9.0"; // CeBIT 2006 version without
-    // // version id
-    // }
-    // LOGGER.debug("Trying to parse version: " + m_loadedVersion);
-    // String[] versionStrArray = m_loadedVersion.split("\\.");
-    // int[] versionIntArray = new int[]{KNIMEConstants.MAJOR,
-    // KNIMEConstants.MINOR, KNIMEConstants.REV};
-    // if (versionStrArray.length != versionIntArray.length) {
-    // throw new WorkflowException("Refuse to load workflow: Unknown"
-    // + " workflow version \"" + m_loadedVersion + "\".");
-    // }
-    // for (int i = 0; i < versionIntArray.length; i++) {
-    // int value = -1;
-    // try {
-    // value = Integer.parseInt(versionStrArray[i]);
-    // } catch (NumberFormatException nfe) {
-    // throw new WorkflowException(
-    // "Refuse to load workflow: Unknown workflow version "
-    // + "\"" + m_loadedVersion + "\".");
-    // }
-    // if (value < versionIntArray[i]) {
-    // break;
-    // } else if (value > versionIntArray[i]) {
-    // throw new WorkflowException("Refuse to load workflow: "
-    // + "The current KNIME version ("
-    // + KNIMEConstants.VERSION
-    // + ") is older than the workflow ("
-    // + m_loadedVersion + ") you are trying to load.\n"
-    // + "Please get a newer version of KNIME.");
-    // }
-    // }
-    // if (!KNIMEConstants.VERSION.equalsIgnoreCase(m_loadedVersion)) {
-    // if (m_parent == null) {
-    // LOGGER
-    // .warn("The current KNIME version ("
-    // + KNIMEConstants.VERSION
-    // + ") is different from the one that created the"
-    // + " workflow ("
-    // + m_loadedVersion
-    // + ") you are trying to load. In some rare cases, it"
-    // + " might not be possible to load all data"
-    // + " or some nodes can't be configured."
-    // + " Please re-configure and/or re-execute these"
-    // + " nodes.");
-    // }
-    // }
-    //
-    // try {
-    // load(settings);
-    // } finally {
-    //
-    // File parentDir = workflowFile.getParentFile();
-    //
-    // // data files are loaded using a repository of reference tables;
-    // // these lines serves to init the repository so nodes can put
-    // // their data
-    // // into this map, the repository is deleted when the loading is
-    // // done
-    //
-    // // meta workflows must use their grand*-parent editor's id
-    // // and only the grand-parent may initialize the repository with
-    // // the id
-    // while (wfm.m_parent != null) {
-    // wfm = wfm.m_parent;
-    // }
-    // int loadID = System.identityHashCode(wfm);
-    // if (wfm == this) {
-    // BufferedDataTable.initRepository(loadID);
-    // }
-    // ArrayList<NodeContainer> failedNodes = new ArrayList<NodeContainer>();
-    // // get all keys in there
-    // try {
-    // double nodeCounter = 1.0;
-    // ExecutionMonitor execMon = new ExecutionMonitor(progMon);
-    // for (int i = 0; i < topSortNodes().size(); i++) {
-    // NodeContainer newNode = topSortNodes().get(i);
-    // execMon.checkCanceled();
-    // execMon.setMessage("Loading node: "
-    // + newNode.getNameWithID());
-    // try {
-    // NodeSettingsRO nodeSetting = settings
-    // .getNodeSettings(KEY_NODES)
-    // .getNodeSettings("node_" + newNode.getID());
-    // String nodeFileName = nodeSetting
-    // .getString(KEY_NODE_SETTINGS_FILE);
-    // File nodeFile = new File(parentDir, nodeFileName);
-    // NodeProgressMonitor subProgMon = execMon
-    // .createSubProgress(
-    // 1.0 / topSortNodes().size())
-    // .getProgressMonitor();
-    // newNode.load(loadID, nodeFile, subProgMon);
-    // } catch (IOException ioe) {
-    // String msg = "Unable to load node: "
-    // + newNode.getNameWithID()
-    // + " -> reset and configure.";
-    // LOGGER.error(msg, ioe);
-    // failedNodes.add(newNode);
-    // } catch (InvalidSettingsException ise) {
-    // String msg = "Unable to load node: "
-    // + newNode.getNameWithID()
-    // + " -> reset and configure.";
-    // LOGGER.error(msg, ise);
-    // failedNodes.add(newNode);
-    // } catch (Throwable e) {
-    // String msg = "Unable to load node: "
-    // + newNode.getNameWithID()
-    // + " -> reset and configure.";
-    // LOGGER.error(msg, e);
-    // failedNodes.add(newNode);
-    // }
-    // progMon
-    // .setProgress(nodeCounter
-    // / topSortNodes().size());
-    // // progMon.setMessage("Prog: " + nodeCounter
-    // // / topSortNodes().size());
-    // nodeCounter += 1.0;
-    // }
-    // } finally {
-    // // put into a finally block because that may release much of
-    // // memory
-    //
-    // // only the wfm that create the repos may clear it,
-    // // otherwise
-    // // the meta workflow clears it and not-yet-loaded nodes
-    // // in the parent cannot be loaded
-    // if (wfm == this) {
-    // BufferedDataTable.clearRepository(loadID);
-    // }
-    // }
-    // for (NodeContainer newNode : failedNodes) {
-    // resetAndConfigureNode(newNode.getID());
-    // }
-    // }
-    // } finally {
-    // // ===============================================================
-    // // FIXME The following linesand the one line above are just hacks
-    // // to omit warnings messages during loading the flow.
-    // // When the WFM is redesigned we need a proper way to do this.
-    // if (m_parent == null) { // meta nodes must not do anything here!
-    // NodeLogger.setIgnoreConfigureWarning(false);
-    // }
-    // // ===============================================================
-    // }
-    // }
-    /**
-     * Saves this workflow manager settings including nodes and connections into
-     * the given file. In additon, all nodes' internal structures are stored -
-     * if available, depending on the current node state, reset, configured, or
-     * executed. For each node a directory is created (at the workflow file's
-     * parent path) to save the node internals.
-     * 
-     * @param workflowFile To write workflow manager settings to.
-     * @param progMon The monitor for the workflow saving progress.
-     * @throws IOException If the workflow file can't be found.
-     * @throws CanceledExecutionException If the saving process has been
-     *             canceled.
-     * @throws WorkflowInExecutionException if the workflow is currently being
-     *             executed
-     */
-    // public synchronized void save(final File workflowFile,
-    // final NodeProgressMonitor progMon) throws IOException,
-    // CanceledExecutionException, WorkflowInExecutionException {
-    // checkForRunningNodes("Workflow cannot be saved");
-    //
-    // if (workflowFile.isDirectory()
-    // || !workflowFile.getName().equals(WORKFLOW_FILE)) {
-    // throw new IOException("File must be named: \"" + WORKFLOW_FILE
-    // + "\": " + workflowFile);
-    // }
-    //
-    // // remove internals of all detached nodes first
-    // for (NodeContainer cont : m_detachedNodes) {
-    // cont.removeInternals();
-    // }
-    // m_detachedNodes.clear();
-    //
-    // }
+    
+    /** {@inheritDoc} */
+    public String getLoadVersion() {
+        return m_loadVersion;
+    }
 
     /** {@inheritDoc} */
     public Set<ConnectionContainerTemplate> getConnectionSet() {
@@ -416,6 +194,16 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         m_workflowSett = subWFSettings;
         m_workflowDir = parentRef;
 
+        try {
+            m_loadVersion = loadVersion(m_workflowSett);
+        } catch (InvalidSettingsException e) {
+            String error = "Unable to load version string: " + e.getMessage();
+            LOGGER.debug(error, e);
+            loadResult.addError(error);
+            // this will enforce the WFM to save everything from scratch
+            m_loadVersion = "1.3.0";
+        }
+        
         try {
             m_name = loadWorkflowName(m_workflowSett);
         } catch (InvalidSettingsException e) {
@@ -822,6 +610,11 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
      */ 
     protected boolean shouldSkipThisNode(final NodeSettingsRO settings) {
         return false;
+    }
+    
+    protected String loadVersion(final NodeSettingsRO settings) 
+        throws InvalidSettingsException {
+        return settings.getString("version");
     }
     
     protected int loadNodeIDSuffix(final NodeSettingsRO settings)

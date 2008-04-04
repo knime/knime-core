@@ -54,6 +54,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     /** Identifier for KNIME workflows when saved to disc. */
     public static final String WORKFLOW_FILE = "workflow.knime";
 
+    String getLoadVersion();
 
     Map<Integer, NodeContainerPersistor> getNodeLoaderMap();
 

@@ -128,14 +128,14 @@ public class BufferedDataContainer extends DataContainer {
         }
     }
     
-    /** @see DataContainer#createInternalBufferID() */
+    /** {@inheritDoc} */ 
     @Override
     protected int createInternalBufferID() {
         return BufferedDataTable.generateNewID();
     }
     
     /** Returns the table repository from this workflow.
-     * @see DataContainer#getGlobalTableRepository() 
+     * {@inheritDoc} 
      */
     @Override
     protected Map<Integer, ContainerTable> getGlobalTableRepository() {
@@ -145,7 +145,7 @@ public class BufferedDataContainer extends DataContainer {
     /**
      * Returns the local repository of tables. It contains tables that have
      * been created during the execution of a node.
-     * @see DataContainer#getLocalTableRepository()
+     * {@inheritDoc} 
      */
     @Override
     protected Map<Integer, ContainerTable> getLocalTableRepository() {

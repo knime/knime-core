@@ -38,6 +38,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
@@ -63,11 +64,20 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         m_rowCount = rowCount;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** Internal use.
+     * {@inheritDoc} */
     public void clear() {
         // left empty, it's up to the node to clear our underlying tables.
+    }
+    
+    /** Internal use.
+     * {@inheritDoc} */
+    public void ensureOpen() {
+        for (BufferedDataTable t : m_tables) {
+            // use public method in class Node to do it
+            // (ensureOpen() has only package scope in class BDT)
+            Node.invokeEnsureOpen(t);
+        }
     }
 
     /**
