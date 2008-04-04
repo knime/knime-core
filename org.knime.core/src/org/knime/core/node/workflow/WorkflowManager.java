@@ -554,7 +554,7 @@ public final class WorkflowManager extends NodeContainer {
                 // if the destination was the WFM itself, only configure its
                 // successors one layer up!
                 getParent().configureNodeAndSuccessors(dest, false, true);
-                checkForNodeStateChanges();
+                checkForNodeStateChanges(true);
             } else {
                 assert m_nodes.containsKey(dest);
                 // ...make sure the destination node is configured again (and
@@ -763,7 +763,7 @@ public final class WorkflowManager extends NodeContainer {
             this.getParent().configureNodeAndSuccessors(this.getID(),
                     false, true);
             // make sure to reflect state changes
-            checkForNodeStateChanges();
+            checkForNodeStateChanges(true);
         } else {
             // otherwise just reset successor, rest will be handled by WFM
             resetAndConfigureNode(cc.getDest());
@@ -896,7 +896,7 @@ public final class WorkflowManager extends NodeContainer {
                     // TODO other states - not really reason for warning?
                 }
             }
-            checkForNodeStateChanges();
+            checkForNodeStateChanges(true);
         }
     }
 
@@ -1108,7 +1108,7 @@ public final class WorkflowManager extends NodeContainer {
                 return true;
             } else {
                 disableNodeForExecution(nc.getID());
-                checkForNodeStateChanges();
+                checkForNodeStateChanges(true);
                 return false;
             }
         }
@@ -1160,7 +1160,7 @@ public final class WorkflowManager extends NodeContainer {
         }
         // make sure we reflect any state changes inside this workflow also
         // in our own state:
-        checkForNodeStateChanges();
+        checkForNodeStateChanges(true);
         return specsChanged;
     }
 
@@ -1200,7 +1200,7 @@ public final class WorkflowManager extends NodeContainer {
                             + getState() + " in markForExecution(false)");
                 }
             }
-            checkForNodeStateChanges();
+            checkForNodeStateChanges(true);
         }
     }
 
@@ -1213,7 +1213,7 @@ public final class WorkflowManager extends NodeContainer {
         assert false : "Workflow Manager can't be queued";
         switch (getState()) {
         case MARKEDFOREXEC:
-            checkForNodeStateChanges();
+            checkForNodeStateChanges(true);
             break;
         default: throw new IllegalStateException(
                 "State change to " + State.QUEUED + " not allowed, currently "
@@ -1234,7 +1234,7 @@ public final class WorkflowManager extends NodeContainer {
             if (nc instanceof SingleNodeContainer) {
                 ((SingleNodeContainer)nc).preExecuteNode();
             }
-            checkForNodeStateChanges();
+            checkForNodeStateChanges(true);
         }
     }
 
@@ -1321,7 +1321,7 @@ public final class WorkflowManager extends NodeContainer {
                 // one but then it can be treated like a SNC
                 configureNodeAndSuccessors(nc.getID(), false, true);
             }
-            checkForNodeStateChanges();
+            checkForNodeStateChanges(true);
             
             // a loop is to be continued, we need to queue the loop head
             if (loopHeadNode != null) {
@@ -1337,7 +1337,7 @@ public final class WorkflowManager extends NodeContainer {
     void resetAsNodeContainer() {
         synchronized (m_workflowMutex) {
             resetAll();
-            checkForNodeStateChanges();
+            checkForNodeStateChanges(true);
         }
     }
 
@@ -1419,7 +1419,7 @@ public final class WorkflowManager extends NodeContainer {
             configureNodeAndSuccessors(id, true, true);
         default: // ignore all other states (IDLE, CONFIGURED...)
         }
-        checkForNodeStateChanges();
+        checkForNodeStateChanges(true);
     }
 
     /** 
@@ -1766,8 +1766,10 @@ public final class WorkflowManager extends NodeContainer {
     /**
      * Check if any internal nodes have changed state which might mean that
      * this WFM also needs to change its state...
+     * @param propagateChanges Whether to also inform this wm's parent if done
+     * (true always except for loading) 
      */
-    private void checkForNodeStateChanges() {
+    private void checkForNodeStateChanges(final boolean propagateChanges) {
         // TODO enable this assertion
 //        assert Thread.holdsLock(m_workflowMutex);
         int[] nrNodesInState = new int[State.values().length];
@@ -1842,8 +1844,8 @@ public final class WorkflowManager extends NodeContainer {
         // from configured to executed (because all "incoming" nodes are done).
         wfmJustDone |= (!this.getState().equals(State.EXECUTED))
                        && (newState.equals(State.EXECUTED));
-        this.setState(newState);
-        if (wfmJustDone && (getParent() != null)) {
+        this.setState(newState, propagateChanges);
+        if (wfmJustDone && (getParent() != null) && propagateChanges) {
             // make sure parent WFM knows about successful execution
             getParent().doAfterExecution(this, newState.equals(State.EXECUTED));
         }
@@ -2049,7 +2051,7 @@ public final class WorkflowManager extends NodeContainer {
             }
         }
         // make sure internal status changes are properly reflected
-        checkForNodeStateChanges();
+        checkForNodeStateChanges(true);
         // configure this WFM in its parent only if desired (and part of list)
         if (wfmIsPartOfList && configureWFMsuccessors) {
             getParent().configureNodeAndSuccessors(this.getID(), false, configureWFMsuccessors);
@@ -2520,7 +2522,7 @@ public final class WorkflowManager extends NodeContainer {
         for (NodeID id : needConfigurationNodes) {
             configureNodeAndSuccessors(id, true, true);
         }
-        sweep();
+        sweep(false);
         return loadResult;
     }
 
@@ -2572,7 +2574,12 @@ public final class WorkflowManager extends NodeContainer {
         }
     }
     
-    boolean sweep() {
+    /** Performs sanity check on workflow. This is necessary upon load.
+     * @param propagate Whether to also reflect state changes in our parent
+     * @return Whether everything was clean before (if false is returned, 
+     * something was wrong).
+     */
+    boolean sweep(final boolean propagate) {
         boolean wasClean = true;
         synchronized (m_workflowMutex) {
             for (NodeID id : getBreathFirstListOfNodes()) {
@@ -2684,7 +2691,7 @@ public final class WorkflowManager extends NodeContainer {
                 }
             }
         }
-        checkForNodeStateChanges();
+        checkForNodeStateChanges(propagate);
         return wasClean;
     }
     
