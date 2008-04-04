@@ -76,7 +76,16 @@ class NodeContainerMetaPersistorVersion200 extends
 
     protected void saveState(final NodeSettingsWO settings,
             final NodeContainer nc) {
-        settings.addString(CFG_STATE, nc.getState().toString());
+        String state;
+        switch (nc.getState()) {
+        case IDLE:
+        case UNCONFIGURED_MARKEDFOREXEC:
+            state = State.IDLE.toString();
+            break;
+        default:
+            state = State.CONFIGURED.toString();
+        }
+        settings.addString(CFG_STATE, state);
     }
     
     protected void saveCustomName(final NodeSettingsWO settings,
