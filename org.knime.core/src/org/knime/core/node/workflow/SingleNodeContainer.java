@@ -725,7 +725,7 @@ public final class SingleNodeContainer extends NodeContainer
      * <p>This method is used when the loaded version is older than the version
      * used for saving. */
     void ensureOutputDataIsRead() {
-        
+        m_node.ensureOutputDataIsRead();
     }
 
 }
