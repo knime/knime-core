@@ -159,6 +159,9 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
         for (int i = 0; i < m_predRow.getNrMemships(); i++) {
             MembershipFunction memA = m_predRow.getMemship(i);
             MembershipFunction memB = fbf.m_predRow.getMemship(i);
+            if (memA.isMissingIntern() || memB.isMissingIntern()) {
+            	continue;
+            }
             double overlapping = overlapping(memA.getMinCore(), memA
                     .getMaxCore(), memB.getMinCore(), memB.getMaxCore(),
                     symmetric);
@@ -443,6 +446,9 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
         double dom = 0.0;
         for (int i = 0; i < m_predRow.getNrMemships(); i++) {
             MembershipFunction mem = m_predRow.getMemship(i);
+            if (mem.isMissingIntern()) {
+            	continue;
+            }
             double spread = (mem.getMaxSupport() - mem.getMinSupport());
             if (spread > 0.0) {
                 if (vol == 0.0) {

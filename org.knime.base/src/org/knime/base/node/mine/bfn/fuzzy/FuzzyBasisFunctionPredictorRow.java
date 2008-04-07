@@ -207,7 +207,7 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
     public int getNrUsedFeatures() {
         int used = 0;
         for (MembershipFunction mem : m_mem) {
-            if (!mem.isSuppLeftMax() || !mem.isSuppRightMax()) {
+            if (mem.isMissingIntern() || !mem.isSuppLeftMax() || !mem.isSuppRightMax()) {
                 used++;
             }
         }
