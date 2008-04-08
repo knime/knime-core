@@ -26,8 +26,13 @@ package org.knime.core.node;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -38,6 +43,7 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.GenericNodeDialogPane.MiscNodeDialogPane;
 import org.knime.core.node.GenericNodeFactory.NodeType;
+import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.workflow.NodeID;
@@ -46,6 +52,7 @@ import org.knime.core.node.workflow.NodeMessageEvent;
 import org.knime.core.node.workflow.NodeMessageListener;
 import org.knime.core.node.workflow.ScopeContext;
 import org.knime.core.node.workflow.ScopeObjectStack;
+import org.knime.core.node.workflow.ScopeVariable;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.util.FileUtil;
 import org.w3c.dom.Element;
@@ -79,6 +86,9 @@ public final class Node {
 
     /** The sub settings entry where the model can save its setup. */
     public static final String CFG_MODEL = "model";
+    /** The sub settings entry containing the scope variable settings. These
+     * settings are not available in the derived node model. */
+    public static final String CFG_VARIABLES = "variables";
 
     /** The node's name. */
     private String m_name;
@@ -91,6 +101,8 @@ public final class Node {
 
     /** The node's dialog or <code>null</code> if not available. */
     private GenericNodeDialogPane m_dialogPane;
+    
+    private NodeSettings m_variablesSettings;
 
     /** Holds the current node message. */
     private NodeMessage m_message;
@@ -102,7 +114,6 @@ public final class Node {
         PortObjectSpec spec;
         PortObject object;
         HiLiteHandler hiliteHdl;
-        ScopeObjectStack scopeStackContainer;
     }
     private final Output[] m_outputs;
 
@@ -226,7 +237,6 @@ public final class Node {
             m_outputs[i].spec = null;
             m_outputs[i].object = null;
             m_outputs[i].hiliteHdl = m_model.getOutHiLiteHandler(i);
-            m_outputs[i].scopeStackContainer = null;
         }
 
         m_localTempTables = new HashSet<ContainerTable>();
@@ -249,7 +259,7 @@ public final class Node {
         } catch (InvalidSettingsException ise) {
             m_logger.error("Could not copy node, reason: " + ise.getMessage());
         } finally {
-            reset();
+            reset(true);
         }
     }
 
@@ -265,6 +275,7 @@ public final class Node {
         }
         m_message = loader.getNodeMessage();
         m_outDataPortsMemoryPolicy = loader.getMemoryPolicy();
+        m_variablesSettings = loader.getVariablesSettings();
         if (m_outDataPortsMemoryPolicy == null) {
             m_outDataPortsMemoryPolicy = MemoryPolicy.CacheSmallInMemory;
         }
@@ -360,6 +371,7 @@ public final class Node {
         } catch (Throwable t) {
             m_logger.error("Loading model settings failed", t);
         }
+        m_variablesSettings = l.getVariablesSettings();
         if (getNrOutPorts() > 0) {
             // ensured to return non-null value
             m_outDataPortsMemoryPolicy = l.getMemoryPolicy();
@@ -525,17 +537,7 @@ public final class Node {
     public void setInHiLiteHandler(final int index, final HiLiteHandler hdl) {
         m_model.setNewInHiLiteHandler(index, hdl);
     }
-
   
-    public ScopeObjectStack getScopeObjectStack(final int index) {
-        return m_outputs[index].scopeStackContainer;
-    }
-
-    public void setScopeObjectStack(final int index,
-            final ScopeObjectStack sos) {
-        m_outputs[index].scopeStackContainer = sos;
-    }
-
     /**
      * Get the policy for the data outports, that is, keep the output in main
      * memory or write it to disc. This method is used from within the
@@ -607,15 +609,13 @@ public final class Node {
         // TODO allow for optional inputs
         for (int i = 0; i < inData.length; i++) {
             if (inData[i] == null) {
-                m_logger.assertLog(false,
-                        "Couldn't get data from predecessor (Port No." + i
-                                + "). Is it executed?");
+                m_logger.assertLog(false, "Couldn't get data from predecessor "
+                        + "(Port No." + i + "). Is it executed?");
                 m_logger.error("failed execute");
                 // TODO NEWWFM state event
-                m_message =
-                        new NodeMessage(NodeMessage.Type.ERROR,
+                m_message = new NodeMessage(NodeMessage.Type.ERROR,
                                 "Couldn't get data from predecessor (Port No."
-                                        + i + "). Is it executed?");
+                                + i + "). Is it executed?");
                 // TODO: also notify message/progress listeners
                 notifyMessageListeners(m_message);
                 // notifyStateListeners(new NodeStateChangedEvent.EndExecute());
@@ -632,8 +632,7 @@ public final class Node {
                 m_logger.error("  (Wanted: "
                         + thisType.getPortObjectClass().getName() + ", "
                         + "actual: " + inData[i].getClass().getName() + ")");
-                m_message =
-                        new NodeMessage(NodeMessage.Type.ERROR,
+                m_message = new NodeMessage(NodeMessage.Type.ERROR,
                                 "Connection Error: Mismatch"
                                         + " of input port types (port " + i
                                         + ").");
@@ -649,33 +648,29 @@ public final class Node {
         } catch (CanceledExecutionException cee) {
             // execution was canceled
             m_logger.info("execute canceled");
-            reset();
-            m_message =
-                    new NodeMessage(NodeMessage.Type.WARNING,
+            reset(true);
+            m_message = new NodeMessage(NodeMessage.Type.WARNING,
                             "Execution canceled");
             return false;
         } catch (AssertionError ae) {
             m_logger.assertLog(false, ae.getMessage(), ae);
-            reset();
-            m_message =
-                    new NodeMessage(NodeMessage.Type.ERROR, "Execute failed: "
-                            + ae.getMessage());
+            reset(true);
+            m_message = new NodeMessage(NodeMessage.Type.ERROR, 
+                    "Execute failed: " + ae.getMessage());
             return false;
         } catch (Error e) {
             // some other error - should never happen!
             m_logger.fatal("Fatal error", e);
-            reset();
-            m_message =
-                    new NodeMessage(NodeMessage.Type.ERROR, "Execute failed: "
-                            + e.getMessage());
+            reset(true);
+            m_message = new NodeMessage(NodeMessage.Type.ERROR, 
+                    "Execute failed: " + e.getMessage());
             return false;
         } catch (Exception e) {
             // execution failed
             m_logger.error("Execute failed", e);
-            reset();
-            m_message =
-                    new NodeMessage(NodeMessage.Type.ERROR, "Execute failed: "
-                            + e.getMessage());
+            reset(true);
+            m_message = new NodeMessage(NodeMessage.Type.ERROR, 
+                    "Execute failed: " + e.getMessage());
             return false;
         } finally {
             if (m_message != null) {
@@ -688,23 +683,21 @@ public final class Node {
         // check for compatible output PortObjects
         for (int i = 0; i < newOutData.length; i++) {
             PortType thisType = m_model.getOutPortType(i);
-            assert newOutData[i] != null || continuesLoop : "Null output from non-loopterminate node";
-            if ((newOutData[i] != null)
-                    && !thisType.getPortObjectClass().isInstance(newOutData[i])) {
+            assert newOutData[i] != null || continuesLoop 
+                : "Null output from non-loopterminate node";
+            if ((newOutData[i] != null) && !thisType.getPortObjectClass().
+                    isInstance(newOutData[i])) {
                 m_logger.error("Connection Error: Mismatch"
                         + " of output port types (port " + i + ").");
-                m_logger
-                        .error("  (Wanted: "
+                m_logger.error("  (Wanted: "
                                 + thisType.getPortObjectClass().getName()
                                 + ", " + "actual: "
                                 + newOutData[i].getClass().getName() + ")");
-
                 // TODO: is this redundant double checking?
-                m_message =
-                        new NodeMessage(NodeMessage.Type.ERROR,
+                m_message = new NodeMessage(NodeMessage.Type.ERROR,
                                 "Connection Error: Mismatch"
-                                        + " of output port types (port " + i
-                                        + ").");
+                                    + " of output port types (port " + i
+                                    + ").");
                 notifyMessageListeners(m_message);
                 return false;
             }
@@ -736,7 +729,6 @@ public final class Node {
                 }
             }
             m_outputs[p].hiliteHdl = m_model.getOutHiLiteHandler(p);
-            m_outputs[p].scopeStackContainer = getScopeContextStackContainer();
         }
         m_logger.info("End execute (" + (System.currentTimeMillis() - time)
                 / 100 / 10.0 + " sec)");
@@ -755,8 +747,7 @@ public final class Node {
         if (warningMessage != null) {
 
             m_logger.warn("Model warning message: " + warningMessage);
-            m_message =
-                    new NodeMessage(NodeMessage.Type.WARNING, "Warning: "
+            m_message = new NodeMessage(NodeMessage.Type.WARNING, "Warning: "
                             + warningMessage);
             notifyMessageListeners(m_message);
             // reset the warning message
@@ -765,16 +756,18 @@ public final class Node {
     }
 
     /**
-     * Resets this node with out re-configuring it. All connected nodes will be
-     * reset, as well as the <code>DataTable</code>s and
-     * <code>PredictParams</code> at the outports.
-     * 
+     * Resets this node without re-configuring it. 
+     * @param cleanMessages Whether to clear the node message, mostly true
+     * but false if an execution has failed and we want to give the node model
+     * a chance to clear its intermediate results.
      */
-    public void reset() {
+    public void reset(final boolean cleanMessages) {
         m_logger.info("reset");
         // if reset had no exception, reset node message
-        m_message = null;
         m_model.resetModel();
+        if (cleanMessages) {
+            m_message = null;
+        }
         // and make sure output ports are empty as well
         cleanOutPorts();
         // clear temporary tables that have been created during execute
@@ -787,9 +780,16 @@ public final class Node {
     public void cleanOutPorts() {
         m_logger.info("clean output ports.");
         // blow away our data tables in the port
-        for (int p = 0; p < getNrOutPorts(); p++) {
-            m_outputs[p].spec = null;
-            m_outputs[p].object = null;
+        for (int i = 0; i < m_outputs.length; i++) {
+            PortObject portObject = m_outputs[i].object;
+            if (portObject instanceof BufferedDataTable) {
+                BufferedDataTable t = (BufferedDataTable)portObject;
+                if (t != null) {
+                    t.clear(this);
+                }
+            }
+            m_outputs[i].spec = null;
+            m_outputs[i].object = null;
         }
     }
 
@@ -841,15 +841,7 @@ public final class Node {
      * Deletes any temporary resources associated with this node.
      */
     public void cleanup() {
-        for (int i = 0; i < m_outputs.length; i++) {
-            PortObject portObject = m_outputs[i].object;
-            if (portObject instanceof BufferedDataTable) {
-                BufferedDataTable t = (BufferedDataTable)portObject;
-                if (t != null) {
-                    t.clear(this);
-                }
-            }
-        }
+        cleanOutPorts();
     }
 
     // /**
@@ -975,7 +967,92 @@ public final class Node {
     // }
     //
     // }
-
+    
+    /** Used before configure, to apply the variable mask to the nodesettings,
+     * that is to change individual node settings to reflect the current values
+     * of the variables (if any).
+     * @return a map containing the exposed variables (which are visible to
+     * downstream nodes. These variables are put onto the node's 
+     * {@link ScopeObjectStack}.
+     */
+    private Map<String, ScopeVariable> applySettingsUsingScopeStack() 
+        throws InvalidSettingsException {
+        if (m_variablesSettings == null) {
+            return Collections.emptyMap();
+        }
+        NodeSettings fromModel = new NodeSettings("model");
+        try {
+            m_model.saveSettingsTo(fromModel);
+        } catch (Throwable e) {
+            m_logger.error("Saving of model settings failed with " 
+                    + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
+            String message = "Failed to apply scope variables; "
+                + "model failed to save its settings";
+            throw new InvalidSettingsException(message, e);
+        }
+        ConfigEditTreeModel configEditor;
+        try {
+            configEditor = 
+                ConfigEditTreeModel.create(fromModel, m_variablesSettings);
+        } catch (final InvalidSettingsException e) {
+            throw new InvalidSettingsException("Errors reading flow variables: "
+                    + e.getMessage(), e);
+        }
+        Map<String, ScopeVariable> scopeVariablesMap =
+            getScopeContextStackContainer().getAvailableVariables();
+        List<ScopeVariable> newVariableList;
+        try {
+            newVariableList = configEditor.overwriteSettings(
+                    fromModel, scopeVariablesMap);
+        } catch (InvalidSettingsException e) {
+            throw new InvalidSettingsException(
+                    "Errors overwriting node settings with flow variables: "
+                    + e.getMessage(), e);
+        }
+        try {
+            m_model.validateSettings(fromModel);
+        } catch (final Throwable e) {
+            if (!(e instanceof InvalidSettingsException)) {
+                m_logger.error("Validation of node settings failed with " 
+                        + e.getClass().getSimpleName(), e);
+            }
+            throw new InvalidSettingsException(
+                    "Errors loading flow variables into node : "
+                    + e.getMessage(), e);
+        }
+        try {
+            m_model.loadValidatedSettingsFrom(fromModel);
+        } catch (Throwable e) {
+            if (!(e instanceof InvalidSettingsException)) {
+                m_logger.error("Loading of node settings failed with " 
+                        + e.getClass().getSimpleName(), e);
+            }
+            m_logger.error("loadSettings failed after validation succeeded.");
+            throw new InvalidSettingsException(
+                    "Errors loading flow variables into node : "
+                    + e.getMessage(), e);
+        }
+        Map<String, ScopeVariable> newVariableHash = 
+            new LinkedHashMap<String, ScopeVariable>();
+        for (ScopeVariable v : newVariableList) {
+            if (newVariableHash.put(v.getName(), v) != null) {
+                m_logger.warn("Duplicate variable assignment for key \""
+                        + v.getName() + "\")");
+            }
+        }
+        return newVariableHash;
+    }
+    
+    private void pushOntoStack(final Map<String, ScopeVariable> newVars) {
+        ScopeObjectStack stack = getScopeContextStackContainer();
+        ArrayList<ScopeVariable> reverseOrder = 
+            new ArrayList<ScopeVariable>(newVars.values());
+        Collections.reverse(reverseOrder);
+        for (ScopeVariable v : reverseOrder) {
+            stack.push(v);
+        }
+    }
+    
     /**
      * Sets all (new) incoming <code>DataTableSpec</code> elements in the
      * model, calls the model to create output table specs and propagates these
@@ -994,7 +1071,11 @@ public final class Node {
             // need to init here as there may be an exception being thrown and
             // then we copy the null elements of this array to their destination
             PortObjectSpec[] newOutSpec = new PortObjectSpec[getNrOutPorts()];
+            Map<String, ScopeVariable> newVariables = Collections.emptyMap();
             try {
+                if (m_variablesSettings != null) {
+                    newVariables = applySettingsUsingScopeStack();
+                }
                 // check the inspecs against null
                 for (int i = 0; i < inSpecs.length; i++) {
                     if (BufferedDataTable.class.isAssignableFrom(
@@ -1011,6 +1092,7 @@ public final class Node {
                 // call configure model to create output table specs
                 // guaranteed to return non-null, correct-length array
                 newOutSpec = m_model.configureModel(inSpecs);
+                pushOntoStack(newVariables);
                 success = true;
             } catch (InvalidSettingsException ise) {
                 m_logger.warn("Configure failed: " + ise.getMessage());
@@ -1022,15 +1104,9 @@ public final class Node {
             } catch (Error e) {
                 m_logger.fatal("Configure failed", e);
             } finally {
-                /*
-                 * set the new specs in the output ports, which will propagate
-                 * them to connected successor nodes
-                 */
                 for (int p = 0; p < newOutSpec.length; p++) {
                     // update data table spec
                     m_outputs[p].spec = newOutSpec[p];
-                    m_outputs[p].scopeStackContainer =
-                            getScopeContextStackContainer();
                 }
 
                 processModelWarnings();
@@ -1108,8 +1184,14 @@ public final class Node {
      * @throws ArrayIndexOutOfBoundsException If the view index is out of range.
      */
     public GenericNodeView<?> getView(final int viewIndex, final String title) {
-        GenericNodeView<?> view = m_factory.createNodeView(viewIndex, m_model);
-        view.setViewTitle(title);
+        GenericNodeView<?> view;
+        try {
+            view = m_factory.createNodeView(viewIndex, m_model);
+            view.setViewTitle(title);
+        } catch (Throwable e) {
+            m_logger.error("View instantiation failed", e);
+            throw new RuntimeException(e.getMessage(), e);
+        }
         return view;
     }
 
@@ -1173,6 +1255,7 @@ public final class Node {
      * @param inSpecs The input specs, which will be forwarded to the dialog's
      *            {@link GenericNodeDialogPane# loadSettingsFrom(NodeSettingsRO,
      *            PortObjectSpec[])}.
+     * @param scopeStack The stack of variables.
      * @return The dialog pane which holds all the settings' components. In
      *         addition this method loads the settings from the model into the
      *         dialog pane.
@@ -1184,17 +1267,18 @@ public final class Node {
      * @see #hasDialog()
      */
     public GenericNodeDialogPane getDialogPaneWithSettings(
-            final PortObjectSpec[] inSpecs) throws NotConfigurableException {
+            final PortObjectSpec[] inSpecs, final ScopeObjectStack scopeStack)
+        throws NotConfigurableException {
         GenericNodeDialogPane dialogPane = getDialogPane();
         NodeSettingsRO settings = getSettingsFromNode();
-        dialogPane.internalLoadSettingsFrom(settings, inSpecs);
+        dialogPane.internalLoadSettingsFrom(settings, inSpecs, scopeStack);
         return dialogPane;
     }
 
     /**
      * Get reference to the node dialog instance. Used to get the user settings
      * from the dialog without overwriting them as in in
-     * {@link #getDialogPaneWithSettings(PortObjectSpec[])}
+     * {@link #getDialogPaneWithSettings(PortObjectSpec[], ScopeObjectStack)}
      * 
      * @return Reference to dialog pane.
      * @throws IllegalStateException If node has no dialog.
@@ -1279,6 +1363,7 @@ public final class Node {
             m_logger.fatal("Could not save model", e);
         }
         l.setModelSettings(model);
+        l.setVariablesSettings(m_variablesSettings);
         l.save(settings);
     }
 
@@ -1462,8 +1547,8 @@ public final class Node {
     public void notifyMessageListeners(final NodeMessage message) {
         for (NodeMessageListener listener : m_messageListeners) {
             try {
-                listener.messageChanged(new NodeMessageEvent(new NodeID(0),
-                        message));
+                listener.messageChanged(new NodeMessageEvent(
+                        new NodeID(0), message));
             } catch (Throwable t) {
                 m_logger.error("Exception while notifying node listeners", t);
             }
@@ -1553,7 +1638,8 @@ public final class Node {
         static final String CFG_MISC_SETTINGS = "internal_node_subsettings";
 
         private MemoryPolicy m_memoryPolicy = MemoryPolicy.CacheSmallInMemory;
-
+        private NodeSettings m_variablesSettings = 
+            new NodeSettings("variables");
         private NodeSettings m_modelSettings;
 
         /**
@@ -1587,6 +1673,20 @@ public final class Node {
             m_modelSettings = modelSettings;
         }
 
+        /**
+         * @return the variableSettings
+         */
+        NodeSettings getVariablesSettings() {
+            return m_variablesSettings;
+        }
+        
+        /**
+         * @param variablesSettings the variablesSettings to set
+         */
+        void setVariablesSettings(final NodeSettings variablesSettings) {
+            m_variablesSettings = variablesSettings;
+        }
+        
         static SettingsLoaderAndWriter load(final NodeSettingsRO settings)
                 throws InvalidSettingsException {
             SettingsLoaderAndWriter result = new SettingsLoaderAndWriter();
@@ -1616,8 +1716,14 @@ public final class Node {
             } else {
                 result.m_memoryPolicy = MemoryPolicy.CacheSmallInMemory;
             }
+            if (settings.containsKey(CFG_VARIABLES)) {
+                result.m_variablesSettings =
+                    (NodeSettings)settings.getNodeSettings(CFG_VARIABLES);
+            } else {
+                result.m_variablesSettings = null;
+            }
             result.m_modelSettings =
-                    (NodeSettings)settings.getNodeSettings(CFG_MODEL);
+                (NodeSettings)settings.getNodeSettings(CFG_MODEL);
             return result;
         }
 
@@ -1629,6 +1735,11 @@ public final class Node {
             }
             NodeSettingsWO model = settings.addNodeSettings(CFG_MODEL);
             m_modelSettings.copyTo(model);
+            if (m_variablesSettings != null) {
+                NodeSettingsWO variables = 
+                    settings.addNodeSettings(CFG_VARIABLES);
+                m_variablesSettings.copyTo(variables);
+            }
         }
     }
 }

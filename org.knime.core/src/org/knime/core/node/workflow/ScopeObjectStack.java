@@ -24,8 +24,11 @@
 package org.knime.core.node.workflow;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 
@@ -144,6 +147,11 @@ public final class ScopeObjectStack {
         return null;
     }
 
+    /** Get the variable with the given name or null if no such variable
+     * is on the stack.
+     * @param name To peek
+     * @return the variable or null
+     */ 
     public ScopeVariable peekVariable(final String name) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {
             ScopeObject e = m_stack.get(i);
@@ -154,7 +162,47 @@ public final class ScopeObjectStack {
         }
         return null;
     }
-
+    
+    /** Get all (visible!) variables on the stack in a non-modifiable map.
+     * This method is used to show available variables to the user.
+     * @return Such a map.
+     */
+    public Map<String, ScopeVariable> getAvailableVariables() {
+        LinkedHashMap<String, ScopeVariable> hash = 
+            new LinkedHashMap<String, ScopeVariable>();
+        for (int i = m_stack.size() - 1; i >= 0; i--) {
+            ScopeObject e = m_stack.get(i);
+            if (!(e instanceof ScopeVariable)) {
+                continue;
+            }
+            ScopeVariable v = (ScopeVariable)e;
+            if (!hash.containsKey(v.getName())) {
+                hash.put(v.getName(), v);
+            }
+        }
+        return Collections.unmodifiableMap(hash);
+    }
+    
+    /** Get all objects on the stack that are owned by the node with the given
+     * id. This method is used to persist the stack.
+     * @param id identifies objects of interest.
+     * @return list of all elements that are put onto the stack by 
+     *         the argument node
+     */
+    List<ScopeObject> getScopeObjectsOwnedBy(final NodeID id) {
+        List<ScopeObject> result = new ArrayList<ScopeObject>();
+        boolean isInSequence = true;
+        for (ScopeObject v : m_stack) {
+            if (v.getOriginatingNode().equals(id)) {
+                isInSequence = false;
+                result.add(v);
+            }
+            assert isInSequence || v.getOriginatingNode().equals(id)
+                : "Scope objects are not ordered";
+        }
+        return result;
+    }
+    
 
     /**
      * Removes all elements from the stack whose class is not of the given type.

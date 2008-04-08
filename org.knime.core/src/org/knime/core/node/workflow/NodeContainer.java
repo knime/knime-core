@@ -460,7 +460,7 @@ public abstract class NodeContainer {
         return getDialogPaneWithSettings(inputSpecs);
     }
 
-    /** Launch a node dialog in it's own JFrame (actually a JDialog).
+    /** Launch a node dialog in its own JFrame (a JDialog).
      *
      * @param id node ID
      * @throws NotConfigurableException if node can not be configured
@@ -640,7 +640,7 @@ public abstract class NodeContainer {
     }
     
     abstract LoadResult loadContent(final NodeContainerPersistor persistor, 
-            final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec)
+            final Map<Integer, BufferedDataTable> tblRep, ScopeObjectStack inStack, final ExecutionMonitor exec)
             throws CanceledExecutionException;
     
 

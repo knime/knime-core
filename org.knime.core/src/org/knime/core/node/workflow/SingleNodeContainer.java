@@ -312,7 +312,7 @@ public final class SingleNodeContainer extends NodeContainer
         synchronized (m_nodeMutex) {
             switch (getState()) {
             case EXECUTED:
-                m_node.reset();
+                m_node.reset(true);
                 // After reset we need explicit configure!
                 setState(State.IDLE);
                 return;
@@ -484,7 +484,7 @@ public final class SingleNodeContainer extends NodeContainer
                     setState(State.CONFIGURED);
                 }
             } else {
-                m_node.reset();  // we need to clean up remaining nonsense...
+                m_node.reset(false);  // we need to clean up remaining nonsense...
                 m_node.clearLoopStatus();  // ...and the loop status
                 // but node will not be reconfigured!
                 // (configure does not prepare execute but only tells us what
@@ -565,23 +565,30 @@ public final class SingleNodeContainer extends NodeContainer
     /** {@inheritDoc} */
     @Override
     LoadResult loadContent(final NodeContainerPersistor nodePersistor,
-            final Map<Integer, BufferedDataTable> tblRep, ExecutionMonitor exec) throws CanceledExecutionException {
-        if (!(nodePersistor instanceof SingleNodeContainerPersistor)) {
-            throw new IllegalStateException("Expected " 
-                    + SingleNodeContainerPersistor.class.getSimpleName() 
-                    + " persistor object, got " 
-                    + nodePersistor.getClass().getSimpleName());
+            final Map<Integer, BufferedDataTable> tblRep, 
+            final ScopeObjectStack inStack, 
+            final ExecutionMonitor exec) throws CanceledExecutionException {
+        synchronized (m_nodeMutex) {
+            if (!(nodePersistor instanceof SingleNodeContainerPersistor)) {
+                throw new IllegalStateException("Expected " 
+                        + SingleNodeContainerPersistor.class.getSimpleName() 
+                        + " persistor object, got " 
+                        + nodePersistor.getClass().getSimpleName());
+            }
+            SingleNodeContainerPersistor persistor = 
+                (SingleNodeContainerPersistor)nodePersistor;
+            State state = persistor.getMetaPersistor().getState();
+            setState(state, false);
+            if (state.equals(State.EXECUTED)) {
+                m_node.putOutputTablesIntoGlobalRepository(
+                        getParent().getGlobalTableRepository());
+            }
+            for (ScopeObject s : persistor.getScopeObjects()) {
+                inStack.push(s);
+            }
+            setScopeObjectStack(inStack);
+            return new LoadResult();
         }
-        SingleNodeContainerPersistor persistor = 
-            (SingleNodeContainerPersistor)nodePersistor;
-        State state = persistor.getMetaPersistor().getState();
-        setState(state, false);
-        if (state.equals(State.EXECUTED)) {
-            m_node.putOutputTablesIntoGlobalRepository(
-                    getParent().getGlobalTableRepository());
-        }
-        setScopeObjectStack(new ScopeObjectStack(getID()));
-        return new LoadResult();
     }
 
     /** {@inheritDoc} */
@@ -664,7 +671,8 @@ public final class SingleNodeContainer extends NodeContainer
     @Override
     GenericNodeDialogPane getDialogPaneWithSettings(
             final PortObjectSpec[] inSpecs) throws NotConfigurableException {
-        return m_node.getDialogPaneWithSettings(inSpecs);
+        ScopeObjectStack stack = getScopeObjectStack();
+        return m_node.getDialogPaneWithSettings(inSpecs, stack);
     }
 
     /** {@inheritDoc} */

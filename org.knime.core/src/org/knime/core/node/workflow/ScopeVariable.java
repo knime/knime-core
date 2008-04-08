@@ -61,6 +61,11 @@ public class ScopeVariable extends ScopeObject {
         return m_name;
     }
     
+    /** @return the type */
+    public Type getType() {
+        return m_type;
+    }
+    
     public String getStringValue() {
         if (m_type != Type.STRING) {
             return null;

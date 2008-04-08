@@ -2339,7 +2339,7 @@ public final class WorkflowManager extends NodeContainer {
             ROOT.addNodeContainer(manager);
             synchronized (manager.m_workflowMutex) {
                 result.addError(manager.loadContent(
-                        persistor, tblRep, loadExec));
+                        persistor, tblRep, null, loadExec));
             }
         }
         exec.setProgress(1.0);
@@ -2353,7 +2353,8 @@ public final class WorkflowManager extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     LoadResult loadContent(final NodeContainerPersistor nodePersistor, 
-            final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec) 
+            final Map<Integer, BufferedDataTable> tblRep, 
+            final ScopeObjectStack ignoredStack, final ExecutionMonitor exec) 
         throws CanceledExecutionException {
         if (!(nodePersistor instanceof WorkflowPersistor)) {
             throw new IllegalStateException("Expected " 
@@ -2440,15 +2441,20 @@ public final class WorkflowManager extends NodeContainer {
                 break;
             }
             NodeOutPort[] predPorts = assemblePredecessorOutPorts(bfsID);
-            PortObject[] portObjects = new PortObject[predPorts.length];
-            for (int i = 0; i < predPorts.length; i++) {
+            final int predCount = predPorts.length;
+            PortObject[] portObjects = new PortObject[predCount];
+            ScopeObjectStack[] predStacks = new ScopeObjectStack[predCount];
+            for (int i = 0; i < predCount; i++) {
                 NodeOutPort p = predPorts[i];
                 if (cont instanceof SingleNodeContainer && p != null) {
                     SingleNodeContainer snc = (SingleNodeContainer)cont;
                     snc.setInHiLiteHandler(i, p.getHiLiteHandler());
                 }
+                predStacks[i] = p.getScopeContextStackContainer();
                 portObjects[i] = p != null ? p.getPortObject() : null;
             }
+            ScopeObjectStack inStack = 
+                new ScopeObjectStack(cont.getID(), predStacks);
             NodeContainerPersistor containerPersistor = persistorMap.get(bfsID);
             exec.setMessage("Loading persistor for " + cont.getNameWithID());
             // two steps below: loadNodeContainer and loadContent
@@ -2477,7 +2483,7 @@ public final class WorkflowManager extends NodeContainer {
             sub1.setProgress(1.0);
             exec.setMessage("Loading " + cont.getNameWithID());
             subResult.addError(cont.loadContent(
-                    containerPersistor, tblRep, sub2));
+                    containerPersistor, tblRep, inStack, sub2));
             sub2.setProgress(1.0);
 
             boolean hasPredecessorFailed = false;

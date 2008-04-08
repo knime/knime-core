@@ -72,5 +72,11 @@ public final class NodeMessage {
     public Type getMessageType() {
         return m_type;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return getMessageType() + ": " + getMessage();
+    }
 
 }

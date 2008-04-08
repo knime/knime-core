@@ -24,6 +24,7 @@
 package org.knime.core.node;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.FlowLayout;
@@ -40,19 +41,26 @@ import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
 import javax.swing.JSpinner.DefaultEditor;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicComboPopup;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.Node.MemoryPolicy;
 import org.knime.core.node.Node.SettingsLoaderAndWriter;
+import org.knime.core.node.config.ConfigEditJTree;
+import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.workflow.ScopeObjectStack;
 import org.knime.core.util.MutableInteger;
 
 /**
@@ -80,6 +88,8 @@ public abstract class GenericNodeDialogPane {
 
     private static final String TAB_NAME_MISCELLANEOUS =
         "General Node Settings";
+    
+    private static final String TAB_NAME_VARIABLES = "Flow Variables";
 
     /**
      * Tabbed pane in the center of the dialog, which holds the components added
@@ -97,6 +107,17 @@ public abstract class GenericNodeDialogPane {
      * This field is null when m_node has no data outports.
      */
     private MiscSettingsTab m_miscTab;
+    
+    /** The tab containing the flow variables. */
+    private ScopeVariablesTab m_scopeVariableTab;
+    
+    /** The variables tab settings as loaded from the model. We'll use them as
+     * soon as the tab gets activated to update the tree. */
+    private NodeSettings m_scopeVariablesSettings;
+    
+    /** The scope object stack, it's also used when the variables tab get's 
+     * activated. */
+    private ScopeObjectStack m_scopeObjectStack;
 
     /** The underlying panel which keeps all the tabs. */
     private final JPanel m_panel;
@@ -174,18 +195,22 @@ public abstract class GenericNodeDialogPane {
      * (i.e. memory policy of outports, if any).
      * @param settings To load from.
      * @param specs The DTSs from the inports.
+     * @param scopeStack Scope object stack (contains flow variables)
      * @throws NotConfigurableException
      * If loadSettingsFrom throws this exception.
-     * @see #loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
+     * @see #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])
      */
     final void internalLoadSettingsFrom(final NodeSettingsRO settings,
-            final PortObjectSpec[] specs) throws NotConfigurableException {
-        NodeSettingsRO modelSettings = null;
+            final PortObjectSpec[] specs, final ScopeObjectStack scopeStack) 
+        throws NotConfigurableException {
+        NodeSettings modelSettings = null;
         MemoryPolicy memoryPolicy = null;
+        m_scopeObjectStack = scopeStack;
         try {
             SettingsLoaderAndWriter l = SettingsLoaderAndWriter.load(settings);
             modelSettings = l.getModelSettings();
             memoryPolicy = l.getMemoryPolicy();
+            m_scopeVariablesSettings = l.getVariablesSettings();
         } catch (InvalidSettingsException e) {
             // silently ignored here, variables get assigned default values
             // if they are null
@@ -206,6 +231,22 @@ public abstract class GenericNodeDialogPane {
         if (m_miscTab != null) {
             m_miscTab.setStatus(memoryPolicy);
         }
+        if (m_scopeVariableTab == null) {
+            m_scopeVariableTab = new ScopeVariablesTab();
+            addTab(TAB_NAME_VARIABLES, m_scopeVariableTab);
+            m_pane.addChangeListener(new ChangeListener() {
+                /** {@inheritDoc} */
+                public void stateChanged(final ChangeEvent e) {
+                    if (m_pane.getSelectedComponent() == m_scopeVariableTab) {
+                        onVariablesTabSelected();
+                    }
+                } 
+            });
+        }
+        m_scopeVariableTab.setWasAtLeastOnceVisible(false);
+        if (m_pane.getSelectedComponent() == m_scopeVariableTab) {
+            onVariablesTabSelected();
+        }
     }
 
     /**
@@ -218,20 +259,27 @@ public abstract class GenericNodeDialogPane {
     public final void internalSaveSettingsTo(final NodeSettingsWO settings)
         throws InvalidSettingsException {
         SettingsLoaderAndWriter l = new SettingsLoaderAndWriter();
-        NodeSettings temp = new NodeSettings("field_ignored");
+        NodeSettings model = new NodeSettings("field_ignored");
         try {
-            saveSettingsTo(temp);
+            saveSettingsTo(model);
         } catch (InvalidSettingsException ise) {
             throw ise;
         } catch (Throwable e) {
             m_logger.error("Failed to save dialog settings", e);
         }
+        NodeSettings variables;
+        if (m_scopeVariableTab.wasAtLeastOnceVisible()) {
+            variables = m_scopeVariableTab.getVariableSettings();
+        } else {
+            variables = m_scopeVariablesSettings;
+        }
         MemoryPolicy memPolicy = MemoryPolicy.CacheSmallInMemory;
         if (m_miscTab != null) {
             memPolicy = m_miscTab.getStatus();
         }
-        l.setModelSettings(temp);
+        l.setModelSettings(model);
         l.setMemoryPolicy(memPolicy);
+        l.setVariablesSettings(variables);
         l.save(settings);
     }
 
@@ -508,17 +556,24 @@ public abstract class GenericNodeDialogPane {
 
         ViewUtils.invokeAndWaitInEDT(new Runnable() {
             public void run() {
+                int variableTabIndex = m_pane.indexOfComponent(m_scopeVariableTab);
                 int miscIndex = m_pane.indexOfComponent(m_miscTab);
 
                 if (miscIndex >= 0) {
-                    // make sure the miscellaneous tab is always the last tab
+                    // make sure the miscellaneous tab is the last tab
                     if (insertIdx.intValue() > miscIndex) {
                         insertIdx.setValue(miscIndex);
                     }
-                } else {
-                    if (insertIdx.intValue() > m_pane.getTabCount()) {
-                        insertIdx.setValue(m_pane.getTabCount());
+                }
+                if (variableTabIndex >= 0) {
+                    // make sure the variables tab is the second last tab
+                    if (insertIdx.intValue() > variableTabIndex) {
+                        insertIdx.setValue(variableTabIndex);
                     }
+                    
+                }
+                if (insertIdx.intValue() > m_pane.getTabCount()) {
+                    insertIdx.setValue(m_pane.getTabCount());
                 }
 
                 // add it to the tabbed pane and the hash map
@@ -663,6 +718,113 @@ public abstract class GenericNodeDialogPane {
      */
     protected final int getTabIndex(final String title) {
         return m_pane.indexOfTab(title);
+    }
+    
+    private void onVariablesTabSelected() {
+        m_scopeVariableTab.setErrorLabel("");
+        NodeSettings settings = new NodeSettings("save");
+        NodeSettings variableSettings;
+        commitComponentsRecursively(getPanel());
+        try {
+            saveSettingsTo(settings);
+            variableSettings = m_scopeVariableTab.wasAtLeastOnceVisible()
+                ? m_scopeVariableTab.getVariableSettings()
+                : m_scopeVariablesSettings;
+        } catch (Throwable e) {
+            if (!(e instanceof InvalidSettingsException)) {
+                m_logger.error("Saving intermediate settings failed with "
+                        + e.getClass().getSimpleName());
+            }
+            String error = "Panel does not reflect current settings; failed to "
+                + "save intermediate settings: " + e.getMessage(); 
+            m_logger.warn(error, e);
+            return;
+        }
+        m_scopeVariableTab.setWasAtLeastOnceVisible(true);
+        m_scopeVariableTab.setVariableSettings(
+                settings, variableSettings, m_scopeObjectStack);
+    }
+    
+    /** The tab currently called "Flow Variables". It allows the user to mask
+     * certain settings of the dialog (for instance to use variables instead
+     * of hard-coded values. */
+    private static class ScopeVariablesTab extends JPanel {
+        private final ConfigEditJTree m_tree;
+        private final JLabel m_errorLabel;
+        private boolean m_wasAtLeastOnceVisible;
+        
+        /** Creates new tab. */
+        public ScopeVariablesTab() {
+            super(new BorderLayout());
+            m_tree = new ConfigEditJTree();
+            m_errorLabel = new JLabel();
+            m_errorLabel.setForeground(Color.RED);
+            add(new JScrollPane(m_tree), BorderLayout.CENTER);
+            add(m_errorLabel, BorderLayout.NORTH);
+        }
+        
+        /** Update the panel to reflect new properties. 
+         * @param nodeSettings Settings of the node (or currently entered in 
+         *  the remaining tabs of the dialog.
+         * @param variableSettings  The variable mask.
+         * @param stack the stack to get the variables from. */
+        public void setVariableSettings(final NodeSettings nodeSettings, 
+                final NodeSettings variableSettings,
+                final ScopeObjectStack stack) {
+            NodeSettings nodeSetsCopy = nodeSettings == null ?
+                    new NodeSettings("variables") : nodeSettings;
+            ConfigEditTreeModel model;
+            try {
+                if (variableSettings == null) {
+                    model = ConfigEditTreeModel.create(nodeSetsCopy);
+                } else {
+                    model = ConfigEditTreeModel.create(
+                        nodeSetsCopy, variableSettings);
+                }
+            } catch (InvalidSettingsException e) {
+                JOptionPane.showMessageDialog(this, "Errors reading variable "
+                        + "configuration: " + e.getMessage(), "Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                model = ConfigEditTreeModel.create(nodeSetsCopy);
+            }
+            m_tree.setScopeStack(stack);
+            m_tree.setModel(model);
+        }
+        
+        /**
+         * @param error the errorLabel to set
+         */
+        public void setErrorLabel(final String error) {
+            m_errorLabel.setText(error);
+        }
+        
+        /** @return the variables mask as node settings object. */
+        public NodeSettings getVariableSettings() {
+            m_tree.getCellEditor().cancelCellEditing();
+            ConfigEditTreeModel model = m_tree.getModel();
+            if (model.hasConfiguration()) {
+                NodeSettings settings = new NodeSettings("variables");
+                model.writeVariablesTo(settings);
+                return settings;
+            }
+            return null;
+        }
+        
+        /** @param wasVisible the wasVisible property.
+         * @see #wasAtLeastOnceVisible() */
+        public void setWasAtLeastOnceVisible(final boolean wasVisible) {
+            m_wasAtLeastOnceVisible = wasVisible;
+        }
+        
+        /** If true, the tab was at least once loaded after a load settings.
+         * It helps us to distinguish whether we need to read the original node
+         * settings mask or the mask from this tab.
+         * @return the above described property.
+         */
+        public boolean wasAtLeastOnceVisible() {
+            return m_wasAtLeastOnceVisible;
+        }
+        
     }
 
     private static class MiscSettingsTab extends JPanel {

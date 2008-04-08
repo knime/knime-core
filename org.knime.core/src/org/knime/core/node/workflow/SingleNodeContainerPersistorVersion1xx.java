@@ -28,7 +28,9 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.knime.core.data.container.ContainerTable;
@@ -66,6 +68,7 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
     private NodeSettingsRO m_nodeSettings;
     private ReferencedFile m_nodeDir;
     private boolean m_needsResetAfterLoad;
+    private List<ScopeObject> m_scopeObjects;
     
     /** {@inheritDoc} */
     public boolean needsResetAfterLoad() {
@@ -93,8 +96,8 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
     }
     
     /** {@inheritDoc} */
-    public ScopeObjectStack getScopeObjectStack() {
-        return null;
+    public List<ScopeObject> getScopeObjects() {
+        return m_scopeObjects;
     }
     
     /** {@inheritDoc} */
@@ -175,10 +178,21 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
             LoadResult nodeLoadResult = nodePersistor.load(
                     m_node, nodeFile, exec, tblRep, m_globalTableRepository);
             result.addError(nodeLoadResult);
-        } catch (final InvalidSettingsException e) {
+        } catch (final Exception e) {
             String error = "Error loading node content: " + e.getMessage();
             LOGGER.debug(error, e);
+            needsResetAfterLoad();
             result.addError(error);
+        }
+        try {
+            m_scopeObjects = loadScopeObjects(m_nodeSettings);
+        } catch (InvalidSettingsException e) {
+            m_scopeObjects = Collections.emptyList();
+            String error = "Error loading scope objects (flow variables): "
+                + e.getMessage();
+            LOGGER.debug(error, e);
+            result.addError(error);
+            needsResetAfterLoad();
         }
         if (nodePersistor.needsResetAfterLoad()) {
             setNeedsResetAfterLoad();
@@ -243,5 +257,10 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
         throws InvalidSettingsException {
         return SETTINGS_FILE_NAME;
     }
-
+    
+    protected List<ScopeObject> loadScopeObjects(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        return Collections.emptyList();
+    }
+    
 }

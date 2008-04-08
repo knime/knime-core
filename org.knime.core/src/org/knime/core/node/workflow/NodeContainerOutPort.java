@@ -100,17 +100,8 @@ implements NodeOutPort {
      * {@inheritDoc}
      */
     public ScopeObjectStack getScopeContextStackContainer() {
-        return m_snc.getNode().getScopeObjectStack(getPortIndex());
+        return m_snc.getNode().getScopeContextStackContainer();
     }
-
-    /**
-     * Sets a new scope object stack.
-     * @param sos scope object stack
-     */
-    void setScopeContextStackContainer(final ScopeObjectStack sos) {
-        m_snc.getNode().setScopeObjectStack(getPortIndex(), sos);
-    }
-
 
     /**
      * Sets a port view for this port. The port view can only be set once.

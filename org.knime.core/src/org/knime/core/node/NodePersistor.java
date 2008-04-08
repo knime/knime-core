@@ -75,7 +75,7 @@ public interface NodePersistor {
 
     LoadResult load(Node node, final ReferencedFile nodeFile, ExecutionMonitor execMon,
             Map<Integer, BufferedDataTable> loadTblRep, HashMap<Integer, ContainerTable> tblRep)
-            throws IOException, InvalidSettingsException, CanceledExecutionException;
+            throws IOException, CanceledExecutionException;
     
     boolean needsResetAfterLoad();
     
@@ -85,6 +85,7 @@ public interface NodePersistor {
     ReferencedFile getNodeInternDirectory();
     MemoryPolicy getMemoryPolicy();
     NodeSettingsRO getNodeModelSettings();
+    public NodeSettings getVariablesSettings();
     PortObjectSpec getPortObjectSpec(final int outportIndex);
     PortObject getPortObject(final int outportIndex);
     NodeMessage getNodeMessage();

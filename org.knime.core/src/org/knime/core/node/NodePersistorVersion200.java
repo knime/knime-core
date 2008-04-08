@@ -233,7 +233,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             sub.addString("message", message.getMessage());
         }
     }
-
+    
     protected void saveNodeInternDirectory(final Node node,
             final File nodeInternDir, final NodeSettingsWO settings,
             final ExecutionMonitor exec) throws CanceledExecutionException {

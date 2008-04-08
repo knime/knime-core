@@ -61,6 +61,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
     private ReferencedFile m_nodeInternDirectory;
 
     private NodeSettingsRO m_modelSettings;
+    
+    private NodeSettings m_variablesSettings;
 
     private PortObject[] m_portObjects;
 
@@ -348,7 +350,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
     public LoadResult load(Node node,
             final ReferencedFile configFileRef, ExecutionMonitor exec, Map<Integer, BufferedDataTable> loadTblRep,
             HashMap<Integer, ContainerTable> tblRep) 
-            throws InvalidSettingsException, IOException, CanceledExecutionException {
+            throws IOException, CanceledExecutionException {
         LoadResult result = new LoadResult();
         ExecutionMonitor loadExec = exec.createSubProgress(0.5);
         loadExec.setMessage("Loading settings");
@@ -388,6 +390,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
                 SettingsLoaderAndWriter.load(settings);
             m_memoryPolicy = nodeSettings.getMemoryPolicy();
             m_modelSettings = nodeSettings.getModelSettings();
+            m_variablesSettings = nodeSettings.getVariablesSettings();
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load node settings: " + ise.getMessage();
             result.addError(e);
@@ -481,6 +484,11 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return m_modelSettings;
     }
 
+    /** {@inheritDoc} */
+    public NodeSettings getVariablesSettings() {
+        return m_variablesSettings;
+    }
+    
     /** {@inheritDoc} */
     public PortObject getPortObject(final int outportIndex) {
         return m_portObjects[outportIndex];
