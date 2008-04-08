@@ -156,7 +156,6 @@ public interface DataValue {
             ImageIcon icon;
             try {
                 ClassLoader loader = className.getClassLoader(); 
-                    DataValue.class.getClassLoader();
                 String packagePath = 
                     className.getPackage().getName().replace('.', '/');
                 String correctedPath = path;
