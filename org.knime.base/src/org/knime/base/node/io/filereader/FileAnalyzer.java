@@ -350,6 +350,7 @@ public final class FileAnalyzer {
         // store the first line here to analyze the tokens - depending on the
         // row header flag expect one more token to come.
         String rowHeader = null;
+        String scndLineRowHeader = null;
         String[] columnHeaders = new String[result.getNumberOfColumns()];
 
         BufferedReader reader = result.createNewInputReader();
@@ -371,6 +372,7 @@ public final class FileAnalyzer {
             }
             if (result.isRowDelimiter(token)) {
                 // end of line - a bit early, huh??
+                scndLineRowHeader = tokenizer.nextToken();
                 break;
             }
             columnHeaders[c] = token;
@@ -381,6 +383,8 @@ public final class FileAnalyzer {
                 throw iee;
             }
         }
+        // the next token is the row header in the next row (could be...)
+        scndLineRowHeader = tokenizer.nextToken();
         tokenizer.closeSourceStream();
 
         Vector<ColProperty> userColProps = userSettings.getColumnProperties();
@@ -437,6 +441,28 @@ public final class FileAnalyzer {
                 return createColProps(columnHeaders, userColProps, columnTypes,
                         missValues, exec);
             }
+
+            // if all column headers fit the type of the column, the rowHeader
+            // should also fit in - if we have row headers in the file
+            if (!result.isFileHasRowHeadersUserSet()) {
+                // do it only if user didn't specify rowHeader existence,
+                // if the user said we have row headers they may not fit our
+                // prefix+index pattern, so we have nothing to test against.
+                if (rowHeader != null && scndLineRowHeader != null) {
+                    HeaderHelper hh =
+                        HeaderHelper.extractPrefixAndIndexFromHeader(rowHeader);
+                    if (hh == null || !hh.testNextHeader(scndLineRowHeader)) {
+                        // this first line row header isn't a good row header
+                        // all the other lines have nice ones - create col hdrs
+                        // also create colHdrs if they don't fit to each other
+                        // header is not data: must be column header
+                        result.setFileHasColumnHeaders(true);
+                        return createColProps(columnHeaders, userColProps,
+                                columnTypes, missValues, exec);
+                    }
+                }
+            }
+
             // and now, see if the headers to be are nicely formatted - that is
             // all have the same prefix and a growing index.
             if ((columnHeaders.length > 0)
