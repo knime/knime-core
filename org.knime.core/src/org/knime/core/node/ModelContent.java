@@ -72,17 +72,6 @@ public final class ModelContent extends Config
     public ModelContent(final String key) {
         super(key);
     }
-    
-    /** Default constructor which is called via reflection when the object
-     * represents a {@link PortObject}. Derived classes must provide
-     * this constructor if they represent a {@link PortObject} and rely
-     * on the framework to restore this object after loading. Derived classes
-     * may also override the methods{@link #saveOverride(ExecutionMonitor)} and
-     * {@link #loadOverride(ExecutionMonitor)}.
-     */
-    protected ModelContent() {
-        this("modelcontent");
-    }
 
     /**
      * {@inheritDoc}

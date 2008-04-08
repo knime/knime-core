@@ -183,7 +183,7 @@ public abstract class NodeModel extends GenericNodeModel {
                 protected ModelContentWrapper loadPortObject(
                         final File directory, final ExecutionMonitor c)
                         throws IOException, CanceledExecutionException {
-                    ModelContent cnt = new ModelContent();
+                    ModelContent cnt = new ModelContent("predictor");
                     cnt.load(directory, c);
                     return new ModelContentWrapper(cnt);
                 }
@@ -216,7 +216,7 @@ public abstract class NodeModel extends GenericNodeModel {
                     if (nullFile.exists()) {
                         return new ModelContentWrapper(null);
                     }
-                    ModelContent cnt = new ModelContent();
+                    ModelContent cnt = new ModelContent("predictor");
                     try {
                         cnt.load(directory, new ExecutionMonitor());
                     } catch (CanceledExecutionException cee) {
@@ -290,7 +290,7 @@ public abstract class NodeModel extends GenericNodeModel {
         for (int i = m_nrDataOutPorts;
                  i < m_nrDataOutPorts + m_nrModelOutPorts; i++) {
             int mdlIndex = i - m_nrDataOutPorts;
-            ModelContent thisMdl = new ModelContent("ModelContent");
+            ModelContent thisMdl = new ModelContent("predictor");
             saveModelContent(mdlIndex, thisMdl);
             m_localOutModels[mdlIndex].m_hiddenModel = thisMdl;
             returnObjects[i] = m_localOutModels[mdlIndex];
