@@ -1277,7 +1277,7 @@ public final class WorkflowManager extends NodeContainer {
                         ScopeContext sc = node.getLoopStatus();
                         node.clearLoopStatus();
                         // (2) find all intermediate node, the loop's "body"
-                        Set<NodeID> loopBodyNodes = findExecutedNodesInLoopBody(
+                        List<NodeID> loopBodyNodes = findExecutedNodesInLoopBody(
                                 sc.getOriginatingNode(), nc.getID());
                         // (3) reset the nodes in the body (only those -
                         //     make sure end of loop is NOT reset)
@@ -1607,50 +1607,34 @@ public final class WorkflowManager extends NodeContainer {
     /** Create list of executed node (id)s between two nodes. Used to re-execute
      * all nodes within a loop.
      */
-    private Set<NodeID> findExecutedNodesInLoopBody(final NodeID startNode,
+    private List<NodeID> findExecutedNodesInLoopBody(final NodeID startNode,
             final NodeID endNode) {
-        Set<NodeID> matchingNodes = new HashSet<NodeID>();
-        doesChainOfExecutedNodesReachNode(startNode, endNode, matchingNodes);
-        matchingNodes.remove(startNode);
-        matchingNodes.remove(endNode);
-        return matchingNodes;
-    }
-
-    /**
-     * Check if there is one chain of nodes inbetween two nodes that are
-     * all executed. Produce set of nodes inbetween the two nodes as well.
-     * 
-     * @param hereIam start node
-     * @param endNode end node
-     * @param resultSet resulting, executed nodes.
-     * @return true if they are all executed.
-     */
-    private boolean doesChainOfExecutedNodesReachNode(final NodeID hereIam,
-            final NodeID endNode, final Set<NodeID> resultSet) {
-        if (hereIam == endNode) {
-            return true;
+        ArrayList<NodeID> matchingNodes = new ArrayList<NodeID>();
+        if (startNode.equals(endNode)) {
+            // silly case
+            return matchingNodes;
         }
-        if (resultSet.contains(hereIam)) {
-            return true;
-        }
-        boolean atLeastOneChainDoes = false;
-        Set<ConnectionContainer> succs = m_connectionsBySource.get(hereIam);
-        if (succs != null) {
-            for (ConnectionContainer conn : succs) {
-                NodeID currID = conn.getDest();
-                if (doesChainOfExecutedNodesReachNode(currID, endNode,
-                                        resultSet)) {
-                    assert     (currID == endNode)
-                            || (m_nodes.get(currID).getState()
-                                        == NodeContainer.State.EXECUTED);
-                    atLeastOneChainDoes = true;
+        matchingNodes.add(startNode);
+        int currIndex = 0;
+        while (currIndex < matchingNodes.size()) {
+            NodeID currID = matchingNodes.get(currIndex);
+            for (ConnectionContainer cc : m_connectionsBySource.get(currID)) {
+                assert (cc.getSource().equals(currID));
+                NodeID succID = cc.getDest();
+                if ((!succID.equals(endNode)) 
+                        && (!succID.equals(this.getID()))
+                        && (!matchingNodes.contains(succID))) {
+                    NodeContainer succNode = m_nodes.get(succID);
+                    if (succNode.getState().equals(State.EXECUTED)) {
+                        matchingNodes.add(succID);
+                    }
                 }
             }
         }
-        if (atLeastOneChainDoes) {
-            resultSet.add(hereIam);
-        }
-        return atLeastOneChainDoes;
+//        doesChainOfExecutedNodesReachNode(startNode, endNode, matchingNodes);
+        matchingNodes.remove(startNode);
+//        matchingNodes.remove(endNode);
+        return matchingNodes;
     }
 
     /** Return list of nodes, sorted by traversing the graph breadth first.
