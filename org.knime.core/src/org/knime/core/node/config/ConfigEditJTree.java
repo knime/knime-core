@@ -66,6 +66,7 @@ public class ConfigEditJTree extends JTree {
         ConfigEditTreeRenderer renderer = new ConfigEditTreeRenderer();
         setCellRenderer(renderer);
         setCellEditor(new ConfigEditTreeEditor(this, renderer));
+        setRowHeight(renderer.getPreferredSize().height);
         setEditable(true);
         setToolTipText("config tree"); // enable tooltip
     }
