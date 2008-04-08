@@ -733,11 +733,11 @@ public abstract class GenericNodeDialogPane {
         } catch (Throwable e) {
             if (!(e instanceof InvalidSettingsException)) {
                 m_logger.error("Saving intermediate settings failed with "
-                        + e.getClass().getSimpleName());
+                        + e.getClass().getSimpleName(), e);
             }
             String error = "Panel does not reflect current settings; failed to "
-                + "save intermediate settings: " + e.getMessage(); 
-            m_logger.warn(error, e);
+                + "save intermediate settings: " + e.getMessage();
+            m_scopeVariableTab.setErrorLabel(error);
             return;
         }
         m_scopeVariableTab.setWasAtLeastOnceVisible(true);
@@ -795,7 +795,7 @@ public abstract class GenericNodeDialogPane {
          * @param error the errorLabel to set
          */
         public void setErrorLabel(final String error) {
-            m_errorLabel.setText(error);
+            m_errorLabel.setText("<html><body>" + error + "</body></html>");
         }
         
         /** @return the variables mask as node settings object. */
