@@ -1630,6 +1630,7 @@ public final class WorkflowManager extends NodeContainer {
                     }
                 }
             }
+            currIndex += 1;
         }
 //        doesChainOfExecutedNodesReachNode(startNode, endNode, matchingNodes);
         matchingNodes.remove(startNode);
