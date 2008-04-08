@@ -2450,8 +2450,10 @@ public final class WorkflowManager extends NodeContainer {
                     SingleNodeContainer snc = (SingleNodeContainer)cont;
                     snc.setInHiLiteHandler(i, p.getHiLiteHandler());
                 }
-                predStacks[i] = p.getScopeContextStackContainer();
-                portObjects[i] = p != null ? p.getPortObject() : null;
+                if (p != null) {
+                    predStacks[i] = p.getScopeContextStackContainer();
+                    portObjects[i] = p.getPortObject();
+                }
             }
             ScopeObjectStack inStack = 
                 new ScopeObjectStack(cont.getID(), predStacks);
