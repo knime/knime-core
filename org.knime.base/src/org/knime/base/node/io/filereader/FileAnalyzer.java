@@ -60,8 +60,7 @@ import org.knime.core.node.NodeLogger;
 public final class FileAnalyzer {
 
     /**
-     * Tasks looking at the first couple of lines only, look at this amount of
-     * lines.
+     * If the analysis is cut short, we look only at the first couple of lines.
      */
     static final int NUMOFLINES = 1000;
 
@@ -156,7 +155,6 @@ public final class FileAnalyzer {
                 result.setCommentUserSet(true);
             }
             subExec.setProgress(1.0);
-
             checkInterrupt(execMon);
 
             subExec = execMon.createSubProgress(QUOTES_SUB);
@@ -178,7 +176,6 @@ public final class FileAnalyzer {
                 result.setQuoteUserSet(true);
             }
             subExec.setProgress(1.0);
-
             checkInterrupt(execMon);
 
             // if user provided whitespace characters, we need to add them.
@@ -205,20 +202,19 @@ public final class FileAnalyzer {
 
             assert result.getNumberOfColumns() > 0;
             subExec.setProgress(1.0);
+            checkInterrupt(execMon);
 
             // the number of column set as of now does not take into account the
             // skipped columns.
             subExec = execMon.createSubProgress(ROWHDR_SUB);
             if (userSettings.isFileHasRowHeadersUserSet()) {
-                result
-                        .setFileHasRowHeaders(userSettings
-                                .getFileHasRowHeaders());
+                result.setFileHasRowHeaders(
+                        userSettings.getFileHasRowHeaders());
                 result.setFileHasRowHeadersUserSet(true);
             } else {
                 boolean hasRowHeaders;
                 if (result.getNumberOfColumns() > 1) {
-                    // only if we have at least 2 columns, one of them could be
-                    // headers
+                    // if we have at least 2 cols, one of them could be headers
                     hasRowHeaders = checkRowHeader(result, subExec);
                 } else {
                     hasRowHeaders = false;
@@ -227,7 +223,6 @@ public final class FileAnalyzer {
                 result.setFileHasRowHeadersUserSet(false);
             }
             subExec.setProgress(1.0);
-
             checkInterrupt(execMon);
 
             // we must correct the column number we've guessed
@@ -297,11 +292,7 @@ public final class FileAnalyzer {
         if (exec instanceof FileReaderExecutionMonitor) {
             FileReaderExecutionMonitor m = (FileReaderExecutionMonitor)exec;
             m.checkInterrupted();
-            boolean result = m.wasCanceled();
-            if (result) {
-                assert result;
-            }
-            return result;
+            return m.wasCanceled();
         }
         try {
             exec.checkCanceled();
@@ -352,6 +343,7 @@ public final class FileAnalyzer {
             missValues[c] = colProps[c].getMissingValuePattern();
         }
         subExec.setProgress(1.0);
+        checkInterrupt(exec);
 
         // number of columns must be set accordingly (including skipped cols)
         assert result.getNumberOfColumns() == columnTypes.length;
@@ -365,7 +357,6 @@ public final class FileAnalyzer {
         tokenizer.setSettings(result);
 
         exec.setProgress("Guessing column headers");
-        checkInterrupt(exec);
 
         // the first token is supposed to be the header for the "row column"
         if (result.getFileHasRowHeaders()) {
@@ -383,7 +374,12 @@ public final class FileAnalyzer {
                 break;
             }
             columnHeaders[c] = token;
-            checkInterrupt(exec);
+            try {
+                checkInterrupt(exec);
+            } catch (InterruptedExecutionException iee) {
+                tokenizer.closeSourceStream();
+                throw iee;
+            }
         }
         tokenizer.closeSourceStream();
 
@@ -499,12 +495,9 @@ public final class FileAnalyzer {
             final FileReaderNodeSettings settings, final ExecutionMonitor exec)
             throws IOException, InterruptedExecutionException {
 
-        // read in all row headers to examine (plus one, the first line could
-        // contain column headers - we don't examine them yet).
-        String[] rowHeaders = new String[NUMOFLINES + 1];
-
         BufferedFileReader reader = settings.createNewInputReader();
         long fileSize = reader.getFileSize();
+        long linesRead = 0;
 
         exec.setProgress("Guessing row IDs");
 
@@ -512,43 +505,72 @@ public final class FileAnalyzer {
         tokenizer.setSettings(settings);
         String token;
 
-        int hdrIdx = 0;
-        while (hdrIdx < rowHeaders.length) {
+        HeaderHelper helper = null;
+        boolean firstTokenInRow = true;
+        try {
+            while (true) {
 
-            if (cutItShort(exec)) {
-                return false;
-            }
-            token = tokenizer.nextToken();
-            if (token == null) {
-                // end of file
-                break;
-            }
-            if (fileSize > 0) {
-                exec.setProgress(
-                        reader.getNumberOfBytesRead() / (double)fileSize);
-            }
-            if (!settings.isRowDelimiter(token)) {
-                if (rowHeaders[hdrIdx] == null) {
-                    rowHeaders[hdrIdx] = token;
+                token = tokenizer.nextToken();
+                if (token == null) {
+                    // end of file
+                    break;
                 }
-            } else {
-                if (rowHeaders[hdrIdx] != null) {
-                    hdrIdx++;
-                } // else ignore that empty line
+
+                if (firstTokenInRow && settings.isRowDelimiter(token)) {
+                    // ignore empty rows
+                    continue;
+                }
+
+                if (firstTokenInRow) {
+                    firstTokenInRow = false;
+                    if (linesRead > 0) {
+                        // we ignore the first line (could be col header line)
+                        if (helper == null) {
+                            // the first row ID we see
+                            helper =
+                                HeaderHelper.extractPrefixAndIndexFromHeader(
+                                        token);
+                            if (helper == null) {
+                                // that's not row header material
+                                return false;
+                            }
+                        } else {
+                            // all other header must match the first one
+                            if (!helper.testNextHeader(token)) {
+                                return false;
+                            }
+                        }
+                    }
+                } else {
+                    // swallow all tokens except new line delimiters
+                    if (settings.isRowDelimiter(token)) {
+                        firstTokenInRow = true; // the next token is the first
+                        linesRead++;
+                        if (cutItShort(exec)) {
+                            if (linesRead > NUMOFLINES) {
+                                break;
+                            }
+                            exec.setProgress(linesRead / (double)NUMOFLINES);
+                        } else {
+                            if (fileSize > 0) {
+                                exec.setProgress(reader.getNumberOfBytesRead()
+                                        / fileSize);
+                            }
+                        }
+                    }
+                }
+
             }
-
+        } finally {
+            tokenizer.closeSourceStream();
         }
-        tokenizer.closeSourceStream();
 
-        String[] rowHeadersWOfirstLine = new String[rowHeaders.length - 1];
-        System.arraycopy(rowHeaders, 1, rowHeadersWOfirstLine, 0,
-                rowHeadersWOfirstLine.length);
-        return consecutiveHeaders(rowHeadersWOfirstLine, exec);
+        return true;
     }
 
     /**
      * Returns <code>true</code> if all items in the array are prefixed by the
-     * same (possibly empty) string followed by a constantly incremented number.
+     * same (possibly empty) string followed by a constantly increasing number.
      *
      * @param headers the headers to look at, an empty item is considered end of
      *            list
@@ -559,77 +581,21 @@ public final class FileAnalyzer {
      *             immediately
      */
     private static boolean consecutiveHeaders(final String[] headers,
-            final ExecutionMonitor exec) throws InterruptedExecutionException {
+            final ExecutionMonitor exec) {
 
         // examine the first header first - it is the template for the rest
-        String header = headers[0];
-        if ((header == null) || header.equals("")) {
+        HeaderHelper helper =
+                HeaderHelper.extractPrefixAndIndexFromHeader(headers[0]);
+        if (helper == null) {
             return false;
         }
 
-        int p;
-        for (p = header.length() - 1; p >= 0; p--) {
-            if ((header.charAt(p) < '0') || (header.charAt(p) > '9')) {
-                break;
-            }
-        }
-        // p is now the first position from the end with a not-a-number-char
-
-        if (p == header.length() - 1) {
-            // we want a running index at the end of the row identifier
-            return false;
-        }
-
-        String prefix = "";
-        boolean hasPrefix = false;
-        if (p >= 0) {
-            prefix = header.substring(0, p);
-            hasPrefix = true;
-        }
-
-        String index = header.substring(p + 1);
-        long oldIdx;
-        try {
-            oldIdx = Long.parseLong(index); // to make sure idx increases
-        } catch (NumberFormatException nfe) {
-            // it is a number - but too big for a long. Can't do it.
-            return false;
-        }
-
-        // now expect all headers starting with the same prefix and
-        // incrementing the index.
+        // now test all other headers starting with the same prefix and
+        // incrementing the running index.
         for (int h = 1; h < headers.length; h++) {
-            if (headers[h] == null) {
-                // we've reached the end of the list.
-                return true;
-            }
-            if (cutItShort(exec)) {
+            if (!helper.testNextHeader(headers[h])) {
                 return false;
             }
-            if ((headers[h].length() - 1) <= p) {
-                // we want that running index. This header is too short.
-                return false;
-            }
-            if (hasPrefix) {
-                if (!headers[h].substring(0, p).equals(prefix)) {
-                    // this header doesn't start with the prefix. Bummer.
-                    return false;
-                }
-            }
-            long newIdx;
-            try {
-                newIdx = Long.parseLong(headers[h].substring(p + 1));
-            } catch (NumberFormatException nfe) {
-                // this header doesn't have an index. ByeBye.
-                return false;
-            }
-            if (newIdx <= oldIdx) {
-                // we want the index to grow. This way we ensure unique headers.
-                return false;
-            }
-
-            oldIdx = newIdx;
-
         }
 
         return true;
@@ -753,8 +719,6 @@ public final class FileAnalyzer {
 
         exec.setProgress("Guessing column types");
 
-        FileTokenizer tokenizer = new FileTokenizer(reader);
-        tokenizer.setSettings(result);
         // extract user preset type - if we got any
         DataType[] userTypes = new DataType[result.getNumberOfColumns()];
         Vector<ColProperty> userColProps = userSettings.getColumnProperties();
@@ -782,6 +746,9 @@ public final class FileAnalyzer {
                 types[t] = userTypes[t];
             }
         }
+
+        FileTokenizer tokenizer = new FileTokenizer(reader);
+        tokenizer.setSettings(result);
         int linesRead = 0;
         int colIdx = -1;
 
@@ -789,121 +756,123 @@ public final class FileAnalyzer {
         cellFactory.setDecimalSeparator(result.getDecimalSeparator());
         cellFactory.setThousandsSeparator(result.getThousandsSeparator());
 
-        while (true) {
+        try {
+            // close the stream on an exception
+            while (true) {
 
-            if (cutItShort(exec)) {
-                result.setAnalyzeUsedAllRows(false);
-                break;
-            }
+                String token = tokenizer.nextToken();
 
-            String token = tokenizer.nextToken();
-
-            if (token == null) {
-                // reached EOF
-                break;
-            }
-            if (fileSize > 0) {
-                exec.setProgress(
-                        reader.getNumberOfBytesRead() / (double)fileSize);
-            }
-            colIdx++;
-            if (result.getFileHasRowHeaders() && (colIdx == 0)
-                    && (!result.isRowDelimiter(token))) {
-                // ignore the row header - get the next token/column
-                token = tokenizer.nextToken();
-                if (token == null) { // EOF
+                if (token == null) {
+                    // reached EOF
                     break;
                 }
-            }
-            if (!result.isRowDelimiter(token)) {
-                if ((linesRead < 1)
-                        && (!userSettings.isFileHasColumnHeadersUserSet()
-                                || userSettings.getFileHasColumnHeaders())) {
-                    // skip the first line - could be column headers - unless
-                    // we know it's not
-                    continue;
+                colIdx++;
+                if (result.getFileHasRowHeaders() && (colIdx == 0)
+                        && (!result.isRowDelimiter(token))) {
+                    // ignore the row header - get the next token/column
+                    token = tokenizer.nextToken();
+                    if (token == null) { // EOF
+                        break;
+                    }
                 }
-                if (colIdx >= result.getNumberOfColumns()) {
-                    // the line contains more tokens than columns.
-                    // Ignore the extra columns.
-                    continue;
-                }
-
-                cellFactory.setMissingValuePattern(missValPattern[colIdx]);
-
-                // for numbers we trim tokens and allow empty for missValue
-                token = token.trim();
-                if (userTypes[colIdx] == null) {
-                    // no user preset type - figure out the right type
-                    if (types[colIdx] == null) {
-                        // we come across this columns for the first time:
-                        // start with INT type, the most restrictive type
-                        types[colIdx] = IntCell.TYPE;
+                checkInterrupt(exec);
+                if (!result.isRowDelimiter(token)) {
+                    if ((linesRead < 1)
+                            && (!userSettings.isFileHasColumnHeadersUserSet()
+                                   || userSettings.getFileHasColumnHeaders())) {
+                        // skip the first line - could be column headers -
+                        // unless we know it's not
+                        continue;
+                    }
+                    if (colIdx >= result.getNumberOfColumns()) {
+                        // the line contains more tokens than columns.
+                        // Ignore the extra columns.
+                        continue;
                     }
 
-                    if (types[colIdx].isCompatible(IntValue.class)) {
-                        DataCell dc =
-                                cellFactory.createDataCellOfType(IntCell.TYPE,
-                                        token);
-                        if (dc != null) {
-                            continue;
+                    cellFactory.setMissingValuePattern(missValPattern[colIdx]);
+
+                    // for numbers we trim tokens and allow empty for missValue
+                    token = token.trim();
+                    if (userTypes[colIdx] == null) {
+                        // no user preset type - figure out the right type
+                        if (types[colIdx] == null) {
+                            // we come across this columns for the first time:
+                            // start with INT type, the most restrictive type
+                            types[colIdx] = IntCell.TYPE;
                         }
-                        // not an integer - could it be the missing value?
-                        if (missValPattern[colIdx] == null) {
-                            // we accept one token that can't be
-                            // parsed per column - but we don't use doubles as
-                            // missing value! Would be odd.
-                            dc =
+
+                        if (types[colIdx].isCompatible(IntValue.class)) {
+                            DataCell dc =
+                                    cellFactory.createDataCellOfType(
+                                            IntCell.TYPE, token);
+                            if (dc != null) {
+                                continue;
+                            }
+                            // not an integer - could it be the missing value?
+                            if (missValPattern[colIdx] == null) {
+                                // we accept one token that can't be
+                                // parsed per column - but we don't use doubles
+                                // as missing value! Would be odd.
+                                dc =
+                                        cellFactory.createDataCellOfType(
+                                                DoubleCell.TYPE, token);
+                                if (dc == null) {
+                                    missValPattern[colIdx] = token;
+                                    continue;
+                                }
+                            }
+                            // not an integer, not the missing value
+                            // - could be a double
+                            types[colIdx] = DoubleCell.TYPE;
+                        } // no else, we immediately check if it's a double
+
+                        if (types[colIdx].isCompatible(DoubleValue.class)) {
+                            DataCell dc =
                                     cellFactory.createDataCellOfType(
                                             DoubleCell.TYPE, token);
-                            if (dc == null) {
+                            if (dc != null) {
+                                continue;
+                            }
+                            // not a double - missing value maybe?
+                            if (missValPattern[colIdx] == null) {
+                                // we accept one token that can't be parsed
+                                // per column as missing value pattern
                                 missValPattern[colIdx] = token;
                                 continue;
                             }
+                            // not a double, not a missing value,
+                            // lets accept everything: StringCell
+                            types[colIdx] = StringCell.TYPE;
                         }
-                        // not an integer, not the missing value
-                        // - could be a double
-                        types[colIdx] = DoubleCell.TYPE;
-                    } // no else, we immediately check if it's a double
+                    }
 
-                    if (types[colIdx].isCompatible(DoubleValue.class)) {
-                        DataCell dc =
-                            cellFactory.createDataCellOfType(DoubleCell.TYPE,
-                                    token);
-                        if (dc != null) {
-                            continue;
+                } else {
+                    // it's a row delimiter.
+                    // we could check if we got enough tokens for the row from
+                    // the file. But if not - what would we do...
+                    if (colIdx > 0) {
+                        linesRead++; // only count not empty lines
+                        exec.setProgress("Verifying column types");
+                    }
+                    colIdx = -1;
+                    if (cutItShort(exec)) {
+                        if (linesRead >= NUMOFLINES) {
+                            result.setAnalyzeUsedAllRows(false);
+                            break;
                         }
-                        // not a double - missing value maybe?
-                        if (missValPattern[colIdx] == null) {
-                            // we accept one token that can't be parsed
-                            // per column as missing value pattern
-                            missValPattern[colIdx] = token;
-                            continue;
+                        exec.setProgress(linesRead / (double)NUMOFLINES);
+                    } else {
+                        if (fileSize > 0) {
+                            exec.setProgress(reader.getNumberOfBytesRead()
+                                    / (double)fileSize);
                         }
-                        // not a double, not a missing value,
-                        // lets accept everything: StringCell
-                        types[colIdx] = StringCell.TYPE;
                     }
                 }
-
-            } else {
-                // it's a row delimiter.
-                // we could check if we got enough tokens for the row from the
-                // file. But if not - what would we do...
-                if (colIdx > 0) {
-                    linesRead++; // only count not empty lines
-                    exec.setProgress("Verifying column types");
-                }
-                colIdx = -1;
-                if (linesRead == NUMOFLINES) {
-                    // we've seen enough
-                    result.setAnalyzeUsedAllRows(false);
-                    break;
-                }
             }
+        } finally {
+            tokenizer.closeSourceStream();
         }
-        tokenizer.closeSourceStream();
-
         // if there is still a type set to null we got only missing values
         // in that column: warn user (unless he already chose to skip
         // column)
@@ -964,7 +933,8 @@ public final class FileAnalyzer {
                 // for string columns we don't have a missing value.
                 // use the global one, if set, otherwise '?'
                 if (result.getMissValuePatternStrCols() != null) {
-                    cp.setMissingValuePattern(result.getMissValuePatternStrCols());
+                    cp.setMissingValuePattern(
+                            result.getMissValuePatternStrCols());
                 } else {
                     cp.setMissingValuePattern("?");
                 }
@@ -980,6 +950,9 @@ public final class FileAnalyzer {
     /**
      * Looks at the first character of the first lines of the file and
      * determines what kind of single line comment we should support.
+     * Comments are usually at the beginning of the file - so this method looks
+     * only at the first couple of lines (even if we are not supposed to cut
+     * the analysis short).
      *
      * @param settings object containing the data file location. The method will
      *            add comment patterns to this object.
@@ -1001,61 +974,53 @@ public final class FileAnalyzer {
         String line;
         int linesRead = 0;
 
-        while (linesRead < NUMOFLINES) {
-            if (cutItShort(exec)) {
-                // use what we have so far
+        try {
+            while (linesRead < NUMOFLINES) {
+
+                checkInterrupt(exec);
+
+                line = reader.readLine();
+                if (line == null) {
+                    break;
+                }
+                if (line.equals("")) {
+                    // empty lines are boring.
+                    continue;
+                }
+                linesRead++;
+
+                exec.setProgress(linesRead / (double)NUMOFLINES);
+
+                if (line.charAt(0) == '#') {
+                    settings.addSingleLineCommentPattern("#", false, false);
+                    break;
+                }
+                if (line.charAt(0) == '%') {
+                    settings.addSingleLineCommentPattern("%", false, false);
+                    break;
+                }
+
+                if ((line.charAt(0) == '/') && (line.charAt(1) == '/')) {
+                    settings.addSingleLineCommentPattern("//", false, false);
+                    settings.addBlockCommentPattern("/*", "*/", false, false);
+                    break;
+                }
+
+            }
+
+            if (linesRead >= NUMOFLINES) {
                 settings.setAnalyzeUsedAllRows(false);
-                break;
             }
-            line = reader.readLine();
-            if (line == null) {
-                break;
-            }
-            if (line.equals("")) {
-                // empty lines are boring.
-                continue;
-            }
-            linesRead++;
-
-            exec.setProgress(linesRead / (double)NUMOFLINES);
-
-            if (line.charAt(0) == '#') {
-                settings.addSingleLineCommentPattern("#", false, false);
-                break;
-            }
-            if (line.charAt(0) == '%') {
-                settings.addSingleLineCommentPattern("%", false, false);
-                break;
-            }
-
-            if ((line.charAt(0) == '/') && (line.charAt(1) == '/')) {
-                settings.addSingleLineCommentPattern("//", false, false);
-                settings.addBlockCommentPattern("/*", "*/", false, false);
-                break;
-            }
-
+        } finally {
+            reader.close();
         }
-
-        if (linesRead >= NUMOFLINES) {
-            // if the next char is EOF we've seen all rows.
-            settings.setAnalyzeUsedAllRows(false);
-        }
-
-        // as of ver1.2.++ I am removing this. Comment in data files is not
-        // really common. If we didn't see comment in the first few lines there
-        // probably isn't any.
-        // if (!commentFound) {
-        // // haven't seen any line comment, set C-style comment.
-        // settings.addSingleLineCommentPattern("//", false, false);
-        // settings.addBlockCommentPattern("/*", "*/", false, false);
-        // }
-
-        reader.close();
     }
 
     /**
-     * Adds quotes to the settings object. For now we always add double quotes
-     * with an escape character and single quotes without it.
+     * Adds quotes to the settings object. It counts the occurrence of double
+     * and single quotes in each line. If it's an odd number it will not
+     * consider this being a quote (unless it has an odd number of escaped
+     * character of this type).
      *
      * @param settings the object to add quote settings to. Must contain file
      *            location and possibly comments - but no delimiters yet!
@@ -1071,9 +1036,9 @@ public final class FileAnalyzer {
         assert settings.getDataFileLocation() != null;
         assert settings.getAllDelimiters().size() == 0;
 
-        BufferedReader reader = settings.createNewInputReader();
+        BufferedFileReader reader = settings.createNewInputReader();
         FileTokenizer tokenizer = new FileTokenizer(reader);
-
+        double fileSize = reader.getFileSize();
         exec.setProgress("Guessing quotes");
 
         // add '\n' as the only delimiter, so we get one line per token
@@ -1089,116 +1054,120 @@ public final class FileAnalyzer {
         boolean escapeSingleQuotes = true;
 
         String token;
-        while (true) {
+        try {
+            while (true) {
+                token = tokenizer.nextToken();
+                if (token == null) {
+                    // seen end of file.
+                    break;
+                }
+                if (token.length() == 0) {
+                    continue; // ignore empty lines
+                }
+                linesRead++;
+                // cutItShort also checks for interrupt
+                if (cutItShort(exec) && (linesRead > NUMOFLINES)) {
+                    settings.setAnalyzeUsedAllRows(false);
+                    break;
+                }
 
-            if (cutItShort(exec)) {
-                settings.setAnalyzeUsedAllRows(false);
-                break;
-            }
+                if (cutItShort(exec)) {
+                    exec.setProgress(linesRead / (double)NUMOFLINES);
+                } else if (fileSize > 0) {
+                    exec.setProgress(reader.getNumberOfBytesRead() / fileSize);
+                }
 
-            token = tokenizer.nextToken();
-            if (token == null) {
-                // seen end of file.
-                break;
-            }
-            if (token.length() == 0) {
-                continue; // ignore empty lines
-            }
-            linesRead++;
-            exec.setProgress(linesRead / (double)NUMOFLINES);
-
-            // Count the number of quote characters. If an odd number appears
-            // don't support this quote character.
-            int dq = 0; // double quote count
-            int edq = 0; // escaped double quotes
-            int sq = 0; // single quote count
-            int esq = 0; // escaped single quote count
-            boolean esc = false;
-            for (int c = 0; c < token.length(); c++) {
-                char ch = token.charAt(c);
-                if (ch == '\\') {
-                    if (esc) {
-                        // it's a double backslash, leave esc mode
-                        esc = false;
+                // Count the number of quote characters. If an odd number
+                // appears don't support this quote character.
+                int dq = 0; // double quote count
+                int edq = 0; // escaped double quotes
+                int sq = 0; // single quote count
+                int esq = 0; // escaped single quote count
+                boolean esc = false;
+                for (int c = 0; c < token.length(); c++) {
+                    char ch = token.charAt(c);
+                    if (ch == '\\') {
+                        if (esc) {
+                            // it's a double backslash, leave esc mode
+                            esc = false;
+                        } else {
+                            esc = true;
+                        }
                     } else {
-                        esc = true;
+                        if (ch == '"') {
+                            if (!esc) {
+                                dq++;
+                            } else {
+                                edq++; // previous char was escape char.
+                            }
+                        }
+                        if (ch == '\'') {
+                            if (!esc) {
+                                sq++;
+                            } else {
+                                esq++;
+                            }
+                        }
+                        esc = false;
                     }
-                } else {
-                    if (ch == '"') {
-                        if (!esc) {
-                            dq++;
-                        } else {
-                            edq++; // previous char was escape char.
+                } // end of for loop
+
+                // now figure out what to do...
+                if (dq % 2 != 0) { // odd number of quotes
+                    if (edq % 2 != 0) {
+                        // we can fix that by using the odd number of esc quotes
+                        escapeDoubleQuotes = false;
+                    } else {
+                        // nothing to do but not using double quotes as quotes
+                        useDoubleQuotes = false;
+                        if (!useSingleQuotes) {
+                            break; // final decision made
                         }
                     }
-                    if (ch == '\'') {
-                        if (!esc) {
-                            sq++;
-                        } else {
-                            esq++;
+                }
+                if (sq % 2 != 0) { // odd number of quotes
+                    if (esq % 2 != 0) {
+                        // we can fix that by using the odd number of esc quotes
+                        escapeSingleQuotes = false;
+                    } else {
+                        // nothing to do but not using single quotes as quotes
+                        useSingleQuotes = false;
+                        if (!useDoubleQuotes) {
+                            break; // final decision made
                         }
                     }
-                    esc = false;
                 }
-            } // end of for loop
+            }
 
-            // now figure out what to do...
-            if (dq % 2 != 0) { // odd number of quotes
-                if (edq % 2 != 0) {
-                    // we can fix that by using the odd number of esc quotes
-                    escapeDoubleQuotes = false;
+            if (useDoubleQuotes) {
+                if (escapeDoubleQuotes) {
+                    settings.addQuotePattern("\"", "\"", '\\');
                 } else {
-                    // nothing to do but not using double quotes as quotes
-                    useDoubleQuotes = false;
-                    if (!useSingleQuotes) {
-                        break; // final decision made
-                    }
+                    settings.addQuotePattern("\"", "\"");
                 }
             }
-            if (sq % 2 != 0) { // odd number of quotes
-                if (esq % 2 != 0) {
-                    // we can fix that by using the odd number of esc quotes
-                    escapeSingleQuotes = false;
+            if (useSingleQuotes) {
+                if (escapeSingleQuotes) {
+                    settings.addQuotePattern("'", "'", '\\');
                 } else {
-                    // nothing to do but not using single quotes as quotes
-                    useSingleQuotes = false;
-                    if (!useDoubleQuotes) {
-                        break; // final decision made
-                    }
+                    settings.addQuotePattern("'", "'");
                 }
             }
 
-            if (linesRead > NUMOFLINES) {
-                settings.setAnalyzeUsedAllRows(false);
-                break;
-            }
+        } finally {
+            // do this even if analysis is interrupted
+            tokenizer.closeSourceStream();
         }
 
-        tokenizer.closeSourceStream();
-
-        if (useDoubleQuotes) {
-            if (escapeDoubleQuotes) {
-                settings.addQuotePattern("\"", "\"", '\\');
-            } else {
-                settings.addQuotePattern("\"", "\"");
-            }
-        }
-        if (useSingleQuotes) {
-            if (escapeSingleQuotes) {
-                settings.addQuotePattern("'", "'", '\\');
-            } else {
-                settings.addQuotePattern("'", "'");
-            }
-        }
     }
 
     /**
      * Splits the lines of the file (honoring the settings in the settings
      * object), and tries to guess which delimiters create the best results.
-     * It'll try out comma, tab, space, or semicolon delimiters; in this order.
+     * It'll try out semicolon, comma, tab, or space delimiters; in this order.
      * Whatever produces more than one column (consistently) will be set. If no
      * settings create more than one column no column delimiters will be set. A
-     * row delimiter ('\n') will always be set.
+     * row delimiter ('\n') is always set.
      */
     private static void setDelimitersAndColNum(
             final FileReaderNodeSettings userSettings,
@@ -1213,7 +1182,6 @@ public final class FileAnalyzer {
 
             exec.setProgress("Guessing column separator");
             exec.setProgress(0.0);
-
             // Start with a semicolon delimiter. This way we catch the German
             // version of CSV files (they use semicolons, because comma is the
             // decimal separator - which might not yet be specified by the user)
@@ -1234,7 +1202,6 @@ public final class FileAnalyzer {
                     // seems we've added ';' as comment before - alright then.
                 }
             }
-
             //
             // Try out comma delimiter
             // - but only if its not the decimal or thousand separator
@@ -1349,7 +1316,7 @@ public final class FileAnalyzer {
             }
             // set the number of cols that we read in with user presets.
             // take the maximum if rows have different num of cols.
-            result.setNumberOfColumns(getMaximumNumberOfColumns(result));
+            result.setNumberOfColumns(getMaximumNumberOfColumns(result, exec));
         }
 
         return;
@@ -1398,17 +1365,12 @@ public final class FileAnalyzer {
         int linesRead = 0;
         int columns = 0; // column counter per line
         int numOfCols = -1; // num of cols with these settings
-        int maxNumOfCols = -1; // num of cols including some emtpy tokens at
-        // EOR
+        int maxNumOfCols = -1; // num of cols incl. some empty tokens at EOR
         boolean useSettings = false; // set it true to use these settings.
         int consEmptyTokens = 0; // consecutive empty tokens read
 
         while (true) {
 
-            if (cutItShort(exec)) {
-                settings.setAnalyzeUsedAllRows(false);
-                break;
-            }
             String token = tokenizer.nextToken();
             if (fileSize > 0) {
                 exec.setProgress(
@@ -1430,6 +1392,16 @@ public final class FileAnalyzer {
                     // ignore empty lines
 
                     linesRead++;
+                    try {
+                        if (cutItShort(exec) && (linesRead > NUMOFLINES)) {
+                            // cutItShort also checks for interrupts
+                            settings.setAnalyzeUsedAllRows(false);
+                            break;
+                        }
+                    } catch (InterruptedExecutionException iee) {
+                        tokenizer.closeSourceStream();
+                        throw iee;
+                    }
 
                     if (linesRead > 1) {
                         if (numOfCols < 1) {
@@ -1474,8 +1446,7 @@ public final class FileAnalyzer {
                                 }
                                 if (columns < maxNumOfCols) {
                                     // "maxNumOfCols" is the maximum number all
-                                    // rows
-                                    // can deliver.
+                                    // rows can deliver.
                                     maxNumOfCols = columns;
                                 }
                                 if ((columns - consEmptyTokens) > numOfCols) {
@@ -1504,12 +1475,6 @@ public final class FileAnalyzer {
                 consEmptyTokens = 0;
                 columns = 0;
 
-                // Now that the user can cancel - we look at the entire file
-                // if (linesRead == NUMOFLINES) {
-                // // seen enough lines.
-                // settings.setAnalyzeUsedAllRows(false);
-                // break;
-                // }
                 if (token == null) {
                     // seen end of file.
                     break;
@@ -1529,67 +1494,231 @@ public final class FileAnalyzer {
     }
 
     private static int getMaximumNumberOfColumns(
-            final FileReaderNodeSettings settings) throws IOException {
+            final FileReaderNodeSettings settings, final ExecutionMonitor exec)
+            throws IOException, InterruptedExecutionException {
 
-        BufferedReader reader = settings.createNewInputReader();
+        BufferedFileReader reader = settings.createNewInputReader();
         FileTokenizer tokenizer = new FileTokenizer(reader);
         tokenizer.setSettings(settings);
+        double fileSize = reader.getFileSize();
 
         int linesRead = 0;
         int colCount = 0; // the counter per line
         int numOfCols = 0; // the maximum
-        int consEmptyTokens = 0; // consecutive emtpy tokens
+        int consEmptyTokens = 0; // consecutive empty tokens
 
-        while (true) {
+        try {
+            while (true) {
 
-            String token = tokenizer.nextToken();
+                String token = tokenizer.nextToken();
 
-            if (!settings.isRowDelimiter(token)) {
+                if (!settings.isRowDelimiter(token)) {
 
-                colCount++;
+                    colCount++;
 
-                // keep track of the empty tokens read.
-                if (token.equals("") && !tokenizer.lastTokenWasQuoted()) {
-                    consEmptyTokens++;
+                    // keep track of the empty tokens read.
+                    if (token.equals("") && !tokenizer.lastTokenWasQuoted()) {
+                        consEmptyTokens++;
+                    } else {
+                        consEmptyTokens = 0;
+                    }
+
                 } else {
+                    // null token (=EOF) is a row delimiter
+                    if (colCount > 0) {
+                        // ignore empty lines
+                        linesRead++;
+                    }
+
+                    if (settings.ignoreEmptyTokensAtEndOfRow()) {
+                        // we are looking for the maximum - those empty tokens
+                        // should not contribute to it.
+                        colCount -= consEmptyTokens;
+                    }
+                    if (colCount > numOfCols) {
+                        // we are supposed to return the maximum
+                        numOfCols = colCount;
+                        settings.setColumnNumDeterminingLineNumber(tokenizer
+                                .getLineNumber());
+                    }
+
+                    colCount = 0;
                     consEmptyTokens = 0;
+
+                    if (token == null) {
+                        break;
+                    }
+
+                    if (cutItShort(exec)) {
+                        // cutItShort also checks for interrupts
+                        if (linesRead >= NUMOFLINES) {
+                            settings.setAnalyzeUsedAllRows(false);
+                            break;
+                        }
+                        exec.setProgress(linesRead / (double)NUMOFLINES);
+                    } else {
+                        if (fileSize > 0) {
+                            exec.setProgress(
+                                    reader.getNumberOfBytesRead() / fileSize);
+                        }
+                    }
                 }
 
-            } else {
-                // null token (=EOF) is a row delimiter
-                if (colCount > 0) {
-                    // ignore empty lines
-                    linesRead++;
-                }
+            }
+        } finally {
+            tokenizer.closeSourceStream();
+        }
+        return numOfCols;
+    }
 
-                if (settings.ignoreEmptyTokensAtEndOfRow()) {
-                    // we are looking for the maximum - those emtpy tokens
-                    // should not contribute to it.
-                    colCount -= consEmptyTokens;
-                }
-                if (colCount > numOfCols) {
-                    // we are supposed to return the maximum
-                    numOfCols = colCount;
-                    settings.setColumnNumDeterminingLineNumber(tokenizer
-                            .getLineNumber());
-                }
+    /**
+     * Little helper class for the check header method. Holds the prefix and the
+     * running index of possible row or column headers.
+     *
+     * @author ohl, University of Konstanz
+     */
+    static final class HeaderHelper {
+        /* the prefix of all row/col headers (could be empty) */
+        private final String m_prefix;
 
-                colCount = 0;
-                consEmptyTokens = 0;
+        /* the index of the first character of the running index */
+        private final int m_indexStartIdx;
 
-                if (token == null) {
-                    break;
-                }
-                if (linesRead == NUMOFLINES) {
-                    // read enough lines.
-                    settings.setAnalyzeUsedAllRows(false);
+        /* the last index seen (to ensure increasing indices) */
+        private long m_lastIndex;
+
+        /**
+         * Stores the prefix all headers should start with (could be empty), the
+         * index in the string, where the running index of the headers start and
+         * the first running index seen (to ensure increasing indices).
+         *
+         * @param prefix the prefix of all headers (could be empty but not
+         *            null).
+         * @param indexStartIdx the index in the header the running index starts
+         *            at. Must not be negative.
+         * @param firstRunningIndex the first running index of the first header
+         */
+        private HeaderHelper(final String prefix, final int indexStartIdx,
+                final long firstRunningIndex) {
+            if (prefix == null) {
+                throw new NullPointerException(
+                        "The row ID prefix can't be null.");
+            }
+            if (indexStartIdx < 0) {
+                throw new IllegalArgumentException(
+                        "The start index can't be negative.");
+            }
+            m_prefix = prefix;
+            m_indexStartIdx = indexStartIdx;
+            m_lastIndex = firstRunningIndex;
+        }
+
+        /**
+         * Checks if the specified header fits in the sequence of consecutive
+         * headers. That is, it must consist of the stored prefix followed by a
+         * number (the running index) that must be larger than the last one
+         * seen. It is assumed that all headers are checked through this method
+         * in the order they are read (because this method stores the last
+         * running index seen).<br>
+         * If false is returned, this method doesn't change its last running
+         * index seen.
+         *
+         * @param headerToTest the next header in the file to test.
+         * @return true, if this header fits in the sequence of header - with
+         *         its prefix and its running index.
+         */
+        boolean testNextHeader(final String headerToTest) {
+            if (headerToTest == null || headerToTest.isEmpty()) {
+                return false;
+            }
+            if (headerToTest.length() <= m_indexStartIdx) {
+                // we need that prefix
+                return false;
+            }
+            if (!headerToTest.substring(0, m_indexStartIdx).equals(m_prefix)) {
+                // the (possibly empty) prefix must match
+                return false;
+            }
+
+            // see if it has a running index after the prefix
+            long newIdx;
+            try {
+                newIdx =
+                        Long.parseLong(headerToTest.substring(m_indexStartIdx));
+            } catch (NumberFormatException nfe) {
+                // this header doesn't have an index. ByeBye.
+                return false;
+            }
+            if (newIdx <= m_lastIndex) {
+                // we want the index to grow. This way we ensure unique headers.
+                return false;
+            }
+
+            m_lastIndex = newIdx;
+            return true;
+        }
+
+        /**
+         * from the header passed it extracts the prefix and the running index
+         * and stores them in the returned helper class. If the specified header
+         * has no index at the end, it returns null.
+         *
+         * @param header the (possible) header to examine
+         * @return a class holding the (possibly empty) prefix and the running
+         *         index of the specified header, or null, if the header has no
+         *         prefix
+         */
+        static HeaderHelper extractPrefixAndIndexFromHeader(
+                final String header) {
+            if (header == null || header.isEmpty()) {
+                return null;
+            }
+            int p;
+            for (p = header.length() - 1; p >= 0; p--) {
+                if (!Character.isDigit(header.charAt(p))) {
                     break;
                 }
             }
+            // p is now the first idx from the end with a not-a-number-char, or
+            // -1
+
+            p = p + 1; // now it points at the first number of the header index
+
+            if (p == header.length()) {
+                // we want a running index at the end of the header
+                return null;
+            }
+
+            String prefix = header.substring(0, p);
+            String index = header.substring(p);
+
+            long idx;
+            try {
+                idx = Long.parseLong(index); // to make sure idx increases
+            } catch (NumberFormatException nfe) {
+                // it is a number - but too big for a long. Can't do it.
+                return null;
+            }
+
+            return new HeaderHelper(prefix, p, idx);
 
         }
-        tokenizer.closeSourceStream();
 
-        return numOfCols;
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            String result = "";
+            if (m_prefix.isEmpty()) {
+                result += "No prefix. ";
+            } else {
+                result += "Prefix: '" + m_prefix + "' ";
+            }
+            result += "Index starts at " + m_indexStartIdx;
+            result += ". Last Index: " + m_lastIndex;
+            return result;
+        }
     }
+
 }

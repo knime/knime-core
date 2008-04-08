@@ -40,15 +40,19 @@ import org.knime.core.node.NodeProgressMonitor;
  */
 public class FileReaderExecutionMonitor extends ExecutionMonitor {
 
+    // if not null this is a sub exec
+    private FileReaderExecutionMonitor m_parent;
+
     private boolean m_interrupt = false;
 
     private boolean m_cancel = false;
 
     /**
-     * Creates a new object with a default progress monitor
+     * Creates a new object with a default progress monitor.
      */
     FileReaderExecutionMonitor() {
         super();
+        m_parent = null;
     }
 
     /**
@@ -57,8 +61,21 @@ public class FileReaderExecutionMonitor extends ExecutionMonitor {
      */
     FileReaderExecutionMonitor(final NodeProgressMonitor progressMonitor) {
         super(progressMonitor);
+        m_parent = null;
     }
 
+    /**
+     * private constructor used for creating sub exec monitors.
+     * @param progressMonitor the progress monitor
+     * @param parent the exec monitor the new one is sub exec of
+     */
+    private FileReaderExecutionMonitor(
+            final NodeProgressMonitor progressMonitor,
+            final FileReaderExecutionMonitor parent) {
+        super(progressMonitor);
+        assert parent != null;
+        m_parent = parent;
+    }
     /**
      * {@inheritDoc}
      */
@@ -81,7 +98,8 @@ public class FileReaderExecutionMonitor extends ExecutionMonitor {
     }
 
     /**
-     * Checks the cancel flag.
+     * Checks the cancel flag. If this is a sub exec, it also checks with the
+     * parent.
      * <p>
      * NOTE: if the cancellation was triggered in the progress monitor, this
      * method will return false. Always cancel execution through this execution
@@ -90,6 +108,9 @@ public class FileReaderExecutionMonitor extends ExecutionMonitor {
      * @return true, if execution was canceled.
      */
     public boolean wasCanceled() {
+        if (m_parent != null && m_parent.wasCanceled()) {
+            return true;
+        }
         return m_cancel;
     }
 
@@ -114,11 +135,15 @@ public class FileReaderExecutionMonitor extends ExecutionMonitor {
     }
 
     /**
-     * Checks if the execution was interrupted.
+     * Checks if the execution was interrupted. In sub execs it also checks
+     * with the parent.
      *
      * @return true, if execution was interrupted
      */
     public boolean wasInterrupted() {
+        if (m_parent != null && m_parent.wasInterrupted()) {
+            return true;
+        }
         return m_interrupt;
     }
 
@@ -129,6 +154,6 @@ public class FileReaderExecutionMonitor extends ExecutionMonitor {
     public ExecutionMonitor createSubProgress(final double maxProg) {
         ExecutionMonitor e = super.createSubProgress(maxProg);
         // steal the progress monitor and implant it into a FREM
-        return new FileReaderExecutionMonitor(e.getProgressMonitor());
+        return new FileReaderExecutionMonitor(e.getProgressMonitor(), this);
     }
 }

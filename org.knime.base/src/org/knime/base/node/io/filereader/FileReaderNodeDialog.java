@@ -74,7 +74,6 @@ import org.knime.base.node.io.filetokenizer.Comment;
 import org.knime.base.node.io.filetokenizer.Delimiter;
 import org.knime.base.node.io.filetokenizer.FileTokenizerException;
 import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
-import org.knime.base.node.util.BufferedFileReader;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -119,12 +118,6 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     new Delimiter(" ", true, false, false),
                     new Delimiter("\t", false, false, false),
                     new Delimiter(";", false, false, false)};
-
-    // max size of files that will be analyzed automatically
-    private static final long AUTO_TRIGGER_SIZE = 500000;
-
-    // if analyze is faster than that we automatically do it
-    private static final long AUTO_TRIGGER_TIME = 1000;
 
     /*
      * the settings object holding the current state of all settings. The
@@ -175,9 +168,6 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
     private boolean m_insideLoadColHdr;
 
-    /* if false, dialog waits for user action to analyze file */
-    private boolean m_autoAnalyze;
-
     private JPanel m_dialogPanel;
 
     private JCheckBox m_ignoreWS;
@@ -200,9 +190,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
     private FileReaderPreviewTable m_previewTable;
 
-    private final JButton m_analyzeButton = new JButton("Start Analysis");
-
-    private final JButton m_analyzeCancel = new JButton("Stop Analysis");
+    private JButton m_analyzeCancel;
 
     private final JLabel m_analyzeProgressMsg = new JLabel("");
 
@@ -228,7 +216,6 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         m_insideColHdrChange = false;
         m_insideLoadRowHdr = false;
         m_insideRowHdrChange = false;
-        m_autoAnalyze = false;
         m_analysisExecMonitor = null;
 
         m_prevWhiteSpaces = null;
@@ -357,12 +344,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         try {
             fileChanged = takeOverNewFileLocation();
 
-            if (fileChanged) {
-                m_autoAnalyze =
-                        alwaysAnalyze(m_frSettings.getDataFileLocation());
-                if (!m_frSettings.getPreserveSettings()) {
-                    resetSettings();
-                }
+            if (fileChanged && !m_frSettings.getPreserveSettings()) {
+                resetSettings();
             }
 
         } catch (final InvalidSettingsException e) {
@@ -412,19 +395,16 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     }
 
     private JPanel createAnalysisPanel() {
-        m_analyzeButton.addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent e) {
-                m_analyzeButton.setEnabled(false);
-                analyzeAction();
-            }
-        });
-        m_analyzeButton.setEnabled(false);
 
+        m_analyzeCancel = new JButton("Quick Scan");
+        m_analyzeCancel.setToolTipText(
+                "Analyze the first " + FileAnalyzer.NUMOFLINES
+                + " lines only.");
         m_analyzeCancel.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_analyzeCancel.setEnabled(false);
-                m_analyzeCancel.setText("Wrapping up");
-                m_analysisExecMonitor.getProgressMonitor().setExecuteCanceled();
+                m_analyzeCancel.setText("Scanning quickly");
+                m_analysisExecMonitor.setExecuteCanceled();
             }
         });
         m_analyzeCancel.setEnabled(false);
@@ -445,14 +425,14 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         progressBox.add(m_analyzeProgressBar);
 
         Box buttonBox = Box.createHorizontalBox();
-        buttonBox.add(m_analyzeButton);
-        buttonBox.add(Box.createHorizontalStrut(7));
+        buttonBox.add(Box.createHorizontalGlue());
         buttonBox.add(m_analyzeCancel);
+        buttonBox.add(Box.createHorizontalGlue());
 
         Box allBox = Box.createVerticalBox();
-        allBox.add(buttonBox);
-        allBox.add(Box.createVerticalStrut(5));
         allBox.add(progressBox);
+        allBox.add(Box.createVerticalStrut(5));
+        allBox.add(buttonBox);
 
         Box hBox = Box.createHorizontalBox();
         hBox.add(Box.createGlue());
@@ -1355,13 +1335,10 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     }
                 }
 
-                if (!m_autoAnalyze) {
-                    // invalidate the current settings
-                    m_frSettings.setNumberOfColumns(-1);
-                    showAnalyzeButton();
-                } else {
-                    analyzeAction();
-                }
+                // invalidate the current settings
+                m_frSettings.setNumberOfColumns(-1);
+                showAnalyzeButton();
+                analyzeAction();
             }
 
         } else {
@@ -1382,8 +1359,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 // show the analyze button
                 m_previewArea.add(m_analysisPanel, BorderLayout.CENTER);
                 // enable button!!
-                m_analyzeButton.setEnabled(true);
-                m_analyzeCancel.setText("Stop Analysis");
+                m_analyzeCancel.setText("Quick Scan");
                 m_analyzeCancel.setEnabled(false);
                 m_analyzeProgressMsg.setText("");
                 m_analyzeProgressBar.setValue(0);
@@ -1494,7 +1470,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
             // the analysis thread, when finished, clears this flag.
             m_analysisRunning.setValue(true);
-            // allow for cancellations from now on
+            // allow for quickies from now on
             m_analyzeCancel.setEnabled(true);
             setPreviewTable(null);
             setErrorLabelText("");
@@ -1538,24 +1514,15 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             public void run() {
 
                 try {
-                    // take the time how long it takes to analyze this file
-                    long analTime = System.currentTimeMillis();
 
                     // analyze the file now.
                     FileReaderNodeSettings newSettings =
                             FileAnalyzer.analyze(userSettings,
                                     m_analysisExecMonitor);
 
-                    analTime = System.currentTimeMillis() - analTime;
-
                     if (m_analysisExecMonitor.wasInterrupted()) {
                         // if the code stopped us, do nothing more
                         return;
-                    }
-
-                    // if it finished fast enough always analyze this file
-                    if (!m_analysisExecMonitor.wasCanceled()) {
-                        m_autoAnalyze = (analTime < AUTO_TRIGGER_TIME);
                     }
 
                     if (m_analysisExecMonitor.wasCanceled()) {
@@ -1591,7 +1558,6 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     }
                     updatePreview();
                     setAnalWarningText("I/O Error while analyzing file: ");
-                    m_autoAnalyze = false;
                     return;
                 } catch (FileTokenizerException fte) {
                     updatePreview();
@@ -1609,7 +1575,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                         m_analysisExecMonitor = null;
                         m_analysisRunning.setValue(false);
 
-                        // disable cancellations
+                        // disable quicky
                         m_analyzeCancel.setEnabled(false);
                         m_analyzeProgressMsg.setText("");
                         m_analyzeProgressBar.setValue(0);
@@ -1624,44 +1590,6 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
         }, threadName).start();
 
-    }
-
-    /**
-     * Tries to figure out if this data source can be always analyzed, without
-     * being triggered by the user. It looks at the size of the file - if
-     * determinable. If the passed URL is null, it returns true.
-     *
-     * @param location the URL to the source to check
-     * @return true if the data can be analyzed right away, false if the user
-     *         should trigger it.
-     */
-    private boolean alwaysAnalyze(final URL location) {
-        if (location == null) {
-            return true;
-        }
-        if (!location.getProtocol().equals("file")) {
-            // if this is something else than a file, we can't get a size
-            // and we don't know how painful it is to read it:
-            return false;
-        }
-        try {
-            BufferedFileReader bfr =
-                    BufferedFileReader.createNewReader(location);
-            long size = bfr.getFileSize();
-            bfr.close();
-
-            if (size == 0) {
-                // couldn't get a size - let the user trigger analyze
-                return false;
-            } else {
-                return (size < AUTO_TRIGGER_SIZE);
-            }
-
-        } catch (IOException ioe) {
-            // something went wrong - automatically analyze to produce an
-            // error message
-            return true;
-        }
     }
 
     /*
