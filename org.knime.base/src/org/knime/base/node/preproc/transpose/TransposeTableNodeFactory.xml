@@ -10,6 +10,9 @@
 		    the former (old) column names. The new column type is the most specific
 		    base type and applies to all cells in one row.
 		</intro>
+		<option name=" Chunk size (columns):">
+		      number of columns read during one iteration over the table
+		</options>
 	</fullDescription>
     <ports>
         <dataIn index="0" name="Table">Input data to transpose</dataIn>
