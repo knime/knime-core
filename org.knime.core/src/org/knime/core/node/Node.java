@@ -46,6 +46,7 @@ import org.knime.core.node.GenericNodeFactory.NodeType;
 import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.util.StringFormat;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessageEvent;
@@ -594,7 +595,7 @@ public final class Node {
             final ExecutionContext exec) {
         // start message and keep start time
         final long time = System.currentTimeMillis();
-        m_logger.info("Start execute");
+        m_logger.debug("Start execute");
         // reset the message object
         m_message = null;
         // notify state listeners
@@ -730,8 +731,9 @@ public final class Node {
             }
             m_outputs[p].hiliteHdl = m_model.getOutHiLiteHandler(p);
         }
-        m_logger.info("End execute (" + (System.currentTimeMillis() - time)
-                / 100 / 10.0 + " sec)");
+        String elapsed = StringFormat.formatElapsedTime(
+                System.currentTimeMillis() - time);
+        m_logger.info("End execute (" + elapsed + ")");
         return true;
     } // executeNode(ExecutionMonitor)
 
@@ -762,7 +764,7 @@ public final class Node {
      * a chance to clear its intermediate results.
      */
     public void reset(final boolean cleanMessages) {
-        m_logger.info("reset");
+        m_logger.debug("reset");
         // if reset had no exception, reset node message
         m_model.resetModel();
         if (cleanMessages) {
@@ -778,7 +780,7 @@ public final class Node {
     }
 
     public void cleanOutPorts() {
-        m_logger.info("clean output ports.");
+        m_logger.debug("clean output ports.");
         // blow away our data tables in the port
         for (int i = 0; i < m_outputs.length; i++) {
             PortObject portObject = m_outputs[i].object;
@@ -1117,7 +1119,7 @@ public final class Node {
             }
         }
         if (success) {
-            m_logger.info("Configure succeeded. (" + this.getName() + ")");
+            m_logger.debug("Configure succeeded. (" + this.getName() + ")");
         }
         return success;
     }
