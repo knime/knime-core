@@ -96,9 +96,8 @@ public class ForLoopTailNodeModel extends NodeModel {
         IntCell currIterCell = new IntCell(ctx.currentIteration());
         for (DataRow row : inData[0]) {
             AppendedColumnRow newRow =
-                    new AppendedColumnRow(new DefaultRow(new RowKey(row
-                            .getKey()
-                            + "#" + ctx.currentIteration()), row), currIterCell);
+                    new AppendedColumnRow(new DefaultRow(new RowKey(row.getKey()
+                    + "#" + ctx.currentIteration()), row), currIterCell);
             m_resultContainer.addRowToTable(newRow);
         }
 
