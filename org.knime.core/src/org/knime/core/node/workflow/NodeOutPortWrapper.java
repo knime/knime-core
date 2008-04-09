@@ -100,11 +100,11 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
     /**
      * {@inheritDoc}
      */
-    public boolean inProgress() {
+    public NodeContainer.State getNodeState() {
         if (m_underlyingPort == null) {
-            return false;
+            return null;
         }
-        return m_underlyingPort.inProgress();
+        return m_underlyingPort.getNodeState();
     }
     
     /**

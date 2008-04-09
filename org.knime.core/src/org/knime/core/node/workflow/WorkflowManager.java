@@ -1061,8 +1061,9 @@ public final class WorkflowManager extends NodeContainer {
             NodeOutPort[] predPorts = assemblePredecessorOutPorts(id);
             boolean canBeMarked = true;
             for (NodeOutPort portIt : predPorts) {
-                if (portIt == null || (!portIt.inProgress() 
-                       && portIt.getPortObject() == null)) {
+                if (portIt == null 
+                    || (!portIt.getNodeState().executionInProgress() 
+                        && portIt.getPortObject() == null)) {
                     canBeMarked = false;
                 }
             }

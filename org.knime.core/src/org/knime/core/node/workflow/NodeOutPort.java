@@ -54,11 +54,9 @@ public interface NodeOutPort extends NodePort {
     public PortObject getPortObject();
 
     /**
-     * 
-     * @return true of node of this port is still waiting to (or already)
-     *   doing something (i.e. State.executionInProgress() is true).
+     * @return the state of the node owning this port.
      */
-    public boolean inProgress();
+    public NodeContainer.State getNodeState();
     
     
     /**

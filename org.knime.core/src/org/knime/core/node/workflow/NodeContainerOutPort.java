@@ -85,8 +85,8 @@ implements NodeOutPort {
     /**
      * {@inheritDoc}
      */
-    public boolean inProgress() {
-        return m_snc.getState().executionInProgress();
+    public State getNodeState() {
+        return m_snc.getState();
     }
     
     /**
