@@ -359,48 +359,36 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     public void stateChanged(final NodeStateEvent state) {
         Display.getDefault().asyncExec(new Runnable() {
             public void run() {
-//                NodeContainer nodeContainer = getNodeContainer();
                 NodeContainerFigure fig = (NodeContainerFigure)getFigure();
+                fig.setState(state.getState());
+                /*
                 if (state.getState().equals(NodeContainer.State.CONFIGURED)) {
-
+                    
                     fig.setState(NodeContainerFigure.STATE_READY, "");
-
-                    // it is possible that configured events are received
-                    // even though the node is queued or executing
-                    // (Meta nodes or consecutive nodes when the previous one
-                    // finished executing)
-                    // thus, these cases are checked before a configured (ready)
-                    // or not configured is set
-//                    if (nodeContainer.getState().equals(NodeContainer.State.EXECUTING)) {
-//                        fig.setState(NodeContainerFigure.STATE_EXECUTING, "");
-//                    } else if (nodeContainer.getState().equals(NodeContainer.State.QUEUED)) {
-//                        fig.setState(NodeContainerFigure.STATE_QUEUED, "");
-//                    } else if (getWorkflow().canExecuteNode(nodeContainer.getID())) {
-//                        fig.setState(NodeContainerFigure.STATE_READY, "");
-//                    } else {
-//                        fig.setState(NodeContainerFigure.STATE_NOT_CONFIGURED, "");
-//                    }
-
-                    // TODO: removed node reset event
-
+                    
                 } else if (state.getState().equals(NodeContainer.State.IDLE)) {
+                    
                         fig.setState(NodeContainerFigure.STATE_NOT_CONFIGURED, "");
+                        
                 } else if (state.getState().equals(NodeContainer.State.QUEUED)) {
 
                     fig.setState(NodeContainerFigure.STATE_QUEUED, "");
 
                 } else if (state.getState().equals(NodeContainer.State.EXECUTING)) {
+                    
                     fig.setState(NodeContainerFigure.STATE_EXECUTING, "");
 
                     // deactivate edit part and set locking flag
                     // NodeContainerEditPart.this.deactivateEditPolicies();
                     m_isLocked = true;
                 } else if (state.getState().equals(NodeContainer.State.EXECUTED)) {
+                    
                         fig.setState(NodeContainerFigure.STATE_EXECUTED, "");
                     // re-activate edit part and clear locking flag
                     // NodeContainerEditPart.this.activateEditPolicies();
                     m_isLocked = false;
                 }
+                */
                 updateNodeStatus();
 
                 // reset the tooltip text of the outports
@@ -413,12 +401,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                         outPortPart.rebuildTooltip();
                     }
                 }
-
                 // always refresh visuals
                 refreshVisuals();
-
             }
-
         });
 
     }
@@ -432,33 +417,22 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 pe.getNodeProgress());
     }
 
+    /**
+     * 
+     * {@inheritDoc}
+     */
     public void messageChanged(final NodeMessageEvent messageEvent) {
         //
         // As this code updates the UI it must be executed in the UI thread.
         //
         Display.getDefault().asyncExec(new Runnable() {
-
             public void run() {
                 NodeContainerFigure fig = (NodeContainerFigure)getFigure();
-                NodeMessage msg = messageEvent.getMessage();
-
-                    // re-activate edit part and clear locking flag
-                    // NodeContainerEditPart.this.activateEditPolicies();
-                    m_isLocked = false;
-                if (msg.getMessageType().equals(NodeMessage.Type.WARNING)) {
-                    fig.setState(NodeContainerFigure.STATE_WARNING,
-                            msg.getMessage());
-                } else if (msg.getMessageType().equals(NodeMessage.Type.ERROR)) {
-                    fig.setState(NodeContainerFigure.STATE_ERROR,
-                            msg.getMessage());
-                }
+                fig.setMessage(messageEvent.getMessage());
                 updateNodeStatus();
-
                 // always refresh visuals
                 refreshVisuals();
-
             }
-
         });
     }
 
@@ -593,25 +567,26 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
         // TODO FIXME construct initial state here (after loading) - this should
         // be made nicer
-        boolean isExecuted = getNodeContainer().getState().equals(
-                NodeContainer.State.EXECUTED);
-        if (isExecuted) {
-            f.setState(NodeContainerFigure.STATE_EXECUTED, null);
-        } else {
-            if (getNodeContainer().getState().equals(
-                    NodeContainer.State.EXECUTING)) {
-                f.setState(NodeContainerFigure.STATE_EXECUTING, null);
-            } else if (getNodeContainer().getState().equals(
-                    NodeContainer.State.QUEUED)) {
-                f.setState(NodeContainerFigure.STATE_QUEUED, null);
-                // TODO: check this
-            } else if (getNodeContainer().getState().equals(
-                    NodeContainer.State.CONFIGURED)) {
-                f.setState(NodeContainerFigure.STATE_READY, null);
-            } else {
-                f.setState(NodeContainerFigure.STATE_NOT_CONFIGURED, null);
-            }
-        }
+//        boolean isExecuted = getNodeContainer().getState().equals(
+//                NodeContainer.State.EXECUTED);
+//        if (isExecuted) {
+//            f.setState(NodeContainerFigure.STATE_EXECUTED, null);
+//        } else {
+//            if (getNodeContainer().getState().equals(
+//                    NodeContainer.State.EXECUTING)) {
+//                f.setState(NodeContainerFigure.STATE_EXECUTING, null);
+//            } else if (getNodeContainer().getState().equals(
+//                    NodeContainer.State.QUEUED)) {
+//                f.setState(NodeContainerFigure.STATE_QUEUED, null);
+//                // TODO: check this
+//            } else if (getNodeContainer().getState().equals(
+//                    NodeContainer.State.CONFIGURED)) {
+//                f.setState(NodeContainerFigure.STATE_READY, null);
+//            } else {
+//                f.setState(NodeContainerFigure.STATE_NOT_CONFIGURED, null);
+//            }
+//        }
+        f.setState(getNodeContainer().getState());
         updateNodeStatus();
     }
 
@@ -624,27 +599,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         NodeContainerFigure containerFigure = (NodeContainerFigure)getFigure();
         NodeMessage nodeMessage = getNodeContainer().getNodeMessage();
         if (nodeMessage != null) {
-
-            String message = nodeMessage.getMessage();
-
-            // if there is a message, set it, else remove the current message
-            // if set
-            if (message != null && !message.trim().equals("")) {
-
-                int messageType;
-
-                // message type tranlation for workbench
-                if (nodeMessage.getMessageType() == NodeMessage.Type.ERROR) {
-                    messageType = NodeContainerFigure.STATE_ERROR;
-                } else {
-                    messageType = NodeContainerFigure.STATE_WARNING;
-                }
-                containerFigure.setState(messageType, message);
-            } else {
-                containerFigure.removeMessages();
-            }
-        } else {
-            containerFigure.removeMessages();
+            containerFigure.setMessage(nodeMessage);
         }
     }
 

@@ -49,6 +49,8 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.GenericNodeFactory.NodeType;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeMessage;
 import org.knime.workbench.editor2.ImageRepository;
 
 /**
@@ -95,10 +97,6 @@ public class NodeContainerFigure extends RectangleFigure {
     public static final Image WARNING_SIGN =
             ImageRepository.getImage("icons/warning.gif");
 
-    /** Warning sign. * */
-    public static final Image WARNING_SIGN_TINY =
-            ImageRepository.getImage("icons/warningTiny.gif");
-
     /** Error sign. * */
     public static final Image ERROR_SIGN =
             ImageRepository.getImage("icons/error.jpg");
@@ -139,7 +137,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
     private static final Font FONT_USER_NAME;
 
-    // private static final Font FONT_EXECUTING;
+//     private static final Font FONT_EXECUTING;
 
     private static final Font FONT_EXECUTED;
 
@@ -158,7 +156,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
         // FONT_NORMAL = new Font(current, name, height, SWT.NORMAL);
         FONT_USER_NAME = new Font(current, name, height, SWT.NORMAL);
-        // FONT_EXECUTING = new Font(current, name, height, SWT.ITALIC);
+//        FONT_EXECUTING = new Font(current, name, height, SWT.ITALIC);
         FONT_EXECUTED = new Font(current, name, height, SWT.BOLD);
         FONT_NORMAL = FONT_EXECUTED;
 
@@ -485,79 +483,45 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
-     * Sets the state of the node, which shall be reflected in the UI.
-     *
-     * @param state The state to set
-     * @param message The message for the state
+     * 
+     * @param state new state of underlying node
      */
-    public void setState(final int state, final String message) {
-
-        switch (state) {
-        case STATE_NOT_CONFIGURED:
-//            m_heading.setFont(FONT_NORMAL);
-//            m_heading.setEnabled(false);
+    public void setState(final NodeContainer.State state) {
+        if (state.equals(NodeContainer.State.IDLE)) {
             setStatusAmple();
             m_statusFigure.setIcon(RED);
-            break;
-        case STATE_READY:
-//            m_heading.setFont(FONT_NORMAL);
-//            m_heading.setEnabled(true);
-
+        } else if (state.equals(NodeContainer.State.CONFIGURED)) {
             setStatusAmple();
             m_statusFigure.setIcon(YELLOW);
-
-            // m_contentFigure.removeWarningSign();
-            break;
-        // case STATE_QUEUED:
-        // m_statusFigure.setIcon(YELLOW);
-        // m_statusFigure.setEnabled(false);
-        // break;
-        case STATE_EXECUTING:
-            // m_heading.setFont(FONT_EXECUTING);
-           // m_heading.setEnabled(true);
-
+        } else if (state.equals(NodeContainer.State.EXECUTING)) {
             setProgressBar(true);
-            // m_heading.setFont(FONT_EXECUTING);
-            // m_contentFigure.removeWarningSign();
-            break;
-        case STATE_QUEUED:
-            // m_heading.setFont(FONT_NORMAL);
-           // m_heading.setEnabled(true);
-
-            setProgressBar(false);
-            break;
-        case STATE_EXECUTED:
-            // m_heading.setFont(FONT_EXECUTED);
-           // m_heading.setEnabled(true);
-
+        } else if (state.equals(NodeContainer.State.EXECUTED)) {
             setStatusAmple();
             m_statusFigure.setIcon(GREEN);
-            break;
-        case STATE_WARNING:
-            // m_heading.setFont(FONT_NORMAL);
-           // m_heading.setEnabled(true);
-            m_infoWarnErrorPanel.setWarning(message);
-            // m_contentFigure.setWarning(message, WarnErrorToolTip.WARNING);
-            break;
-        case STATE_ERROR:
-            // m_heading.setFont(FONT_NORMAL);
-          //  m_heading.setEnabled(true);
-            m_infoWarnErrorPanel.setError(message);
-            // m_contentFigure.setWarning(message, WarnErrorToolTip.ERROR);
-            break;
-        default:
-            // m_heading.setFont(FONT_NORMAL);
-           // m_heading.setEnabled(false);
-
-            setStatusAmple();
-            m_statusFigure.setIcon(RED);
-            break;
+        } else if (state.equals(
+                NodeContainer.State.UNCONFIGURED_MARKEDFOREXEC)) {
+            setProgressBar(false);
+        } else if (state.equals(NodeContainer.State.QUEUED)) {
+            setProgressBar(false);
         }
-
-        m_heading.repaint();
         m_statusFigure.repaint();
-
     }
+    
+    /**
+     * 
+     * @param msg the node message
+     */
+    public void setMessage(final NodeMessage msg) {
+        if (msg.getMessageType().equals(NodeMessage.Type.RESET)) {
+            removeMessages();
+        } else if (msg.getMessageType().equals(NodeMessage.Type.WARNING)) {
+            m_infoWarnErrorPanel.setWarning(msg.getMessage());
+        } else if (msg.getMessageType().equals(NodeMessage.Type.ERROR)) {
+            m_infoWarnErrorPanel.setError(msg.getMessage());
+        }
+        m_statusFigure.repaint();
+    }
+    
 
     /**
      * {@inheritDoc}
@@ -781,7 +745,7 @@ public class NodeContainerFigure extends RectangleFigure {
             Image icon = m_baseIcon;
 
             OverlayImage overlayImage =
-                    new OverlayImage(icon, WARNING_SIGN_TINY);
+                    new OverlayImage(icon, WARNING_SIGN);
 
             // parameters are only dummy values. not needed!
             overlayImage.drawCompositeImage(0, 0);

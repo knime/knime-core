@@ -39,7 +39,9 @@ public final class NodeMessage {
         /** Warning - not fatal . */
         WARNING,
         /** Error - fatal, node not executable. */
-        ERROR
+        ERROR,
+        /** Reset - reset the warning/error. */
+        RESET
     }
 
     private final String m_message;
