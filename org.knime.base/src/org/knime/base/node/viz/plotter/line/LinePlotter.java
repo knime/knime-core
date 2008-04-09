@@ -257,8 +257,8 @@ public class LinePlotter extends ScatterPlotter {
                     float h = (colNr * segment) / 360f;
                     m_colorMapping.put(colSpec.getName(), 
                             Color.getHSBColor(h, 1, 1));
-                    colNr++;
                 }
+                colNr++;
             }
             calculateCoordinates(array);
             calculateDots();
