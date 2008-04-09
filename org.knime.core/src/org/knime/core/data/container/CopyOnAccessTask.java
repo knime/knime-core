@@ -117,7 +117,7 @@ final class CopyOnAccessTask {
                 public void run() {
                     double sizeInMB = file.length() / (double)(1 << 20);
                     String size = NumberFormat.getInstance().format(sizeInMB);
-                    LOGGER.info(
+                    LOGGER.debug(
                             "Extracting data file \"" + file.getAbsolutePath()
                             + "\" to temp dir (" + size + "MB)");
                 }

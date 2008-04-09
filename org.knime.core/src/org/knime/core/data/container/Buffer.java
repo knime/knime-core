@@ -627,7 +627,7 @@ class Buffer {
                 m_list = null;
                 double sizeInMB = m_binFile.length() / (double)(1 << 20);
                 String size = NumberFormat.getInstance().format(sizeInMB);
-                LOGGER.info("Buffer file (" + m_binFile.getAbsolutePath() 
+                LOGGER.debug("Buffer file (" + m_binFile.getAbsolutePath() 
                         + ") is " + size + "MB in size");
             } catch (IOException ioe) {
                 throw new RuntimeException("Cannot close stream of file \"" 
