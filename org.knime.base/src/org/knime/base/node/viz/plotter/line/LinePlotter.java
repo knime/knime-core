@@ -243,20 +243,21 @@ public class LinePlotter extends ScatterPlotter {
             if (m_columnNames == null) {
                 initColumnNames(array);
             }
-            // create the color mapping if necessary
+            // create the color mapping
             if (m_colorMapping == null) {
                 m_colorMapping = new LinkedHashMap<String, Color>();
-                float segment = 360f / (float)m_columns2Draw.size();
-                int colNr = 0;
-                for (DataColumnSpec colSpec : getDataProvider().getDataArray(
-                        getDataArrayIdx())
-                        .getDataTableSpec()) {
-                    if (colSpec.getType().isCompatible(DoubleValue.class)) {
-                        float h = (colNr * segment) / 360f;
-                        m_colorMapping.put(colSpec.getName(), 
-                                Color.getHSBColor(h, 1, 1));
-                        colNr++;
-                    }
+            } 
+            m_colorMapping.clear();
+            float segment = 360f / (float)m_columns2Draw.size();
+            int colNr = 0;
+            for (DataColumnSpec colSpec : getDataProvider().getDataArray(
+                    getDataArrayIdx())
+                    .getDataTableSpec()) {
+                if (m_columns2Draw.contains(colNr)) {
+                    float h = (colNr * segment) / 360f;
+                    m_colorMapping.put(colSpec.getName(), 
+                            Color.getHSBColor(h, 1, 1));
+                    colNr++;
                 }
             }
             calculateCoordinates(array);
