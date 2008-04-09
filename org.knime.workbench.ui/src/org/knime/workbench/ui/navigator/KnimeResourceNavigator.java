@@ -103,14 +103,14 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                     ncAdded.addNodeStateChangeListener(
                             KnimeResourceNavigator.this);
                     LOGGER.debug(
-                            "Workflow " + ncAdded.getNameWithID() + "added"); 
+                            "Workflow " + ncAdded.getNameWithID() + " added"); 
                     break;
                 case NODE_REMOVED:
                     NodeContainer ncRem = (NodeContainer)event.getOldValue(); 
                     ncRem.removeNodeStateChangeListener(
                             KnimeResourceNavigator.this);
                     LOGGER.debug("Workflow " + ncRem.getNameWithID() 
-                            + "removed"); 
+                            + " removed"); 
                     break;
                 default:
                     // ignored, not interesting in this context
