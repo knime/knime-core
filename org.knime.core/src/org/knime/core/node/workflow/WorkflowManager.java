@@ -2329,9 +2329,16 @@ public final class WorkflowManager extends NodeContainer {
         }
         exec.setProgress(1.0);
         result.setWorkflowManager(manager);
-        LOGGER.debug("Successfully loaded content from \"" 
-                + directory.getAbsolutePath() + "\"  into workflow manager "
-                + "instance " + manager.getNameWithID());
+        String message;
+        if (result.hasErrors()) {
+            message = "Loaded workflow from \"" + directory.getAbsolutePath() 
+                + "\" with errors";
+            LOGGER.debug(result.getErrors());
+        } else {
+            message = "Successfully loaded workflow from \"" 
+                + directory.getAbsolutePath() + "\"";
+        }
+        LOGGER.debug(message);
         return result;
     }
     
