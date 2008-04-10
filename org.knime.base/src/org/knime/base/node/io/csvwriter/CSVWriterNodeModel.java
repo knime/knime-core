@@ -344,12 +344,7 @@ public class CSVWriterNodeModel extends NodeModel {
             String addMsg =
                     "No separator and no quotes and no missing value pattern"
                             + " set.\nWritten data will be hard read!";
-            String warnMsg = getWarningMessage();
-            if (notEmtpy(warnMsg)) {
-                setWarningMessage(warnMsg + "\n" + addMsg);
-            } else {
-                setWarningMessage(addMsg);
-            }
+            setWarningMessage(addMsg);
         }
 
         DataTableSpec inSpec = inSpecs[0];
