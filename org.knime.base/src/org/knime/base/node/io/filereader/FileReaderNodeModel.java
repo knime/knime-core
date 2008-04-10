@@ -181,9 +181,14 @@ public class FileReaderNodeModel extends NodeModel {
             }
 
         } catch (DuplicateKeyException dke) {
-            setWarningMessage("Duplicate row IDs. Consider making IDs unique in"
-                    + " the advanced settings.");
-            throw dke;
+            String msg = dke.getMessage();
+            if (msg == null) {
+                msg = "Duplicate row IDs";
+            }
+            msg += ". Consider making IDs unique in the advanced settings.";
+            DuplicateKeyException newDKE = new DuplicateKeyException(msg);
+            newDKE.initCause(dke);
+            throw newDKE;
         } finally {
             c.close();
         }
