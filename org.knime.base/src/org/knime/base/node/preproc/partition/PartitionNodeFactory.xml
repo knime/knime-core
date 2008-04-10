@@ -19,20 +19,24 @@
 			in the first partition. It must be between 0 and 100, inclusively.
 		</option>
 		<option name="Draw randomly">
-			The sampling should be done randomly. If this is not checked the first partition
-			is taken from the top of the input table.
-		</option>
-		<option name="Seed">
-			Check this button and add a random seed to have deterministic 
+			The sampling should be done randomly. 
+			Check the "Seed" button and add a random seed to have deterministic 
 			sampling, i.e. each execution results in the same partitioning. 
 			If you do not specify a random seed, the partitioning will differ
 	        when the node is re-executed.
 		</option>
+        <option name="Take from top">This mode puts the top-most rows 
+        into the first output table and the remainder in the second table.</option>        
         <option name="Stratified sampling">
             Check this button if you want stratified sampling, i.e. the distribution
             of values in the selected column is (approximately) retained in 
             the output tables. 
             Stratified sampling only works when random sampling is enabled.
+        </option>
+        <option name="Linear sampling">
+            This mode always includes the first and the last row and selects the remaining rows linearly over the whole
+            table (e.g. every third row). This is useful to downsample a sorted column while maintaining minimum and
+            maximum value.
         </option>
 	</fullDescription>
     <ports>
