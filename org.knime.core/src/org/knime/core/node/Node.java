@@ -80,7 +80,7 @@ import org.w3c.dom.Element;
  * @author Thomas Gabriel, University of Konstanz
  * 
  */
-public final class Node {
+public final class Node implements NodeModelWarningListener {
 
     /** The node logger for this class. */
     private final NodeLogger m_logger;
@@ -100,13 +100,13 @@ public final class Node {
     /** The node's assigned node model. */
     private final GenericNodeModel m_model;
 
+    /** the last fired message (or null if none available). */
+    private NodeMessage m_message;
+
     /** The node's dialog or <code>null</code> if not available. */
     private GenericNodeDialogPane m_dialogPane;
     
     private NodeSettings m_variablesSettings;
-
-    /** Holds the current node message. */
-    private NodeMessage m_message;
 
     /** Keeps outgoing information (specs, objects, HiLiteHandlers...). */
     static class Output {
@@ -212,11 +212,14 @@ public final class Node {
 
         // keep node model
         m_model = m_factory.callCreateNodeModel();
+        
+        // register ourselves as listener for warnings
+        m_model.addWarningListener(this);
 
         // register logger
         m_logger = NodeLogger.getLogger(m_name);
 
-        // init state listener array
+        // init message listener array
         m_messageListeners = new CopyOnWriteArraySet<NodeMessageListener>();
 
         // init input ports
@@ -274,7 +277,7 @@ public final class Node {
             boolean hasContent = loader.hasContent();
             m_model.setHasContent(hasContent);
         }
-        m_message = loader.getNodeMessage();
+        NodeMessage nodeMessage = loader.getNodeMessage();
         m_outDataPortsMemoryPolicy = loader.getMemoryPolicy();
         m_variablesSettings = loader.getVariablesSettings();
         if (m_outDataPortsMemoryPolicy == null) {
@@ -321,8 +324,8 @@ public final class Node {
                 internDirRef.unlock();
             }
         }
-        if (m_message != null) {
-            notifyMessageListeners(m_message);
+        if (nodeMessage != null) {
+            notifyMessageListeners(nodeMessage);
         }
         for (int i = 0; i < getNrOutPorts(); i++) {
             Class<? extends PortObjectSpec> specClass =
@@ -597,7 +600,8 @@ public final class Node {
         final long time = System.currentTimeMillis();
         m_logger.debug("Start execute");
         // reset the message object
-        m_message = null;
+        notifyMessageListeners(new NodeMessage(NodeMessage.Type.RESET,
+                null));
         // notify state listeners
         // TODO: NEWWFM State Event
         // notifyStateListeners(new NodeStateChangedEvent(
@@ -614,11 +618,10 @@ public final class Node {
                         + "(Port No." + i + "). Is it executed?");
                 m_logger.error("failed execute");
                 // TODO NEWWFM state event
-                m_message = new NodeMessage(NodeMessage.Type.ERROR,
-                                "Couldn't get data from predecessor (Port No."
-                                + i + "). Is it executed?");
                 // TODO: also notify message/progress listeners
-                notifyMessageListeners(m_message);
+                notifyMessageListeners(new NodeMessage(NodeMessage.Type.ERROR,
+                                "Couldn't get data from predecessor (Port No."
+                                + i + "). Is it executed?"));
                 // notifyStateListeners(new NodeStateChangedEvent.EndExecute());
                 return false;
             }
@@ -633,49 +636,50 @@ public final class Node {
                 m_logger.error("  (Wanted: "
                         + thisType.getPortObjectClass().getName() + ", "
                         + "actual: " + inData[i].getClass().getName() + ")");
-                m_message = new NodeMessage(NodeMessage.Type.ERROR,
+                notifyMessageListeners(new NodeMessage(NodeMessage.Type.ERROR,
                                 "Connection Error: Mismatch"
                                         + " of input port types (port " + i
-                                        + ").");
+                                        + ")."));
                 // TODO: return here???
             }
         }
 
         PortObject[] newOutData; // the new DTs from the model
+        NodeMessage nodeMessage = null;
         try {
             // INVOKE MODEL'S EXECUTE
+            // (note that warning will now be processed automatically - we listen)
             newOutData = m_model.executeModel(inData, exec);
-            processModelWarnings();
         } catch (CanceledExecutionException cee) {
             // execution was canceled
             m_logger.info("execute canceled");
             reset(true);
-            m_message = new NodeMessage(NodeMessage.Type.WARNING,
+            nodeMessage = new NodeMessage(NodeMessage.Type.WARNING,
                             "Execution canceled");
             return false;
         } catch (AssertionError ae) {
             m_logger.assertLog(false, ae.getMessage(), ae);
             reset(true);
-            m_message = new NodeMessage(NodeMessage.Type.ERROR, 
+            nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
                     "Execute failed: " + ae.getMessage());
             return false;
         } catch (Error e) {
             // some other error - should never happen!
             m_logger.fatal("Fatal error", e);
             reset(true);
-            m_message = new NodeMessage(NodeMessage.Type.ERROR, 
+            nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
                     "Execute failed: " + e.getMessage());
             return false;
         } catch (Exception e) {
             // execution failed
             m_logger.error("Execute failed", e);
             reset(true);
-            m_message = new NodeMessage(NodeMessage.Type.ERROR, 
+            nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
                     "Execute failed: " + e.getMessage());
             return false;
         } finally {
-            if (m_message != null) {
-                notifyMessageListeners(m_message);
+            if (nodeMessage != null) {
+                notifyMessageListeners(nodeMessage);
             }
         }
 
@@ -695,11 +699,10 @@ public final class Node {
                                 + ", " + "actual: "
                                 + newOutData[i].getClass().getName() + ")");
                 // TODO: is this redundant double checking?
-                m_message = new NodeMessage(NodeMessage.Type.ERROR,
+                notifyMessageListeners(new NodeMessage(NodeMessage.Type.ERROR,
                                 "Connection Error: Mismatch"
                                     + " of output port types (port " + i
-                                    + ").");
-                notifyMessageListeners(m_message);
+                                    + ")."));
                 return false;
             }
         }
@@ -741,19 +744,15 @@ public final class Node {
      * Checks the warnings in the model and notifies registered listeners.
      * 
      */
-    private void processModelWarnings() {
+    public void warningChanged(final String warningMessage) {
 
         // get the warning message if available and create a message object
         // also notify all listeners
-        String warningMessage = m_model.getWarningMessage();
         if (warningMessage != null) {
 
             m_logger.warn("Model warning message: " + warningMessage);
-            m_message = new NodeMessage(NodeMessage.Type.WARNING, "Warning: "
-                            + warningMessage);
-            notifyMessageListeners(m_message);
-            // reset the warning message
-            m_model.setWarningMessage(null);
+            notifyMessageListeners(new NodeMessage(NodeMessage.Type.WARNING,
+                    "Warning: " + warningMessage));
         }
     }
 
@@ -768,7 +767,8 @@ public final class Node {
         // if reset had no exception, reset node message
         m_model.resetModel();
         if (cleanMessages) {
-            m_message = null;
+            notifyMessageListeners(new NodeMessage(NodeMessage.Type.RESET,
+                    null));
         }
         // and make sure output ports are empty as well
         cleanOutPorts();
@@ -1067,9 +1067,7 @@ public final class Node {
         boolean success = false;
         synchronized (m_configureLock) {
             // reset message object
-            m_message = null;
-
-            NodeMessage localMessage = null;
+            NodeMessage nodeMessage = null;
             // need to init here as there may be an exception being thrown and
             // then we copy the null elements of this array to their destination
             PortObjectSpec[] newOutSpec = new PortObjectSpec[getNrOutPorts()];
@@ -1098,7 +1096,7 @@ public final class Node {
                 success = true;
             } catch (InvalidSettingsException ise) {
                 m_logger.warn("Configure failed: " + ise.getMessage());
-                localMessage =
+                nodeMessage =
                         new NodeMessage(NodeMessage.Type.WARNING, "Warning: "
                                 + ise.getMessage());
             } catch (Exception e) {
@@ -1110,13 +1108,9 @@ public final class Node {
                     // update data table spec
                     m_outputs[p].spec = newOutSpec[p];
                 }
-
-                processModelWarnings();
-                if (localMessage != null) {
-                    m_message = localMessage;
-                    notifyMessageListeners(localMessage);
-                }
             }
+            // make sure we change the message (or reset it)
+            notifyMessageListeners(nodeMessage);
         }
         if (success) {
             m_logger.debug("Configure succeeded. (" + this.getName() + ")");
@@ -1162,18 +1156,16 @@ public final class Node {
             getView(viewIndex, nodeName).openView();
         } catch (Exception e) {
             m_logger.error("Show view failed", e);
-            m_message =
+            notifyMessageListeners(
                     new NodeMessage(NodeMessage.Type.ERROR,
                             "View could not be opened, reason: "
-                                    + e.getMessage());
-            notifyMessageListeners(m_message);
+                                    + e.getMessage()));
         } catch (Error e) {
             m_logger.fatal("Show view failed", e);
-            m_message =
+            notifyMessageListeners(
                     new NodeMessage(NodeMessage.Type.ERROR,
                             "View could not be opened, reason: "
-                                    + e.getMessage());
-            notifyMessageListeners(m_message);
+                                    + e.getMessage()));
         }
     }
 
@@ -1378,32 +1370,29 @@ public final class Node {
         if (internDir.canWrite()) {
             try {
                 m_model.saveInternals(internDir, exec);
-                processModelWarnings();
             } catch (IOException ioe) {
-                m_message =
+                notifyMessageListeners(
                         new NodeMessage(NodeMessage.Type.ERROR,
                                 "Unable to save " + "internals: "
-                                        + ioe.getMessage());
+                                        + ioe.getMessage()));
                 m_logger.debug("saveInternals() failed with " + "IOException",
                         ioe);
-                notifyMessageListeners(m_message);
             } catch (CanceledExecutionException e) {
                 throw e;
             } catch (Exception e) {
                 m_logger.coding("saveInternals() "
                         + "should only cause IOException.", e);
-                m_message =
+                notifyMessageListeners(
                         new NodeMessage(NodeMessage.Type.ERROR,
                                 "Unable to save " + "internals: "
-                                        + e.getMessage());
-                notifyMessageListeners(m_message);
+                                        + e.getMessage()));
             }
         } else {
             String errorMessage =
                     "Unable to write directory: " + internDir.getAbsolutePath();
             m_logger.error(errorMessage);
-            m_message = new NodeMessage(NodeMessage.Type.ERROR, errorMessage);
-            notifyMessageListeners(m_message);
+            notifyMessageListeners(new NodeMessage(NodeMessage.Type.ERROR,
+                    errorMessage));
         }
     }
 
@@ -1412,21 +1401,18 @@ public final class Node {
         if (m_model.hasContent()) {
             try {
                 m_model.loadInternals(internDir, exec);
-                processModelWarnings();
             } catch (IOException ioe) {
-                m_message =
+                notifyMessageListeners(
                         new NodeMessage(NodeMessage.Type.ERROR,
-                            "Unable to load internals: " + ioe.getMessage());
+                            "Unable to load internals: " + ioe.getMessage()));
                 m_logger.debug("loadInternals() failed with IOException", ioe);
-                notifyMessageListeners(m_message);
             } catch (CanceledExecutionException e) {
                 throw e;
             } catch (Throwable e) {
                 m_logger.coding("loadInternals() "
                         + "should only cause IOException.", e);
-                m_message = new NodeMessage(NodeMessage.Type.ERROR,
-                                "Unable to load internals: " + e.getMessage());
-                notifyMessageListeners(m_message);
+                notifyMessageListeners(new NodeMessage(NodeMessage.Type.ERROR,
+                                "Unable to load internals: " + e.getMessage()));
             }
         }
     }
@@ -1542,11 +1528,14 @@ public final class Node {
     }
 
     /**
-     * Notifies all state listeners that the state of this node has changed.
+     * Notifies all state listeners that the message of this node has changed.
      * 
      * @param message The message object.
      */
     public void notifyMessageListeners(final NodeMessage message) {
+        // remember old message (in case we want to store status of this node)
+        m_message = message;
+        // fire event to all listeners
         for (NodeMessageListener listener : m_messageListeners) {
             try {
                 listener.messageChanged(new NodeMessageEvent(
@@ -1555,6 +1544,13 @@ public final class Node {
                 m_logger.error("Exception while notifying node listeners", t);
             }
         }
+    }
+
+    /** 
+     * @return Last fired message. 
+     */
+    public NodeMessage getNodeMessage() {
+        return m_message;
     }
 
     /**
@@ -1566,13 +1562,6 @@ public final class Node {
     public String toString() {
         return "Node @" + hashCode() + " [" + m_name + ";in="
                 + m_model.getNrInPorts() + ";out=" + m_outputs.length + "]";
-    }
-
-    /**
-     * @return The message object of this <code>Node</code>.
-     */
-    public NodeMessage getNodeMessage() {
-        return m_message;
     }
 
     /**

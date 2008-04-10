@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
@@ -80,6 +81,10 @@ public abstract class GenericNodeModel {
      */
     private String m_warningMessage = null;
 
+    /** The listeners that are interested in changes of the model warning. */
+    private final CopyOnWriteArraySet<NodeModelWarningListener>
+                                                         m_warningListeners;
+
     /**
      * Creates a new model with the given number (and types!) of input and
      * output types.
@@ -92,6 +97,10 @@ public abstract class GenericNodeModel {
             final PortType[] outPortTypes) {
         // create logger
         m_logger = NodeLogger.getLogger(this.getClass());
+
+        // init message listener array
+        m_warningListeners =
+                       new CopyOnWriteArraySet<NodeModelWarningListener>();
 
         // check port types of validity and store them
         if ((inPortTypes == null) || (outPortTypes == null)) {
@@ -388,8 +397,8 @@ public abstract class GenericNodeModel {
         }
         // check meaningfulness of result and warn,
         // - only if the execute didn't issue a warning already
-        if ((getWarningMessage() == null)
-                || (getWarningMessage().length() == 0)) {
+        if ((m_warningMessage == null)
+                || (m_warningMessage.length() == 0)) {
             boolean hasData = false;
             boolean hasDataPorts = false;
             for (int i = 0; i < outData.length; i++) {
@@ -766,22 +775,72 @@ public abstract class GenericNodeModel {
             final PortObjectSpec[] inSpecs)
     throws InvalidSettingsException;
 
-    /**
-     * @return the warning message set during execution, null if none.
-     */
-    protected final String getWarningMessage() {
-        return m_warningMessage;
-    }
-
+    /////////////////////////
+    // Warning handling
+    /////////////////////////
+    
     /**
      * Sets an optional warning message by the implementing node model.
      *
      * @param warningMessage the warning message to set
      */
     protected final void setWarningMessage(final String warningMessage) {
+        if (warningMessage == m_warningMessage) {
+            return;
+        }
+        if ((warningMessage != null) && (m_warningMessage != null)
+                && (warningMessage.equals(m_warningMessage))) {
+            // neither string is null and they are equal
+            return;
+        }
+        // message changed, set new one and notify listeners.
         m_warningMessage = warningMessage;
+        notifyWarningListeners(m_warningMessage);
     }
 
+    /**
+     * Adds a warning listener to this node. Ignored if the listener is already
+     * registered.
+     * 
+     * @param listener The listener to add.
+     */
+    public void addWarningListener(final NodeModelWarningListener listener) {
+        if (listener == null) {
+            throw new NullPointerException(
+                    "NodeModel message listener must not be null!");
+        }
+        m_warningListeners.add(listener);
+    }
+
+    /**
+     * Removes a warning listener from this node. Ignored if the listener is
+     * not registered.
+     * 
+     * @param listener The listener to remove.
+     */
+    public void removeWarningListener(
+            final NodeModelWarningListener listener) {
+        if (!m_warningListeners.remove(listener)) {
+            m_logger.debug("listener was not registered: " + listener);
+        }
+    }
+
+    /**
+     * Notifies all listeners that the warning of this node has changed.
+     * 
+     * @param message The warning message.
+     */
+    public void notifyWarningListeners(final String warning) {
+        for (NodeModelWarningListener listener : m_warningListeners) {
+            try {
+                listener.warningChanged(warning);
+            } catch (Throwable t) {
+                m_logger.error("Exception while notifying NodeModel listeners",
+                        t);
+            }
+        }
+    }
+    
     //////////////////////////////////////////////
     // ScopeContext functionality
     // TODO not drunk - unfortunately - fix later.
