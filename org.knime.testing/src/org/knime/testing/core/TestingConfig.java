@@ -625,8 +625,6 @@ public class TestingConfig extends AppenderSkeleton {
                     + "(specify node id and status):" + line);
         }
 
-        // TODO: This is the simple node ID - we cut off the wfm's prefix when
-        // we analyze the result...
         String nodeID = splits[0];
 
         String msg = null;
@@ -724,10 +722,10 @@ public class TestingConfig extends AppenderSkeleton {
         for (NodeContainer node : nodes) {
 
             State status = node.getState();
+            String nodeSimpleID = Integer.toString(node.getID().getIndex());
 
             if (!status.equals(State.EXECUTED)
-                    && !m_requiredUnexecutedNodes.contains(
-                            node.getID().toString())) {
+                    && !m_requiredUnexecutedNodes.contains(nodeSimpleID)) {
 
                 // not executed but supposed to be
 
@@ -741,8 +739,7 @@ public class TestingConfig extends AppenderSkeleton {
                 // make sure to log an error - during wrapUp the test fails then
                 LOGGER.error(msg);
             } else if (status.equals(State.EXECUTED)
-                    && m_requiredUnexecutedNodes.contains(
-                            node.getID().toString())) {
+                    && m_requiredUnexecutedNodes.contains(nodeSimpleID)) {
 
                 // executed but shouldn't be
 
