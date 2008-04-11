@@ -421,6 +421,11 @@ public class ColumnSelectionPanel extends JPanel {
     public final int getSelectedIndex() {
         return m_chooser.getSelectedIndex();
     }
+    
+    /** @return the number of selectable elements in the list. */
+    public int getNrItemsInList() {
+        return m_chooser.getModel().getSize();
+    }
 
     /**
      * Selects the given index in the combo box.
