@@ -61,6 +61,7 @@ import javax.swing.table.TableColumnModel;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.util.ConvenienceMethods;
 
 
 /** 
@@ -617,7 +618,7 @@ public class TableView extends JScrollPane {
         if (!search.equals(m_searchString) || idOnly != m_searchIDOnly) {
             m_searchRow = 0;
         }
-        m_searchString = search;
+        setLastSearchString(search);
         m_searchIDOnly = idOnly;
         TableContentView cView = getContentTable();
         if (cView == null) {
@@ -656,6 +657,19 @@ public class TableView extends JScrollPane {
         }
         JOptionPane.showMessageDialog(this, "Search string not found");
         m_searchRow = 0;
+    }
+
+    /** Sets a new search string and sends event if it differs from the
+     * previous search string. (Event is important for Find Next button's
+     * enable status.
+     * @param searchString The new search string.
+     */
+    private void setLastSearchString(final String searchString) {
+        if (!ConvenienceMethods.areEqual(m_searchString, searchString)) {
+            String old = m_searchString;
+            m_searchString = searchString;
+            firePropertyChange("search_string", old, searchString);
+        }
     }
 
     /**
@@ -717,10 +731,10 @@ public class TableView extends JScrollPane {
     public JMenu createNavigationMenu() {
         final JMenu result = new JMenu("Navigation");
         result.setMnemonic('N');
-        JMenuItem item = new JMenuItem("Go to Row...");
-        item.setAccelerator(KeyStroke.getKeyStroke(
+        JMenuItem goToRowItem = new JMenuItem("Go to Row...");
+        goToRowItem.setAccelerator(KeyStroke.getKeyStroke(
                 KeyEvent.VK_L, KeyEvent.CTRL_DOWN_MASK));
-        item.addActionListener(new ActionListener() {
+        goToRowItem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 String rowString = JOptionPane.showInputDialog(
                         TableView.this, "Enter row number:", "Go to Row", 
@@ -738,13 +752,14 @@ public class TableView extends JScrollPane {
                 }
             }
         });
-        item.addPropertyChangeListener(new EnableListener(this, true, false));
-        item.setEnabled(hasData());
-        result.add(item);
-        item = new JMenuItem("Find Row ID...");
-        item.setAccelerator(KeyStroke.getKeyStroke(
+        goToRowItem.addPropertyChangeListener(
+                new EnableListener(this, true, false));
+        goToRowItem.setEnabled(hasData());
+        result.add(goToRowItem);
+        JMenuItem findItem = new JMenuItem("Find Row ID...");
+        findItem.setAccelerator(KeyStroke.getKeyStroke(
                 KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK));
-        item.addActionListener(new ActionListener() {
+        findItem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
 //                JCheckBox rowKeyBox = 
 //                    new JCheckBox("ID only", m_searchIDOnly);
@@ -761,19 +776,39 @@ public class TableView extends JScrollPane {
                 find(in, true/*rowKeyBox.isSelected()*/);
             }
         });
-        item.addPropertyChangeListener(new EnableListener(this, true, false));
-        item.setEnabled(hasData());
-        result.add(item);
-        item = new JMenuItem("Find Next");
-        item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F3, 0));
-        item.addActionListener(new ActionListener() {
+        findItem.addPropertyChangeListener(
+                new EnableListener(this, true, false));
+        findItem.setEnabled(hasData());
+        result.add(findItem);
+        final JMenuItem findNextItem = new JMenuItem("Find Next");
+        findNextItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F3, 0));
+        findNextItem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
+                if (m_searchString == null) {
+                    return;
+                }
                 find(m_searchString, m_searchIDOnly);
             }
         });
-        item.addPropertyChangeListener(new EnableListener(this, true, false));
-        item.setEnabled(hasData());
-        result.add(item);
+        findNextItem.addPropertyChangeListener(
+                new EnableListener(this, true, false) {
+            /** {@inheritDoc} */
+            @Override
+            protected boolean checkEnabled(final JComponent source) {
+                return super.checkEnabled(source) && m_searchString != null;
+            }
+        });
+        addPropertyChangeListener("search_string", 
+                new PropertyChangeListener() {
+            /** {@inheritDoc} */
+            public void propertyChange(final PropertyChangeEvent evt) {
+                // firePropertyChange with object args is not visible.
+                // the item does not care ... (see above)
+                findNextItem.firePropertyChange(evt.getPropertyName(), 0, 1);
+            }
+        });
+        findNextItem.firePropertyChange("update", true, false);
+        result.add(findNextItem);
         return result;
     } // createNavigationMenu()
     
@@ -956,7 +991,7 @@ public class TableView extends JScrollPane {
         private final boolean m_watchData;
         private final boolean m_watchHilite;
         private final TableView m_view;
-        
+                
         /**
          * Constructor. Will respect the hasData(), hasHiliteHandler() flag
          * according to the arguments.
@@ -972,14 +1007,21 @@ public class TableView extends JScrollPane {
             m_watchHilite = watchHilite;
         }
         
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
         public void propertyChange(final PropertyChangeEvent evt) {
             JComponent source = (JComponent)evt.getSource();
+            boolean isEnabled = checkEnabled(source);
+            source.setEnabled(isEnabled);
+        }
+        
+        /** Determines whether component is to be enabled.
+         * @param source Event source (for reference)
+         * @return if to enable (true) or disable (false);
+         */
+        protected boolean checkEnabled(final JComponent source) {
             boolean data = !m_watchData || m_view.hasData();
             boolean hilite = !m_watchHilite || m_view.hasHiLiteHandler();
-            source.setEnabled(data && hilite);
+            return data && hilite;
         }
     }
     
