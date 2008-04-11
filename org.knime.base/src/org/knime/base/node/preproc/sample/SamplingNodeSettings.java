@@ -177,16 +177,15 @@ public class SamplingNodeSettings {
             if (samplingMethod == null) {
                 try {
                     boolean random = settings.getBoolean(CFG_RANDOM);
-                    if (random) {
+                    boolean stratified =
+                            settings.getBoolean(CFG_STRATIFIED, false);
+
+                    if (stratified) {
+                        m_samplingMethod = SamplingMethods.Stratified;
+                    } else if (random) {
                         m_samplingMethod = SamplingMethods.Random;
                     } else {
-                        boolean stratified =
-                                settings.getBoolean(CFG_STRATIFIED);
-                        if (stratified) {
-                            m_samplingMethod = SamplingMethods.Stratified;
-                        } else {
-                            m_samplingMethod = SamplingMethods.First;
-                        }
+                        m_samplingMethod = SamplingMethods.First;
                     }
                 } catch (InvalidSettingsException ex) {
                     throw new InvalidSettingsException(

@@ -22,8 +22,9 @@
  */
 package org.knime.base.node.preproc.sample;
 
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -31,11 +32,10 @@ import java.awt.event.ItemListener;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
-import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JSeparator;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
@@ -58,25 +58,33 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class SamplingNodeDialogPanel extends JPanel {
-    private final JRadioButton m_absoluteButton;
+    private final JRadioButton m_absoluteButton =
+            new JRadioButton("Absolute   ");
 
-    private final JRadioButton m_relativeButton;
+    private final JRadioButton m_relativeButton =
+            new JRadioButton("Relative[%]   ");
 
-    private final JSpinner m_absoluteSpinner;
+    private final JSpinner m_absoluteSpinner =
+            new JSpinner(new SpinnerNumberModel(100, 1, Integer.MAX_VALUE, 50));
 
-    private final JSpinner m_relativeSpinner;
+    private final JSpinner m_relativeSpinner =
+            new JSpinner(new SpinnerNumberModel(10.0, 0.0, 100.0, 2.0));
 
-    private final JCheckBox m_useSeedChecker;
+    private final JCheckBox m_useSeedChecker = new JCheckBox("Use random seed");
 
     private final JFormattedTextField m_seedField;
 
-    private final JRadioButton m_randomSampling;
+    private final JRadioButton m_randomSampling =
+            new JRadioButton("Draw randomly");
 
-    private final JRadioButton m_linearSampling;
+    private final JRadioButton m_linearSampling =
+            new JRadioButton("Linear sampling");
 
-    private final JRadioButton m_firstSampling;
+    private final JRadioButton m_firstSampling =
+            new JRadioButton("Take from top");
 
-    private final JRadioButton m_stratifiedSampling;
+    private final JRadioButton m_stratifiedSampling =
+            new JRadioButton("Stratified sampling");
 
     private final ColumnSelectionComboxBox m_classColumn;
 
@@ -85,14 +93,9 @@ public class SamplingNodeDialogPanel extends JPanel {
      */
     @SuppressWarnings("unchecked")
     public SamplingNodeDialogPanel() {
-        super(new GridLayout(0, 2));
-        m_absoluteButton = new JRadioButton("Absolute: ");
-        m_relativeButton = new JRadioButton("Relative[%]: ");
-        m_absoluteSpinner =
-                new JSpinner(new SpinnerNumberModel(100, 1, Integer.MAX_VALUE,
-                        50));
-        m_relativeSpinner =
-                new JSpinner(new SpinnerNumberModel(10.0, 0.0, 100.0, 2.0));
+        super(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+
         final int width = 8;
         JSpinner.DefaultEditor editor =
                 (JSpinner.DefaultEditor)m_absoluteSpinner.getEditor();
@@ -100,7 +103,6 @@ public class SamplingNodeDialogPanel extends JPanel {
         editor = (JSpinner.DefaultEditor)m_relativeSpinner.getEditor();
         editor.getTextField().setColumns(width);
 
-        m_useSeedChecker = new JCheckBox("Seed:");
         m_useSeedChecker
                 .setToolTipText("Check this to allow deterministic sampling.");
         m_useSeedChecker.setHorizontalTextPosition(SwingConstants.RIGHT);
@@ -109,11 +111,12 @@ public class SamplingNodeDialogPanel extends JPanel {
         m_seedField.setColumns(10);
         m_useSeedChecker.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
-                m_seedField.setEnabled(m_randomSampling.isSelected()
-                        && m_useSeedChecker.isSelected());
+                m_seedField
+                        .setEnabled((m_randomSampling.isSelected() || m_stratifiedSampling
+                                .isSelected())
+                                && m_useSeedChecker.isSelected());
             }
         });
-        m_randomSampling = new JRadioButton("Draw randomly");
         m_randomSampling.setToolTipText("If selected, chooses samples randomly"
                 + "; otherwise takes from top.");
         m_randomSampling.addItemListener(new ItemListener() {
@@ -124,9 +127,8 @@ public class SamplingNodeDialogPanel extends JPanel {
             }
         });
 
-        m_stratifiedSampling = new JRadioButton("Stratified sampling:");
-        m_stratifiedSampling.setToolTipText(
-                "Check this to retain the distribution in the class column.");
+        m_stratifiedSampling.setToolTipText("Check this to retain the "
+                + "distribution in the class column.");
         m_stratifiedSampling.setHorizontalTextPosition(SwingConstants.RIGHT);
         m_classColumn =
                 new ColumnSelectionComboxBox((Border)null, NominalValue.class);
@@ -134,20 +136,24 @@ public class SamplingNodeDialogPanel extends JPanel {
         m_stratifiedSampling.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
                 m_classColumn.setEnabled(m_stratifiedSampling.isSelected());
+                m_useSeedChecker.setEnabled(m_stratifiedSampling.isSelected());
+                m_seedField.setEnabled(m_stratifiedSampling.isSelected()
+                        && m_useSeedChecker.isSelected());
             }
         });
 
-        m_linearSampling = new JRadioButton("Linear sampling");
         m_linearSampling.setToolTipText("Check this to select samples "
                 + "linearly over the whole table");
 
-        m_firstSampling = new JRadioButton("Take from top");
         m_firstSampling.setToolTipText("Check this to select samples "
                 + "consecutively from the beginning");
 
-        m_useSeedChecker.setEnabled(m_randomSampling.isSelected());
-        m_seedField.setEnabled(m_randomSampling.isSelected()
-                && m_useSeedChecker.isSelected());
+        m_useSeedChecker.setEnabled(m_randomSampling.isSelected()
+                || m_stratifiedSampling.isSelected());
+        m_seedField
+                .setEnabled((m_randomSampling.isSelected() || m_stratifiedSampling
+                        .isSelected())
+                        && m_useSeedChecker.isSelected());
 
         ButtonGroup buttonGroup = new ButtonGroup();
         buttonGroup.add(m_absoluteButton);
@@ -169,26 +175,51 @@ public class SamplingNodeDialogPanel extends JPanel {
         m_absoluteButton.addActionListener(actionListener);
         m_absoluteButton.doClick();
 
-        add(getInFlowLayout(m_absoluteButton));
-        add(getInFlowLayout(m_absoluteSpinner));
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(2, 1, 2, 1);
+        add(m_absoluteButton, c);
+        c.gridx++;
+        add(m_absoluteSpinner, c);
 
-        add(getInFlowLayout(m_relativeButton));
-        add(getInFlowLayout(m_relativeSpinner));
+        c.gridx = 0;
+        c.gridy++;
+        add(m_relativeButton, c);
+        c.gridx++;
+        add(m_relativeSpinner, c);
 
-        add(new JLabel());
-        add(new JLabel());
+        c.gridx = 0;
+        c.gridy++;
+        c.gridwidth = 2;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1;
+        add(new JSeparator(), c);
 
-        add(getInFlowLayout(m_randomSampling));
-        add(getInFlowLayout(m_useSeedChecker, m_seedField));
-        
-        add(getInFlowLayout(m_firstSampling));
-        add(new JLabel());
+        c.gridx = 0;
+        c.gridy++;
+        c.gridwidth = 1;
+        c.fill = GridBagConstraints.NONE;
+        add(m_firstSampling, c);
 
-        add(getInFlowLayout(m_stratifiedSampling));
-        add(getInFlowLayout(m_classColumn));
+        c.gridy++;
+        add(m_linearSampling, c);
 
-        add(getInFlowLayout(m_linearSampling));
-        add(new JLabel());
+        c.gridy++;
+        add(m_randomSampling, c);
+
+        c.gridy++;
+        add(m_stratifiedSampling, c);
+        c.gridx++;
+        add(m_classColumn, c);
+
+        c.gridx = 0;
+        c.gridy++;
+        c.insets = new Insets(10, 1, 2, 1);
+        add(m_useSeedChecker, c);
+
+        c.gridx++;
+        add(m_seedField, c);
     }
 
     /**
@@ -279,14 +310,5 @@ public class SamplingNodeDialogPanel extends JPanel {
         sets.classColumn(m_classColumn.getSelectedColumn());
 
         sets.saveSettingsTo(settings);
-    }
-
-    /* Convenience method to get an component in a JPanel with FlowLayout. */
-    private static JPanel getInFlowLayout(final JComponent... c) {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        for (JComponent comp : c) {
-            panel.add(comp);
-        }
-        return panel;
     }
 }

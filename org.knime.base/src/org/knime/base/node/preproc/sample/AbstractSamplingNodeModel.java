@@ -147,7 +147,9 @@ public abstract class AbstractSamplingNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws CanceledExecutionException,
             InvalidSettingsException {
         Random rand;
-        if (m_settings.samplingMethod().equals(SamplingMethods.Random)) {
+        if (m_settings.samplingMethod().equals(SamplingMethods.Random)
+                || m_settings.samplingMethod().equals(
+                        SamplingMethods.Stratified)) {
             rand =
                     m_settings.seed() != null ? new Random(m_settings.seed())
                             : new Random();
@@ -155,50 +157,26 @@ public abstract class AbstractSamplingNodeModel extends NodeModel {
             rand = null;
         }
 
-        RowFilter rowFilter;
+        int rowCount;
         if (m_settings.countMethod().equals(
-                SamplingNodeSettings.CountMethods.Absolute)) {
-            if (m_settings.samplingMethod().equals(SamplingMethods.Random)) {
-                rowFilter =
-                        Sampler.createSampleFilter(in, m_settings.count(),
-                                rand, exec);
-            } else if (m_settings.samplingMethod().equals(
-                    SamplingMethods.Stratified)) {
-                rowFilter =
-                        new StratifiedSamplingRowFilter(in, m_settings
-                                .classColumn(), m_settings.count(), rand, exec);
-            } else if (m_settings.samplingMethod().equals(
-                    SamplingMethods.Linear)) {
-                rowFilter =
-                        new LinearSamplingRowFilter(in.getRowCount(), m_settings
-                                .count());
-            } else {
-                rowFilter = Sampler.createRangeFilter(m_settings.count());
-            }
-        } else if (m_settings.countMethod() == SamplingNodeSettings.CountMethods.Relative) {
-            if (m_settings.samplingMethod().equals(SamplingMethods.Random)) {
-                rowFilter =
-                        Sampler.createSampleFilter(in, m_settings.fraction(),
-                                rand, exec);
-            } else if (m_settings.samplingMethod().equals(
-                    SamplingMethods.Stratified)) {
-                rowFilter =
-                        new StratifiedSamplingRowFilter(in, m_settings
-                                .classColumn(), m_settings.fraction(), rand,
-                                exec);
-            } else if (m_settings.samplingMethod().equals(
-                    SamplingMethods.Linear)) {
-                rowFilter =
-                        new LinearSamplingRowFilter(in.getRowCount(), m_settings
-                                .fraction());
-            } else {
-                rowFilter =
-                        Sampler.createRangeFilter(in, m_settings.fraction(),
-                                exec);
-            }
+                SamplingNodeSettings.CountMethods.Relative)) {
+            rowCount = (int)(m_settings.fraction() * in.getRowCount());
         } else {
-            throw new InvalidSettingsException("Unknown method: "
-                    + m_settings.countMethod());
+            rowCount = m_settings.count();
+        }
+
+        RowFilter rowFilter;
+        if (m_settings.samplingMethod().equals(SamplingMethods.Random)) {
+            rowFilter = Sampler.createSampleFilter(in, rowCount, rand, exec);
+        } else if (m_settings.samplingMethod().equals(
+                SamplingMethods.Stratified)) {
+            rowFilter =
+                    new StratifiedSamplingRowFilter(in, m_settings
+                            .classColumn(), rowCount, rand, exec);
+        } else if (m_settings.samplingMethod().equals(SamplingMethods.Linear)) {
+            rowFilter = new LinearSamplingRowFilter(in.getRowCount(), rowCount);
+        } else {
+            rowFilter = Sampler.createRangeFilter(rowCount);
         }
         return rowFilter;
     }
