@@ -218,7 +218,7 @@ public class SortedTable implements DataTable {
         exec.setMessage("Creating sorted table");
 
         final BufferedDataContainer dc =
-                exec.createDataContainer(dataTable.getDataTableSpec());
+                exec.createDataContainer(dataTable.getDataTableSpec(), true);
         time = System.currentTimeMillis();
         for (i = 0; i < rows.length; i++) {
             exec.checkCanceled();
