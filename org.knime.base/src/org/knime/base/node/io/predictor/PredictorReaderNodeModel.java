@@ -180,16 +180,16 @@ public class PredictorReaderNodeModel extends NodeModel {
         File file = new File(fileName);
         if (file.isDirectory()) {
             throw new InvalidSettingsException("\"" + file.getAbsolutePath()
-                    + "\" is a directory.");
+                    + "\" is a directory, but must be a file.");
         }
         if (!file.exists()) {
-            // dunno how to check the write access to the directory. If we can't
-            // create the file the execute of the node will fail. Well, too bad.
-            throw new InvalidSettingsException("File does not exist: "
-                    + fileName);
+            throw new InvalidSettingsException(
+                    "File \"" + file.getAbsolutePath() + "\"" 
+                        + " does not exist.");
         }
+        // check read access to file
         if (!file.canRead()) {
-            throw new InvalidSettingsException("Cannot write to file \""
+            throw new InvalidSettingsException("Cannot read from file \""
                     + file.getAbsolutePath() + "\".");
         }
     }
