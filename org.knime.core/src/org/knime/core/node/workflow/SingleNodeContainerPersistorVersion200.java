@@ -181,7 +181,10 @@ public class SingleNodeContainerPersistorVersion200 extends
             final SingleNodeContainer nc) {
         NodeSettingsWO stackSet = settings.addNodeSettings("scope_stack");
         ScopeObjectStack stack = nc.getScopeObjectStack();
-        for (ScopeObject s : stack.getScopeObjectsOwnedBy(nc.getID())) {
+        @SuppressWarnings("unchecked")
+        Iterable<ScopeObject> myObjs = stack == null ? Collections.EMPTY_LIST
+                : stack.getScopeObjectsOwnedBy(nc.getID());
+        for (ScopeObject s : myObjs) {
             if (s instanceof ScopeVariable) {
                 ScopeVariable v = (ScopeVariable)s;
                 NodeSettingsWO sub = stackSet.addNodeSettings(v.getName());
