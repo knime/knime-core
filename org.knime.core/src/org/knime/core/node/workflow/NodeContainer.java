@@ -386,6 +386,9 @@ public abstract class NodeContainer {
                 changesMade = true;
             }
         }
+        // TODO: This is sometimes (always?) synchronized on m_nodeMutex as
+        // the calling method is sync'ed... 
+        // I ran into a deadlock 
         if (changesMade) {
             if (setDirty) {
                 setDirty();
