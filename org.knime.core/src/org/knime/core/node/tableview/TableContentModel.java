@@ -77,6 +77,37 @@ import org.knime.core.node.property.hilite.KeyEvent;
 public class TableContentModel extends AbstractTableModel 
     implements HiLiteListener, TableContentInterface {
     
+    /** Possible hilite filter incarnations. */
+    public static enum TableContentFilter {
+        /** Show all available rows (default). */
+        All,
+        /** Show only rows, which are currently hilited. */
+        HiliteOnly,
+        /** Show only rows, which are currently not hilited. */
+        UnHiliteOnly;
+        
+        /** @param isHilit If row is hilit.
+         * @return whether the row with the given hilite status is to be
+         * filtered out.
+         */ 
+        public boolean matches(final boolean isHilit) {
+            switch (this) {
+            case All: return true;
+            case HiliteOnly: return isHilit;
+            case UnHiliteOnly: return !isHilit;
+            default: throw new InternalError("Unknown constant: " + this);
+            }
+        }
+        
+        /** @return Whether filter is limiting the scope. */
+        public boolean performsFiltering() {
+            switch (this) {
+            case All: return false;
+            default: return true;
+            }
+        }
+    }
+    
     private static final long serialVersionUID = 8413295641103391635L;
 
     /**
@@ -164,10 +195,8 @@ public class TableContentModel extends AbstractTableModel
      */
     private boolean m_isMaxRowCountFinal;
     
-    /**
-     * Switch to show only hilited rows.
-     */
-    private boolean m_showOnlyHiLit;
+    /** Policy as to which rows to show. */
+    private TableContentFilter m_tableFilter = TableContentFilter.All;
 
     /** number of rows that are read at a time, defaults to
      * {@link #CHUNK_SIZE}. */
@@ -306,7 +335,7 @@ public class TableContentModel extends AbstractTableModel
                 BufferedDataTable bData = (BufferedDataTable)data;
                 m_isMaxRowCountFinal = true;
                 m_maxRowCount = bData.getRowCount();
-                if (!showsHiLitedOnly()) {
+                if (!m_tableFilter.performsFiltering()) {
                     m_rowCountOfInterest = m_maxRowCount;
                     m_isRowCountOfInterestFinal = true;
                 }
@@ -381,7 +410,7 @@ public class TableContentModel extends AbstractTableModel
         
         // check for rows whose hilite status has changed
         if (hasData()) {
-            if (showsHiLitedOnly()) {
+            if (m_tableFilter.performsFiltering()) {
                 m_isRowCountOfInterestFinal = false;
                 m_rowCountOfInterest = 0;
                 clearCache();
@@ -457,24 +486,49 @@ public class TableContentModel extends AbstractTableModel
      */
     public final boolean hasHiLiteHandler() {
         return m_hiLiteHdl != null;
-    } // hasHiLiteHandler()
+    }
 
     /**
      * Control behaviour to show only hilited rows.
-     * 
      * @param showOnlyHilite <code>true</code> Filter and display only rows
      *            whose hilite status is set.
+     * @deprecated This method has been replaced by 
+     * {@link #setTableContentFilter(TableContentFilter)}.
      */
+    @Deprecated
     public final void showHiLitedOnly(final boolean showOnlyHilite) {
-        if (showOnlyHilite == m_showOnlyHiLit) {
+        setTableContentFilter(showOnlyHilite 
+                ? TableContentFilter.HiliteOnly : TableContentFilter.All);
+    }
+
+    /** Get status of filtering for hilited rows.
+    * @return <code>true</code> if only hilited rows are shown,
+    *         <code>false</code> if all rows are shown.
+    * @deprecated This method has been replaced by 
+    *   {@link #getTableContentFilter()}
+    */
+    @Deprecated
+   public boolean showsHiLitedOnly() {
+       return TableContentFilter.HiliteOnly.equals(m_tableFilter);
+   }
+
+    
+    /** Set new filter instance. If changed, the table will be refreshed.
+     * @param newFilter The new filter to be applied.
+     * @throws NullPointerException If argument is null.
+     */
+    public final void setTableContentFilter(
+            final TableContentFilter newFilter) {
+        if (newFilter.equals(m_tableFilter)) {
             return;
         }
-        m_showOnlyHiLit = showOnlyHilite;
-        if (m_showOnlyHiLit) {
-            // don't know how many rows are hilit
+        m_tableFilter = newFilter;
+        if (m_tableFilter.performsFiltering()) {
+            // don't know how many rows are being filtered
             m_rowCountOfInterest = 0;
             m_isRowCountOfInterestFinal = false;
         } else {
+            assert m_tableFilter.equals(TableContentFilter.All);
             // row count may be known when it shows all rows
             m_rowCountOfInterest = m_maxRowCount;
             m_isRowCountOfInterestFinal = m_isMaxRowCountFinal;
@@ -485,15 +539,10 @@ public class TableContentModel extends AbstractTableModel
         cacheNextRow();
         fireTableDataChanged();
     }
-
-    /**
-     * Get status of filtering for hilited rows.
-     * 
-     * @return <code>true</code> if only hilited rows are shown,
-     *         <code>false</code> if all rows are shown.
-     */
-    public boolean showsHiLitedOnly() {
-        return m_showOnlyHiLit;
+    
+    /** @return the currently set filter. */
+    public TableContentFilter getTableContentFilter() {
+        return m_tableFilter;
     }
 
     /**
@@ -624,7 +673,7 @@ public class TableContentModel extends AbstractTableModel
      * @return if there are no more unknown rows
      */
     public boolean isRowCountFinal() {
-        if (m_showOnlyHiLit) {
+        if (m_tableFilter.performsFiltering()) {
             return m_isRowCountOfInterestFinal;
         }
         return m_isMaxRowCountFinal;
@@ -789,11 +838,30 @@ public class TableContentModel extends AbstractTableModel
         final int cacheSize = getCacheSize();
         final int oldRowCount = getRowCount();
         // if it shows only the hilited ones, remove all rows.
-        if (showsHiLitedOnly()) {
+        switch (m_tableFilter) {
+        case HiliteOnly:
             m_rowCountOfInterest = 0;
             clearCache(); // clears also hilite
             fireTableRowsDeleted(0, oldRowCount);
-        } else { // shows all
+            break;
+        case UnHiliteOnly:
+            // there may be more rows now (can't get fewer)
+            boolean wasRowCountOfInterestFinal = m_isRowCountOfInterestFinal;
+            m_isRowCountOfInterestFinal = false;
+            clearCache(); // clears also hilite
+            if (oldRowCount > 0) {
+                fireTableRowsUpdated(0, oldRowCount - 1);
+                if (wasRowCountOfInterestFinal) {
+                    // go to last known (which will
+                    // try to read further and send rows-inserted events)
+                    getRow(oldRowCount - 1);
+                }
+            } else if (cacheNextRow()) {
+                // row count was zero, notify listeners of first row 
+                fireTableRowsInserted(oldRowCount, getRowCount() - 1);
+            }
+            break;
+        case All:
             /* process event if it shows all rows */
             final int firstRowCached = firstRowCached();
             int firstI = -1; // remember first and last changed "i" (for event)
@@ -819,8 +887,10 @@ public class TableContentModel extends AbstractTableModel
                 assert (firstI != -1);
                 fireRowsInCacheUpdated(firstI, lastI);
             }
+            break;
+        default: throw new InternalError("Unknown filter: " + m_tableFilter);
         }
-    } // resetHiLite()
+    } // unHiLiteAll()
     
     /** 
      * Gets a row with a specified index. Either the row is in the cache (just
@@ -899,7 +969,7 @@ public class TableContentModel extends AbstractTableModel
             isHiLit = m_hiLiteHdl != null 
                 ? m_hiLiteHdl.isHiLit(currentRow.getKey().getId()) : false;
             // ignore row if we filter for hilit rows and this one is not hilit
-        } while (m_showOnlyHiLit && !isHiLit);
+        } while (!m_tableFilter.matches(isHiLit));
         // index of row in cache
         int indexInCache = m_rowCountOfInterestInIterator % getCacheSize();
         m_cachedRows[indexInCache] = currentRow;
@@ -1016,7 +1086,7 @@ public class TableContentModel extends AbstractTableModel
         }
         final int cacheSize = getCacheSize();
         final int oldRowCount = getRowCount();
-        if (showsHiLitedOnly()) {
+        if (m_tableFilter.performsFiltering()) {
             /* what follows: run through the DataTable to the last 
              * cached row, count the number of rows that have been 
              * changed and add (or subtract, resp.) them from the global 
@@ -1030,17 +1100,27 @@ public class TableContentModel extends AbstractTableModel
             for (RowIterator it = m_data.iterator(); it.hasNext() 
                 && c < m_rowCountOfInterest;) {
                 DataCell currentRowKey = it.next().getKey().getId();
-                boolean isNowHiLit = m_hiLiteHdl.isHiLit(currentRowKey);
+                boolean isNowOfInterest = 
+                    m_tableFilter.matches(m_hiLiteHdl.isHiLit(currentRowKey));
                 boolean hasChanged = keySet.contains(currentRowKey);
                 changedCount += hasChanged ? 1 : 0;
-                // was previously hilit?
-                c += (hasChanged != isNowHiLit) ? 1 : 0;
+                // was previously of interest?
+                c += (hasChanged != isNowOfInterest) ? 1 : 0;
             }
             m_isRowCountOfInterestFinal = false;
             clearCache();
+            boolean newRowsAdded;
+            switch (m_tableFilter) {
+            case HiliteOnly: newRowsAdded = isHiLite;
+                break;
+            case UnHiliteOnly: newRowsAdded = !isHiLite;
+                break;
+            default: throw new InternalError(
+                    "Unexpected filter: " + m_tableFilter);
+            }
             if (changedCount > 0) {
                 assert (oldRowCount > 0);
-                if (isHiLite) {
+                if (newRowsAdded) {
                     fireTableRowsUpdated(0, oldRowCount - 1);
                     m_rowCountOfInterest += changedCount;
                     fireTableRowsInserted(oldRowCount, getRowCount() - 1);
@@ -1051,26 +1131,15 @@ public class TableContentModel extends AbstractTableModel
                     fireTableRowsUpdated(0, getRowCount());
                 }
             }
-//            if (oldRowCount == 0) {
-//                assert changedCount == 0;
-//                if (cacheNextRow()) {
-//            }
             // there may be more rows after the last known one when 
-            // isHiLite is true (only more rows are added - check for that)
-            if (oldRowCount == getRowCount() && isHiLite) {
+            // newRowsAdded is true (only more rows are added - check for that)
+            if (oldRowCount == getRowCount() && newRowsAdded) {
                 if (oldRowCount > 0) { // that would fail if there were 0 rows
                     getRow(oldRowCount - 1); // move it to the last known
                 }
                 // are there new rows now?
                 if (oldRowCount == getRowCount() && cacheNextRow()) {
                     fireTableRowsInserted(oldRowCount, oldRowCount);
-                }
-            }
-            if (!isHiLite) {
-                if (getRowCount() > 0) { // that would fail if there were 0 rows
-                    getRow(getRowCount() - 1); // move it to the last known
-                } else {
-                    cacheNextRow();
                 }
             }
             return;
@@ -1144,7 +1213,7 @@ public class TableContentModel extends AbstractTableModel
         } else { // iteration necessary: use new (private) iterator
             // TODO: check for correctness when m_showOnlyHilited is set
             final RowIterator it = m_data.iterator();
-            for (int i = 0; it.hasNext() && i < lastSelected; i++) {
+            for (int i = 0; it.hasNext() && i <= lastSelected; i++) {
                 DataCell key = it.next().getKey().getId();
                 if (i >= firstSelected && selModel.isSelectedIndex(i)) {
                     selectedSet.add(key);
@@ -1195,7 +1264,7 @@ public class TableContentModel extends AbstractTableModel
         }
         m_isMaxRowCountFinal = isFinal;
         m_maxRowCount = newCount;
-        if (!showsHiLitedOnly()) {
+        if (!m_tableFilter.performsFiltering()) {
             m_rowCountOfInterest = m_maxRowCount;
             m_isRowCountOfInterestFinal = isFinal;
         }

@@ -38,6 +38,7 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import javax.swing.AbstractButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -45,6 +46,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JViewport;
@@ -61,6 +63,7 @@ import javax.swing.table.TableColumnModel;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.tableview.TableContentModel.TableContentFilter;
 import org.knime.core.node.util.ConvenienceMethods;
 
 
@@ -385,9 +388,13 @@ public class TableView extends JScrollPane {
      * @param showOnlyHilite <code>true</code> Filter and display only
      *        rows whose hilite status is set.
      * @see TableContentModel#showHiLitedOnly(boolean)
+     * @see TableContentModel#getTableContentFilter()
+     * @deprecated Implementors should refer to 
+     * <code>getContentModel().setTableContentFilter(TableContentFilter)</code>
      */
+    @Deprecated
     public final void showHiLitedOnly(final boolean showOnlyHilite) {
-        getContentTable().showHiLitedOnly(showOnlyHilite);
+        getContentModel().showHiLitedOnly(showOnlyHilite);
     }
 
     /**
@@ -396,9 +403,13 @@ public class TableView extends JScrollPane {
      * @return <code>true</code>: only hilited rows are shown, 
      *         <code>false</code>: all rows are shown.
      * @see TableContentModel#showsHiLitedOnly() 
+     * @see TableContentModel#getTableContentFilter() 
+     * @deprecated Implementors should refer to 
+     * <code>getContentModel().getTableContentFilter()</code>
      */
+    @Deprecated
     public boolean showsHiLitedOnly() {
-        return getContentTable().showsHiLitedOnly();
+        return getContentModel().showsHiLitedOnly();
     }
     
     /**
@@ -866,25 +877,72 @@ public class TableView extends JScrollPane {
         chitem.setEnabled(hasData() && hasHiLiteHandler());
         result.add(chitem);
         
-        JMenuItem shoitem = new JCheckBoxMenuItem("Show Hilited Only");
-        shoitem.setMnemonic('O');
-        shoitem.addPropertyChangeListener(
+        JMenu filterSubMenu = new JMenu("Filter");
+        
+        JRadioButtonMenuItem showAllItem = 
+            new JRadioButtonMenuItem("Show All");
+        showAllItem.addPropertyChangeListener(
                 "ancestor", new PropertyChangeListener() {
             public void propertyChange(final PropertyChangeEvent evt) {
-                JCheckBoxMenuItem source = (JCheckBoxMenuItem)evt.getSource();
-                source.setSelected(showsHiLitedOnly());
+                boolean selected = getContentModel().
+                    getTableContentFilter().equals(TableContentFilter.All);
+                ((AbstractButton)evt.getSource()).setSelected(selected);
             }
         });
-        shoitem.addActionListener(new ActionListener() {
+        showAllItem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                boolean i = ((JCheckBoxMenuItem)e.getSource()).isSelected();
-                showHiLitedOnly(i);
+                getContentModel().setTableContentFilter(TableContentFilter.All);
             }
         });
-        shoitem.addPropertyChangeListener(new EnableListener(this, true, true));
-        shoitem.setEnabled(hasData() && hasHiLiteHandler());
-        result.add(shoitem);
+        showAllItem.addPropertyChangeListener(
+                new EnableListener(this, true, false));
+        showAllItem.setEnabled(hasData());
+        filterSubMenu.add(showAllItem);
         
+        JRadioButtonMenuItem showHiliteItem = 
+            new JRadioButtonMenuItem("Show Hilited Only");
+        showHiliteItem.addPropertyChangeListener(
+                "ancestor", new PropertyChangeListener() {
+            public void propertyChange(final PropertyChangeEvent evt) {
+                boolean selected = getContentModel().
+                getTableContentFilter().equals(TableContentFilter.HiliteOnly);
+                ((AbstractButton)evt.getSource()).setSelected(selected);
+            }
+        });
+        showHiliteItem.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                getContentModel().setTableContentFilter(
+                        TableContentFilter.HiliteOnly);
+            }
+        });
+        showHiliteItem.addPropertyChangeListener(
+                new EnableListener(this, true, true));
+        showHiliteItem.setEnabled(hasData() && hasHiLiteHandler());
+        filterSubMenu.add(showHiliteItem);
+        
+        JRadioButtonMenuItem showUnHiliteItem = 
+            new JRadioButtonMenuItem("Show UnHilited Only");
+        showUnHiliteItem.addPropertyChangeListener(
+                "ancestor", new PropertyChangeListener() {
+            public void propertyChange(final PropertyChangeEvent evt) {
+                boolean selected = getContentModel().
+                    getTableContentFilter().equals(
+                            TableContentFilter.UnHiliteOnly);
+                ((AbstractButton)evt.getSource()).setSelected(selected);
+            }
+        });
+        showUnHiliteItem.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                getContentModel().setTableContentFilter(
+                        TableContentFilter.UnHiliteOnly);
+            }
+        });
+        showUnHiliteItem.addPropertyChangeListener(
+                new EnableListener(this, true, true));
+        showUnHiliteItem.setEnabled(hasData() && hasHiLiteHandler());
+        filterSubMenu.add(showUnHiliteItem);
+
+        result.add(filterSubMenu);
         return result;
     }
     
