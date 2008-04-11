@@ -388,7 +388,7 @@ public abstract class NodeContainer {
         }
         // TODO: This is sometimes (always?) synchronized on m_nodeMutex as
         // the calling method is sync'ed... 
-        // I ran into a deadlock 
+        // I ran into a deadlock (see Email to Michael on 11.4.08)
         if (changesMade) {
             if (setDirty) {
                 setDirty();
