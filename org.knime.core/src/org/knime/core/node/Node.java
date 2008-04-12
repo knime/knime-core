@@ -1081,7 +1081,8 @@ public final class Node implements NodeModelWarningListener {
         boolean success = false;
         synchronized (m_configureLock) {
             // reset message object
-            NodeMessage nodeMessage = null;
+            NodeMessage nodeMessage = new NodeMessage(NodeMessage.Type.RESET,
+                    null);
             // need to init here as there may be an exception being thrown and
             // then we copy the null elements of this array to their destination
             PortObjectSpec[] newOutSpec = new PortObjectSpec[getNrOutPorts()];
