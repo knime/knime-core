@@ -1088,13 +1088,13 @@ public final class WorkflowManager extends NodeContainer {
         }
         assert Thread.holdsLock(m_workflowMutex);
         switch (nc.getState()) {
-        case UNCONFIGURED_MARKEDFOREXEC:
-        case MARKEDFOREXEC:
-            break;
-        default:
-            assert false : "Queuing of " + nc.getNameWithID() + "not possible,"
-                + " node is " + nc.getState();
-            return false;
+            case UNCONFIGURED_MARKEDFOREXEC:
+            case MARKEDFOREXEC:
+                break;
+            default:
+                assert false : "Queuing of " + nc.getNameWithID()
+                    + "not possible, node is " + nc.getState();
+                return false;
         }
         NodeOutPort[] ports = assemblePredecessorOutPorts(nc.getID());
         PortObject[] inData = new PortObject[ports.length];
@@ -1107,8 +1107,17 @@ public final class WorkflowManager extends NodeContainer {
         }
         if (allDataAvailable) {
             if (nc.getState().equals(State.MARKEDFOREXEC)) {
-                nc.queueAsNodeContainer(inData);
-                return true;
+                NodeID activeSuccessor = findOneSuccessorInExecution(
+                        nc.getID(), false);
+                if (activeSuccessor == null) {
+                    nc.queueAsNodeContainer(inData);
+                    return true;
+                } else {
+                    NodeContainer activeNode = m_nodes.get(activeSuccessor);
+                    assert activeNode != null;
+                    activeNode.addWaitingLoopHeadNode(nc.getID());
+                    return false;
+                }
             } else {
                 disableNodeForExecution(nc.getID());
                 checkForNodeStateChanges(true);
@@ -1116,6 +1125,50 @@ public final class WorkflowManager extends NodeContainer {
             }
         }
         return false;
+    }
+    
+    /** Determine if any of the successors of the given node are currently
+     * being executed or queued (MARKED is not a problem).
+     * 
+     * @param nodeID the id of the given node
+     * @param searchOutsideWFM true: narrow search to nodes in this WFM only
+     * @return the nodeID of a (pretty much randomly picked) node which is
+     *   still under execution or null if no such node exists.
+     */
+    private NodeID findOneSuccessorInExecution(final NodeID nodeID,
+            final boolean searchOutsideWFM) {
+        synchronized (m_workflowMutex) {
+            for (ConnectionContainer cc : m_connectionsBySource.get(nodeID)) {
+                assert cc.getSource().equals(nodeID);
+                NodeID foundNode = null;
+                NodeID currID = cc.getDest();
+                if (currID.equals(this.getID())) {
+                    // leaving WFM - check its successors!
+                    if (searchOutsideWFM) {
+                        foundNode =
+                            getParent().findOneSuccessorInExecution(
+                                    this.getID(), searchOutsideWFM);
+                        if (foundNode != null) {
+                            return foundNode;
+                        }
+                    }
+                } else {
+                    NodeContainer currNode = m_nodes.get(currID);
+                    assert currNode != null;
+                    if (currNode.getState().equals(State.QUEUED)
+                            || currNode.getState().equals(State.EXECUTING)) {
+                        // we found one - return it!
+                        return currID;
+                    }
+                    foundNode = findOneSuccessorInExecution(currID,
+                            searchOutsideWFM);
+                    if (foundNode != null) {
+                        return foundNode;
+                    }
+                }
+            }
+            return null;
+        }
     }
     
     /** Returns a description of a node container,
@@ -1255,6 +1308,12 @@ public final class WorkflowManager extends NodeContainer {
             if (!success) {
                 // execution failed - clean up successors' execution-marks
                 disableNodeForExecution(nc.getID());
+                // and also any nodes which were waiting for this one to
+                // be executed.
+                for (NodeID id : nc.getWaitingLoopHeadNodeList()) {
+                    disableNodeForExecution(id);
+                }
+                nc.clearWaitingLoopHeadNodeList();
             }
             // allow SNC to update states etc
             if (nc instanceof SingleNodeContainer) {
@@ -1329,9 +1388,25 @@ public final class WorkflowManager extends NodeContainer {
             // a loop is to be continued, we need to queue the loop head
             if (loopHeadNode != null) {
                 assert loopHeadNode.getState().equals(State.MARKEDFOREXEC);
-                boolean isSuccessfullyQueued = queueIfQueuable(loopHeadNode);
-                assert isSuccessfullyQueued : "Loop head can't be re-executed";
+                queueIfQueuable(loopHeadNode);
             }
+            // and also if any nodes (loop heads) were waiting for this one to
+            // be executed we need to check if we can queue them now and
+            // clean up the list in this node.
+            if (nc.getWaitingLoopHeadNodeList().size() >= 1) {
+                // make sure this node can be executed again (it is part of
+                // a dangling branch of a loop)
+                nc.resetAsNodeContainer();
+                configureNodeAndSuccessors(nc.getID(), true, true);
+                nc.markForExecutionAsNodeContainer(true);
+                // and try (again) to re-queue the loop head(s):
+                for (NodeID id : nc.getWaitingLoopHeadNodeList()) {
+                    // queue the original node
+                    queueIfQueuable(m_nodes.get(id));
+                }
+                nc.clearWaitingLoopHeadNodeList();
+            }
+
         }
     }
 

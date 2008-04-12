@@ -24,6 +24,8 @@
 package org.knime.core.node.workflow;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -91,6 +93,12 @@ public abstract class NodeContainer {
     private final WorkflowManager m_parent;
 
     private JobExecutor m_jobExecutor;
+    
+    /** this list will hold nodes earlier in the pipeline which can not
+     * be executed before this one is not done - usually these are loops
+     * with "dangling" branches, e.g. a chain of nodes leaving the loop.
+     */
+    private ArrayList<NodeID> m_listOfWaitingLoopHeadNodes;
 
     private String m_customName;
 
@@ -140,6 +148,7 @@ public abstract class NodeContainer {
         }
         m_id = id;
         m_state = State.IDLE;
+        m_listOfWaitingLoopHeadNodes = new ArrayList<NodeID>();
     }
 
     NodeContainer(final WorkflowManager parent, final NodeID id,
@@ -185,6 +194,45 @@ public abstract class NodeContainer {
         return m_jobExecutor;
     }
 
+    /////////////////////////////////////////////////
+    // List Management of Waiting Loop Head Nodes
+    /////////////////////////////////////////////////
+    
+    /** add a node the list of waiting nodes. 
+     * 
+     * @param id of node to be added.
+     */
+    public void addWaitingLoopHeadNode(final NodeID id) {
+        // only nodes can be added which are part of the same workflow!
+        assert getParent().getNodeContainer(id) != null;
+        if (!m_listOfWaitingLoopHeadNodes.contains(id)) {
+            m_listOfWaitingLoopHeadNodes.add(id);
+        }
+    }
+    
+    /**
+     * @return a list of waiting nodes (well: their IDs)
+     */
+    public List<NodeID> getWaitingLoopHeadNodeList() {
+        return m_listOfWaitingLoopHeadNodes;
+    }
+
+    /** clears the list of waiting nodes.
+     */
+    public void clearWaitingLoopHeadNodeList() {
+        m_listOfWaitingLoopHeadNodes.clear();
+    }
+    
+    /** Remove node from list of waiting nodes.
+     * 
+     * @param id of node to be removed.
+     */
+    public void removeWaitingLoopHeadNode(final NodeID id) {
+        if (m_listOfWaitingLoopHeadNodes.contains(id)) {
+            m_listOfWaitingLoopHeadNodes.remove(id);
+        }
+    }
+    
     ///////////////////////////////
     // Listener administration
     ////////////////////////////////////
