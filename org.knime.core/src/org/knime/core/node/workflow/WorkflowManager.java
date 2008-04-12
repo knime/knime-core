@@ -1075,8 +1075,10 @@ public final class WorkflowManager extends NodeContainer {
     }
     
     /** Queues the argument NC if possible. Does nothing if argument is
-     * not marked. Resets marks if not is queuable (all predecessors are done)
-     * but its state is unconfigured-marked.
+     * not marked. Resets marks if node is queuable (all predecessors are done)
+     * but its state is still unconfigured (and marked for execution). This
+     * will never change again so we can forget about executing also the rest.
+     * 
      * @param nc To queue if possible
      * @return whether successfully queued.
      */
