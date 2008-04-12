@@ -648,7 +648,7 @@ public final class Node implements NodeModelWarningListener {
         NodeMessage nodeMessage = null;
         try {
             // INVOKE MODEL'S EXECUTE
-            // (note that warning will now be processed automatically - we listen)
+            // (warnings will now be processed "automatically" - we listen)
             newOutData = m_model.executeModel(inData, exec);
         } catch (CanceledExecutionException cee) {
             // execution was canceled
@@ -661,21 +661,35 @@ public final class Node implements NodeModelWarningListener {
             m_logger.assertLog(false, ae.getMessage(), ae);
             reset(true);
             nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
-                    "Execute failed: " + ae.getMessage());
+                    "Execute failed (AssertionError): " + ae.getMessage());
             return false;
         } catch (Error e) {
             // some other error - should never happen!
-            m_logger.fatal("Fatal error", e);
+            m_logger.fatal("Fatal error (" + e.getClass().getName()
+                    + "): ", e);
             reset(true);
-            nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
-                    "Execute failed: " + e.getMessage());
+            if (e.getMessage().length() < 5) {
+                nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
+                    "Execute failed (Error): " + e.getMessage());
+            } else {
+                nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
+                        "Execute failed (" + e.getClass().getName() + "): "
+                        + e.getMessage());
+            }
             return false;
         } catch (Exception e) {
             // execution failed
-            m_logger.error("Execute failed", e);
+            m_logger.error("Execute failed ("
+                    + e.getClass().getName() + "): ", e);
             reset(true);
-            nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
-                    "Execute failed: " + e.getMessage());
+            if (e.getMessage().length() < 5) {
+                nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
+                    "Execute failed (" + e.getClass().getName() + "): "
+                    + e.getMessage());
+            } else {
+                nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
+                        "Execute failed: " + e.getMessage());
+            }
             return false;
         } finally {
             if (nodeMessage != null) {
