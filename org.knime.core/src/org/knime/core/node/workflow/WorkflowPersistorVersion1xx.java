@@ -43,6 +43,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -503,7 +504,22 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     && targetIDSuffix != -1) {
                 loadResult.addError("Unable to load node connection " + c
                         + ", destination node does not exist");
+            } else {
+                /* workflows saved with 1.x.x have misleading port indices for
+                 * incoming ports. Data ports precede the model ports (in
+                 * their index), although the GUI and the true ordering is
+                 * the other way around. */
+                NodeContainerPersistor targetNodePersistor = 
+                    m_nodeContainerLoaderMap.get(targetIDSuffix);
+                // don't use instanceof here (fixed in 2.0+) 
+                if (targetNodePersistor.getClass().equals(
+                        SingleNodeContainerPersistorVersion1xx.class)) {
+                    Node node = ((SingleNodeContainerPersistorVersion1xx)
+                            targetNodePersistor).getNode();
+                    fixDestPortIfNecessary(node, c);
+                }
             }
+                
             if (!m_connectionSet.add(c)) {
                 loadResult.addError(
                         "Duplicate connection information: " + c);
@@ -818,6 +834,23 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             nodeIDSuffix += 1;
         }
         return nodeIDSuffix;
+    }
+    
+    private void fixDestPortIfNecessary(final Node node, 
+            final ConnectionContainerTemplate c) {
+        int modelPortCount = 0;
+        for (int i = 0; i < node.getNrInPorts(); i++) {
+            if (!node.getInputType(i).getPortObjectClass().isAssignableFrom(
+                    BufferedDataTable.class)) {
+                modelPortCount += 1;
+            }
+        }
+        int destPort = c.getDestPort();
+        if (destPort < modelPortCount) { // c represent data connection
+            c.setDestPort(destPort + modelPortCount);
+        } else { // c represents model connection
+            c.setDestPort(destPort - modelPortCount);
+        }
     }
 
 }

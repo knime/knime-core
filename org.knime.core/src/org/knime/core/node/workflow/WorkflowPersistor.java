@@ -82,7 +82,8 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         private final int m_sourceSuffix;
         private final int m_sourcePort;
         private final int m_destSuffix;
-        private final int m_destPort;
+        // not final, may be fixed later (puzzling port IDs in 1.x.x)
+        private int m_destPort;
         private final UIInformation m_uiInfo;
         
         ConnectionContainerTemplate(final int source, final int sourcePort, 
@@ -113,6 +114,11 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         /** @return the destination port */
         int getDestPort() {
             return m_destPort;
+        }
+        
+        /** @param destPort the destPort to set */
+        public void setDestPort(int destPort) {
+            m_destPort = destPort;
         }
 
         /** @return the uiInfo */

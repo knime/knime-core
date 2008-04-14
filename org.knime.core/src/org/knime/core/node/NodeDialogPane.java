@@ -21,6 +21,8 @@
  */
 package org.knime.core.node;
 
+import java.util.ArrayList;
+
 import org.knime.core.data.DataTableSpec;
 
 
@@ -42,21 +44,16 @@ public abstract class NodeDialogPane extends GenericNodeDialogPane {
     @Override
     protected final void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
-        // find out how many DataTableSpecs we have (only consider the
-        // ones at beginning of array) to make sure we are also compatible
-        // to old style NodeModel with model ports!
-        int nrDataSpecs = 0;
-        while ((nrDataSpecs < specs.length)
-               && (specs[nrDataSpecs] instanceof DataTableSpec)) {
-            nrDataSpecs++;
+        // get the data specs into a new (possibly smaller) array
+        ArrayList<DataTableSpec> dataSpecList = new ArrayList<DataTableSpec>();
+        for (PortObjectSpec s : specs) {
+            if (s instanceof DataTableSpec) {
+                dataSpecList.add((DataTableSpec)s);
+            }
         }
-        // convert only PortObjectSpecs that are DataTableSpecs
-        DataTableSpec[] inTableSpecs =
-             new DataTableSpec[nrDataSpecs];
-        for (int i = 0; i < nrDataSpecs; i++) {
-            inTableSpecs[i] = (DataTableSpec)(specs[i]);
-        }
-        loadSettingsFrom(settings, inTableSpecs);
+        DataTableSpec[] dataSpecs = dataSpecList.toArray(
+                new DataTableSpec[dataSpecList.size()]);
+        loadSettingsFrom(settings, dataSpecs);
     }
 
     protected abstract void loadSettingsFrom(NodeSettingsRO settings,

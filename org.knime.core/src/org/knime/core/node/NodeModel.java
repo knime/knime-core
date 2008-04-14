@@ -59,7 +59,8 @@ public abstract class NodeModel extends GenericNodeModel {
         this(nrDataIns, nrDataOuts, 0, 0);
     }
 
-    private static PortType[] createArrayOfDataAndModelTypes(
+    // data ports first, then model ports.
+    private static PortType[] createArrayOfDataAndModelOutputTypes(
             final int nrDataPorts, final int nrModelPorts) {
         PortType[] pTypes = new PortType[nrDataPorts + nrModelPorts];
         for (int i = 0; i < nrDataPorts; i++) {
@@ -67,6 +68,19 @@ public abstract class NodeModel extends GenericNodeModel {
         }
         for (int i = nrDataPorts; i < nrDataPorts + nrModelPorts; i++) {
             pTypes[i] = OLDSTYLEMODELPORTTYPE;
+        }
+        return pTypes;
+    }
+
+    // model ports first, then data ports (just as in pre2.0 KNIME)
+    private static PortType[] createArrayOfDataAndModelInputTypes(
+            final int nrDataPorts, final int nrModelPorts) {
+        PortType[] pTypes = new PortType[nrDataPorts + nrModelPorts];
+        for (int i = 0; i < nrModelPorts; i++) {
+            pTypes[i] = OLDSTYLEMODELPORTTYPE;
+        }
+        for (int i = nrModelPorts; i < nrModelPorts + nrDataPorts; i++) {
+            pTypes[i] = BufferedDataTable.TYPE;
         }
         return pTypes;
     }
@@ -97,8 +111,8 @@ public abstract class NodeModel extends GenericNodeModel {
     @Deprecated
     protected NodeModel(final int nrDataIns, final int nrDataOuts,
             final int nrModelIns, final int nrModelOuts) {
-        super(createArrayOfDataAndModelTypes(nrDataIns, nrModelIns),
-              createArrayOfDataAndModelTypes(nrDataOuts, nrModelOuts));
+        super(createArrayOfDataAndModelInputTypes(nrDataIns, nrModelIns),
+              createArrayOfDataAndModelOutputTypes(nrDataOuts, nrModelOuts));
         m_nrDataInPorts = nrDataIns;
         m_nrDataOutPorts = nrDataOuts;
         m_nrModelInPorts = nrModelIns;
@@ -123,21 +137,22 @@ public abstract class NodeModel extends GenericNodeModel {
     protected final PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
     throws InvalidSettingsException {
         // convert all PortObjectSpecs corresponding to data ports to
-        // DataTableSpecs
-        DataTableSpec[] inTableSpecs = new DataTableSpec[m_nrDataInPorts];
-        for (int i = 0; i < m_nrDataInPorts; i++) {
-            inTableSpecs[i] = (DataTableSpec) inSpecs[i];
-        }
-        for (int i = m_nrDataInPorts;
-                i < m_nrDataInPorts + m_nrModelInPorts; i++) {
+        // DataTableSpecs (Note: ModelPorts first, then DataPorts)
+        for (int i = 0; i < m_nrModelInPorts; i++) {
             assert (inSpecs[i] instanceof ModelContentWrapper);
             ModelContentWrapper mlw = (ModelContentWrapper)inSpecs[i];
             ModelContentRO mdl = mlw.m_hiddenModel;
-            loadModelContent(i - m_nrDataInPorts, mdl);
+            loadModelContent(i, mdl);
+        }
+        DataTableSpec[] inTableSpecs = new DataTableSpec[m_nrDataInPorts];
+        for (int i = m_nrModelInPorts;
+                i < m_nrDataInPorts + m_nrModelInPorts; i++) {
+            inTableSpecs[i - m_nrModelInPorts] = (DataTableSpec) inSpecs[i];
         }
         // call old-style configure
         DataTableSpec[] outTableSpecs = configure(inTableSpecs);
         // copy output specs and put dummy model-out specs in result array
+        // (Note: DataPorts first, then ModelPorts)
         PortObjectSpec[] returnObjectSpecs =
             new PortObjectSpec[m_nrDataOutPorts + m_nrModelOutPorts];
         for (int i = 0; outTableSpecs != null && i < m_nrDataOutPorts; i++) {
@@ -265,19 +280,19 @@ public abstract class NodeModel extends GenericNodeModel {
     protected final PortObject[] execute(
             final PortObject[] inData, final ExecutionContext exec)
             throws Exception {
-        // convert all PortObjects to DataTables
-        BufferedDataTable[] inTables =
-            new BufferedDataTable[m_nrDataInPorts];
-        for (int i = 0; i < m_nrDataInPorts; i++) {
-            inTables[i] = (BufferedDataTable)(inData[i]);
-        }
         // load remaining Model Objects into old style NodeModel
-        for (int i = m_nrDataInPorts;
-                 i < m_nrDataInPorts + m_nrModelInPorts; i++) {
+        for (int i = 0; i < m_nrModelInPorts; i++) {
             assert (inData[i] instanceof ModelContentWrapper);
             ModelContentRO mdl = 
                 ((ModelContentWrapper) inData[i]).m_hiddenModel;
             loadModelContent(i - m_nrDataInPorts, mdl);
+        }
+        // convert all PortObjects to DataTables
+        BufferedDataTable[] inTables =
+            new BufferedDataTable[m_nrDataInPorts];
+        for (int i = m_nrModelInPorts;
+                     i < m_nrModelInPorts + m_nrDataInPorts; i++) {
+            inTables[i - m_nrModelInPorts] = (BufferedDataTable)(inData[i]);
         }
         // finally call old style execute
         BufferedDataTable[] outTables = execute(inTables, exec);
