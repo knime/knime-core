@@ -1107,9 +1107,9 @@ public final class WorkflowManager extends NodeContainer {
         }
         if (allDataAvailable) {
             if (nc.getState().equals(State.MARKEDFOREXEC)) {
-                nc.queueAsNodeContainer(inData);
-                return true;
-            } else {
+                    nc.queueAsNodeContainer(inData);
+                    return true;
+                } else {
                 disableNodeForExecution(nc.getID());
                 checkForNodeStateChanges(true);
                 return false;
@@ -1345,36 +1345,36 @@ public final class WorkflowManager extends NodeContainer {
                 return;
             }
         }
-        // (3) reset the nodes in the body (only those -
-        //     make sure end of loop is NOT reset)
-        for (NodeID id : loopBodyNodes) {
-            m_nodes.get(id).resetAsNodeContainer();
-        }
-        // (4) mark the origin of the loop to be executed again
+                        // (3) reset the nodes in the body (only those -
+                        //     make sure end of loop is NOT reset)
+                        for (NodeID id : loopBodyNodes) {
+                            m_nodes.get(id).resetAsNodeContainer();
+                        }
+                        // (4) mark the origin of the loop to be executed again
         ((SingleNodeContainer)headNode).enableReQueuing();
-        // (5) configure the nodes from start to rest (it's not
-        //     so important if we configure more than the body)
-        //     do NOT configure start of loop because otherwise
-        //     we will re-create the ScopeContextStack and
-        //     remove the loop-object as well!
+                        // (5) configure the nodes from start to rest (it's not
+                        //     so important if we configure more than the body)
+                        //     do NOT configure start of loop because otherwise
+                        //     we will re-create the ScopeContextStack and
+                        //     remove the loop-object as well!
         configureNodeAndSuccessors(headNode.getID(),
-                false, true);
-        // the current node may have thrown an exception inside
-        // configure, so we have to check here if the node
-        // is really configured before...
+                                false, true);
+                        // the current node may have thrown an exception inside
+                        // configure, so we have to check here if the node
+                        // is really configured before...
         if (tailNode.getState().equals(State.CONFIGURED)) {
-            // (6) ... we enable the body to be queued again.
-            for (NodeID id : loopBodyNodes) {
-                m_nodes.get(id)
-                    .markForExecutionAsNodeContainer(true);
-            }
+                            // (6) ... we enable the body to be queued again.
+                            for (NodeID id : loopBodyNodes) {
+                                m_nodes.get(id)
+                                    .markForExecutionAsNodeContainer(true);
+                            }
             // and (7) mark end of loop for re-execution
             tailNode.markForExecutionAsNodeContainer(true);
-        }
+                        }
         // (8) finally try to queue the head of this loop!
         assert headNode.getState().equals(State.MARKEDFOREXEC);
         queueIfQueuable(headNode);
-    }
+                    }
 
     /** Create list of nodes (id)s that are part of a loop body. Note that
      * this also includes any dangling branches which leave the loop but
@@ -1392,7 +1392,7 @@ public final class WorkflowManager extends NodeContainer {
         if (startNode.equals(endNode)) {
             // silly case
             return matchingNodes;
-        }
+                }
         matchingNodes.add(startNode);
         int currIndex = 0;
         while (currIndex < matchingNodes.size()) {
@@ -1404,7 +1404,7 @@ public final class WorkflowManager extends NodeContainer {
                     // if any branch leaves this WFM, complain!
                     throw new IllegalContextStackObjectException(
                             "Loops are not permitted to leave workflows!");
-                }
+            }
                 if ((!succID.equals(endNode)) 
                         && (!matchingNodes.contains(succID))) {
                     NodeContainer succNode = m_nodes.get(succID);
@@ -1413,7 +1413,7 @@ public final class WorkflowManager extends NodeContainer {
                         // nodes in loop must be either executing or done!
                         throw new IllegalContextStackObjectException(
                                 "Nodes within loop is not executing or done!");
-                    }
+            }
                     matchingNodes.add(succID);
                 }
             }
@@ -1422,7 +1422,7 @@ public final class WorkflowManager extends NodeContainer {
         matchingNodes.remove(startNode);
         return matchingNodes;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     void resetAsNodeContainer() {
@@ -2469,6 +2469,7 @@ public final class WorkflowManager extends NodeContainer {
             }
             ConnectionContainer cc = addConnection(
                     source, c.getSourcePort(), dest, c.getDestPort(), false);
+            cc.setUIInfo(c.getUiInfo());
             assert cc.getType() == type;
         }
         
