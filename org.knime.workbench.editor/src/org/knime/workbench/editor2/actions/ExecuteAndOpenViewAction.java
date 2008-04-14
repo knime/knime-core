@@ -192,7 +192,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
                     // if the node was successfully executed
                     // start the view
                     if (cont.getState().equals(NodeContainer.State.EXECUTED)) {
-                        Display.getDefault().syncExec(new Runnable() {
+                        Display.getDefault().asyncExec(new Runnable() {
                             public void run() {
                                 // set the appropriate action to open the
                                 // view (jframe or embedded)
