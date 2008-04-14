@@ -193,11 +193,11 @@ public final class ScopeObjectStack {
         List<ScopeObject> result = new ArrayList<ScopeObject>();
         boolean isInSequence = true;
         for (ScopeObject v : m_stack) {
-            if (v.getOriginatingNode().equals(id)) {
+            if (v.getHeadNode().equals(id)) {
                 isInSequence = false;
                 result.add(v);
             }
-            assert isInSequence || v.getOriginatingNode().equals(id)
+            assert isInSequence || v.getHeadNode().equals(id)
                 : "Scope objects are not ordered";
         }
         return result;
@@ -232,13 +232,13 @@ public final class ScopeObjectStack {
      * @see java.util.Stack#push(java.lang.Object)
      */
     public void push(final ScopeObject item) {
-        if ((item.getOriginatingNode() != null)
-                && (item.getOriginatingNode() != m_nodeID)) {
+        if ((item.getHeadNode() != null)
+                && (item.getHeadNode() != m_nodeID)) {
             throw new IllegalArgumentException(
                     "Can't put a ScopeContext item onto stack, which already "
                     + "has a different owner.");
         }
-        item.setOriginatingNode(m_nodeID);
+        item.setHeadNode(m_nodeID);
         m_stack.add(item);
     }
 

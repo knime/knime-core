@@ -1107,17 +1107,8 @@ public final class WorkflowManager extends NodeContainer {
         }
         if (allDataAvailable) {
             if (nc.getState().equals(State.MARKEDFOREXEC)) {
-                NodeID activeSuccessor = findOneSuccessorInExecution(
-                        nc.getID(), false);
-                if (activeSuccessor == null) {
-                    nc.queueAsNodeContainer(inData);
-                    return true;
-                } else {
-                    NodeContainer activeNode = m_nodes.get(activeSuccessor);
-                    assert activeNode != null;
-                    activeNode.addWaitingLoopHeadNode(nc.getID());
-                    return false;
-                }
+                nc.queueAsNodeContainer(inData);
+                return true;
             } else {
                 disableNodeForExecution(nc.getID());
                 checkForNodeStateChanges(true);
@@ -1125,50 +1116,6 @@ public final class WorkflowManager extends NodeContainer {
             }
         }
         return false;
-    }
-    
-    /** Determine if any of the successors of the given node are currently
-     * being executed or queued (MARKED is not a problem).
-     * 
-     * @param nodeID the id of the given node
-     * @param searchOutsideWFM true: narrow search to nodes in this WFM only
-     * @return the nodeID of a (pretty much randomly picked) node which is
-     *   still under execution or null if no such node exists.
-     */
-    private NodeID findOneSuccessorInExecution(final NodeID nodeID,
-            final boolean searchOutsideWFM) {
-        synchronized (m_workflowMutex) {
-            for (ConnectionContainer cc : m_connectionsBySource.get(nodeID)) {
-                assert cc.getSource().equals(nodeID);
-                NodeID foundNode = null;
-                NodeID currID = cc.getDest();
-                if (currID.equals(this.getID())) {
-                    // leaving WFM - check its successors!
-                    if (searchOutsideWFM) {
-                        foundNode =
-                            getParent().findOneSuccessorInExecution(
-                                    this.getID(), searchOutsideWFM);
-                        if (foundNode != null) {
-                            return foundNode;
-                        }
-                    }
-                } else {
-                    NodeContainer currNode = m_nodes.get(currID);
-                    assert currNode != null;
-                    if (currNode.getState().equals(State.QUEUED)
-                            || currNode.getState().equals(State.EXECUTING)) {
-                        // we found one - return it!
-                        return currID;
-                    }
-                    foundNode = findOneSuccessorInExecution(currID,
-                            searchOutsideWFM);
-                    if (foundNode != null) {
-                        return foundNode;
-                    }
-                }
-            }
-            return null;
-        }
     }
     
     /** Returns a description of a node container,
@@ -1310,17 +1257,16 @@ public final class WorkflowManager extends NodeContainer {
                 disableNodeForExecution(nc.getID());
                 // and also any nodes which were waiting for this one to
                 // be executed.
-                for (NodeID id : nc.getWaitingLoopHeadNodeList()) {
-                    disableNodeForExecution(id);
+                for (ScopeObject so : nc.getWaitingLoops()) {
+                    disableNodeForExecution(so.getHeadNode());
                 }
-                nc.clearWaitingLoopHeadNodeList();
+                nc.clearWaitingLoopList();
             }
             // allow SNC to update states etc
             if (nc instanceof SingleNodeContainer) {
                 ((SingleNodeContainer)nc).postExecuteNode(success);
             }
             boolean canConfigureSuccessors = true;
-            NodeContainer loopHeadNode = null;
             if (nc instanceof SingleNodeContainer) {
                 // process loop context - only for "real" nodes:
                 SingleNodeContainer snc = (SingleNodeContainer)nc;
@@ -1328,54 +1274,35 @@ public final class WorkflowManager extends NodeContainer {
                 if (node.getLoopStatus() != null) {
                     // we are supposed to execute this loop again!
                     // first check if the loop is properly configured:
-                    if (m_nodes.get(node.getLoopStatus().getOriginatingNode())
+                    if (m_nodes.get(node.getLoopStatus().getHeadNode())
                             == null) {
                         // obviously not: origin of the loop is not in this WFM!
-                        // FIXME: error from WFM!!!
                         // nothing else to do: NC stays configured
                         assert nc.getState() == NodeContainer.State.CONFIGURED;
+                        // and choke
+                        throw new IllegalContextStackObjectException(
+                                "Loop nodes are not in the same workflow!");
                     } else {
-                        // (1) clear stack (= loop context)
-                        ScopeContext sc = node.getLoopStatus();
+                        // make sure the end of the loop is properly
+                        // configured:
+                        node.getLoopStatus().setTailNode(nc.getID());
+                        // and try to restart loop
+                        restartLoop(node.getLoopStatus());
+                        // clear stack (= loop context)
                         node.clearLoopStatus();
-                        // (2) find all intermediate node, the loop's "body"
-                        List<NodeID> loopBodyNodes = findExecutedNodesInLoopBody(
-                                sc.getOriginatingNode(), nc.getID());
-                        // (3) reset the nodes in the body (only those -
-                        //     make sure end of loop is NOT reset)
-                        for (NodeID id : loopBodyNodes) {
-                            m_nodes.get(id).resetAsNodeContainer();
-                        }
-                        // (4) mark the origin of the loop to be executed again
-                        NodeContainer origin 
-                                    = m_nodes.get(sc.getOriginatingNode());
-                        assert origin instanceof SingleNodeContainer;
-                        ((SingleNodeContainer)origin).enableReQueuing();
-                        loopHeadNode = origin;
-                        // (5) configure the nodes from start to rest (it's not
-                        //     so important if we configure more than the body)
-                        //     do NOT configure start of loop because otherwise
-                        //     we will re-create the ScopeContextStack and
-                        //     remove the loop-object as well!
-                        configureNodeAndSuccessors(sc.getOriginatingNode(),
-                                false, true);
-                        // the current node may have thrown an exception inside
-                        // configure, so we have to check here if the node
-                        // is really configured before...
-                        if (nc.getState().equals(State.CONFIGURED)) {
-                            // (6) ... we enable the body to be queued again.
-                            for (NodeID id : loopBodyNodes) {
-                                m_nodes.get(id)
-                                    .markForExecutionAsNodeContainer(true);
-                            }
-                            // and finally (7) mark end of loop for re-execution
-                            nc.markForExecutionAsNodeContainer(true);
-                        }
-                        // make sure we do not accidentally configure the
+                        // and make sure we do not accidentally configure the
                         // remainder of this node since we are not yet done
                         // with the loop
                         canConfigureSuccessors = false;
                     }
+                }
+                if (snc.getWaitingLoops().size() >= 1) {
+                    // looks as if some loops were waiting for this node to
+                    // finish! Let's try to restart them:
+                    for (ScopeObject so : nc.getWaitingLoops()) {
+                        restartLoop(so);
+                    }
+                    nc.clearWaitingLoopList();
                 }
             }
             if (canConfigureSuccessors) {
@@ -1384,32 +1311,118 @@ public final class WorkflowManager extends NodeContainer {
                 configureNodeAndSuccessors(nc.getID(), false, true);
             }
             checkForNodeStateChanges(true);
-            
-            // a loop is to be continued, we need to queue the loop head
-            if (loopHeadNode != null) {
-                assert loopHeadNode.getState().equals(State.MARKEDFOREXEC);
-                queueIfQueuable(loopHeadNode);
-            }
-            // and also if any nodes (loop heads) were waiting for this one to
-            // be executed we need to check if we can queue them now and
-            // clean up the list in this node.
-            if (nc.getWaitingLoopHeadNodeList().size() >= 1) {
-                // make sure this node can be executed again (it is part of
-                // a dangling branch of a loop)
-                nc.resetAsNodeContainer();
-                configureNodeAndSuccessors(nc.getID(), true, true);
-                nc.markForExecutionAsNodeContainer(true);
-                // and try (again) to re-queue the loop head(s):
-                for (NodeID id : nc.getWaitingLoopHeadNodeList()) {
-                    // queue the original node
-                    queueIfQueuable(m_nodes.get(id));
-                }
-                nc.clearWaitingLoopHeadNodeList();
-            }
-
         }
     }
 
+    /** Restart execution of a loop if possible. Can delay restart if
+     * we are still waiting for some node in the loop body (or any
+     * dangling loop branches) to finish execution
+     * 
+     * @param sc ScopeObject of the actual loop
+     */
+    private void restartLoop(final ScopeObject sc) {
+        NodeContainer tailNode = m_nodes.get(sc.getTailNode());
+        NodeContainer headNode = m_nodes.get(sc.getHeadNode());
+        if ((tailNode == null) || (headNode == null)) {
+            throw new IllegalStateException("Loop Nodes must both"
+                    + " be in the same workflow!");
+        }
+        if (!(tailNode instanceof SingleNodeContainer)
+                || !(headNode instanceof SingleNodeContainer)) {
+            throw new IllegalStateException("Loop Nodes must both"
+                    + " be SingleNodeContainers!");
+        }
+        // (1) find all intermediate node, the loop's "body"
+        List<NodeID> loopBodyNodes = findAllNodesConnectedToLoopBody(
+                headNode.getID(), tailNode.getID());
+        // (2) check if any of those nodes is still waiting to be
+        //     executed or currently executing
+        for (NodeID id : loopBodyNodes) {
+            NodeContainer currNode = m_nodes.get(id);
+            if (currNode.getState().executionInProgress()) {
+                // stop right here - loop can not yet be restarted!
+                currNode.addWaitingLoop(sc);
+                return;
+            }
+        }
+        // (3) reset the nodes in the body (only those -
+        //     make sure end of loop is NOT reset)
+        for (NodeID id : loopBodyNodes) {
+            m_nodes.get(id).resetAsNodeContainer();
+        }
+        // (4) mark the origin of the loop to be executed again
+        ((SingleNodeContainer)headNode).enableReQueuing();
+        // (5) configure the nodes from start to rest (it's not
+        //     so important if we configure more than the body)
+        //     do NOT configure start of loop because otherwise
+        //     we will re-create the ScopeContextStack and
+        //     remove the loop-object as well!
+        configureNodeAndSuccessors(headNode.getID(),
+                false, true);
+        // the current node may have thrown an exception inside
+        // configure, so we have to check here if the node
+        // is really configured before...
+        if (tailNode.getState().equals(State.CONFIGURED)) {
+            // (6) ... we enable the body to be queued again.
+            for (NodeID id : loopBodyNodes) {
+                m_nodes.get(id)
+                    .markForExecutionAsNodeContainer(true);
+            }
+            // and (7) mark end of loop for re-execution
+            tailNode.markForExecutionAsNodeContainer(true);
+        }
+        // (8) finally try to queue the head of this loop!
+        assert headNode.getState().equals(State.MARKEDFOREXEC);
+        queueIfQueuable(headNode);
+    }
+
+    /** Create list of nodes (id)s that are part of a loop body. Note that
+     * this also includes any dangling branches which leave the loop but
+     * do not connect back to the end-node. Used to re-execute all nodes
+     * of a loop.
+     * The list does not contain the start node or end node.
+     * 
+     * @param startNode id of head of loop
+     * @param endNode if of tail of loop
+     * @return list of nodes within loop body & any dangling branches
+     */
+    private List<NodeID> findAllNodesConnectedToLoopBody(final NodeID startNode,
+            final NodeID endNode) {
+        ArrayList<NodeID> matchingNodes = new ArrayList<NodeID>();
+        if (startNode.equals(endNode)) {
+            // silly case
+            return matchingNodes;
+        }
+        matchingNodes.add(startNode);
+        int currIndex = 0;
+        while (currIndex < matchingNodes.size()) {
+            NodeID currID = matchingNodes.get(currIndex);
+            for (ConnectionContainer cc : m_connectionsBySource.get(currID)) {
+                assert (cc.getSource().equals(currID));
+                NodeID succID = cc.getDest();
+                if (succID.equals(this.getID())) {
+                    // if any branch leaves this WFM, complain!
+                    throw new IllegalContextStackObjectException(
+                            "Loops are not permitted to leave workflows!");
+                }
+                if ((!succID.equals(endNode)) 
+                        && (!matchingNodes.contains(succID))) {
+                    NodeContainer succNode = m_nodes.get(succID);
+                    if (!(succNode.getState().equals(State.EXECUTED))
+                            && !(succNode.getState().executionInProgress())) {
+                        // nodes in loop must be either executing or done!
+                        throw new IllegalContextStackObjectException(
+                                "Nodes within loop is not executing or done!");
+                    }
+                    matchingNodes.add(succID);
+                }
+            }
+            currIndex += 1;
+        }
+        matchingNodes.remove(startNode);
+        return matchingNodes;
+    }
+    
     /** {@inheritDoc} */
     @Override
     void resetAsNodeContainer() {
@@ -1682,39 +1695,6 @@ public final class WorkflowManager extends NodeContainer {
         return m_globalTableRepository;
     }
 
-    /** Create list of executed node (id)s between two nodes. Used to re-execute
-     * all nodes within a loop.
-     */
-    private List<NodeID> findExecutedNodesInLoopBody(final NodeID startNode,
-            final NodeID endNode) {
-        ArrayList<NodeID> matchingNodes = new ArrayList<NodeID>();
-        if (startNode.equals(endNode)) {
-            // silly case
-            return matchingNodes;
-        }
-        matchingNodes.add(startNode);
-        int currIndex = 0;
-        while (currIndex < matchingNodes.size()) {
-            NodeID currID = matchingNodes.get(currIndex);
-            for (ConnectionContainer cc : m_connectionsBySource.get(currID)) {
-                assert (cc.getSource().equals(currID));
-                NodeID succID = cc.getDest();
-                if ((!succID.equals(endNode)) 
-                        && (!succID.equals(this.getID()))
-                        && (!matchingNodes.contains(succID))) {
-                    NodeContainer succNode = m_nodes.get(succID);
-                    if (succNode.getState().equals(State.EXECUTED)) {
-                        matchingNodes.add(succID);
-                    }
-                }
-            }
-            currIndex += 1;
-        }
-//        doesChainOfExecutedNodesReachNode(startNode, endNode, matchingNodes);
-        matchingNodes.remove(startNode);
-//        matchingNodes.remove(endNode);
-        return matchingNodes;
-    }
 
     /** Return list of nodes, sorted by traversing the graph breadth first.
      * 
