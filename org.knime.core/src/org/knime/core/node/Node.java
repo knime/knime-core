@@ -1081,8 +1081,8 @@ public final class Node implements NodeModelWarningListener {
         boolean success = false;
         synchronized (m_configureLock) {
             // reset message object
-            NodeMessage nodeMessage = new NodeMessage(NodeMessage.Type.RESET,
-                    null);
+            notifyMessageListeners(new NodeMessage(NodeMessage.Type.RESET,
+                    null));
             // need to init here as there may be an exception being thrown and
             // then we copy the null elements of this array to their destination
             PortObjectSpec[] newOutSpec = new PortObjectSpec[getNrOutPorts()];
@@ -1111,9 +1111,9 @@ public final class Node implements NodeModelWarningListener {
                 success = true;
             } catch (InvalidSettingsException ise) {
                 m_logger.warn("Configure failed: " + ise.getMessage());
-                nodeMessage =
+                notifyMessageListeners(
                         new NodeMessage(NodeMessage.Type.WARNING, "Warning: "
-                                + ise.getMessage());
+                                + ise.getMessage()));
             } catch (Exception e) {
                 m_logger.error("Configure failed", e);
             } catch (Error e) {
@@ -1124,8 +1124,6 @@ public final class Node implements NodeModelWarningListener {
                     m_outputs[p].spec = newOutSpec[p];
                 }
             }
-            // make sure we change the message (or reset it)
-            notifyMessageListeners(nodeMessage);
         }
         if (success) {
             m_logger.debug("Configure succeeded. (" + this.getName() + ")");
