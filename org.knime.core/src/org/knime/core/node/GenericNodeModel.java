@@ -785,14 +785,6 @@ public abstract class GenericNodeModel {
      * @param warningMessage the warning message to set
      */
     protected final void setWarningMessage(final String warningMessage) {
-        if (warningMessage == m_warningMessage) {
-            return;
-        }
-        if ((warningMessage != null) && (m_warningMessage != null)
-                && (warningMessage.equals(m_warningMessage))) {
-            // neither string is null and they are equal
-            return;
-        }
         // message changed, set new one and notify listeners.
         m_warningMessage = warningMessage;
         notifyWarningListeners(m_warningMessage);
