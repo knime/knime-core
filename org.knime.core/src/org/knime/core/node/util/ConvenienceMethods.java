@@ -45,7 +45,7 @@ public final class ConvenienceMethods {
         }
         boolean differ = false;
         if (o1 != null) {
-            differ = !o1.equals(o2);
+            differ = o1.equals(o2);
         } else if (o2 != null) {
             differ = o2.equals(o1);
         }
