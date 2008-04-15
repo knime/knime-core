@@ -48,9 +48,12 @@ import org.knime.core.node.util.ViewUtils;
  * The part specific to the special purpose node view must be implemented in the
  * derived class and must take place in a <code>Panel</code>. This panel is
  * registered in this base class (method <code>#setComponent(Component)</code>)
- * and will be displayed in the JFrame provided and handled by this class.
+ * and will be displayed in the {@link JFrame} provided and handled by this 
+ * class.
  *
  * @author Thomas Gabriel, University of Konstanz
+ * @param <T> the implementation of the {@link GenericNodeModel} this node view
+ *          is based on 
  */
 public abstract class GenericNodeView<T extends GenericNodeModel> {
 
@@ -266,13 +269,13 @@ public abstract class GenericNodeView<T extends GenericNodeModel> {
                 // CALL abstract model changed
                 modelChanged();
             } catch (NullPointerException npe) {
-                m_logger.coding("NodeView.modelChanged() causes "
+                m_logger.coding("GenericNodeView.modelChanged() causes "
                        + "NullPointerException during notification of a "
                        + "changed model, reason: " + npe.getMessage(), npe);
-            } catch (Exception e) {
-                m_logger.error("NodeView.modelChanged() causes "
-                       + "Exception during notification of a changed "
-                       + "model, reason: " + e.getMessage(), e);
+            } catch (Throwable t) {
+                m_logger.error("GenericNodeView.modelChanged() causes an error"
+                       + "during notification of a changed model, reason: " 
+                       + t.getMessage(), t);
             } finally {
                 // repaint and pack if the view has not been opened yet or
                 // the underlying view component was added
@@ -332,7 +335,12 @@ public abstract class GenericNodeView<T extends GenericNodeModel> {
      * Initializes the view before opening.
      */
     private void callOpenView() {
-        onOpen();
+        try {
+            onOpen();
+        } catch (Throwable t) {
+            m_logger.error("GenericNodeView.onOpen() causes an error "
+                    + "on opening node view, reason: " + t.getMessage(), t);
+        }
         m_nodeModel.registerView(this);
         callModelChanged();
         if (!m_wasOpened) { // if the view was already visible
@@ -399,7 +407,12 @@ public abstract class GenericNodeView<T extends GenericNodeModel> {
      */
     public final void closeView() {
         m_nodeModel.unregisterView(this);
-        onClose();
+        try {
+            onClose();  
+        } catch (Throwable t) {
+            m_logger.error("GenericNodeView.onClose() causes an error "
+                    + "during closing node view, reason: " + t.getMessage(), t);
+        }
         m_frame.getContentPane().firePropertyChange(PROP_CHANGE_CLOSE, 0, 1);
         Runnable runner = new Runnable() {
             public void run() {
