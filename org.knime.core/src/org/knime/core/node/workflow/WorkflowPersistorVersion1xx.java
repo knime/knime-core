@@ -500,17 +500,16 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                         + ", source node does not exist");
             }
             int targetIDSuffix = c.getDestSuffix();
-            if (!m_nodeContainerLoaderMap.containsKey(targetIDSuffix)
-                    && targetIDSuffix != -1) {
+            NodeContainerPersistor targetNodePersistor = 
+                m_nodeContainerLoaderMap.get(targetIDSuffix);
+            if (targetNodePersistor == null && targetIDSuffix != -1) {
                 loadResult.addError("Unable to load node connection " + c
                         + ", destination node does not exist");
-            } else {
+            } else if (targetNodePersistor != null) {
                 /* workflows saved with 1.x.x have misleading port indices for
                  * incoming ports. Data ports precede the model ports (in
                  * their index), although the GUI and the true ordering is
                  * the other way around. */
-                NodeContainerPersistor targetNodePersistor = 
-                    m_nodeContainerLoaderMap.get(targetIDSuffix);
                 // don't use instanceof here (fixed in 2.0+) 
                 if (targetNodePersistor.getClass().equals(
                         SingleNodeContainerPersistorVersion1xx.class)) {
