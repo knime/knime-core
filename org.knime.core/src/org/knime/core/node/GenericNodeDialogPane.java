@@ -736,7 +736,7 @@ public abstract class GenericNodeDialogPane {
                         + e.getClass().getSimpleName(), e);
             }
             String error = "Panel does not reflect current settings; failed to "
-                + "save intermediate settings: " + e.getMessage();
+                + "save intermediate settings:<br/>" + e.getMessage();
             m_scopeVariableTab.setErrorLabel(error);
             return;
         }
@@ -759,7 +759,11 @@ public abstract class GenericNodeDialogPane {
             m_tree = new ConfigEditJTree();
             m_errorLabel = new JLabel();
             m_errorLabel.setForeground(Color.RED);
-            add(new JScrollPane(m_tree), BorderLayout.CENTER);
+            // nesting m_tree directly into the scrollpane causes the dialog
+            // to take oversized dimensions
+            JPanel panel = new JPanel(new BorderLayout());
+            panel.add(m_tree, BorderLayout.CENTER);
+            add(new JScrollPane(panel), BorderLayout.CENTER);
             add(m_errorLabel, BorderLayout.NORTH);
         }
         
