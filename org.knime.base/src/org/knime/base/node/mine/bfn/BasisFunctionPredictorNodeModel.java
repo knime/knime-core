@@ -62,7 +62,7 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
      * @param model type of the basisfunction model at the in-port
      */
     protected BasisFunctionPredictorNodeModel(final PortType model) {
-        super(new PortType[]{BufferedDataTable.TYPE, model},
+        super(new PortType[]{model, BufferedDataTable.TYPE},
               new PortType[]{BufferedDataTable.TYPE});
     }
 
@@ -73,9 +73,9 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
     public BufferedDataTable[] execute(final PortObject[] portObj,
             final ExecutionContext exec) 
             throws CanceledExecutionException, InvalidSettingsException {
-        BasisFunctionPortObject pred = (BasisFunctionPortObject) portObj[1];
+        BasisFunctionPortObject pred = (BasisFunctionPortObject) portObj[0];
         final DataTableSpec modelSpec = pred.getSpec();
-        final BufferedDataTable data = (BufferedDataTable) portObj[0];
+        final BufferedDataTable data = (BufferedDataTable) portObj[1];
         final DataTableSpec dataSpec = data.getDataTableSpec();
         final ColumnRearranger colreg = new ColumnRearranger(dataSpec);
         colreg.append(new BasisFunctionPredictorCellFactory(
@@ -110,10 +110,11 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
     @Override
     public DataTableSpec[] configure(final PortObjectSpec[] portObjSpec)
             throws InvalidSettingsException {
-        // get data spec
-        final DataTableSpec dataSpec = (DataTableSpec) portObjSpec[0];
         // get model spec
-        final DataTableSpec modelSpec = (DataTableSpec) portObjSpec[1];
+        final DataTableSpec modelSpec = (DataTableSpec) portObjSpec[0];
+        // get data spec
+        final DataTableSpec dataSpec = (DataTableSpec) portObjSpec[1];
+        
         final ColumnRearranger colreg = createRearranger(dataSpec, modelSpec);
         colreg.append(new BasisFunctionPredictorCellFactory(
                 modelSpec, m_applyColumn));
