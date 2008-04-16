@@ -148,7 +148,7 @@ public abstract class GenericNodeDialogPane {
     }
 
 
-// TODO (tg,po) has been removed temporarilly and has to be called from the WFM
+// TODO (tg,po) has been removed temporarily and has to be called from the WFM
 //    /**
 //     * Reads and applies the settings from the XML stream into this dialog's
 //     * pane.
@@ -156,8 +156,8 @@ public abstract class GenericNodeDialogPane {
 //     * @param is The XML stream to read the settings from.
 //     * @throws IOException If the stream is not valid.
 //     * @throws NotConfigurableException if the dialog cannot be opened because
-//     * of real invalid settings or if any predconditions are not fulfilled, e.g.
-//     * no predecessor node, no nominal column in input table, etc.
+//     * of real invalid settings or if any pre-conditions are not fulfilled,
+//     * e.g. no predecessor node, no nominal column in input table, etc.
 //     */
 //    public final void loadSettings(final InputStream is)
 //    throws IOException, NotConfigurableException {
@@ -556,7 +556,7 @@ public abstract class GenericNodeDialogPane {
 
         ViewUtils.invokeAndWaitInEDT(new Runnable() {
             public void run() {
-                int variableTabIndex = m_pane.indexOfComponent(m_scopeVariableTab);
+                int varTabIdx = m_pane.indexOfComponent(m_scopeVariableTab);
                 int miscIndex = m_pane.indexOfComponent(m_miscTab);
 
                 if (miscIndex >= 0) {
@@ -565,10 +565,10 @@ public abstract class GenericNodeDialogPane {
                         insertIdx.setValue(miscIndex);
                     }
                 }
-                if (variableTabIndex >= 0) {
+                if (varTabIdx >= 0) {
                     // make sure the variables tab is the second last tab
-                    if (insertIdx.intValue() > variableTabIndex) {
-                        insertIdx.setValue(variableTabIndex);
+                    if (insertIdx.intValue() > varTabIdx) {
+                        insertIdx.setValue(varTabIdx);
                     }
                     
                 }
@@ -775,8 +775,8 @@ public abstract class GenericNodeDialogPane {
         public void setVariableSettings(final NodeSettings nodeSettings, 
                 final NodeSettings variableSettings,
                 final ScopeObjectStack stack) {
-            NodeSettings nodeSetsCopy = nodeSettings == null ?
-                    new NodeSettings("variables") : nodeSettings;
+            NodeSettings nodeSetsCopy = nodeSettings == null
+                    ? new NodeSettings("variables") : nodeSettings;
             ConfigEditTreeModel model;
             try {
                 if (variableSettings == null) {
