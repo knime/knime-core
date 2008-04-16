@@ -73,6 +73,16 @@ public interface NodePersistor {
     /** Config key: What memory policy to use for a node outport. */
     static final String CFG_MEMORY_POLICY = "memory_policy";
 
+    /** Policy on how to behave if the node model settings fails. */
+    public enum LoadNodeModelSettingsFailPolicy {
+        /** reset node, force configure (used when node state is yellow). */
+        FAIL,
+        /** warn using message (used when node state is green). */
+        WARN,
+        /** ignore (used when node state is idle, e.g. node not connected). */
+        IGNORE
+    }
+    
     LoadResult load(Node node, final ReferencedFile nodeFile, ExecutionMonitor execMon,
             Map<Integer, BufferedDataTable> loadTblRep, HashMap<Integer, ContainerTable> tblRep)
             throws IOException, CanceledExecutionException;
@@ -84,6 +94,7 @@ public interface NodePersistor {
     boolean hasContent();
     ReferencedFile getNodeInternDirectory();
     MemoryPolicy getMemoryPolicy();
+    LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy();
     NodeSettingsRO getNodeModelSettings();
     public NodeSettings getVariablesSettings();
     PortObjectSpec getPortObjectSpec(final int outportIndex);

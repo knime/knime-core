@@ -43,6 +43,7 @@ import org.knime.core.node.NodePersistorVersion200;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.workflow.ScopeVariable.Type;
 import org.knime.core.util.FileUtil;
 
@@ -62,8 +63,9 @@ public class SingleNodeContainerPersistorVersion200 extends
     
     /** {@inheritDoc} */
     @Override
-    protected NodePersistorVersion200 createNodePersistor() {
-        return new NodePersistorVersion200();
+    protected NodePersistorVersion200 createNodePersistor(
+            final LoadNodeModelSettingsFailPolicy failPolicy) {
+        return new NodePersistorVersion200(failPolicy);
     }
     
     /** {@inheritDoc} */
@@ -147,10 +149,11 @@ public class SingleNodeContainerPersistorVersion200 extends
         saveNodeFactoryClassName(settings, snc);
         ReferencedFile nodeXMLFileRef = saveNodeFileName(settings, nodeDirRef);
         saveScopeObjectStack(settings, snc);
-        NodeContainerMetaPersistorVersion200 metaPersistor =
+        NodeContainerMetaPersistorVersion200 metaPersistor = 
             createNodeContainerMetaPersistor(null);
         metaPersistor.save(snc, settings, exec, isSaveData);
-        NodePersistorVersion200 persistor = createNodePersistor();
+        NodePersistorVersion200 persistor = createNodePersistor(
+            translateToFailPolicy(snc.getState()));
         persistor.save(snc.getNode(), nodeXMLFileRef, exec, isSaveData 
                 && snc.getState().equals(NodeContainer.State.EXECUTED));
         File nodeSettingsXMLFile = new File(nodeDir, SETTINGS_FILE_NAME);

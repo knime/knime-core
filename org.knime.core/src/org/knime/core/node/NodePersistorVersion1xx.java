@@ -47,6 +47,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(NodePersistorVersion1xx.class);
+    
+    private LoadNodeModelSettingsFailPolicy m_modelSettingsFailPolicy;
 
     private boolean m_isExecuted;
     
@@ -72,8 +74,6 @@ public class NodePersistorVersion1xx implements NodePersistor {
     
     private boolean m_needsResetAfterLoad;
     
-    private final GenericNodeFactory<GenericNodeModel> m_class;
-    
     static String createDataFileDirName(final int index) {
         return DATA_FILE_PREFIX + index;
     }
@@ -82,22 +82,12 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return MODEL_FILE_PREFIX + index + ".pmml.gz";
     }
 
-    /** Constructor being used when this class is used for loading a workflow.
-     * It's then save to call the {@link #load(ExecutionMonitor, int, HashMap)}
-     * method. 
-     * @param cl The factory class for the node. The factory being used to
-     * instantiate a node is retrieved using the 
-     */
-    public NodePersistorVersion1xx(
-            final GenericNodeFactory<GenericNodeModel> cl) {
-        m_class = cl;
-    }
-    
     /** Constructor that should be used when node is saved. It's not been used
      * for loading, i.e. all getXXX() methods will return invalid values.
      */
-    public NodePersistorVersion1xx() {
-        this(null);
+    public NodePersistorVersion1xx(
+            final LoadNodeModelSettingsFailPolicy modelSettingsFailPolicy) {
+        m_modelSettingsFailPolicy = modelSettingsFailPolicy;
     }
     
     protected boolean loadIsExecuted(final NodeSettingsRO settings)
@@ -128,11 +118,6 @@ public class NodePersistorVersion1xx implements NodePersistor {
     protected ReferencedFile loadNodeInternDirectory(final NodeSettingsRO settings, 
             final ReferencedFile nodeDir) throws InvalidSettingsException {
         return getNodeInternDirectory(nodeDir);
-    }
-    
-    protected GenericNodeFactory<GenericNodeModel> loadNodeFactoryClass(
-            final NodeSettingsRO settings) throws InvalidSettingsException {
-        return m_class;
     }
     
     protected void loadPorts(final Node node,
@@ -463,6 +448,11 @@ public class NodePersistorVersion1xx implements NodePersistor {
             + (result.hasErrors() ? " with errors" : " without errors");
         exec.setProgress(1.0, message);
         return result;
+    }
+    
+    /** {@inheritDoc} */
+    public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy() {
+        return m_modelSettingsFailPolicy;
     }
 
     /** {@inheritDoc} */

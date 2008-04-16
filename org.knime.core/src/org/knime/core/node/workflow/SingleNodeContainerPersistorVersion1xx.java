@@ -47,6 +47,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodePersistorVersion1xx;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
@@ -106,8 +107,9 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
         return new SingleNodeContainer(wm, id, this);
     }
     
-    protected NodePersistorVersion1xx createNodePersistor() {
-        return new NodePersistorVersion1xx();
+    protected NodePersistorVersion1xx createNodePersistor(
+            final LoadNodeModelSettingsFailPolicy failPolicy) {
+        return new NodePersistorVersion1xx(failPolicy);
     }
 
     /** {@inheritDoc} */
@@ -156,7 +158,8 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
     }
     
     /** {@inheritDoc} */
-    public LoadResult loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep, 
+    public LoadResult loadNodeContainer(
+            final Map<Integer, BufferedDataTable> tblRep, 
             final ExecutionMonitor exec) throws InvalidSettingsException, 
             CanceledExecutionException, IOException {
         LoadResult result = new LoadResult();
@@ -173,7 +176,8 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
             return result;
         }
         ReferencedFile nodeFile = new ReferencedFile(m_nodeDir, nodeFileName);
-        NodePersistorVersion1xx nodePersistor = createNodePersistor();
+        NodePersistorVersion1xx nodePersistor = createNodePersistor(
+                translateToFailPolicy(m_metaPersistor.getState()));
         try {
             LoadResult nodeLoadResult = nodePersistor.load(
                     m_node, nodeFile, exec, tblRep, m_globalTableRepository);
@@ -263,4 +267,15 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
         return Collections.emptyList();
     }
     
+    static final LoadNodeModelSettingsFailPolicy translateToFailPolicy(
+            final State nodeState) { 
+        switch (nodeState) {
+        case IDLE:
+            return LoadNodeModelSettingsFailPolicy.IGNORE;
+        case EXECUTED:
+            return LoadNodeModelSettingsFailPolicy.WARN;
+        default:
+            return LoadNodeModelSettingsFailPolicy.FAIL;
+        }
+    }
 }

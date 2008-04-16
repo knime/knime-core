@@ -54,6 +54,7 @@ import org.knime.core.node.workflow.NodeMessageListener;
 import org.knime.core.node.workflow.ScopeContext;
 import org.knime.core.node.workflow.ScopeObjectStack;
 import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.util.FileUtil;
 import org.w3c.dom.Element;
@@ -284,6 +285,7 @@ public final class Node implements NodeModelWarningListener {
             m_outDataPortsMemoryPolicy = MemoryPolicy.CacheSmallInMemory;
         }
         try {
+            m_model.validateSettings(loader.getNodeModelSettings());
             m_model.loadSettingsFrom(loader.getNodeModelSettings());
         } catch (Throwable e) {
             String error;
@@ -292,13 +294,24 @@ public final class Node implements NodeModelWarningListener {
             } else {
                 error = "Caught \"" + e.getClass().getSimpleName() + "\", "
                     + "Loading model settings failed: " + e.getMessage();
-                if (e instanceof Error) {
-                    m_logger.fatal(error, e);
-                } else {
-                    m_logger.warn(error, e);
-                }
             }
-            result.addError(error);
+            switch (loader.getModelSettingsFailPolicy()) {
+            case WARN:
+                nodeMessage = new NodeMessage(Type.WARNING, error);
+            case IGNORE:
+                if (!(e instanceof InvalidSettingsException)) {
+                    m_logger.debug(error, e);
+                }
+                break;
+            case FAIL:
+                if (e instanceof InvalidSettingsException) {
+                    m_logger.debug(error);
+                } else {
+                    m_logger.debug(error, e);
+                }
+                result.addError(error);
+                break;
+            }
         }
         ReferencedFile internDirRef = loader.getNodeInternDirectory();
         if (internDirRef != null) {
@@ -323,9 +336,6 @@ public final class Node implements NodeModelWarningListener {
             } finally {
                 internDirRef.unlock();
             }
-        }
-        if (nodeMessage != null) {
-            notifyMessageListeners(nodeMessage);
         }
         for (int i = 0; i < getNrOutPorts(); i++) {
             Class<? extends PortObjectSpec> specClass =
@@ -354,6 +364,9 @@ public final class Node implements NodeModelWarningListener {
             }
         }
         exec.setProgress(1.0);
+        if (nodeMessage != null) {
+            notifyMessageListeners(nodeMessage);
+        }
         return result;
     }
 

@@ -47,23 +47,16 @@ import org.knime.core.util.FileUtil;
  */
 public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
+    /** Invokes super constructor. 
+     * @param modelSettingsFailPolicy Forwared.*/
+    public NodePersistorVersion200(
+            final LoadNodeModelSettingsFailPolicy modelSettingsFailPolicy) {
+        super(modelSettingsFailPolicy);
+    }
+
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(NodePersistorVersion200.class);
-
-    /**
-     * @param cl
-     */
-    public NodePersistorVersion200(
-            final GenericNodeFactory<GenericNodeModel> cl) {
-        super(cl);
-    }
-
-    /**
-     * 
-     */
-    public NodePersistorVersion200() {
-    }
-
+    
     /**
      * Saves the node, node settings, and all internal structures, spec, data,
      * and models, to the given node directory (located at the node file).
