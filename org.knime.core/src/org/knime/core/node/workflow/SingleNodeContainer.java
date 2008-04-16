@@ -626,6 +626,10 @@ public final class SingleNodeContainer extends NodeContainer
             return m_node.getScopeContextStackContainer();
         }
     }
+    
+    Node.LoopRole getLoopRole() {
+        return getNode().getLoopRole();
+    }
 
     ////////////////////////
     // Progress forwarding
