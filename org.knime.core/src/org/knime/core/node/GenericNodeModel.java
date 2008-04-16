@@ -69,7 +69,7 @@ public abstract class GenericNodeModel {
      * hilite handler is <code>null</code>, e.g. the node is not fully 
      * connected.
      */
-    private final static HiLiteHandlerAdapter HILITE_ADAPTER 
+    private static final HiLiteHandlerAdapter HILITE_ADAPTER 
         = new HiLiteHandlerAdapter();
 
     /** Keeps a list of registered views. */
