@@ -34,6 +34,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.property.hilite.HiLiteHandlerAdapter;
 import org.knime.core.node.workflow.ScopeContext;
 import org.knime.core.node.workflow.ScopeObjectStack;
 
@@ -62,6 +63,14 @@ public abstract class GenericNodeModel {
 
     /** Holds the input hilite handler for each input. */
     private final HiLiteHandler[] m_inHiLiteHdls;
+    
+    /** Hilite adapter returned in 
+     * {@link GenericNodeModel#getInHiLiteHandler(int)} when the current in-port
+     * hilite handler is <code>null</code>, e.g. the node is not fully 
+     * connected.
+     */
+    private final static HiLiteHandlerAdapter HILITE_ADAPTER 
+        = new HiLiteHandlerAdapter();
 
     /** Keeps a list of registered views. */
     private final CopyOnWriteArrayList<GenericNodeView<?>> m_views;
@@ -599,15 +608,19 @@ public abstract class GenericNodeModel {
     }
 
     /**
-     * Returns the <code>HiLiteHandler</code> for the given input index.
+     * Returns the <code>HiLiteHandler</code> for the given input index, if the
+     * current in-port hilite handler is <code>null</code> an 
+     * <code>HiLiteHandlerAdapter</code> is created and returned.
      *
-     * @param inIndex The input index.
-     * @return <code>HiLiteHandler</code> for the given input index (could be
-     *         null).
-     * @throws IndexOutOfBoundsException If the <code>inIndex</code> is not in
-     *             the range of inputs.
+     * @param inIndex in-port index
+     * @return <code>HiLiteHandler</code> for the given input index
+     * @throws IndexOutOfBoundsException if the <code>inIndex</code> is not in
+     *             the range of inputs
      */
     public final HiLiteHandler getInHiLiteHandler(final int inIndex) {
+        if (m_inHiLiteHdls[inIndex] == null) {
+            return HILITE_ADAPTER;
+        }
         return m_inHiLiteHdls[inIndex];
     }
 
@@ -773,7 +786,7 @@ public abstract class GenericNodeModel {
      */
     protected abstract PortObjectSpec[] configure(
             final PortObjectSpec[] inSpecs)
-    throws InvalidSettingsException;
+            throws InvalidSettingsException;
 
     /////////////////////////
     // Warning handling
