@@ -85,7 +85,8 @@ final class DBWriterConnection {
                 rs = conn.createStatement().executeQuery(
                         "SELECT * FROM " + table);
             } catch (SQLException sqle) {
-                LOGGER.debug("Table is not available, will create new table.");
+                LOGGER.info("Table \"" + table + "\" not in database, "
+                        + "will create new table.");
                 // and create new table
                 conn.createStatement().execute("CREATE TABLE " + table + " " 
                         + createStmt(spec, sqlTypes));
@@ -171,8 +172,9 @@ final class DBWriterConnection {
             try {
                 // remove existing table (if any)
                 conn.createStatement().execute("DROP TABLE " + table);
-            } catch (Exception e) {
-                LOGGER.debug("Can't drop table, will create new table.");
+            } catch (Throwable t) {
+                LOGGER.info("Can't drop table \"" + table 
+                        + "\", will create new table.");
             }
             // and create new table
             conn.createStatement().execute("CREATE TABLE " + table + " " 
@@ -243,17 +245,17 @@ final class DBWriterConnection {
             }
             try {
                 stmt.execute();
-            } catch (Exception e) {
+            } catch (Throwable t) {
                 allErrors++;
                 if (errorCnt > -1) {
                     String errorMsg = "Error in row #" + cnt + ": " 
-                        + row.getKey() + ", " + e.getMessage();
+                        + row.getKey() + ", " + t.getMessage();
                     exec.setMessage(errorMsg);
                     if (errorCnt++ < 10) {
                         LOGGER.warn(errorMsg);
                     } else {
                         errorCnt = -1;
-                        LOGGER.warn(errorMsg + " - more errors...", e);
+                        LOGGER.warn(errorMsg + " - more errors...", t);
                     }
                 }
             }

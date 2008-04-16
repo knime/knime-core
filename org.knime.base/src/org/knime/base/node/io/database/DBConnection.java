@@ -100,7 +100,7 @@ class DBConnection {
             }
         } catch (Exception e) {
             throw new InvalidSettingsException("Could not register database"
-                    + " driver: " + wDriver, e);
+                    + " driver \"" + wDriver + "\".", e);
         }
         DBDriverLoader.registerDriver(m_driver);
         String password = KnimeEncryption.decrypt(m_pass);
@@ -175,8 +175,9 @@ class DBConnection {
             for (String fileName : loadedDriver) {
                 try {
                     DBDriverLoader.loadDriver(new File(fileName));
-                } catch (Exception e2) {
-                    LOGGER.info("Could not load driver: " + fileName, e2);
+                } catch (Throwable t) {
+                    LOGGER.info("Could not load driver from file \"" 
+                            + fileName + "\".", t);
                 }
             }
             return changed;

@@ -116,8 +116,9 @@ final class DBReaderConnection implements DataTable {
     void close() {
         try {
             m_conn.close();
-        } catch (SQLException e) {
-            LOGGER.warn("Could not close database connection.", e);
+        } catch (Throwable t) {
+            LOGGER.info("Could not close database connection, reason: "
+                    + t.getMessage(), t);
         }
     }
 
@@ -137,8 +138,8 @@ final class DBReaderConnection implements DataTable {
             ResultSet result = stmt.executeQuery(m_query);
             // stmt.close();
             return new DBRowIterator(result);
-        } catch (SQLException e) {
-            LOGGER.error(e);
+        } catch (Throwable t) {
+            LOGGER.error(t);
             return new DBRowIterator(null);
         }
     }

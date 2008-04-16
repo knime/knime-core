@@ -141,8 +141,9 @@ final class DBWriterNodeModel extends NodeModel {
             for (String fileName : loadedDriver) {
                 try {
                     DBDriverLoader.loadDriver(new File(fileName));
-                } catch (Exception e) {
-                    LOGGER.warn("Could not load driver: " + fileName, e);
+                } catch (Throwable t) {
+                    LOGGER.info("Could not load driver from file \"" 
+                            + fileName + "\".", t);
                 }
             }
             // load SQL type for each column

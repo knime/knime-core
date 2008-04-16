@@ -114,8 +114,9 @@ final class DBDialogPane extends JPanel {
                     try {
                         DBDriverLoader.loadDriver(file);
                         updateDriver();
-                    } catch (Exception exc) {
-                        LOGGER.warn("No driver loaded from: " + file, exc);
+                    } catch (Throwable t) {
+                        LOGGER.info("Could not load driver from file \"" 
+                                + file.getAbsolutePath() + "\".", t);
                     }
                 }
             }
@@ -268,11 +269,10 @@ final class DBDialogPane extends JPanel {
             try {
                 settings.addString("password", KnimeEncryption.encrypt(
                         m_pass.getPassword()));
-            } catch (Exception e) {
+            } catch (Throwable t) {
                 InvalidSettingsException ise = new InvalidSettingsException(
-                        "Could not encrypt password.");
-                ise.initCause(e);
-                LOGGER.warn(ise.getMessage(), e);
+                        "Could not encrypt password.", t);
+                LOGGER.warn(ise.getMessage(), t);
             }
         } else {
             settings.addString("password", new String(m_pass.getPassword()));

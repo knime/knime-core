@@ -109,8 +109,9 @@ final class DBDriverLoader {
                     .newInstance());
             // DriverManager.registerDriver(d);
             DRIVER_MAP.put(d.toString(), d);
-        } catch (Exception e) {
-            LOGGER.warn("Could not load driver class: " + JDBC_ODBC_DRIVER, e);
+        } catch (Throwable t) {
+            LOGGER.warn("Could not load driver class \"" 
+                    + JDBC_ODBC_DRIVER + "\".", t);
         }
     }
     
@@ -122,8 +123,9 @@ final class DBDriverLoader {
             try {
                 File histFile = new File(hist);
                 loadDriver(histFile);
-            } catch (Exception e) {
-                LOGGER.warn("Could not load driver library: " + hist, e);
+            } catch (Throwable t) {
+                LOGGER.info("Could not load driver library file \"" 
+                        + hist + "\" from history.", t);
             }
         }
 
@@ -150,7 +152,7 @@ final class DBDriverLoader {
                     .getWrappedDriver(driver));
         } catch (Exception e) {
             throw new InvalidSettingsException("Could not register database"
-                    + " driver: " + driver);
+                    + " driver \"" + driver);
         }
     }
 
