@@ -396,7 +396,8 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
             msg.append("Target columns not found in settings.\n");
         }
         // get data columns
-        String[] dataColumns = settings.getStringArray(DATA_COLUMNS);
+        String[] dataColumns = settings.getStringArray(DATA_COLUMNS, 
+                (String[]) null);
         if (dataColumns != null && targetColumns != null) {
             Set<String> hash = new HashSet<String>(Arrays.asList(dataColumns));
             for (String target : targetColumns) {
@@ -440,7 +441,7 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
         }
         // data columns for training
         m_dataColumns = settings.getStringArray(
-                DATA_COLUMNS, (String[]) null);
+                DATA_COLUMNS, new String[0]);
         // missing value replacement
         m_missing = settings.getInt(BasisFunctionLearnerTable.MISSING);
         // distance function
