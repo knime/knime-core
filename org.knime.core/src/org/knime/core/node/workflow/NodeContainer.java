@@ -98,7 +98,7 @@ public abstract class NodeContainer {
      * be executed before this one is not done - usually these are loops
      * with "dangling" branches, e.g. a chain of nodes leaving the loop.
      */
-    private ArrayList<ScopeObject> m_listOfWaitingLoops;
+    private ArrayList<ScopeLoopContext> m_listOfWaitingLoops;
 
     private String m_customName;
 
@@ -148,7 +148,7 @@ public abstract class NodeContainer {
         }
         m_id = id;
         m_state = State.IDLE;
-        m_listOfWaitingLoops = new ArrayList<ScopeObject>();
+        m_listOfWaitingLoops = new ArrayList<ScopeLoopContext>();
     }
 
     NodeContainer(final WorkflowManager parent, final NodeID id,
@@ -202,16 +202,16 @@ public abstract class NodeContainer {
      * 
      * @param so ScopeObject of the loop.
      */
-    public void addWaitingLoop(final ScopeObject so) {
-        if (!m_listOfWaitingLoops.contains(so)) {
-            m_listOfWaitingLoops.add(so);
+    public void addWaitingLoop(final ScopeLoopContext slc) {
+        if (!m_listOfWaitingLoops.contains(slc)) {
+            m_listOfWaitingLoops.add(slc);
         }
     }
     
     /**
      * @return a list of waiting loops (well: their ScopeObjects)
      */
-    public List<ScopeObject> getWaitingLoops() {
+    public List<ScopeLoopContext> getWaitingLoops() {
         return m_listOfWaitingLoops;
     }
 
