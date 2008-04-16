@@ -40,7 +40,6 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
-    @Override
     public void addHiLiteListener(final HiLiteListener listener) {
 
     }
@@ -48,7 +47,6 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
-    @Override
     public void fireClearHiLiteEvent() {
 
     }
@@ -56,7 +54,6 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
-    @Override
     public void fireHiLiteEvent(final DataCell... ids) {
 
     }
@@ -64,7 +61,6 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
-    @Override
     public void fireHiLiteEvent(final Set<DataCell> ids) {
 
     }
@@ -72,7 +68,6 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
-    @Override
     public void fireUnHiLiteEvent(final DataCell... ids) {
 
     }
@@ -80,7 +75,6 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
-    @Override
     public void fireUnHiLiteEvent(final Set<DataCell> ids) {
 
     }
@@ -88,7 +82,6 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
-    @Override
     public Set<DataCell> getHiLitKeys() {
         return Collections.emptySet();
     }
@@ -96,7 +89,6 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
-    @Override
     public void hiLite(final DataCell... ids) {
 
     }
@@ -104,7 +96,6 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
-    @Override
     public void hiLite(final Set<DataCell> ids) {
 
     }
@@ -112,7 +103,6 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
-    @Override
     public boolean isHiLit(final DataCell... ids) {
         return false;
     }
@@ -120,7 +110,6 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
-    @Override
     public void removeAllHiLiteListeners() {
 
     }
@@ -128,7 +117,6 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
-    @Override
     public void removeHiLiteListener(final HiLiteListener listener) {
 
     }
@@ -136,7 +124,6 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
-    @Override
     public void unHiLite(final DataCell... ids) {
 
     }
@@ -144,7 +131,6 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
-    @Override
     public void unHiLite(final Set<DataCell> ids) {
 
     }
@@ -152,7 +138,6 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
-    @Override
     public void unHiLiteAll() {
 
     }
