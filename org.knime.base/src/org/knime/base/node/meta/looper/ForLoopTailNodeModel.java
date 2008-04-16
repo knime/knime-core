@@ -42,13 +42,15 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.LoopEndNode;
+import org.knime.core.node.workflow.ScopeVariable;
 
 /**
  *T his model is the tail node of a for loop.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ForLoopTailNodeModel extends NodeModel {
+public class ForLoopTailNodeModel extends NodeModel implements LoopEndNode {
     private BufferedDataContainer m_resultContainer;
 
     /**
@@ -82,30 +84,33 @@ public class ForLoopTailNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        ForLoopContext ctx = peekScopeContext(ForLoopContext.class);
-        if (ctx == null) {
-            throw new IllegalStateException("No loop context found");
-        }
+        
+        // retrieve variables from the stack which the head of this
+        // loop hopefully put there:
+        ScopeVariable countVar = peekScopeVariable("LOOP_COUNT");
+        int count = countVar.getIntValue();
+        ScopeVariable maxCountVar = peekScopeVariable("LOOP_MAXCOUNT");
+        int maxCount = maxCountVar.getIntValue();
 
-        if (ctx.currentIteration() == 1) {
+        if (count == 1) {
             m_resultContainer =
                     exec.createDataContainer(createSpec(inData[0]
                             .getDataTableSpec()));
         }
 
-        IntCell currIterCell = new IntCell(ctx.currentIteration());
+        IntCell currIterCell = new IntCell(count);
         for (DataRow row : inData[0]) {
             AppendedColumnRow newRow =
                     new AppendedColumnRow(new DefaultRow(new RowKey(row.getKey()
-                    + "#" + ctx.currentIteration()), row), currIterCell);
+                    + "#" + count), row), currIterCell);
             m_resultContainer.addRowToTable(newRow);
         }
 
-        if (ctx.finished()) {
+        if (count == maxCount) {
             m_resultContainer.close();
             return new BufferedDataTable[]{m_resultContainer.getTable()};
         } else {
-            continueLoop(ctx);
+            continueLoop();
             return new BufferedDataTable[1];
         }
     }
