@@ -35,15 +35,18 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.LoopStartNode;
+import org.knime.core.node.workflow.ScopeVariable;
 
 /**
  * This model is the head node of a for loop.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ForLoopHeadNodeModel extends NodeModel {
-    private boolean m_inLoop;
+public class ForLoopHeadNodeModel extends NodeModel implements LoopStartNode {
 
+    private int m_iteration;
+    
     private final ForLoopHeadSettings m_settings = new ForLoopHeadSettings();
 
     /**
@@ -71,16 +74,24 @@ public class ForLoopHeadNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        ForLoopContext ctx;
-        if (!m_inLoop) {
-            ctx = new ForLoopContext(m_settings.loops());
-            pushScopeContext(ctx);
-            m_inLoop = true;
+        // let's see if we have access to the tail: if we do, it's not the
+        // first time we are doing this...
+        if (super.getLoopTailNode() == null) {
+            // if it's null we know that this is the first time the
+            // loop is being executed.
+            m_iteration = 1;
         } else {
-            ctx = peekScopeContext(ForLoopContext.class);
+            // otherwise we do this again, and we increment our counter
+            m_iteration++;
+            // and we can do a quick sanity check
+            if (!(super.getLoopTailNode() instanceof ForLoopTailNodeModel)) {
+                throw new IllegalArgumentException("Loop Head is wrong type!");
+            }
         }
-
-        ctx.nextIteration();
+        // we need to put the counts on the stack for the loop's tail to see:
+        pushScopeVariable(new ScopeVariable("LOOP_COUNT", m_iteration));
+        pushScopeVariable(new ScopeVariable("LOOP_MAXCOUNT",
+                m_settings.loops()));
         return inData;
     }
 
@@ -107,7 +118,7 @@ public class ForLoopHeadNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_inLoop = false;
+        m_iteration = 0;
     }
 
     /**

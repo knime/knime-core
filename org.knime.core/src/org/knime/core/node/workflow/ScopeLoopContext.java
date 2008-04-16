@@ -19,24 +19,30 @@
  * --------------------------------------------------------------------- *
  * 
  * History
- *   15.03.2007 (mb): created
+ *   14.03.2007 (mb): created
  */
 package org.knime.core.node.workflow;
 
-/** Object holding base information for a loop context object: the head
- * and tail IDs of the loop's "control" node.
+
+/**
+ * ScopeContext interface holding loop information.
  * 
  * @author M. Berthold, University of Konstanz
  */
-abstract class ScopeObject {
+public class ScopeLoopContext extends ScopeObject {
 
-    private NodeID m_owner;
-    
-    void setOwner(final NodeID owner) {
-        m_owner = owner;
+    private NodeID m_tailNode;
+
+    public NodeID getHeadNode() {
+        return super.getOwner();
     }
     
-    NodeID getOwner() {
-        return m_owner;
+    public void setTailNode(final NodeID tail) {
+        m_tailNode = tail;
     }
+    
+    public NodeID getTailNode() {
+        return m_tailNode;
+    }
+
 }

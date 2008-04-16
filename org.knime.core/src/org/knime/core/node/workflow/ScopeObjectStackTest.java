@@ -25,9 +25,9 @@ package org.knime.core.node.workflow;
 
 public class ScopeObjectStackTest {
     
-    private static final class ScopeContext1 extends ScopeContext {
+    private static final class ScopeContext1 extends ScopeLoopContext {
     }
-    private static final class ScopeContext2 extends ScopeContext {
+    private static final class ScopeContext2 extends ScopeLoopContext {
     }
     
     public void testConstructor() {

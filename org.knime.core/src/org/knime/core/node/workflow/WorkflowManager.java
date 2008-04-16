@@ -62,6 +62,7 @@ import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.PortType;
 import org.knime.core.node.GenericNodeFactory.NodeType;
+import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
@@ -1258,23 +1259,40 @@ public final class WorkflowManager extends NodeContainer {
                 // and also any nodes which were waiting for this one to
                 // be executed.
                 for (ScopeObject so : nc.getWaitingLoops()) {
-                    disableNodeForExecution(so.getHeadNode());
+                    disableNodeForExecution(so.getOwner());
                 }
                 nc.clearWaitingLoopList();
             }
             // allow SNC to update states etc
             if (nc instanceof SingleNodeContainer) {
-                ((SingleNodeContainer)nc).postExecuteNode(success);
+                SingleNodeContainer snc = (SingleNodeContainer)nc;
+                snc.postExecuteNode(success);
             }
             boolean canConfigureSuccessors = true;
             if (nc instanceof SingleNodeContainer) {
                 // process loop context - only for "real" nodes:
                 SingleNodeContainer snc = (SingleNodeContainer)nc;
+                if (snc.getLoopRole().equals(LoopRole.BEGIN)) {
+                    // if this was BEGIN, it's not anymore (until we do not
+                    // restart it explicitly!)
+                    snc.getNode().setLoopTailNode(null);
+                }
+                if (snc.getLoopRole().equals(LoopRole.END)) {
+                    // no matter what happened, try to clean up the stack.
+                    ScopeLoopContext slc =
+                        snc.getScopeObjectStack().pop(ScopeLoopContext.class);
+                    if (slc == null) {
+                        throw new IllegalStateException(
+                                "No Loop start for this Loop End!");
+                    }
+                }
                 Node node = snc.getNode();
                 if (node.getLoopStatus() != null) {
                     // we are supposed to execute this loop again!
+                    // first retrieve ScopeContext
+                    ScopeLoopContext slc = node.getLoopStatus(); 
                     // first check if the loop is properly configured:
-                    if (m_nodes.get(node.getLoopStatus().getHeadNode())
+                    if (m_nodes.get(slc.getOwner())
                             == null) {
                         // obviously not: origin of the loop is not in this WFM!
                         // nothing else to do: NC stays configured
@@ -1285,9 +1303,9 @@ public final class WorkflowManager extends NodeContainer {
                     } else {
                         // make sure the end of the loop is properly
                         // configured:
-                        node.getLoopStatus().setTailNode(nc.getID());
+                        slc.setTailNode(nc.getID());
                         // and try to restart loop
-                        restartLoop(node.getLoopStatus());
+                        restartLoop(slc);
                         // clear stack (= loop context)
                         node.clearLoopStatus();
                         // and make sure we do not accidentally configure the
@@ -1299,8 +1317,8 @@ public final class WorkflowManager extends NodeContainer {
                 if (snc.getWaitingLoops().size() >= 1) {
                     // looks as if some loops were waiting for this node to
                     // finish! Let's try to restart them:
-                    for (ScopeObject so : nc.getWaitingLoops()) {
-                        restartLoop(so);
+                    for (ScopeLoopContext slc : nc.getWaitingLoops()) {
+                        restartLoop(slc);
                     }
                     nc.clearWaitingLoopList();
                 }
@@ -1320,9 +1338,9 @@ public final class WorkflowManager extends NodeContainer {
      * 
      * @param sc ScopeObject of the actual loop
      */
-    private void restartLoop(final ScopeObject sc) {
-        NodeContainer tailNode = m_nodes.get(sc.getTailNode());
-        NodeContainer headNode = m_nodes.get(sc.getHeadNode());
+    private void restartLoop(final ScopeLoopContext slc) {
+        NodeContainer tailNode = m_nodes.get(slc.getTailNode());
+        NodeContainer headNode = m_nodes.get(slc.getOwner());
         if ((tailNode == null) || (headNode == null)) {
             throw new IllegalStateException("Loop Nodes must both"
                     + " be in the same workflow!");
@@ -1341,40 +1359,43 @@ public final class WorkflowManager extends NodeContainer {
             NodeContainer currNode = m_nodes.get(id);
             if (currNode.getState().executionInProgress()) {
                 // stop right here - loop can not yet be restarted!
-                currNode.addWaitingLoop(sc);
+                currNode.addWaitingLoop(slc);
                 return;
             }
         }
-                        // (3) reset the nodes in the body (only those -
-                        //     make sure end of loop is NOT reset)
-                        for (NodeID id : loopBodyNodes) {
-                            m_nodes.get(id).resetAsNodeContainer();
-                        }
-                        // (4) mark the origin of the loop to be executed again
+        // (3) reset the nodes in the body (only those -
+        //     make sure end of loop is NOT reset)
+        for (NodeID id : loopBodyNodes) {
+            m_nodes.get(id).resetAsNodeContainer();
+        }
+        // (4) mark the origin of the loop to be executed again
         ((SingleNodeContainer)headNode).enableReQueuing();
-                        // (5) configure the nodes from start to rest (it's not
-                        //     so important if we configure more than the body)
-                        //     do NOT configure start of loop because otherwise
-                        //     we will re-create the ScopeContextStack and
-                        //     remove the loop-object as well!
+        // (5) configure the nodes from start to rest (it's not
+        //     so important if we configure more than the body)
+        //     do NOT configure start of loop because otherwise
+        //     we will re-create the ScopeContextStack and
+        //     remove the loop-object as well!
         configureNodeAndSuccessors(headNode.getID(),
                                 false, true);
-                        // the current node may have thrown an exception inside
-                        // configure, so we have to check here if the node
-                        // is really configured before...
+        // the current node may have thrown an exception inside
+        // configure, so we have to check here if the node
+        // is really configured before...
         if (tailNode.getState().equals(State.CONFIGURED)) {
-                            // (6) ... we enable the body to be queued again.
-                            for (NodeID id : loopBodyNodes) {
-                                m_nodes.get(id)
-                                    .markForExecutionAsNodeContainer(true);
-                            }
+            // (6) ... we enable the body to be queued again.
+            for (NodeID id : loopBodyNodes) {
+                m_nodes.get(id)
+                    .markForExecutionAsNodeContainer(true);
+            }
             // and (7) mark end of loop for re-execution
             tailNode.markForExecutionAsNodeContainer(true);
-                        }
-        // (8) finally try to queue the head of this loop!
+        }
+        // (8) allow access to tail node
+        ((SingleNodeContainer)headNode).getNode().setLoopTailNode(
+                ((SingleNodeContainer)tailNode).getNode());
+        // (9) try to queue the head of this loop!
         assert headNode.getState().equals(State.MARKEDFOREXEC);
         queueIfQueuable(headNode);
-                    }
+    }
 
     /** Create list of nodes (id)s that are part of a loop body. Note that
      * this also includes any dangling branches which leave the loop but
@@ -2046,6 +2067,12 @@ public final class WorkflowManager extends NodeContainer {
                         oldSOS = snc.getScopeObjectStack();
                         ScopeObjectStack scsc = 
                             new ScopeObjectStack(currNode, scscs);
+                        if (snc.getLoopRole().equals(LoopRole.BEGIN)) {
+                            // the stack will automatically add the ID of the
+                            // head of the loop (the owner!)
+                            ScopeLoopContext slc = new ScopeLoopContext();
+                            scsc.push(slc);
+                        }
                         snc.setScopeObjectStack(scsc);
                         // update HiLiteHandlers on inports of SNC only
                         // TODO think about it... happens magically

@@ -2,10 +2,10 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
- * University of Konstanz, Germany.
- * Chair for Bioinformatics and Information Mining
- * Prof. Dr. Michael R. Berthold
+ * Copyright, 2003 - 2007
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
  *
  * You may not modify, publish, transmit, transfer or sell, reproduce,
  * create derivative works from, distribute, perform, display, or in
@@ -16,27 +16,17 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * --------------------------------------------------------------------- *
+ * ---------------------------------------------------------------------
  * 
  * History
- *   15.03.2007 (mb): created
+ *   Apr 16, 2008 (berthold): created
  */
 package org.knime.core.node.workflow;
 
-/** Object holding base information for a loop context object: the head
- * and tail IDs of the loop's "control" node.
+/**
  * 
- * @author M. Berthold, University of Konstanz
+ * @author berthold, University of Konstanz
  */
-abstract class ScopeObject {
+public interface LoopStartNode {
 
-    private NodeID m_owner;
-    
-    void setOwner(final NodeID owner) {
-        m_owner = owner;
-    }
-    
-    NodeID getOwner() {
-        return m_owner;
-    }
 }

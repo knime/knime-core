@@ -103,7 +103,7 @@ public final class ScopeObjectStack {
                 while (nexts[i] != null || its[i].hasNext()) {
                     ScopeObject o = nexts[i] != null ? nexts[i] : its[i].next();
                     nexts[i] = null;
-                    if (o instanceof ScopeContext) {
+                    if (o instanceof ScopeLoopContext) {
                         // we must check for identity here - otherwise
                         // nested loops are not possible
                         if (commonScopeO != null && commonScopeO != o) {
@@ -137,7 +137,7 @@ public final class ScopeObjectStack {
      * @param type The desired scope class
      * @see java.util.Stack#peek()
      */
-    public <T extends ScopeContext> T peekContext(final Class<T> type) {
+    public <T extends ScopeObject> T peek(final Class<T> type) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {
             ScopeObject e = m_stack.get(i);
             if (type.isInstance(e)) {
@@ -193,11 +193,11 @@ public final class ScopeObjectStack {
         List<ScopeObject> result = new ArrayList<ScopeObject>();
         boolean isInSequence = true;
         for (ScopeObject v : m_stack) {
-            if (v.getHeadNode().equals(id)) {
+            if (v.getOwner().equals(id)) {
                 isInSequence = false;
                 result.add(v);
             }
-            assert isInSequence || v.getHeadNode().equals(id)
+            assert isInSequence || v.getOwner().equals(id)
                 : "Scope objects are not ordered";
         }
         return result;
@@ -215,7 +215,7 @@ public final class ScopeObjectStack {
      * <code>type</code> or <code>null</code> if no such element is available.
      * @see java.util.Stack#pop()
      */
-    public <T extends ScopeContext> T pop(final Class<T> type) {
+    public <T extends ScopeObject> T pop(final Class<T> type) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {
             ScopeObject e = m_stack.remove(i);
             if (type.isInstance(e)) {
@@ -232,13 +232,13 @@ public final class ScopeObjectStack {
      * @see java.util.Stack#push(java.lang.Object)
      */
     public void push(final ScopeObject item) {
-        if ((item.getHeadNode() != null)
-                && (item.getHeadNode() != m_nodeID)) {
+        if ((item.getOwner() != null)
+                && (item.getOwner() != m_nodeID)) {
             throw new IllegalArgumentException(
                     "Can't put a ScopeContext item onto stack, which already "
                     + "has a different owner.");
         }
-        item.setHeadNode(m_nodeID);
+        item.setOwner(m_nodeID);
         m_stack.add(item);
     }
 
@@ -247,22 +247,6 @@ public final class ScopeObjectStack {
      */
     boolean isEmpty() {
         return m_stack.isEmpty();
-    }
-
-    /** holds matching ScopeContext after execute if loop needs to be
-     * execute again. */
-    private ScopeContext m_requestToContinueLoop;
-
-    public void clearLoopStatus() {
-        m_requestToContinueLoop = null;
-    }
-
-    public ScopeContext getLoopStatus() {
-        return m_requestToContinueLoop;
-    }
-
-    public void continueLoop(final ScopeContext sc) {
-        m_requestToContinueLoop = sc;
     }
 
     @Override

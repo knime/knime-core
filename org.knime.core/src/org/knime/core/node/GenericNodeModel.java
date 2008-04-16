@@ -35,8 +35,9 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteHandlerAdapter;
-import org.knime.core.node.workflow.ScopeContext;
+import org.knime.core.node.workflow.ScopeLoopContext;
 import org.knime.core.node.workflow.ScopeObjectStack;
+import org.knime.core.node.workflow.ScopeVariable;
 
 
 /**
@@ -393,7 +394,7 @@ public abstract class GenericNodeModel {
         for (int i = 0; i < outData.length; i++) {
             // do not check for null output tables if this is the end node
             // of a loop and another loop iteration is requested
-            if ((m_scopeContextStackContainer.getLoopStatus() == null)
+            if ((getLoopStatus() == null)
                     && (outData[i] == null)) {
                 m_logger.error("Execution failed: Incorrect implementation;"
                         + " the execute method in "
@@ -855,40 +856,60 @@ public abstract class GenericNodeModel {
     private ScopeObjectStack m_scopeContextStackContainer;
 
     /** Return top element ScopeConcept from stack but leave it on there.
-     *
      */
-    protected final <T extends ScopeContext> T peekScopeContext(
-            final Class<T> type) {
-        return m_scopeContextStackContainer.peekContext(type);
+    protected final ScopeVariable peekScopeVariable(final String name) {
+        return m_scopeContextStackContainer.peekVariable(name);
+    }
+    
+    /** Return top element ScopeConcept from stack and remove it.
+     */
+    protected final ScopeVariable popScopeVariable() {
+        return m_scopeContextStackContainer.pop(ScopeVariable.class);
     }
 
-    /** Return top element ScopeContext from stack and remove it.
-     *
+    /** push a new ScopeVariable on the stack.
      */
-    protected final <T extends ScopeContext> T  popScopeContext(
-        final Class<T> type) {
-        return m_scopeContextStackContainer.pop(type);
+    protected final void pushScopeVariable(final ScopeVariable sv) {
+        m_scopeContextStackContainer.push(sv);
     }
 
-    /** Put new ScopeContext onto stack.
-     *
-     * @param sc
-     */
-    protected final void pushScopeContext(final ScopeContext sc) {
-        m_scopeContextStackContainer.push(sc);
-    }
-
-    /** Informs WorkflowManager after execute to continue the loop
-     * specified by the given ScopeContext. This will result in both
+    /** Informs WorkflowManager after execute to continue the loop.
+     * Call by the tail of the loop! This will result in both
      * this Node as well as the creator of the ScopeContext to be
      * queued for execution once again. In this case the node can return
      * an empty table after execution.
-     *
-     * @param sc the Execution Context
      */
-    protected final void continueLoop(final ScopeContext sc) {
-        assert sc != null;
-        m_scopeContextStackContainer.continueLoop(sc);
+    protected final void continueLoop() {
+        ScopeLoopContext slc = m_scopeContextStackContainer.peek(
+                ScopeLoopContext.class);
+        if (slc == null) {
+            // wrong wiring of the pipeline: head seems to be missing!
+            throw new IllegalStateException(
+                    "Missing Loop Head in Pipeline!");
+        }
+        m_loopStatus = slc;
+        // note that the WFM will set the tail ID so we can retrieve it
+        // in the head node!
+    }
+
+    private ScopeLoopContext m_loopStatus;
+    
+    protected final ScopeLoopContext getLoopStatus() {
+        return m_loopStatus;
+    }
+    
+    protected final void clearLoopStatus() {
+        m_loopStatus = null;
+    }
+    
+    private GenericNodeModel m_loopTailNode = null;
+    
+    protected final GenericNodeModel getLoopTailNode() {
+        return m_loopTailNode;
+    }
+    
+    public void setLoopTailNode(final GenericNodeModel tail) {
+        m_loopTailNode = tail;
     }
 
     ScopeObjectStack getScopeContextStackContainer() {

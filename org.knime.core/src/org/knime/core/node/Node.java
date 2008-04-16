@@ -47,11 +47,13 @@ import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.StringFormat;
+import org.knime.core.node.workflow.LoopEndNode;
+import org.knime.core.node.workflow.LoopStartNode;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessageEvent;
 import org.knime.core.node.workflow.NodeMessageListener;
-import org.knime.core.node.workflow.ScopeContext;
+import org.knime.core.node.workflow.ScopeLoopContext;
 import org.knime.core.node.workflow.ScopeObjectStack;
 import org.knime.core.node.workflow.ScopeVariable;
 import org.knime.core.node.workflow.NodeMessage.Type;
@@ -695,9 +697,9 @@ public final class Node implements NodeModelWarningListener {
                 notifyMessageListeners(nodeMessage);
             }
         }
-
-        boolean continuesLoop =
-                m_model.getScopeContextStackContainer().getLoopStatus() != null;
+        // check if we see a loop status in the NodeModel
+        ScopeLoopContext slc = m_model.getLoopStatus();
+        boolean continuesLoop = (slc != null);
         // check for compatible output PortObjects
         for (int i = 0; i < newOutData.length; i++) {
             PortType thisType = m_model.getOutPortType(i);
@@ -1625,11 +1627,31 @@ public final class Node implements NodeModelWarningListener {
     }
 
     public void clearLoopStatus() {
-        getScopeContextStackContainer().clearLoopStatus();
+        m_model.clearLoopStatus();
     }
 
-    public ScopeContext getLoopStatus() {
-        return getScopeContextStackContainer().getLoopStatus();
+    public ScopeLoopContext getLoopStatus() {
+        return m_model.getLoopStatus();
+    }
+
+    public static enum LoopRole { BEGIN, END, NONE };
+    
+    public final LoopRole getLoopRole() {
+        if (m_model instanceof LoopStartNode) {
+            return LoopRole.BEGIN;
+        } else if (m_model instanceof LoopEndNode) {
+            return LoopRole.END;
+        } else {
+            return LoopRole.NONE;
+        }
+    }
+    
+    public void setLoopTailNode(final Node tail) {
+        if (tail == null) {
+            m_model.setLoopTailNode(null);
+        } else {
+            m_model.setLoopTailNode(tail.m_model);
+        }
     }
 
     static class SettingsLoaderAndWriter {
