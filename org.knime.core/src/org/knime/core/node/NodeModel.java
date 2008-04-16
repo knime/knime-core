@@ -285,7 +285,7 @@ public abstract class NodeModel extends GenericNodeModel {
             assert (inData[i] instanceof ModelContentWrapper);
             ModelContentRO mdl = 
                 ((ModelContentWrapper) inData[i]).m_hiddenModel;
-            loadModelContent(i - m_nrDataInPorts, mdl);
+            loadModelContent(i, mdl);
         }
         // convert all PortObjects to DataTables
         BufferedDataTable[] inTables =
