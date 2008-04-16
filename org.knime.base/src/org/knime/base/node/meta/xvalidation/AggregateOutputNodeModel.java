@@ -47,6 +47,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.LoopEndNode;
+import org.knime.core.node.workflow.ScopeVariable;
 
 /**
  * This models aggregates the result from each of the cross validation loops. It
@@ -55,7 +57,7 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Bernd Wiswedel, University of Konstanz
  * @author Thorsten Meinl, University of Konstanz
  */
-public class AggregateOutputNodeModel extends NodeModel {
+public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
     private static final DataTableSpec STATISTICS_SPEC =
             new DataTableSpec(new DataColumnSpecCreator("Error in %",
                     DoubleCell.TYPE).createSpec(), new DataColumnSpecCreator(
@@ -128,14 +130,14 @@ public class AggregateOutputNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        final XValLoopContext ctx = peekScopeContext(XValLoopContext.class);
+        // retrieve variables from the stack which the head of this
+        // loop hopefully put there:
+        ScopeVariable countVar = peekScopeVariable("LOOP_COUNT");
+        int count = countVar.getIntValue();
+        ScopeVariable maxCountVar = peekScopeVariable("LOOP_MAXCOUNT");
+        int maxCount = maxCountVar.getIntValue();
 
-        if (ctx == null) {
-            throw new IllegalStateException("No cross validation loop context "
-                    + "found");
-        }
-
-        if (ctx.currentIteration() == 1) {
+        if (count == 1) {
             m_predictionTable =
                     exec.createDataContainer(inData[0].getDataTableSpec());
         }
@@ -149,7 +151,7 @@ public class AggregateOutputNodeModel extends NodeModel {
                 in.getDataTableSpec().findColumnIndex(
                         m_settings.predictionColumn());
         ExecutionMonitor subExec =
-            exec.createSubProgress(ctx.finished() ? 0.9 : 1);
+            exec.createSubProgress(count == maxCount ? 0.9 : 1);
         int correct = 0;
         int incorrect = 0;
         int r = 0;
@@ -176,11 +178,10 @@ public class AggregateOutputNodeModel extends NodeModel {
                         new IntCell(rowCount), new IntCell(incorrect));
         m_foldStatistics.add(stats);
 
-        if (!ctx.finished()) {
-            continueLoop(ctx);
+        if (count <= maxCount) {
+            continueLoop();
             return new BufferedDataTable[2];
         } else {
-            popScopeContext(XValLoopContext.class);
 
             BufferedDataContainer cont =
                     exec.createDataContainer(STATISTICS_SPEC);

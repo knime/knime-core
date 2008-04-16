@@ -36,6 +36,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.LoopStartNode;
+import org.knime.core.node.workflow.ScopeVariable;
 
 /**
  * This is the cross validation partitioning node model that divides the input
@@ -44,12 +46,14 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class XValidatePartitionModel extends NodeModel {
+public class XValidatePartitionModel extends NodeModel
+implements LoopStartNode {
     private final XValidateSettings m_settings = new XValidateSettings();
 
     private short[] m_partNumbers;
-
-    private boolean m_inLoop;
+    
+    private int m_nrIterations;
+    private int m_currIteration;
 
     /**
      * Creates a new model for the internal partitioner node.
@@ -90,10 +94,11 @@ public class XValidatePartitionModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        XValLoopContext ctx;
-        if (!m_inLoop) {
+        boolean inLoop = getLoopTailNode() != null;
+        if (!inLoop) {
             if (m_settings.leaveOneOut()) {
-                ctx = new XValLoopContext(inData[0].getRowCount());
+                m_nrIterations = inData[0].getRowCount();
+                m_currIteration = 0;
             } else {
                 m_partNumbers = new short[inData[0].getRowCount()];
 
@@ -112,16 +117,12 @@ public class XValidatePartitionModel extends NodeModel {
                         m_partNumbers[i] = x;
                     }
                 }
-                ctx = new XValLoopContext(m_settings.validations());
+                m_nrIterations = m_settings.validations();
+                m_currIteration = 0;
             }
-
-            pushScopeContext(ctx);
-            m_inLoop = true;
-        } else {
-            ctx = peekScopeContext(XValLoopContext.class);
         }
-
-        final int currentIteration = ctx.currentIteration();
+        
+        m_currIteration++;
 
         BufferedDataContainer test =
                 exec.createDataContainer(inData[0].getDataTableSpec());
@@ -134,10 +135,10 @@ public class XValidatePartitionModel extends NodeModel {
         for (DataRow row : inData[0]) {
             exec.setProgress(count / max);
 
-            if (m_settings.leaveOneOut() && (count == currentIteration)) {
+            if (m_settings.leaveOneOut() && (count == m_currIteration)) {
                 test.addRowToTable(row);
             } else if (!m_settings.leaveOneOut()
-                    && (m_partNumbers[count] == currentIteration)) {
+                    && (m_partNumbers[count] == m_currIteration)) {
                 test.addRowToTable(row);
             } else {
                 train.addRowToTable(row);
@@ -147,7 +148,11 @@ public class XValidatePartitionModel extends NodeModel {
         test.close();
         train.close();
 
-        ctx.nextIteration();
+        // we need to put the counts on the stack for the loop's tail to see:
+        pushScopeVariable(new ScopeVariable("LOOP_COUNT", m_currIteration));
+        pushScopeVariable(new ScopeVariable("LOOP_MAXCOUNT",
+                m_nrIterations));
+
         return new BufferedDataTable[]{train.getTable(), test.getTable()};
     }
 
@@ -157,7 +162,6 @@ public class XValidatePartitionModel extends NodeModel {
     @Override
     protected void reset() {
         m_partNumbers = null;
-        m_inLoop = false;
     }
 
     /**
