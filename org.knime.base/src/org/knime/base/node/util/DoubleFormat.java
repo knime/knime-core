@@ -83,8 +83,8 @@ public final class DoubleFormat {
      * @return the string representation of <code>d</code>
      */
     public static String formatDouble(final double d) {
-        if (d == 0) {
-            return Double.toString(0.0);
+        if (d == 0.0 || Double.isInfinite(d) || Double.isNaN(d)) {
+            return Double.toString(d);
         }
         double abs = Math.abs(d);
         if (abs < 0.0001) {
