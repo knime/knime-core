@@ -661,35 +661,21 @@ public final class Node implements NodeModelWarningListener {
             m_logger.assertLog(false, ae.getMessage(), ae);
             reset(true);
             nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
-                    "Execute failed (AssertionError): " + ae.getMessage());
+                    "Execute failed: " + ae.getMessage());
             return false;
         } catch (Error e) {
             // some other error - should never happen!
-            m_logger.fatal("Fatal error (" + e.getClass().getName()
-                    + "): ", e);
+            m_logger.fatal("Fatal error", e);
             reset(true);
-            if (e.getMessage().length() < 5) {
-                nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
-                    "Execute failed (Error): " + e.getMessage());
-            } else {
-                nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
-                        "Execute failed (" + e.getClass().getName() + "): "
-                        + e.getMessage());
-            }
+	        nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
+                    "Execute failed: " + e.getMessage());
             return false;
         } catch (Exception e) {
             // execution failed
-            m_logger.error("Execute failed ("
-                    + e.getClass().getName() + "): ", e);
+            m_logger.error("Execute failed", e);
             reset(true);
-            if (e.getMessage().length() < 5) {
-                nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
-                    "Execute failed (" + e.getClass().getName() + "): "
-                    + e.getMessage());
-            } else {
-                nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
-                        "Execute failed: " + e.getMessage());
-            }
+            nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
+                    "Execute failed: " + e.getMessage());
             return false;
         } finally {
             if (nodeMessage != null) {
