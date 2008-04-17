@@ -44,12 +44,46 @@ import org.knime.core.node.KNIMEConstants;
 public class LogfileAppender extends FileAppender {
     private final File m_logFile;
 
-    private int m_maxLogSize = 10 * 1024 * 1024; // 10MB
+    /** Name of the environment variable, which allows one to change the default
+     * log file size. Values must be integer, possibly succeeded by "m" or "k"
+     * to denote that the given value is in mega or kilo byte. */
+    public static final String MAX_SIZE_ENV_VARIABLE = "knime.logfile.maxsize";
+    
+    /** Maximum size of log file before it is split (in bytes). */ 
+    public static final int MAX_LOG_SIZE_DEFAULT = 10 * 1024 * 1024; // 10MB
+    private int m_maxLogSize;
 
     /**
      * Creates a new LogfileAppender.
      */
     public LogfileAppender() {
+        String maxSizeString = System.getProperty(MAX_SIZE_ENV_VARIABLE);
+        if (maxSizeString == null) {
+            m_maxLogSize = MAX_LOG_SIZE_DEFAULT;
+        } else {
+            maxSizeString = maxSizeString.toLowerCase().trim();
+            int multiplier;
+            if (maxSizeString.endsWith("m")) {
+                multiplier = 1024 * 1024;
+                maxSizeString = maxSizeString.substring(
+                            0, maxSizeString.length() - 1).trim();
+            } else if (maxSizeString.endsWith("k")) {
+                multiplier = 1024;
+                maxSizeString = maxSizeString.substring(
+                        0, maxSizeString.length() - 1).trim();
+            } else {
+                multiplier = 1;
+            }
+            try {
+                m_maxLogSize = multiplier * Integer.parseInt(maxSizeString);
+            } catch (Throwable e) {
+                System.err.println("Unable to maximum log size variable "
+                        + MAX_SIZE_ENV_VARIABLE + " (\"" 
+                        + System.getProperty(MAX_SIZE_ENV_VARIABLE) + "\"), " 
+                        + "using default size");
+                m_maxLogSize = MAX_LOG_SIZE_DEFAULT;
+            }
+        }
         // get user home
         final String tmpDir = KNIMEConstants.getKNIMEHomeDir() + File.separator;
         // check if home/.knime exists
