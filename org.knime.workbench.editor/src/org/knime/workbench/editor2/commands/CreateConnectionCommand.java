@@ -218,7 +218,7 @@ public class CreateConnectionCommand extends Command {
                             .getID(), m_sourcePortID, m_targetNode
                             .getNodeContainer().getID(), m_targetPortID);
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.error("Connection could not be created.", e);
             showInfoMessage("Connection could not be created.",
                     "The two nodes could not be connected due to "

@@ -29,7 +29,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.Workbench;
 import org.knime.core.node.GenericNodeView;
@@ -85,13 +84,10 @@ public class OpenViewEmbeddedAction extends OpenViewAction {
                 Workbench.getInstance().getActiveWorkbenchWindow()
                         .getActivePage().activate(view);
             }
-        } catch (PartInitException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
         } catch (Throwable t) {
             MessageBox mb = new MessageBox(
                     Display.getDefault().getActiveShell(),
-                    SWT.ICON_WARNING | SWT.OK);
+                    SWT.ICON_ERROR | SWT.OK);
             mb.setText("View cannot be opened");
             mb.setMessage("The view cannot be opened for the " 
                     + "following reason:\n" + t.getMessage());
