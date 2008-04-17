@@ -216,8 +216,9 @@ final class DBDialogPane extends JPanel {
         for (String driver : loadedDriver) {
             try {
                 DBDriverLoader.loadDriver(new File(driver));
-            } catch (Exception e) {
-                LOGGER.warn("Could not load driver: " + driver, e);
+            } catch (Throwable t) {
+                LOGGER.warn("Could not load driver \"" + driver + "\", reason: "
+                        + t.getMessage(), t);
             }
         }
         updateDriver();
@@ -257,12 +258,10 @@ final class DBDialogPane extends JPanel {
                 throw new InvalidSettingsException("Driver \"" + driverName 
                         + "\" does not accept URL: " + url);
             }
-        } catch (Exception e) {
-            InvalidSettingsException ise = new InvalidSettingsException(
+        } catch (Throwable t) {
+            throw new InvalidSettingsException(
                     "Couldn't test connection to URL \"" + url + "\" "
-                            + " with driver: " + driverName);
-            ise.initCause(e);
-            throw ise;
+                            + " with driver \"" + driverName + "\".", t);
         }        
         settings.addString("user", m_user.getText().trim());
         if (m_passwordChanged) {
@@ -270,9 +269,8 @@ final class DBDialogPane extends JPanel {
                 settings.addString("password", KnimeEncryption.encrypt(
                         m_pass.getPassword()));
             } catch (Throwable t) {
-                InvalidSettingsException ise = new InvalidSettingsException(
-                        "Could not encrypt password.", t);
-                LOGGER.warn(ise.getMessage(), t);
+                LOGGER.warn("Could not encrypt password, reason: " 
+                        + t.getMessage(), t);
             }
         } else {
             settings.addString("password", new String(m_pass.getPassword()));
