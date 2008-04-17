@@ -272,9 +272,9 @@ public abstract class GenericNodeModel {
      * Validates the specified settings in the model and then loads them into
      * it.
      *
-     * @param settings The settings to read.
-     * @throws InvalidSettingsException If the load of the validated settings
-     *             fails.
+     * @param settings the settings to read
+     * @throws InvalidSettingsException if the settings are not valid or cannot
+     *      be loaded into the model
      */
     final void loadSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
@@ -339,7 +339,7 @@ public abstract class GenericNodeModel {
      * Invokes the abstract <code>#execute()</code> method of this model. In
      * addition, this method notifies all assigned views of the model about the
      * changes.
-     *
+     * 
      * @param data An array of <code>DataTable</code> objects holding the data
      *            from the inputs.
      * @param exec The execution monitor which is passed to the execute method
@@ -347,19 +347,19 @@ public abstract class GenericNodeModel {
      * @return The result of the execution in form of an array with
      *         <code>DataTable</code> elements, as many as the node has
      *         outputs.
-     * @throws Exception any exception that is fired in the derived model will
-     *             be just forwarded. This method throws an
-     *             CanceledExecutionException if the user pressed cancel during
+     * @throws Throwable any exception or error that is fired in the derived
+     *             model will be just forwarded
+     * @throws CanceledExecutionException if the user pressed cancel during
      *             execution. Even if the derived model doesn't check, the
-     *             result will be discarded and the exception thrown.
-     * @throws IllegalStateException If the number of <code>DataTable</code>
-     *             objects returned by the derived <code>NodeModel</code> does
+     *             result will be discarded and the exception thrown
+     * @throws IllegalStateException If the number of <code>PortObject</code>
+     *             objects returned by the derived <code>GenericNodeModel</code> does
      *             not match the number of outputs. Or if any of them is null.
      * @see #execute(PortObject[],ExecutionContext)
      */
     protected final PortObject[] executeModel(
             final PortObject[] data, final ExecutionContext exec)
-            throws Exception {
+            throws Throwable {
         assert (data != null && data.length == getNrInPorts());
         assert (exec != null);
 
@@ -716,9 +716,11 @@ public abstract class GenericNodeModel {
      * @return An array where each element indicates if the outport has changed.
      * @throws InvalidSettingsException if the current settings don't go along
      *             with the table specs
+     * @throws Throwable if any other exception or error occurs during configure
+     *             of the model
      */
     final PortObjectSpec[] configureModel(final PortObjectSpec[] inSpecs)
-            throws InvalidSettingsException {
+            throws InvalidSettingsException, Throwable {
 
         assert inSpecs.length == getNrInPorts();
 
