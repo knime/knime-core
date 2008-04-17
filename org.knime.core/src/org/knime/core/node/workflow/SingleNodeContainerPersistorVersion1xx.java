@@ -142,7 +142,7 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
         
         try {
             nodeFactory = loadNodeFactory(nodeFactoryClassName);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             error =  "Unable to load factory class \"" 
                 + nodeFactoryClassName + "\"";
             throw new InvalidSettingsException(error, e);

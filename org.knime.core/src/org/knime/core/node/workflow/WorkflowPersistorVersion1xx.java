@@ -441,7 +441,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 }
             } catch (CanceledExecutionException e) {
                 throw e;
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 String error = "Unable to load node with ID suffix " 
                         + nodeIDSuffix + " into workflow, skipping it: "
                         + e.getMessage();
