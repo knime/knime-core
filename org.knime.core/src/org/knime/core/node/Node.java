@@ -192,14 +192,12 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Creates a new node by retrieving the model, dialog, and views, from the
-     * specified <code>NodeFactory</code>. Also inits the input and output
+     * specified <code>NodeFactory</code>. Also initializes the input and output
      * ports for the given number of data and model port. This node is
      * configured after initialization.
      * 
      * @param nodeFactory the node's factory for the creation of model, view,
      *            and dialog
-     * @param wfm the workflow manager that is responsible for this node; maybe
-     *            <code>null</code>
      * @throws IllegalArgumentException If the <i>nodeFactory</i> is
      *             <code>null</code>.
      */
@@ -1167,7 +1165,7 @@ public final class Node implements NodeModelWarningListener {
                     new NodeMessage(NodeMessage.Type.ERROR,
                             "View could not be opened, reason: "
                                     + e.getMessage()));
-        } catch (Error e) {
+        } catch (Throwable e) {
             m_logger.fatal("Show view failed", e);
             notifyMessageListeners(
                     new NodeMessage(NodeMessage.Type.ERROR,
@@ -1210,7 +1208,7 @@ public final class Node implements NodeModelWarningListener {
     /**
      * 
      * @return <code>true</code> if a dialog is available or the number of
-     *         data outports is greater than zero.
+     *         data out-ports is greater than zero.
      */
     public boolean hasDialog() {
         return m_factory.hasDialog() || (getNrOutPorts() > 0);
