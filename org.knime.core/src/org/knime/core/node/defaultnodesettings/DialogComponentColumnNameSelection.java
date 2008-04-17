@@ -302,7 +302,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
          * avoid loading if no column is selectable, so that the update with a
          * new value (following this method call) will not fail.
          */
-        if ((specs == null) || (specs.length < m_specIndex)) {
+        if ((specs == null) || (specs.length <= m_specIndex)) {
             throw new NotConfigurableException("Need input table spec to "
                     + "configure dialog. Configure or execute predecessor "
                     + "nodes.");
