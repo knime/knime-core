@@ -526,8 +526,7 @@ public abstract class NodeContainer {
      *
      * @throws InvalidSettingsException if settings are not applicable.
      */
-    public void applySettingsFromDialog()
-    throws InvalidSettingsException {
+    public void applySettingsFromDialog() throws InvalidSettingsException {
         if (!hasDialog()) {
             throw new IllegalStateException(
                     "Node \"" + getName() + "\" has no dialog");
