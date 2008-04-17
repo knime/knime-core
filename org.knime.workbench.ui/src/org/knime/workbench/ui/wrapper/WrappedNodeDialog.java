@@ -329,9 +329,9 @@ public class WrappedNodeDialog extends Dialog {
             showErrorMessage("You cannot apply node settings if the workflow"
                     + " is executing. Please stop execution or wait until all"
                     + " nodes have been finished.");            
-        } catch (Exception exc) {
-            showErrorMessage(exc.getClass().getSimpleName() + ": "
-                    + exc.getMessage());
+        } catch (Throwable t) {
+            showErrorMessage(t.getClass().getSimpleName() + ": "
+                    + t.getMessage());
         }
         e.doit = false;
         return false;
