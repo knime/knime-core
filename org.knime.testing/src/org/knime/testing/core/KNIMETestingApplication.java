@@ -80,7 +80,7 @@ public class KNIMETestingApplication implements IApplication {
         }
 
         // make sure the logfile doesn't get split.
-        System.setProperty(LogfileAppender.MAX_SIZE_ENV_VARIABLE, "2048m");
+        System.setProperty(LogfileAppender.MAX_SIZE_ENV_VARIABLE, "-1");
 
         // this is just to load the repository plug-in
         RepositoryManager.INSTANCE.toString();
