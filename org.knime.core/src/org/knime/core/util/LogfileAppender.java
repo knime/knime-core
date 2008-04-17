@@ -36,7 +36,7 @@ import org.knime.core.node.KNIMEConstants;
 /**
  * This is a special appender for KNIME that writes into the
  * <code>knime.log</code> file, which is typically located in the current
- * workspace. If the log file gets bigger than {@link #getMaxLogSize()} the
+ * workspace. If the log file gets bigger than a certain size the
  * file is gzipped and renamed and a new empty file is created.
  *
  * @author Thorsten Meinl, University of Konstanz
@@ -50,8 +50,8 @@ public class LogfileAppender extends FileAppender {
     public static final String MAX_SIZE_ENV_VARIABLE = "knime.logfile.maxsize";
 
     /** Maximum size of log file before it is split (in bytes). */
-    public static final int MAX_LOG_SIZE_DEFAULT = 10 * 1024 * 1024; // 10MB
-    private int m_maxLogSize;
+    public static final long MAX_LOG_SIZE_DEFAULT = 10 * 1024 * 1024; // 10MB
+    private long m_maxLogSize;
 
     /**
      * Creates a new LogfileAppender.
@@ -75,7 +75,7 @@ public class LogfileAppender extends FileAppender {
                 multiplier = 1;
             }
             try {
-                m_maxLogSize = multiplier * Integer.parseInt(maxSizeString);
+                m_maxLogSize = multiplier * Long.parseLong(maxSizeString);
             } catch (Throwable e) {
                 System.err.println("Unable to parse maximum log size variable "
                         + MAX_SIZE_ENV_VARIABLE + " (\""
@@ -102,8 +102,8 @@ public class LogfileAppender extends FileAppender {
      */
     @Override
     public void activateOptions() {
-        if (m_logFile.exists() && (m_logFile.length() > m_maxLogSize)
-                && m_logFile.canRead()) {
+        if (m_maxLogSize > 0 && m_logFile.exists()
+                && (m_logFile.length() > m_maxLogSize) && m_logFile.canRead()) {
             compressOldLog();
         }
         super.activateOptions();
@@ -156,30 +156,12 @@ public class LogfileAppender extends FileAppender {
     }
 
     /**
-     * Returns the maximum log file size in bytes before it is compressed.
-     *
-     * @return the maximum log file size
-     */
-    public int getMaxLogSize() {
-        return m_maxLogSize;
-    }
-
-    /**
-     * Sets the maximum log file size in bytes before it is compressed.
-     *
-     * @param maxLogSize the maximum log file size
-     */
-    public void setMaxLogSize(final int maxLogSize) {
-        m_maxLogSize = maxLogSize;
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
     protected void subAppend(final LoggingEvent event) {
         super.subAppend(event);
-        if (m_logFile.length() > m_maxLogSize) {
+        if (m_maxLogSize > 0 && m_logFile.length() > m_maxLogSize) {
             compressOldLog();
 
             try {
