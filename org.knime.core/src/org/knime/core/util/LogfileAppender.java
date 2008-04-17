@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.core.util;
 
@@ -35,10 +35,10 @@ import org.knime.core.node.KNIMEConstants;
 
 /**
  * This is a special appender for KNIME that writes into the
- * <code>knime.log</code> file, which is typically located in the current 
- * workspace. If the log file gets bigger than {@link #getMaxLogSize()} the 
+ * <code>knime.log</code> file, which is typically located in the current
+ * workspace. If the log file gets bigger than {@link #getMaxLogSize()} the
  * file is gzipped and renamed and a new empty file is created.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class LogfileAppender extends FileAppender {
@@ -48,8 +48,8 @@ public class LogfileAppender extends FileAppender {
      * log file size. Values must be integer, possibly succeeded by "m" or "k"
      * to denote that the given value is in mega or kilo byte. */
     public static final String MAX_SIZE_ENV_VARIABLE = "knime.logfile.maxsize";
-    
-    /** Maximum size of log file before it is split (in bytes). */ 
+
+    /** Maximum size of log file before it is split (in bytes). */
     public static final int MAX_LOG_SIZE_DEFAULT = 10 * 1024 * 1024; // 10MB
     private int m_maxLogSize;
 
@@ -77,9 +77,9 @@ public class LogfileAppender extends FileAppender {
             try {
                 m_maxLogSize = multiplier * Integer.parseInt(maxSizeString);
             } catch (Throwable e) {
-                System.err.println("Unable to maximum log size variable "
-                        + MAX_SIZE_ENV_VARIABLE + " (\"" 
-                        + System.getProperty(MAX_SIZE_ENV_VARIABLE) + "\"), " 
+                System.err.println("Unable to parse maximum log size variable "
+                        + MAX_SIZE_ENV_VARIABLE + " (\""
+                        + System.getProperty(MAX_SIZE_ENV_VARIABLE) + "\"), "
                         + "using default size");
                 m_maxLogSize = MAX_LOG_SIZE_DEFAULT;
             }
@@ -119,7 +119,7 @@ public class LogfileAppender extends FileAppender {
             closeFile();
             m_logFile.renameTo(tmpFile);
             setFile(m_logFile.getAbsolutePath());
-    
+
             Thread t = new Thread() {
                 @Override
                 public void run() {
@@ -133,13 +133,13 @@ public class LogfileAppender extends FileAppender {
                                         new FileOutputStream(new File(tmpFile
                                                 .getAbsolutePath()
                                                 + ".gz")));
-        
+
                                 byte[] buf = new byte[4096];
                                 int count;
                                 while ((count = in.read(buf)) > 0) {
                                     out.write(buf, 0, count);
                                 }
-        
+
                                 in.close();
                                 out.close();
                                 tmpFile.delete();
@@ -157,7 +157,7 @@ public class LogfileAppender extends FileAppender {
 
     /**
      * Returns the maximum log file size in bytes before it is compressed.
-     * 
+     *
      * @return the maximum log file size
      */
     public int getMaxLogSize() {
@@ -166,7 +166,7 @@ public class LogfileAppender extends FileAppender {
 
     /**
      * Sets the maximum log file size in bytes before it is compressed.
-     * 
+     *
      * @param maxLogSize the maximum log file size
      */
     public void setMaxLogSize(final int maxLogSize) {
