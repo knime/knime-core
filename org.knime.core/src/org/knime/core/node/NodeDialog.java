@@ -314,11 +314,16 @@ public final class NodeDialog {
                 return true; // nothing done - everything ok!
             }
         } catch (InvalidSettingsException ise) {
-            // show option pane with includes the message from the exception
             JOptionPane.showConfirmDialog(m_dialog, ise.getMessage(), m_dialog
                     .getTitle()
                     + ": Invalid Settings", JOptionPane.DEFAULT_OPTION,
                     JOptionPane.WARNING_MESSAGE);
+            return false;
+        } catch (Throwable t) {
+            JOptionPane.showConfirmDialog(m_dialog, t.getMessage(), m_dialog
+                    .getTitle()
+                    + ": Error Applying Settings", JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.ERROR_MESSAGE);
             return false;
         }
     }
