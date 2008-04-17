@@ -1110,8 +1110,8 @@ public final class Node implements NodeModelWarningListener {
                                 + ise.getMessage()));
             } catch (Exception e) {
                 m_logger.error("Configure failed", e);
-            } catch (Error e) {
-                m_logger.fatal("Configure failed", e);
+            } catch (Throwable t) {
+                m_logger.fatal("Configure failed", t);
             } finally {
                 for (int p = 0; p < newOutSpec.length; p++) {
                     // update data table spec
@@ -1360,8 +1360,8 @@ public final class Node implements NodeModelWarningListener {
             m_model.saveSettingsTo(model);
         } catch (Exception e) {
             m_logger.error("Could not save model", e);
-        } catch (Error e) {
-            m_logger.fatal("Could not save model", e);
+        } catch (Throwable t) {
+            m_logger.fatal("Could not save model", t);
         }
         l.setModelSettings(model);
         l.setVariablesSettings(m_variablesSettings);
@@ -1386,13 +1386,13 @@ public final class Node implements NodeModelWarningListener {
                         ioe);
             } catch (CanceledExecutionException e) {
                 throw e;
-            } catch (Exception e) {
+            } catch (Throwable t) {
                 m_logger.coding("saveInternals() "
-                        + "should only cause IOException.", e);
+                        + "should only cause IOException.", t);
                 notifyMessageListeners(
                         new NodeMessage(NodeMessage.Type.ERROR,
                                 "Unable to save " + "internals: "
-                                        + e.getMessage()));
+                                        + t.getMessage()));
             }
         } else {
             String errorMessage =
