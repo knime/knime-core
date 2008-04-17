@@ -672,25 +672,18 @@ public final class Node implements NodeModelWarningListener {
             nodeMessage = new NodeMessage(NodeMessage.Type.WARNING,
                             "Execution canceled");
             return false;
-        } catch (AssertionError ae) {
-            m_logger.assertLog(false, ae.getMessage(), ae);
+        } catch (Throwable th) {
+            String exName = "(\"" + th.getClass().getSimpleName() + "\"):";
+            if (th instanceof AssertionError) {
+                m_logger.assertLog(false, th.getMessage(), (AssertionError)th);
+            } else if (th instanceof Error) {
+                m_logger.fatal("Fatal error", th);
+            } else {
+                m_logger.error("Execute failed", th);
+            }
             reset(true);
             nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
-                    "Execute failed: " + ae.getMessage());
-            return false;
-        } catch (Error e) {
-            // some other error - should never happen!
-            m_logger.fatal("Fatal error", e);
-            reset(true);
-	        nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
-                    "Execute failed: " + e.getMessage());
-            return false;
-        } catch (Exception e) {
-            // execution failed
-            m_logger.error("Execute failed", e);
-            reset(true);
-            nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
-                    "Execute failed: " + e.getMessage());
+                    "Execute failed " + exName + th.getMessage());
             return false;
         } finally {
             if (nodeMessage != null) {
@@ -1645,7 +1638,7 @@ public final class Node implements NodeModelWarningListener {
             return LoopRole.NONE;
         }
     }
-    
+
     public void setLoopTailNode(final Node tail) {
         if (tail == null) {
             m_model.setLoopTailNode(null);
