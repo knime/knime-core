@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,8 +18,8 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
- * History: 01.08.2007 (ohl): created 
+ *
+ * History: 01.08.2007 (ohl): created
  */
 package org.knime.testing.core;
 
@@ -44,11 +44,12 @@ import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.LogfileAppender;
 import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.repository.RepositoryManager;
 
 /**
- * 
+ *
  */
 public class KNIMETestingApplication implements IApplication {
 
@@ -66,7 +67,7 @@ public class KNIMETestingApplication implements IApplication {
     /**
      * {@inheritDoc}
      */
-    public Object start(IApplicationContext context) throws Exception {
+    public Object start(final IApplicationContext context) throws Exception {
         // unless the user specified this property, we set it to true here
         // (true means no icons etc will be loaded, if it is false, the
         // loading of the repository manager is likely to print many errors
@@ -77,6 +78,9 @@ public class KNIMETestingApplication implements IApplication {
                 && System.getProperty("java.awt.headless") == null) {
             System.setProperty("java.awt.headless", "true");
         }
+
+        // make sure the logfile doesn't get split.
+        System.setProperty(LogfileAppender.MAX_SIZE_ENV_VARIABLE, "2048m");
 
         // this is just to load the repository plug-in
         RepositoryManager.INSTANCE.toString();
@@ -156,7 +160,7 @@ public class KNIMETestingApplication implements IApplication {
     /**
      * tries to guess a starting directory for the testcase search. Any dir with
      * "_testflow" in its name would be a good guess.
-     * 
+     *
      * @return
      */
     private File findTestCases() {
@@ -320,7 +324,7 @@ public class KNIMETestingApplication implements IApplication {
     /**
      * Extracts from the passed object the arguments. Returns true if everything
      * went smooth, false if the application must exit.
-     * 
+     *
      * @param args the object with the command line arguments.
      * @return true if the members were set according to the command line
      *         arguments, false, if an error message was printed and the
@@ -439,7 +443,7 @@ public class KNIMETestingApplication implements IApplication {
     /**
      * Copies the part of the specified log file that contains the log from the
      * last (possibly still running) KNIME run.
-     * 
+     *
      * @param logFile the log file to analyze and copy the last run from
      * @return a file in the same dir as the specified log file containing the
      *         last run of the specified file.
@@ -454,7 +458,7 @@ public class KNIMETestingApplication implements IApplication {
         BufferedReader reader = new BufferedReader(new FileReader(logFile));
         String line;
         BufferedWriter writer = new BufferedWriter(new FileWriter(copyFile));
-        
+
         while ((line = reader.readLine()) != null) {
             if (line.contains(startLine) && line.endsWith("#")) {
                 // (re-) open the output file, overriding any previous content
@@ -463,7 +467,7 @@ public class KNIMETestingApplication implements IApplication {
             writer.write(line + "\n");
         }
         writer.close();
-        
+
         return copyFile;
     }
 
