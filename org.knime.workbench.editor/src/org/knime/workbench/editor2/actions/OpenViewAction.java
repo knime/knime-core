@@ -26,6 +26,9 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.editor2.ImageRepository;
@@ -89,7 +92,22 @@ public class OpenViewAction extends Action {
     public void run() {
         LOGGER.debug("Open Node View " + m_nodeContainer.getName() + " (#"
                 + m_index + ")");
-        m_nodeContainer.getView(m_index).createFrame();
+        try {
+            m_nodeContainer.getView(m_index).createFrame();
+        } catch (Throwable t) {
+            MessageBox mb = new MessageBox(
+                    Display.getDefault().getActiveShell(),
+                    SWT.ICON_ERROR | SWT.OK);
+            mb.setText("View cannot be opened");
+            mb.setMessage("The view cannot be opened for the " 
+                    + "following reason:\n" + t.getMessage());
+            mb.open();
+            LOGGER.error("The view for node '"
+                    + m_nodeContainer.getNameWithID() + "' has thrown a '"
+                    + t.getClass().getSimpleName()
+                    + "'. That is most likely an " 
+                    + "implementation error.", t);
+        } 
     }
 
     @Override

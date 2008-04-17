@@ -29,9 +29,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.workflow.NodeContainer;
-
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -120,19 +118,18 @@ public class OpenDialogAction extends AbstractNodeAction {
                     .getActiveShell(), container);
             dlg.open();
             dlg.close();
-        } catch (NotConfigurableException ex) {
+        } catch (Throwable t) {
             MessageBox mb = new MessageBox(
                     Display.getDefault().getActiveShell(),
-                    SWT.ICON_WARNING | SWT.OK);
+                    SWT.ICON_ERROR | SWT.OK);
             mb.setText("Dialog cannot be opened");
             mb.setMessage("The dialog cannot be opened for the following"
-                    + " reason:\n" + ex.getMessage());
+                    + " reason:\n" + t.getMessage());
             mb.open();
-        } catch (Throwable t) {
             LOGGER.error("The dialog pane for node '"
                     + container.getNameWithID() + "' has thrown a '"
                     + t.getClass().getSimpleName()
                     + "'. That is most likely an implementation error.", t);
-        }
+        } 
     }
 }

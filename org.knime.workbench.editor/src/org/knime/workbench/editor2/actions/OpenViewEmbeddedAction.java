@@ -24,12 +24,16 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.Workbench;
 import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.ui.views.EmbeddedNodeView;
 
@@ -84,7 +88,21 @@ public class OpenViewEmbeddedAction extends OpenViewAction {
         } catch (PartInitException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        }
+        } catch (Throwable t) {
+            MessageBox mb = new MessageBox(
+                    Display.getDefault().getActiveShell(),
+                    SWT.ICON_WARNING | SWT.OK);
+            mb.setText("View cannot be opened");
+            mb.setMessage("The view cannot be opened for the " 
+                    + "following reason:\n" + t.getMessage());
+            mb.open();
+            NodeLogger.getLogger(OpenViewEmbeddedAction.class).error(
+                    "The view for node '"
+                    + m_container.getNameWithID() + "' has thrown a '"
+                    + t.getClass().getSimpleName()
+                    + "'. That is most likely an " 
+                    + "implementation error.", t);
+        } 
 
     }
 }
