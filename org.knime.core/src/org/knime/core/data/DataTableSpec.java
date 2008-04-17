@@ -160,7 +160,33 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         }
         // copy spec2
         for (; idx < columnSpecs.length; idx++) {
-            columnSpecs[idx] = spec2.getColumnSpec(idx - l1);
+            DataColumnSpec cspec = spec2.getColumnSpec(idx - l1);
+            DataColumnSpecCreator cr = new DataColumnSpecCreator(cspec);
+            // remove color handler from second spec, when also present in first
+            if (spec1.m_colorHandlerColIndex >= 0 
+                    && spec1.m_colorHandlerColIndex >= 0) {
+                LOGGER.warn("DataColumnSpec already contains a color "
+                         + "handler, ignoring color handler from second spec.");
+                // reset second handler
+                cr.setColorHandler(null);
+            }
+            // remove size handler from second spec, when also present in first
+            if (spec1.m_sizeHandlerColIndex >= 0 
+                    && spec1.m_sizeHandlerColIndex >= 0) {
+                LOGGER.warn("DataColumnSpec already contains a size "
+                         + "handler, ignoring size handler from second spec.");
+                // reset second handler
+                cr.setSizeHandler(null);
+            }
+            // remove shape handler from second spec, when also present in first
+            if (spec1.m_shapeHandlerColIndex >= 0 
+                    && spec1.m_shapeHandlerColIndex >= 0) {
+                LOGGER.warn("DataColumnSpec already contains a shape "
+                         + "handler, ignoring shape handler from second spec.");
+                // reset second handler
+                cr.setSizeHandler(null);
+            }
+            columnSpecs[idx] = cr.createSpec();
         }
         return columnSpecs;
     }
@@ -248,13 +274,16 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
 
     /** The index of the column holding the SizeHandler or -1 if not set. */
     private final int m_sizeHandlerColIndex;
+    
+    /** Name used to create a new spec when no other name has been defined. */
+    private static final String DFT_SPEC_NAME = "default";
 
     /**
      * Creates an empty <code>DataTableSpec</code> with no columns defined and
      * <i>default</i> as name.
      */
     public DataTableSpec() {
-        this("default");
+        this(DFT_SPEC_NAME);
     }
 
     /**
@@ -269,7 +298,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      *             method
      */
     public DataTableSpec(final DataColumnSpec... colSpecs) {
-        this("default", colSpecs);
+        this(DFT_SPEC_NAME, colSpecs);
     }
 
     /**
@@ -311,9 +340,12 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      *             method
      */
     public DataTableSpec(final String name, final DataColumnSpec... colSpecs) {
-        m_name = (name == null ? "default" : name);
+        m_name = (name == null ? DFT_SPEC_NAME : name);
         final int colCount = colSpecs.length;
         m_columnSpecs = new DataColumnSpec[colCount];
+        int colorHdlIdx = -1;
+        int sizeHdlIdx  = -1;
+        int shapeHdlIdx = -1;
         for (int i = 0; i < colCount; i++) {
             // disallow duplicates
             String currentName = colSpecs[i].getName();
@@ -321,21 +353,59 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
                 throw new NullPointerException("Column name must not be null.");
             }
 
-            Integer duplicateValue =
+            // if the value is not null, duplicate column name found
+            final Integer duplicateValue =
                     m_colIndexMap.put(colSpecs[i].getName(), i);
-
-            // if the value is unequal null there is a duplicate value
-            // throw an exception
             if (duplicateValue != null) {
                 throw new IllegalArgumentException("Duplicate column name \""
                         + currentName.toString() + "\" at positions "
                         + duplicateValue + " and " + i + ".");
             }
-            m_columnSpecs[i] = colSpecs[i];
+            
+            // creator used to remove handlers
+            DataColumnSpecCreator cr = new DataColumnSpecCreator(colSpecs[i]);
+            
+            // check for multiple color handlers
+            if (colSpecs[i].getColorHandler() != null) {
+                if (colorHdlIdx >= 0) {
+                    LOGGER.warn("Found multiple color handler at columns "
+                            + "index " + colorHdlIdx + " and " 
+                            + i + ", removed second one.");
+                    cr.setColorHandler(null);
+                } else {
+                    colorHdlIdx = i;
+                }
+            }
+            
+            // check for multiple size handlers
+            if (colSpecs[i].getSizeHandler() != null) {
+                if (sizeHdlIdx >= 0) {
+                    LOGGER.warn("Found multiple color handler at columns "
+                            + "index " + colorHdlIdx + " and " 
+                            + i + ", removed second one.");
+                    cr.setSizeHandler(null);
+                } else {
+                    sizeHdlIdx = i;
+                }
+            }
+            
+            // check for multiple shape handlers
+            if (colSpecs[i].getShapeHandler() != null) {
+                if (shapeHdlIdx >= 0) {
+                    LOGGER.warn("Found multiple color handler at columns "
+                            + "index " + colorHdlIdx + " and " 
+                            + i + ", removed second one.");
+                    cr.setShapeHandler(null);
+                } else {
+                    shapeHdlIdx = i;
+                }
+            }
+            
+            m_columnSpecs[i] = cr.createSpec();
         }
-        m_sizeHandlerColIndex = searchSizeHandler();
-        m_colorHandlerColIndex = searchColorHandler();
-        m_shapeHandlerColIndex = searchShapeHandler();
+        m_sizeHandlerColIndex  = sizeHdlIdx;
+        m_colorHandlerColIndex = colorHdlIdx;
+        m_shapeHandlerColIndex = shapeHdlIdx;
     }
 
     /**
@@ -389,7 +459,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      *             the parameter array <code>names</code> contains duplicates
      */
     public DataTableSpec(final String[] names, final DataType[] types) {
-        this("default", names, types);
+        this(CFG_SPEC_NAME, names, types);
     }
 
     /**
@@ -692,51 +762,6 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
             m_columnSpecs[i].save(column);
         }
     }
-
-    private int searchColorHandler() {
-        int idx = -1;
-        for (int i = 0; i < m_columnSpecs.length; i++) {
-            if (m_columnSpecs[i].getColorHandler() != null) {
-                if (idx == -1) {
-                    idx = i;
-                } else {
-                    LOGGER.coding("Found more ColorHandlers for columns: "
-                            + idx + " and " + i + ".");
-                }
-            }
-        }
-        return idx;
-    }
-
-    private int searchShapeHandler() {
-        int idx = -1;
-        for (int i = 0; i < m_columnSpecs.length; i++) {
-            if (m_columnSpecs[i].getShapeHandler() != null) {
-                if (idx == -1) {
-                    idx = i;
-                } else {
-                    LOGGER.coding("Found more ShapeHandlers for columns: "
-                            + idx + " and " + i + ".");
-                }
-            }
-        }
-        return idx;
-    }
-
-    private int searchSizeHandler() {
-        int idx = -1;
-        for (int i = 0; i < m_columnSpecs.length; i++) {
-            if (m_columnSpecs[i].getSizeHandler() != null) {
-                if (idx == -1) {
-                    idx = i;
-                } else {
-                    LOGGER.coding("Found more SizeHandlers for columns: " + idx
-                            + " and " + i + ".");
-                }
-            }
-        }
-        return idx;
-    }
     
     /**
      * This method merges two or more <code>DataTableSpec</code>s. 
@@ -765,7 +790,8 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      * @return a DataTableSpec with merged domain information
      * from both input DataTableSpecs.
      * @throws IllegalArgumentException if the structures of the DataTableSpecs
-     * do not match, the array is empty, or the array is <code>null</code>.
+     * do not match, the array is empty, or the array or one of its elements is 
+     * <code>null</code>.
      */
     public static DataTableSpec mergeDataTableSpecs(
             final DataTableSpec... specs) {
