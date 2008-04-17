@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   May 18, 2006 (ritmeier): created
  */
@@ -37,7 +37,7 @@ import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.StringCell;
 
 /**
- * 
+ *
  * @author ritmeier, University of Konstanz
  */
 public class DataTableDiffer implements TestEvaluator {
@@ -56,7 +56,7 @@ public class DataTableDiffer implements TestEvaluator {
     }
 
     /**
-     * 
+     *
      * @throws TestEvaluationException
      * @see org.knime.testing.node.differNode.TestEvaluator#compare(
      *      org.knime.core.data.DataTable, org.knime.core.data.DataTable)
@@ -128,8 +128,8 @@ public class DataTableDiffer implements TestEvaluator {
                             + c
                             + "('"
                             + table1.getDataTableSpec().getColumnSpec(c)
-                                    .getName() + "'): Cell1='" + c1
-                            + "' vs. Cell2='" + c2 + "'");
+                                    .getName() + "'): CellPort0='" + c1
+                            + "' vs. CellPort1='" + c2 + "'");
                 }
             }
 
@@ -144,7 +144,7 @@ public class DataTableDiffer implements TestEvaluator {
     /**
      * Returns the difference table, with those cells marked, which are not
      * equal.
-     * 
+     *
      * @return - the difference table.
      */
     public DataTable getDiffTable() {

@@ -33,6 +33,8 @@ import java.util.Date;
 import java.util.Vector;
 
 import junit.framework.TestCase;
+
+import org.knime.base.node.io.filereader.FileAnalyzer.HeaderHelper;
 import org.knime.base.node.io.filetokenizer.Quote;
 
 /**
@@ -42,22 +44,11 @@ import org.knime.base.node.io.filetokenizer.Quote;
 public class FileAnalyzerTest extends TestCase {
 
     /**
-     * Tests the analyze.
-     */
-    public void testAnalyze() {
-        // TODO: test all features!
-        colHeaderTest();
-        rowHeaderTest();
-        quoteTest();
-        bug107Test();
-    }
-
-    /*
      * tests if column headers are correctly detected. The file has col headers,
      * if the first line contains a non-empty string in each column that has an
      * increasing number at its end (increasing over the different cols).
      */
-    private void colHeaderTest() {
+    public void testColHeader() {
 
         URL url;
         FileReaderNodeSettings settings;
@@ -173,11 +164,11 @@ public class FileAnalyzerTest extends TestCase {
         }
     }
 
-    /*
+    /**
      * makes sure double quotes and single quotes are only supported when they
      * appear in even numbers.
      */
-    private void quoteTest() {
+    public void testQuote() {
 
         URL url;
         FileReaderNodeSettings settings;
@@ -259,13 +250,13 @@ public class FileAnalyzerTest extends TestCase {
 
     }
 
-    /*
+    /**
      * tests if row headers are correctly detected. The file has row headers, if
      * the first column of each row contains a non-empty string in each column
      * that consists of the same prefix with an increasing number following
      * (increasing over the different rows).
      */
-    private void rowHeaderTest() {
+    public void testRowHeader() {
 
         URL url;
         FileReaderNodeSettings settings;
@@ -311,7 +302,7 @@ public class FileAnalyzerTest extends TestCase {
             assertFalse(analSettings.getFileHasRowHeaders());
 
             /*
-             * don't choke on a huge indecies
+             * don't choke on a huge indices
              */
             url = initTempFile("\"\",col0,col1,col2\n"
                     + "row9999999999999999999999999999999999999999999999999998,"
@@ -325,17 +316,66 @@ public class FileAnalyzerTest extends TestCase {
             assertEquals(analSettings.getNumberOfColumns(), 4);
             assertFalse(analSettings.getFileHasRowHeaders());
 
+
+            /*
+             * these are not row headers (no increasing index)
+             */
+            url = initTempFile(",col0,col1,col2\n" + "row1,poo,moo,zoo\n"
+                    + "row2,poo,moo,zoo\n" + "row5,poo,moo,zoo\n"
+                    + "row3,oop,oom,ooz");
+            settings = new FileReaderNodeSettings();
+            settings.setDataFileLocationAndUpdateTableName(url);
+            analSettings = FileAnalyzer.analyze(settings, null);
+            assertEquals(analSettings.getNumberOfColumns(), 4);
+            assertFalse(analSettings.getFileHasRowHeaders());
+
+            /*
+             * these are not row headers (not the same prefix)
+             */
+            url = initTempFile(",col0,col1,col2\n" + "row1,poo,moo,zoo\n"
+                    + "rom2,poo,moo,zoo\n" + "row3,poo,moo,zoo\n"
+                    + "row4,oop,oom,ooz");
+            settings = new FileReaderNodeSettings();
+            settings.setDataFileLocationAndUpdateTableName(url);
+            analSettings = FileAnalyzer.analyze(settings, null);
+            assertEquals(analSettings.getNumberOfColumns(), 4);
+            assertFalse(analSettings.getFileHasRowHeaders());
+
+            /*
+             * these are not row headers (not the same prefix)
+             */
+            url = initTempFile(",col0,col1,col2\n" + "row1,poo,moo,zoo\n"
+                    + "low2,poo,moo,zoo\n" + "row3,poo,moo,zoo\n"
+                    + "row4,oop,oom,ooz");
+            settings = new FileReaderNodeSettings();
+            settings.setDataFileLocationAndUpdateTableName(url);
+            analSettings = FileAnalyzer.analyze(settings, null);
+            assertEquals(analSettings.getNumberOfColumns(), 4);
+            assertFalse(analSettings.getFileHasRowHeaders());
+
+            /*
+             * these are not row headers (not the same prefix)
+             */
+            url = initTempFile(",col0,col1,col2\n" + "row1,poo,moo,zoo\n"
+                    + "row 2,poo,moo,zoo\n" + "row3,poo,moo,zoo\n"
+                    + "row4,oop,oom,ooz");
+            settings = new FileReaderNodeSettings();
+            settings.setDataFileLocationAndUpdateTableName(url);
+            analSettings = FileAnalyzer.analyze(settings, null);
+            assertEquals(analSettings.getNumberOfColumns(), 4);
+            assertFalse(analSettings.getFileHasRowHeaders());
+
         } catch (IOException ioe) {
             // if this goes off the temp file couldn't be created.
             assertTrue(false);
         }
     }
 
-    /*
+    /**
      * that's a file causing the analyze to puke and die. Lets make sure it
-     * doesn't cause any harme in the future.
+     * doesn't cause any harm in the future.
      */
-    private void bug107Test() {
+    public void testBug107() {
 
         URL url;
         FileReaderNodeSettings settings;
@@ -372,6 +412,64 @@ public class FileAnalyzerTest extends TestCase {
             // if this goes off the temp file couldn't be created.
             assertTrue(false);
         }
+
+    }
+
+    /**
+     * tests the helper class that detects consecutive headers
+     */
+    public void testHeaderHelperClass1() {
+        /*
+         * pure numerical headers are okay, as long as they are increasing
+         */
+        FileAnalyzer.HeaderHelper hh =
+            HeaderHelper.extractPrefixAndIndexFromHeader("123");
+        assertTrue(hh.testNextHeader("124"));
+        assertFalse(hh.testNextHeader("124"));
+        assertTrue(hh.testNextHeader("10456643"));
+        assertFalse(hh.testNextHeader(""));
+        assertFalse(hh.testNextHeader("Foo10456644"));
+        assertTrue(hh.testNextHeader("10456644"));
+
+    }
+
+    /**
+     * tests the helper class that detects consecutive headers
+     */
+    public void testHeaderHelperClass2() {
+        /*
+         * prefixed headers
+         */
+        FileAnalyzer.HeaderHelper hh =
+            HeaderHelper.extractPrefixAndIndexFromHeader("Foo123");
+        assertTrue(hh.testNextHeader("Foo124"));
+        assertFalse(hh.testNextHeader("Foo124"));
+
+        assertTrue(hh.testNextHeader("Foo125"));
+        assertFalse(hh.testNextHeader("Fo126"));
+        assertFalse(hh.testNextHeader("127"));
+
+        assertTrue(hh.testNextHeader("Foo128"));
+        assertFalse(hh.testNextHeader("Fool129"));
+
+        assertTrue(hh.testNextHeader("Foo10456643"));
+        assertFalse(hh.testNextHeader("Foo"));
+        assertFalse(hh.testNextHeader("Fop10456644"));
+        assertTrue(hh.testNextHeader("Foo10456644"));
+    }
+
+    /**
+     * tests the helper class that detects consecutive headers
+     */
+    public void testHeaderHelperClass3() {
+        /*
+         * headers without index are not okay
+         */
+        assertEquals(HeaderHelper.extractPrefixAndIndexFromHeader("Foo"), null);
+        assertEquals(HeaderHelper.extractPrefixAndIndexFromHeader(""), null);
+        assertEquals(HeaderHelper.extractPrefixAndIndexFromHeader(null), null);
+        assertEquals(HeaderHelper.extractPrefixAndIndexFromHeader("Foo17Oops"),
+                null);
 
     }
 
