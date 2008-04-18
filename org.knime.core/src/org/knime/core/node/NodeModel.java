@@ -368,6 +368,19 @@ public abstract class NodeModel extends GenericNodeModel {
         throw new InvalidSettingsException(
                 "saveModelContent() not overridden: " + index);
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    int getSimulatedHiliteHandlerPortIndex(final int portIndex) {
+        // may be < 0, super class will handle it.
+        return portIndex - m_nrModelInPorts;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    int getTrueHiliteHandlerPortIndex(final int portIndex) {
+        return portIndex + m_nrModelInPorts;
+    }
 
 }
 

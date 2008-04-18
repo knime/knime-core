@@ -605,7 +605,10 @@ public abstract class GenericNodeModel {
             return;
         }
         m_inHiLiteHdls[in] = hdl;
-        setInHiLiteHandler(in, hdl);
+        int simulatedPortIndex = getSimulatedHiliteHandlerPortIndex(in);
+        if (simulatedPortIndex >= 0) {
+            setInHiLiteHandler(simulatedPortIndex, hdl);
+        }
         stateChanged();
     }
 
@@ -620,10 +623,31 @@ public abstract class GenericNodeModel {
      *             the range of inputs
      */
     public final HiLiteHandler getInHiLiteHandler(final int inIndex) {
-        if (m_inHiLiteHdls[inIndex] == null) {
+        int correctIndex = getTrueHiliteHandlerPortIndex(inIndex);
+        if (m_inHiLiteHdls[correctIndex] == null) {
             return HILITE_ADAPTER;
         }
-        return m_inHiLiteHdls[inIndex];
+        return m_inHiLiteHdls[correctIndex];
+    }
+    
+    /** Returns the argument. This method is overridden in class 
+     * {@link NodeModel} to handle incoming model ports appropriately 
+     * (no hilite handlers at deprecated model ports).
+     * @param portIndex The simulated port index
+     * @return The true port index
+     */  
+    int getTrueHiliteHandlerPortIndex(final int portIndex) {
+        return portIndex;
+    }
+    
+    /** Returns the argument. This method is overridden in class 
+     * {@link NodeModel} to handle incoming model ports appropriately 
+     * (no hilite handlers at deprecated model ports).
+     * @param portIndex The true port index
+     * @return The simulated port index
+     */  
+    int getSimulatedHiliteHandlerPortIndex(final int portIndex) {
+        return portIndex;
     }
 
     /**
