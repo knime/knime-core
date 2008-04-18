@@ -94,6 +94,7 @@ public interface NodePersistor {
     boolean hasContent();
     ReferencedFile getNodeInternDirectory();
     MemoryPolicy getMemoryPolicy();
+    // may return null in which case the node decides what to do.
     LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy();
     NodeSettingsRO getNodeModelSettings();
     public NodeSettings getVariablesSettings();

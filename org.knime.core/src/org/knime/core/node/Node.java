@@ -43,6 +43,7 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.GenericNodeDialogPane.MiscNodeDialogPane;
 import org.knime.core.node.GenericNodeFactory.NodeType;
+import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -295,7 +296,18 @@ public final class Node implements NodeModelWarningListener {
                 error = "Caught \"" + e.getClass().getSimpleName() + "\", "
                     + "Loading model settings failed: " + e.getMessage();
             }
-            switch (loader.getModelSettingsFailPolicy()) {
+            LoadNodeModelSettingsFailPolicy pol = 
+                loader.getModelSettingsFailPolicy();
+            if (pol == null) {
+                if (!loader.isConfigured()) {
+                    pol = LoadNodeModelSettingsFailPolicy.IGNORE;
+                } else if (loader.isExecuted()) {
+                    pol = LoadNodeModelSettingsFailPolicy.WARN;
+                } else {
+                    pol = LoadNodeModelSettingsFailPolicy.FAIL;
+                }
+            }
+            switch (pol) {
             case WARN:
                 nodeMessage = new NodeMessage(Type.WARNING, error);
             case IGNORE:

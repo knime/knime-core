@@ -48,7 +48,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(NodePersistorVersion1xx.class);
     
-    private LoadNodeModelSettingsFailPolicy m_modelSettingsFailPolicy;
+    private final LoadNodeModelSettingsFailPolicy m_modelSettingsFailPolicy;
 
     private boolean m_isExecuted;
     
@@ -454,7 +454,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
     public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy() {
         return m_modelSettingsFailPolicy;
     }
-
+    
     /** {@inheritDoc} */
     public MemoryPolicy getMemoryPolicy() {
         return m_memoryPolicy;

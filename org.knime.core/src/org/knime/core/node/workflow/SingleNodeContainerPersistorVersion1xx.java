@@ -109,7 +109,10 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
     
     protected NodePersistorVersion1xx createNodePersistor(
             final LoadNodeModelSettingsFailPolicy failPolicy) {
-        return new NodePersistorVersion1xx(failPolicy);
+        // we explicitly null the argument here so the node decides on how
+        // to behave (in workflows 1.x.x it's not known what is the correct
+        // state of the node at this point)
+        return new NodePersistorVersion1xx(null);
     }
 
     /** {@inheritDoc} */

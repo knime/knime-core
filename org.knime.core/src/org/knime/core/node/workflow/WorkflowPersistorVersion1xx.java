@@ -447,9 +447,9 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                         + e.getMessage();
                 if (e instanceof InvalidSettingsException 
                         || e instanceof IOException) {
-                    LOGGER.error(error, e);
-                } else {
                     LOGGER.debug(error, e);
+                } else {
+                    LOGGER.error(error, e);
                 }
                 loadResult.addError(error);
                 continue;
