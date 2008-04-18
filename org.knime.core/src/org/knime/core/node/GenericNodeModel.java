@@ -347,19 +347,20 @@ public abstract class GenericNodeModel {
      * @return The result of the execution in form of an array with
      *         <code>DataTable</code> elements, as many as the node has
      *         outputs.
-     * @throws Throwable any exception or error that is fired in the derived
-     *             model will be just forwarded
-     * @throws CanceledExecutionException if the user pressed cancel during
+     * @throws Exception any exception or error that is fired in the derived
+     *             model will be just forwarded. It may throw an 
+     *             CanceledExecutionException if the user pressed cancel during
      *             execution. Even if the derived model doesn't check, the
-     *             result will be discarded and the exception thrown
+     *             result will be discarded and the exception thrown. 
      * @throws IllegalStateException If the number of <code>PortObject</code>
-     *             objects returned by the derived <code>GenericNodeModel</code> does
-     *             not match the number of outputs. Or if any of them is null.
+     *             objects returned by the derived <code>GenericNodeModel</code>
+     *             does not match the number of outputs. Or if any of them is 
+     *             null.
      * @see #execute(PortObject[],ExecutionContext)
      */
-    protected final PortObject[] executeModel(
-            final PortObject[] data, final ExecutionContext exec)
-            throws Throwable {
+    protected final PortObject[] executeModel(final PortObject[] data, 
+            final ExecutionContext exec) 
+        throws Exception {
         assert (data != null && data.length == getNrInPorts());
         assert (exec != null);
 
@@ -716,11 +717,9 @@ public abstract class GenericNodeModel {
      * @return An array where each element indicates if the outport has changed.
      * @throws InvalidSettingsException if the current settings don't go along
      *             with the table specs
-     * @throws Throwable if any other exception or error occurs during configure
-     *             of the model
      */
     final PortObjectSpec[] configureModel(final PortObjectSpec[] inSpecs)
-            throws InvalidSettingsException, Throwable {
+            throws InvalidSettingsException {
 
         assert inSpecs.length == getNrInPorts();
 
