@@ -683,21 +683,20 @@ public final class Node implements NodeModelWarningListener {
                             "Execution canceled");
             return false;
         } catch (Throwable th) {
-            String thDesc = "(\"" + th.getClass().getSimpleName() + "\"): "
-                + th.getMessage();
-            if (th instanceof Error) {
-                m_logger.fatal("Fatal error " + thDesc, th);
+            String message = "Execute failed: ";
+            if (th.getMessage() != null && th.getMessage().length() >= 5) {
+                message = message.concat(th.getMessage());
             } else {
-                m_logger.error("Execute failed " + thDesc, th);
+                message = message.concat("(\"" + th.getClass().getSimpleName()
+                        + "\"): " + th.getMessage());
+            }
+            if (th instanceof Error) {
+                m_logger.fatal(message, th);
+            } else {
+                m_logger.error(message, th);
             }
             reset(true);
-            if (th.getMessage() != null && th.getMessage().length() >= 5) {
-                nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
-                    "Execute failed: " + th.getMessage());
-            } else {
-                nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, 
-                    "Execute failed " + thDesc);
-            }
+            nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, message);
             return false;
         } finally {
             if (nodeMessage != null) {
