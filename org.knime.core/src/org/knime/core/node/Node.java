@@ -683,7 +683,7 @@ public final class Node implements NodeModelWarningListener {
                             "Execution canceled");
             return false;
         } catch (Throwable th) {
-            String thDesc = "(\"" + th.getClass().getSimpleName() + "\"):"
+            String thDesc = "(\"" + th.getClass().getSimpleName() + "\"): "
                 + th.getMessage();
             if (th instanceof Error) {
                 m_logger.fatal("Fatal error " + thDesc, th);
