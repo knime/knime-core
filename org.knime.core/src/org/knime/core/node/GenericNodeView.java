@@ -273,7 +273,7 @@ public abstract class GenericNodeView<T extends GenericNodeModel> {
                        + "NullPointerException during notification of a "
                        + "changed model, reason: " + npe.getMessage(), npe);
             } catch (Throwable t) {
-                m_logger.error("GenericNodeView.modelChanged() causes an error"
+                m_logger.error("GenericNodeView.modelChanged() causes an error "
                        + "during notification of a changed model, reason: " 
                        + t.getMessage(), t);
             } finally {
