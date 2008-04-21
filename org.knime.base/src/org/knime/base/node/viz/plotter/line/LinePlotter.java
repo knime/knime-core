@@ -174,6 +174,7 @@ public class LinePlotter extends ScatterPlotter {
                  */
                 public void stateChanged(final ChangeEvent e) {
                     setDotSize((Integer)dotSize.getValue());
+                    updatePaintModel();
                     getDrawingPane().repaint();
                 }
             });
@@ -319,6 +320,10 @@ public class LinePlotter extends ScatterPlotter {
             ((ScatterPlotterDrawingPane)getDrawingPane()).setDotInfoArray(
                     new DotInfoArray(new DotInfo[0]));
            
+            // the max dot size is subtracted as a dot can vary in size
+            int width = getDrawingPaneDimension().width - (getDotSize());
+            int height = getDrawingPaneDimension().height - (getDotSize());
+            
             // first store them in a list to avoid keep tracking of indices
             List<DotInfo> dotList = new ArrayList<DotInfo>();
             int colNr = 0;
@@ -340,12 +345,10 @@ public class LinePlotter extends ScatterPlotter {
                     DotInfo dot;
                     int x = (int)getXAxis().getCoordinate()
                     .calculateMappedValue(array.getRow(row).getKey()
-                            .getId(), getDrawingPaneDimension().width, 
-                            true);
+                            .getId(), width, true);
                     if (!cell.isMissing()) {
                         y = (int)getYAxis().getCoordinate()
-                        .calculateMappedValue(cell,
-                                getDrawingPaneDimension().height, true);
+                        .calculateMappedValue(cell, height, true);
                         if (missingValues.size() > 0) {
                             // we have some missing values in between, 
                             // thus we have to interpolate
@@ -435,7 +438,7 @@ public class LinePlotter extends ScatterPlotter {
         createNominalXCoordinate(rowKeys);
         setPreserve(false);
         createYCoordinate(minY, maxY);
-        setPreserve(true);
+//        setPreserve(true);
     }
 
     /**
