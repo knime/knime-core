@@ -51,7 +51,7 @@ implements LoopStartNode {
     private final XValidateSettings m_settings = new XValidateSettings();
 
     private short[] m_partNumbers;
-    
+
     private int m_nrIterations;
     private int m_currIteration;
 
@@ -121,8 +121,6 @@ implements LoopStartNode {
                 m_currIteration = 0;
             }
         }
-        
-        m_currIteration++;
 
         BufferedDataContainer test =
                 exec.createDataContainer(inData[0].getDataTableSpec());
@@ -148,9 +146,10 @@ implements LoopStartNode {
         test.close();
         train.close();
 
+        m_currIteration++;
         // we need to put the counts on the stack for the loop's tail to see:
-        pushScopeVariable(new ScopeVariable("LOOP_COUNT", m_currIteration));
-        pushScopeVariable(new ScopeVariable("LOOP_MAXCOUNT",
+        pushScopeVariable(new ScopeVariable("currentIteration", m_currIteration));
+        pushScopeVariable(new ScopeVariable("maxIterations",
                 m_nrIterations));
 
         return new BufferedDataTable[]{train.getTable(), test.getTable()};

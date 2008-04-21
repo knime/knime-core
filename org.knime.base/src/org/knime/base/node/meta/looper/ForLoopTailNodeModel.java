@@ -84,12 +84,12 @@ public class ForLoopTailNodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        
+
         // retrieve variables from the stack which the head of this
         // loop hopefully put there:
-        ScopeVariable countVar = peekScopeVariable("LOOP_COUNT");
+        ScopeVariable countVar = peekScopeVariable("currentIteration");
         int count = countVar.getIntValue();
-        ScopeVariable maxCountVar = peekScopeVariable("LOOP_MAXCOUNT");
+        ScopeVariable maxCountVar = peekScopeVariable("maxIterations");
         int maxCount = maxCountVar.getIntValue();
 
         if (count == 1) {

@@ -46,7 +46,7 @@ import org.knime.core.node.workflow.ScopeVariable;
 public class ForLoopHeadNodeModel extends NodeModel implements LoopStartNode {
 
     private int m_iteration;
-    
+
     private final ForLoopHeadSettings m_settings = new ForLoopHeadSettings();
 
     /**
@@ -76,7 +76,7 @@ public class ForLoopHeadNodeModel extends NodeModel implements LoopStartNode {
             final ExecutionContext exec) throws Exception {
         // let's see if we have access to the tail: if we do, it's not the
         // first time we are doing this...
-        if (super.getLoopTailNode() == null) {
+        if (getLoopTailNode() == null) {
             // if it's null we know that this is the first time the
             // loop is being executed.
             m_iteration = 1;
@@ -84,13 +84,13 @@ public class ForLoopHeadNodeModel extends NodeModel implements LoopStartNode {
             // otherwise we do this again, and we increment our counter
             m_iteration++;
             // and we can do a quick sanity check
-            if (!(super.getLoopTailNode() instanceof ForLoopTailNodeModel)) {
-                throw new IllegalArgumentException("Loop Head is wrong type!");
+            if (!(getLoopTailNode() instanceof ForLoopTailNodeModel)) {
+                throw new IllegalArgumentException("Loop tail has wrong type!");
             }
         }
         // we need to put the counts on the stack for the loop's tail to see:
-        pushScopeVariable(new ScopeVariable("LOOP_COUNT", m_iteration));
-        pushScopeVariable(new ScopeVariable("LOOP_MAXCOUNT",
+        pushScopeVariable(new ScopeVariable("currentIteration", m_iteration));
+        pushScopeVariable(new ScopeVariable("maxIterations",
                 m_settings.loops()));
         return inData;
     }

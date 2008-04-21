@@ -34,6 +34,8 @@ import javax.swing.border.Border;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.NominalValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -52,11 +54,11 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
 public class AggregateOutputNodeDialogPane extends NodeDialogPane {
     @SuppressWarnings("unchecked")
     private final ColumnSelectionComboxBox m_targetColumn =
-            new ColumnSelectionComboxBox((Border)null, StringValue.class);
+            new ColumnSelectionComboxBox((Border)null, NominalValue.class, DoubleValue.class);
 
     @SuppressWarnings("unchecked")
     private final ColumnSelectionComboxBox m_predictColumn =
-            new ColumnSelectionComboxBox((Border)null, StringValue.class);
+            new ColumnSelectionComboxBox((Border)null, NominalValue.class, DoubleValue.class);
 
     private final AggregateSettings m_settings = new AggregateSettings();
 

@@ -132,9 +132,9 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
             final ExecutionContext exec) throws Exception {
         // retrieve variables from the stack which the head of this
         // loop hopefully put there:
-        ScopeVariable countVar = peekScopeVariable("LOOP_COUNT");
+        ScopeVariable countVar = peekScopeVariable("currentIteration");
         int count = countVar.getIntValue();
-        ScopeVariable maxCountVar = peekScopeVariable("LOOP_MAXCOUNT");
+        ScopeVariable maxCountVar = peekScopeVariable("maxIterations");
         int maxCount = maxCountVar.getIntValue();
 
         if (count == 1) {
@@ -178,7 +178,7 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
                         new IntCell(rowCount), new IntCell(incorrect));
         m_foldStatistics.add(stats);
 
-        if (count <= maxCount) {
+        if (count < maxCount) {
             continueLoop();
             return new BufferedDataTable[2];
         } else {
