@@ -286,7 +286,7 @@ public final class Node implements NodeModelWarningListener {
             m_outDataPortsMemoryPolicy = MemoryPolicy.CacheSmallInMemory;
         }
         try {
-            m_model.validateSettings(loader.getNodeModelSettings());
+            // this also validates the settings
             m_model.loadSettingsFrom(loader.getNodeModelSettings());
         } catch (Throwable e) {
             String error;
@@ -328,7 +328,7 @@ public final class Node implements NodeModelWarningListener {
             }
         }
         ReferencedFile internDirRef = loader.getNodeInternDirectory();
-        if (internDirRef != null) {
+        if (internDirRef != null && !isAutoExecutable()) {
             internDirRef.lock();
             try {
                 exec.setMessage("Loading internals");
