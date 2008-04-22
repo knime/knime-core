@@ -654,9 +654,6 @@ public class TestingConfig extends AppenderSkeleton {
                 // remember the nodes that must not execute
                 if (m_requiredUnexecutedNodes.add(nodeID)) {
                     msg = "Node #" + nodeID + " must not be executed";
-                    // add the "Execute failed" message that is logged by the
-                    // WFM to the required list.
-                    m_requiredErrors.add("Execute failed");
                 }
 
                 // now store the expected status message
@@ -793,8 +790,7 @@ public class TestingConfig extends AppenderSkeleton {
                     // make sure the error message is as expected.
                     // The workflow manager adds "Execute failed (class name):"
                     String statusMsg = status.getMessage();
-                    if (!statusMsg.startsWith("Execute failed")
-                            || !statusMsg.endsWith(expMsg)) {
+                    if (!statusMsg.equals(expMsg)) {
                         String msg =
                                 "Node '"
                                         + node.getNameWithID()
