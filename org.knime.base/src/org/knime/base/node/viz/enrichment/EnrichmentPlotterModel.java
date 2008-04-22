@@ -130,6 +130,7 @@ public class EnrichmentPlotterModel extends NodeModel {
      */
     static class EnrichmentPlot implements Serializable {
         private static final long serialVersionUID = 3967048973324638794L;
+
         private final String m_name;
 
         private final double m_area;
@@ -308,9 +309,11 @@ public class EnrichmentPlotterModel extends NodeModel {
                 if (m_settings.plotMode() == PlotMode.PlotSum) {
                     y += ((DoubleValue)h.b).getDoubleValue();
                 } else if (m_settings.plotMode() == PlotMode.PlotHits) {
-                    y +=
-                            (((DoubleValue)h.b).getDoubleValue() >= m_settings
-                                    .hitThreshold()) ? 1 : 0;
+                    if (!h.b.isMissing()
+                            && (((DoubleValue)h.b).getDoubleValue() >= m_settings
+                                    .hitThreshold())) {
+                        y++;
+                    }
                 } else if (!h.b.isMissing()) {
                     y += clusters.add(h.b) ? 1 : 0;
                 }
@@ -342,8 +345,8 @@ public class EnrichmentPlotterModel extends NodeModel {
                 hitRateValues[j] /= y;
             }
 
-            discrateOutCont.addRowToTable(new DefaultRow(
-                    new RowKey(c.toString()), hitRateValues));
+            discrateOutCont.addRowToTable(new DefaultRow(new RowKey(c
+                    .toString()), hitRateValues));
         }
 
         areaOutCont.close();

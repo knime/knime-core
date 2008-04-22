@@ -228,14 +228,29 @@ public class EnrichmentPlotterSettings {
 
         for (int i = 1; i <= curveCount; i++) {
             String sort = settings.getString("curve_" + i + "_sort");
-            String hit = settings.getString("curve_" + i + "_act");
+            String hit;
+            try {
+                hit = settings.getString("curve_" + i + "_act");
+            } catch (InvalidSettingsException ex) {
+                // try old settings
+                hit = settings.getString("curve_" + i + "_hit");
+            }
             boolean sortDescending =
                     settings.getBoolean("curve_" + i + "_descending");
             m_curves.add(new Curve(sort, hit, sortDescending));
         }
 
         m_hitThreshold = settings.getDouble("hitThreshold");
-        m_plotMode = PlotMode.valueOf(settings.getString("plotMode"));
+        try {
+            String plotMode = settings.getString("plotMode");
+            m_plotMode = PlotMode.valueOf(plotMode);
+        } catch (InvalidSettingsException ex) {
+            if (settings.getBoolean("sumHitValues")) {
+                m_plotMode = PlotMode.PlotSum;
+            } else {
+                m_plotMode = PlotMode.PlotHits;
+            }
+        }
     }
 
     /**
