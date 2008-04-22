@@ -793,8 +793,8 @@ public class TestingConfig extends AppenderSkeleton {
                     // make sure the error message is as expected.
                     // The workflow manager adds "Execute failed (class name):"
                     String statusMsg = status.getMessage();
-                    if (!statusMsg.startsWith("Execute failed (")
-                            || !statusMsg.endsWith("):" + expMsg)) {
+                    if (!statusMsg.startsWith("Execute failed")
+                            || !statusMsg.endsWith(expMsg)) {
                         String msg =
                                 "Node '"
                                         + node.getNameWithID()
