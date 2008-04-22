@@ -307,21 +307,23 @@ public final class Node implements NodeModelWarningListener {
                     pol = LoadNodeModelSettingsFailPolicy.FAIL;
                 }
             }
+            Type messageType = Type.WARNING;
             switch (pol) {
-            case WARN:
-                nodeMessage = new NodeMessage(Type.WARNING, error);
             case IGNORE:
                 if (!(e instanceof InvalidSettingsException)) {
                     m_logger.debug(error, e);
                 }
                 break;
             case FAIL:
+                result.addError(error);
+                messageType = Type.ERROR;
+            case WARN:
+                nodeMessage = new NodeMessage(messageType, error);
                 if (e instanceof InvalidSettingsException) {
                     m_logger.debug(error);
                 } else {
                     m_logger.debug(error, e);
                 }
-                result.addError(error);
                 break;
             }
         }
