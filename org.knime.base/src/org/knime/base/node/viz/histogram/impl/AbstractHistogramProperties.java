@@ -542,9 +542,7 @@ public abstract class AbstractHistogramProperties extends
      */
     public void updateHistogramSettings(
             final AbstractHistogramVizModel vizModel) {
-        LOGGER.debug("Entering updateHistogramSettings(vizModel) "
-                + "of class AbstractHistogramProperties.");
-        final long startTime = System.currentTimeMillis();
+//        final long startTime = System.currentTimeMillis();
         if (vizModel == null) {
             return;
         }
@@ -696,12 +694,10 @@ public abstract class AbstractHistogramProperties extends
         //show element outline
         updateCheckBox(m_showElementOutline, vizModel.isShowElementOutline(),
                 true);
-        final long endTime = System.currentTimeMillis();
-        final long durationTime = endTime - startTime;
-        LOGGER.debug("Time for updateHistogramSettings. "
-                + durationTime + " ms");
-        LOGGER.debug("Exiting updateHistogramSettings(vizModel) "
-                + "of class AbstractHistogramProperties.");
+//        final long endTime = System.currentTimeMillis();
+//        final long durationTime = endTime - startTime;
+//        LOGGER.debug("Time for updateHistogramSettings. "
+//                + durationTime + " ms");
     }
 
     /**
@@ -714,8 +710,6 @@ public abstract class AbstractHistogramProperties extends
     private static void updateCheckBox(final JCheckBox box,
             final boolean selected,
             final boolean enabled) {
-        LOGGER.debug("Entering updateSelectBox(box, selected, enabled) "
-                + "of class AbstractHistogramProperties.");
         final ItemListener[] listeners =
             box.getItemListeners();
         for (final ItemListener listener : listeners) {
@@ -726,8 +720,6 @@ public abstract class AbstractHistogramProperties extends
         for (final ItemListener listener : listeners) {
             box.addItemListener(listener);
         }
-        LOGGER.debug("Exiting updateSelectBox(box, selected, enabled) "
-                + "of class AbstractHistogramProperties.");
     }
 
     /**
