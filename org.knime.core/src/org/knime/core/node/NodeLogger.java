@@ -18,9 +18,9 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
- *   15.05.2006(sieb, ohl): reviewed 
+ *   15.05.2006(sieb, ohl): reviewed
  */
 package org.knime.core.node;
 
@@ -58,7 +58,7 @@ import org.knime.core.util.LogfileAppender;
  * to this logger. Note, calling {@link #setLevelIntern(LEVEL)} does only effect
  * the minimum logging level of the default loggers. All other writers' levels
  * have to be set before hand.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class NodeLogger {
@@ -133,7 +133,7 @@ public final class NodeLogger {
         if (legacyFile.exists()) {
             if (!legacyFile.renameTo(log4j)) {
                 System.err.println("There are two log4j configuration files"
-                        + " in your KNIME home directory ('" 
+                        + " in your KNIME home directory ('"
                         + knimeDir.getAbsolutePath()
                         + " ') - or this directory is write-protected.");
                 System.err.println("The 'log4j.xml' is the one actually used."
@@ -192,7 +192,7 @@ public final class NodeLogger {
     /**
      * Checks if any of the previous shipped log4j-XMLs matches the current one
      * the user has in its local KNIME directory.
-     * 
+     *
      * @param current the user's current file
      * @return <code>true</code> if it matches, <code>false</code> otherwise
      * @throws IOException if an I/O error occurs
@@ -323,7 +323,7 @@ public final class NodeLogger {
     /**
      * Hidden default constructor, logger created by
      * <code>java.lang.Class</code>.
-     * 
+     *
      * @param c The logger created by Class name.
      */
     private NodeLogger(final Class<?> c) {
@@ -332,7 +332,7 @@ public final class NodeLogger {
 
     /**
      * Hidden default constructor, logger created by just a name.
-     * 
+     *
      * @param s The name of the logger.
      */
     private NodeLogger(final String s) {
@@ -341,7 +341,7 @@ public final class NodeLogger {
 
     /**
      * Creates a new <code>NodeLogger</code> for the given Class.
-     * 
+     *
      * @param c The logger's Class.
      * @return A new logger for this Class.
      */
@@ -358,7 +358,7 @@ public final class NodeLogger {
 
     /**
      * Creates a new <code>NodeLogger</code> for the given name.
-     * 
+     *
      * @param s The logger's String.
      * @return A new logger for the given name.
      */
@@ -374,7 +374,7 @@ public final class NodeLogger {
 
     /**
      * Write warning message into this logger.
-     * 
+     *
      * @param o The object to print.
      */
     public void warn(final Object o) {
@@ -383,7 +383,7 @@ public final class NodeLogger {
 
     /**
      * Write debugging message into this logger.
-     * 
+     *
      * @param o The object to print.
      */
     public void debug(final Object o) {
@@ -392,7 +392,7 @@ public final class NodeLogger {
 
     /**
      * Write info message into this logger.
-     * 
+     *
      * @param o The object to print.
      */
     public void info(final Object o) {
@@ -401,7 +401,7 @@ public final class NodeLogger {
 
     /**
      * Write error message into the logger.
-     * 
+     *
      * @param o The object to print.
      */
     public void error(final Object o) {
@@ -410,7 +410,7 @@ public final class NodeLogger {
 
     /**
      * Write fatal error message into the logger.
-     * 
+     *
      * @param o The object to print.
      */
     public void fatal(final Object o) {
@@ -419,22 +419,18 @@ public final class NodeLogger {
 
     /**
      * Write warning message and throwable into this logger.
-     * 
+     *
      * @param o The object to print.
-     * @param t The exception to log, including its stack trace.
+     * @param t The exception to log at debug level, including its stack trace.
      */
     public void warn(final Object o, final Throwable t) {
         this.warn(o);
-        String message = (t != null ? t.getMessage() : null);
-        if (message != null && message.trim().length() > 0) {
-            this.warn(message);
-        }
         this.debug(o, t);
     }
 
     /**
      * Write debugging message and throwable into this logger.
-     * 
+     *
      * @param o The object to print.
      * @param t The exception to log, including its stack trace.
      */
@@ -444,44 +440,36 @@ public final class NodeLogger {
 
     /**
      * Write info message and throwable into this logger.
-     * 
+     *
      * @param o The object to print.
-     * @param t The exception to log, including its stack trace.
+     * @param t The exception to log at debug level, including its stack trace.
      */
     public void info(final Object o, final Throwable t) {
         this.info(o);
-        String message = (t != null ? t.getMessage() : null);
-        if (message != null && message.trim().length() > 0) {
-            this.info(message);
-        }
         this.debug(o, t);
     }
 
     /**
      * Write error message and throwable into the logger.
-     * 
+     *
      * @param o The object to print.
-     * @param t The exception to log, including its stack trace.
+     * @param t The exception to log at debug level, including its stack trace.
      */
     public void error(final Object o, final Throwable t) {
-        if (isIgnoreLoadDataWarning 
+        if (isIgnoreLoadDataWarning
                 && m_logger.getName().equals(WorkflowManager.class.getName())
                 && t != null && t.getMessage() != null
                 && t.getMessage().startsWith("No such data file: ")) {
             debug(o, t);
         } else {
             this.error(o);
-            String message = (t != null ? t.getMessage() : null);
-            if (message != null && message.trim().length() > 0) {
-                this.error(message);
-            }
             this.debug(o, t);
         }
     }
 
     /**
      * Check assert and write into logger if failed.
-     * 
+     *
      * @param b The expression to check.
      * @param m Print this message if failed.
      */
@@ -493,7 +481,7 @@ public final class NodeLogger {
 
     /**
      * Check assertions on/off and write debug message into logger.
-     * 
+     *
      * @param b The expression to check.
      * @param m Print this message if failed.
      * @param e AssertionError which as been fired.
@@ -501,12 +489,7 @@ public final class NodeLogger {
     public void assertLog(final boolean b, final String m,
             final AssertionError e) {
         if (ASSERT) {
-            String message = (e != null ? e.getMessage() : null);
-            if (message != null && message.trim().length() > 0) {
-                m_logger.assertLog(b, "ASSERT " + m + " " + message);
-            } else {
-                m_logger.assertLog(b, "ASSERT " + m);
-            }
+            m_logger.assertLog(b, "ASSERT " + m);
             // for stacktrace
             if (!b & e != null) {
                 m_logger.debug("ASSERT\t " + m, e);
@@ -516,7 +499,7 @@ public final class NodeLogger {
 
     /**
      * Writes CODING PROBLEM plus this message into this logger as error.
-     * 
+     *
      * @param o The message to print.
      */
     public void coding(final Object o) {
@@ -526,37 +509,29 @@ public final class NodeLogger {
     /**
      * Writes <i>CODING PROBLEM</i> plus this message, as well as the the
      * message of the throwable into this logger as error and debug.
-     * 
+     *
      * @param o The message to print.
-     * @param t The throwable's message to print.
+     * @param t The exception to log at debug level, including its stack trace.
      */
     public void coding(final Object o, final Throwable t) {
         this.coding(o);
-        String message = (t != null ? t.getMessage() : null);
-        if (message != null && message.trim().length() > 0) {
-            this.coding(message);
-        }
         this.debug(o, t);
     }
 
     /**
      * Write fatal error message and throwable into the logger.
-     * 
+     *
      * @param o The object to print.
-     * @param t The exception to log, including its stack trace.
+     * @param t The exception to log at debug level, including its stack trace.
      */
     public void fatal(final Object o, final Throwable t) {
         this.fatal(o);
-        String message = (t != null ? t.getMessage() : null);
-        if (message != null && message.trim().length() > 0) {
-            this.fatal(message);
-        }
         this.debug(o, t);
     }
 
     /**
      * Adds a new {@link java.io.Writer} with the given level to this logger.
-     * 
+     *
      * @param writer The writer to add.
      * @param minLevel The minimum level to output.
      * @param maxLevel The maximum level to output.
@@ -584,7 +559,7 @@ public final class NodeLogger {
 
     /**
      * Removes the previously added {@link java.io.Writer} from the logger.
-     * 
+     *
      * @param writer The Writer to remove.
      */
     public static final void removeWriter(final Writer writer) {
@@ -607,13 +582,13 @@ public final class NodeLogger {
     public static void setLevelIntern(final LEVEL level) {
         setLevel(level);
     }
-    
+
     /**
      * Sets an new minimum logging level for all internal appenders, that are,
      * log file, and <code>System.out</code> and <code>System.err</code>
      * appender. The maximum logging level stays <code>LEVEL.ALL</code> for
      * all appenders.
-     * 
+     *
      * @param level new minimum logging level
      */
     public static void setLevel(final LEVEL level) {
@@ -629,7 +604,7 @@ public final class NodeLogger {
         // SERR_APPENDER.addFilter(filter);
         SOUT_APPENDER.addFilter(filter);
     }
-    
+
     /**
      * Returns the minimum logging retrieved from the underlying Log4J logger.
      * @return minimum logging level
@@ -637,30 +612,30 @@ public final class NodeLogger {
     public LEVEL getLevel() {
         return transLevel(m_logger.getLevel());
     }
-    
-    /**   
+
+    /**
      * Checks if debug logging level is enabled.
-     * @return <code>true</code> if debug logging level is enabled, otherwise 
-     *         <code>false</code>     
+     * @return <code>true</code> if debug logging level is enabled, otherwise
+     *         <code>false</code>
      */
     public boolean isDebugEnabled() {
         return m_logger.isDebugEnabled();
     }
-    
-    /**   
+
+    /**
      * Checks if info logging level is enabled.
-     * @return <code>true</code> if info logging level is enabled, otherwise 
-     *         <code>false</code>     
+     * @return <code>true</code> if info logging level is enabled, otherwise
+     *         <code>false</code>
      */
     public boolean isInfoEnabled() {
         return m_logger.isInfoEnabled();
     }
-    
+
     /**
-     * Returns <code>true</code> if the underlying Log4J logger is enabled 
+     * Returns <code>true</code> if the underlying Log4J logger is enabled
      * for the given <code>level</code>.
      * @param level to test logging enabled
-     * @return <code>true</code> if logging is enabled, otherwise 
+     * @return <code>true</code> if logging is enabled, otherwise
      *         <code>false</code>
      */
     public boolean isEnabledFor(final LEVEL level) {
@@ -669,7 +644,7 @@ public final class NodeLogger {
 
     /**
      * Translates this logging <code>LEVEL</code> into Log4J logging levels.
-     * 
+     *
      * @param level the <code>LEVEL</code> to translate
      * @return the Log4J logging level
      */
@@ -689,10 +664,10 @@ public final class NodeLogger {
             return Level.ALL;
         }
     }
-    
+
     /**
      * Translates Log4J logging level into this <code>LEVEL</code>.
-     * 
+     *
      * @param level the Level to translate
      * @return this logging LEVEL
      */
@@ -716,11 +691,11 @@ public final class NodeLogger {
      * Ignore error messages that result from loading an exported workflow
      * without data. In the current version of KNIME, exporting a workflow
      * without the data simply deletes the 'data' directories in the workspace
-     * dir (but the flags in the node stay set). This is a known bug which 
+     * dir (but the flags in the node stay set). This is a known bug which
      * will be fixed as soon as the workflow manager is rewritten (before
      * KNIME 1.3).
-     * 
-     * <p>Setting this flag will cause the node logger to filter for one 
+     *
+     * <p>Setting this flag will cause the node logger to filter for one
      * specific error message that is reported from the Node class and only
      * print this error as debug.
      * @param value If to ignore.
