@@ -1236,7 +1236,25 @@ public final class WorkflowManager extends NodeContainer {
             LOGGER.debug(nc.getNameWithID() + " doBeforeExecute (NC)");
             // allow SNC to update states etc
             if (nc instanceof SingleNodeContainer) {
-                ((SingleNodeContainer)nc).preExecuteNode();
+                SingleNodeContainer snc = (SingleNodeContainer)nc;
+                if (snc.getLoopRole().equals(LoopRole.END)) {
+                    // if this is an END to a loop, make sure it knows it's
+                    // head
+                    ScopeLoopContext slc = snc.getNode().
+                               getScopeContextStackContainer().peek(
+                                       ScopeLoopContext.class);
+                    if (slc == null) {
+                        throw new IllegalStateException("Encountered"
+                                    + " loop-end without corresponding head!");
+                    }
+                    NodeContainer headNode = m_nodes.get(slc.getOwner());
+                    snc.getNode().setLoopHeadNode(
+                            ((SingleNodeContainer)headNode).getNode());
+                } else {
+                    // or not if it's any other type of node
+                    snc.getNode().setLoopHeadNode(null);
+                }
+                snc.preExecuteNode();
             }
             checkForNodeStateChanges(true);
         }

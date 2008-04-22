@@ -1662,6 +1662,14 @@ public final class Node implements NodeModelWarningListener {
         }
     }
 
+    public void setLoopHeadNode(final Node head) {
+        if (head == null) {
+            m_model.setLoopHeadNode(null);
+        } else {
+            m_model.setLoopHeadNode(head.m_model);
+        }
+    }
+
     static class SettingsLoaderAndWriter {
         /**
          * Config for misc settings which are shown in the dialog. So far it

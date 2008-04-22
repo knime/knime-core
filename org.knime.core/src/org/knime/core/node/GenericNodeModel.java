@@ -937,6 +937,16 @@ public abstract class GenericNodeModel {
         m_loopTailNode = tail;
     }
 
+    private GenericNodeModel m_loopHeadNode = null;
+    
+    protected final GenericNodeModel getLoopHeadNode() {
+        return m_loopHeadNode;
+    }
+    
+    public void setLoopHeadNode(final GenericNodeModel head) {
+        m_loopHeadNode = head;
+    }
+
     ScopeObjectStack getScopeContextStackContainer() {
         return m_scopeContextStackContainer;
     }
