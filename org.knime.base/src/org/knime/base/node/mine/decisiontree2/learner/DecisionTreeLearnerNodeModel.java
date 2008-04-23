@@ -801,7 +801,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             throws InvalidSettingsException {
         String classifyColumn = settings.getString(KEY_CLASSIFYCOLUMN);
         if (classifyColumn == null || classifyColumn.equals("")) {
-            throw new InvalidSettingsException("Must be a valid string!");
+            throw new InvalidSettingsException(
+                    "Classification column not set.");
         }
 
 // TODO       double significance =
