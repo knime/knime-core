@@ -311,7 +311,7 @@ public final class Node implements NodeModelWarningListener {
             switch (pol) {
             case IGNORE:
                 if (!(e instanceof InvalidSettingsException)) {
-                    m_logger.debug(error, e);
+                    m_logger.coding(error, e);
                 }
                 break;
             case FAIL:
@@ -320,9 +320,9 @@ public final class Node implements NodeModelWarningListener {
             case WARN:
                 nodeMessage = new NodeMessage(messageType, error);
                 if (e instanceof InvalidSettingsException) {
-                    m_logger.debug(error);
+                    m_logger.warn(error);
                 } else {
-                    m_logger.debug(error, e);
+                    m_logger.coding(error, e);
                 }
                 break;
             }
@@ -340,11 +340,11 @@ public final class Node implements NodeModelWarningListener {
                 } else {
                     error = "Caught \"" + e.getClass().getSimpleName() + "\", "
                         + "Loading model internals failed: " + e.getMessage();
-                    if (e instanceof Error) {
-                        m_logger.fatal(error, e);
-                    } else {
-                        m_logger.warn(error, e);
-                    }
+                }
+                if (e instanceof IOException) {
+                    m_logger.warn(error);
+                } else {
+                    m_logger.coding(error, e);
                 }
                 result.addError(error);
             } finally {
