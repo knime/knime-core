@@ -1143,7 +1143,7 @@ public class WizardProjectsImportPage extends WizardPage implements
         };
         // run the new project creation operation
         try {
-            getContainer().run(true, true, op);
+            getContainer().run(false, false, op);
         } catch (InterruptedException e) {
             return false;
         } catch (InvocationTargetException e) {
