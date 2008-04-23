@@ -233,7 +233,8 @@ final class RenameColumnSetting {
                     + getNewValueClassIndex());
         }
         String newName = m_newColumnName == null ? m_name : m_newColumnName;
-        Class<? extends DataValue> newVal = possibleTypes[getNewValueClassIndex()];
+        Class<? extends DataValue> newVal = 
+            possibleTypes[getNewValueClassIndex()];
         boolean useToString = newVal.equals(StringValue.class)
                 && !oldType.isCompatible(StringValue.class);
         DataColumnDomain newDomain;
@@ -243,7 +244,8 @@ final class RenameColumnSetting {
             newType = StringCell.TYPE;
         } else {
             newDomain = inSpec.getDomain();
-            if (oldType.getPreferredValueClass().equals(newVal)) {
+            Class<? extends DataValue> oldP = oldType.getPreferredValueClass();
+            if (oldP != null && oldP.equals(newVal)) {
                 newType = oldType;
             } else {
                 newType = DataType.cloneChangePreferredValue(oldType, newVal);
