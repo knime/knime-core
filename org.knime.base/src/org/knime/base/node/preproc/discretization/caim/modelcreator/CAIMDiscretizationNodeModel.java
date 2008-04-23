@@ -819,7 +819,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
      * columns. Also create the output table spec replacing the columns to
      * discretize to nominal String values.
      * 
-     * @see NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -875,7 +875,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
     /**
      * Loads the class column and the classification value in the model.
      * 
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -896,7 +896,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
     /**
      * Saves the class column and the classification value in the settings.
      * 
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -915,14 +915,15 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
      * <li>The positive value <code>DataCell</code> must not be null</li>
      * </ul>
      * 
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         String classifyColumn = settings.getString(CLASS_COLUMN_KEY);
         if (classifyColumn == null || classifyColumn.equals("")) {
-            throw new InvalidSettingsException("Must be a valid string!");
+            throw new InvalidSettingsException(
+                    "Discretization column not set.");
         }
 
         String[] includedColumnNames =
@@ -938,8 +939,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
      * Saves the {@link DiscretizationModel} to a config object at the model
      * outport.
      * 
-     * @see org.knime.core.node.NodeModel#saveModelContent(int,
-     *      org.knime.core.node.ModelContentWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveModelContent(final int index,
@@ -970,8 +970,8 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
         File internalsFile = new File(nodeInternDir, SAVE_INTERNALS_FILE_NAME);
         if (!internalsFile.exists()) {
             // file to load internals from not available
-            setWarningMessage("Internal model could not be loaded.");
-            return;
+            throw new IOException("Internal model could not be loaded, file \"" 
+                + internalsFile.getAbsoluteFile() + "\" does not exist.");
         }
 
         BufferedInputStream in =
@@ -983,8 +983,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
         try {
             m_discretizationModel = new DiscretizationModel(binModel);
         } catch (InvalidSettingsException ise) {
-            LOGGER.warn("Bin Model (internals) could not be loaded.", ise);
-            setWarningMessage("Internal model could not be loaded.");
+            throw new IOException("Internal model could not be loaded.", ise);
         }
     }
 
