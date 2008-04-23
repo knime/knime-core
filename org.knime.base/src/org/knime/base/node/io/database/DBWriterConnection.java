@@ -267,7 +267,7 @@ final class DBWriterConnection {
         if (allErrors == 0) {
             return null;
         } else {
-            return "Error writing " + allErrors + " of " + rowCount;
+            return "Error writing " + allErrors + " of " + rowCount + " rows.";
         }
     }
     
