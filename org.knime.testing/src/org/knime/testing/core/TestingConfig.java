@@ -33,10 +33,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import junit.framework.Assert;
 
@@ -90,22 +94,22 @@ public class TestingConfig extends AppenderSkeleton {
 
     private List<String> m_owners;
 
-    private Collection<String> m_requiredErrors;
+    private Collection<MsgPattern> m_requiredErrors;
 
-    private Collection<String> m_requiredWarnings;
+    private Collection<MsgPattern> m_requiredWarnings;
 
-    private Collection<String> m_requiredInfos;
+    private Collection<MsgPattern> m_requiredInfos;
 
-    private Collection<String> m_requiredDebugs;
+    private Collection<MsgPattern> m_requiredDebugs;
 
     // node IDs are strings like "0:1:4"
     private Set<String> m_requiredUnexecutedNodes;
 
     // maps node IDs (strings like "0:1:4") to messages
-    private Map<String, String> m_warningStatus;
+    private Map<String, MsgPattern> m_warningStatus;
 
     // maps node IDs (strings like "0:1:4") to messages
-    private Map<String, String> m_errorStatus;
+    private Map<String, MsgPattern> m_errorStatus;
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(TestingConfig.class);
@@ -123,13 +127,13 @@ public class TestingConfig extends AppenderSkeleton {
      */
     public TestingConfig(final int maxLines) {
 
-        m_requiredErrors = new LinkedList<String>();
-        m_requiredWarnings = new LinkedList<String>();
-        m_requiredInfos = new LinkedList<String>();
-        m_requiredDebugs = new LinkedList<String>();
+        m_requiredErrors = new LinkedList<MsgPattern>();
+        m_requiredWarnings = new LinkedList<MsgPattern>();
+        m_requiredInfos = new LinkedList<MsgPattern>();
+        m_requiredDebugs = new LinkedList<MsgPattern>();
         m_requiredUnexecutedNodes = new HashSet<String>();
-        m_errorStatus = new HashMap<String, String>();
-        m_warningStatus = new HashMap<String, String>();
+        m_errorStatus = new HashMap<String, MsgPattern>();
+        m_warningStatus = new HashMap<String, MsgPattern>();
         m_owners = null;
 
         m_maxlines = maxLines;
@@ -485,8 +489,8 @@ public class TestingConfig extends AppenderSkeleton {
      * @throws InvalidSettingsException if the settings in the file are
      *             incorrect
      */
-    public void readNodeStatusFile(final File statusFile) throws FileNotFoundException,
-            IOException, InvalidSettingsException {
+    public void readNodeStatusFile(final File statusFile)
+            throws FileNotFoundException, IOException, InvalidSettingsException {
 
         if (!statusFile.exists()) {
             return;
@@ -503,8 +507,10 @@ public class TestingConfig extends AppenderSkeleton {
                     || (line.toUpperCase().startsWith("WARN"))
                     || (line.toUpperCase().startsWith("INFO"))
                     || (line.toUpperCase().startsWith("DEBUG"))) {
+                // line specifies certain message that should appear in the log
                 parseMessageLine(line);
             } else {
+                // line specifies a node status plus message
                 parseNodeStatusLine(line);
             }
 
@@ -523,7 +529,7 @@ public class TestingConfig extends AppenderSkeleton {
     private void parseMessageLine(final String line)
             throws InvalidSettingsException {
 
-        Collection<String> msgList = null;
+        Collection<MsgPattern> msgList = null;
         String infoMsg = "<unknownType>";
         if (line.toUpperCase().startsWith("ERROR")) {
             msgList = m_requiredErrors;
@@ -542,7 +548,7 @@ public class TestingConfig extends AppenderSkeleton {
             assert false;
         }
 
-        String msg = extractMessagePart(line);
+        MsgPattern msg = extractMessagePart(line);
         if (msg == null) {
             throw new InvalidSettingsException("Invalid line in status file "
                     + "(missing ':'): " + line);
@@ -563,13 +569,13 @@ public class TestingConfig extends AppenderSkeleton {
      * @return the interesting message part of the specified line, or null, if
      *         the line has an unexpected format.
      */
-    private String extractMessagePart(final String line) {
+    private MsgPattern extractMessagePart(final String line) {
 
         String[] splits = line.split(" : ", 2);
         if (splits.length != 2) {
             return null;
         }
-        return splits[1];
+        return new MsgPattern(splits[1]);
     }
 
     /**
@@ -583,7 +589,7 @@ public class TestingConfig extends AppenderSkeleton {
      */
     private boolean registerRequiredMessage(final String msg,
             final Level msgLevel) {
-        Collection<String> msgList = null;
+        Collection<MsgPattern> msgList = null;
         if (msg != null) {
             if (msgLevel == Level.ERROR) {
                 msgList = m_requiredErrors;
@@ -599,12 +605,14 @@ public class TestingConfig extends AppenderSkeleton {
         // now check if its contained the corresponding list
         boolean expected = false;
         if (msgList != null) {
-            if (msgList.contains(msg)) {
-                // remove the expected msg - at the end we test, if
-                // required messages did not appear (are still in this list)
-                // and fail if so.
-                msgList.remove(msg);
-                expected = true;
+            Iterator<MsgPattern> iter = msgList.iterator();
+            while (iter.hasNext()) {
+                MsgPattern p = iter.next();
+                if (p.matches(msg)) {
+                    iter.remove();
+                    expected = true;
+                    break;
+                }
             }
         }
         return expected;
@@ -617,7 +625,8 @@ public class TestingConfig extends AppenderSkeleton {
      * @param line the line specifying the status of the node.
      * @throws InvalidSettingsException if the line is invalid
      */
-    private void parseNodeStatusLine(final String line) throws InvalidSettingsException {
+    private void parseNodeStatusLine(final String line)
+            throws InvalidSettingsException {
 
         String[] splits = line.split(",", 2);
         if (splits.length < 2) {
@@ -637,16 +646,17 @@ public class TestingConfig extends AppenderSkeleton {
                         "Invalid line in status file "
                                 + "(invalid err/warn status): " + line);
             }
+            MsgPattern statMsg = extractMessagePart(stats[1]);
+            if (statMsg == null) {
+                throw new InvalidSettingsException(
+                        "Invalid line in status file "
+                        + "(invalid err status msg): " + line);
+            }
 
             if (stats[0].toUpperCase().startsWith("ERR")) {
-                String errStatMsg = extractMessagePart(stats[1]);
-                if (errStatMsg == null) {
-                    throw new InvalidSettingsException(
-                            "Invalid line in status file "
-                                    + "(invalid err status msg): " + line);
-                }
 
-                /* if a node is supposed to have an error status then it is
+                /*
+                 * if a node is supposed to have an error status then it is
                  * supposed to fail during execution. Add the failure messages
                  * to the required messages, add the node id to the not-executed
                  * ids.
@@ -657,42 +667,31 @@ public class TestingConfig extends AppenderSkeleton {
                 }
 
                 // now store the expected status message
-                m_errorStatus.put(nodeID, errStatMsg);
+                m_errorStatus.put(nodeID, statMsg);
                 if (msg == null) {
                     msg = "Node #" + nodeID;
                 }
-                msg += " should have an error status '" + errStatMsg + "'";
+                msg += " should have an error status '" + statMsg + "'";
 
                 /*
                  * an error status also creates an error message in the log file
-                 * which would cause the test to fail then.
                  */
                 // add message of the error status to the list of expected msgs
-                m_requiredErrors.add(errStatMsg);
+                m_requiredErrors.add(statMsg);
 
             } else if (stats[0].toUpperCase().startsWith("WARN")) {
 
-                /**
-                 * The message in the node status is supposed to be copied from
-                 * the log file: <br />
-                 * <timestamp> WARN <thread> <classname> : Model warning
-                 * message: <ModelMsg> <br />
-                 * We must extract the pure model message first.
-                 */
-                String modelMsg = stats[1].split(": ", 3)[2];
-
-                m_warningStatus.put(nodeID, modelMsg);
+                m_warningStatus.put(nodeID, statMsg);
                 if (msg == null) {
                     msg = "Node #" + nodeID;
                 }
-                msg += " should have a warning status '" + modelMsg + "'";
+                msg += " should have a warning status '" + statMsg + "'";
 
                 /*
                  * a warning status also creates a warn message in the log file
                  * lets make this required.
                  */
                 // add message of the warn status to the list of expected msgs
-                String statMsg = "Model warning message: " + modelMsg;
                 m_requiredWarnings.add(statMsg);
 
             } else {
@@ -729,9 +728,11 @@ public class TestingConfig extends AppenderSkeleton {
                 String msg =
                         "Node " + node.getNameWithID() + " is not executed.";
                 if (node.getNodeMessage() != null) {
-                    msg += " (node's status message: "
-                        + node.getNodeMessage().getMessageType() + ": "
-                        + node.getNodeMessage().getMessage() + ")";
+                    msg +=
+                            " (node's status message: "
+                                    + node.getNodeMessage().getMessageType()
+                                    + ": " + node.getNodeMessage().getMessage()
+                                    + ")";
                 }
                 // make sure to log an error - during wrapUp the test fails then
                 LOGGER.error(msg);
@@ -762,7 +763,6 @@ public class TestingConfig extends AppenderSkeleton {
      * makes sure all nodes have a node status corresponding to the node status
      * file. If a node has an unexpected status or not the expected one, an
      * error is logged and the test fails.
-     * Sure!
      *
      * @param wfm the manager holding the flow to check.
      */
@@ -776,7 +776,7 @@ public class TestingConfig extends AppenderSkeleton {
             if (status != null
                     && status.getMessageType().equals(NodeMessage.Type.ERROR)) {
 
-                String expMsg = m_errorStatus.get(shortID(node, idPrefix));
+                MsgPattern expMsg = m_errorStatus.get(shortID(node, idPrefix));
                 if (expMsg == null) {
                     // node was not expected to finish with an error status
                     String msg =
@@ -788,9 +788,7 @@ public class TestingConfig extends AppenderSkeleton {
                     LOGGER.error(msg);
                 } else {
                     // make sure the error message is as expected.
-                    // The workflow manager adds "Execute failed (class name):"
-                    String statusMsg = status.getMessage();
-                    if (!statusMsg.equals(expMsg)) {
+                    if (!expMsg.matches(status.getMessage())) {
                         String msg =
                                 "Node '"
                                         + node.getNameWithID()
@@ -811,7 +809,7 @@ public class TestingConfig extends AppenderSkeleton {
             } else if (status != null
                     && status.getMessageType().equals(NodeMessage.Type.WARNING)) {
 
-                String expMsg = m_warningStatus.get(shortID(node, idPrefix));
+                MsgPattern expMsg = m_warningStatus.get(shortID(node, idPrefix));
                 if (expMsg == null) {
                     // node was not expected to finish with a warning status
                     String msg =
@@ -823,8 +821,7 @@ public class TestingConfig extends AppenderSkeleton {
                     LOGGER.error(msg);
                 } else {
                     // make sure the warning message is as expected.
-                    expMsg = "Warning: " + expMsg;
-                    if (!expMsg.equals(status.getMessage())) {
+                    if (!expMsg.matches(status.getMessage())) {
                         String msg =
                                 "Node '"
                                         + node.getNameWithID()
@@ -845,7 +842,7 @@ public class TestingConfig extends AppenderSkeleton {
             } else {
                 // no or unknown status
 
-                String expMsg = m_warningStatus.get(shortID(node, idPrefix));
+                MsgPattern expMsg = m_warningStatus.get(shortID(node, idPrefix));
                 if (expMsg != null) {
                     String msg =
                             "Node '"
@@ -922,21 +919,21 @@ public class TestingConfig extends AppenderSkeleton {
 
         if (m_requiredDebugs.size() > 0) {
             missingMessages = true;
-            for (String msg : m_requiredDebugs) {
+            for (MsgPattern msg : m_requiredDebugs) {
                 LOGGER.info("Missing DEBUG msg: \"" + msg + "\"");
             }
             LOGGER.error("Missing required DEBUG messages in the test output");
         }
         if (m_requiredInfos.size() > 0) {
             missingMessages = true;
-            for (String msg : m_requiredInfos) {
+            for (MsgPattern msg : m_requiredInfos) {
                 LOGGER.info("Missing INFO msg: \"" + msg + "\"");
             }
             LOGGER.error("Missing required INFO messages in the test output");
         }
         if (m_requiredWarnings.size() > 0) {
             missingMessages = true;
-            for (String msg : m_requiredWarnings) {
+            for (MsgPattern msg : m_requiredWarnings) {
                 LOGGER.info("Missing WARNING msg: \"" + msg + "\"");
             }
             LOGGER.error("Missing required WARNING messages in the "
@@ -944,7 +941,7 @@ public class TestingConfig extends AppenderSkeleton {
         }
         if (m_requiredErrors.size() > 0) {
             missingMessages = true;
-            for (String msg : m_requiredErrors) {
+            for (MsgPattern msg : m_requiredErrors) {
                 LOGGER.info("Missing ERROR msg: \"" + msg + "\"");
             }
             LOGGER.error("Missing required ERROR messages in the test output");
@@ -970,5 +967,141 @@ public class TestingConfig extends AppenderSkeleton {
 
         LOGGER.info(SUCCESS_MSG);
 
+    }
+
+    private final class MsgPattern {
+
+        private static final String REGEXPRPATTERN = "_!_";
+
+        private final String m_msg;
+
+        private final String m_patternPart1;
+
+        private final Pattern m_regExpr;
+
+        private final String m_patternPart3;
+
+        /**
+         * Creates a new pattern for a message. In the simple case this is the
+         * expected message. But it could also be a message containing a regular
+         * expression. The equals method pays attention to it then.<br />
+         * The part in the pattern that starts with _!_ and ends with _!_ will
+         * be considered a regular expression. If a pattern consists of
+         * PART1_!_RegExpr_!_PART3 then the message to compare against it will
+         * be split in three parts: Part 1 from the beginning of the message of
+         * length of PART1, part 2 from the end of the message - of length of
+         * PART3, and part 3, the middle part which must match the RegExpr part
+         * of the pattern.
+         *
+         * @see #equals(Object)
+         *
+         * @param msg the expected message (pattern). Can't be null.
+         */
+        public MsgPattern(final String msg) {
+
+            m_msg = msg;
+
+            // figure out if the pattern contains a regular expression
+            int regExStartIdx = m_msg.indexOf(REGEXPRPATTERN);
+            int regExEndIdx = m_msg.lastIndexOf(REGEXPRPATTERN);
+
+            if (regExStartIdx + REGEXPRPATTERN.length() < regExEndIdx) {
+                // seems it does
+                String part1 = m_msg.substring(0, regExStartIdx);
+                String regExprPart =
+                        m_msg.substring(
+                                regExStartIdx + REGEXPRPATTERN.length(),
+                                regExEndIdx);
+                String part3 =
+                        m_msg.substring(regExEndIdx + REGEXPRPATTERN.length());
+                Pattern p;
+                try {
+                    int compileFlags = Pattern.DOTALL | Pattern.UNICODE_CASE;
+                    p = Pattern.compile(regExprPart, compileFlags);
+                } catch (PatternSyntaxException pse) {
+                    LOGGER.error("Pattern to compare message to contains "
+                            + "invalid regular expression: \"" + regExprPart
+                            + "\" (full pattern: " + m_msg
+                            + "). Using regular string equals.");
+                    part1 = null;
+                    p = null;
+                    part3 = null;
+                }
+
+                m_patternPart1 = part1;
+                m_regExpr = p;
+                m_patternPart3 = part3;
+
+            } else {
+                // no regular expression
+                m_regExpr = null;
+                m_patternPart1 = null;
+                m_patternPart3 = null;
+            }
+        }
+
+        /**
+         * Returns the stored message pattern.
+         *
+         * @return the stored message pattern.
+         */
+        public String getPattern() {
+            return m_msg;
+        }
+
+        /**
+         * Compares the actual message with the pattern.
+         *
+         * @param actualMsg the message to test.
+         * @return true if the message matches the pattern, false otherwise.
+         */
+        public boolean matches(final String actualMsg) {
+
+            if (m_regExpr == null) {
+                // no regular expression - do a normal string equals
+                return m_msg.equals(actualMsg); // (m_msg can't be null)
+            }
+
+            if (actualMsg == null) {
+                return false;
+            }
+
+            // we must compare those three parts
+
+            if (actualMsg.length() < (m_patternPart1.length() + m_patternPart3
+                    .length())) {
+                return false;
+            }
+            if (!actualMsg.startsWith(m_patternPart1)) {
+                return false;
+            }
+            if (!actualMsg.endsWith(m_patternPart3)) {
+                return false;
+            }
+            String msgRegExpr =
+                    actualMsg.substring(m_patternPart1.length(), actualMsg
+                            .length()
+                            - m_patternPart3.length());
+            Matcher matcher = m_regExpr.matcher(msgRegExpr);
+            return matcher.matches();
+
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            throw new UnsupportedOperationException(
+                    "Don't call equal. Use matches.");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return m_msg;
+        }
     }
 }
