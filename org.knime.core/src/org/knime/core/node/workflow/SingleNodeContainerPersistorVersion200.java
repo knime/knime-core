@@ -130,6 +130,12 @@ public class SingleNodeContainerPersistorVersion200 extends
             final NodePersistorVersion1xx nodePersistor) {
     }
     
+    /** {@inheritDoc} */
+    @Override
+    protected boolean shouldFixModelPortOrder() {
+        return false;
+    }
+    
     protected String save(final SingleNodeContainer snc,
             final ReferencedFile nodeDirRef, final ExecutionMonitor exec,
             final boolean isSaveData) throws CanceledExecutionException,

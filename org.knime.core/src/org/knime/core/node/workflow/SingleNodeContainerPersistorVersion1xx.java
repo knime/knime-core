@@ -270,6 +270,10 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
         return Collections.emptyList();
     }
     
+    protected boolean shouldFixModelPortOrder() {
+        return true;
+    }
+    
     static final LoadNodeModelSettingsFailPolicy translateToFailPolicy(
             final State nodeState) { 
         switch (nodeState) {
