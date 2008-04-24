@@ -94,7 +94,7 @@ implements LoopStartNode {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        boolean inLoop = getLoopTailNode() != null;
+        boolean inLoop = (m_partNumbers != null);
         if (!inLoop) {
             if (m_settings.leaveOneOut()) {
                 m_nrIterations = inData[0].getRowCount();
@@ -131,6 +131,7 @@ implements LoopStartNode {
         int count = 0;
         final double max = inData[0].getRowCount();
         for (DataRow row : inData[0]) {
+            exec.checkCanceled();
             exec.setProgress(count / max);
 
             if (m_settings.leaveOneOut() && (count == m_currIteration)) {
