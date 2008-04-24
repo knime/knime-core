@@ -18,9 +18,9 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
- *   17.01.2006(sieb, ohl): reviewed 
+ *   17.01.2006(sieb, ohl): reviewed
  */
 package org.knime.core.node;
 
@@ -57,7 +57,6 @@ import org.knime.core.node.workflow.NodeMessageListener;
 import org.knime.core.node.workflow.ScopeLoopContext;
 import org.knime.core.node.workflow.ScopeObjectStack;
 import org.knime.core.node.workflow.ScopeVariable;
-import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.util.FileUtil;
 import org.w3c.dom.Element;
@@ -80,9 +79,9 @@ import org.w3c.dom.Element;
  * {@link NodeView}, thus, it is not intended to extend this class. A
  * {@link NodeFactory} is used to bundle model, view and dialog. This factory is
  * passed to the node constructor to create a node of that specific type.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
- * 
+ *
  */
 public final class Node implements NodeModelWarningListener {
 
@@ -109,7 +108,7 @@ public final class Node implements NodeModelWarningListener {
 
     /** The node's dialog or <code>null</code> if not available. */
     private GenericNodeDialogPane m_dialogPane;
-    
+
     private NodeSettings m_variablesSettings;
 
     /** Keeps outgoing information (specs, objects, HiLiteHandlers...). */
@@ -196,7 +195,7 @@ public final class Node implements NodeModelWarningListener {
      * specified <code>NodeFactory</code>. Also initializes the input and output
      * ports for the given number of data and model port. This node is
      * configured after initialization.
-     * 
+     *
      * @param nodeFactory the node's factory for the creation of model, view,
      *            and dialog
      * @throws IllegalArgumentException If the <i>nodeFactory</i> is
@@ -214,7 +213,7 @@ public final class Node implements NodeModelWarningListener {
 
         // keep node model
         m_model = m_factory.callCreateNodeModel();
-        
+
         // register ourselves as listener for warnings
         m_model.addWarningListener(this);
 
@@ -253,7 +252,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Creates a copy of the passed node.
-     * 
+     *
      * @param node the node that should be copied
      */
     public Node(final Node node) {
@@ -296,7 +295,7 @@ public final class Node implements NodeModelWarningListener {
                 error = "Caught \"" + e.getClass().getSimpleName() + "\", "
                     + "Loading model settings failed: " + e.getMessage();
             }
-            LoadNodeModelSettingsFailPolicy pol = 
+            LoadNodeModelSettingsFailPolicy pol =
                 loader.getModelSettingsFailPolicy();
             if (pol == null) {
                 if (!loader.isConfigured()) {
@@ -307,7 +306,6 @@ public final class Node implements NodeModelWarningListener {
                     pol = LoadNodeModelSettingsFailPolicy.FAIL;
                 }
             }
-            Type messageType = Type.WARNING;
             switch (pol) {
             case IGNORE:
                 if (!(e instanceof InvalidSettingsException)) {
@@ -316,13 +314,17 @@ public final class Node implements NodeModelWarningListener {
                 break;
             case FAIL:
                 result.addError(error);
-                messageType = Type.ERROR;
-            case WARN:
-                nodeMessage = new NodeMessage(messageType, error);
                 if (e instanceof InvalidSettingsException) {
-                    m_logger.warn(error);
+                    createErrorMessageAndNotify(error);
                 } else {
-                    m_logger.coding(error, e);
+                    createErrorMessageAndNotify(error, e);
+                }
+                break;
+            case WARN:
+                if (e instanceof InvalidSettingsException) {
+                    createWarningMessageAndNotify(error);
+                } else {
+                    createWarningMessageAndNotify(error, e);
                 }
                 break;
             }
@@ -362,7 +364,7 @@ public final class Node implements NodeModelWarningListener {
             } else {
                 m_outputs[i].spec = spec;
             }
-            
+
             Class<? extends PortObject> objClass =
                 m_outputs[i].type.getPortObjectClass();
             PortObject obj = loader.getPortObject(i);
@@ -386,7 +388,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Loads the settings (but not the data) from the given settings object.
-     * 
+     *
      * @param settings a settings object
      * @throws InvalidSettingsException if an expected setting is missing
      */
@@ -411,7 +413,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Validates the argument settings.
-     * 
+     *
      * @param settings a settings object
      * @return if valid.
      */
@@ -431,7 +433,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Returns the name for this node.
-     * 
+     *
      * @return The node's name.
      */
     public String getName() {
@@ -440,7 +442,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Returns the type for this node.
-     * 
+     *
      * @return The node's type.
      */
     public NodeType getType() {
@@ -449,7 +451,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * A detailed description of this node as html.
-     * 
+     *
      * @deprecated Use the <code>NodeFactoryHTMLCreator</code> in connection
      *             with the {@link #getXMLDescription()}.
      * @return A html page containing the node's detailed description.
@@ -462,7 +464,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * A short description of this node.
-     * 
+     *
      * @deprecated Use the <code>NodeFactoryHTMLCreator</code> in connection
      *             with the {@link #getXMLDescription()}.
      * @return A single line containing a brief node description.
@@ -477,7 +479,7 @@ public final class Node implements NodeModelWarningListener {
      * The XML description can be used with the
      * <code>NodeFactoryHTMLCreator</code> in order to get a converted HTML
      * description of it, which fits the overall KNIME HTML style.
-     * 
+     *
      * @return XML description of the node
      * @see org.knime.core.node.NodeFactory#getXMLDescription()
      */
@@ -487,7 +489,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Sets a new name for this node.
-     * 
+     *
      * @param nodeName The node's new name.
      * @throws NullPointerException If the name is <code>null</code>.
      */
@@ -511,7 +513,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Return name of input connector.
-     * 
+     *
      * @param index of the connector
      * @return The description
      * @throws IndexOutOfBoundsException If argument is out of range.
@@ -519,10 +521,10 @@ public final class Node implements NodeModelWarningListener {
     public String getInportName(final int index) {
         return m_inputs[index].name;
     }
-    
+
     /**
      * Return type of input connector.
-     * 
+     *
      * @param index of the connector
      * @return The type
      * @throws IndexOutOfBoundsException If argument is out of range.
@@ -533,7 +535,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Return name of output connector.
-     * 
+     *
      * @param index of the connector
      * @return The description to that port.
      * @throws IndexOutOfBoundsException If argument is out of range.
@@ -544,7 +546,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Return type of output connector.
-     * 
+     *
      * @param index of the connector
      * @return The type
      * @throws IndexOutOfBoundsException If argument is out of range.
@@ -552,28 +554,28 @@ public final class Node implements NodeModelWarningListener {
     public PortType getOutputType(final int index) {
         return m_outputs[index].type;
     }
-    
+
     public PortObjectSpec getOutputSpec(final int index) {
         return m_outputs[index].spec;
     }
-        
+
     public PortObject getOutputObject(final int index) {
         return m_outputs[index].object;
     }
-    
+
     public HiLiteHandler getOutputHiLiteHandler(final int index) {
         return m_outputs[index].hiliteHdl;
     }
-    
+
     public void setInHiLiteHandler(final int index, final HiLiteHandler hdl) {
         m_model.setNewInHiLiteHandler(index, hdl);
     }
-  
+
     /**
      * Get the policy for the data outports, that is, keep the output in main
      * memory or write it to disc. This method is used from within the
      * ExecutionContext when the derived NodeModel is executing.
-     * 
+     *
      * @return The memory policy to use.
      */
     final MemoryPolicy getOutDataMemoryPolicy() {
@@ -582,7 +584,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Delegate method to the model's <code>isAutoExecutable()</code> method.
-     * 
+     *
      * @return If the the underlying node model should be immediately executed
      *         when possible.
      */
@@ -592,7 +594,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Delegate method to node model.
-     * 
+     *
      * @return Whether the node model has (potentially) content to be displayed.
      * @see GenericNodeModel#hasContent()
      */
@@ -603,8 +605,8 @@ public final class Node implements NodeModelWarningListener {
     /**
      * Starts executing this node. If the node has been executed already, it
      * does nothing - just returns <code>true</code>.
-     * 
-     * 
+     *
+     *
      * Otherwise, the procedure starts executing all predecessor nodes connected
      * to an input port (which in turn recursively trigger their predecessors)
      * and calls the function <code>#execute()</code> in the model after all
@@ -613,7 +615,7 @@ public final class Node implements NodeModelWarningListener {
      * some predecessor nodes though). If a predecessor node returns false this
      * method also returns false without executing this node or any further
      * connected node.
-     * 
+     *
      * @param exec The execution monitor.
      * @param inData the datatables from the successors.
      * @return <code>true</code> if execution was successful otherwise
@@ -627,28 +629,25 @@ public final class Node implements NodeModelWarningListener {
         final long time = System.currentTimeMillis();
         m_logger.debug("Start execute");
         // reset the message object
-        notifyMessageListeners(new NodeMessage(NodeMessage.Type.RESET,
-                null));
+        createResetMessageAndNotify();
         // notify state listeners
         // TODO: NEWWFM State Event
         // notifyStateListeners(new NodeStateChangedEvent(
         // NodeStateChangedEvent.Type.START_EXECUTE));
 
-        // 
+        //
         // EXECUTE the underlying node's model
         //
         // check for existence of all input tables
         // TODO allow for optional inputs
         for (int i = 0; i < inData.length; i++) {
             if (inData[i] == null) {
-                m_logger.assertLog(false, "Couldn't get data from predecessor "
-                        + "(Port No." + i + "). Is it executed?");
                 m_logger.error("failed execute");
                 // TODO NEWWFM state event
                 // TODO: also notify message/progress listeners
-                notifyMessageListeners(new NodeMessage(NodeMessage.Type.ERROR,
-                                "Couldn't get data from predecessor (Port No."
-                                + i + "). Is it executed?"));
+                createErrorMessageAndNotify(
+                        "Couldn't get data from predecessor (Port No."
+                        + i + "). Is it executed?");
                 // notifyStateListeners(new NodeStateChangedEvent.EndExecute());
                 return false;
             }
@@ -658,31 +657,25 @@ public final class Node implements NodeModelWarningListener {
         for (int i = 0; i < inData.length; i++) {
             PortType thisType = m_model.getInPortType(i);
             if (!(thisType.getPortObjectClass().isInstance(inData[i]))) {
-                m_logger.error("Connection Error: Mismatch"
-                        + " of input port types (port " + i + ").");
+                createErrorMessageAndNotify("Connection Error: Mismatch"
+                                        + " of input port types (port " + i
+                                        + ").");
                 m_logger.error("  (Wanted: "
                         + thisType.getPortObjectClass().getName() + ", "
                         + "actual: " + inData[i].getClass().getName() + ")");
-                notifyMessageListeners(new NodeMessage(NodeMessage.Type.ERROR,
-                                "Connection Error: Mismatch"
-                                        + " of input port types (port " + i
-                                        + ")."));
                 // TODO: return here???
             }
         }
 
         PortObject[] newOutData; // the new DTs from the model
-        NodeMessage nodeMessage = null;
         try {
             // INVOKE MODEL'S EXECUTE
             // (warnings will now be processed "automatically" - we listen)
             newOutData = m_model.executeModel(inData, exec);
         } catch (CanceledExecutionException cee) {
             // execution was canceled
-            m_logger.info("execute canceled");
             reset(true);
-            nodeMessage = new NodeMessage(NodeMessage.Type.WARNING,
-                            "Execution canceled");
+            createWarningMessageAndNotify("Execution canceled");
             return false;
         } catch (Throwable th) {
             String message = "Execute failed: ";
@@ -692,18 +685,9 @@ public final class Node implements NodeModelWarningListener {
                 message = message.concat("(\"" + th.getClass().getSimpleName()
                         + "\"): " + th.getMessage());
             }
-            if (th instanceof Error) {
-                m_logger.fatal(message, th);
-            } else {
-                m_logger.error(message, th);
-            }
             reset(true);
-            nodeMessage = new NodeMessage(NodeMessage.Type.ERROR, message);
+            createErrorMessageAndNotify(message, th);
             return false;
-        } finally {
-            if (nodeMessage != null) {
-                notifyMessageListeners(nodeMessage);
-            }
         }
         // check if we see a loop status in the NodeModel
         ScopeLoopContext slc = m_model.getLoopStatus();
@@ -711,21 +695,18 @@ public final class Node implements NodeModelWarningListener {
         // check for compatible output PortObjects
         for (int i = 0; i < newOutData.length; i++) {
             PortType thisType = m_model.getOutPortType(i);
-            assert newOutData[i] != null || continuesLoop 
+            assert newOutData[i] != null || continuesLoop
                 : "Null output from non-loopterminate node";
             if ((newOutData[i] != null) && !thisType.getPortObjectClass().
                     isInstance(newOutData[i])) {
-                m_logger.error("Connection Error: Mismatch"
-                        + " of output port types (port " + i + ").");
-                m_logger.error("  (Wanted: "
-                                + thisType.getPortObjectClass().getName()
-                                + ", " + "actual: "
-                                + newOutData[i].getClass().getName() + ")");
                 // TODO: is this redundant double checking?
-                notifyMessageListeners(new NodeMessage(NodeMessage.Type.ERROR,
-                                "Connection Error: Mismatch"
+                createErrorMessageAndNotify("Connection Error: Mismatch"
                                     + " of output port types (port " + i
-                                    + ")."));
+                                    + ").");
+                m_logger.error("  (Wanted: "
+                        + thisType.getPortObjectClass().getName()
+                        + ", " + "actual: "
+                        + newOutData[i].getClass().getName() + ")");
                 return false;
             }
         }
@@ -763,24 +744,90 @@ public final class Node implements NodeModelWarningListener {
         return true;
     } // executeNode(ExecutionMonitor)
 
+
     /**
-     * Checks the warnings in the model and notifies registered listeners.
-     * 
+     * Creates a new {@link NodeMessage} object of type warning and notifies
+     * registered {@link NodeMessageListener}s. Also logs a warning message.
+     *
+     * @param warningMessage the new warning message
+     */
+    private void createWarningMessageAndNotify(final String warningMessage) {
+        createWarningMessageAndNotify(warningMessage, null);
+    }
+
+    /**
+     * Creates a new {@link NodeMessage} object of type warning and notifies
+     * registered {@link NodeMessageListener}s. Also logs a warning message.
+     * If a throwable is provided its stacktrace is logged at debug level.
+     *
+     * @param warningMessage the new warning message
+     * @param t its stacktrace is logged at debug level.
+     */
+    private void createWarningMessageAndNotify(final String warningMessage,
+            final Throwable t) {
+        m_logger.warn(warningMessage);
+        if (t != null) {
+            m_logger.debug(warningMessage, t);
+        }
+        notifyMessageListeners(new NodeMessage(NodeMessage.Type.WARNING,
+                warningMessage));
+    }
+
+    /**
+     * Creates a new {@link NodeMessage} object of type error and notifies
+     * registered {@link NodeMessageListener}s. Also logs an error message.
+     *
+     * @param errorMessage the new error message
+     */
+    private void createErrorMessageAndNotify(final String errorMessage) {
+        createErrorMessageAndNotify(errorMessage, null);
+    }
+
+    /**
+     * Creates a new {@link NodeMessage} object of type error and notifies
+     * registered {@link NodeMessageListener}s. Also logs an error message.
+     * If a throwable is provided its stacktrace is logged at debug level.
+     *
+     * @param errorMessage the new error message
+     * @param t its stacktrace is logged at debug level.
+     */
+    private void createErrorMessageAndNotify(final String errorMessage, final
+            Throwable t) {
+        m_logger.error(errorMessage);
+        if (t != null) {
+            m_logger.debug(errorMessage, t);
+        }
+        notifyMessageListeners(new NodeMessage(NodeMessage.Type.ERROR,
+                errorMessage));
+    }
+
+    /**
+     * Notifies all registered {@link NodeMessageListener}s that the node's
+     * message is cleared.
+     */
+    private void createResetMessageAndNotify() {
+        notifyMessageListeners(new NodeMessage(NodeMessage.Type.RESET, null));
+    }
+
+    /**
+     * Is called, when a warning message is set in the {@link GenericNodeModel}.
+     * Forwards it to registered {@link NodeMessageListener}s.
+     *
+     * @param warningMessage the new message in the node model.
      */
     public void warningChanged(final String warningMessage) {
 
         // get the warning message if available and create a message object
         // also notify all listeners
         if (warningMessage != null) {
-
-            m_logger.warn("Model warning message: " + warningMessage);
-            notifyMessageListeners(new NodeMessage(NodeMessage.Type.WARNING,
-                    "Warning: " + warningMessage));
+            createWarningMessageAndNotify(warningMessage);
+        } else {
+            createResetMessageAndNotify();
         }
     }
 
     /**
-     * Resets this node without re-configuring it. 
+     * Resets this node without re-configuring it.
      * @param cleanMessages Whether to clear the node message, mostly true
      * but false if an execution has failed and we want to give the node model
      * a chance to clear its intermediate results.
@@ -790,8 +837,7 @@ public final class Node implements NodeModelWarningListener {
         // if reset had no exception, reset node message
         m_model.resetModel();
         if (cleanMessages) {
-            notifyMessageListeners(new NodeMessage(NodeMessage.Type.RESET,
-                    null));
+            createResetMessageAndNotify();
         }
         // and make sure output ports are empty as well
         cleanOutPorts();
@@ -821,7 +867,7 @@ public final class Node implements NodeModelWarningListener {
     /**
      * Adds the argument set of tables to the set of temporary tables in this
      * node. Called after execute.
-     * 
+     *
      * @param tempTables Tables to add, not <code>null</code>.
      */
     public void addToTemporaryTables(final Set<ContainerTable> tempTables) {
@@ -833,7 +879,7 @@ public final class Node implements NodeModelWarningListener {
      * repository of tables. This method is basically delegates from the
      * NodeContainer class to access a package-scope method in
      * BufferedDataTable.
-     * 
+     *
      * @param rep The global repository.
      */
     public void putOutputTablesIntoGlobalRepository(
@@ -853,7 +899,7 @@ public final class Node implements NodeModelWarningListener {
      * Delegate method to allow access to the (package scope) method
      * {@link ExecutionContext#getLocalTableRepository()}. Called after
      * execution has finished to clean up temporary tables.
-     * 
+     *
      * @param c To access.
      * @return Its local table repository.
      */
@@ -992,15 +1038,15 @@ public final class Node implements NodeModelWarningListener {
     // }
     //
     // }
-    
+
     /** Used before configure, to apply the variable mask to the nodesettings,
      * that is to change individual node settings to reflect the current values
      * of the variables (if any).
      * @return a map containing the exposed variables (which are visible to
-     * downstream nodes. These variables are put onto the node's 
+     * downstream nodes. These variables are put onto the node's
      * {@link ScopeObjectStack}.
      */
-    private Map<String, ScopeVariable> applySettingsUsingScopeStack() 
+    private Map<String, ScopeVariable> applySettingsUsingScopeStack()
         throws InvalidSettingsException {
         if (m_variablesSettings == null) {
             return Collections.emptyMap();
@@ -1009,7 +1055,7 @@ public final class Node implements NodeModelWarningListener {
         try {
             m_model.saveSettingsTo(fromModel);
         } catch (Throwable e) {
-            m_logger.error("Saving of model settings failed with " 
+            m_logger.error("Saving of model settings failed with "
                     + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
             String message = "Failed to apply scope variables; "
                 + "model failed to save its settings";
@@ -1017,7 +1063,7 @@ public final class Node implements NodeModelWarningListener {
         }
         ConfigEditTreeModel configEditor;
         try {
-            configEditor = 
+            configEditor =
                 ConfigEditTreeModel.create(fromModel, m_variablesSettings);
         } catch (final InvalidSettingsException e) {
             throw new InvalidSettingsException("Errors reading flow variables: "
@@ -1038,7 +1084,7 @@ public final class Node implements NodeModelWarningListener {
             m_model.validateSettings(fromModel);
         } catch (final Throwable e) {
             if (!(e instanceof InvalidSettingsException)) {
-                m_logger.error("Validation of node settings failed with " 
+                m_logger.error("Validation of node settings failed with "
                         + e.getClass().getSimpleName(), e);
             }
             throw new InvalidSettingsException(
@@ -1049,7 +1095,7 @@ public final class Node implements NodeModelWarningListener {
             m_model.loadValidatedSettingsFrom(fromModel);
         } catch (Throwable e) {
             if (!(e instanceof InvalidSettingsException)) {
-                m_logger.error("Loading of node settings failed with " 
+                m_logger.error("Loading of node settings failed with "
                         + e.getClass().getSimpleName(), e);
             }
             m_logger.error("loadSettings failed after validation succeeded.");
@@ -1057,7 +1103,7 @@ public final class Node implements NodeModelWarningListener {
                     "Errors loading flow variables into node : "
                     + e.getMessage(), e);
         }
-        Map<String, ScopeVariable> newVariableHash = 
+        Map<String, ScopeVariable> newVariableHash =
             new LinkedHashMap<String, ScopeVariable>();
         for (ScopeVariable v : newVariableList) {
             if (newVariableHash.put(v.getName(), v) != null) {
@@ -1067,22 +1113,22 @@ public final class Node implements NodeModelWarningListener {
         }
         return newVariableHash;
     }
-    
+
     private void pushOntoStack(final Map<String, ScopeVariable> newVars) {
         ScopeObjectStack stack = getScopeContextStackContainer();
-        ArrayList<ScopeVariable> reverseOrder = 
+        ArrayList<ScopeVariable> reverseOrder =
             new ArrayList<ScopeVariable>(newVars.values());
         Collections.reverse(reverseOrder);
         for (ScopeVariable v : reverseOrder) {
             stack.push(v);
         }
     }
-    
+
     /**
      * Sets all (new) incoming <code>DataTableSpec</code> elements in the
      * model, calls the model to create output table specs and propagates these
      * new specs to the connected successors.
-     * 
+     *
      * @param inSpecs the tablespecs from the predecessors
      * @return flag indicating success of configure
      */
@@ -1090,8 +1136,7 @@ public final class Node implements NodeModelWarningListener {
         boolean success = false;
         synchronized (m_configureLock) {
             // reset message object
-            notifyMessageListeners(new NodeMessage(NodeMessage.Type.RESET,
-                    null));
+            createResetMessageAndNotify();
             // need to init here as there may be an exception being thrown and
             // then we copy the null elements of this array to their destination
             PortObjectSpec[] newOutSpec = new PortObjectSpec[getNrOutPorts()];
@@ -1119,10 +1164,9 @@ public final class Node implements NodeModelWarningListener {
                 pushOntoStack(newVariables);
                 success = true;
             } catch (InvalidSettingsException ise) {
-                m_logger.warn("Configure failed: " + ise.getMessage());
-                notifyMessageListeners(
-                        new NodeMessage(NodeMessage.Type.WARNING, "Warning: "
-                                + ise.getMessage()));
+
+                createWarningMessageAndNotify(ise.getMessage());
+
             } catch (Exception e) {
                 m_logger.error("Configure failed", e);
             } catch (Throwable t) {
@@ -1149,7 +1193,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Returns the name for this node's view at the given index.
-     * 
+     *
      * @param viewIndex The view index.
      * @return The view's name.
      * @throws ArrayIndexOutOfBoundsException If the view index is out of range.
@@ -1160,7 +1204,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Opens the node's view.
-     * 
+     *
      * @param viewIndex The view index to show.
      */
     public void showView(final int viewIndex) {
@@ -1169,31 +1213,22 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Opens the node's view.
-     * 
+     *
      * @param viewIndex The view's index to show.
      * @param nodeName The underlying node's name.
      */
     public void showView(final int viewIndex, final String nodeName) {
         try {
             getView(viewIndex, nodeName).openView();
-        } catch (Exception e) {
-            m_logger.error("Show view failed", e);
-            notifyMessageListeners(
-                    new NodeMessage(NodeMessage.Type.ERROR,
-                            "View could not be opened, reason: "
-                                    + e.getMessage()));
         } catch (Throwable e) {
-            m_logger.fatal("Show view failed", e);
-            notifyMessageListeners(
-                    new NodeMessage(NodeMessage.Type.ERROR,
-                            "View could not be opened, reason: "
-                                    + e.getMessage()));
+            createErrorMessageAndNotify("View could not be opened, reason: "
+                    + e.getMessage(), e);
         }
     }
 
     /**
      * Return a new instance of the node's view (without opening it).
-     * 
+     *
      * @param viewIndex The view's index to show up.
      * @param title the displayed view title.
      * @return The node view with the specified index.
@@ -1223,7 +1258,7 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
-     * 
+     *
      * @return <code>true</code> if a dialog is available or the number of
      *         data out-ports is greater than zero.
      */
@@ -1233,7 +1268,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Shows this node's dialog with the name of this node as title.
-     * 
+     *
      * @see #showDialog(String)
      */
     // OBSOLETE
@@ -1243,7 +1278,7 @@ public final class Node implements NodeModelWarningListener {
     /**
      * Opens the node's dialog and loads the current settings from the model
      * into the dialog.
-     * 
+     *
      * @param title The title for the dialog to open.
      */
     // OBSOLETE
@@ -1295,7 +1330,7 @@ public final class Node implements NodeModelWarningListener {
      * Get reference to the node dialog instance. Used to get the user settings
      * from the dialog without overwriting them as in in
      * {@link #getDialogPaneWithSettings(PortObjectSpec[], ScopeObjectStack)}
-     * 
+     *
      * @return Reference to dialog pane.
      * @throws IllegalStateException If node has no dialog.
      * @see #hasDialog()
@@ -1364,7 +1399,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Saves the settings (but not the data).
-     * 
+     *
      * @param settings a settings object
      */
     public void saveSettingsTo(final NodeSettingsWO settings) {
@@ -1392,29 +1427,28 @@ public final class Node implements NodeModelWarningListener {
         if (internDir.canWrite()) {
             try {
                 m_model.saveInternals(internDir, exec);
-            } catch (IOException ioe) {
-                notifyMessageListeners(
-                        new NodeMessage(NodeMessage.Type.ERROR,
-                                "Unable to save " + "internals: "
-                                        + ioe.getMessage()));
-                m_logger.debug("saveInternals() failed with " + "IOException",
-                        ioe);
             } catch (CanceledExecutionException e) {
                 throw e;
             } catch (Throwable t) {
-                m_logger.coding("saveInternals() "
-                        + "should only cause IOException.", t);
-                notifyMessageListeners(
-                        new NodeMessage(NodeMessage.Type.ERROR,
-                                "Unable to save " + "internals: "
-                                        + t.getMessage()));
+                String details = "<no details available>";
+                if (t.getMessage() != null && t.getMessage().length() > 0) {
+                    details = t.getMessage();
+                }
+
+                String errMsg;
+                if (t instanceof IOException) {
+                    errMsg = "I/O error while saving internals: " + details;
+                } else {
+                    errMsg = "Unable to save internals: " + details;
+                    m_logger.coding("saveInternals() "
+                            + "should only cause IOException.", t);
+                }
+                createErrorMessageAndNotify(errMsg, t);
             }
         } else {
             String errorMessage =
                     "Unable to write directory: " + internDir.getAbsolutePath();
-            m_logger.error(errorMessage);
-            notifyMessageListeners(new NodeMessage(NodeMessage.Type.ERROR,
-                    errorMessage));
+            createErrorMessageAndNotify(errorMessage);
         }
     }
 
@@ -1423,25 +1457,26 @@ public final class Node implements NodeModelWarningListener {
         if (m_model.hasContent()) {
             try {
                 m_model.loadInternals(internDir, exec);
-            } catch (IOException ioe) {
-                notifyMessageListeners(
-                        new NodeMessage(NodeMessage.Type.ERROR,
-                            "Unable to load internals: " + ioe.getMessage()));
-                m_logger.debug("loadInternals() failed with IOException", ioe);
             } catch (CanceledExecutionException e) {
                 throw e;
             } catch (Throwable e) {
-                m_logger.coding("loadInternals() "
-                        + "should only cause IOException.", e);
-                notifyMessageListeners(new NodeMessage(NodeMessage.Type.ERROR,
-                                "Unable to load internals: " + e.getMessage()));
+                String details = "<no details available>";
+                if (e.getMessage() != null && e.getMessage().length() > 0) {
+                    details = e.getMessage();
+                }
+                createErrorMessageAndNotify("Unable to load internals: "
+                        + details, e);
+                if (!(e instanceof IOException)) {
+                    m_logger.coding("loadInternals() "
+                            + "should only cause IOException.", e);
+                }
             }
         }
     }
 
     /**
      * Validates the settings inside the model.
-     * 
+     *
      * @throws InvalidSettingsException If not valid.
      */
     // OBSOLETE
@@ -1458,7 +1493,7 @@ public final class Node implements NodeModelWarningListener {
     /**
      * Reads the current settings from the dialog and writes them into the
      * model.
-     * 
+     *
      * @throws InvalidSettingsException If the settings are not valid for the
      *             underlying model.
      */
@@ -1479,7 +1514,7 @@ public final class Node implements NodeModelWarningListener {
     /**
      * Compares the current settings from the dialog with the settings from the
      * model.
-     * 
+     *
      * @return true if the settings are equal
      */
     // OBSOLETE here
@@ -1504,7 +1539,7 @@ public final class Node implements NodeModelWarningListener {
     /**
      * Reads the current settings from the model and load them into the dialog
      * pane.
-     * 
+     *
      * @throws NotConfigurableException if the dialog cannot be opened because
      *             of real invalid settings or if any preconditions are not
      *             fulfilled, e.g. no predecessor node, no nominal column in
@@ -1526,7 +1561,7 @@ public final class Node implements NodeModelWarningListener {
     /**
      * Adds a state listener to this node. Ignored, if the listener is already
      * registered.
-     * 
+     *
      * @param listener The listener to add.
      */
     public void addMessageListener(final NodeMessageListener listener) {
@@ -1540,7 +1575,7 @@ public final class Node implements NodeModelWarningListener {
     /**
      * Removes a state listener from this node. Ignored, if the listener is not
      * registered.
-     * 
+     *
      * @param listener The listener to remove.
      */
     public void removeMessageListener(final NodeMessageListener listener) {
@@ -1551,7 +1586,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Notifies all state listeners that the message of this node has changed.
-     * 
+     *
      * @param message The message object.
      */
     public void notifyMessageListeners(final NodeMessage message) {
@@ -1568,8 +1603,8 @@ public final class Node implements NodeModelWarningListener {
         }
     }
 
-    /** 
-     * @return Last fired message. 
+    /**
+     * @return Last fired message.
      */
     public NodeMessage getNodeMessage() {
         return m_message;
@@ -1577,7 +1612,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Returns a string summary of this node.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -1599,8 +1634,8 @@ public final class Node implements NodeModelWarningListener {
     public boolean isInterruptible() {
         return (m_model instanceof InterruptibleNodeModel);
     }
-    
-    /** Ensures that any port object is read for later saving with a 
+
+    /** Ensures that any port object is read for later saving with a
      * newer version, details see same method in class SingleNodeContainer. */
     public void ensureOutputDataIsRead() {
         for (Output p : m_outputs) {
@@ -1612,7 +1647,7 @@ public final class Node implements NodeModelWarningListener {
             t.ensureOpen();
         }
     }
-    
+
     /** Exposes {@link BufferedDataTable#ensureOpen()} as public method. This
      * method has been added here in order to keep the scope of the above method
      * at a minimum.
@@ -1643,7 +1678,7 @@ public final class Node implements NodeModelWarningListener {
     }
 
     public static enum LoopRole { BEGIN, END, NONE };
-    
+
     public final LoopRole getLoopRole() {
         if (m_model instanceof LoopStartNode) {
             return LoopRole.BEGIN;
@@ -1679,7 +1714,7 @@ public final class Node implements NodeModelWarningListener {
         static final String CFG_MISC_SETTINGS = "internal_node_subsettings";
 
         private MemoryPolicy m_memoryPolicy = MemoryPolicy.CacheSmallInMemory;
-        private NodeSettings m_variablesSettings = 
+        private NodeSettings m_variablesSettings =
             new NodeSettings("variables");
         private NodeSettings m_modelSettings;
 
@@ -1720,14 +1755,14 @@ public final class Node implements NodeModelWarningListener {
         NodeSettings getVariablesSettings() {
             return m_variablesSettings;
         }
-        
+
         /**
          * @param variablesSettings the variablesSettings to set
          */
         void setVariablesSettings(final NodeSettings variablesSettings) {
             m_variablesSettings = variablesSettings;
         }
-        
+
         static SettingsLoaderAndWriter load(final NodeSettingsRO settings)
                 throws InvalidSettingsException {
             SettingsLoaderAndWriter result = new SettingsLoaderAndWriter();
@@ -1777,7 +1812,7 @@ public final class Node implements NodeModelWarningListener {
             NodeSettingsWO model = settings.addNodeSettings(CFG_MODEL);
             m_modelSettings.copyTo(model);
             if (m_variablesSettings != null) {
-                NodeSettingsWO variables = 
+                NodeSettingsWO variables =
                     settings.addNodeSettings(CFG_VARIABLES);
                 m_variablesSettings.copyTo(variables);
             }
