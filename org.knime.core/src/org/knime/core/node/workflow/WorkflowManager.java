@@ -1784,10 +1784,11 @@ public final class WorkflowManager extends NodeContainer {
 
     // complete set of nodes depth-first starting with node id.
     private void completeSet(final HashSet<NodeID> nodes, final NodeID id) {
-        nodes.add(id);
-        for (ConnectionContainer cc : m_connectionsBySource.get(id)) {
-            if (!cc.getType().isLeavingWorkflow()) {
-                completeSet(nodes, cc.getDest());
+        if (nodes.add(id)) {
+            for (ConnectionContainer cc : m_connectionsBySource.get(id)) {
+                if (!cc.getType().isLeavingWorkflow()) {
+                    completeSet(nodes, cc.getDest());
+                }
             }
         }
     }
