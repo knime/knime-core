@@ -250,9 +250,8 @@ final class SearchReplaceDictNodeModel extends NodeModel {
             throws InvalidSettingsException {
         settings.getString(CFG_TARGET_COLUMN);
         String dictURL = settings.getString(CFG_DICT_LOCATION);
-        if (dictURL == null || !new File(dictURL).isFile()) {
-            throw new InvalidSettingsException(
-                    "Dictionary file does not exist: " + m_dictFileURLString);
+        if (dictURL == null) {
+            throw new InvalidSettingsException("No dictionary file specified");
         }
         String newCol = settings.getString(CFG_APPEND_COLUMN);
         if (newCol != null && newCol.trim().length() == 0) {
