@@ -100,5 +100,7 @@ public interface NodePersistor {
     public NodeSettings getVariablesSettings();
     PortObjectSpec getPortObjectSpec(final int outportIndex);
     PortObject getPortObject(final int outportIndex);
+    // TODO should use template instead of final object creation, goes
+    // along with changes in Node class
     NodeMessage getNodeMessage();
 }
