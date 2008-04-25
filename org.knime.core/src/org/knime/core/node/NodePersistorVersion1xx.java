@@ -402,7 +402,10 @@ public class NodePersistorVersion1xx implements NodePersistor {
         
         try {
             m_isExecuted = loadIsExecuted(settings);
-            if (shouldLoadAsNotExecuted(node)) {
+            if (m_isExecuted && shouldLoadAsNotExecuted(node)) {
+                LOGGER.debug("Setting executed flag of node \"" 
+                        + node.getFactory().getClass().getSimpleName()
+                        + "\" to false due to version bump (loaded as true)");
                 m_isExecuted = false;
             }
         } catch (InvalidSettingsException ise) {
