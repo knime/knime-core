@@ -95,6 +95,15 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return settings.getBoolean(CFG_ISEXECUTED);
     }
     
+    protected boolean shouldLoadAsNotExecuted(final Node node) {
+        String facName = node.getFactory().getClass().getSimpleName();
+        if (facName.equals("InteractivePieNodeFactory")
+                || facName.equals("HistogramNodeFactory")) {
+            return true;
+        }
+        return false;
+    }
+    
     protected boolean loadHasContent(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         return settings.getBoolean(CFG_ISEXECUTED);
@@ -393,6 +402,9 @@ public class NodePersistorVersion1xx implements NodePersistor {
         
         try {
             m_isExecuted = loadIsExecuted(settings);
+            if (shouldLoadAsNotExecuted(node)) {
+                m_isExecuted = false;
+            }
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load execution flag: " + ise.getMessage();
             result.addError(e);

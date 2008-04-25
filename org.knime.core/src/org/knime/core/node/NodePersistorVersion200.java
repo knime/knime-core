@@ -246,6 +246,12 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     
     /** {@inheritDoc} */
     @Override
+    protected boolean shouldLoadAsNotExecuted(Node node) {
+        return false;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
     protected boolean loadHasContent(NodeSettingsRO settings)
             throws InvalidSettingsException {
         return settings.getBoolean("hasContent");
