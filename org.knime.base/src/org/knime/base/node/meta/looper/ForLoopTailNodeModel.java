@@ -46,7 +46,7 @@ import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.ScopeVariable;
 
 /**
- *T his model is the tail node of a for loop.
+ * This model is the tail node of a for loop.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
