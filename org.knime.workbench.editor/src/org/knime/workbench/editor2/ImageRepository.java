@@ -49,7 +49,7 @@ import org.knime.workbench.KNIMEEditorPlugin;
  */
 public final class ImageRepository {
     private ImageRepository() {
-        // hidden, dude !
+        // hidden
     }
 
     /** Image: editor. */
