@@ -40,6 +40,7 @@ import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeInPortEditPart;
 import org.knime.workbench.editor2.editparts.NodeOutPortEditPart;
+import org.knime.workbench.editor2.editparts.SubWorkFlowOutPortEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowOutPortBarEditPart;
@@ -165,15 +166,25 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
              * NodeContainerEditPart the WorkflowOutPort is a model child of a
              * NodeContainerEditPart and we look at it as a node out port. 
              */
+            
+         // TODO: return SubWorkFlowOutPortEditPart
             WorkflowOutPort outport = (WorkflowOutPort)model;
-            part =
-                new WorkflowOutPortEditPart(
+                
+             part = new WorkflowOutPortEditPart(
                         outport.getPortType(), 
                         outport.getPortIndex());
+        } else if (model instanceof WorkflowOutPort) {
+         // TODO: return SubWorkFlowOutPortEditPart
+            WorkflowOutPort outport = (WorkflowOutPort)model;
+            part = new SubWorkFlowOutPortEditPart(
+                    outport.getPortType(),
+                    outport.getPortIndex());
+            
         } else if (model instanceof NodeInPort) {
             // NodeInPort -> NodeInPortEditPart
             NodePort port = (NodeInPort)model;
-            part = new NodeInPortEditPart(port.getPortType(), port.getPortIndex());
+            part = new NodeInPortEditPart(port.getPortType(), 
+                    port.getPortIndex());
         } else if (model instanceof NodeOutPort) {
             // NodeOutPort -> NodeOutPortEditPart
             NodePort port = (NodeOutPort)model;
