@@ -352,6 +352,7 @@ public final class WorkflowManager extends NodeContainer {
         notifyWorkflowListeners(
                 new WorkflowEvent(WorkflowEvent.Type.NODE_REMOVED,
                 getID(), nc, null));
+        checkForNodeStateChanges(true);
     }
 
     /** Creates new meta node. We will automatically find the next available
@@ -441,6 +442,7 @@ public final class WorkflowManager extends NodeContainer {
             m_connectionsBySource.put(id, new HashSet<ConnectionContainer>());
             m_connectionsByDest.put(id, new HashSet<ConnectionContainer>());
         }
+        checkForNodeStateChanges(true);
     }
 
     ///////////////////////////
@@ -975,10 +977,7 @@ public final class WorkflowManager extends NodeContainer {
                 assert !this.getID().equals(nc.getID());
                 switch (nc.getState()) {
                 case EXECUTED:
-                    // TODO clean this up - resetNode() reconfigures for every node!
-                    // it would be better to use the internal reset() instead.
-                    resetSuccessors(nc.getID());
-                    nc.resetAsNodeContainer();
+                    this.resetAndConfigureNode(nc.getID());
                     break;
                 case MARKEDFOREXEC:
                 case UNCONFIGURED_MARKEDFOREXEC:
@@ -2132,10 +2131,13 @@ public final class WorkflowManager extends NodeContainer {
                         queueIfQueuable(nc);
                     }
                     break;
+                case EXECUTED:
+                    // should only happen if this is a WFM with no nodes
+                    // and a THROUGH connection
+                    assert nc instanceof WorkflowManager;
+                    break;
                 default:
-                    throw new IllegalStateException("Wrong state in configure"
-                            + " (" + nc.getState() + " " 
-                            + nc.getNameWithID() + ")");
+                    
                 }
             }
         }
