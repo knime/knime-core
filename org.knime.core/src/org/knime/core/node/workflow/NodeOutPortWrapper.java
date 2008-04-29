@@ -23,6 +23,9 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.PortType;
@@ -33,6 +36,8 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * @author B. Wiswedel, M. Berthold, University of Konstanz
  */
 public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
+    
+    private final Set<NodeStateChangeListener>m_listener;
     
     /** if connected, reference the outport this node is connected to.
      */
@@ -47,6 +52,7 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
      */
     NodeOutPortWrapper(final int portIndex, final PortType pType) {
         super(portIndex, pType);
+        m_listener = new HashSet<NodeStateChangeListener>();
     }
 
     /**
@@ -57,7 +63,20 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
      * @param p new port
      */
     void setUnderlyingPort(final NodeOutPort p) {
+        if (m_underlyingPort != null) {
+            m_underlyingPort.removeNodeStateChangeListener(this);
+        }
         m_underlyingPort = p;
+        if (m_underlyingPort != null) {
+            m_underlyingPort.addNodeStateChangeListener(this);
+            // if not null -> query state and throw event
+            notifyNodeStateChangeListener(new NodeStateEvent(
+                    new NodeID(0), m_underlyingPort.getNodeState()));
+        } else {
+            // if null: disconnected set state -> idle
+            notifyNodeStateChangeListener(new NodeStateEvent(
+                    new NodeID(0), NodeContainer.State.IDLE));
+        }
     }
 
     /**
@@ -163,6 +182,50 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
             return "<<not connected>>";
         }
         return m_underlyingPort.toString();
+    }
+    
+    ///////////////////////////////////////////////
+    ///         State Listener methods
+    //////////////////////////////////////////////
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public boolean addNodeStateChangeListener(
+            final NodeStateChangeListener listener) {
+        return m_listener.add(listener);
+    }
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public void notifyNodeStateChangeListener(final NodeStateEvent e) {
+        for (NodeStateChangeListener l : m_listener) {
+            l.stateChanged(e);
+        }
+    }
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public boolean removeNodeStateChangeListener(
+            final NodeStateChangeListener listener) {
+        return m_listener.remove(listener);
+    }
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public void stateChanged(final NodeStateEvent state) {
+        if (state.getState().equals(NodeContainer.State.IDLE)
+                || state.getState().equals(NodeContainer.State.CONFIGURED)
+                || state.getState().equals(NodeContainer.State.EXECUTED)) {
+            notifyNodeStateChangeListener(state);
+        }
     }
 
 }

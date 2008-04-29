@@ -36,7 +36,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-public interface NodeOutPort extends NodePort {
+public interface NodeOutPort extends NodePort, NodeStateChangeListener {
 
     /**
      * Returns the <code>DataTableSpec</code> or null if not available.
@@ -81,5 +81,32 @@ public interface NodeOutPort extends NodePort {
      */
     // TODO: return component with convenience method for Frame construction.
     public void openPortView(final String name);
+    
+    /**
+     * 
+     * @param listener a listener to the state of the port, that is the state
+     *  of the predecessor node
+     * @return true if the listener was added, false if it was already 
+     *  registered
+     */
+    public boolean addNodeStateChangeListener(
+            final NodeStateChangeListener listener);
+    
+    /**
+     * 
+     * @param listener the listener to be de-registered
+     * @return true if it was successfully removed, false if it was not 
+     *  registered
+     */
+    public boolean removeNodeStateChangeListener(
+            final NodeStateChangeListener listener);
+    
+    /**
+     * 
+     * @param e the event which should be forwarded to all regsitered 
+     * {@link NodeStateChangeListener}s
+     */
+    public void notifyNodeStateChangeListener(final NodeStateEvent e);
+    
 
 }

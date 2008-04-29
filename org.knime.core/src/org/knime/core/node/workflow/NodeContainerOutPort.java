@@ -23,6 +23,9 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.knime.core.node.Node;
 import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
@@ -36,7 +39,9 @@ import org.knime.core.node.workflow.NodeContainer.State;
  * @author M. Berthold, University of Konstanz
  */
 public class NodeContainerOutPort extends NodePortAdaptor
-implements NodeOutPort {
+    implements NodeOutPort {
+    
+    private final Set<NodeStateChangeListener>m_listener;
 
     /**
      * The underlying Node.
@@ -62,6 +67,8 @@ implements NodeOutPort {
         m_portView = null;
         // TODO register this object as listener to spec/object... changes
         //   with Node!!
+        m_snc.addNodeStateChangeListener(this);
+        m_listener = new HashSet<NodeStateChangeListener>();
     }
 
     /**
@@ -167,6 +174,51 @@ implements NodeOutPort {
         // make sure to blow away the port view
         disposePortView(null);
         super.finalize();
+    }
+
+    ///////////////////////////////////////////////
+    ///         State Listener methods
+    //////////////////////////////////////////////
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public boolean addNodeStateChangeListener(
+            final NodeStateChangeListener listener) {
+        return m_listener.add(listener);
+    }
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public void notifyNodeStateChangeListener(final NodeStateEvent e) {
+        for (NodeStateChangeListener l : m_listener) {
+            l.stateChanged(e);
+        }
+    }
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public boolean removeNodeStateChangeListener(
+            final NodeStateChangeListener listener) {
+        return m_listener.remove(listener);
+    }
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public void stateChanged(final NodeStateEvent state) {
+        if (state.getState().equals(NodeContainer.State.IDLE)
+                || state.getState().equals(NodeContainer.State.CONFIGURED)
+                || state.getState().equals(NodeContainer.State.EXECUTED)) {
+            notifyNodeStateChangeListener(state);
+        }
+        
     }
 
 }
