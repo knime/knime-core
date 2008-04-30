@@ -34,10 +34,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.data.property.ShapeFactory;
@@ -866,7 +868,59 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         }
         return result;
     }
+    
+    /** Columns used to guess class column in the order they are specified. */
+    public static final String[] CLASS_COLUMN_NAMES = 
+        {"class", "target", "klasse", "ziel"};
 
+    /**
+     * Guesses the first column (iterating from the last to the first column
+     * in the spec) that is compatible with <code>NominalValue</code> and
+     * has possible values defined, <code>withValues</code>; or 
+     * <code>null</code> if both conditions are nut fulfilled.
+     * @param spec the extract column name from
+     * @param withValues with or without possible values
+     * @return first hit in spec or null
+     */
+    public static final String guessNominalClassColumn(final DataTableSpec spec,
+            final boolean withValues) {
+        // sorted map that holds indices from the CLASS_COLUMN_NAMES to
+        // column names, first entry value will be returned
+        TreeMap<Integer, String> map = new TreeMap<Integer, String>(
+                new Comparator<Integer>() {
+                    @Override
+                    public int compare(final Integer i, final Integer j) {
+                        return Double.compare(i, j);
+                    }
+                    
+                });
+        for (int i = spec.getNumColumns(); --i >= 0;) {
+            DataColumnSpec cspec = spec.getColumnSpec(i);
+            // NominalValue type check
+            if (cspec.getType().isCompatible(NominalValue.class)) {
+                // has value check
+                if (withValues && cspec.getDomain().hasValues()) {
+                    String colName = cspec.getName();
+                    for (int j = 0; j < CLASS_COLUMN_NAMES.length; j++) {
+                        if (colName.toLowerCase().contains(
+                                CLASS_COLUMN_NAMES[j])) {
+                            // add only first appearance 
+                            if (!map.containsKey(j)) {
+                                map.put(j, colName);
+                                continue;
+                            }
+                        }
+                    }
+                    // add only first appearance 
+                    if (!map.containsKey(Integer.MAX_VALUE)) {
+                        map.put(Integer.MAX_VALUE, colName);
+                    }
+                }
+            }
+        }
+        return map.isEmpty() ? null : map.firstEntry().getValue();
+    }
+    
     /**
      * The string summary of all column specs of this table spec.
      * 

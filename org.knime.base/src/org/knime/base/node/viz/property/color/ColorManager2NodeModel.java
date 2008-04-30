@@ -121,22 +121,21 @@ class ColorManager2NodeModel extends NodeModel {
         DataTableSpec inSpec = data[INPORT].getDataTableSpec();
         // if no column has been selected, guess first nominal column
         if (m_column == null) {
-            for (int i = inSpec.getNumColumns(); --i >= 0;) {
-                DataColumnSpec cspec = inSpec.getColumnSpec(i);
-                if (cspec.getDomain().hasValues()) {
-                    String column = cspec.getName();
-                    Set<DataCell> set = cspec.getDomain().getValues();
-                    m_colorHandler = createNominalColorHandler(
-                            ColorManager2DialogNominal.createColorMapping(set));
-                    DataTableSpec newSpec =
-                        appendColorManager(inSpec, column, m_colorHandler);
-                    BufferedDataTable changedSpecTable = 
-                        exec.createSpecReplacerTable(data[INPORT], newSpec);
-                    // return original table with ColorHandler
-                    return new BufferedDataTable[]{changedSpecTable};
-                    
-                }
-            }
+            // find first nominal column with possible values
+            String column = DataTableSpec.guessNominalClassColumn(inSpec, true);
+            super.setWarningMessage(
+                    "Selected column \"" + column
+                    + "\" with default nominal color mapping.");
+            Set<DataCell> set = 
+                inSpec.getColumnSpec(column).getDomain().getValues();
+            m_colorHandler = createNominalColorHandler(
+                    ColorManager2DialogNominal.createColorMapping(set));
+            DataTableSpec newSpec =
+                appendColorManager(inSpec, column, m_colorHandler);
+            BufferedDataTable changedSpecTable = 
+                exec.createSpecReplacerTable(data[INPORT], newSpec);
+            // return original table with ColorHandler
+            return new BufferedDataTable[]{changedSpecTable};
         }
         // find column index
         int columnIndex = inSpec.findColumnIndex(m_column);
@@ -204,21 +203,21 @@ class ColorManager2NodeModel extends NodeModel {
         
         // check null column
         if (m_column == null) {
-            for (int i = inSpecs[INPORT].getNumColumns(); --i >= 0;) {
-                DataColumnSpec cspec = inSpecs[INPORT].getColumnSpec(i);
-                if (cspec.getDomain().hasValues()) {
-                    String column = cspec.getName();
-                    super.setWarningMessage(
-                            "Selected column \"" + cspec.getName()
-                            + "\" with default nominal color mapping.");
-                    Set<DataCell> set = cspec.getDomain().getValues();
-                    ColorHandler colorHandler = createNominalColorHandler(
-                            ColorManager2DialogNominal.createColorMapping(set));
-                    return new DataTableSpec[]{
-                     appendColorManager(inSpecs[INPORT], column, colorHandler)};
-                }
-            }            
-            throw new InvalidSettingsException("No column selected.");
+            // find first nominal column with possible values
+            String column = DataTableSpec.guessNominalClassColumn(
+                    inSpecs[INPORT], true);
+            if (column == null) {
+                throw new InvalidSettingsException("No column selected.");
+            }
+            super.setWarningMessage(
+                    "Selected column \"" + column
+                    + "\" with default nominal color mapping.");
+            Set<DataCell> set = inSpecs[INPORT].getColumnSpec(column).
+                    getDomain().getValues();
+            ColorHandler colorHandler = createNominalColorHandler(
+                    ColorManager2DialogNominal.createColorMapping(set));
+            return new DataTableSpec[]{
+                    appendColorManager(inSpecs[INPORT], column, colorHandler)};
         }
         // check column in spec
         if (!inSpecs[INPORT].containsName(m_column)) {
