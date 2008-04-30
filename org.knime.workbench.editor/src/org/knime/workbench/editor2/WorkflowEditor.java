@@ -82,6 +82,7 @@ import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -497,11 +498,14 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
             WorkflowManagerInput in =
                     new WorkflowManagerInput((WorkflowManager)child, this);
-            IEditorPart editor =
-                    PlatformUI.getWorkbench().getActiveWorkbenchWindow()
-                            .getActivePage().findEditor(in);
-            if (editor != null) {
-                editors.add(editor);
+            if (PlatformUI.getWorkbench().getActiveWorkbenchWindow() != null) {
+                for (IWorkbenchPage p : PlatformUI.getWorkbench()
+                        .getActiveWorkbenchWindow().getPages()) {
+                    IEditorPart editor = p.findEditor(in);
+                    if (editor != null) {
+                        editors.add(editor);
+                    }
+                }
             }
         }
         return editors;
