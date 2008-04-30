@@ -425,7 +425,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         //
         // As this code updates the UI it must be executed in the UI thread.
         //
-        Display.getDefault().syncExec(new Runnable() {
+        Display.getDefault().asyncExec(new Runnable() {
             public void run() {
                 NodeContainerFigure fig = (NodeContainerFigure)getFigure();
                 fig.setMessage(messageEvent.getMessage());
