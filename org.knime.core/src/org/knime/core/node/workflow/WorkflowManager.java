@@ -1243,6 +1243,9 @@ public final class WorkflowManager extends NodeContainer {
                                getScopeContextStackContainer().peek(
                                        ScopeLoopContext.class);
                     if (slc == null) {
+                        LOGGER.debug("Incoming scope object stack for " 
+                                + snc.getNameWithID() + ":\n"
+                                + snc.getScopeObjectStack().toDeepString());
                         throw new IllegalStateException("Encountered"
                                     + " loop-end without corresponding head!");
                     }
