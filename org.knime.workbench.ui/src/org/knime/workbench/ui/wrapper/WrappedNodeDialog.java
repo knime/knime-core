@@ -284,10 +284,10 @@ public class WrappedNodeDialog extends Dialog {
             // to the previous settings inform the user but do nothing
             // (no reset)
             if (m_nodeContainer.getState().equals(
-                            NodeContainer.State.EXECUTED)) {
+                    NodeContainer.State.EXECUTED)) {
                 if (m_nodeContainer.areDialogAndNodeSettingsEqual()) {
                     // settings not changed
-                informNothingChanged();
+                    informNothingChanged();
                     e.doit = true;
                     return true;
                 } else {
@@ -297,12 +297,12 @@ public class WrappedNodeDialog extends Dialog {
                         if (confirmApply()) {
                             // apply settings
                             m_nodeContainer.applySettingsFromDialog();
-                e.doit = true;
+                            e.doit = true;
                             return true;
-            } else {
+                        } else {
                             // user canceled reset and apply
                             // let the dialog open
-                e.doit = false;
+                            e.doit = false;
                             return false;
                         }
                     } else {
@@ -313,8 +313,8 @@ public class WrappedNodeDialog extends Dialog {
                         // (since we should have invalid settings)
                         throw new IllegalStateException(
                                 "Settings are not valid but apply "
-                                + "settings throws no exception");
-            }
+                                        + "settings throws no exception");
+                    }
                 }
             } else {
                 // not executed
