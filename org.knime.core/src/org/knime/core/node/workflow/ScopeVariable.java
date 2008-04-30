@@ -29,7 +29,7 @@ package org.knime.core.node.workflow;
  * 
  * @author M. Berthold, University of Konstanz
  */
-public class ScopeVariable extends ScopeObject {
+public final class ScopeVariable extends ScopeObject {
 
     public static enum Type {DOUBLE, INTEGER, STRING};
     

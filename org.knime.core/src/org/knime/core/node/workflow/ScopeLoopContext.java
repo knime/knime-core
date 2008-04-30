@@ -29,7 +29,7 @@ package org.knime.core.node.workflow;
  * 
  * @author M. Berthold, University of Konstanz
  */
-public class ScopeLoopContext extends ScopeObject {
+public final class ScopeLoopContext extends ScopeObject {
 
     private NodeID m_tailNode;
 
