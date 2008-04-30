@@ -533,7 +533,7 @@ public abstract class NodeContainer {
         }
         // TODO do we need to reset the node first??
         NodeSettings sett = new NodeSettings("node settings");
-        getDialogPane().internalSaveSettingsTo(sett);
+        getDialogPane().finishEditingAndSaveSettingsTo(sett);
         m_parent.loadNodeSettings(getID(), sett);
     }
 
@@ -544,7 +544,7 @@ public abstract class NodeContainer {
         }
         NodeSettings sett = new NodeSettings("node settings");
         try {
-            getDialogPane().internalSaveSettingsTo(sett);
+            getDialogPane().finishEditingAndSaveSettingsTo(sett);
             return areSettingsValid(sett);
         } catch (InvalidSettingsException nce) {
             return false;

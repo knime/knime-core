@@ -256,7 +256,7 @@ public abstract class GenericNodeDialogPane {
      * @param settings To write to. Forwarded to abstract saveSettings method.
      * @throws InvalidSettingsException If any of the writing fails.
      */
-    public final void internalSaveSettingsTo(final NodeSettingsWO settings)
+    private void internalSaveSettingsTo(final NodeSettingsWO settings)
         throws InvalidSettingsException {
         SettingsLoaderAndWriter l = new SettingsLoaderAndWriter();
         NodeSettings model = new NodeSettings("field_ignored");
@@ -334,8 +334,8 @@ public abstract class GenericNodeDialogPane {
      *             the model.
      * @see NodeModel#saveSettingsTo(NodeSettingsWO)
      */
-    void finishEditingAndSaveSettingsTo(final NodeSettingsWO settings)
-        throws InvalidSettingsException {
+    public final void finishEditingAndSaveSettingsTo(
+            final NodeSettingsWO settings) throws InvalidSettingsException {
         commitComponentsRecursively(getPanel());
         internalSaveSettingsTo(settings);
     }
