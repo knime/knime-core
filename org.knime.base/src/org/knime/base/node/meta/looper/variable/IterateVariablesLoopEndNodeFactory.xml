@@ -10,4 +10,5 @@
         Tail node for an encapsulated sub workflow performing a loop over different variables sets.
         </intro>
     </fullDescription>
+    <ports></ports>
 </knimeNode>
