@@ -121,7 +121,22 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
      */
     public NodeContainer.State getNodeState() {
         if (m_underlyingPort == null) {
-            return null;
+            /* 
+             * Return the IDLE state if the underlying port is null.
+             * This may happen during loading of meta nodes and
+             * if the port is not connected. The port is anyway intersted in 
+             * the state and it is displayed as "no spec/node data".
+             * 
+             * TODO: when necessary (e.g. if a "not connected" state for the 
+             * port should be displayed an additional event type has to be 
+             * implemented (NodeOutPort.State = {Not_CONNECTED, NO_SPEC_NO_DATA,
+             * SPEC_AVAILABLE, DATA_AVAILABEL}. Then the SingleNodeContainer 
+             * has to cvonvert between the NodeContainer.State and the 
+             * NodeOutPort.State. The NodeContainer.State can then be moved to 
+             * the SingleNodeContainer.
+             * Meanwhile return IDLE. 
+             */
+            return NodeContainer.State.IDLE;
         }
         return m_underlyingPort.getNodeState();
     }
