@@ -33,7 +33,6 @@ public class NominalCoordinateFactory implements CoordinateFactory {
     /**
      * {@inheritDoc}
      */
-    @Override
     public Coordinate createCoordinate(final DataColumnSpec columnSpec) {
         return new NominalCoordinate(columnSpec);
     }

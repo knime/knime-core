@@ -200,7 +200,7 @@ public class Axis extends JComponent {
             }
         } else {
             // map the y value to screen coordinates
-            pivot = getHeight() - event.getY();
+            pivot = m_fullLength - event.getY();
             for (CoordinateMapping mapping : m_coordMap) {
                 if (pivot > mapping.getMappingValue() - m_tickDist / 3
                         && pivot < mapping.getMappingValue() + m_tickDist / 3) {
@@ -424,12 +424,6 @@ public class Axis extends JComponent {
 
             g.drawLine(SIZE - m_tickLength - 1, y, SIZE - 1, y);
 
-            // enough place
-            if (y < g.getFontMetrics().getHeight() * 1.75
-                    && (m_fullLength - at) > g.getFontMetrics().getHeight()) {
-                return;
-            }
-
             m_tickPositions.add(y);
 
             if (!m_coordinate.isNominal()) {
@@ -500,7 +494,6 @@ public class Axis extends JComponent {
                     /**
                      * {@inheritDoc}
                      */
-                    @Override
                     public int compare(final PolicyStrategy o1,
                             final PolicyStrategy o2) {
                         return o1.getDisplayName().compareTo(
@@ -524,7 +517,6 @@ public class Axis extends JComponent {
                     /**
                      * {@inheritDoc}
                      */
-                    @Override
                     public void itemStateChanged(final ItemEvent e) {
                         if (e.getStateChange() == ItemEvent.SELECTED) {
                             m_coordinate.setPolicy(tempStrategy);
@@ -559,7 +551,6 @@ public class Axis extends JComponent {
                     /**
                      * {@inheritDoc}
                      */
-                    @Override
                     public void itemStateChanged(final ItemEvent e) {
                         if (e.getStateChange() == ItemEvent.SELECTED) {
                             if (!m_selectedMappingMethods.contains(tempMethod)) {

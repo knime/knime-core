@@ -64,7 +64,6 @@ public class LogarithmicMappingMethod implements MappingMethod {
     /**
      * {@inheritDoc}
      */
-    @Override
     public DataCell doMapping(final DataCell in) {
         if (!(in.getType().isCompatible(DoubleValue.class))) {
             // we can only map double values
@@ -88,7 +87,6 @@ public class LogarithmicMappingMethod implements MappingMethod {
     /**
      * {@inheritDoc}
      */
-    @Override
     public String getDisplayName() {
         if (m_base == Math.E) { // natural logarithm
             return "ln(x)";
@@ -102,7 +100,6 @@ public class LogarithmicMappingMethod implements MappingMethod {
     /**
      * {@inheritDoc}
      */
-    @Override
     public boolean isCompatibleWithDomain(final DataColumnDomain domain) {
         if (domain.getLowerBound().getType().isCompatible(DoubleValue.class)
                 && domain.getUpperBound().getType().isCompatible(

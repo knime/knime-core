@@ -510,7 +510,6 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
             /**
              * {@inheritDoc}
              */
-            @Override
             public void stateChanged(final ChangeEvent e) {
                 updateSize();
                 repaint();
@@ -538,7 +537,6 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
            /**
              * {@inheritDoc}
              */
-            @Override
             public void stateChanged(final ChangeEvent e) {
                 updateSize();
                 repaint();

@@ -33,7 +33,6 @@ public class DoubleCoordinateFactory implements CoordinateFactory {
     /**
      * {@inheritDoc}
      */
-    @Override
     public Coordinate createCoordinate(final DataColumnSpec columnSpec) {
         return new DoubleCoordinate(columnSpec);
     }

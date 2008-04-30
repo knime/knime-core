@@ -84,11 +84,7 @@ public abstract class Coordinate {
         addMappingMethod(IntValue.class, new LogarithmicMappingMethod(10));
         addMappingMethod(DoubleValue.class, new LogarithmicMappingMethod(2));
         addMappingMethod(IntValue.class, new LogarithmicMappingMethod(2));
-        addMappingMethod(DoubleValue.class, new LogarithmicMappingMethod(
-                Double.MAX_VALUE));
-        addMappingMethod(DoubleValue.class, new LogarithmicMappingMethod(
-                Double.MAX_VALUE / 20));
-        addMappingMethod(IntValue.class, new LogarithmicMappingMethod(32.12));
+
         addPolicy(IntValue.class, new AscendingNumericTickPolicyStrategy(
                 "Ascending"));
         addPolicy(IntValue.class, new DescendingNumericTickPolicyStrategy(

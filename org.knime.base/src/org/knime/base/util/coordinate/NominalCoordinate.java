@@ -189,18 +189,22 @@ public class NominalCoordinate extends Coordinate {
             reduced = new CoordinateMapping[mappings.length / leaveOut + 1];
 
             for (int i = 0; i < reduced.length; i++) {
+                int index = i * leaveOut;
+                if (index > mappings.length - 1) {
+                    index = mappings.length - 1;
+                }
                 if (i % 2 == 0) {
-                    reduced[i] = mappings[i * leaveOut];
+                    reduced[i] = mappings[index];
                 } else {
                     reduced[i] =
-                            new NominalCoordinateMapping("...", mappings[i
-                                    * leaveOut].getMappingValue());
+                            new NominalCoordinateMapping("...", 
+                                    mappings[index].getMappingValue());
                     if (leaveOut == 1) {
                         String val =
-                                mappings[i * leaveOut].getDomainValueAsString();
+                                mappings[index].getDomainValueAsString();
                         reduced[i] =
-                                new NominalCoordinateMapping(val, mappings[i
-                                        * leaveOut].getMappingValue());
+                                new NominalCoordinateMapping(val, 
+                                        mappings[index].getMappingValue());
                     }
                     List<DataValue> tickValues = new ArrayList<DataValue>();
                     int start = (i - 1) * leaveOut + 1;
