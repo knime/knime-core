@@ -32,6 +32,7 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.MouseMotionListener;
+import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.EditPart;
@@ -521,12 +522,28 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     private void initFigureFromExtraInfo(final ModellingNodeExtraInfo ei) {
 
         LOGGER.debug("Initializing figure from NodeExtraInfo..");
+        for (int i : ei.getBounds()) {
+            LOGGER.debug(i);
+        }
         m_figureInitialized = true;
 
+        /*
+         * If the figure wasn't yet initialized 
+         * (see that the width and height are -1)
+         * convert from absolute to take scrolling into account 
+         */
         NodeContainerFigure f = (NodeContainerFigure)getFigure();
         int[] b = ei.getBounds();
+        if (b[2] == -1 || b[2] == -1) {
+            Point p = new Point(b[0], b[1]);
+            LOGGER.debug("before: " + p);
+            f.translateToRelative(p);
+            LOGGER.debug("after: " + p);
+            b[0] = p.x;
+            b[1] = p.y;
+        }
         f.setBounds(new Rectangle(b[0], b[1], b[2], b[3]));
-
+        
         // String plugin = ei.getPluginID();
         // String iconPath = ei.getIconPath();
         NodeType type = getNodeContainer().getType();
