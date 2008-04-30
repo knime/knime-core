@@ -872,11 +872,11 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     /** Columns used to guess class column in the order they are specified. */
     public static final String[] CLASS_COLUMN_NAMES = 
         {"class", "target", "klasse", "ziel"};
-
+    
     /**
      * Guesses the column in the argument spec that likely contains the class
      * attribute. The guessing is based on column names, whereby names as
-     * specified in {@value #CLASS_COLUMN_NAMES} are preferably considered. The
+     * specified in {@link #CLASS_COLUMN_NAMES} are preferably considered. The
      * returned column's name, if not null, is ensured to be compatible to
      * <code>NominalValue</code> and also has possible values attached, if so
      * specified by the boolean argument; it returns <code>null</code> if
