@@ -874,11 +874,15 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         {"class", "target", "klasse", "ziel"};
 
     /**
-     * Guesses the first column (iterating from the last to the first column
-     * in the spec) that is compatible with <code>NominalValue</code> and
-     * has possible values defined, <code>withValues</code>; or 
-     * <code>null</code> if both conditions are nut fulfilled.
-     * @param spec the extract column name from
+     * Guesses the column in the argument spec that likely contains the class
+     * attribute. The guessing is based on column names, whereby names as
+     * specified in {@value #CLASS_COLUMN_NAMES} are preferably considered. The
+     * returned column's name, if not null, is ensured to be compatible to
+     * <code>NominalValue</code> and also has possible values attached, if so
+     * specified by the boolean argument; it returns <code>null</code> if
+     * there are no such columns fulfilling these constraints.
+     * 
+     * @param spec the argument spec
      * @param withValues with or without possible values
      * @return first hit in spec or null
      */
@@ -888,7 +892,6 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         // column names, first entry value will be returned
         TreeMap<Integer, String> map = new TreeMap<Integer, String>(
                 new Comparator<Integer>() {
-                    @Override
                     public int compare(final Integer i, final Integer j) {
                         return Double.compare(i, j);
                     }
