@@ -121,7 +121,8 @@ class ColorManager2NodeModel extends NodeModel {
         DataTableSpec inSpec = data[INPORT].getDataTableSpec();
         // if no column has been selected, guess first nominal column
         if (m_column == null) {
-            for (DataColumnSpec cspec : inSpec) {
+            for (int i = inSpec.getNumColumns(); --i >= 0;) {
+                DataColumnSpec cspec = inSpec.getColumnSpec(i);
                 if (cspec.getDomain().hasValues()) {
                     String column = cspec.getName();
                     Set<DataCell> set = cspec.getDomain().getValues();
@@ -203,7 +204,8 @@ class ColorManager2NodeModel extends NodeModel {
         
         // check null column
         if (m_column == null) {
-            for (DataColumnSpec cspec : inSpecs[INPORT]) {
+            for (int i = inSpecs[INPORT].getNumColumns(); --i >= 0;) {
+                DataColumnSpec cspec = inSpecs[INPORT].getColumnSpec(i);
                 if (cspec.getDomain().hasValues()) {
                     String column = cspec.getName();
                     super.setWarningMessage(
