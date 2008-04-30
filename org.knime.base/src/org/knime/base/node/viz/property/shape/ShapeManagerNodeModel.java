@@ -24,6 +24,7 @@ package org.knime.base.node.viz.property.shape;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -57,13 +58,14 @@ import org.knime.core.node.NodeSettingsWO;
  */
 class ShapeManagerNodeModel extends NodeModel {
     
-    private ShapeHandler m_shapeHandler = null;
+    /** ShapeHandler generated during executed and save into the model port. */
+    private ShapeHandler m_shapeHandler;
     
     /** Logger for this package. */
     static final NodeLogger LOGGER = NodeLogger.getLogger("Shape Manager");
 
     /** Stores the mapping from column value to shape. */
-    private final LinkedHashMap<DataCell, Shape> m_map;
+    private final Map<DataCell, Shape> m_map;
 
     /** The selected column. */
     private String m_column;
@@ -207,9 +209,10 @@ class ShapeManagerNodeModel extends NodeModel {
         if (m_map.isEmpty()) {
             throw new InvalidSettingsException("No shapes defined to apply.");
         }
-        m_shapeHandler = new ShapeHandler(new ShapeModelNominal(m_map));
+        ShapeHandler shapeHandler = 
+            new ShapeHandler(new ShapeModelNominal(m_map));
         DataTableSpec outSpec = appendShapeHandler(inSpecs[INPORT], m_column, 
-                m_shapeHandler);
+                shapeHandler);
         return new DataTableSpec[]{outSpec};
     }
 

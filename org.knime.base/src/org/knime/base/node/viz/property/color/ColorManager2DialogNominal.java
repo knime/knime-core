@@ -37,6 +37,7 @@ import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -48,8 +49,9 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Thomas Gabriel, University of Konstanz
  */
 final class ColorManager2DialogNominal extends JPanel {
+    
     /** Keeps mapping from data cell name to color. */
-    private final LinkedHashMap<String, LinkedHashMap<DataCell, Color>> m_map;
+    private final Map<String, Map<DataCell, ColorAttr>> m_map;
 
     /** Keeps the all possible column values. */
     private final JList m_columnValues;
@@ -63,7 +65,7 @@ final class ColorManager2DialogNominal extends JPanel {
         super(new GridLayout());
 
         // map for key to color mapping
-        m_map = new LinkedHashMap<String, LinkedHashMap<DataCell, Color>>();
+        m_map = new LinkedHashMap<String, Map<DataCell, ColorAttr>>();
 
         // create list for possible column values
         m_columnModel = new DefaultListModel();
@@ -81,7 +83,7 @@ final class ColorManager2DialogNominal extends JPanel {
      */
     boolean select(final String column) {
         m_columnModel.removeAllElements();
-        Map<DataCell, Color> map = m_map.get(column);
+        Map<DataCell, ColorAttr> map = m_map.get(column);
         boolean flag;
         if (map == null) {
             m_columnModel.removeAllElements();
@@ -91,9 +93,10 @@ final class ColorManager2DialogNominal extends JPanel {
             m_columnValues.setEnabled(true);
             for (DataCell cell : map.keySet()) {
                 assert cell != null;
-                Color color = map.get(cell);
+                ColorAttr color = map.get(cell);
                 assert color != null;
-                m_columnModel.addElement(new ColorManager2Icon(cell, color));
+                m_columnModel.addElement(
+                        new ColorManager2Icon(cell, color.getColor()));
             }
             flag = true;
         }
@@ -109,13 +112,13 @@ final class ColorManager2DialogNominal extends JPanel {
      * @param column the selected column
      * @param color the new color
      */
-    void update(final String column, final Color color) {
+    void update(final String column, final ColorAttr color) {
         Object o = m_columnValues.getSelectedValue();
         if (o != null) {
-            LinkedHashMap<DataCell, Color> map = m_map.get(column);
+            Map<DataCell, ColorAttr> map = m_map.get(column);
             ColorManager2Icon icon = (ColorManager2Icon)o;
             map.put(icon.getCell(), color);
-            icon.setColor(color);
+            icon.setColor(color.getColor());
             super.validate();
             super.repaint();
         }
@@ -129,21 +132,28 @@ final class ColorManager2DialogNominal extends JPanel {
      * @param set the set of possible values for this column
      */
     void add(final String column, final Set<DataCell> set) {
-        LinkedHashMap<DataCell, Color> map = 
-            new LinkedHashMap<DataCell, Color>();
         if (set != null && !set.isEmpty()) {
-            int idx = -1;
-            for (DataCell cell : set) {
-                map.put(cell, generateColor(++idx, set.size()));
-            }
-            m_map.put(column, map);
+            m_map.put(column, createColorMapping(set));
         }
     }
 
-    private static Color generateColor(final int idx, final int size) {
-        // use Color, half saturated, half bright for base color
-        return Color.getColor(null, Color.HSBtoRGB((float)idx / (float)size,
-                1.0f, 1.0f));
+    /**
+     * Create default color mapping for the given set of possible 
+     * <code>DataCell</code> values.
+     * @param set possible values
+     * @return a map of possible value to color
+     */
+    static final Map<DataCell, ColorAttr> createColorMapping(
+            final Set<DataCell> set) {
+        Map<DataCell, ColorAttr> map = new LinkedHashMap<DataCell, ColorAttr>();
+        int idx = 0;
+        for (DataCell cell : set) {
+            // use Color, half saturated, half bright for base color
+            Color color = Color.getColor(null, 
+                Color.HSBtoRGB((float) idx++ / (float) set.size(), 1.0f, 1.0f));
+            map.put(cell, ColorAttr.getInstance(color));
+        }
+        return map;
     }
 
     /**
@@ -195,16 +205,16 @@ final class ColorManager2DialogNominal extends JPanel {
         if (vals == null) {
             return;
         }
-        LinkedHashMap<DataCell, Color> map = m_map.get(column);
+        Map<DataCell, ColorAttr> map = m_map.get(column);
         if (map == null) {
             return;
         }
         for (int i = 0; i < vals.length; i++) {
             if (map.containsKey(vals[i])) {
-                Color dftColor = map.get(vals[i]);
+                ColorAttr dftColor = map.get(vals[i]);
                 Color color = new Color(settings.getInt(vals[i].toString(),
-                        dftColor.getRGB()));
-                map.put(vals[i], color);
+                        dftColor.getColor().getRGB()));
+                map.put(vals[i], ColorAttr.getInstance(color));
             }
         }
     }

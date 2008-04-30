@@ -53,7 +53,8 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  */
 public class SizeManager2NodeModel extends NodeModel {
     
-    private SizeHandler m_sizeHandler = null;
+    /** SizeHandler generated during executed and save into the model port. */
+    private SizeHandler m_sizeHandler;
     
     /** The selected column. */
     private final SettingsModelString m_column = 
@@ -159,9 +160,9 @@ public class SizeManager2NodeModel extends NodeModel {
             throw new InvalidSettingsException("No bounds defined for column: "
                     + column);
         }
-        m_sizeHandler = createSizeHandler(cspec);
+        SizeHandler sizeHandler = createSizeHandler(cspec);
         DataTableSpec outSpec = appendSizeHandler(inSpecs[0], 
-                m_column.getStringValue(), m_sizeHandler);
+                m_column.getStringValue(), sizeHandler);
         // return original spec with SizeHandler
         return new DataTableSpec[]{outSpec};
     }

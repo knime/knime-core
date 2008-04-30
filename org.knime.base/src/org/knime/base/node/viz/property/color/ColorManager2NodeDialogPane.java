@@ -158,7 +158,7 @@ final class ColorManager2NodeDialogPane extends NodeDialogPane implements
             return;
         }
         if (m_buttonNominal.isSelected()) {
-            m_nominal.update(cell, color);
+            m_nominal.update(cell, ColorAttr.getInstance(color));
         } else {
             if (m_buttonRange.isSelected()) {
                 m_range.update(cell, color);
