@@ -25,7 +25,6 @@
 package org.knime.base.node.mine.scorer.entrop;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
@@ -146,16 +145,6 @@ class EntropyNodeModel extends NodeModel {
                 m_clusteringCol);
         m_calculator = new EntropyCalculator(reference, clustering,
                 referenceColIndex, clusteringColIndex, exec);
-        if (peekScopeVariable("isLastIteration") != null) {
-            FileWriter w = new FileWriter(new File(System.getProperty(
-                    "user.home") + "/entropy_out.txt"), true);
-            String clustercount = peekScopeVariable("Clustercount").getStringValue();
-            w.write(clustercount + ", " + m_calculator.getEntropy() + ", " 
-                    + m_calculator.getQuality());
-            w.write("\n");
-            w.close();
-        }
-        
         Map<DataCell, Set<DataCell>> map = m_calculator.getClusteringMap();
         m_translator.setMapper(new DefaultHiLiteMapper(map));
         if (getNrOutPorts() > 0) {
@@ -214,6 +203,15 @@ class EntropyNodeModel extends NodeModel {
             m_translator.addToHiLiteHandler(hiLiteHdl);
         }
         super.setInHiLiteHandler(inIndex, hiLiteHdl);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
+        if (outIndex == 0) {
+            return m_translator.getFromHiLiteHandler();
+        }
+        return super.getOutHiLiteHandler(outIndex);
     }
 
     /**
