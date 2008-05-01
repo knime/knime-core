@@ -360,6 +360,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                     } else {
                         counterpart.addFloat(key, (float)doubleValue);
                     }
+                    break;
                 default:
                     assert false : "Unreachable case";
                 }
