@@ -44,6 +44,7 @@ import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
+import org.knime.core.node.workflow.ScopeVariable;
 
 
 /**
@@ -148,6 +149,10 @@ class EntropyNodeModel extends NodeModel {
         Map<DataCell, Set<DataCell>> map = m_calculator.getClusteringMap();
         m_translator.setMapper(new DefaultHiLiteMapper(map));
         if (getNrOutPorts() > 0) {
+            pushScopeVariable(new ScopeVariable(
+                    "clusteringQuality", m_calculator.getQuality()));
+            pushScopeVariable(new ScopeVariable(
+                    "clusteringEntropy", m_calculator.getEntropy()));
             BufferedDataTable out = exec.createBufferedDataTable(
                     m_calculator.getScoreTable(), exec);
             return new BufferedDataTable[]{out};
@@ -187,6 +192,8 @@ class EntropyNodeModel extends NodeModel {
                     "Invalid clustering column name " + m_clusteringCol);
         }
         if (getNrOutPorts() > 0) {
+            pushScopeVariable(new ScopeVariable("clusteringQuality", 0.0));
+            pushScopeVariable(new ScopeVariable("clusteringEntropy", 0.0));
             return new DataTableSpec[]{EntropyCalculator.getScoreTableSpec()};
         }
         return new DataTableSpec[0];
