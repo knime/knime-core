@@ -32,8 +32,10 @@ import java.awt.GridLayout;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.text.ParseException;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
@@ -61,6 +63,7 @@ import org.knime.core.node.config.ConfigEditJTree;
 import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.ScopeObjectStack;
+import org.knime.core.node.workflow.ScopeVariable;
 import org.knime.core.util.MutableInteger;
 
 /**
@@ -187,6 +190,19 @@ public abstract class GenericNodeDialogPane {
      */
     public final JPanel getPanel() {
         return m_panel;
+    }
+    
+    /** @return available scope variables in a non-modifiable map 
+     *           (ensured to be not null) . */
+    public final Map<String, ScopeVariable> getAvailableScopeVariables() {
+        Map<String, ScopeVariable> result = null;
+        if (m_scopeObjectStack != null) {
+            result = m_scopeObjectStack.getAvailableVariables();
+        }
+        if (result == null) {
+            result = Collections.emptyMap();
+        }
+        return result;
     }
 
     /** Method being called from the node when the dialog shall load the
