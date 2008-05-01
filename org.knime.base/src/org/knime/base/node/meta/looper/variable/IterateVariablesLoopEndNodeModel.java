@@ -47,14 +47,14 @@ public class IterateVariablesLoopEndNodeModel extends NodeModel implements
     
     /** One input, no output. */
     public IterateVariablesLoopEndNodeModel() {
-        super(1, 0);
+        super(1, 1);
     }
 
     /** {@inheritDoc} */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        return new DataTableSpec[0];
+        return new DataTableSpec[]{inSpecs[0]};
     }
 
     /** {@inheritDoc} */
@@ -67,7 +67,7 @@ public class IterateVariablesLoopEndNodeModel extends NodeModel implements
         if (isLast) {
             continueLoop();
         }
-        return new BufferedDataTable[0];
+        return new BufferedDataTable[]{inData[0]};
     }
 
     /** {@inheritDoc} */
