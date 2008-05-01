@@ -24,54 +24,19 @@
  */
 package org.knime.base.node.mine.scorer.entrop;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
- * 
- * @author Bernd Wiswedell, University of Konstanz
+ * Old entropy node. It differs from the new entropy node (see super class)
+ * in that it doesn't have an outport.
+ *  @author Bernd Wiswedel, University of Konstanz
+ * @deprecated Replaced by {@link NewEntropyNodeFactory}.
  */
-public class EntropyNodeFactory extends NodeFactory {
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeModel createNodeModel() {
-        return new EntropyNodeModel();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 1;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
-        return new EntropyNodeView((EntropyNodeModel)nodeModel);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new EntropyNodeDialogPane();
+@Deprecated
+public class EntropyNodeFactory extends NewEntropyNodeFactory {
+    
+    /** Constructor, invokes {@link NewEntropyNodeFactory#
+     * NewEntropyNodeFactory(boolean)} with argument false. */
+    public EntropyNodeFactory() {
+        super(false);
     }
 }

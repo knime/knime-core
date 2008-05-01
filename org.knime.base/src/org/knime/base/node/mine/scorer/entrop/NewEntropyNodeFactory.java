@@ -1,4 +1,4 @@
-/* 
+/*  
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -24,46 +24,66 @@
  */
 package org.knime.base.node.mine.scorer.entrop;
 
-import org.knime.core.node.NodeView;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
 
 /**
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class EntropyNodeView extends NodeView<EntropyNodeModel> {
-    private final EntropyView m_view;
-
-    /**
-     * Delegates to super class.
-     * 
-     * @param nodeModel the node model to look at
-     */
-    EntropyNodeView(final EntropyNodeModel nodeModel) {
-        super(nodeModel);
-        m_view = new EntropyView();
-        setComponent(m_view);
+public class NewEntropyNodeFactory extends NodeFactory<EntropyNodeModel> {
+    
+    private final boolean m_enableOutput;
+    
+    /** @param enableOutput whether node should have output port 
+     * (it didn't have one in 1.x.x) */
+    protected NewEntropyNodeFactory(final boolean enableOutput) {
+        m_enableOutput = enableOutput;
     }
-
-    /** {@inheritDoc} */
+    
+    /** Instantiates class with enabled output. */
+    public NewEntropyNodeFactory() {
+        this(true);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected void modelChanged() {
-        EntropyCalculator calculator = getNodeModel().getCalculator();
-        m_view.update(calculator);
-        m_view.setHiliteHandler(calculator == null ? null : getNodeModel()
-                .getViewHiliteHandler());
+    public EntropyNodeModel createNodeModel() {
+        return new EntropyNodeModel(m_enableOutput);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void onClose() {
+    public int getNrNodeViews() {
+        return 1;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void onOpen() {
+    public EntropyNodeView createNodeView(final int viewIndex,
+            final EntropyNodeModel nodeModel) {
+        return new EntropyNodeView(nodeModel);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new EntropyNodeDialogPane();
     }
 }

@@ -201,6 +201,11 @@ public final class EntropyCalculator {
     public DataTable getScoreTable() {
         return m_scoreTable;
     }
+    
+    /** @return Table spec to {@link #getScoreTable()}. */
+    public static DataTableSpec getScoreTableSpec() {
+        return new DataTableSpec("Entropy Scores", NAMES, TYPES);
+    }
 
     /**
      * Map of Cluster name -&gt; cluster members (in a set) as given in the
@@ -349,8 +354,7 @@ public final class EntropyCalculator {
             }
         });
         DataRow[] rows = sortedRows.toArray(new DataRow[0]);
-        DataTableSpec tableSpec = 
-            new DataTableSpec("Entropy Scores", NAMES, TYPES);
+        DataTableSpec tableSpec = getScoreTableSpec();
         DataContainer container = new DataContainer(tableSpec);
         for (DataRow r : rows) {
             container.addRowToTable(r);
@@ -390,7 +394,7 @@ public final class EntropyCalculator {
         }
         return result;
     }
-
+    
     private static HashMap<DataCell, DataCell> getMap(final DataTable table,
             final int colIndex, final ExecutionMonitor ex)
             throws CanceledExecutionException {

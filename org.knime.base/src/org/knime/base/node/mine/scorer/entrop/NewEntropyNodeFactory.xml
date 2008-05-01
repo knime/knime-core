@@ -23,6 +23,7 @@
     <ports>
         <dataIn index="0" name="Reference clustering">Table containing reference clustering.</dataIn>
         <dataIn index="1" name="Clustering to score">Table containing clustering (to score).</dataIn>
+        <dataOut index="0" name="Quality Table">Table containing entropy values for each cluster</dataOut>
 	</ports>
 	<views>
 		<view index="0" name="Statistics View">

@@ -26,6 +26,7 @@ package org.knime.deprecated;
 
 import org.eclipse.core.runtime.Plugin;
 import org.knime.base.node.mine.scorer.ScorerNodeFactory;
+import org.knime.base.node.mine.scorer.entrop.EntropyNodeFactory;
 import org.knime.base.node.mine.sota.SotaNodeFactory;
 import org.knime.base.node.preproc.join.JoinerNodeFactory;
 import org.knime.base.node.preproc.nominal.NominalValueFactory;
@@ -57,6 +58,6 @@ public class DeprecatedPlugin extends Plugin {
         NodeFactory.addLoadedFactory(SizeManagerNodeFactory.class);
         NodeFactory.addLoadedFactory(ColorManagerNodeFactory.class);
         NodeFactory.addLoadedFactory(ColorAppender2NodeFactory.class);
-        
+        NodeFactory.addLoadedFactory(EntropyNodeFactory.class);
     }
 }
