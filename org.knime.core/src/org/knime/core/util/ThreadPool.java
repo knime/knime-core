@@ -91,6 +91,8 @@ public class ThreadPool {
 
         private ThreadPool m_startedFrom;
 
+        private boolean m_stopped;
+
         /**
          * Creates a new worker.
          */
@@ -111,6 +113,7 @@ public class ThreadPool {
                             if (m_runnable == null) {
                                 // then the timeout has occured
                                 // and we end the thread
+                                m_stopped = true;
                                 return;
                             }
                         } catch (InterruptedException ex) {
@@ -144,7 +147,7 @@ public class ThreadPool {
          */
         public boolean wakeup(final Runnable r, final ThreadPool pool) {
             synchronized (m_lock) {
-                if (!isAlive()) {
+                if (m_stopped) {
                     return false;
                 }
                 m_runnable = r;
