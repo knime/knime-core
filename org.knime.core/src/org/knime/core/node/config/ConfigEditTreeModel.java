@@ -362,7 +362,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                     }
                     break;
                 default:
-                    assert false : "Unreachable case";
+                    assert false : "Unreachable case: " + original.getType();
                 }
             }
             String newVar = getExposeVariableName();
