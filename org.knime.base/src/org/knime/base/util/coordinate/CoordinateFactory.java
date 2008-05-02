@@ -35,7 +35,8 @@ public interface CoordinateFactory {
      * {@link DataColumnSpec}.
      *
      * @param columnSpec the {@link DataColumnSpec}
-     * @return the according {@link Coordinate}
+     * @return the according {@link Coordinate}, or <code>null</code> if for
+     * some reason an appropriate coordinate cannot be created
      */
     public Coordinate createCoordinate(DataColumnSpec columnSpec);
 }

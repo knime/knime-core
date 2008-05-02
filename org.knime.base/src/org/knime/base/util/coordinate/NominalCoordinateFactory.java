@@ -34,7 +34,11 @@ public class NominalCoordinateFactory implements CoordinateFactory {
      * {@inheritDoc}
      */
     public Coordinate createCoordinate(final DataColumnSpec columnSpec) {
-        return new NominalCoordinate(columnSpec);
+        if ((columnSpec.getDomain().getValues() != null)
+                && (columnSpec.getDomain().getValues().size() > 0)) {
+            return new NominalCoordinate(columnSpec);
+        } else {
+            return null;
+        }
     }
-
 }
