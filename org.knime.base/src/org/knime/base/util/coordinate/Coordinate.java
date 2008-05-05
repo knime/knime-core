@@ -56,21 +56,23 @@ public abstract class Coordinate {
     /**
      * The default tick distance in pixel.
      */
-    protected static final int DEFAULT_ABSOLUTE_TICK_DIST = 35;
+    public static final int DEFAULT_ABSOLUTE_TICK_DIST = 35;
 
     /**
      * The underlying data column spec of this coordinate.
      */
     private DataColumnSpec m_columnSpec;
 
-    private static final Map<Class<? extends DataValue>, CoordinateFactory> MAP =
-            new HashMap<Class<? extends DataValue>, CoordinateFactory>();
+    private static final Map<Class<? extends DataValue>, CoordinateFactory> 
+        MAP = new HashMap<Class<? extends DataValue>, CoordinateFactory>();
 
-    private static final Map<Class<? extends DataValue>, Set<PolicyStrategy>> POLICY_MAP =
-            new HashMap<Class<? extends DataValue>, Set<PolicyStrategy>>();
+    private static final Map<Class<? extends DataValue>, Set<PolicyStrategy>> 
+        POLICY_MAP = new HashMap
+            <Class<? extends DataValue>, Set<PolicyStrategy>>();
 
-    private static final Map<Class<? extends DataValue>, Set<MappingMethod>> MAPPING_METHODS =
-            new HashMap<Class<? extends DataValue>, Set<MappingMethod>>();
+    private static final Map<Class<? extends DataValue>, Set<MappingMethod>> 
+        MAPPING_METHODS = new HashMap
+            <Class<? extends DataValue>, Set<MappingMethod>>();
 
     static {
         addCoordinateFactory(DoubleValue.class, new DoubleCoordinateFactory());
