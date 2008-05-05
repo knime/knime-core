@@ -513,6 +513,11 @@ public class Axis extends JComponent {
                 final PolicyStrategy tempStrategy = strategy;
                 JRadioButtonMenuItem tickPolicy =
                         new JRadioButtonMenuItem(strategy.getDisplayName());
+                tickPolicyButtons.add(tickPolicy);
+                tickPolicyMenu.add(tickPolicy);
+                if (strategy.equals(m_coordinate.getCurrentPolicy())) {
+                    tickPolicy.setSelected(true);
+                }
                 tickPolicy.addItemListener(new ItemListener() {
                     /**
                      * {@inheritDoc}
@@ -524,11 +529,6 @@ public class Axis extends JComponent {
                         }
                     }
                 });
-                tickPolicyButtons.add(tickPolicy);
-                tickPolicyMenu.add(tickPolicy);
-                if (strategy.equals(m_coordinate.getCurrentPolicy())) {
-                    tickPolicy.setSelected(true);
-                }
             } // add strategies
 
             Set<MappingMethod> mappingMethods =
