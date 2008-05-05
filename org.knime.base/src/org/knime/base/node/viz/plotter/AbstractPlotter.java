@@ -505,16 +505,17 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     public void setXAxis(final Axis xAxis) {
         m_xAxis = xAxis;
         m_scroller.setColumnHeaderView(m_xAxis);
-
-        m_xAxis.addChangeListener(new ChangeListener() {
-            /**
-             * {@inheritDoc}
-             */
-            public void stateChanged(final ChangeEvent e) {
-                updateSize();
-                repaint();
-            }
-        });
+        if (m_xAxis != null) {
+            m_xAxis.addChangeListener(new ChangeListener() {
+                /**
+                 * {@inheritDoc}
+                 */
+                public void stateChanged(final ChangeEvent e) {
+                    updateSize();
+                    repaint();
+                }
+            });
+        }
     }
 
     /**
@@ -533,15 +534,17 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         m_yAxis = yAxis;
         m_scroller.setRowHeaderView(m_yAxis);
 
-        m_yAxis.addChangeListener(new ChangeListener() {
-           /**
-             * {@inheritDoc}
-             */
-            public void stateChanged(final ChangeEvent e) {
-                updateSize();
-                repaint();
-            }
-        });
+        if (m_yAxis != null) {
+            m_yAxis.addChangeListener(new ChangeListener() {
+               /**
+                 * {@inheritDoc}
+                 */
+                public void stateChanged(final ChangeEvent e) {
+                    updateSize();
+                    repaint();
+                }
+            });
+        }
     }
 
     /**
