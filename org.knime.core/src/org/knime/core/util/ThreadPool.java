@@ -202,8 +202,7 @@ public class ThreadPool {
                     it.remove();
                 } else {
                     ThreadPool pool = f.getPool();
-                    Worker w2 = pool.freeWorker();
-                    if ((w2 != null) && w2.wakeup(f, pool)) {
+                    if (pool.wakeupWorker(f, pool) != null) {
                         it.remove();
                         return true;
                     }
@@ -252,8 +251,7 @@ public class ThreadPool {
         MyFuture<T> ftask = new MyFuture<T>(t);
 
         synchronized (m_queuedFutures) {
-            Worker w = freeWorker();
-            if ((w == null) || !w.wakeup(ftask, this)) {
+            if (wakeupWorker(ftask, this) == null) {
                 m_queuedFutures.add(ftask);
             }
         }
@@ -277,8 +275,7 @@ public class ThreadPool {
         MyFuture<?> ftask = new MyFuture<Object>(r, null);
 
         synchronized (m_queuedFutures) {
-            Worker w = freeWorker();
-            if ((w == null) || !w.wakeup(ftask, this)) {
+            if (wakeupWorker(ftask, this) == null) {
                 m_queuedFutures.add(ftask);
             }
         }
@@ -286,18 +283,18 @@ public class ThreadPool {
         return ftask;
     }
 
-    private Worker freeWorker() {
+    private Worker wakeupWorker(final Runnable task, final ThreadPool pool) {
         synchronized (m_runningWorkers) {
             if (m_runningWorkers.size() - m_invisibleThreads < m_maxThreads) {
                 Worker w;
                 if (m_parent == null) {
-                    if (((w = m_availableWorkers.poll()) == null)
-                            || !w.isAlive()) {
+                    w = m_availableWorkers.poll();
+                    while ((w == null) || !w.wakeup(task, pool)) {
                         w = new Worker();
                         w.start();
                     }
                 } else {
-                    w = m_parent.freeWorker();
+                    w = m_parent.wakeupWorker(task, pool);
                 }
 
                 if (w != null) {
