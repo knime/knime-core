@@ -379,7 +379,10 @@ public abstract class NodeModel extends GenericNodeModel {
     /** {@inheritDoc} */
     @Override
     int getTrueHiliteHandlerPortIndex(final int portIndex) {
-        return portIndex + m_nrModelInPorts;
+        if (m_nrDataInPorts > 0) {
+            return portIndex + m_nrModelInPorts;
+        }
+        return portIndex;
     }
 
 }
