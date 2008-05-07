@@ -32,11 +32,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
-import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -54,11 +52,13 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
 public class AggregateOutputNodeDialogPane extends NodeDialogPane {
     @SuppressWarnings("unchecked")
     private final ColumnSelectionComboxBox m_targetColumn =
-            new ColumnSelectionComboxBox((Border)null, NominalValue.class, DoubleValue.class);
+            new ColumnSelectionComboxBox((Border)null, NominalValue.class,
+                    DoubleValue.class);
 
     @SuppressWarnings("unchecked")
     private final ColumnSelectionComboxBox m_predictColumn =
-            new ColumnSelectionComboxBox((Border)null, NominalValue.class, DoubleValue.class);
+            new ColumnSelectionComboxBox((Border)null, NominalValue.class,
+                    DoubleValue.class);
 
     private final AggregateSettings m_settings = new AggregateSettings();
 
@@ -88,35 +88,12 @@ public class AggregateOutputNodeDialogPane extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        DataTableSpec in = specs[0];
-        String targetCol = null;
-        String predictCol = null;
-        for (int i = in.getNumColumns() - 1; i >= 0; i--) {
-            DataColumnSpec c = in.getColumnSpec(i);
-            if (c.getType().isCompatible(StringValue.class)) {
-                if (predictCol == null) {
-                    predictCol = c.getName();
-                } else {
-                    targetCol = c.getName();
-                    break; // both columns assigned
-                }
-            }
-        }
-        if (targetCol == null) {
-            throw new NotConfigurableException(
-                    "Invalid input: Need at least two string columns.");
-        }
-
         m_settings.loadSettingsForDialog(settings);
 
-        if (!in.containsName(m_settings.targetColumn())) {
-            m_settings.targetColumn(targetCol);
-        }
-        if (!in.containsName(m_settings.predictionColumn())) {
-            m_settings.predictionColumn(predictCol);
-        }
-        m_targetColumn.update(in, m_settings.targetColumn());
-        m_predictColumn.update(in, m_settings.predictionColumn());
+        m_settings.targetColumn(m_settings.targetColumn());
+        m_settings.predictionColumn(m_settings.predictionColumn());
+        m_targetColumn.update(specs[0], m_settings.targetColumn());
+        m_predictColumn.update(specs[0], m_settings.predictionColumn());
     }
 
     /**

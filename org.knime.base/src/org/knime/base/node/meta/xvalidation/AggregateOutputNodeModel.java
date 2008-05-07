@@ -33,6 +33,9 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.def.DefaultRow;
@@ -58,12 +61,22 @@ import org.knime.core.node.workflow.ScopeVariable;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
-    private static final DataTableSpec STATISTICS_SPEC =
+    private static final DataTableSpec NOMINAL_STATISTICS_SPEC =
             new DataTableSpec(new DataColumnSpecCreator("Error in %",
                     DoubleCell.TYPE).createSpec(), new DataColumnSpecCreator(
                     "Size of Test Set", IntCell.TYPE).createSpec(),
                     new DataColumnSpecCreator("Error Count", IntCell.TYPE)
                             .createSpec());
+
+    private static final DataTableSpec NUMERIC_STATISTICS_SPEC =
+        new DataTableSpec(
+                new DataColumnSpecCreator("Total mean squarred error",
+                        DoubleCell.TYPE).createSpec(),
+                new DataColumnSpecCreator("Mean squarred error per row",
+                        DoubleCell.TYPE).createSpec(),
+                new DataColumnSpecCreator("Size of Test Set",
+                        IntCell.TYPE).createSpec());
+
 
     private final AggregateSettings m_settings = new AggregateSettings();
 
@@ -121,7 +134,22 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
             throw new InvalidSettingsException("No such column: "
                     + m_settings.predictionColumn());
         }
-        return new DataTableSpec[]{in, STATISTICS_SPEC};
+
+        DataType commonType = DataType.getCommonSuperType(
+                in.getColumnSpec(targetColIndex).getType(),
+                in.getColumnSpec(predictColIndex).getType());
+        if ((commonType.getValueClasses().size() == 1)
+                && (commonType.getValueClasses().get(0) == DataValue.class)) {
+            throw new InvalidSettingsException("Target and prediction column "
+                    + "are not of compatible type");
+        }
+
+        if (in.getColumnSpec(targetColIndex).getType()
+                .isCompatible(DoubleValue.class)) {
+            return new DataTableSpec[]{in, NUMERIC_STATISTICS_SPEC};
+        } else {
+            return new DataTableSpec[]{in, NOMINAL_STATISTICS_SPEC};
+        }
     }
 
     /**
@@ -150,41 +178,76 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
         final int predictColIndex =
                 in.getDataTableSpec().findColumnIndex(
                         m_settings.predictionColumn());
+
+        final boolean numericMode = in.getDataTableSpec()
+                .getColumnSpec(predictColIndex).getType()
+                .isCompatible(DoubleValue.class);
+
         ExecutionMonitor subExec =
             exec.createSubProgress(count == maxCount ? 0.9 : 1);
-        int correct = 0;
-        int incorrect = 0;
-        int r = 0;
-        for (DataRow row : in) {
-            RowKey key = row.getKey();
-            DataCell target = row.getCell(targetColIndex);
-            DataCell predict = row.getCell(predictColIndex);
-            if (target.equals(predict)) {
-                correct++;
-            } else {
-                incorrect++;
-            }
-            r++;
+        if (numericMode) {
+            double errorSum = 0;
+            int r = 0;
+            for (DataRow row : in) {
+                RowKey key = row.getKey();
+                DoubleValue target = (DoubleValue)row.getCell(targetColIndex);
+                DoubleValue predict = (DoubleValue)row.getCell(predictColIndex);
+                double d = (target.getDoubleValue() - predict.getDoubleValue());
+                errorSum += d * d;
+                r++;
 
-            m_predictionTable.addRowToTable(row);
-            subExec.setProgress(r / (double)rowCount, "Calculating output " + r
-                    + "/" + rowCount + " (\"" + key + "\")");
-            subExec.checkCanceled();
+                m_predictionTable.addRowToTable(row);
+                subExec.setProgress(r / (double)rowCount, "Calculating output "
+                        + r + "/" + rowCount + " (\"" + key + "\")");
+                subExec.checkCanceled();
+            }
+
+            errorSum = Math.sqrt(errorSum);
+
+            DataRow stats = new DefaultRow(
+                            new RowKey("fold " + m_foldStatistics.size()),
+                            new DoubleCell(errorSum),
+                            new DoubleCell(errorSum / rowCount),
+                            new IntCell(rowCount));
+            m_foldStatistics.add(stats);
+        } else {
+            int correct = 0;
+            int incorrect = 0;
+            int r = 0;
+            for (DataRow row : in) {
+                RowKey key = row.getKey();
+                DataCell target = row.getCell(targetColIndex);
+                DataCell predict = row.getCell(predictColIndex);
+                if (target.equals(predict)) {
+                    correct++;
+                } else {
+                    incorrect++;
+                }
+                r++;
+
+                m_predictionTable.addRowToTable(row);
+                subExec.setProgress(r / (double)rowCount, "Calculating output "
+                        + r + "/" + rowCount + " (\"" + key + "\")");
+                subExec.checkCanceled();
+            }
+
+            DataRow stats = new DefaultRow(
+                            new RowKey("fold " + m_foldStatistics.size()),
+                            new DoubleCell(100.0 * incorrect / rowCount),
+                            new IntCell(rowCount), new IntCell(incorrect));
+            m_foldStatistics.add(stats);
         }
 
-        DataRow stats =
-                new DefaultRow(new RowKey("fold " + m_foldStatistics.size()),
-                        new DoubleCell(100.0 * incorrect / rowCount),
-                        new IntCell(rowCount), new IntCell(incorrect));
-        m_foldStatistics.add(stats);
+
 
         if (count < maxCount) {
             continueLoop();
             return new BufferedDataTable[2];
         } else {
-
             BufferedDataContainer cont =
-                    exec.createDataContainer(STATISTICS_SPEC);
+                    exec.createDataContainer(numericMode
+                            ? NUMERIC_STATISTICS_SPEC
+                            : NOMINAL_STATISTICS_SPEC);
             for (DataRow row : m_foldStatistics) {
                 cont.addRowToTable(row);
             }
