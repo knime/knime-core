@@ -73,7 +73,7 @@ public interface HiLiteHandler {
     
     /**
      * Adds a new <code>HiLiteListener</code> to the list of registered
-     * listener objects that will then in turn recieve (un)hilite events.
+     * listener objects that will then in turn receive (un)hilite events.
      * 
      * @param listener the hilite listener to add
      */
