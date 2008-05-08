@@ -26,7 +26,9 @@ package org.knime.base.node.preproc.filter.columnref;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * 
@@ -34,22 +36,38 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
  * @author Thomas Gabriel, University of Konstanz
  */
 public class ColumnFilterRefNodeDialogPane extends DefaultNodeSettingsPane {
+    
+    /** Include columns. */
+    static final String INCLUDE = "Include columns from reference table";
+    /** Exclude columns. */
+    static final String EXCLUDE = "Exclude columns from reference table";
 
     /**
      * 
      */
     public ColumnFilterRefNodeDialogPane() {
-        DialogComponentBoolean bool = new DialogComponentBoolean(
-                createCheckBoxModel(), "Exclude columns from first table");
-        bool.setToolTipText("Exclude all columns from the first table "
-                + "present in the second table.");
-        addDialogComponent(bool);
+        DialogComponentButtonGroup group = new DialogComponentButtonGroup(
+                createInExcludeModel(), 
+                null, true,
+                INCLUDE, new String[]{INCLUDE, EXCLUDE});
+        group.setToolTipText("Include or exclude columns in first table "
+                + "according to the second reference table.");
+        addDialogComponent(group);
+        addDialogComponent(new DialogComponentBoolean(createTypeModel(), 
+                "Ensure compatibility of column types"));
     }
     
     /**
-     * @return boolean model for exclude/include check box
+     * @return model for include/exclude button group
      */
-    static SettingsModelBoolean createCheckBoxModel() {
-        return new SettingsModelBoolean("exclude_columns", false);
+    static SettingsModelString createInExcludeModel() {
+        return new SettingsModelString("inexclude", INCLUDE);
+    }
+    
+    /**
+     * @return type compatibility model
+     */
+    static SettingsModelBoolean createTypeModel() {
+        return new SettingsModelBoolean("type_compatibility", false);
     }
 }

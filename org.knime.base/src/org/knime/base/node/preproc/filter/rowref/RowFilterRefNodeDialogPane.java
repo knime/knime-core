@@ -25,8 +25,8 @@
 package org.knime.base.node.preproc.filter.rowref;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * 
@@ -35,21 +35,28 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
  */
 public class RowFilterRefNodeDialogPane extends DefaultNodeSettingsPane {
 
+    /** Include rows. */
+    static final String INCLUDE = "Include rows from reference table";
+    /** Exclude rows. */
+    static final String EXCLUDE = "Exclude rows from reference table";
+
     /**
      * 
      */
     public RowFilterRefNodeDialogPane() {
-        DialogComponentBoolean bool = new DialogComponentBoolean(
-                createCheckBoxModel(), "Exclude rows from first table");
-        bool.setToolTipText("Exclude all rows from the first table "
-                + "present in the second table.");
-        addDialogComponent(bool);
+        DialogComponentButtonGroup group = new DialogComponentButtonGroup(
+                createInExcludeModel(), 
+                null, true,
+                INCLUDE, new String[]{INCLUDE, EXCLUDE});
+        group.setToolTipText("Include or exclude rows in first table "
+                + "according to the second reference table.");
+        addDialogComponent(group);
     }
     
     /**
-     * @return boolean model for exclude/include check box
+     * @return model for include/exclude button group
      */
-    static SettingsModelBoolean createCheckBoxModel() {
-        return new SettingsModelBoolean("exclude_rows", false);
+    static SettingsModelString createInExcludeModel() {
+        return new SettingsModelString("inexclude", INCLUDE);
     }
 }

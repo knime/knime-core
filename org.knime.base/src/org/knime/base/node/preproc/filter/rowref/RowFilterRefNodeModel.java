@@ -41,7 +41,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * 
@@ -49,8 +49,8 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
  */
 public class RowFilterRefNodeModel extends NodeModel {
     
-    private final SettingsModelBoolean m_excludeRows =
-        RowFilterRefNodeDialogPane.createCheckBoxModel();
+    private final SettingsModelString m_inexcludeRows =
+        RowFilterRefNodeDialogPane.createInExcludeModel();
     
     /**
      * 
@@ -81,7 +81,8 @@ public class RowFilterRefNodeModel extends NodeModel {
         BufferedDataContainer buf = 
             exec.createDataContainer(inData[0].getSpec());
         for (DataRow row : inData[0]) {
-            if (m_excludeRows.getBooleanValue()) {
+            if (m_inexcludeRows.getStringValue().equals(
+                    RowFilterRefNodeDialogPane.EXCLUDE)) {
                 if (!keySet.contains(row.getKey())) {
                     buf.addRowToTable(row);
                 }
@@ -111,7 +112,7 @@ public class RowFilterRefNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_excludeRows.loadSettingsFrom(settings);
+        m_inexcludeRows.loadSettingsFrom(settings);
     }
 
     /**
@@ -137,7 +138,7 @@ public class RowFilterRefNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_excludeRows.saveSettingsTo(settings);
+        m_inexcludeRows.saveSettingsTo(settings);
     }
 
     /**
@@ -146,7 +147,7 @@ public class RowFilterRefNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_excludeRows.validateSettings(settings);
+        m_inexcludeRows.validateSettings(settings);
     }
 
 }

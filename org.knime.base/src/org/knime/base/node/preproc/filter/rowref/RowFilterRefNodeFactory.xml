@@ -16,11 +16,10 @@
 			excluded in the output table.
 		</intro>
 		
-		<option name="Exclude rows from first table">
-			Excludes all rows from in the first table present in the second
-			one; otherwise all rows from the reference table are included in
-			the output table.
-		</option>
+        <option name="In-/Exclude rows from reference table">
+            Includes or excludes all rows from the reference table into the
+            resulting table from the first input.
+        </option>
 		
 	</fullDescription>
 	

@@ -29,6 +29,7 @@ import java.io.IOException;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -39,6 +40,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * 
@@ -46,8 +48,11 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
  */
 public class ColumnFilterRefNodeModel extends NodeModel {
     
-    private final SettingsModelBoolean m_excudeColumns = 
-        ColumnFilterRefNodeDialogPane.createCheckBoxModel();
+    private final SettingsModelString m_inexcudeColumns = 
+        ColumnFilterRefNodeDialogPane.createInExcludeModel();
+    
+    private final SettingsModelBoolean m_typeComp = 
+        ColumnFilterRefNodeDialogPane.createTypeModel();
     
     /**
      * 
@@ -84,13 +89,24 @@ public class ColumnFilterRefNodeModel extends NodeModel {
         ColumnRearranger cr = new ColumnRearranger(oSpec);
         for (DataColumnSpec cspec : oSpec) {
             String name = cspec.getName();
-            if (m_excudeColumns.getBooleanValue()) {
+            if (m_inexcudeColumns.getStringValue().equals(
+                    ColumnFilterRefNodeDialogPane.EXCLUDE)) {
                 if (filterSpec.containsName(name)) {
-                    cr.remove(name);
+                    DataType fType = filterSpec.getColumnSpec(name).getType();
+                    if (!m_typeComp.getBooleanValue() 
+                            || cspec.getType().isASuperTypeOf(fType)) {
+                        cr.remove(name);
+                    }
                 }
             } else {
                 if (!filterSpec.containsName(name)) {
                     cr.remove(name);
+                } else {
+                    DataType fType = filterSpec.getColumnSpec(name).getType();
+                    if (m_typeComp.getBooleanValue() 
+                            && !cspec.getType().isASuperTypeOf(fType)) {
+                        cr.remove(name);
+                    }
                 }
             }
         }
@@ -114,7 +130,8 @@ public class ColumnFilterRefNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_excudeColumns.loadSettingsFrom(settings);
+        m_inexcudeColumns.loadSettingsFrom(settings);
+        m_typeComp.loadSettingsFrom(settings);
     }
 
     /**
@@ -140,7 +157,8 @@ public class ColumnFilterRefNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_excudeColumns.saveSettingsTo(settings);
+        m_inexcudeColumns.saveSettingsTo(settings);
+        m_typeComp.saveSettingsTo(settings);
     }
 
     /**
@@ -149,7 +167,8 @@ public class ColumnFilterRefNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_excudeColumns.validateSettings(settings);
+        m_inexcudeColumns.validateSettings(settings);
+        m_typeComp.validateSettings(settings);
     }
 
 }
