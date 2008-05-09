@@ -74,7 +74,7 @@ final class ConfigFloatEntry extends AbstractConfigEntry {
      */
     @Override
     protected boolean hasIdenticalValue(final AbstractConfigEntry ace) {
-        return ((ConfigFloatEntry) ace).m_float == m_float;
+        return Float.compare(((ConfigFloatEntry) ace).m_float, m_float) == 0;
     }
 
 }

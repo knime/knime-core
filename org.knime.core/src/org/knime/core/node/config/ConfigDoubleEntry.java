@@ -75,7 +75,8 @@ final class ConfigDoubleEntry extends AbstractConfigEntry {
      */
     @Override
     protected boolean hasIdenticalValue(final AbstractConfigEntry ace) {
-        return ((ConfigDoubleEntry) ace).m_double == m_double;
+        return 
+            Double.compare(((ConfigDoubleEntry) ace).m_double, m_double) == 0;
     }
 
 }
