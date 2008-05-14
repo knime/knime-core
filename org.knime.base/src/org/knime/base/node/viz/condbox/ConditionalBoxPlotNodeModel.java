@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 25, 2008 (sellien): created
  */
@@ -29,6 +29,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -50,6 +51,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
@@ -69,9 +71,9 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * Class for the model of a conditional box plot.
- * 
+ *
  * @author Stephan Sellien, University of Konstanz
- * 
+ *
  */
 public class ConditionalBoxPlotNodeModel extends NodeModel implements
         BoxPlotDataProvider {
@@ -250,6 +252,15 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
                         m_settings.nominalColumn());
         Map<String, Map<Double, Set<RowKey>>> data =
                 new LinkedHashMap<String, Map<Double, Set<RowKey>>>();
+
+        // some default values .. if one column only has missing values.
+        for (DataCell d : inData[0].getDataTableSpec().getColumnSpec(
+                nominalIndex).getDomain().getValues()) {
+            String name = ((StringValue)d).getStringValue();
+            m_mildOutliers.put(name, new HashMap<Double, Set<RowKey>>());
+            m_extremeOutliers.put(name, new HashMap<Double, Set<RowKey>>());
+        }
+
         for (DataRow r : inData[0]) {
             exec.checkCanceled();
             exec.setProgress(rowCount++ / nrRows, "Separating...");
@@ -294,7 +305,14 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
             setWarningMessage("All classes are empty.");
         }
         int dataSetNr = 0;
-        for (String d : keys) {
+        // for (String d : keys) {
+        for (DataColumnSpec dcs : colSpecs) {
+            String d = dcs.getName();
+            if (data.get(d) == null || keys.size() == 0) {
+                dataSetNr++;
+                continue;
+            }
+
             exec.checkCanceled();
             exec.setProgress(dataSetNr / keys.size(), "Creating statistics");
 
@@ -515,7 +533,10 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
      */
     @Override
     protected void reset() {
-
+        m_extremeOutliers = null;
+        m_mildOutliers = null;
+        m_statistics = null;
+        m_dataArray = null;
     }
 
     /**
