@@ -25,13 +25,16 @@
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
-import org.eclipse.swt.SWT;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.ConnectableEditPart;
+import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  * Command for creating connections between an in-port and an out-port.
@@ -42,7 +45,7 @@ public class CreateConnectionCommand extends Command {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             CreateConnectionCommand.class);
-
+    
     // TODO: allow also workflow root edit parts
     private ConnectableEditPart m_sourceNode;
 
@@ -58,6 +61,16 @@ public class CreateConnectionCommand extends Command {
     private boolean m_startedOnOutPort;
 
     private ConnectionContainer m_connection;
+    
+    private boolean m_confirm;
+    
+    
+    public CreateConnectionCommand() {
+//        KNIMEUIPlugin.getDefault().getPreferenceStore().setDefault(
+//                PreferenceConstants.P_CONFIRM_RECONNECT, true);
+        m_confirm = KNIMEUIPlugin.getDefault().getPreferenceStore()
+            .getBoolean(PreferenceConstants.P_CONFIRM_RECONNECT);
+    }
 
     /**
      * @param workflowManager The workflow manager to create the connection in
@@ -169,12 +182,28 @@ public class CreateConnectionCommand extends Command {
             if (m_sourceNode == null || m_targetNode == null) {
                 return false;
             }
-        // let check the workflow manager if the connection can be created
-            return m_manager.canAddConnection(m_sourceNode.getNodeContainer()
-                    .getID(), m_sourcePortID, m_targetNode.getNodeContainer()
+            
+            // let the workflow manager check if the connection can be created
+            // or removed
+            boolean canAdd = m_manager.canAddConnection(
+                    m_sourceNode.getNodeContainer().getID(), 
+                    m_sourcePortID, m_targetNode.getNodeContainer()
                     .getID(), m_targetPortID);
+            boolean canRemove = false;
+            if (!canAdd) {
+                if (m_targetPortID >= 0) {
+                    ConnectionContainer cc = m_manager.getIncomingConnectionFor(
+                            m_targetNode.getNodeContainer().getID(),
+                            m_targetPortID);
+                    if (cc != null) {
+                        canRemove = m_manager.canRemoveConnection(cc);
+                    }
+                }
+            }
+            return canAdd || canRemove; 
+                    
         } catch (Throwable t) {
-            LOGGER.warn("can create connection? ", t);
+            LOGGER.error("can create connection? ", t);
         }
         return false;
     }
@@ -208,6 +237,34 @@ public class CreateConnectionCommand extends Command {
         // in case it can not an exception is thrown which is caught and
         // displayed to the user
         try {
+            // if target nodeport is already connected
+            if (m_manager.getIncomingConnectionFor(
+                    m_targetNode.getNodeContainer().getID(), 
+                    m_targetPortID) != null) {
+                // ask user if it should be replaced...
+                if (m_confirm) {
+                    MessageDialogWithToggle msgD = MessageDialogWithToggle
+                        .openYesNoQuestion(
+                            Display.getDefault().getActiveShell(),
+                            "Replace Connection?", 
+                            "Do you want to replace existing connection? \n"
+                            + "This will reset the target node!", 
+                            "Always replace without confirm.", !m_confirm, 
+                            KNIMEUIPlugin.getDefault().getPreferenceStore(),
+                            PreferenceConstants.P_CONFIRM_RECONNECT);
+                    m_confirm = !msgD.getToggleState();
+                    if (msgD.getReturnCode() != IDialogConstants.YES_ID) {
+                        return;
+                    }
+                } 
+                // remove existing connection
+                m_manager.removeConnection(
+                        m_manager.getIncomingConnectionFor(
+                        m_targetNode.getNodeContainer().getID(),
+                        m_targetPortID));
+            }
+            
+            
             LOGGER.info("adding connection from "
                     + m_sourceNode.getNodeContainer()
                     .getID() + " " + m_sourcePortID
@@ -220,13 +277,21 @@ public class CreateConnectionCommand extends Command {
 
         } catch (Throwable e) {
             LOGGER.error("Connection could not be created.", e);
-            showInfoMessage("Connection could not be created.",
+            m_connection = null;
+            m_sourceNode = null;
+            m_targetNode = null;
+            m_sourcePortID = -1;
+            m_targetPortID = -1;
+            MessageDialog.openError(Display.getDefault().getActiveShell(),
+                    "Connection could not be created", 
                     "The two nodes could not be connected due to "
-                            + "the following reason:\n " + e.getMessage());
+                    + "the following reason:\n " + e.getMessage());
+            
         }
 
     }
 
+    /*
     private void showInfoMessage(final String header, final String message) {
         MessageBox mb =
                 new MessageBox(Display.getDefault().getActiveShell(),
@@ -235,6 +300,7 @@ public class CreateConnectionCommand extends Command {
         mb.setMessage(message);
         mb.open();
     }
+    */
 
     /**
      * {@inheritDoc}

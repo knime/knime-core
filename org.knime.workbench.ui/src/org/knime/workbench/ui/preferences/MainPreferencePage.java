@@ -212,6 +212,9 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
 
         addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_DELETE, 
                 "Confirm Node/Connection Deletion", parent));
+        
+        addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_RECONNECT,
+                "Confirm reconnection of already connected nodes", parent));
     }
 
     /**

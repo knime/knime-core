@@ -88,6 +88,9 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
                 PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE);
         int usedHistorySize = getPreferenceStore().getInt(
                 PreferenceConstants.P_FAV_LAST_USED_SIZE);
+        
+        getPreferenceStore().setDefault(PreferenceConstants.P_CONFIRM_RECONNECT,
+                true);
         try {
         NodeUsageRegistry.setMaxFrequentSize(freqHistorySize);
         NodeUsageRegistry.setMaxLastUsedSize(usedHistorySize);

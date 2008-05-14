@@ -61,6 +61,9 @@ public class PreferenceConstants {
     /** Preference constant: whether user needs to confirm delete actions. */
     public static final String P_CONFIRM_DELETE = "knime.confirm.delete";
     
+    /** Preference constant to confirm reconnecting a node. */
+    public static final String P_CONFIRM_RECONNECT = "knime.confirm.reconnect";
+    
     /** Choice: log >= debug events. */
     public static final String P_LOGLEVEL_DEBUG = LEVEL.DEBUG.toString();
 

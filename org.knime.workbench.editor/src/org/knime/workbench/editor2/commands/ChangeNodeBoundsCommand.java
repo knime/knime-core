@@ -27,7 +27,6 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
 import org.knime.core.node.workflow.NodeContainer;
-
 import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
 /**
@@ -70,6 +69,11 @@ public class ChangeNodeBoundsCommand extends Command {
     @Override
     public void execute() {
         m_extraInfo.setBounds(m_newBounds);
+        // check if the node was placed under an existing connection
+        
+        
+        // if yes ask user if the node should be inserted into this connection
+        
         // must set explicitly so that event is fired by container
         m_container.setUIInformation(m_extraInfo);
     }
