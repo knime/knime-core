@@ -522,9 +522,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     private void initFigureFromExtraInfo(final ModellingNodeExtraInfo ei) {
 
         LOGGER.debug("Initializing figure from NodeExtraInfo..");
-        for (int i : ei.getBounds()) {
-            LOGGER.debug(i);
-        }
         m_figureInitialized = true;
 
         /*
@@ -536,9 +533,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         int[] b = ei.getBounds();
         if (b[2] == -1 || b[2] == -1) {
             Point p = new Point(b[0], b[1]);
-            LOGGER.debug("before: " + p);
             f.translateToRelative(p);
-            LOGGER.debug("after: " + p);
+//            LOGGER.debug("after: " + p);
             b[0] = p.x;
             b[1] = p.y;
         }
