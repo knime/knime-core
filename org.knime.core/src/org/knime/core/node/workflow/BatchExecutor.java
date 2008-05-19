@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.core.node.workflow;
 
@@ -47,8 +47,8 @@ import org.knime.core.util.KnimeEncryption;
  * Simple utility class that takes a workflow, either in a directory or zipped
  * into a single file, executes it and saves the results in the end. If the
  * input was a ZIP file the workflow is zipped back into a file.
- * 
- * 
+ *
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public final class BatchExecutor {
@@ -112,7 +112,7 @@ public final class BatchExecutor {
 
     /**
      * Main method.
-     * 
+     *
      * @param args a workflow directory or a zip input and output file
      * @throws IOException Delegated from WFM
      * @throws WorkflowException Delegated from WFM
@@ -126,12 +126,12 @@ public final class BatchExecutor {
         int returnVal = mainRun(args);
         System.exit(returnVal);
     }
-    
+
     /** Called from {@link #main(String[])} method. It parses the command line
      * and starts up KNIME. It returns 0 if the execution was run (even with
      * errors) and 1 if the command line could not be parsed (e.g. usage was
      * printed).
-     * 
+     *
      * @param args Command line arguments
      * @return 0 if WorkflowManager (WFM) was executed, 1 otherwise.
      * @throws IOException Delegated from WFM
@@ -157,7 +157,7 @@ public final class BatchExecutor {
         List<Option> options = new ArrayList<Option>();
 
         for (String s : args) {
-            String[] parts = s.split("=");
+            String[] parts = s.split("=", 2);
             if ("-nosave".equals(parts[0])) {
                 noSave = true;
             } else if ("-reset".equals(parts[0])) {
@@ -209,8 +209,10 @@ public final class BatchExecutor {
                             "Couldn't parse -option argument: " + s);
                     return 1;
                 }
-                String[] parts2 = parts[1].split("\\,");
-                if (parts2.length != 4) {
+                String[] parts2;
+                try {
+                    parts2 = splitOption(parts[1]);
+                } catch (IndexOutOfBoundsException ex) {
                     System.err.println(
                             "Couldn't parse -option argument: " + s);
                     return 1;
@@ -231,34 +233,7 @@ public final class BatchExecutor {
                 return 1;
             }
         }
-        EncryptionKeySupplier encryptionKeySupplier = null;
-        if (isPromptForPassword) {
-            Console cons;
-            if ((cons = System.console()) == null) {
-                System.err.println("No console for password prompt available");
-            } else {
-                char[] first, second;
-                boolean areEqual;
-                do {
-                    first = cons.readPassword("%s", "Password:");
-                    second = cons.readPassword("%s", "Reenter Password:");
-                    areEqual = Arrays.equals(first, second);
-                    if (!areEqual) {
-                        System.out.println("Passwords don't match");
-                    }
-                } while (!areEqual);
-                masterKey = new String(first);
-            }
-        } 
-        if (masterKey != null) {
-            final String encryptionKey = masterKey;
-            encryptionKeySupplier = new EncryptionKeySupplier() {
-                /** {@inheritDoc} */
-                public String getEncryptionKey() {
-                    return encryptionKey;
-                }
-            };
-        }
+        setupEncryptionKey(isPromptForPassword, masterKey);
 
         final File workflowDir;
         if (input == null) {
@@ -282,14 +257,33 @@ public final class BatchExecutor {
         WorkflowLoadResult loadResult = WorkflowManager.load(
                 workflowFile, new ExecutionMonitor());
         WorkflowManager wfm = loadResult.getWorkflowManager();
-        if (encryptionKeySupplier != null) {
-            KnimeEncryption.setEncryptionKeySupplier(encryptionKeySupplier);
-        }
 
         if (reset) {
             wfm.resetAll();
         }
 
+        setNodeOptions(options, wfm);
+
+        System.out.println(wfm.printNodeSummary(wfm.getID(), 0));
+        boolean successful = wfm.executeAllAndWaitUntilDone();
+        if (!noSave) {
+            wfm.save(workflowFile, new ExecutionMonitor(), true);
+
+            if (output != null) {
+                FileUtil.zipDir(output, workflowDir, 9);
+            }
+        }
+        // Get elapsed time in milliseconds
+        long elapsedTimeMillis = System.currentTimeMillis() - t;
+        String niceTime = StringFormat.formatElapsedTime(elapsedTimeMillis);
+        String timeString = ("Finished in " + niceTime
+                + " (" + elapsedTimeMillis + "ms)");
+        System.out.println(timeString);
+        return successful ? 0 : 1;
+    }
+
+    private static void setNodeOptions(final List<Option> options,
+            final WorkflowManager wfm) throws InvalidSettingsException {
         for (Option o : options) {
             int[] idPath = o.m_nodeIDs;
             NodeID subID = new NodeID(wfm.getID(), idPath[0]);
@@ -304,7 +298,7 @@ public final class BatchExecutor {
                 }
             }
             if (cont == null) {
-                LOGGER.warn("No node with id " 
+                LOGGER.warn("No node with id "
                         + Arrays.toString(idPath) + " found.");
             } else {
                 WorkflowManager parent = cont.getParent();
@@ -315,7 +309,7 @@ public final class BatchExecutor {
                 String[] splitName = o.m_name.split("/");
                 String name = splitName[splitName.length - 1];
                 String[] pathElements = new String[splitName.length - 1];
-                System.arraycopy(splitName, 0, 
+                System.arraycopy(splitName, 0,
                         pathElements, 0, pathElements.length);
                 for (String s : pathElements) {
                     model = model.getNodeSettings(s);
@@ -331,7 +325,7 @@ public final class BatchExecutor {
                     model.addBoolean(name, Boolean.parseBoolean(o.m_value));
                 } else if ("char".equals(o.m_type)) {
                     model.addChar(name, o.m_value.charAt(0));
-                } else if ("float".equals(o.m_type) 
+                } else if ("float".equals(o.m_type)
                         || ("double".equals(o.m_type))) {
                     model.addDouble(name, Double.parseDouble(o.m_value));
                 } else if ("String".equals(o.m_type)) {
@@ -346,57 +340,59 @@ public final class BatchExecutor {
                     model.addDataCell(name, new IntCell(i));
                 } else {
                     throw new IllegalArgumentException("Unknown option type '"
-                            + o.m_type + "'");                   
+                            + o.m_type + "'");
                 }
                 parent.loadNodeSettings(cont.getID(), settings);
             }
         }
+    }
 
-        System.out.println(wfm.printNodeSummary(wfm.getID(), 0));
-        final Object waiter = new Object();
-        synchronized (waiter) {
-            wfm.addNodeStateChangeListener(new NodeStateChangeListener() {
-                public void stateChanged(NodeStateEvent state) {
-                    synchronized (waiter) {
-                        switch (state.getState()) {
-                        case EXECUTED:
-                            waiter.notifyAll();
-                        case IDLE:
-                        case CONFIGURED:
-                        default:
-                        }
-                    }
-                } 
-            });
-            if (wfm.getParent().canExecuteNode(wfm.getID())) {
-                wfm.getParent().executeUpToHere(wfm.getID());
+
+    private static void setupEncryptionKey(final boolean isPromptForPassword,
+            String masterKey) {
+        if (isPromptForPassword) {
+            Console cons;
+            if ((cons = System.console()) == null) {
+                System.err.println("No console for password prompt available");
             } else {
-                throw new RuntimeException("Can't execute flow.");
+                char[] first, second;
+                boolean areEqual;
+                do {
+                    first = cons.readPassword("%s", "Password:");
+                    second = cons.readPassword("%s", "Reenter Password:");
+                    areEqual = Arrays.equals(first, second);
+                    if (!areEqual) {
+                        System.out.println("Passwords don't match");
+                    }
+                } while (!areEqual);
+                masterKey = new String(first);
             }
-            switch (wfm.getState()) {
-            case EXECUTED: break;
-            default:
-                try {
-                    waiter.wait();
-                } catch (InterruptedException ie) {
-                    throw new RuntimeException("Thread was interrupted", ie);
+        }
+        if (masterKey != null) {
+            final String encryptionKey = masterKey;
+            KnimeEncryption.setEncryptionKeySupplier(new EncryptionKeySupplier() {
+                /** {@inheritDoc} */
+                public String getEncryptionKey() {
+                    return encryptionKey;
                 }
-                break;
-            }
+            });
         }
-        if (!noSave) {
-            wfm.save(workflowFile.getParentFile(), new ExecutionMonitor(), true);
+    }
 
-            if (output != null) {
-                FileUtil.zipDir(output, workflowDir, 9);
-            }
-        }
-        // Get elapsed time in milliseconds
-        long elapsedTimeMillis = System.currentTimeMillis() - t;
-        String niceTime = StringFormat.formatElapsedTime(elapsedTimeMillis);
-        String timeString = ("Finished in " + niceTime 
-                + " (" + elapsedTimeMillis + "ms)");
-        System.out.println(timeString);
-        return 0;
+    private static String[] splitOption(String option) {
+        String[] res = new String[4];
+        int index = option.indexOf(',');
+        res[0] = option.substring(0, index);
+        option = option.substring(index + 1);
+
+        index = option.indexOf(',');
+        res[1] = option.substring(0, index);
+        option = option.substring(index + 1);
+
+        index = option.lastIndexOf(',');
+        res[2] = option.substring(0, index);
+        res[3] = option.substring(index + 1);
+
+        return res;
     }
 }
