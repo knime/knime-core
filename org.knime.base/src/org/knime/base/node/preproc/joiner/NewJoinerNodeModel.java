@@ -275,6 +275,7 @@ public class NewJoinerNodeModel extends NodeModel {
                     dc.addRowToTable(createJoinedRow(key, lrow, rrow));
                     exec.setProgress(0.7 + 0.3 * p++ / max);
                     if (!rit.hasNext()) {
+                        rrow = null;
                         break outer;
                     }
                     rrow = rit.next();
@@ -305,7 +306,7 @@ public class NewJoinerNodeModel extends NodeModel {
                         lrow, missingRow));
                 exec.setProgress(0.7 + 0.3 * p++ / max);
             }
-        } else if (rit.hasNext() && rofj) {
+        } else if ((rrow != null) && rofj) {
             // add remaining non-joined rows from the right table if right or
             // full outer join
             missingCells =
@@ -314,6 +315,10 @@ public class NewJoinerNodeModel extends NodeModel {
                 missingCells[i] = DataType.getMissingCell();
             }
             missingRow = new DefaultRow(new RowKey(""), missingCells);
+
+            dc.addRowToTable(createJoinedRow(rrow.getKey().toString(),
+                    missingRow, rrow));
+            exec.setProgress(0.7 + 0.3 * p++ / max);
 
             while (rit.hasNext()) {
                 rrow = rit.next();
