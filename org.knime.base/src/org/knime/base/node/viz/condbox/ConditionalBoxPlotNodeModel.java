@@ -190,6 +190,18 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
         if (m_settings.showMissingValues() && !ignoreMissingValues) {
             values.add(DataType.getMissingCell().toString());
         }
+
+        int emptyCounter = 0;
+        for (int i = 0; i < values.size(); i++) {
+            if ("".equals(values.get(i))) {
+                String replacementName;
+                do {
+                    replacementName = "<empty_" + emptyCounter++ + ">";
+                } while (values.contains(replacementName));
+                values.set(i, replacementName);
+            }
+        }
+
         Collections.sort(values);
         DataColumnSpecCreator creator;
         int index = 0;
