@@ -90,8 +90,8 @@ public class DefaultDataArray implements DataArray {
      * Constructs a random access container holding a certain number of rows
      * from the data table passed in. It will store the specified amount of rows
      * starting from the row specified in the "<code>firstRow</code>"
-     * parameter. The rows can be accessed by index later on always starting
-     * with index zero.
+     * parameter (where the first row is number 1). The rows can be accessed by
+     * index later on always starting with index zero.
      *
      * @param dTable the data table to read the rows from
      * @param firstRow the first row to store (must be greater than zero)
