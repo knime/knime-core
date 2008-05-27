@@ -2,7 +2,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   27.07.2007 (thor): created
  */
@@ -57,13 +57,13 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * This is the model of the joiner node that does all the dirty work.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class NewJoinerNodeModel extends NodeModel {
     /**
      * Builds a map from the table's row keys to their row number.
-     * 
+     *
      * @param table a table
      * @param exec an execution monitor
      * @return the map
@@ -107,9 +107,14 @@ public class NewJoinerNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        if ((m_settings.secondTableColumn() == null)
+                || (m_settings.secondTableColumn().length() < 1)) {
+            throw new InvalidSettingsException(
+                    "No column from the second table selected");
+        }
         if (!NewJoinerSettings.ROW_KEY_IDENTIFIER.equals(
-                m_settings.secondTableColumn()) 
-                && inSpecs[1].findColumnIndex(m_settings.secondTableColumn()) 
+                m_settings.secondTableColumn())
+                && inSpecs[1].findColumnIndex(m_settings.secondTableColumn())
                 == -1) {
             throw new InvalidSettingsException("Join column '"
                     + m_settings.secondTableColumn()
@@ -121,7 +126,7 @@ public class NewJoinerNodeModel extends NodeModel {
 
     /**
      * Creates a spec for the output table by taking care of duplicate columns.
-     * 
+     *
      * @param specs the specs of the two input tables
      * @return the spec of the output table
      * @throws InvalidSettingsException if duplicate columns exists and the are
@@ -196,9 +201,10 @@ public class NewJoinerNodeModel extends NodeModel {
             exec.createDataContainer(createSpec(new DataTableSpec[]{
                     leftTable.getDataTableSpec(),
                     rightTable.getDataTableSpec()}));
-        
+
         // create a row with missing values for left or full outer joins
-        DataCell[] missingCells = new DataCell[m_secondTableSurvivers.length];
+        DataCell[] missingCells = new DataCell[rightTable.getDataTableSpec()
+                                               .getNumColumns()];
         for (int i = 0; i < missingCells.length; i++) {
             missingCells[i] = DataType.getMissingCell();
         }
@@ -269,6 +275,7 @@ public class NewJoinerNodeModel extends NodeModel {
                     dc.addRowToTable(createJoinedRow(key, lrow, rrow));
                     exec.setProgress(0.7 + 0.3 * p++ / max);
                     if (!rit.hasNext()) {
+                        rrow = null;
                         break outer;
                     }
                     rrow = rit.next();
@@ -299,7 +306,7 @@ public class NewJoinerNodeModel extends NodeModel {
                         lrow, missingRow));
                 exec.setProgress(0.7 + 0.3 * p++ / max);
             }
-        } else if (rit.hasNext() && rofj) {
+        } else if ((rrow != null) && rofj) {
             // add remaining non-joined rows from the right table if right or
             // full outer join
             missingCells =
@@ -308,6 +315,10 @@ public class NewJoinerNodeModel extends NodeModel {
                 missingCells[i] = DataType.getMissingCell();
             }
             missingRow = new DefaultRow(new RowKey(""), missingCells);
+
+            dc.addRowToTable(createJoinedRow(rrow.getKey().toString(),
+                    missingRow, rrow));
+            exec.setProgress(0.7 + 0.3 * p++ / max);
 
             while (rit.hasNext()) {
                 rrow = rit.next();
@@ -324,7 +335,7 @@ public class NewJoinerNodeModel extends NodeModel {
     /**
      * Creates a new row that is a join of the two input rows. The columns from
      * the right row are filtered based on the the duplicate handling mode.
-     * 
+     *
      * @param key the new row's key
      * @param leftRow the left row
      * @param rightRow the right which may get filtered

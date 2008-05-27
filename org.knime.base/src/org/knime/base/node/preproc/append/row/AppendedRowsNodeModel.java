@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -42,6 +42,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.property.hilite.DefaultHiLiteManager;
+import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * {@link org.knime.core.node.NodeModel} that concatenates its two input
@@ -69,6 +71,9 @@ public class AppendedRowsNodeModel extends NodeModel {
 
     private boolean m_isIntersection;
 
+    private final DefaultHiLiteManager m_manager =
+        new DefaultHiLiteManager();
+    
     /**
      * Creates new node model with two inputs and one output.
      */
@@ -215,6 +220,11 @@ public class AppendedRowsNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
+        m_manager.removeAllHiLiteHandlers();
+        for (int i = 0; i < getNrDataIns(); i++) {
+            HiLiteHandler hdl = getInHiLiteHandler(i);
+            m_manager.addHiLiteHandler(hdl);
+        }
     }
 
     /**
@@ -235,5 +245,23 @@ public class AppendedRowsNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
 
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void setInHiLiteHandler(final int inIndex, 
+            final HiLiteHandler hiLiteHdl) {
+        super.setInHiLiteHandler(inIndex, hiLiteHdl);
+        m_manager.addHiLiteHandler(hiLiteHdl);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
+        return m_manager;
     }
 }

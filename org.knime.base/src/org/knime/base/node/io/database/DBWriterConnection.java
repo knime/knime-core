@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -27,6 +27,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.knime.core.data.DataCell;
@@ -74,15 +75,8 @@ final class DBWriterConnection {
             throws Exception, CanceledExecutionException {
         Connection conn = dbConn.createConnection();
         DataTableSpec spec = data.getDataTableSpec();
-        StringBuilder wildcard = new StringBuilder("(");
-        for (int i = 0; i < spec.getNumColumns(); i++) {
-            if (i > 0) {
-                wildcard.append(", ?");
-            } else {
-                wildcard.append("?");
-            }
-        }
-        wildcard.append(")");
+        // mapping from spec columns to database columns
+        final int[] mapping;
         // append data to existing table
         if (appendData) {
             ResultSet rs = null;
@@ -91,7 +85,8 @@ final class DBWriterConnection {
                 rs = conn.createStatement().executeQuery(
                         "SELECT * FROM " + table);
             } catch (SQLException sqle) {
-                LOGGER.debug("Table is not available, will create new table.");
+                LOGGER.info("Table \"" + table + "\" not in database, "
+                        + "will create new table.");
                 // and create new table
                 conn.createStatement().execute("CREATE TABLE " + table + " " 
                         + createStmt(spec, sqlTypes));
@@ -99,20 +94,32 @@ final class DBWriterConnection {
             // if table exists
             if (rs != null) {
                 ResultSetMetaData rsmd = rs.getMetaData();
-                if (spec.getNumColumns() != rsmd.getColumnCount()) {
-                    throw new RuntimeException("Number of columns from input "
-                            + "and in database does not match: " 
-                            + spec.getNumColumns() + " <> "
-                            + rsmd.getColumnCount());
+                final Map<String, Integer> columnNames = 
+                    new LinkedHashMap<String, Integer>();
+                for (int i = 0; i < spec.getNumColumns(); i++) {
+                    String colName = replaceColumnName(
+                            spec.getColumnSpec(i).getName());
+                    columnNames.put(colName, i);
+                }       
+                if (spec.getNumColumns() > rsmd.getColumnCount()) {
+                    for (int i = 0; i < rsmd.getColumnCount(); i++) {
+                        String colName = rsmd.getColumnName(i + 1);
+                        if (columnNames.containsKey(colName)) {
+                            columnNames.remove(colName);
+                        }
+                    }
+                    throw new RuntimeException("No. of columns in input table"
+                            + " > in database; not existing columns: " 
+                            + columnNames.keySet().toString());
                 }
+                mapping = new int[rsmd.getColumnCount()];
                 for (int i = 0; i < rsmd.getColumnCount(); i++) {
                     String name = rsmd.getColumnName(i + 1);
-                    DataColumnSpec cspec = spec.getColumnSpec(i);
-                    if (!cspec.getName().equals(name)) {
-                        throw new RuntimeException("Column name from input "
-                                + "does not match column name in database at "
-                                + "position " + i + ": " + name);
+                    mapping[i] = columnNames.get(name);
+                    if (mapping[i] < 0) {
+                        continue;
                     }
+                    DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
                     int type = rsmd.getColumnType(i + 1);
                     switch (type) {
                         // check all int compatible types 
@@ -126,10 +133,11 @@ final class DBWriterConnection {
                         case Types.BIGINT:
                         // check all double compatible types
                             if (!cspec.getType().isCompatible(IntValue.class)) {
-                                throw new RuntimeException("Column type from "
-                                        + "input does not match type in "
-                                        + "database at position " + i 
-                                        + ": " + type);
+                                throw new RuntimeException("Column \"" + name
+                                        + "\" of type \"" + cspec.getType()
+                                        + "\" from input does not match type "
+                                        + "\"" + rsmd.getColumnTypeName(i + 1)
+                                        + "\" in database at position " + i);
                             }
                             break;
                         case Types.FLOAT:
@@ -139,28 +147,51 @@ final class DBWriterConnection {
                         case Types.REAL:
                             if (!cspec.getType().isCompatible(
                                     DoubleValue.class)) {
-                                throw new RuntimeException("Column type from "
-                                        + "input does not match type in "
-                                        + "database at position " + i 
-                                        + ": " + type);
+                                throw new RuntimeException("Column \"" + name
+                                        + "\" of type \"" + cspec.getType()
+                                        + "\" from input does not match type "
+                                        + "\"" + rsmd.getColumnTypeName(i + 1)
+                                        + "\" in database at position " + i);
                             }
                             break;
                         // all other cases are fine for string-type columns
                     }
                 }
                 rs.close();
+            } else {
+                mapping = new int[spec.getNumColumns()];
+                for (int k = 0; k < mapping.length; k++) {
+                    mapping[k] = k;
+                }
             }
         } else {
+            mapping = new int[spec.getNumColumns()];
+            for (int k = 0; k < mapping.length; k++) {
+                mapping[k] = k;
+            }
             try {
                 // remove existing table (if any)
                 conn.createStatement().execute("DROP TABLE " + table);
-            } catch (Exception e) {
-                LOGGER.debug("Can't drop table, will create new table.");
+            } catch (Throwable t) {
+                LOGGER.info("Can't drop table \"" + table 
+                        + "\", will create new table.");
             }
             // and create new table
             conn.createStatement().execute("CREATE TABLE " + table + " " 
                     + createStmt(spec, sqlTypes));
         }
+        
+        // creates the wild card string based on the number of columns
+        // this string it used everytime an new row is inserted into the db 
+        final StringBuilder wildcard = new StringBuilder("(");
+        for (int i = 0; i < mapping.length; i++) {
+            if (i > 0) {
+                wildcard.append(", ?");
+            } else {
+                wildcard.append("?");
+            }
+        }
+        wildcard.append(")");
         
         // create table meta data with empty column information
         PreparedStatement stmt = conn.prepareStatement("INSERT INTO " + table
@@ -178,10 +209,14 @@ final class DBWriterConnection {
             exec.checkCanceled();
             exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
             DataRow row = it.next();
-            for (int i = 0; i < row.getNumCells(); i++) {
+            for (int i = 0; i < mapping.length; i++) {
                 int dbIdx = i + 1;
-                DataColumnSpec cspec = spec.getColumnSpec(i);
-                DataCell cell = row.getCell(i);
+                if (mapping[i] < 0) {
+                    stmt.setNull(dbIdx, Types.NULL);
+                    continue;
+                }
+                DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
+                DataCell cell = row.getCell(mapping[i]);
                 if (cspec.getType().isCompatible(IntValue.class)) {
                     if (cell.isMissing()) {
                         stmt.setNull(dbIdx, Types.INTEGER);
@@ -210,17 +245,17 @@ final class DBWriterConnection {
             }
             try {
                 stmt.execute();
-            } catch (Exception e) {
+            } catch (Throwable t) {
                 allErrors++;
                 if (errorCnt > -1) {
                     String errorMsg = "Error in row #" + cnt + ": " 
-                        + row.getKey() + ", " + e.getMessage();
+                        + row.getKey() + ", " + t.getMessage();
                     exec.setMessage(errorMsg);
-                    if (errorCnt++ < 100) {
-                        LOGGER.warn(errorMsg, e);
+                    if (errorCnt++ < 10) {
+                        LOGGER.warn(errorMsg);
                     } else {
                         errorCnt = -1;
-                        LOGGER.warn(errorMsg + " - more errors...", e);
+                        LOGGER.warn(errorMsg + " - more errors...", t);
                     }
                 }
             }
@@ -232,7 +267,7 @@ final class DBWriterConnection {
         if (allErrors == 0) {
             return null;
         } else {
-            return "Error writing " + allErrors + " of " + rowCount;
+            return "Error writing " + allErrors + " of " + rowCount + " rows.";
         }
     }
     
@@ -245,11 +280,15 @@ final class DBWriterConnection {
             }
             DataColumnSpec cspec = spec.getColumnSpec(i);
             String colName = cspec.getName();
-            String column = colName.replaceAll("[^a-zA-Z0-9]", "_");
+            String column = replaceColumnName(colName);
             buf.append(column + " " + sqlTypes.get(colName));
         }
         buf.append(")");
         return buf.toString();
+    }
+    
+    private static String replaceColumnName(final String oldName) {
+        return oldName.replaceAll("[^a-zA-Z0-9]", "_");
     }
 
 }

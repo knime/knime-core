@@ -195,7 +195,7 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
     /**
      * This method is called before the first chunked is processed. The method
      * must return a cell factory for each output table. The factory must create
-     * the new cells for each row in the input table and also specifiy where the
+     * the new cells for each row in the input table and also specify where the
      * new columns should be placed in the output table.
      * 
      * @param data the input data tables
@@ -330,9 +330,26 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
         }
 
         m_additionalTables = null;
-        return resultTables;
+        return postExecute(resultTables, exec);
     }
 
+    
+    /**
+     * This method is called after all rows have been processed and combined
+     * into the final result tables. Implementors of subclasses may override
+     * this in order to e.g. change the spec of the result tables. The default
+     * implementation returns the parameter unaltered.
+     *
+     * @param res the combined result tables
+     * @param exec the currently active execution context
+     * @return the output tables of the node.
+     */
+    protected BufferedDataTable[] postExecute(final BufferedDataTable[] res,
+            final ExecutionContext exec) {
+        return res;
+    }
+
+    
     /**
      * Returns all additional tables passed into the node, i.e. tables from 1 to
      * n. This result is only non-<code>null</code> during

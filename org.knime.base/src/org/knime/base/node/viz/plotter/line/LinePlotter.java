@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -115,9 +115,11 @@ public class LinePlotter extends ScatterPlotter {
                          */
                         public void stateChanged(final ChangeEvent e) {
                             if (getDataProvider() != null 
-                                && getDataProvider().getDataArray(0) != null) {
+                                && getDataProvider().getDataArray(
+                                        getDataArrayIdx()) != null) {
                                 DataTableSpec spec = getDataProvider()
-                                    .getDataArray(0).getDataTableSpec();
+                                    .getDataArray(getDataArrayIdx())
+                                    .getDataTableSpec();
                                 m_columnNames = columnFilter
                                     .getIncludedColumnSet();
                                 m_columns2Draw.clear();
@@ -172,6 +174,7 @@ public class LinePlotter extends ScatterPlotter {
                  */
                 public void stateChanged(final ChangeEvent e) {
                     setDotSize((Integer)dotSize.getValue());
+                    updatePaintModel();
                     getDrawingPane().repaint();
                 }
             });
@@ -235,26 +238,28 @@ public class LinePlotter extends ScatterPlotter {
     @Override
     public void updatePaintModel() {
         if (getDataProvider() != null
-                && getDataProvider().getDataArray(0) != null) {
+                && getDataProvider().getDataArray(getDataArrayIdx()) != null) {
             // draw the points and add the lines
-            DataArray array = getDataProvider().getDataArray(0);
+            DataArray array = getDataProvider().getDataArray(getDataArrayIdx());
             if (m_columnNames == null) {
                 initColumnNames(array);
             }
-            // create the color mapping if necessary
+            // create the color mapping
             if (m_colorMapping == null) {
                 m_colorMapping = new LinkedHashMap<String, Color>();
-                float segment = 360f / (float)m_columns2Draw.size();
-                int colNr = 0;
-                for (DataColumnSpec colSpec : getDataProvider().getDataArray(0)
-                        .getDataTableSpec()) {
-                    if (colSpec.getType().isCompatible(DoubleValue.class)) {
-                        float h = (colNr * segment) / 360f;
-                        m_colorMapping.put(colSpec.getName(), 
-                                Color.getHSBColor(h, 1, 1));
-                        colNr++;
-                    }
+            } 
+            m_colorMapping.clear();
+            float segment = 360f / (float)m_columns2Draw.size();
+            int colNr = 0;
+            for (DataColumnSpec colSpec : getDataProvider().getDataArray(
+                    getDataArrayIdx())
+                    .getDataTableSpec()) {
+                if (m_columns2Draw.contains(colNr)) {
+                    float h = (colNr * segment) / 360f;
+                    m_colorMapping.put(colSpec.getName(), 
+                            Color.getHSBColor(h, 1, 1));
                 }
+                colNr++;
             }
             calculateCoordinates(array);
             calculateDots();
@@ -306,8 +311,8 @@ public class LinePlotter extends ScatterPlotter {
             return;
         }
         if (getDataProvider() != null
-                && getDataProvider().getDataArray(0) != null) {
-            DataArray array = getDataProvider().getDataArray(0);
+                && getDataProvider().getDataArray(getDataArrayIdx()) != null) {
+            DataArray array = getDataProvider().getDataArray(getDataArrayIdx());
             int nrOfRows = array.size();
             
             // set the empty dots to delete the old ones 
@@ -315,6 +320,10 @@ public class LinePlotter extends ScatterPlotter {
             ((ScatterPlotterDrawingPane)getDrawingPane()).setDotInfoArray(
                     new DotInfoArray(new DotInfo[0]));
            
+            // the max dot size is subtracted as a dot can vary in size
+            int width = getDrawingPaneDimension().width - (getDotSize());
+            int height = getDrawingPaneDimension().height - (getDotSize());
+            
             // first store them in a list to avoid keep tracking of indices
             List<DotInfo> dotList = new ArrayList<DotInfo>();
             int colNr = 0;
@@ -336,12 +345,10 @@ public class LinePlotter extends ScatterPlotter {
                     DotInfo dot;
                     int x = (int)getXAxis().getCoordinate()
                     .calculateMappedValue(array.getRow(row).getKey()
-                            .getId(), getDrawingPaneDimension().width, 
-                            true);
+                            .getId(), width, true);
                     if (!cell.isMissing()) {
                         y = (int)getYAxis().getCoordinate()
-                        .calculateMappedValue(cell,
-                                getDrawingPaneDimension().height, true);
+                        .calculateMappedValue(cell, height, true);
                         if (missingValues.size() > 0) {
                             // we have some missing values in between, 
                             // thus we have to interpolate
@@ -431,7 +438,7 @@ public class LinePlotter extends ScatterPlotter {
         createNominalXCoordinate(rowKeys);
         setPreserve(false);
         createYCoordinate(minY, maxY);
-        setPreserve(true);
+//        setPreserve(true);
     }
 
     /**
@@ -481,7 +488,4 @@ public class LinePlotter extends ScatterPlotter {
         }
         return interpolated;
     }
-    
-    
-    
 }

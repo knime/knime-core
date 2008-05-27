@@ -21,8 +21,10 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,7 +38,9 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
+import org.knime.core.util.EncryptionKeySupplier;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.KnimeEncryption;
 
 /**
  * Simple utility class that takes a workflow, either in a directory or zipped
@@ -145,15 +149,32 @@ public final class BatchExecutor {
         File input = null, output = null;
         boolean noSave = false;
         boolean reset = false;
+        boolean isPromptForPassword = false;
+        String masterKey = null;        
         List<Option> options = new ArrayList<Option>();
 
         for (String s : args) {
-            String[] parts = s.split("=");
+            String[] parts = s.split("=", 2);
             if ("-nosave".equals(parts[0])) {
                 noSave = true;
             } else if ("-reset".equals(parts[0])) {
                 reset = true;
+            } else if ("-masterkey".equals(parts[0])) {
+                if (parts.length > 1) {
+                    if (parts[1].length() == 0) {
+                        System.err.println("Master key must not be empty.");
+                        return 1;
+                    }
+                    masterKey = parts[1];
+                } else {
+                    isPromptForPassword = true;
+                }
             } else if ("-workflowFile".equals(parts[0])) {
+                if (parts.length != 2) {
+                    System.err.println(
+                            "Couldn't parse -workflowFile argument: " + s);
+                    return 1;
+                }
                 input = new File(parts[1]);
                 if (!input.isFile()) {
                     System.err.println("Workflow file '" + parts[1]
@@ -161,6 +182,11 @@ public final class BatchExecutor {
                     return 1;
                 }
             } else if ("-workflowDir".equals(parts[0])) {
+                if (parts.length != 2) {
+                    System.err.println(
+                            "Couldn't parse -workflowDir argument: " + s);
+                    return 1;
+                }
                 input = new File(parts[1]);
                 if (!input.isDirectory()) {
                     System.err.println("Workflow directory '" + parts[1]
@@ -168,9 +194,26 @@ public final class BatchExecutor {
                     return 1;
                 }
             } else if ("-destFile".equals(parts[0])) {
+                if (parts.length != 2) {
+                    System.err.println(
+                            "Couldn't parse -destFile argument: " + s);
+                    return 1;
+                }
                 output = new File(parts[1]);
             } else if ("-option".equals(parts[0])) {
-                String[] parts2 = parts[1].split("\\,");
+                if (parts.length != 2) {
+                    System.err.println(
+                            "Couldn't parse -option argument: " + s);
+                    return 1;
+                }
+                String[] parts2;
+                try {
+                    parts2 = splitOption(parts[1]);
+                } catch (IndexOutOfBoundsException ex) {
+                    System.err.println(
+                            "Couldn't parse -option argument: " + s);
+                    return 1;
+                }
                 String[] nodeIDPath = parts2[0].split("/");
                 int[] nodeIDs = new int[nodeIDPath.length];
                 for (int i = 0; i < nodeIDs.length; i++) {
@@ -187,6 +230,7 @@ public final class BatchExecutor {
                 return 1;
             }
         }
+        setupEncryptionKey(isPromptForPassword, masterKey);
 
         final File workflowDir;
         if (input == null) {
@@ -279,5 +323,48 @@ public final class BatchExecutor {
         System.out.println(
                 "Finished in " + (System.currentTimeMillis() - t) + "ms");
         return 0;
+    }
+    
+    
+    private static void setupEncryptionKey(final boolean isPromptForPassword,
+            String masterKey) {
+        if (isPromptForPassword) {
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(System.in));
+            System.out.println("Password (warning: shown in cleartext!): ");
+            try {
+                masterKey = in.readLine();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        if (masterKey != null) {
+            final String encryptionKey = masterKey;
+            KnimeEncryption.setEncryptionKeySupplier(
+                new EncryptionKeySupplier() {
+                    /** {@inheritDoc} */
+                    public String getEncryptionKey() {
+                        return encryptionKey;
+                    }
+                });
+        }
+    }
+
+    
+    private static String[] splitOption(String option) {
+        String[] res = new String[4];
+        int index = option.indexOf(',');
+        res[0] = option.substring(0, index);
+        option = option.substring(index + 1);
+
+        index = option.indexOf(',');
+        res[1] = option.substring(0, index);
+        option = option.substring(index + 1);
+
+        index = option.lastIndexOf(',');
+        res[2] = option.substring(0, index);
+        res[3] = option.substring(index + 1);
+
+        return res;
     }
 }

@@ -594,6 +594,16 @@
             factory-class="org.knime.base.node.preproc.colcombine.ColCombineNodeFactory"
             id="org.knime.base.node.preproc.colcombine.ColCombineSimNodeFactory">
       </node>
+      <node
+            category-path="/mining/modeleval"
+            factory-class="org.knime.base.node.viz.roc.ROCNodeFactory"
+            id="org.knime.base.node.viz.roc.ROCNodeFactory">
+      </node>
+      <node
+            category-path="/view"
+            factory-class="org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeFactory"
+            id="ConditionalBoxPlotNodeFactory">
+      </node>
    </extension>
    
    

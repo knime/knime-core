@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 9, 2006 (wiswedel): created
  */
@@ -46,7 +46,7 @@ import org.knime.core.node.NodeLogger;
  * Utitlity class to do some basic file handling that is not available through
  * java API. This includes copying of files and deleting entire directories.
  * These methods are mainly used for the load/save of the workflow.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class FileUtil {
@@ -54,6 +54,9 @@ public final class FileUtil {
             NodeLogger.getLogger(FileUtil.class);
 
     private static final List<File> TEMP_FILES;
+
+    private static final boolean IS_WINDOWS = System.getProperty("os.name")
+        .startsWith("Windows");
 
     static {
         TEMP_FILES = new ArrayList<File>();
@@ -89,7 +92,7 @@ public final class FileUtil {
      * check a canceled status. The copy process will report progress in the
      * full range of the execution monitor. Consider to use a sub-execution
      * monitor if the copy process is only a small part of the entire work.
-     * 
+     *
      * @param file The file to copy.
      * @param destination The destination file, fully qualified (do not provide
      *            a directory).
@@ -137,7 +140,7 @@ public final class FileUtil {
      * Copies the bytes as read from <code>input</code> to the output stream
      * <code>destination</code>. Neither <code>input</code> nor
      * <code>destination</code> get closed at the end!
-     * 
+     *
      * @param input To read from
      * @param destination To write to
      * @throws IOException If that fails for any reason.
@@ -155,7 +158,7 @@ public final class FileUtil {
 
     /**
      * Copies a file. The implementation uses a temporary buffer of 8kB.
-     * 
+     *
      * @param file The file to copy.
      * @param destination The destination file, fully qualified (do not provide
      *            a directory).
@@ -176,7 +179,7 @@ public final class FileUtil {
      * the file will be deleted. If it represents a symbolic link, it won't
      * follow the link but simply delete the link. Links contained in any of the
      * subdirectories are deleted without touching the link source.
-     * 
+     *
      * @param dir The directory or file to delete.
      * @return If that was successful.
      */
@@ -193,7 +196,7 @@ public final class FileUtil {
 
         // a symbolic link has a different canonical path than its actual path,
         // unless it's a link to itself
-        if (!candir.equals(dir.getAbsoluteFile())) {
+        if (!IS_WINDOWS && !candir.equals(dir.getAbsoluteFile())) {
             // this file is a symbolic link, and there's no reason for us to
             // follow it, because then we might be deleting something outside of
             // the directory we were told to delete
@@ -229,10 +232,10 @@ public final class FileUtil {
     } // deleteRecursively(File)
 
     /**
-     * Recursivly packs all the the files and directories beneath the
+     * Recursively packs all the the files and directories beneath the
      * <code>rootDir</code> into a zip file. The zip file will contain the
      * root directory as the only entry in its root.
-     * 
+     *
      * @param zipFile the zip file that should be created
      * @param rootDir the root directory
      * @param compressionLevel the desired compression level, see
@@ -291,7 +294,7 @@ public final class FileUtil {
     /**
      * Extracts the contents of the given ZIP file into the destination
      * directory.
-     * 
+     *
      * @param zipFile a ZIP file
      * @param destDir the destination directory, must already exist
      * @throws IOException if an I/O error occurs
@@ -340,9 +343,9 @@ public final class FileUtil {
     /**
      * Creates a temporary directory that is automatically deleted when the JVM
      * shuts down.
-     * 
+     *
      * @param prefix the prefix string to be used in generating the file's name
-     * 
+     *
      * @return an abstract pathname denoting a newly-created empty directory
      * @throws IOException if the directory could not be created
      */
@@ -353,7 +356,7 @@ public final class FileUtil {
     /**
      * Creates a temporary directory that is automatically deleted when the JVM
      * shuts down.
-     * 
+     *
      * @param prefix the prefix string to be used in generating the file's name
      * @param dir the directory in which the file is to be created, or
      *            <code>null</code> if the default temporary-file directory is
@@ -366,9 +369,11 @@ public final class FileUtil {
         File rootDir =
                 (dir == null) ? new File(System.getProperty("java.io.tmpdir"))
                         : dir;
-        File tempDir =
-                new File(rootDir, prefix + System.currentTimeMillis()
+        File tempDir;
+        do {
+            tempDir = new File(rootDir, prefix + System.currentTimeMillis()
                         + TEMP_FILES.size());
+        } while (tempDir.exists());
         if (!tempDir.mkdirs()) {
             throw new IOException("Cannot create temporary directory '"
                     + tempDir.getCanonicalPath() + "'.");
