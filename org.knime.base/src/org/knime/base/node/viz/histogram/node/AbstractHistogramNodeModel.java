@@ -227,6 +227,8 @@ public abstract class AbstractHistogramNodeModel extends GenericNodeModel {
             m_tableSpec = DataTableSpec.load(settings);
             final File histoDataDir =
                 new File(nodeInternDir, CFG_DATA_DIR_NAME);
+            loadXCol();
+            loadAggrColumns();
             //load the data of the implementation
             loadHistogramInternals(histoDataDir, exec);
         } catch (final Exception e) {
@@ -427,35 +429,8 @@ public abstract class AbstractHistogramNodeModel extends GenericNodeModel {
         if (maxNoOfRows < 1) {
             setWarningMessage("Empty data table found.");
         }
-        final String xCol = m_xColName.getStringValue();
-        m_xColSpec = m_tableSpec.getColumnSpec(xCol);
-        if (m_xColSpec == null) {
-            throw new IllegalArgumentException("Binning column not found");
-        }
-        m_xColIdx = m_tableSpec.findColumnIndex(xCol);
-        if (m_xColIdx < 0) {
-            throw new IllegalArgumentException(
-                    "Binning column index not found");
-        }
-        final ColorColumn[] aggrCols = m_aggrColName.getColorNameColumns();
-        if (aggrCols == null) {
-            //the user hasn't selected an aggregation column
-            //thats fine since it is optional
-            m_aggrCols = null;
-        } else {
-            m_aggrCols = new ArrayList<ColorColumn>(aggrCols.length);
-            for (final ColorColumn column : aggrCols) {
-                final String columnName = column.getColumnName();
-                final int aggrColIdx = m_tableSpec.findColumnIndex(columnName);
-                if (aggrColIdx < 0) {
-                    throw new IllegalArgumentException(
-                            "Selected aggregation column not found.");
-                }
-                final ColorColumn aggrColumn =
-                    new ColorColumn(column.getColor(), columnName);
-                m_aggrCols.add(aggrColumn);
-            }
-        }
+        loadXCol();
+        loadAggrColumns();
         int selectedNoOfRows;
         if (m_allRows.getBooleanValue()) {
             //set the actual number of rows in the selected number of rows
@@ -479,6 +454,47 @@ public abstract class AbstractHistogramNodeModel extends GenericNodeModel {
     }
 
     /**
+     *
+     */
+    private void loadXCol() {
+        final String xCol = m_xColName.getStringValue();
+        m_xColSpec = m_tableSpec.getColumnSpec(xCol);
+        if (m_xColSpec == null) {
+            throw new IllegalArgumentException("Binning column not found");
+        }
+        m_xColIdx = m_tableSpec.findColumnIndex(xCol);
+        if (m_xColIdx < 0) {
+            throw new IllegalArgumentException(
+                    "Binning column index not found");
+        }
+    }
+
+    /**
+     *
+     */
+    private void loadAggrColumns() {
+        final ColorColumn[] aggrCols = m_aggrColName.getColorNameColumns();
+        if (aggrCols == null) {
+            //the user hasn't selected an aggregation column
+            //thats fine since it is optional
+            m_aggrCols = null;
+        } else {
+            m_aggrCols = new ArrayList<ColorColumn>(aggrCols.length);
+            for (final ColorColumn column : aggrCols) {
+                final String columnName = column.getColumnName();
+                final int aggrColIdx = m_tableSpec.findColumnIndex(columnName);
+                if (aggrColIdx < 0) {
+                    throw new IllegalArgumentException(
+                            "Selected aggregation column not found.");
+                }
+                final ColorColumn aggrColumn =
+                    new ColorColumn(column.getColor(), columnName);
+                m_aggrCols.add(aggrColumn);
+            }
+        }
+    }
+
+    /**
      * This method should use the given information to create the internal
      * histogram data model.
      * @param exec the {@link ExecutionContext} for progress information
@@ -488,7 +504,7 @@ public abstract class AbstractHistogramNodeModel extends GenericNodeModel {
      * node execution
      */
     protected abstract void createHistogramModel(final ExecutionContext exec,
-            final int noOfRows, final DataTable table)
+            final int noOfRows, final BufferedDataTable table)
     throws CanceledExecutionException;
 
     /**

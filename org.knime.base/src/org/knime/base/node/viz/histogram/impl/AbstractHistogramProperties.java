@@ -268,6 +268,19 @@ public abstract class AbstractHistogramProperties extends
         m_detailsPane = new JPanel();
         m_detailsPane.add(m_detailsScrollPane);
         addTab(DETAILS_TAB_LABEL, m_detailsPane);
+        addLabelDisplayListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                for (final Enumeration<AbstractButton> buttons =
+                    m_labelOrientation.getElements();
+                buttons.hasMoreElements();) {
+                    //disable the label orientation buttons if noe label
+                    //should be displayed
+                    buttons.nextElement().setEnabled(
+                            !LabelDisplayPolicy.NONE.equals(
+                            getLabelDisplayPolicy()));
+                }
+            }
+        });
     }
 
     private Dimension getTabSize() {
@@ -636,7 +649,9 @@ public abstract class AbstractHistogramProperties extends
                 button.setSelected(true);
             }
         }
-        //select the current label orientation
+
+      //select the current label orientation and disable the buttons if the
+        //show none label options is selected
         //since the set selected method doesn't trigger an event
         //we don't need to remove/add the action listener
         for (final Enumeration<AbstractButton> buttons = m_labelOrientation
@@ -651,7 +666,12 @@ public abstract class AbstractHistogramProperties extends
                     && !vizModel.isShowLabelVertical()) {
                 button.setSelected(true);
             }
+            //disable the label orientation buttons if noe label
+            //should be displayed
+            button.setEnabled(!LabelDisplayPolicy.NONE.equals(
+                    vizModel.getLabelDisplayPolicy()));
         }
+
         //Bar layout group
         //select the current layout
         //since the set selected method doesn't trigger an event

@@ -25,10 +25,8 @@
 package org.knime.base.node.viz.histogram.node;
 
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowIterator;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -47,6 +45,7 @@ import org.knime.base.node.viz.histogram.util.ColorColumn;
 
 import java.awt.Color;
 import java.io.File;
+import java.io.FileNotFoundException;
 
 
 /**
@@ -65,9 +64,6 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
      * The constructor.
      */
     protected HistogramNodeModel() {
-        //if we set the node to autoExecutable = true the execute method
-        //gets also called when the workspace is reloaded from file
-        setAutoExecutable(true);
     }
 
     /**
@@ -75,30 +71,16 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
      */
     @Override
     protected void createHistogramModel(final ExecutionContext exec,
-            final int noOfRows, final DataTable dataTable)
+            final int noOfRows, final BufferedDataTable dataTable)
     throws CanceledExecutionException {
         LOGGER.debug("Entering createHistogramModel(exec, dataTable) "
                 + "of class HistogramNodeModel.");
-       final DataTableSpec tableSpec = getTableSpec();
        if (noOfRows == 0) {
            m_model = null;
            return;
        }
-       m_model = new InteractiveHistogramDataModel(tableSpec, noOfRows);
-        exec.setMessage("Adding data rows to histogram...");
-        final double progressPerRow = 1.0 / noOfRows;
-        double progress = 0.0;
-        final RowIterator rowIterator = dataTable.iterator();
-        for (int i = 0; i < noOfRows && rowIterator.hasNext();
-            i++) {
-            final DataRow row = rowIterator.next();
-            m_model.addDataRow(row);
-            progress += progressPerRow;
-            exec.setProgress(progress, "Adding data rows to histogram...");
-            exec.checkCanceled();
-        }
-        exec.setProgress(1.0, "Histogram finished.");
-        LOGGER.debug("Exiting createHistogramModel(exec, dataTable) "
+       m_model = new InteractiveHistogramDataModel(exec, dataTable, noOfRows);
+       LOGGER.debug("Exiting createHistogramModel(exec, dataTable) "
                 + "of class HistogramNodeModel.");
     }
 
@@ -185,8 +167,18 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
      */
     @Override
     protected void loadHistogramInternals(final File dataDir,
-            final ExecutionMonitor exec) {
-        //      nothing to do since it is auto executable
+            final ExecutionMonitor exec) throws Exception {
+        try {
+            m_model = InteractiveHistogramDataModel.loadFromFile(dataDir, exec);
+        } catch (final FileNotFoundException e) {
+            LOGGER.debug("Previous implementations haven't stored the data");
+            m_model = null;
+        } catch (final Exception e) {
+            LOGGER.warn("Error while loadHistogramInternals of "
+                    + "FixedColumn implementation: " + e.getMessage());
+            m_model = null;
+            throw e;
+        }
     }
 
     /**
@@ -194,7 +186,16 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
      */
     @Override
     protected void saveHistogramInternals(final File dataDir,
-            final ExecutionMonitor exec) {
-        //      nothing to do since it is auto executable
+            final ExecutionMonitor exec) throws Exception {
+        if (m_model == null) {
+            return;
+        }
+        try {
+            m_model.save2File(dataDir, exec);
+        } catch (final Exception e) {
+            LOGGER.warn("Error while saveHistogramInternals of "
+                    + "FixedColumn implementation: " + e.getMessage());
+            throw e;
+        }
     }
 }

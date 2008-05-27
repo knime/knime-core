@@ -358,7 +358,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
 //      add the data rows to the new bins
         int startBin = 0;
         if (m_aggrColumns == null || m_aggrColumns.size() < 1) {
-            //if the user hsn't selected a aggregation column
+            //if the user hasn't selected a aggregation column
             for (final DataRow row : getSortedRows()) {
                 final DataCell xCell = row.getCell(m_xColIdx);
                 final Color color =

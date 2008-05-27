@@ -27,11 +27,11 @@ package org.knime.base.node.viz.histogram.node;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -128,7 +128,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
      */
     @Override
     protected void createHistogramModel(final ExecutionContext exec,
-            final int noOfRows, final DataTable table)
+            final int noOfRows, final BufferedDataTable table)
     throws CanceledExecutionException {
         LOGGER.debug("Entering createHistogramModel(exec, table) "
                 + "of class FixedColumnHistogramNodeModel.");
