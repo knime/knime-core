@@ -104,8 +104,8 @@ public final class PieColumnFilter implements ColumnFilter {
 //                      || domain.getUpperBound() == null) {
 //                  return false;
 //              }
-//            final int lower = ((IntCell)domain.getLowerBound()).getIntValue();
-//            final int upper = ((IntCell)domain.getUpperBound()).getIntValue();
+//           final int lower = ((IntValue)domain.getLowerBound()).getIntValue();
+//           final int upper = ((IntValue)domain.getUpperBound()).getIntValue();
 //              return (upper - lower < MAX_NO_OF_SECTIONS);
 //          }
         return true;
