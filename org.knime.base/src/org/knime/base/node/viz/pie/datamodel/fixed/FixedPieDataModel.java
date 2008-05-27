@@ -150,9 +150,13 @@ public class FixedPieDataModel extends PieDataModel {
     }
 
     /**
-     * {@inheritDoc}
+     * @param row the row to add
+     * @param rowColor the color of the roe
+     * @param pieCell the cell with the pie value
+     * @param aggrCell the cell with the aggregation value
+     * @throws TooManySectionsException if more sections are created than
+     * supported
      */
-    @Override
     public void addDataRow(final DataRow row, final Color rowColor,
             final DataCell pieCell, final DataCell aggrCell)
     throws TooManySectionsException {

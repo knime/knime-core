@@ -25,9 +25,11 @@
 
 package org.knime.base.node.viz.pie.datamodel.interactive;
 
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.List;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.pie.datamodel.PieDataModel;
@@ -35,11 +37,10 @@ import org.knime.base.node.viz.pie.datamodel.PieSectionDataModel;
 import org.knime.base.node.viz.pie.datamodel.PieVizModel;
 import org.knime.base.node.viz.pie.util.PieColumnFilter;
 import org.knime.base.node.viz.pie.util.TooManySectionsException;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DoubleValue;
+
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -184,7 +185,7 @@ public class InteractivePieVizModel extends PieVizModel {
         } else {
             aggrColIdx = m_model.getColIndex(m_aggrColSpec.getName());
         }
-        for (final DataRow row : m_model.getDataRows()) {
+        for (final DataRow row : m_model) {
             final DataCell pieCell = row.getCell(pieColIdx);
             final DataCell aggrCell;
             if (aggrColIdx < 0) {

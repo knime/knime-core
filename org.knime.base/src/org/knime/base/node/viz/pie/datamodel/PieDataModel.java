@@ -25,15 +25,12 @@
 
 package org.knime.base.node.viz.pie.datamodel;
 
+import org.knime.base.node.viz.aggregation.util.AggrValModelComparator;
+import org.knime.base.node.viz.aggregation.util.GUIUtils;
+
 import java.awt.Color;
 import java.util.Collections;
 import java.util.List;
-
-import org.knime.base.node.viz.aggregation.util.AggrValModelComparator;
-import org.knime.base.node.viz.aggregation.util.GUIUtils;
-import org.knime.base.node.viz.pie.util.TooManySectionsException;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataRow;
 
 /**
  * The abstract pie data model which provides method to hold the data which
@@ -118,17 +115,4 @@ public abstract class PieDataModel {
     public boolean detailsAvailable() {
         return m_detailsAvailable;
     }
-
-    /**
-     * Adds the given row values to the histogram.
-     * @param row the data row to add
-     * @param rowColor the color of this row
-     * @param pieCell the pie value
-     * @param aggrCell the optional aggregation value
-     * @throws TooManySectionsException if more sections are created than
-     * supported
-     */
-    public abstract void addDataRow(final DataRow row, final Color rowColor,
-            final DataCell pieCell, final DataCell aggrCell)
-    throws TooManySectionsException;
 }
