@@ -15,12 +15,12 @@
 		<p>
 		A box plot displays robust statistical parameters: minimum, 
 		lower quartile, median, upper quartile, and maximum. These parameters 
-		called robust, since they are not sensitive to extreme outliers.
+		are called robust, since they are not sensitive to extreme outliers.
 		</p>
 		<p>
 		The conditional box plot partitions the data of a numeric column into
-		classes according to a nominal column and creates a box plot for each
-		of this classes.
+		classes according to another nominal column and creates a box plot for
+        each of the classes.
 		</p>
 		<p> A box plot for one numerical attribute is constructed in the 
 		following way:
@@ -38,7 +38,7 @@
 		p &lt; Q1 - (1.5 * IQR) AND p &gt; Q1 - (3 * IQR) or 
 		p &gt; Q3 + (1.5 * IQR) AND p &lt; Q3 + (3 * IQR). In other words mild outliers
 		are those data points which lay between 1.5 * IRQ and 3 * IRQ.
-		Extreme outliers are those datapoints p for which holds:
+		Extreme outliers are those data points p for which holds:
 		p &lt; Q1 - (3 * IQR) or p &gt; Q3 + (3 * IQR).
 		Thus, three times the box width (IQR) marks
 		the boundary between "mild" and "extreme" outliers. Mild outliers are 
@@ -52,7 +52,7 @@
 		provided as a tooltip.
 		</p>
 		
-		<h3>HiLiting:</h3>
+		<h3>HiLiting</h3>
 		<p> The outlier points may be selected by either dragging
 		a rectangle with the mouse over them or by clicking on them. Hold 
 		control pressed for multiple selections. The selected outliers may be 
@@ -68,7 +68,7 @@
 		value and the row ID.
 		</p>
 		
-		<h3>Properties: </h3>
+		<h3>Properties</h3>
 		<p>Default Settings:
 			<ul>
 			<li>Mouse Mode: choose "Selection" to select outlier points or
@@ -98,7 +98,7 @@
 		median, Q3, largest value (non-outlier), and maximum.</dataOut>
 	</ports>	
 	<views>
-		<view index="0" name="ConditionalBoxPlot">
+		<view index="0" name="Conditional box plot">
 			The box plot displaying the data distribution.
 		</view>
 	</views>

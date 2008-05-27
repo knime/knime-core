@@ -104,6 +104,7 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        String warning = "";
         String nominalCol = m_settings.nominalColumn();
         if (nominalCol == null) {
             for (int i = 0; i < inSpecs[0].getNumColumns(); i++) {
@@ -112,8 +113,8 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
                         && nomColSpec.getDomain().hasValues()) {
                     nominalCol = inSpecs[0].getColumnSpec(i).getName();
                     m_settings.nominalColumn(nominalCol);
-                    setWarningMessage("No nominal column selected. Column "
-                            + nominalCol + " chosen.");
+                    warning = "No nominal column selected. Column "
+                            + nominalCol + " chosen.";
                     break;
                 }
             }
@@ -134,8 +135,8 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
                     "Selected nominal column is not nominal.");
         }
         if (!inSpecs[0].getColumnSpec(nominalCol).getDomain().hasValues()) {
-            setWarningMessage("Selected nominal column has no domain values.\n"
-                    + "Use Domain Calculator before.");
+            warning += "\nSelected nominal column has no domain values.\n"
+                    + "Use Domain Calculator before.";
             throw new InvalidSettingsException(
                     "Selected nominal column has no domain values.");
         }
@@ -147,8 +148,8 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
                         DoubleValue.class)) {
                     numericCol = inSpecs[0].getColumnSpec(i).getName();
                     m_settings.numericColumn(numericCol);
-                    setWarningMessage("No numeric column selected. Column "
-                            + numericCol + " chosen.");
+                    warning += "\nNo numeric column selected. Column "
+                            + numericCol + " chosen.";
                     break;
                 }
             }
@@ -166,6 +167,9 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
                     "Selected numeric column is not numeric.");
         }
 
+        if (warning.length() > 0) {
+            setWarningMessage(warning.trim());
+        }
         return new DataTableSpec[]{createOutputSpec(inSpecs[0])};
     }
 
