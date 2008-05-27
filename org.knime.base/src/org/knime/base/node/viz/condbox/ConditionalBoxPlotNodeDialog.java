@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 25, 2008 (sellien): created
  */
@@ -25,6 +25,7 @@ package org.knime.base.node.viz.condbox;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -44,9 +45,9 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
 /**
  * This class provides the configuration dialog for the conditional box plot
  * node.
- * 
+ *
  * @author Stephan Sellien, University of Konstanz
- * 
+ *
  */
 public class ConditionalBoxPlotNodeDialog extends NodeDialogPane {
     private final ConditionalBoxPlotSettings m_settings =
@@ -70,16 +71,17 @@ public class ConditionalBoxPlotNodeDialog extends NodeDialogPane {
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 
-        c.anchor = GridBagConstraints.NORTHWEST;
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(2, 2, 2, 2);
         c.gridx = 0;
         c.gridy = 0;
-        p.add(new JLabel("Nominal column:"), c);
+        p.add(new JLabel("Nominal column   "), c);
         c.gridx++;
         p.add(m_nominalColumn, c);
 
         c.gridx = 0;
         c.gridy = 1;
-        p.add(new JLabel("Numeric column:"), c);
+        p.add(new JLabel("Numeric column   "), c);
         c.gridx++;
         p.add(m_numericColumn, c);
 
