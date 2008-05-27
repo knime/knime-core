@@ -64,6 +64,9 @@ public enum AggregationMethod {
     SUM("Sum", true, "Sum({1})", DoubleCell.TYPE, false, false),
     /**Variance.*/
     VARIANCE("Variance", true, "Variance({1})", DoubleCell.TYPE, false, false),
+    /**Standard deviation.*/
+    STD_DEVIATION("Standard deviation", true, "Standard deviation({1})",
+            DoubleCell.TYPE, false, false),
 
 //The none numerical methods
     /**Takes the first cell per group.*/
@@ -78,6 +81,9 @@ public enum AggregationMethod {
     /**Takes the value which occurs most.*/
     UNIQUE_CONCATENATE("Unique concatenate", false, "Unique concatenate({1})",
             StringCell.TYPE, true, false),
+    /**Counts the number of unique group members.*/
+    UNIQUE_COUNT("Unique count", false, "Unique count({1})",
+            IntCell.TYPE, true, false),
     /**Counts the number of group members.*/
     COUNT("Count", false, "Count({1})", IntCell.TYPE, false, false);
 
@@ -274,7 +280,7 @@ public enum AggregationMethod {
         }
     }
 
-    private final class VarianceOperator extends AggregationOperator {
+    private class VarianceOperator extends AggregationOperator {
 
         /**Constructor for class VarianceOperator.
          * @param maxUniqueValues
@@ -335,6 +341,29 @@ public enum AggregationMethod {
             m_validCount = 0;
         }
 
+    }
+
+    private final class StdDeviationOperator extends VarianceOperator {
+
+        /**Constructor for class StdDeviationOperator.
+         * @param maxUniqueValues
+         */
+        StdDeviationOperator(final int maxUniqueValues) {
+            super(maxUniqueValues);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataCell getResultInternal() {
+            final DataCell result = super.getResult();
+            if (result instanceof DoubleCell) {
+                final double value = ((DoubleCell)result).getDoubleValue();
+                return new DoubleCell(Math.sqrt(Math.abs(value)));
+            }
+            return result;
+        }
     }
 
     private final class FirstOperator extends AggregationOperator {
@@ -603,6 +632,62 @@ public enum AggregationMethod {
         }
     }
 
+
+    private final class UniqueCountOperator extends AggregationOperator {
+
+        private final Set<String> m_vals;
+
+        /**Constructor for class Concatenate.
+         * @param maxUniqueValues the maximum number of unique values
+         */
+        public UniqueCountOperator(final int maxUniqueValues) {
+            super(maxUniqueValues);
+            try {
+                m_vals = new HashSet<String>(maxUniqueValues);
+            } catch (final OutOfMemoryError e) {
+                throw new IllegalArgumentException(
+                        "Maximum unique values number to big");
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected boolean computeInternal(final DataCell cell) {
+            if (cell.isMissing()) {
+                return false;
+            }
+            final String val = cell.toString();
+            if (m_vals.contains(val)) {
+                return false;
+            }
+            //check if the set contains more values than allowed
+            //before adding a new value
+            if (m_vals.size() >= getMaxUniqueValues()) {
+                return true;
+            }
+            m_vals.add(val);
+            return false;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataCell getResultInternal() {
+            return new IntCell(m_vals.size());
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected void resetInternal() {
+            m_vals.clear();
+        }
+    }
+
     private final class CountOperator extends AggregationOperator {
 
         private int m_counter = 0;
@@ -697,12 +782,15 @@ public enum AggregationMethod {
             case MEAN:       return new MeanOperator(maxUniqueValues);
             case SUM:       return new SumOperator(maxUniqueValues);
             case VARIANCE:  return new VarianceOperator(maxUniqueValues);
+            case STD_DEVIATION:  return new StdDeviationOperator(
+                    maxUniqueValues);
             case FIRST:     return new FirstOperator(maxUniqueValues);
             case LAST:      return new LastOperator(maxUniqueValues);
             case MODE:      return new ModeOperator(maxUniqueValues);
             case CONCATENATE: return new ConcatenateOperator(maxUniqueValues);
             case UNIQUE_CONCATENATE: return new UniqueConcatenateOperator(
                     maxUniqueValues);
+            case UNIQUE_COUNT: return new UniqueCountOperator(maxUniqueValues);
             case COUNT:     return new CountOperator(maxUniqueValues);
         }
         throw new IllegalStateException("No operator found");

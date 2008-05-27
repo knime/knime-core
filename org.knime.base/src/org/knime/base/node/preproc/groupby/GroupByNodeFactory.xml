@@ -26,8 +26,9 @@
     			 group. If multiple values match this criterion 
     			 the first occurrence is written to the output table.</li>
     			 <li>Concatenate: Concatenates the values per group.</li>
-    			 <li>Unique concatenate:Concatenates each value only once 
+    			 <li>Unique concatenate: Concatenates each value only once 
     			 per group.</li>
+    			 <li>Unique count: Counts each value only once per group.</li>
     			<li>Count: Counts members per group.</li>
     		</ul>
 			Additional aggregation methods only available for numerical columns:
@@ -37,6 +38,8 @@
     			<li>Mean: Calculates the mean value per group.</li>
     			<li>Sum: Calculates the sum per group.</li>
     			<li>Variance: Calculates the variance per group.</li>
+    			<li>Standard deviation: Calculates the standard deviation 
+    			per group.</li>
     		</ul>
     		</p>
     		<p>
