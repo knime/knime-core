@@ -137,9 +137,9 @@ public class StringReplacerNodeModel extends NodeModel {
         exec.setMessage("Replacing");
         String regex = WildcardMatcher.wildcardToRegex(m_settings.pattern());
          // for support of \n and international weird characters
-        int flags = Pattern.DOTALL | Pattern.MULTILINE | Pattern.UNICODE_CASE;
+        int flags = Pattern.DOTALL | Pattern.MULTILINE;
         if (!m_settings.caseSensitive()) {
-            flags |= Pattern.CASE_INSENSITIVE;
+            flags |= Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
         }
         Pattern p = Pattern.compile(regex, flags);
 
