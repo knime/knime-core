@@ -85,7 +85,7 @@ public class RowFilterRefNodeModel extends NodeModel {
             keySet.add(row.getKey());
         }
         BufferedDataContainer buf =
-            exec.createDataContainer(inData[0].getSpec());
+            exec.createDataContainer(inData[0].getDataTableSpec());
         boolean exclude = m_inexcludeRows.getStringValue().equals(
                 RowFilterRefNodeDialogPane.EXCLUDE);
 

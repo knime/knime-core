@@ -82,7 +82,8 @@ public class ColumnFilterRefNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         ColumnRearranger cr =
-            createRearranger(inData[0].getSpec(), inData[1].getSpec());
+            createRearranger(inData[0].getDataTableSpec(),
+                    inData[1].getDataTableSpec());
         BufferedDataTable out =
             exec.createColumnRearrangeTable(inData[0], cr, exec);
         return new BufferedDataTable[]{out};
