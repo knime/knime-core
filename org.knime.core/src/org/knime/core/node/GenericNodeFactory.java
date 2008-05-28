@@ -552,7 +552,8 @@ public abstract class GenericNodeFactory<T extends GenericNodeModel> {
             nameList.add("");
         }
         if (nameList.get(index).length() > 0) {
-            LOGGER.coding("Duplicate port index " + index);
+            m_logger.coding("Duplicate port description in "
+                    + "XML for index " + index + ".");
         }
         if (port.getAttribute("name").length() > 0) {
             nameList.set(index, port.getAttribute("name").trim());
