@@ -604,6 +604,14 @@
             factory-class="org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeFactory"
             id="ConditionalBoxPlotNodeFactory">
       </node>
+      <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.filter.columnref.ColumnFilterRefNodeFactory"
+            id="org.knime.base.node.preproc.filter.columnref.ColumnFilterRefNodeFactory"/>
+      <node
+            category-path="/manipulation/row"
+            factory-class="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory"
+            id="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory"/>
    </extension>
    
    
