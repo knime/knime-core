@@ -35,7 +35,7 @@ import org.knime.core.node.config.ConfigWO;
 final class DBQueryConnection extends DBConnection {
     
     /** Place holder <code>&lttable&gt</code>. */
-    public static final String TABLE_PLACEHOLDER = "<table>"; 
+    static final String TABLE_PLACEHOLDER = "<table>"; 
     
     private String m_query = null;
     

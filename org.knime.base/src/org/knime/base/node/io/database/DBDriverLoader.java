@@ -29,6 +29,7 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarFile;
@@ -50,14 +51,18 @@ final class DBDriverLoader {
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(DBDriverLoader.class);
     
+    /** Map from driver file to driver class. */
+    private static final Map<String, String> DRIVERFILE_TO_DRIVERCLASS
+        = new LinkedHashMap<String, String>();
+    
     /**
      * Name of the standard JDBC-ODBC database driver, 
      * <i>sun.jdbc.odbc.JdbcOdbcDriver</i> object. Loaded per default.
      */
     static final String JDBC_ODBC_DRIVER = "sun.jdbc.odbc.JdbcOdbcDriver";
     
-    private static final HashMap<String, String> DRIVER_TO_URL
-        = new HashMap<String, String>();
+    private static final Map<String, String> DRIVER_TO_URL
+        = new LinkedHashMap<String, String>();
     
     static {
         DRIVER_TO_URL.put(JDBC_ODBC_DRIVER, "jdbc:odbc:");
@@ -190,12 +195,11 @@ final class DBDriverLoader {
                         WrappedDriver d = new WrappedDriver(
                                 (Driver)c.newInstance());
                         DRIVER_MAP.put(d.toString(), d);
-//                        DriverManager.registerDriver(d);
+                        DRIVERFILE_TO_DRIVERCLASS.put(d.toString(), 
+                                file.getAbsolutePath());
                     }
-                } catch (Exception ex) {
-                    // ignore
-                } catch (Error er) {
-                    // ignore
+                } catch (Throwable t) {
+                    // ignored
                 }
             }
         }
@@ -232,11 +236,22 @@ final class DBDriverLoader {
      * @return an String containing protocol, port, host, and database name
      *      place holder 
      */
-    public static final String getURLForDriver(final String driver) {
+    static final String getURLForDriver(final String driver) {
         String url = DRIVER_TO_URL.get(driver);
         if (url == null) {
             return "<protocol>://<host>:<port>/<database_name>";
         }
         return url + "//<host>:<port>/<database_name>";
     }
+    
+    /**
+     * Returns the absolute path for the driver class name from which it has
+     * been loaded.
+     * @param driverClass driver class name
+     * @return driver file location
+     */
+    static final String getDriverFileForDriverClass(final String driverClass) {
+        return DRIVERFILE_TO_DRIVERCLASS.get(driverClass);
+    }
+    
 }

@@ -117,6 +117,8 @@ class DBConnection {
         settings.addString("database", m_dbName);
         settings.addString("user", m_user);
         settings.addString("password", m_pass);
+        settings.addString("loaded_driver", 
+                DBDriverLoader.getDriverFileForDriverClass(m_driver));
         DBDialogPane.DRIVER_ORDER.add(m_driver);
         DBDialogPane.DRIVER_URLS.add(m_dbName);
     }
@@ -153,7 +155,7 @@ class DBConnection {
         String user = settings.getString("user");
         // password
         String password = settings.getString("password", "");
-        // loaded driver: need to load settings before 1.2
+        // loaded driver
         String[] loadedDriver = settings.getStringArray("loaded_driver", 
                 new String[0]);
         // write settings or skip it
