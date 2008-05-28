@@ -29,7 +29,8 @@ import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * 
+ * The dialog pane for the Reference Row Filter node which offers an
+ * include and exclude option.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -41,7 +42,8 @@ public class RowFilterRefNodeDialogPane extends DefaultNodeSettingsPane {
     static final String EXCLUDE = "Exclude rows from reference table";
 
     /**
-     * 
+     * Creates a new dialog pane with a radio button group to shows between
+     * include or exclude mode.
      */
     public RowFilterRefNodeDialogPane() {
         DialogComponentButtonGroup group = new DialogComponentButtonGroup(
@@ -54,7 +56,7 @@ public class RowFilterRefNodeDialogPane extends DefaultNodeSettingsPane {
     }
     
     /**
-     * @return model for include/exclude button group
+     * @return setting model for include/exclude row IDs
      */
     static SettingsModelString createInExcludeModel() {
         return new SettingsModelString("inexclude", INCLUDE);

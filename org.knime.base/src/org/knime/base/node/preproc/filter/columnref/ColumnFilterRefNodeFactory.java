@@ -29,6 +29,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
+ * Factory to create a Reference Column Filter node.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */

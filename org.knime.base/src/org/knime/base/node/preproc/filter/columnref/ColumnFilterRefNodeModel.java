@@ -44,18 +44,22 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  *
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class ColumnFilterRefNodeModel extends NodeModel {
 
+    /** Settings model to included or exclude columns. */
     private final SettingsModelString m_inexcudeColumns =
         ColumnFilterRefNodeDialogPane.createInExcludeModel();
 
+    /** Settings model to check column type compatibility. */
     private final SettingsModelBoolean m_typeComp =
         ColumnFilterRefNodeDialogPane.createTypeModel();
 
     /**
-     *
+     * Creates a new node model of the Reference Column Filter node with two
+     * inputs and one output.
      */
     public ColumnFilterRefNodeModel() {
         super(2, 1);
@@ -84,6 +88,13 @@ public class ColumnFilterRefNodeModel extends NodeModel {
         return new BufferedDataTable[]{out};
     }
 
+    /**
+     * Creates a <code>ColumnRearranger</code> that is a filter on the input 
+     * table spec.
+     * @param oSpec original table spec to filter
+     * @param filterSpec the reference table spec
+     * @return a rearranger object that filters the original spec
+     */
     private ColumnRearranger createRearranger(final DataTableSpec oSpec,
             final DataTableSpec filterSpec) {
         ColumnRearranger cr = new ColumnRearranger(oSpec);

@@ -44,15 +44,22 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
+ * The Reference Row Filter node allow the filtering of row IDs based
+ * on a second reference table. Two modes are possible, either the corresponding
+ * row IDs of the first table are included or excluded in the resulting
+ * output table.
  *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class RowFilterRefNodeModel extends NodeModel {
+    
+    /** Settings model for include/exclude option. */
     private final SettingsModelString m_inexcludeRows =
         RowFilterRefNodeDialogPane.createInExcludeModel();
 
     /**
-     *
+     * Creates a new reference row filter node model with two inputs and
+     * one filtered output.
      */
     public RowFilterRefNodeModel() {
         super(2, 1);
@@ -82,7 +89,11 @@ public class RowFilterRefNodeModel extends NodeModel {
         boolean exclude = m_inexcludeRows.getStringValue().equals(
                 RowFilterRefNodeDialogPane.EXCLUDE);
 
+        double rowCnt = 1;
         for (DataRow row : inData[0]) {
+            exec.checkCanceled();
+            exec.setProgress(
+                    rowCnt++ / inData[0].getRowCount(), "Filtering...");
             if (exclude) {
                 if (!keySet.contains(row.getKey())) {
                     buf.addRowToTable(row);

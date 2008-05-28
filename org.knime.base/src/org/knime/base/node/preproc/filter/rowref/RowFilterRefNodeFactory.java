@@ -29,6 +29,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
+ * Factory for the creation of a Reference Row Filter node.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */

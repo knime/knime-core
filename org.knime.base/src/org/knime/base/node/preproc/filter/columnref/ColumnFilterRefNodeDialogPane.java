@@ -31,7 +31,8 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * 
+ * The dialog pane to filter column which offers options to include or
+ * exclude column and two check column type compatibility.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -43,7 +44,8 @@ public class ColumnFilterRefNodeDialogPane extends DefaultNodeSettingsPane {
     static final String EXCLUDE = "Exclude columns from reference table";
 
     /**
-     * 
+     * Creates a new dialog pane with the option to include or exclude column
+     * and to optionally check to column compatibility.
      */
     public ColumnFilterRefNodeDialogPane() {
         DialogComponentButtonGroup group = new DialogComponentButtonGroup(
@@ -58,14 +60,14 @@ public class ColumnFilterRefNodeDialogPane extends DefaultNodeSettingsPane {
     }
     
     /**
-     * @return model for include/exclude button group
+     * @return settings model for include/exclude columns
      */
     static SettingsModelString createInExcludeModel() {
         return new SettingsModelString("inexclude", INCLUDE);
     }
     
     /**
-     * @return type compatibility model
+     * @return settings model for column type compatibility
      */
     static SettingsModelBoolean createTypeModel() {
         return new SettingsModelBoolean("type_compatibility", false);
