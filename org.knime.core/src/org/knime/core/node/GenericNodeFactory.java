@@ -133,7 +133,7 @@ public abstract class GenericNodeFactory<T extends GenericNodeModel> {
 
     static {
         try {
-            String imagePath = 
+            String imagePath =
                 GenericNodeFactory.class.getPackage().getName().replace(
                         '.', '/') + "/default.png";
 
@@ -550,6 +550,9 @@ public abstract class GenericNodeFactory<T extends GenericNodeModel> {
         int index = Integer.parseInt(port.getAttribute("index"));
         for (int k = nameList.size(); k <= index; k++) {
             nameList.add("");
+        }
+        if (nameList.get(index).length() > 0) {
+            LOGGER.coding("Duplicate port index " + index);
         }
         if (port.getAttribute("name").length() > 0) {
             nameList.set(index, port.getAttribute("name").trim());
