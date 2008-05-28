@@ -5,19 +5,21 @@
 	
 	<shortDescription>
 		The Reference Row Filter allows rows to be filtered from the first 
-		table while the second table is used as reference table.
+		table using the second table as reference.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>
-			This node allows rows to be filtered from the first table while
-			the second table is used as reference table. Depending on the dialog
-			setting, either the rows from the reference table are included or
-			excluded in the output table.
+			This node allows rows to be filtered from the first table using
+			the second table as reference. Depending on the dialog
+			setting, the rows from the reference table are either included or
+			excluded in the output table.<br />
+            During the test for in-/exclusion the row IDs of both tables are
+            compared.
 		</intro>
 		
         <option name="In-/Exclude rows from reference table">
-            Includes or excludes all rows from the reference table into the
+            Includes or excludes all rows from the reference table in the
             resulting table from the first input.
         </option>
 		
@@ -28,7 +30,7 @@
             Table from which rows are to be included or excluded
         </dataIn>
         <dataIn index="0" name="Reference table">
-            Table rows which used as reference filter
+            Table rows used as reference filter
         </dataIn>
         <dataOut index="0" name="Filtered table">
             Table with filtered rows

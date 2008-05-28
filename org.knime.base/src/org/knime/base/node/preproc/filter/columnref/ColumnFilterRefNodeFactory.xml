@@ -5,13 +5,13 @@
 	
 	<shortDescription>
 		The Reference Column Filter allows columns to be filtered from the first 
-		table while the second table is used as reference table.
+		table using the second table as reference.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>
-			This node allows columns to be filtered from the first table while
-			the second table is used as reference table. Depending on the dialog
+			This node allows columns to be filtered from the first table using
+			the second table as reference table. Depending on the dialog
 			setting, either the columns from the reference table are included or
 			excluded in the output table.
 		</intro>
@@ -36,7 +36,7 @@
 			Table from which columns are to be included or excluded
 		</dataIn>
 		<dataIn index="0" name="Reference table">
-            Table columns which used as reference filter
+            Table with the columns used as references
         </dataIn>
 		<dataOut index="0" name="Filtered table">
 			Table with filtered columns

@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   06.05.2008 (gabriel): created
  */
@@ -44,23 +44,22 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class RowFilterRefNodeModel extends NodeModel {
-    
     private final SettingsModelString m_inexcludeRows =
         RowFilterRefNodeDialogPane.createInExcludeModel();
-    
+
     /**
-     * 
+     *
      */
     public RowFilterRefNodeModel() {
         super(2, 1);
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -69,7 +68,7 @@ public class RowFilterRefNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -78,11 +77,13 @@ public class RowFilterRefNodeModel extends NodeModel {
         for (DataRow row : inData[1]) {
             keySet.add(row.getKey());
         }
-        BufferedDataContainer buf = 
+        BufferedDataContainer buf =
             exec.createDataContainer(inData[0].getSpec());
+        boolean exclude = m_inexcludeRows.getStringValue().equals(
+                RowFilterRefNodeDialogPane.EXCLUDE);
+
         for (DataRow row : inData[0]) {
-            if (m_inexcludeRows.getStringValue().equals(
-                    RowFilterRefNodeDialogPane.EXCLUDE)) {
+            if (exclude) {
                 if (!keySet.contains(row.getKey())) {
                     buf.addRowToTable(row);
                 }
@@ -97,17 +98,17 @@ public class RowFilterRefNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) 
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
 
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -116,7 +117,7 @@ public class RowFilterRefNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -124,17 +125,17 @@ public class RowFilterRefNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
 
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -142,12 +143,11 @@ public class RowFilterRefNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_inexcludeRows.validateSettings(settings);
     }
-
 }

@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   06.05.2008 (gabriel): created
  */
@@ -43,26 +43,26 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class ColumnFilterRefNodeModel extends NodeModel {
-    
-    private final SettingsModelString m_inexcudeColumns = 
+
+    private final SettingsModelString m_inexcudeColumns =
         ColumnFilterRefNodeDialogPane.createInExcludeModel();
-    
-    private final SettingsModelBoolean m_typeComp = 
+
+    private final SettingsModelBoolean m_typeComp =
         ColumnFilterRefNodeDialogPane.createTypeModel();
-    
+
     /**
-     * 
+     *
      */
     public ColumnFilterRefNodeModel() {
         super(2, 1);
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -72,28 +72,31 @@ public class ColumnFilterRefNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        ColumnRearranger cr = 
+        ColumnRearranger cr =
             createRearranger(inData[0].getSpec(), inData[1].getSpec());
-        BufferedDataTable out = 
+        BufferedDataTable out =
             exec.createColumnRearrangeTable(inData[0], cr, exec);
         return new BufferedDataTable[]{out};
     }
-    
+
     private ColumnRearranger createRearranger(final DataTableSpec oSpec,
             final DataTableSpec filterSpec) {
         ColumnRearranger cr = new ColumnRearranger(oSpec);
+
+        boolean exclude = m_inexcudeColumns.getStringValue().equals(
+                ColumnFilterRefNodeDialogPane.EXCLUDE);
+
         for (DataColumnSpec cspec : oSpec) {
             String name = cspec.getName();
-            if (m_inexcudeColumns.getStringValue().equals(
-                    ColumnFilterRefNodeDialogPane.EXCLUDE)) {
+            if (exclude) {
                 if (filterSpec.containsName(name)) {
                     DataType fType = filterSpec.getColumnSpec(name).getType();
-                    if (!m_typeComp.getBooleanValue() 
+                    if (!m_typeComp.getBooleanValue()
                             || cspec.getType().isASuperTypeOf(fType)) {
                         cr.remove(name);
                     }
@@ -103,7 +106,7 @@ public class ColumnFilterRefNodeModel extends NodeModel {
                     cr.remove(name);
                 } else {
                     DataType fType = filterSpec.getColumnSpec(name).getType();
-                    if (m_typeComp.getBooleanValue() 
+                    if (m_typeComp.getBooleanValue()
                             && !cspec.getType().isASuperTypeOf(fType)) {
                         cr.remove(name);
                     }
@@ -111,21 +114,21 @@ public class ColumnFilterRefNodeModel extends NodeModel {
             }
         }
         return cr;
-        
+
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) 
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
 
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -135,7 +138,7 @@ public class ColumnFilterRefNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -143,17 +146,17 @@ public class ColumnFilterRefNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
 
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -162,7 +165,7 @@ public class ColumnFilterRefNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
