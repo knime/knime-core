@@ -35,7 +35,7 @@
 		<dataIn index="0" name="Table to be filtered">
 			Table from which columns are to be included or excluded
 		</dataIn>
-		<dataIn index="0" name="Reference table">
+		<dataIn index="1" name="Reference table">
             Table with the columns used as references
         </dataIn>
 		<dataOut index="0" name="Filtered table">
