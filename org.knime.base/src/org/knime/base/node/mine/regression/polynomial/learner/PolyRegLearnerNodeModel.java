@@ -157,7 +157,8 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
             xMat[rowIndex][0] = 1;
             int colIndex = 1;
             for (int i = 0; i < row.getNumCells(); i++) {
-                if (row.getCell(i).isMissing()) {
+                if ((m_colSelected[i] || (i == dependentIndex))
+                        && row.getCell(i).isMissing()) {
                     throw new Exception(
                             "Missing values are not supported by this node.");
                 }
