@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.base.node.mine.regression.polynomial.learner;
 
@@ -62,11 +62,11 @@ import org.knime.core.node.NodeSettingsWO;
  * This node performs polynomial regression on an input table with numeric-only
  * columns. The user can choose the maximum degree the built polynomial should
  * have.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
-    private final PolyRegLearnerSettings m_settings = 
+    private final PolyRegLearnerSettings m_settings =
         new PolyRegLearnerSettings();
 
     private double[] m_betas;
@@ -157,7 +157,8 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
             xMat[rowIndex][0] = 1;
             int colIndex = 1;
             for (int i = 0; i < row.getNumCells(); i++) {
-                if (row.getCell(i).isMissing()) {
+                if ((m_colSelected[i] || (i == dependentIndex))
+                        && row.getCell(i).isMissing()) {
                     throw new Exception(
                             "Missing values are not supported by this node.");
                 }
@@ -222,7 +223,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
         String[] temp = new String[m_columnNames.length + 1];
         System.arraycopy(m_columnNames, 0, temp, 0, m_columnNames.length);
         temp[temp.length - 1] = m_settings.getTargetColumn();
-        FilterColumnTable filteredTable = 
+        FilterColumnTable filteredTable =
             new FilterColumnTable(inData[0], temp);
 
         m_rowContainer = new DefaultDataArray(filteredTable, 1, m_settings
@@ -415,7 +416,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
 
     /**
      * Returns the learned beta values.
-     * 
+     *
      * @return the beta values
      */
     double[] getBetas() {
@@ -424,7 +425,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
 
     /**
      * Returns the column names.
-     * 
+     *
      * @return the column names
      */
     String[] getColumnNames() {
@@ -433,7 +434,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
 
     /**
      * Returns the total squared error.
-     * 
+     *
      * @return the squared error
      */
     double getSquaredError() {
@@ -442,7 +443,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
 
     /**
      * Returns the degree of the regression function.
-     * 
+     *
      * @return the degree
      */
     int getDegree() {
@@ -451,7 +452,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
 
     /**
      * Returns the target column's name.
-     * 
+     *
      * @return the target column's name
      */
     String getTargetColumn() {
@@ -460,7 +461,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
 
     /**
      * Returns the mean value of each input column.
-     * 
+     *
      * @return the mean values
      */
     double[] getMeanValues() {
