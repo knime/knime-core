@@ -86,6 +86,8 @@ public final class BatchExecutor {
               "Usage: The following options are available:\n"
             + " -nosave => do not save the workflow after execution has finished\n"
             + " -reset => reset workflow prior to execution\n"
+            + " -masterkey[=...] => prompt for master passwort (used in e.g. database nodes),\n"
+            + "                 if provided with argument, use argument instead of prompting\n"
             + " -workflowFile=... => ZIP file with a ready-to-execute workflow in the root \n"
             + "                  of the ZIP\n"
             + " -workflowDir=... => directory with a ready-to-execute workflow\n"
