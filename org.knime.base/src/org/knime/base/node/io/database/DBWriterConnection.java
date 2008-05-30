@@ -113,12 +113,13 @@ final class DBWriterConnection {
                             + columnNames.keySet().toString());
                 }
                 mapping = new int[rsmd.getColumnCount()];
-                for (int i = 0; i < rsmd.getColumnCount(); i++) {
+                for (int i = 0; i < mapping.length; i++) {
                     String name = rsmd.getColumnName(i + 1);
-                    mapping[i] = columnNames.get(name);
-                    if (mapping[i] < 0) {
+                    if (!columnNames.containsKey(name)) {
+                        mapping[i] = -1;
                         continue;
                     }
+                    mapping[i] = columnNames.get(name);
                     DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
                     int type = rsmd.getColumnType(i + 1);
                     switch (type) {
