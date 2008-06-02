@@ -977,7 +977,8 @@ public final class WorkflowManager extends NodeContainer {
                 assert !this.getID().equals(nc.getID());
                 switch (nc.getState()) {
                 case EXECUTED:
-                    this.resetAndConfigureNode(nc.getID());
+                    this.resetSuccessors(nc.getID());
+                    nc.resetAsNodeContainer();
                     break;
                 case MARKEDFOREXEC:
                 case UNCONFIGURED_MARKEDFOREXEC:
@@ -1269,89 +1270,83 @@ public final class WorkflowManager extends NodeContainer {
 
     /** cleanup a node after execution.
      *
-     * @param nc NodeContainer which just finished execution
+     * @param snc SingleNodeContainer which just finished execution
      * @param success indicates if node execution was finished successfully
      *    (note that this does not imply State=EXECUTED e.g. for loop ends)
      */
-    void doAfterExecution(final NodeContainer nc, final boolean success) {
-        assert !nc.getID().equals(this.getID());
+    void doAfterExecution(final SingleNodeContainer snc, final boolean success) {
+        assert !snc.getID().equals(this.getID());
         synchronized (m_workflowMutex) {
             String st = success ? " - success" : " - failure";
-            LOGGER.debug(nc.getNameWithID() + " doAfterExecute" + st);
+            LOGGER.debug(snc.getNameWithID() + " doAfterExecute" + st);
             if (!success) {
                 // execution failed - clean up successors' execution-marks
-                disableNodeForExecution(nc.getID());
+                disableNodeForExecution(snc.getID());
                 // and also any nodes which were waiting for this one to
                 // be executed.
-                for (ScopeObject so : nc.getWaitingLoops()) {
+                for (ScopeObject so : snc.getWaitingLoops()) {
                     disableNodeForExecution(so.getOwner());
                 }
-                nc.clearWaitingLoopList();
+                snc.clearWaitingLoopList();
             }
             // allow SNC to update states etc
-            if (nc instanceof SingleNodeContainer) {
-                SingleNodeContainer snc = (SingleNodeContainer)nc;
-                snc.postExecuteNode(success);
-            }
+            snc.postExecuteNode(success);
             boolean canConfigureSuccessors = true;
-            if (nc instanceof SingleNodeContainer) {
-                // process loop context - only for "real" nodes:
-                SingleNodeContainer snc = (SingleNodeContainer)nc;
-                if (snc.getLoopRole().equals(LoopRole.BEGIN)) {
-                    // if this was BEGIN, it's not anymore (until we do not
-                    // restart it explicitly!)
-                    snc.getNode().setLoopTailNode(null);
+            // process loop context - only for "real" nodes:
+            if (snc.getLoopRole().equals(LoopRole.BEGIN)) {
+                // if this was BEGIN, it's not anymore (until we do not
+                // restart it explicitly!)
+                snc.getNode().setLoopTailNode(null);
+            }
+            if (snc.getLoopRole().equals(LoopRole.END)) {
+                // no matter what happened, try to clean up the stack.
+                ScopeLoopContext slc =
+                    snc.getScopeObjectStack().pop(ScopeLoopContext.class);
+                if (slc == null) {
+                    throw new IllegalStateException(
+                            "No Loop start for this Loop End!");
                 }
-                if (snc.getLoopRole().equals(LoopRole.END)) {
-                    // no matter what happened, try to clean up the stack.
-                    ScopeLoopContext slc =
-                        snc.getScopeObjectStack().pop(ScopeLoopContext.class);
-                    if (slc == null) {
-                        throw new IllegalStateException(
-                                "No Loop start for this Loop End!");
-                    }
+            }
+            Node node = snc.getNode();
+            if (node.getLoopStatus() != null) {
+                // we are supposed to execute this loop again!
+                // first retrieve ScopeContext
+                ScopeLoopContext slc = node.getLoopStatus();
+                // first check if the loop is properly configured:
+                if (m_nodes.get(slc.getOwner())
+                        == null) {
+                    // obviously not: origin of the loop is not in this WFM!
+                    // nothing else to do: NC stays configured
+                    assert snc.getState() == NodeContainer.State.CONFIGURED;
+                    // and choke
+                    throw new IllegalContextStackObjectException(
+                            "Loop nodes are not in the same workflow!");
+                } else {
+                    // make sure the end of the loop is properly
+                    // configured:
+                    slc.setTailNode(snc.getID());
+                    // and try to restart loop
+                    restartLoop(slc);
+                    // clear stack (= loop context)
+                    node.clearLoopStatus();
+                    // and make sure we do not accidentally configure the
+                    // remainder of this node since we are not yet done
+                    // with the loop
+                    canConfigureSuccessors = false;
                 }
-                Node node = snc.getNode();
-                if (node.getLoopStatus() != null) {
-                    // we are supposed to execute this loop again!
-                    // first retrieve ScopeContext
-                    ScopeLoopContext slc = node.getLoopStatus();
-                    // first check if the loop is properly configured:
-                    if (m_nodes.get(slc.getOwner())
-                            == null) {
-                        // obviously not: origin of the loop is not in this WFM!
-                        // nothing else to do: NC stays configured
-                        assert nc.getState() == NodeContainer.State.CONFIGURED;
-                        // and choke
-                        throw new IllegalContextStackObjectException(
-                                "Loop nodes are not in the same workflow!");
-                    } else {
-                        // make sure the end of the loop is properly
-                        // configured:
-                        slc.setTailNode(nc.getID());
-                        // and try to restart loop
-                        restartLoop(slc);
-                        // clear stack (= loop context)
-                        node.clearLoopStatus();
-                        // and make sure we do not accidentally configure the
-                        // remainder of this node since we are not yet done
-                        // with the loop
-                        canConfigureSuccessors = false;
-                    }
+            }
+            if (snc.getWaitingLoops().size() >= 1) {
+                // looks as if some loops were waiting for this node to
+                // finish! Let's try to restart them:
+                for (ScopeLoopContext slc : snc.getWaitingLoops()) {
+                    restartLoop(slc);
                 }
-                if (snc.getWaitingLoops().size() >= 1) {
-                    // looks as if some loops were waiting for this node to
-                    // finish! Let's try to restart them:
-                    for (ScopeLoopContext slc : nc.getWaitingLoops()) {
-                        restartLoop(slc);
-                    }
-                    nc.clearWaitingLoopList();
-                }
+                snc.clearWaitingLoopList();
             }
             if (canConfigureSuccessors) {
                 // may be SingleNodeContainer or WFM contained within this
                 // one but then it can be treated like a SNC
-                configureNodeAndSuccessors(nc.getID(), false, true);
+                configureNodeAndSuccessors(snc.getID(), false, true);
             }
             checkForNodeStateChanges(true);
         }
@@ -1856,7 +1851,7 @@ public final class WorkflowManager extends NodeContainer {
     /**
      * Check if any internal nodes have changed state which might mean that
      * this WFM also needs to change its state...
-     * @param propagateChanges Whether to also inform this wm's parent if done
+     * @param propagateChanges Whether to also inform this wfm's parent if done
      * (true always except for loading)
      */
     private void checkForNodeStateChanges(final boolean propagateChanges) {
@@ -1926,44 +1921,14 @@ public final class WorkflowManager extends NodeContainer {
         } else if (nrNodesInState[State.MARKEDFOREXEC.ordinal()] >= 1) {
             newState = State.MARKEDFOREXEC;
         }
-        // check if we just went from EXECUTING to something else
-        boolean wfmJustDone = (this.getState().equals(State.EXECUTING))
-                              && (!newState.executionInProgress());
-        // also find out if we went from something else to EXECUTED
-        // this should only happen if WFM contains 0 nodes and goes
-        // from configured to executed (because all "incoming" nodes are done).
-        wfmJustDone |= (!this.getState().equals(State.EXECUTED))
-                       && (newState.equals(State.EXECUTED));
+        State oldState = this.getState();
         this.setState(newState, propagateChanges);
-        if (wfmJustDone && (getParent() != null) && propagateChanges) {
-            // make sure parent WFM knows about successful execution
-            getParent().doAfterExecution(this, newState.equals(State.EXECUTED));
+        if ((!oldState.equals(newState))
+                && (getParent() != null) && propagateChanges) {
+            // make sure parent WFM reflects state changes
+            getParent().checkForNodeStateChanges(propagateChanges);
         }
     }
-
-
-//    /** Assemble array of all data for the data input of a given node. The
-//     * underlying NodeContainer will make sure the nodes are actually
-//     * executed before it provides data != null.
-//     *
-//     * @param id of node
-//     * @param array of data tables
-//     */
-//    private void assembleInputData(final NodeID id,
-//            final PortObject[] inData) {
-//        synchronized (m_workflowMutex) {
-//            NodeOutPort[] ports = assemblePredecessorOutPorts(id);
-//            assert inData.length == ports.length;
-//            for (int i = 0; i < inData.length; i++) {
-//                inData[i] = null;
-//                if (ports[i] != null) {
-//                    inData[i] = ports[i].getPortObject();
-//                } else {
-//                    inData[i] = null;
-//                }
-//            }
-//        }
-//    }
 
     /** Assemble array of all NodeOutPorts connected to the input
      * ports of a given node. This routine will make sure to skip intermediate

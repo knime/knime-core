@@ -420,8 +420,9 @@ public abstract class NodeContainer {
     /** Set new status and notify listeners.
      * @param state the new state
      * @param setDirty whether to set this node &quot;dirty&quot; (needs save).
+     * @return true if change was changed.
      */
-    protected void setState(final State state, final boolean setDirty) {
+    protected boolean setState(final State state, final boolean setDirty) {
         if (state == null) {
             throw new NullPointerException("State must not be null.");
         }
@@ -442,6 +443,7 @@ public abstract class NodeContainer {
             notifyStateChangeListeners(new NodeStateEvent(getID(), m_state));
         }
         LOGGER.debug(this.getNameWithID() + " has new state: " + m_state);
+        return changesMade;
     }
     
     /* ---------- State changing actions ------------ */
