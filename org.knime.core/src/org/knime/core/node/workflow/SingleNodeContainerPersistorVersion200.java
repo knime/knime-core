@@ -170,6 +170,7 @@ public class SingleNodeContainerPersistorVersion200 extends
         if (nodeDirRef.equals(snc.getNodeContainerDirectory())) {
             snc.unsetDirty();
         }
+        exec.setProgress(1.0);
         return SETTINGS_FILE_NAME;
     }
     

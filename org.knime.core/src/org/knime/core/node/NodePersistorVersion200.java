@@ -85,12 +85,17 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         if (nodeInternDir.exists()) {
             FileUtil.deleteRecursively(nodeInternDir);
         }
+        ExecutionMonitor internalMon = execMon.createSilentSubProgress(0.2);
+        ExecutionMonitor portMon = execMon.createSilentSubProgress(0.7);
+        execMon.setMessage("Internals");
         if (!node.isAutoExecutable() && isSaveData) {
-            saveNodeInternDirectory(node, nodeInternDir, settings, execMon);
+            saveNodeInternDirectory(node, nodeInternDir, settings, internalMon);
         }
-        savePorts(node, nodeDirRef, settings, execMon, isSaveData);
+        execMon.setMessage("Ports");
+        savePorts(node, nodeDirRef, settings, portMon, isSaveData);
         settings.saveToXML(new BufferedOutputStream(new FileOutputStream(
                 nodeFile.getFile())));
+        execMon.setProgress(1.0);
     }
 
     protected void savePorts(final Node node, final ReferencedFile nodeDirRef,
@@ -105,8 +110,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         exec.setMessage("Saving outport data");
         for (int i = 0; i < portCount; i++) {
             String portName = "port_" + i;
-            ExecutionMonitor subProgress =
-                    exec.createSubProgress(1 / (double)portCount);
+            ExecutionMonitor subProgress = 
+                exec.createSubProgress(1.0 / portCount);
             NodeSettingsWO singlePortSetting =
                     portSettings.addNodeSettings(portName);
             singlePortSetting.addInt("index", i);

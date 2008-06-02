@@ -467,7 +467,11 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
             setProgress(message, true);
         }
 
-        private void setProgress(final String message, final boolean append) {
+        /** Internal setter method, subject to override in silent progress mon.
+         * @param message new message
+         * @param append whether to append
+         */
+        void setProgress(final String message, final boolean append) {
             synchronized (m_parent) {
                 m_message = message;
                 if (append) {
@@ -485,7 +489,8 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
             }
         }
 
-        private void appendMessage(final String append) {
+        /** @param append Message to append */
+        void appendMessage(final String append) {
             m_append = append;
             setProgress(m_message, false);
         }
@@ -575,6 +580,24 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
          */
         @Override
         public void setMessage(final String arg0) {
+            // do nothing here
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public void setProgress(final String message) {
+            // do nothing here
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        void appendMessage(final String append) {
+            // do nothing here
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        void setProgress(final String message, final boolean append) {
             // do nothing here
         }
     }
