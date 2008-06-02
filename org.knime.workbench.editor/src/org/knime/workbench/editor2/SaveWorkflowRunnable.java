@@ -99,8 +99,8 @@ class SaveWorkflowRunnable extends PersistWorflowRunnable {
             checkThread.start();
 
             // TODO: execution monitor? progress monitor??
-            m_editor.getWorkflowManager().save(m_workflowFile, new ExecutionMonitor(), true);
-
+            m_editor.getWorkflowManager().save(m_workflowFile, 
+                    new ExecutionMonitor(progressMonitor), true);
         } catch (FileNotFoundException fnfe) {
             LOGGER.fatal("File not found", fnfe);
             m_exceptionMessage.append("File access problems: "
