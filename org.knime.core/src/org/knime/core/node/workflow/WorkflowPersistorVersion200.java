@@ -245,18 +245,18 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         NodeSettingsWO nodesSettings = saveSettingsForNodes(settings);
         Collection<NodeContainer> nodes = wm.getNodeContainers();
         double progRatio = 1.0 / (nodes.size() + 1);
-        execMon.setMessage("Saving");
 
         for (NodeContainer nextNode : nodes) {
             int id = nextNode.getID().getIndex();
             ExecutionMonitor subExec = execMon.createSubProgress(progRatio);
-            subExec.setMessage(nextNode.getNameWithID());
+            execMon.setMessage(nextNode.getNameWithID());
             NodeSettingsWO sub = nodesSettings.addNodeSettings("node_" + id);
             saveNodeContainer(
                     sub, workflowDirRef, nextNode, subExec, isSaveData);
             subExec.setProgress(1.0);
         }
 
+        execMon.setMessage("connection information");
         NodeSettingsWO connSettings = saveSettingsForConnections(settings);
         int connectionNumber = 0;
         for (ConnectionContainer cc : wm.getConnectionContainers()) {

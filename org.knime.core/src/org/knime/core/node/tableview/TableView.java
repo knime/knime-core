@@ -37,6 +37,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 
 import javax.swing.AbstractButton;
 import javax.swing.JCheckBoxMenuItem;
@@ -65,6 +66,7 @@ import org.knime.core.data.DataTable;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.tableview.TableContentModel.TableContentFilter;
 import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.util.Pair;
 
 
 /** 
@@ -106,7 +108,13 @@ public class TableView extends JScrollPane {
     private String m_searchString;
     
     /** Whether continued search only search row id column or entire data. */
-    private boolean m_searchIDOnly;
+    private boolean m_searchRowHeader;
+    
+    /** Whether continued search only search row id column or entire data. */
+    private boolean m_searchColHeader;
+    
+    /** Whether continued search only search row id column or entire data. */
+    private boolean m_searchData;
     
     /** 
      * Creates new empty <code>TableView</code>. Content and handlers are set
@@ -119,6 +127,7 @@ public class TableView extends JScrollPane {
      */
     public TableView() {
         this(new TableContentModel());
+        assert                                      m_searchColHeader == m_searchData;
     }
     
     /** 
@@ -626,11 +635,11 @@ public class TableView extends JScrollPane {
          *   the string, which is rendered, contains the search string
          */
         // new search string, reset search position and start on top
-        if (!search.equals(m_searchString) || idOnly != m_searchIDOnly) {
+        if (!search.equals(m_searchString) || idOnly != m_searchRowHeader) {
             m_searchRow = 0;
         }
         setLastSearchString(search);
-        m_searchIDOnly = idOnly;
+        m_searchRowHeader = idOnly;
         TableContentView cView = getContentTable();
         if (cView == null) {
             return;
@@ -647,7 +656,7 @@ public class TableView extends JScrollPane {
             }
             boolean matches = cView.getContentModel().getRowKey(pos).
                 toString().contains(search);
-            if (!m_searchIDOnly) {
+            if (!m_searchRowHeader) {
                 for (int c = 0; c < cView.getColumnCount(); c++) {
                     TableCellRenderer rend = cView.getCellRenderer(pos, c);
                     Component comp = rend.getTableCellRendererComponent(cView, 
@@ -773,7 +782,7 @@ public class TableView extends JScrollPane {
         findItem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
 //                JCheckBox rowKeyBox = 
-//                    new JCheckBox("ID only", m_searchIDOnly);
+//                    new JCheckBox("ID only", m_searchRowHeader);
 //                JPanel panel = new JPanel(new BorderLayout());
 //                panel.add(new JLabel("Find String: "), BorderLayout.WEST);
 //                panel.add(rowKeyBox, BorderLayout.EAST);
@@ -798,7 +807,7 @@ public class TableView extends JScrollPane {
                 if (m_searchString == null) {
                     return;
                 }
-                find(m_searchString, m_searchIDOnly);
+                find(m_searchString, m_searchRowHeader);
             }
         });
         findNextItem.addPropertyChangeListener(
@@ -1043,6 +1052,78 @@ public class TableView extends JScrollPane {
         result.add(item);
         return result;
     } // createViewMenu()
+    
+    class SearchIterator implements Iterator<Pair<Integer, Integer>> {
+      
+        static final int HEADER = -1;
+        private Pair<Integer, Integer> m_nextPos;
+        
+        /**  
+         */
+        public SearchIterator() {
+            this(new Pair<Integer, Integer>(HEADER, HEADER));
+        }
+        
+        /**
+         * 
+         */
+        public SearchIterator(final Pair<Integer, Integer> startPos) {
+        }
+
+        /** {@inheritDoc} */
+        public boolean hasNext() {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        /** {@inheritDoc} */
+        public Pair<Integer, Integer> next() {
+            return internalNext(m_nextPos);
+        }
+        
+        private Pair<Integer, Integer> internalNext(
+                final Pair<Integer, Integer> start) {
+//            String searchString = TableView.this.m_searchString;
+            int thisRow = start.getFirst();
+            int thisCol = start.getSecond();
+            boolean change = false;
+            // thisCol represent == HEADER represent row key column!
+            if (thisCol == HEADER && !m_searchRowHeader) {
+                change = true;
+                thisCol = 0;
+            }
+            if (thisRow == HEADER && !m_searchColHeader) {
+                change = true;
+                thisRow = 0;
+            }
+            if (change) {
+                return new Pair<Integer, Integer>(thisRow, thisCol);
+            }
+            if (thisCol == HEADER) {
+                if (thisRow == HEADER) {
+                    thisRow = 0;
+                } else {
+                    thisRow += 1;
+                }
+                if (thisRow < getContentModel().getRowCount() - 1) {
+                    return new Pair<Integer, Integer>(thisRow, thisCol);
+                } else {
+                    thisCol = 0;
+                    thisRow = m_searchColHeader ? HEADER : 0;
+                    
+                }
+            }
+            
+            return null;
+        }
+
+        /** {@inheritDoc} */
+        public void remove() {
+            // TODO Auto-generated method stub
+            
+        }
+        
+    }
     
     /** PropertyChangeListener that will disable/enable the menu items. */
     private static class EnableListener implements PropertyChangeListener {

@@ -1118,8 +1118,8 @@ public final class WorkflowManager extends NodeContainer {
                 assert nc instanceof SingleNodeContainer;
                 SingleNodeContainer snc = (SingleNodeContainer)nc;
                 snc.queueAsNodeContainer(inData);
-                return true;
-            } else {
+                    return true;
+                } else {
                 disableNodeForExecution(nc.getID());
                 checkForNodeStateChanges(true);
                 return false;
@@ -1227,27 +1227,27 @@ public final class WorkflowManager extends NodeContainer {
         synchronized (m_workflowMutex) {
             LOGGER.debug(snc.getNameWithID() + " doBeforeExecute");
             // allow SNC to update states etc
-            if (snc.getLoopRole().equals(LoopRole.END)) {
-                // if this is an END to a loop, make sure it knows it's
-                // head
-                ScopeLoopContext slc = snc.getNode().
-                           getScopeContextStackContainer().peek(
-                                   ScopeLoopContext.class);
-                if (slc == null) {
-                    LOGGER.debug("Incoming scope object stack for "
-                            + snc.getNameWithID() + ":\n"
-                            + snc.getScopeObjectStack().toDeepString());
-                    throw new IllegalStateException("Encountered"
-                                + " loop-end without corresponding head!");
+                if (snc.getLoopRole().equals(LoopRole.END)) {
+                    // if this is an END to a loop, make sure it knows it's
+                    // head
+                    ScopeLoopContext slc = snc.getNode().
+                               getScopeContextStackContainer().peek(
+                                       ScopeLoopContext.class);
+                    if (slc == null) {
+                        LOGGER.debug("Incoming scope object stack for "
+                                + snc.getNameWithID() + ":\n"
+                                + snc.getScopeObjectStack().toDeepString());
+                        throw new IllegalStateException("Encountered"
+                                    + " loop-end without corresponding head!");
+                    }
+                    NodeContainer headNode = m_nodes.get(slc.getOwner());
+                    snc.getNode().setLoopHeadNode(
+                            ((SingleNodeContainer)headNode).getNode());
+                } else {
+                    // or not if it's any other type of node
+                    snc.getNode().setLoopHeadNode(null);
                 }
-                NodeContainer headNode = m_nodes.get(slc.getOwner());
-                snc.getNode().setLoopHeadNode(
-                        ((SingleNodeContainer)headNode).getNode());
-            } else {
-                // or not if it's any other type of node
-                snc.getNode().setLoopHeadNode(null);
-            }
-            snc.preExecuteNode();
+                snc.preExecuteNode();
             checkForNodeStateChanges(true);
         }
     }
@@ -2396,8 +2396,7 @@ public final class WorkflowManager extends NodeContainer {
                 workflowknimeRef, settings));
         ExecutionMonitor contentExec = exec.createSubProgress(0.1);
         ExecutionMonitor loadExec = exec.createSubProgress(0.9);
-        exec.setMessage("Loading workflow content from \""
-                + directory.getAbsolutePath() + "\"");
+        exec.setMessage("Loading content");
         result.addError(persistor.loadNodeContainer(tblRep, contentExec));
         contentExec.setProgress(1.0);
         WorkflowManager manager;
@@ -2446,7 +2445,7 @@ public final class WorkflowManager extends NodeContainer {
             new HashMap<NodeID, NodeContainerPersistor>();
         m_loadVersion = persistor.getLoadVersion();
 
-        exec.setMessage("Loading node information");
+        exec.setMessage("node information");
         for (Map.Entry<Integer, NodeContainerPersistor> nodeEntry
                 : persistor.getNodeLoaderMap().entrySet()) {
             int suffix = nodeEntry.getKey();
@@ -2461,7 +2460,7 @@ public final class WorkflowManager extends NodeContainer {
             addNodeContainer(container);
         }
 
-        exec.setMessage("Loading connection information");
+        exec.setMessage("connection information");
         for (ConnectionContainerTemplate c : persistor.getConnectionSet()) {
             int sourceSuffix = c.getSourceSuffix();
             int destSuffix = c.getDestSuffix();
@@ -2535,7 +2534,7 @@ public final class WorkflowManager extends NodeContainer {
             ScopeObjectStack inStack =
                 new ScopeObjectStack(cont.getID(), predStacks);
             NodeContainerPersistor containerPersistor = persistorMap.get(bfsID);
-            exec.setMessage("Loading persistor for " + cont.getNameWithID());
+            exec.setMessage(cont.getNameWithID());
             // two steps below: loadNodeContainer and loadContent
             ExecutionMonitor sub1 =
                 exec.createSubProgress(1.0 / (2 * m_nodes.size()));
@@ -2560,7 +2559,6 @@ public final class WorkflowManager extends NodeContainer {
                 needsReset = true;
             }
             sub1.setProgress(1.0);
-            exec.setMessage("Loading " + cont.getNameWithID());
             subResult.addError(cont.loadContent(
                     containerPersistor, tblRep, inStack, sub2));
             sub2.setProgress(1.0);

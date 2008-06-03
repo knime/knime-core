@@ -205,6 +205,7 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
             setNeedsResetAfterLoad();
         }
         loadNodeStateIntoMetaPersistor(nodePersistor);
+        exec.setProgress(1.0);
         return result;
     }
     

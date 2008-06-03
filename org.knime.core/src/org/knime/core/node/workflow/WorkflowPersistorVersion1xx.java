@@ -336,7 +336,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             // stop loading here
             return loadResult;
         }
-        exec.setMessage("Loading node information");
+        exec.setMessage("node information");
         /* Load nodes */
         for (String nodeKey : nodes.keySet()) {
             NodeSettingsRO nodeSetting;
@@ -468,7 +468,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         }
 
         /* read connections */
-        exec.setMessage("Loading connection information");
+        exec.setMessage("connection information");
         NodeSettingsRO connections;
         try {
             connections = loadSettingsForConnections(m_workflowSett);
@@ -615,6 +615,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             }
         }
         m_outPortsBarUIInfo = outPortsBarUIInfo;
+        exec.setProgress(1.0);
         return loadResult;
     }
     

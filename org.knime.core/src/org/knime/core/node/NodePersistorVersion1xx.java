@@ -346,10 +346,10 @@ public class NodePersistorVersion1xx implements NodePersistor {
             HashMap<Integer, ContainerTable> tblRep) 
             throws IOException, CanceledExecutionException {
         LoadResult result = new LoadResult();
-        ExecutionMonitor loadExec = exec.createSubProgress(0.5);
-        loadExec.setMessage("Loading settings");
-        ExecutionMonitor createExec = exec.createSubProgress(0.5);
-        int loadSteps = 1 + node.getNrOutPorts(); // one for the settings
+        ExecutionMonitor settingsExec = exec.createSilentSubProgress(0.1);
+        ExecutionMonitor loadExec = exec.createSilentSubProgress(0.7);
+        ExecutionMonitor createExec = exec.createSilentSubProgress(0.2);
+        exec.setMessage("settings");
         m_portObjects = new PortObject[node.getNrOutPorts()];
         m_portObjectSpecs = new PortObjectSpec[node.getNrOutPorts()];
         m_nodeDirectory = configFileRef.getParent();
@@ -435,11 +435,10 @@ public class NodePersistorVersion1xx implements NodePersistor {
                 LOGGER.warn(e, ise);
             }
         }
-        loadExec.setProgress(1.0 / loadSteps, "Loading ports");
+        settingsExec.setProgress(1.0);
+        exec.setMessage("ports");
         try {
-            ExecutionMonitor sub = 
-                loadExec.createSubProgress(1.0 - 1.0 / loadSteps);
-            loadPorts(node, sub, settings, loadTblRep, tblRep);
+            loadPorts(node, loadExec, settings, loadTblRep, tblRep);
         } catch (Exception e) {
             if (!(e instanceof InvalidSettingsException)
                     && !(e instanceof IOException)) {
@@ -452,7 +451,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
             LOGGER.warn(err, e);
             setNeedsResetAfterLoad();
         }
-        loadExec.setProgress(1.0, "");
+        loadExec.setProgress(1.0);
+        exec.setMessage("creating instance");
         if (result.hasErrors()) {
             m_nodeMessage = new NodeMessage(Type.ERROR, result.getErrors());
         }

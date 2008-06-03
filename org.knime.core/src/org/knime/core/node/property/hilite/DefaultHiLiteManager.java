@@ -265,10 +265,12 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
      */
     @Override
     public synchronized void fireClearHiLiteEvent() {
-        if (getHiLitKeys().size() > 0) {
+        if (!getHiLitKeys().isEmpty()) {
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() { 
-                    unHiLite(new KeyEvent(this, getHiLitKeys()));
+                    if (!getHiLitKeys().isEmpty()) {
+                        unHiLite(new KeyEvent(this, getHiLitKeys()));
+                    }
                 }
             });
         }
