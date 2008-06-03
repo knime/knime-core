@@ -1033,7 +1033,9 @@ public final class WorkflowManager extends NodeContainer {
                         || nc.getState().equals(State.EXECUTED)
                         : "NodeContainer " + nc + " in unexpected state: "
                         + nc.getState();
-                    nc.queueAsNodeContainer(new PortObject[0]);
+                    assert nc instanceof SingleNodeContainer;
+                    SingleNodeContainer snc = (SingleNodeContainer)nc;
+                    snc.queueAsNodeContainer(new PortObject[0]);
                 }
                 return;
             }
@@ -1113,9 +1115,11 @@ public final class WorkflowManager extends NodeContainer {
         }
         if (allDataAvailable) {
             if (nc.getState().equals(State.MARKEDFOREXEC)) {
-                    nc.queueAsNodeContainer(inData);
-                    return true;
-                } else {
+                assert nc instanceof SingleNodeContainer;
+                SingleNodeContainer snc = (SingleNodeContainer)nc;
+                snc.queueAsNodeContainer(inData);
+                return true;
+            } else {
                 disableNodeForExecution(nc.getID());
                 checkForNodeStateChanges(true);
                 return false;
@@ -1213,57 +1217,37 @@ public final class WorkflowManager extends NodeContainer {
         }
     }
 
-    /** {@inheritDoc} */
-    @Override
-    void queueAsNodeContainer(final PortObject[] inData) {
-        if (true) {
-            return;
-        }
-        assert false : "Workflow Manager can't be queued";
-        switch (getState()) {
-        case MARKEDFOREXEC:
-            checkForNodeStateChanges(true);
-            break;
-        default: throw new IllegalStateException(
-                "State change to " + State.QUEUED + " not allowed, currently "
-                + getState());
-        }
-    }
-
-    /** call-back from NodeContainer called before node is actually
+    /** call-back from SingleNodeContainer called before node is actually
      * executed.
      *
-     * @param nc node container which just finished execution in a JobExecutor
+     * @param snc SingleNodeContainer which finished execution in a JobExecutor
      */
-    void doBeforeExecution(final NodeContainer nc) {
-        assert !nc.getID().equals(this.getID());
+    void doBeforeExecution(final SingleNodeContainer snc) {
+        assert !snc.getID().equals(this.getID());
         synchronized (m_workflowMutex) {
-            LOGGER.debug(nc.getNameWithID() + " doBeforeExecute (NC)");
+            LOGGER.debug(snc.getNameWithID() + " doBeforeExecute");
             // allow SNC to update states etc
-            if (nc instanceof SingleNodeContainer) {
-                SingleNodeContainer snc = (SingleNodeContainer)nc;
-                if (snc.getLoopRole().equals(LoopRole.END)) {
-                    // if this is an END to a loop, make sure it knows it's
-                    // head
-                    ScopeLoopContext slc = snc.getNode().
-                               getScopeContextStackContainer().peek(
-                                       ScopeLoopContext.class);
-                    if (slc == null) {
-                        LOGGER.debug("Incoming scope object stack for "
-                                + snc.getNameWithID() + ":\n"
-                                + snc.getScopeObjectStack().toDeepString());
-                        throw new IllegalStateException("Encountered"
-                                    + " loop-end without corresponding head!");
-                    }
-                    NodeContainer headNode = m_nodes.get(slc.getOwner());
-                    snc.getNode().setLoopHeadNode(
-                            ((SingleNodeContainer)headNode).getNode());
-                } else {
-                    // or not if it's any other type of node
-                    snc.getNode().setLoopHeadNode(null);
+            if (snc.getLoopRole().equals(LoopRole.END)) {
+                // if this is an END to a loop, make sure it knows it's
+                // head
+                ScopeLoopContext slc = snc.getNode().
+                           getScopeContextStackContainer().peek(
+                                   ScopeLoopContext.class);
+                if (slc == null) {
+                    LOGGER.debug("Incoming scope object stack for "
+                            + snc.getNameWithID() + ":\n"
+                            + snc.getScopeObjectStack().toDeepString());
+                    throw new IllegalStateException("Encountered"
+                                + " loop-end without corresponding head!");
                 }
-                snc.preExecuteNode();
+                NodeContainer headNode = m_nodes.get(slc.getOwner());
+                snc.getNode().setLoopHeadNode(
+                        ((SingleNodeContainer)headNode).getNode());
+            } else {
+                // or not if it's any other type of node
+                snc.getNode().setLoopHeadNode(null);
             }
+            snc.preExecuteNode();
             checkForNodeStateChanges(true);
         }
     }
@@ -1923,6 +1907,27 @@ public final class WorkflowManager extends NodeContainer {
         }
         State oldState = this.getState();
         this.setState(newState, propagateChanges);
+        if (oldState.equals(State.EXECUTING)) {
+            if (newState.equals(State.EXECUTED)) {
+                // we just successfully executed this WFM: check if any
+                // loops were waiting for this one in the parent workflow!
+                if (getWaitingLoops().size() >= 1) {
+                    // looks as if some loops were waiting for this node to
+                    // finish! Let's try to restart them:
+                    for (ScopeLoopContext slc : getWaitingLoops()) {
+                        getParent().restartLoop(slc);
+                    }
+                    clearWaitingLoopList();
+                }
+            } else if (!newState.equals(State.EXECUTING)) {
+                // something went wrong - if other any loops were waiting
+                // for this node: clean them up!
+                for (ScopeObject so : getWaitingLoops()) {
+                    getParent().disableNodeForExecution(so.getOwner());
+                }
+                clearWaitingLoopList();
+            }
+        }
         if ((!oldState.equals(newState))
                 && (getParent() != null) && propagateChanges) {
             // make sure parent WFM reflects state changes

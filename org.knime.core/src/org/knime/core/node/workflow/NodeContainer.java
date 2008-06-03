@@ -43,7 +43,6 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.GenericNodeFactory.NodeType;
 import org.knime.core.node.util.ConvenienceMethods;
@@ -93,12 +92,13 @@ public abstract class NodeContainer {
     private final WorkflowManager m_parent;
 
     private JobExecutor m_jobExecutor;
-    
+
     /** this list will hold ScopeObjects of loops in the pipeline which can not
      * be executed before this one is not done - usually these are loops
      * with "dangling" branches, e.g. a chain of nodes leaving the loop.
      */
-    private ArrayList<ScopeLoopContext> m_listOfWaitingLoops;
+    private ArrayList<ScopeLoopContext> m_listOfWaitingLoops
+                                        = new ArrayList<ScopeLoopContext>();
 
     private String m_customName;
 
@@ -148,7 +148,6 @@ public abstract class NodeContainer {
         }
         m_id = id;
         m_state = State.IDLE;
-        m_listOfWaitingLoops = new ArrayList<ScopeLoopContext>();
     }
 
     NodeContainer(final WorkflowManager parent, final NodeID id,
@@ -230,7 +229,7 @@ public abstract class NodeContainer {
             m_listOfWaitingLoops.remove(so);
         }
     }
-    
+
     ///////////////////////////////
     // Listener administration
     ////////////////////////////////////
@@ -475,15 +474,6 @@ public abstract class NodeContainer {
      * @throws IllegalStateException
      */
     abstract void cancelExecutionAsNodeContainer()
-    throws IllegalStateException;
-
-    /** Actually queue the node for execution together with ingoing data.
-     * The outgoing data is held in the nodes {@link NodeOutPort}s.
-     *
-     * @param inData ingoing objects.
-     * @throws IllegalStateException in case of illegal entry state.
-     */
-    abstract void queueAsNodeContainer(final PortObject[] inData)
     throws IllegalStateException;
 
     /** Reset underlying node and update state accordingly.

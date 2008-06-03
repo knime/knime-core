@@ -389,7 +389,6 @@ public final class SingleNodeContainer extends NodeContainer
      * @param inData the incoming data for the execution
      * @throws IllegalStateException in case of illegal entry state.
      */
-    @Override
     void queueAsNodeContainer(final PortObject[] inData) {
         synchronized (m_nodeMutex) {
             switch (getState()) {
