@@ -50,40 +50,40 @@ Uses: Java, GEF, Log4J
       <feature id="org.eclipse.pde" version="0.0.0"/>
       <feature id="org.eclipse.platform" version="0.0.0"/>
       <feature id="org.eclipse.rcp" version="0.0.0"/>
-      <feature id="org.knime.features.base" version="1.3.4"/>
-      <feature id="org.knime.features.chem.types" version="1.3.4"/>
-      <feature id="org.knime.features.ext.birt" version="1.3.4"/>
-      <feature id="org.knime.features.ext.chem.cdk" version="1.3.4"/>
-      <feature id="org.knime.features.ext.chem.plants" version="1.3.4"/>
-      <feature id="org.knime.features.ext.chem.tools" version="1.3.4"/>
-      <feature id="org.knime.features.ext.jep" version="1.3.4"/>
-      <feature id="org.knime.features.ext.jfreechart" version="1.3.4"/>
-      <feature id="org.knime.features.ext.jython" version="1.3.4"/>
-      <feature id="org.knime.features.ext.r" version="1.3.4"/>
-      <feature id="org.knime.features.ext.weka" version="1.3.4"/>
-      <feature id="org.knime.features.product" version="1.3.4"/>
-      <feature id="org.knime.features.testing" version="1.3.4"/>
-      <feature id="org.knime.features.wizard" version="1.3.4"/>
+      <feature id="org.knime.features.base" version="1.3.5"/>
+      <feature id="org.knime.features.chem.types" version="1.3.5"/>
+      <feature id="org.knime.features.ext.birt" version="1.3.5"/>
+      <feature id="org.knime.features.ext.chem.cdk" version="1.3.5"/>
+      <feature id="org.knime.features.ext.chem.plants" version="1.3.5"/>
+      <feature id="org.knime.features.ext.chem.tools" version="1.3.5"/>
+      <feature id="org.knime.features.ext.jep" version="1.3.5"/>
+      <feature id="org.knime.features.ext.jfreechart" version="1.3.5"/>
+      <feature id="org.knime.features.ext.jython" version="1.3.5"/>
+      <feature id="org.knime.features.ext.r" version="1.3.5"/>
+      <feature id="org.knime.features.ext.weka" version="1.3.5"/>
+      <feature id="org.knime.features.product" version="1.3.5"/>
+      <feature id="org.knime.features.testing" version="1.3.5"/>
+      <feature id="org.knime.features.wizard" version="1.3.5"/>
       <feature id="org.mozilla.rhino" version="0.0.0"/>
       <feature id="org.w3c.sac" version="0.0.0"/>
-      <feature id="org.knime.features.base.exttool" version="1.3.4"/>
-      <feature id="org.knime.features.base.exttool.sdk" version="1.3.4"/>
-      <feature id="org.knime.features.base.sdk" version="1.3.4"/>
-      <feature id="org.knime.features.chem.types.sdk" version="1.3.4"/>
-      <feature id="org.knime.features.ext.birt.sdk" version="1.3.4"/>
-      <feature id="org.knime.features.ext.chem.cdk.sdk" version="1.3.4"/>
-      <feature id="org.knime.features.ext.chem.plants.sdk" version="1.3.4"/>
-      <feature id="org.knime.features.ext.chem.tools.sdk" version="1.3.4"/>
-      <feature id="org.knime.features.ext.jep.sdk" version="1.3.4"/>
-      <feature id="org.knime.features.ext.jfreechart.sdk" version="1.3.4"/>
-      <feature id="org.knime.features.ext.jython.sdk" version="1.3.4"/>
-      <feature id="org.knime.features.ext.poi" version="1.3.4"/>
-      <feature id="org.knime.features.ext.poi.sdk" version="1.3.4"/>
-      <feature id="org.knime.features.ext.r.sdk" version="1.3.4"/>
-      <feature id="org.knime.features.ext.weka.sdk" version="1.3.4"/>
-      <feature id="org.knime.features.product.sdk" version="1.3.4"/>
-      <feature id="org.knime.features.wizard.sdk" version="1.3.4"/>
-      <feature id="org.knime.features.timeseries" version="1.3.4"/>
+      <feature id="org.knime.features.base.exttool" version="1.3.5"/>
+      <feature id="org.knime.features.base.exttool.sdk" version="1.3.5"/>
+      <feature id="org.knime.features.base.sdk" version="1.3.5"/>
+      <feature id="org.knime.features.chem.types.sdk" version="1.3.5"/>
+      <feature id="org.knime.features.ext.birt.sdk" version="1.3.5"/>
+      <feature id="org.knime.features.ext.chem.cdk.sdk" version="1.3.5"/>
+      <feature id="org.knime.features.ext.chem.plants.sdk" version="1.3.5"/>
+      <feature id="org.knime.features.ext.chem.tools.sdk" version="1.3.5"/>
+      <feature id="org.knime.features.ext.jep.sdk" version="1.3.5"/>
+      <feature id="org.knime.features.ext.jfreechart.sdk" version="1.3.5"/>
+      <feature id="org.knime.features.ext.jython.sdk" version="1.3.5"/>
+      <feature id="org.knime.features.ext.poi" version="1.3.5"/>
+      <feature id="org.knime.features.ext.poi.sdk" version="1.3.5"/>
+      <feature id="org.knime.features.ext.r.sdk" version="1.3.5"/>
+      <feature id="org.knime.features.ext.weka.sdk" version="1.3.5"/>
+      <feature id="org.knime.features.product.sdk" version="1.3.5"/>
+      <feature id="org.knime.features.wizard.sdk" version="1.3.5"/>
+      <feature id="org.knime.features.timeseries" version="1.3.5"/>
    </features>
 
 </product>
