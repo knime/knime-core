@@ -98,13 +98,13 @@ public class ThreadedJobExecutor implements JobExecutor {
         m_jobQueue.add(r);
         for (int i = 0; i < m_worker.length; i++) {
             if (m_worker[i] == null) {
-                m_worker[i] = new Worker("Worker(threaded)_" + i);
+                m_worker[i] = new Worker("KNIME-Worker (" + i + ")");
                 m_worker[i].setUncaughtExceptionHandler(
                         new UncaughtExceptionHandler() {
                     /** {@inheritDoc} */
                     public void uncaughtException(
                             final Thread t, final Throwable e) {
-                        LOGGER.error(t.getName() + "terminated with uncaught "
+                        LOGGER.error(t.getName() + " terminated with uncaught "
                                 + e.getClass().getSimpleName(), e);
                     }
                     
