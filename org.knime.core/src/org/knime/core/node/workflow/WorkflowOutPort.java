@@ -34,8 +34,6 @@ public class WorkflowOutPort extends NodeOutPortWrapper  {
     
     private final NodeInPort m_simulatedInPort;
     
-    private final WorkflowManager m_workflowManager;
-    
     /**
      * Creates a new output port with a fixed type and index (should unique 
      * to all other output ports of this node) for the given node.
@@ -48,7 +46,6 @@ public class WorkflowOutPort extends NodeOutPortWrapper  {
             final int portIndex, final PortType pType) {
         super(portIndex, pType);
         m_simulatedInPort = new NodeInPort(portIndex, pType);
-        m_workflowManager = wm;
     }
 
     /** Return a NodeInPort for the WFM's output ports so that the Outport
@@ -67,12 +64,9 @@ public class WorkflowOutPort extends NodeOutPortWrapper  {
      */
     @Override
     public PortObject getPortObject() {
-        // Test if the WFM is EXECUTED in order to be sure
-        // that we want to return this object (like the SNC does).
-        if (m_workflowManager.getState().equals(NodeContainer.State.EXECUTED)) {
-            return super.getPortObject();
-        }
-        return null;
+        // don't test for execution in the WFM, this will be done by
+        // the individual ports
+        return super.getPortObject();
     }
     
 }
