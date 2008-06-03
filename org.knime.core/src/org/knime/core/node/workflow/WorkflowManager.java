@@ -1748,7 +1748,7 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     /** Return list of nodes connected to the given node sorted in breath
-     * first order. Note that also nodes who have another predecessors not
+     * first order. Note that also nodes which have another predecessors not
      * contained in this node may be included as long as at least one input
      * node is connected to a node in this list!
      *
@@ -1765,6 +1765,9 @@ public final class WorkflowManager extends NodeContainer {
         ArrayList<NodeID> bfsSortedNodes = new ArrayList<NodeID>();
         bfsSortedNodes.add(id);
         expandListBreathFirst(bfsSortedNodes, inclusionList);
+        if (inclusionList.contains(getID())) {
+            bfsSortedNodes.add(getID());
+        }
         return bfsSortedNodes;
     }
 
@@ -1774,6 +1777,11 @@ public final class WorkflowManager extends NodeContainer {
             for (ConnectionContainer cc : m_connectionsBySource.get(id)) {
                 if (!cc.getType().isLeavingWorkflow()) {
                     completeSet(nodes, cc.getDest());
+                } else {
+                    // do not call completeSet on this node as this
+                    // also includes all nodes connected to our inports
+                    assert cc.getDest().equals(getID());
+                    nodes.add(getID());
                 }
             }
         }
