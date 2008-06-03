@@ -45,7 +45,7 @@ public final class KNIMEConstants {
     /** KNIME's minor release number. */
     public static final int MINOR = 3;
     /** KNIME's revision number. */
-    public static final int REV = 4;
+    public static final int REV = 5;
     /** KNIME's build id. */
     public static final String BUILD = "";
     
