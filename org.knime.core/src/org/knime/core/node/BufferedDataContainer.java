@@ -96,6 +96,8 @@ public class BufferedDataContainer extends DataContainer {
      * @param initDomain Whether or not the spec's domain shall be used for
      * initialization.
      * @param node The owner of the outcome table.
+     * @param maxCellsInMemory Number of cells to be kept in memory, if negative
+     * use user settings (according to node)
      * @param globalTableRepository 
      *        The global (WFM) table repository for blob (de)serialization.
      * @param localTableRepository 
@@ -103,10 +105,11 @@ public class BufferedDataContainer extends DataContainer {
      * @see DataContainer#DataContainer(DataTableSpec, boolean)
      */
     BufferedDataContainer(final DataTableSpec spec, final boolean initDomain, 
-            final Node node, 
+            final Node node, final int maxCellsInMemory,
             final Map<Integer, ContainerTable> globalTableRepository,
             final Map<Integer, ContainerTable> localTableRepository) {
-        super(spec, initDomain, getMaxCellsInMemory(node));
+        super(spec, initDomain, maxCellsInMemory < 0 
+                ? getMaxCellsInMemory(node) : maxCellsInMemory);
         m_node = node;
         m_globalTableRepository = globalTableRepository;
         m_localTableRepository = localTableRepository;
