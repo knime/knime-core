@@ -147,8 +147,8 @@ public class SingleNodeContainerPersistorVersion200 extends
         File nodeDir = nodeDirRef.getFile();
         FileUtil.deleteRecursively(nodeDir);
         nodeDir.mkdirs();
-        if (!nodeDir.isDirectory()) {
-                throw new IOException("Unable to read or create directory \""
+        if (!nodeDir.isDirectory() || !nodeDir.canWrite()) {
+                throw new IOException("Unable to write or create directory \""
                         + nodeDirRef + "\"");
         }
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
