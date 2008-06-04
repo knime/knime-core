@@ -169,7 +169,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             if (spec != null) {
                 String specDirName = "spec";
                 File specDir = new File(portDir, specDirName);
-                if (!specDir.mkdir()) {
+                specDir.mkdir();
+                if (!specDir.isDirectory() || !specDir.canWrite()) {
                     throw new IOException("Can't create directory "
                             + specDir.getAbsolutePath());
                 }
@@ -184,7 +185,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                 String objectDirName = null;
                 objectDirName = "object";
                 File objectDir = new File(portDir, objectDirName);
-                if (!objectDir.mkdir()) {
+                objectDir.mkdir();
+                if (!objectDir.isDirectory() || !objectDir.canWrite()) {
                     throw new IOException("Can't create directory "
                             + objectDir.getAbsolutePath());
                 }
