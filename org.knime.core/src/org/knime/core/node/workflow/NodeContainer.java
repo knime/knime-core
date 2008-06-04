@@ -476,6 +476,11 @@ public abstract class NodeContainer {
     abstract void cancelExecutionAsNodeContainer()
     throws IllegalStateException;
 
+    /** check if node can be safely reset.
+     * @return if node can be reset.
+     */
+    abstract boolean isResetableAsNodeContainer();
+    
     /** Reset underlying node and update state accordingly.
      * @throws IllegalStateException in case of illegal entry state.
      */
