@@ -90,7 +90,11 @@ public final class WorkflowManager extends NodeContainer {
 
     /** Name of this workflow (usually displayed at top of the node figure). */
     private String m_name = "Workflow Manager";
-
+    
+    /** Summarization of internal nodes' message(s). */
+    private NodeMessage m_nodeMessage 
+                   = new NodeMessage(NodeMessage.Type.RESET, "");
+    
     // Nodes held in this workflow:
 
     /** mapping from NodeID to Nodes. */
@@ -945,7 +949,9 @@ public final class WorkflowManager extends NodeContainer {
      * Reset all nodes in this workflow. Make sure the reset is propagated
      * in the right order, that is, only actively reset the "left most"
      * nodes in the workflow or the ones connected to meta node input
-     * ports only(!).
+     * ports.
+     * Note that this routine will NOT trigger any resets connected to
+     * possible outports of this WFM.
      */
     public void resetAll() {
         synchronized (m_workflowMutex) {
@@ -975,15 +981,9 @@ public final class WorkflowManager extends NodeContainer {
             // reset automatically)
             for (NodeContainer nc : sourceNodes) {
                 assert !this.getID().equals(nc.getID());
-                switch (nc.getState()) {
-                case EXECUTED:
+                if (nc.isResetableAsNodeContainer()) {
                     this.resetSuccessors(nc.getID());
                     nc.resetAsNodeContainer();
-                    break;
-                case MARKEDFOREXEC:
-                case UNCONFIGURED_MARKEDFOREXEC:
-                    nc.markForExecutionAsNodeContainer(false);
-                default: // nothing to do with "yellow" nodes
                 }
             }
         }
@@ -1147,34 +1147,34 @@ public final class WorkflowManager extends NodeContainer {
         // however, triggering reset here will reset the MARK-status?
 //        resetSuccessors(getID());
         // remember old specs
-        PortObjectSpec[] prevSpecs =
-                new PortObjectSpec[getNrOutPorts()];
-        for (int i = 0; i < prevSpecs.length; i++) {
-            prevSpecs[i] = getOutPort(i).getPortObjectSpec();
-        }
+//        PortObjectSpec[] prevSpecs =
+//                new PortObjectSpec[getNrOutPorts()];
+//        for (int i = 0; i < prevSpecs.length; i++) {
+//            prevSpecs[i] = getOutPort(i).getPortObjectSpec();
+//        }
         // configure all nodes inside this WFM (this is configure called
         // on the WFM acting as a NodeContainer inside a workflow!)
         configureNodeAndSuccessors(this.getID(), false, false);
         // compare old and new specs
-        boolean specsChanged = false;
-        // TODO check also Stack and HiLiteHandlers!!!!!!!
-        for (int i = 0; i < prevSpecs.length; i++) {
-            PortObjectSpec newSpec =
-                    getOutPort(i).getPortObjectSpec();
-            if (newSpec != null) {
-                if (!newSpec.equals(prevSpecs[i])) {
-                    specsChanged = true;
-                    break;
-                }
-            } else if (prevSpecs[i] != null) {
-                specsChanged = true;
-                break;
-            }
-        }
+//        boolean specsChanged = false;
+//        // TODO check also Stack and HiLiteHandlers!!!!!!!
+//        for (int i = 0; i < prevSpecs.length; i++) {
+//            PortObjectSpec newSpec =
+//                    getOutPort(i).getPortObjectSpec();
+//            if (newSpec != null) {
+//                if (!newSpec.equals(prevSpecs[i])) {
+//                    specsChanged = true;
+//                    break;
+//                }
+//            } else if (prevSpecs[i] != null) {
+//                specsChanged = true;
+//                break;
+//            }
+//        }
         // make sure we reflect any state changes inside this workflow also
         // in our own state:
         checkForNodeStateChanges(true);
-        return specsChanged;
+        return true; // specsChanged;
     }
 
     /** {@inheritDoc}
@@ -1448,12 +1448,48 @@ public final class WorkflowManager extends NodeContainer {
         return matchingNodes;
     }
 
+    /** check if node can be safely reset. In case of a WFM we will check
+     * if one of the internal nodes can be reset and none of the nodes
+     * are "in progress".
+     * 
+     * @return if node can be reset.
+     */
+    @Override
+    boolean isResetableAsNodeContainer() {
+        // first check if there is a node in execution
+        for (NodeContainer nc : m_nodes.values()) {
+            if (nc.getState().executionInProgress()) {
+                return false;
+            }
+        }
+        // check for through connection
+        for (ConnectionContainer cc : m_connectionsBySource.get(getID())) {
+            if (cc.getType().equals(
+                    ConnectionContainer.ConnectionType.WFMTHROUGH)) {
+                return true;
+            }
+        }
+        // check for at least one resetable node!
+        for (NodeContainer nc : m_nodes.values()) {
+            if (nc.isResetableAsNodeContainer()) {
+                return true;
+            }
+        }
+        // nothing of the above: false.
+        return false;
+    }
+
     /** {@inheritDoc} */
     @Override
     void resetAsNodeContainer() {
         synchronized (m_workflowMutex) {
-            resetAll();
-            checkForNodeStateChanges(true);
+            if (this.isResetableAsNodeContainer()) {
+                resetAll();
+                // don't let the WFM decide on the state himself - for example,
+                // if there is only one WFMTHROUGH connection contained, it will
+                // produce wrong states! Force it to be idle.
+                setState(State.IDLE);
+            }
         }
     }
 
@@ -1472,41 +1508,35 @@ public final class WorkflowManager extends NodeContainer {
         if (nc == null) {
             return false;
         }
-        // (a) this node is executed
+        // (a) this node is resetable
         // (b) no successors is running or queued.
-        return (nc.getState() == NodeContainer.State.EXECUTED)
-               && (successorsResetable(nodeID));
+        return (nc.isResetableAsNodeContainer()
+               && (!hasSuccessorInProgress(nodeID)));
     }
 
     /**
-     * Test if successors of a node are resetable (i.e. not currently
-     * executing).
+     * Test if successors of a node are currently executing.
      *
      * @param nodeID id of node
-     * @return true of all successors are resetable
+     * @return true if at least one successors is currently in progress.
      */
-    private boolean successorsResetable(final NodeID nodeID) {
+    private boolean hasSuccessorInProgress(final NodeID nodeID) {
         NodeContainer nc = m_nodes.get(nodeID);
         if (nc == null) {  // we are talking about this WFM
             assert nodeID == this.getID();
-            return getParent().successorsResetable(nodeID);
+            return getParent().hasSuccessorInProgress(nodeID);
         }
         // else it's a node inside the WFM
         for (ConnectionContainer cc : m_connectionsBySource.get(nodeID)) {
             NodeID succID = cc.getDest();
             NodeContainer succNC = m_nodes.get(succID);
-            State succState;
-            if (succNC == null) {
-                succState = this.getState();
-            } else {
-                succState = succNC.getState();
-            }
-            if ((succState == State.CONFIGURED) || (succState == State.EXECUTED)
-                    || (succState == State.IDLE)) {
-                return successorsResetable(succID);
+            if (succNC.getState().executionInProgress()) {
+                if (hasSuccessorInProgress(succID)) {
+                    return true;
+                }
             }
         }
-        return true;
+        return false;
     }
 
     //////////////////////////////////////////////////////////
@@ -1518,22 +1548,26 @@ public final class WorkflowManager extends NodeContainer {
     * @param id of first node in chain to be reset.
     */
     public void resetAndConfigureNode(final NodeID id) {
-        NodeContainer nc = m_nodes.get(id);
-        assert nc != null;
-        switch (nc.getState()) {
-        case EXECUTING:
-            throw new IllegalStateException(
-                    "Can not reset executing node " + id);
-        case QUEUED:
-            throw new IllegalStateException("Can not reset queued node " + id);
-        case EXECUTED:
-            // reset all successors first
-            this.resetSuccessors(id);
-            // and then reset node itself
-            m_nodes.get(id).resetAsNodeContainer();
-            // and launch configure starting with this node
-            configureNodeAndSuccessors(id, true, true);
-        default: // ignore all other states (IDLE, CONFIGURED...)
+        synchronized (m_workflowMutex) {
+            NodeContainer nc = m_nodes.get(id);
+            assert nc != null;
+            if (!hasSuccessorInProgress(id)) {
+                // if that's not the case: problem!
+                if (nc.isResetableAsNodeContainer()) {
+                    // only then does it make sense to reset/configure this
+                    // Node and also it's successors. Otherwise stop.
+                    //
+                    // Reset all successors first
+                    this.resetSuccessors(id);
+                    // and then reset node itself
+                    m_nodes.get(id).resetAsNodeContainer();
+                    // and launch configure starting with this node
+                    configureNodeAndSuccessors(id, true, true);
+                }
+            } else {
+                throw new IllegalStateException(
+                "Can not reset node (wrong state of node or successors) " + id);
+            }
         }
         checkForNodeStateChanges(true);
     }
@@ -1545,6 +1579,7 @@ public final class WorkflowManager extends NodeContainer {
      * @param id of node
      */
     private void resetSuccessors(final NodeID id) {
+        assert Thread.holdsLock(m_workflowMutex);
         Set<ConnectionContainer> succs = m_connectionsBySource.get(id);
         for (ConnectionContainer conn : succs) {
             NodeID currID = conn.getDest();
@@ -1554,22 +1589,11 @@ public final class WorkflowManager extends NodeContainer {
                 // first check if it is already reset
                 NodeContainer nc = m_nodes.get(currID);
                 assert nc != null;
-                switch (nc.getState()) {
-                case EXECUTED:
-                case MARKEDFOREXEC:
-                // TODO: reset shouldn't be allowed while executing
-                case EXECUTING:
+                if (nc.isResetableAsNodeContainer()) {
                     // first reset successors of successor
                     this.resetSuccessors(currID);
                     // ..then immediate successor itself
                     nc.resetAsNodeContainer();
-                    break;
-                case IDLE:
-                case CONFIGURED:
-                    break;
-                default:
-                    throw new IllegalStateException("Wrong state of"
-                            + "successor in resetSuccessors.");
                 }
             } else {
                 assert m_nodes.get(currID) == null;
@@ -1622,7 +1646,7 @@ public final class WorkflowManager extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     public NodeMessage getNodeMessage() {
-        return null;
+        return m_nodeMessage;
     }
 
     /** {@inheritDoc} */
@@ -1851,10 +1875,28 @@ public final class WorkflowManager extends NodeContainer {
 //        assert Thread.holdsLock(m_workflowMutex);
         int[] nrNodesInState = new int[State.values().length];
         int nrNodes = 0;
+        boolean internalNodeHasError = false;
         for (NodeContainer ncIt : m_nodes.values()) {
             nrNodesInState[ncIt.getState().ordinal()]++;
             nrNodes++;
+            if ((ncIt.getNodeMessage() != null) &&
+               (ncIt.getNodeMessage().getMessageType()
+                    .equals(NodeMessage.Type.ERROR))) {
+                internalNodeHasError = true;
+            }
         }
+        // set summarization message if any of the internal nodes has an error
+        NodeMessage newMessage = new NodeMessage(NodeMessage.Type.RESET, "");
+        if (internalNodeHasError) {
+            newMessage = new NodeMessage(NodeMessage.Type.ERROR,
+                    "Internal Error.");
+        }
+        if (!newMessage.equals(m_nodeMessage)) {
+            notifyMessageListeners(new NodeMessageEvent(this.getID(),
+                    newMessage));
+            m_nodeMessage = newMessage;
+        }
+        //
         assert nrNodes == m_nodes.size();
         NodeContainer.State newState = State.IDLE;
         // check if all outports are connected

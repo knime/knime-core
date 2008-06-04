@@ -306,6 +306,16 @@ public final class SingleNodeContainer extends NodeContainer
         }
     }
 
+    /** check if node can be safely reset.
+     * @return if node can be reset.
+     */
+    @Override
+    boolean isResetableAsNodeContainer() {
+        return (getState().equals(State.EXECUTED)
+                || getState().equals(State.MARKEDFOREXEC)
+                || getState().equals(State.UNCONFIGURED_MARKEDFOREXEC));
+    }
+
     /** {@inheritDoc} */
     @Override
     void resetAsNodeContainer() {
