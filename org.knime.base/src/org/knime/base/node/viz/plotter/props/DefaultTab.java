@@ -66,7 +66,7 @@ public class DefaultTab extends PropertiesTab {
         m_mouseModeSelection = new JComboBox();
         m_mouseModeSelection.setPreferredSize(new Dimension(COMPONENT_WIDTH,
                 m_mouseModeSelection.getPreferredSize().height));
-        m_fitToScreenBtn = new JButton("Fit to screen");
+        m_fitToScreenBtn = new JButton("Fit to size");
         m_chooser = new JColorChooser();
         m_chooser.setPreviewPanel(new JPanel());
         m_chooseBackground = new JButton("Background Color");
