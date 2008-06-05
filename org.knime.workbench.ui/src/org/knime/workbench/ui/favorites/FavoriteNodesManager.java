@@ -255,7 +255,7 @@ public final class FavoriteNodesManager {
             RepositoryManager.INSTANCE.getRoot();
             for (IMemento favNode : favNodes.getChildren(TAG_FAVORITE)) {
                 String id = favNode.getString(TAG_NODE_ID);
-                LOGGER.debug("trying to load: " + id);
+//                LOGGER.debug("trying to load: " + id);
                 NodeTemplate node = (NodeTemplate)RepositoryManager.INSTANCE
                     .getRoot().getChildByID(id, true);
                 addFavoriteNode(node);
