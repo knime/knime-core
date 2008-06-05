@@ -93,7 +93,12 @@ public class OpenViewAction extends Action {
         LOGGER.debug("Open Node View " + m_nodeContainer.getName() + " (#"
                 + m_index + ")");
         try {
-            m_nodeContainer.getView(m_index).createFrame();
+            String title = m_nodeContainer.getID().toString();
+            if (m_nodeContainer.getCustomName() != null) { 
+                    title = m_nodeContainer.getCustomName();
+            }
+            title += " : " + m_nodeContainer.getViewName(m_index);
+            m_nodeContainer.getView(m_index).createFrame(title);
         } catch (Throwable t) {
             MessageBox mb = new MessageBox(
                     Display.getDefault().getActiveShell(),
@@ -110,9 +115,12 @@ public class OpenViewAction extends Action {
         } 
     }
 
+    /**
+     * 
+     * {@inheritDoc}
+     */
     @Override
     public String getId() {
-        // TODO Auto-generated method stub
-        return null;
+        return "knime.open.view.action";
     }
 }

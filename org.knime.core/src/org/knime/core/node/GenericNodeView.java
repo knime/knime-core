@@ -125,6 +125,9 @@ public abstract class GenericNodeView<T extends GenericNodeModel> {
      */
     private boolean m_alwaysOnTop = false;
 
+    
+    private String m_frameTitle;
+    
     /**
      * This class sends property events when the status changes.
      */
@@ -349,6 +352,7 @@ public abstract class GenericNodeView<T extends GenericNodeModel> {
                 m_comp.invalidate();
                 m_comp.repaint();
             }
+            m_frame.setTitle(m_frameTitle);
             m_frame.pack();
             setLocation();
         }
@@ -370,10 +374,11 @@ public abstract class GenericNodeView<T extends GenericNodeModel> {
     }
 
     /**
-    *
+    * 
     * @return a {@link JFrame} with an initialized {@link GenericNodeView}
     */
-   public final JFrame createFrame() {
+   public final JFrame createFrame(final String viewTitle) {
+       m_frameTitle = viewTitle;
        openView();
        return m_frame;
    }
