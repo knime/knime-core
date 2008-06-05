@@ -75,7 +75,8 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     /** If this table just filters columns from the reference table, we use
      * this dummy iterator to provide empty appended cells.
      */
-    private static final RowIterator EMPTY_ITERATOR = new RowIterator() {
+    private static final CloseableRowIterator EMPTY_ITERATOR = 
+        new CloseableRowIterator() {
         @Override
         public boolean hasNext() {
             return true;
@@ -83,6 +84,9 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         @Override
         public DataRow next() {
             return DUMMY_ROW;
+        }
+        @Override
+        public void close() {
         }
     };
 
@@ -224,8 +228,8 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     /**
      * {@inheritDoc}
      */
-    public RowIterator iterator() {
-        RowIterator appendIt;
+    public CloseableRowIterator iterator() {
+        CloseableRowIterator appendIt;
         if (m_appendTable != null) {
             appendIt = m_appendTable.iterator();
         } else {

@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowIterator;
+import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ConcatenateTable;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.JoinedTable;
@@ -59,6 +59,11 @@ import org.knime.core.node.config.ConfigRO;
  * constructor, for instance) but they are rather instantiated using the 
  * {@link ExecutionContext} that is provided in the execute method. 
  * 
+ * <p>Implementation note: The iterator returned by this class is a 
+ * {@link CloseableRowIterator}, meaning that if your implementation is likely
+ * to open many iterators without pushing them to the end of the table, you
+ * should consider to close them when done in order to free system resources. 
+
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class BufferedDataTable implements DataTable, PortObject {
@@ -204,10 +209,8 @@ public final class BufferedDataTable implements DataTable, PortObject {
         return getDataTableSpec();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public RowIterator iterator() {
+    /** {@inheritDoc} */
+    public CloseableRowIterator iterator() {
         return m_delegate.iterator();
     }
 
@@ -540,6 +543,10 @@ public final class BufferedDataTable implements DataTable, PortObject {
         
         /** Implementation of {@link BufferedDataTable#ensureOpen()}. */
         void ensureOpen();
+        
+        /** Overridden to narrow return type to closeable iterator.
+         * {@inheritDoc} */
+        public CloseableRowIterator iterator();
         
         /** Reference to the underlying tables, if any. A reference
          * table exists if this object is just a wrapper, such as a 

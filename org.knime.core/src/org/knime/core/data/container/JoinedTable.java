@@ -92,7 +92,7 @@ public final class JoinedTable implements KnowsRowCountTable {
     /**
      * {@inheritDoc}
      */
-    public RowIterator iterator() {
+    public CloseableRowIterator iterator() {
         return new JoinTableIterator(m_leftTable.iterator(), 
                 m_rightTable.iterator(), m_map, m_flags);
     }

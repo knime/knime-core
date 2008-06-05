@@ -1258,7 +1258,7 @@ class Buffer {
      * only).
      * @return a new Iterator over all rows.
      */
-    RowIterator iterator() {
+    CloseableRowIterator iterator() {
         if (usesOutFile()) {
             return new FromFileIterator();
         } else {
@@ -1430,7 +1430,7 @@ class Buffer {
      * Iterator that traverses the out file on the disk and deserializes
      * the rows.
      */
-    private class FromFileIterator extends RowIterator {
+    private class FromFileIterator extends CloseableRowIterator {
 
         private int m_pointer;
         /** If an exception has been thrown while reading from this buffer (only
@@ -1587,10 +1587,14 @@ class Buffer {
                 logDebug(closeMes + "failed!", ioe);
             }
         }
+        
+        /** {@inheritDoc} */
+        @Override
+        public void close() {
+            clearIteratorInstance(true);
+        }
 
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
         @Override
         protected void finalize() throws Throwable {
             /* This all relates much to bug #63: The temp files are not
@@ -1608,7 +1612,7 @@ class Buffer {
      * the content is fetched from disk and restored in memory).
      * This object is used when all rows fit in memory (no file).
      */
-    private class FromListIterator extends RowIterator {
+    private class FromListIterator extends CloseableRowIterator {
 
         // do not use iterator here, see inner class comment
         private int m_nextIndex = 0;
@@ -1658,6 +1662,12 @@ class Buffer {
                 }
                 return next;
             }
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public void close() {
+            m_nextIndex = size();
         }
     }
 

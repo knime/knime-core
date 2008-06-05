@@ -31,7 +31,6 @@ import java.util.zip.ZipOutputStream;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowIterator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -97,7 +96,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     /**
      * {@inheritDoc}
      */
-    public RowIterator iterator() {
+    public CloseableRowIterator iterator() {
         ensureBufferOpen();
         return m_buffer.iterator();
     }

@@ -32,7 +32,6 @@ import java.util.Map;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -104,7 +103,7 @@ public final class ConcatenateTable implements KnowsRowCountTable {
     /**
      * {@inheritDoc}
      */
-    public RowIterator iterator() {
+    public CloseableRowIterator iterator() {
         return new MyIterator();
     }
 
@@ -183,9 +182,9 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         return DataTableSpec.mergeDataTableSpecs(specs);
     }
     
-    private class MyIterator extends RowIterator {
+    private class MyIterator extends CloseableRowIterator {
         private int m_tableIndex;
-        private RowIterator m_curIterator;
+        private CloseableRowIterator m_curIterator;
         private DataRow m_next;
         
         public MyIterator() {
@@ -222,6 +221,13 @@ public final class ConcatenateTable implements KnowsRowCountTable {
                 return internalNext();
             } 
             return null;
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public void close() {
+            m_curIterator.close();
+            m_tableIndex = m_tables.length;
         }
         
     }
