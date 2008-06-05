@@ -33,7 +33,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.viewers.ILabelDecorator;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
@@ -102,8 +101,8 @@ public class KnimeProjectLabelDecorator implements ILabelDecorator {
      * {@inheritDoc}
      */
     public void addListener(final ILabelProviderListener listener) {
-        NodeLogger.getLogger(KnimeProjectLabelDecorator.class)
-            .info("listener added " + listener);
+//        NodeLogger.getLogger(KnimeProjectLabelDecorator.class)
+//            .info("listener added " + listener);
         m_listeners.add(listener);
     }
 
