@@ -208,8 +208,9 @@ public final class FileAnalyzer {
             // skipped columns.
             subExec = execMon.createSubProgress(ROWHDR_SUB);
             if (userSettings.isFileHasRowHeadersUserSet()) {
-                result.setFileHasRowHeaders(
-                        userSettings.getFileHasRowHeaders());
+                result
+                        .setFileHasRowHeaders(userSettings
+                                .getFileHasRowHeaders());
                 result.setFileHasRowHeadersUserSet(true);
             } else {
                 boolean hasRowHeaders;
@@ -333,7 +334,7 @@ public final class FileAnalyzer {
         // first detect the type of each column
         ExecutionMonitor subExec = exec.createSubProgress(TYPES_SUB);
         ColProperty[] colProps =
-            createColumnTypes(userSettings, result, subExec);
+                createColumnTypes(userSettings, result, subExec);
         // extract the column types and column missing values from the result
         // of the above method call
         DataType[] columnTypes = new DataType[colProps.length];
@@ -428,8 +429,9 @@ public final class FileAnalyzer {
                 }
                 cellFactory.setMissingValuePattern(missValues[c]);
 
-                DataCell dc = cellFactory.createDataCellOfType(
-                        columnTypes[c], columnHeaders[c]);
+                DataCell dc =
+                        cellFactory.createDataCellOfType(columnTypes[c],
+                                columnHeaders[c]);
 
                 if (dc != null) {
                     // this column header could be data - try the others...
@@ -450,7 +452,8 @@ public final class FileAnalyzer {
                 // prefix+index pattern, so we have nothing to test against.
                 if (rowHeader != null && scndLineRowHeader != null) {
                     HeaderHelper hh =
-                        HeaderHelper.extractPrefixAndIndexFromHeader(rowHeader);
+                            HeaderHelper
+                                    .extractPrefixAndIndexFromHeader(rowHeader);
                     if (hh == null || !hh.testNextHeader(scndLineRowHeader)) {
                         // this first line row header isn't a good row header
                         // all the other lines have nice ones - create col hdrs
@@ -475,8 +478,8 @@ public final class FileAnalyzer {
             // pass an array with null strings and it will create headers for us
             result.setFileHasColumnHeaders(false);
             String[] nulls = new String[columnHeaders.length]; // null array
-            return createColProps(nulls, userColProps, columnTypes,
-                    missValues, exec);
+            return createColProps(nulls, userColProps, columnTypes, missValues,
+                    exec);
         } else {
             // user set fileHasColHeaders - see if it's true or false
             result.setFileHasColumnHeaders(userSettings
@@ -554,8 +557,8 @@ public final class FileAnalyzer {
                         if (helper == null) {
                             // the first row ID we see
                             helper =
-                                HeaderHelper.extractPrefixAndIndexFromHeader(
-                                        token);
+                                    HeaderHelper
+                                            .extractPrefixAndIndexFromHeader(token);
                             if (helper == null) {
                                 // that's not row header material
                                 return false;
@@ -710,8 +713,7 @@ public final class FileAnalyzer {
             // itself!
             String currentUserName = userNames.remove(c);
 
-            while (resultNames.contains(name)
-                        || userNames.containsValue(name)) {
+            while (resultNames.contains(name) || userNames.containsValue(name)) {
                 name = colProp.getColumnSpec().getName() + "(" + cnt++ + ")";
                 changed = true;
             }
@@ -766,11 +768,20 @@ public final class FileAnalyzer {
         // if we find a number that can't be parsed,
         // we set it as missing value pattern
         String[] missValPattern = new String[result.getNumberOfColumns()];
+        // we can use this missing value pattern only if we also got a real
+        // value for that same column
+        boolean[] gotValue = new boolean[result.getNumberOfColumns()];
+
         for (int t = 0; t < types.length; t++) {
             // set user type - if set.
             if (userTypes[t] != null) {
                 types[t] = userTypes[t];
+            } else {
+                types[t] = IntCell.TYPE;
             }
+            // initialize the data structures:
+            missValPattern[t] = null;
+            gotValue[t] = false;
         }
 
         FileTokenizer tokenizer = new FileTokenizer(reader);
@@ -802,78 +813,8 @@ public final class FileAnalyzer {
                     }
                 }
                 checkInterrupt(exec);
-                if (!result.isRowDelimiter(token)) {
-                    if ((linesRead < 1)
-                            && (!userSettings.isFileHasColumnHeadersUserSet()
-                                   || userSettings.getFileHasColumnHeaders())) {
-                        // skip the first line - could be column headers -
-                        // unless we know it's not
-                        continue;
-                    }
-                    if (colIdx >= result.getNumberOfColumns()) {
-                        // the line contains more tokens than columns.
-                        // Ignore the extra columns.
-                        continue;
-                    }
 
-                    cellFactory.setMissingValuePattern(missValPattern[colIdx]);
-
-                    // for numbers we trim tokens and allow empty for missValue
-                    token = token.trim();
-                    if (userTypes[colIdx] == null) {
-                        // no user preset type - figure out the right type
-                        if (types[colIdx] == null) {
-                            // we come across this columns for the first time:
-                            // start with INT type, the most restrictive type
-                            types[colIdx] = IntCell.TYPE;
-                        }
-
-                        if (types[colIdx].isCompatible(IntValue.class)) {
-                            DataCell dc =
-                                    cellFactory.createDataCellOfType(
-                                            IntCell.TYPE, token);
-                            if (dc != null) {
-                                continue;
-                            }
-                            // not an integer - could it be the missing value?
-                            if (missValPattern[colIdx] == null) {
-                                // we accept one token that can't be
-                                // parsed per column - but we don't use doubles
-                                // as missing value! Would be odd.
-                                dc =
-                                        cellFactory.createDataCellOfType(
-                                                DoubleCell.TYPE, token);
-                                if (dc == null) {
-                                    missValPattern[colIdx] = token;
-                                    continue;
-                                }
-                            }
-                            // not an integer, not the missing value
-                            // - could be a double
-                            types[colIdx] = DoubleCell.TYPE;
-                        } // no else, we immediately check if it's a double
-
-                        if (types[colIdx].isCompatible(DoubleValue.class)) {
-                            DataCell dc =
-                                    cellFactory.createDataCellOfType(
-                                            DoubleCell.TYPE, token);
-                            if (dc != null) {
-                                continue;
-                            }
-                            // not a double - missing value maybe?
-                            if (missValPattern[colIdx] == null) {
-                                // we accept one token that can't be parsed
-                                // per column as missing value pattern
-                                missValPattern[colIdx] = token;
-                                continue;
-                            }
-                            // not a double, not a missing value,
-                            // lets accept everything: StringCell
-                            types[colIdx] = StringCell.TYPE;
-                        }
-                    }
-
-                } else {
+                if (result.isRowDelimiter(token)) {
                     // it's a row delimiter.
                     // we could check if we got enough tokens for the row from
                     // the file. But if not - what would we do...
@@ -894,25 +835,100 @@ public final class FileAnalyzer {
                                     / (double)fileSize);
                         }
                     }
+                    continue;
                 }
+                if ((linesRead < 1)
+                        && (!userSettings.isFileHasColumnHeadersUserSet()
+                                || userSettings.getFileHasColumnHeaders())) {
+                    // skip the first line - could be column headers -
+                    // unless we know it's not
+                    continue;
+                }
+                if (colIdx >= result.getNumberOfColumns()) {
+                    // the line contains more tokens than columns.
+                    // Ignore the extra columns.
+                    continue;
+                }
+
+                if (userTypes[colIdx] != null) {
+                    // user preset type - nothing to do for us in this column
+                    continue;
+                }
+
+                cellFactory.setMissingValuePattern(missValPattern[colIdx]);
+
+                // for numbers we trim tokens and allow empty for missValue
+                token = token.trim();
+
+                if (types[colIdx].isCompatible(IntValue.class)) {
+                    DataCell dc =
+                            cellFactory.createDataCellOfType(IntCell.TYPE,
+                                    token);
+                    if (dc != null) {
+                        gotValue[colIdx] = gotValue[colIdx] || !dc.isMissing();
+                        continue;
+                    }
+                    // not an integer - could it be the missing value?
+                    if (missValPattern[colIdx] == null) {
+                        // we accept one token that can't be
+                        // parsed per column - but we don't use doubles
+                        // as missing value! Would be odd.
+                        dc = cellFactory.createDataCellOfType(
+                                DoubleCell.TYPE, token);
+                        if (dc == null) {
+                            missValPattern[colIdx] = token;
+                            continue;
+                        }
+                    }
+                    // not an integer, not the missing value
+                    // - could be a double
+                    types[colIdx] = DoubleCell.TYPE;
+                } // no else, we immediately check if it's a double
+
+                if (types[colIdx].isCompatible(DoubleValue.class)) {
+                    DataCell dc =
+                            cellFactory.createDataCellOfType(DoubleCell.TYPE,
+                                    token);
+                    if (dc != null) {
+                        gotValue[colIdx] = gotValue[colIdx] || !dc.isMissing();
+                        continue;
+                    }
+                    // not a double - missing value maybe?
+                    if (missValPattern[colIdx] == null) {
+                        // we accept one token that can't be parsed
+                        // per column as missing value pattern
+                        missValPattern[colIdx] = token;
+                        continue;
+                    }
+                    // not a double, not a missing value,
+                    // lets accept everything: StringCell
+                    types[colIdx] = StringCell.TYPE;
+                    gotValue[colIdx] = true;
+                }
+
             }
         } finally {
             tokenizer.closeSourceStream();
         }
-        // if there is still a type set to null we got only missing values
-        // in that column: warn user (unless he already chose to skip
-        // column)
+
+        // set all columns we didn't see any real value for to String.
+        // Discard any (possible) missing value pattern (that works,
+        // because we don't accept doubles as missing value patterns).
+        // Warn the user.
         String cols = "";
         int cnt = 0;
         for (int t = 0; t < types.length; t++) {
-            if (types[t] == null) {
+            if (userTypes[t] == null && !gotValue[t]) {
+                // do it only for types not set by the user
+                assert types[t].equals(IntCell.TYPE);
                 types[t] = StringCell.TYPE;
+                missValPattern[t] = null;
                 if ((cnt < 21)
                         && ((userColProps == null)
                                 || (userColProps.size() <= t)
                                 || (userColProps.get(t) == null)
-                                || (!userColProps.get(t).getSkipThisColumn()))
-                                ) {
+                                || (!userColProps
+                                        .get(t).getSkipThisColumn()))) {
                     if (cnt < 20) {
                         cols += "#" + t + ", ";
                         cnt++;
@@ -925,27 +941,9 @@ public final class FileAnalyzer {
         }
         if (cols.length() > 0) {
             LOGGER.warn("Didn't get any value for column(s) with index "
-                    + cols.substring(0, cols.length() - 2) // cut off the
-                    // comma
+                    // cut off the comma
+                    + cols.substring(0, cols.length() - 2)
                     + ". Please verify column type(s).");
-        }
-        if (linesRead < 2) {
-            /*
-             * if we read only one line, all tokens that couldn't be parsed are
-             * missing values now, and their column's type is integer! Fix that
-             * by changing all integer columns with missing values to string
-             * types (that does it, because we don't accept doubles as missing
-             * values).
-             */
-            for (int i = 0; i < types.length; i++) {
-                if (types[i].equals(IntCell.TYPE)
-                        && (missValPattern[i] != null)) {
-                    // columns with user set types don't have missing values
-                    types[i] = StringCell.TYPE;
-                    missValPattern[i] = null;
-                }
-            }
-
         }
 
         // pack column types and column missing values in one object
@@ -959,8 +957,8 @@ public final class FileAnalyzer {
                 // for string columns we don't have a missing value.
                 // use the global one, if set, otherwise '?'
                 if (result.getMissValuePatternStrCols() != null) {
-                    cp.setMissingValuePattern(
-                            result.getMissValuePatternStrCols());
+                    cp.setMissingValuePattern(result
+                            .getMissValuePatternStrCols());
                 } else {
                     cp.setMissingValuePattern("?");
                 }
@@ -975,10 +973,10 @@ public final class FileAnalyzer {
 
     /**
      * Looks at the first character of the first lines of the file and
-     * determines what kind of single line comment we should support.
-     * Comments are usually at the beginning of the file - so this method looks
-     * only at the first couple of lines (even if we are not supposed to cut
-     * the analysis short).
+     * determines what kind of single line comment we should support. Comments
+     * are usually at the beginning of the file - so this method looks only at
+     * the first couple of lines (even if we are not supposed to cut the
+     * analysis short).
      *
      * @param settings object containing the data file location. The method will
      *            add comment patterns to this object.
@@ -1399,8 +1397,8 @@ public final class FileAnalyzer {
 
             String token = tokenizer.nextToken();
             if (fileSize > 0) {
-                exec.setProgress(
-                        reader.getNumberOfBytesRead() / (double)fileSize);
+                exec.setProgress(reader.getNumberOfBytesRead()
+                        / (double)fileSize);
             }
             if (!settings.isRowDelimiter(token)) {
 
@@ -1456,8 +1454,7 @@ public final class FileAnalyzer {
                             }
                         } else {
                             if (settings.ignoreEmptyTokensAtEndOfRow()) {
-                                if ((columns - consEmptyTokens)
-                                        > maxNumOfCols) {
+                                if ((columns - consEmptyTokens) > maxNumOfCols) {
                                     // we read more non-empty columns than we
                                     // could
                                     // fill (in other rows) with empty tokens
@@ -1584,8 +1581,8 @@ public final class FileAnalyzer {
                         exec.setProgress(linesRead / (double)NUMOFLINES);
                     } else {
                         if (fileSize > 0) {
-                            exec.setProgress(
-                                    reader.getNumberOfBytesRead() / fileSize);
+                            exec.setProgress(reader.getNumberOfBytesRead()
+                                    / fileSize);
                         }
                     }
                 }
@@ -1694,8 +1691,7 @@ public final class FileAnalyzer {
          *         index of the specified header, or null, if the header has no
          *         prefix
          */
-        static HeaderHelper extractPrefixAndIndexFromHeader(
-                final String header) {
+        static HeaderHelper extractPrefixAndIndexFromHeader(final String header) {
             if (header == null || header.isEmpty()) {
                 return null;
             }
