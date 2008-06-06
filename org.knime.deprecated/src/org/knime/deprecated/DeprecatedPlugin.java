@@ -31,9 +31,10 @@ import org.knime.base.node.mine.sota.SotaNodeFactory;
 import org.knime.base.node.preproc.join.JoinerNodeFactory;
 import org.knime.base.node.preproc.nominal.NominalValueFactory;
 import org.knime.base.node.preproc.normalize.NormalizeNodeFactory;
-import org.knime.base.node.viz.property.color.ColorAppender2NodeFactory;
+import org.knime.base.node.viz.property.color.ColorAppenderNodeFactory;
 import org.knime.base.node.viz.property.color.ColorManagerNodeFactory;
 import org.knime.base.node.viz.property.size.SizeManagerNodeFactory;
+import org.knime.base.node.viz.rulevis2d.Rule2DNodeFactory;
 import org.knime.core.node.NodeFactory;
 import org.osgi.framework.BundleContext;
 
@@ -57,7 +58,8 @@ public class DeprecatedPlugin extends Plugin {
         NodeFactory.addLoadedFactory(SotaNodeFactory.class);
         NodeFactory.addLoadedFactory(SizeManagerNodeFactory.class);
         NodeFactory.addLoadedFactory(ColorManagerNodeFactory.class);
-        NodeFactory.addLoadedFactory(ColorAppender2NodeFactory.class);
+        NodeFactory.addLoadedFactory(ColorAppenderNodeFactory.class);
         NodeFactory.addLoadedFactory(EntropyNodeFactory.class);
+        NodeFactory.addLoadedFactory(Rule2DNodeFactory.class);
     }
 }

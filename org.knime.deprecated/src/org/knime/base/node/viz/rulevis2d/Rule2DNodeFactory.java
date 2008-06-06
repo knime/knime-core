@@ -32,6 +32,7 @@ import org.knime.core.node.NodeView;
 /**
  * This is the factory class for the Fuzzy Rule Plotter Node.
  * 
+ * @deprecated new rule 2 plotter is still in exp
  * @author Fabian Dill, University of Konstanz
  */
 public class Rule2DNodeFactory extends NodeFactory {
