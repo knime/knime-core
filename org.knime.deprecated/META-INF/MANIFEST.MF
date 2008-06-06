@@ -16,8 +16,13 @@ Export-Package: org.knime.base.node.mine.decisiontree.predictor,
  org.knime.base.node.preproc.join,
  org.knime.base.node.preproc.nominal,
  org.knime.base.node.preproc.normalize,
+ org.knime.base.node.viz.parcoord,
+ org.knime.base.node.viz.parcoord.visibility,
+ org.knime.base.node.viz.plotter2D,
  org.knime.base.node.viz.property.color,
- org.knime.base.node.viz.property.size
+ org.knime.base.node.viz.property.size,
+ org.knime.base.node.viz.rulevis2d,
+ org.knime.base.node.viz.scatterplot
 Eclipse-LazyStart: false
 Bundle-Activator: org.knime.deprecated.DeprecatedPlugin
 Bundle-ClassPath: knime-deprecated.jar
