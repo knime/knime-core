@@ -258,7 +258,9 @@ public final class FavoriteNodesManager {
 //                LOGGER.debug("trying to load: " + id);
                 NodeTemplate node = (NodeTemplate)RepositoryManager.INSTANCE
                     .getRoot().getChildByID(id, true);
-                addFavoriteNode(node);
+                if (node != null) {
+                    addFavoriteNode(node);
+                }
             }
             IMemento freqNodes = favoriteNodes.getChild(TAG_MOST_FREQUENT);
             NodeUsageRegistry.loadFrequentNodes(freqNodes);

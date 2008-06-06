@@ -140,7 +140,13 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
      */
     public void nodeAdded() {
         FavoriteNodesManager.getInstance().updateNodes();
-        m_viewer.refresh();
+        Display.getDefault().syncExec(new Runnable() {
+
+            public void run() {                
+                m_viewer.refresh();
+            }
+            
+        });
     }
 
 
