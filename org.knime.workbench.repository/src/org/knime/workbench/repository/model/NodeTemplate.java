@@ -194,4 +194,12 @@ public class NodeTemplate extends AbstractSimpleObject {
     public void setPluginID(final String pluginID) {
         m_pluginID = pluginID;
     }
+    
+    @Override
+    public String toString() {
+        if (m_factory == null) {
+            return super.toString();
+        }
+        return m_factory.getName();
+    }
 }
