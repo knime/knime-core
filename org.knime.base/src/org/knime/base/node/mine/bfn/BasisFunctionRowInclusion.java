@@ -24,7 +24,6 @@
  */
 package org.knime.base.node.mine.bfn;
 
-import org.knime.base.node.viz.parcoord.DegreeOfAffinity;
 import org.knime.core.data.DataRow;
 
 /**

@@ -1,4 +1,4 @@
-/*  
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -20,7 +20,7 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   Aug 12, 2005 (tg): created
+ *   Jun 22, 2005 (tg): created
  */
 package org.knime.base.node.mine.bfn;
 
@@ -30,21 +30,13 @@ import org.knime.core.data.DataRow;
  * 
  * @author Simona Pintilie, University of Konstanz
  */
-public class BasisFunctionAntisymmetricRowOverlap implements DegreeOfAffinity {
+public interface DegreeOfAffinity {
+    
     /**
-     * {@inheritDoc}
+     * @return the affinity degree between the two rules
+     * @param dr1 the first rule
+     * @param dr2 the second rule
      */
-    public double getAffinityDegree(final DataRow row1, final DataRow row2) {
-        BasisFunctionLearnerRow bf1 = (BasisFunctionLearnerRow)row1;
-        BasisFunctionLearnerRow bf2 = (BasisFunctionLearnerRow)row2;
-        return bf1.overlap(bf2, false);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String toString() {
-        return "Anti-symmetric Overlap";
-    }
+    public double getAffinityDegree(final DataRow dr1, final DataRow dr2); 
+    
 }
