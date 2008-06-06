@@ -350,10 +350,6 @@
             factory-class="org.knime.base.node.mine.decisiontree2.predictor.DecTreePredictorNodeFactory"
             id="org.knime.base.node.mine.decisiontreenew.predictor.DecTreePredictorNodeFactory"/>
       <node
-            category-path="/view"
-            factory-class="org.knime.base.node.viz.rulevis2d.Rule2DNodeFactory"
-            id="org.knime.base.node.viz.rulevis2d.Rule2DNodeFactory"/>
-      <node
             category-path="/mining/clustering"
             factory-class="org.knime.base.node.mine.sota.SotaLearnerNodeFactory"
             id="org.knime.base.node.mine.sota.SotaLearnerNodeFactory"/>
