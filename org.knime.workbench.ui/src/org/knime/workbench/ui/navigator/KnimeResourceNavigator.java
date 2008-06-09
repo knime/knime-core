@@ -87,12 +87,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         super(); 
 
         LOGGER.debug("Knime resource navigator created");
-        // register listener to check whether projects have been added
-        // or renamed
-//        ResourcesPlugin.getWorkspace().addResourceChangeListener(this,
-//                IResourceChangeEvent.POST_CHANGE);
 
-        
         WorkflowManager.ROOT.addListener(new WorkflowListener() {
 
             public void workflowChanged(final WorkflowEvent event) {
@@ -103,7 +98,14 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                     ncAdded.addNodeStateChangeListener(
                             KnimeResourceNavigator.this);
                     LOGGER.debug(
-                            "Workflow " + ncAdded.getNameWithID() + " added"); 
+                            "Workflow " + ncAdded.getNameWithID() + " added");
+                    if (getViewer() != null) {
+                        Display.getDefault().asyncExec(new Runnable() {
+                            public void run() {
+                                getViewer().refresh();
+                            }
+                        });
+                    }
                     break;
                 case NODE_REMOVED:
                     NodeContainer ncRem = (NodeContainer)event.getOldValue(); 
