@@ -87,6 +87,9 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         super(); 
 
         LOGGER.debug("Knime resource navigator created");
+        
+        ResourcesPlugin.getWorkspace().addResourceChangeListener(
+                new KnimeResourceChangeListener(this));
 
         WorkflowManager.ROOT.addListener(new WorkflowListener() {
 
