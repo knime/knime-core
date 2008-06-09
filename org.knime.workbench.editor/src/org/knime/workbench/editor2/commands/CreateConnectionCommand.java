@@ -46,10 +46,8 @@ public class CreateConnectionCommand extends Command {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             CreateConnectionCommand.class);
     
-    // TODO: allow also workflow root edit parts
     private ConnectableEditPart m_sourceNode;
 
-    // TODO: allow also workflow root edit parts
     private ConnectableEditPart m_targetNode;
 
     private int m_sourcePortID = -1;

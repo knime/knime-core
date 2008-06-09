@@ -127,7 +127,7 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
     @Override
     protected Command getConnectionCompleteCommand(
             final CreateConnectionRequest request) {
-
+        
         // get the previously started command
         CreateConnectionCommand cmd = (CreateConnectionCommand)request
                 .getStartCommand();
@@ -141,8 +141,6 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
 
         if ((target instanceof NodeOutPortEditPart)
                 || target instanceof WorkflowInPortEditPart) {
-            // cmd.setSourcePortID(((NodeOutPortEditPart) target).getId());
-            // cmd.setSourceNode((NodeContainerEditPart) target.getParent());
             return null;
 
 //             LOGGER.debug("Ending connection on out-port...");
@@ -208,18 +206,18 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
      */
     @Override
     protected Command getReconnectTargetCommand(final ReconnectRequest req) {
-        if (!(getHost() instanceof NodeInPortEditPart)) {
+        // target port or node changes
+        // only connect to inports
+        if (!(getHost() instanceof NodeInPortEditPart
+                || getHost() instanceof WorkflowOutPortEditPart)) {
             return null;
         }
-        NodeInPortEditPart target = (NodeInPortEditPart)req.getTarget();
-        NodeContainerEditPart targetNode 
-            = (NodeContainerEditPart)target.getParent();
-        WorkflowManager wfm = ((WorkflowRootEditPart)targetNode.getParent())
-            .getWorkflowManager();
+        // get new target in port
+        AbstractPortEditPart target = (AbstractPortEditPart)req.getTarget();
         ReconnectConnectionCommand reconnectCmd 
             = new ReconnectConnectionCommand(
                     (ConnectionContainerEditPart)req.getConnectionEditPart(),
-                    wfm, (AbstractPortEditPart)req.getConnectionEditPart()
+                    (AbstractPortEditPart)req.getConnectionEditPart()
                     .getSource(), 
                     target);
         return reconnectCmd;
