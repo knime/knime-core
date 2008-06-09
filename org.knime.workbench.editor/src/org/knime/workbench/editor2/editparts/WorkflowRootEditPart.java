@@ -182,11 +182,6 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     @Override
     public void activate() {
         super.activate();
-        LOGGER.debug("WorkflowRootEditPart activated. Figure: " + getFigure());
-        for (Object o : getFigure().getChildren()) {
-            LOGGER.debug("child: " + o + " bounds " + ((IFigure)o).getBounds());
-            
-        }
         // register as listener on model object
         getWorkflowManager().addListener(this);
 
