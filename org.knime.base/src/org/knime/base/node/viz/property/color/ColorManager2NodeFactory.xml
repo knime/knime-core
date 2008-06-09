@@ -32,6 +32,11 @@
 	    the attribute's value within the numeric range: the corresponding color 
 	    is set at the same position in the gradient.
     </option>
+    <option name="Alpha: ">
+        Adjust the color's alpha component in the range of 0..255. Please note,
+        alpha composition is expensive in cases when operations performed are 
+        not hardware-accelerated.
+    </option>
 	</fullDescription>
 	
 	<ports>

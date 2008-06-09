@@ -98,9 +98,7 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
             DataCell key = e.getKey();
             keyConfig.addDataCell(key.toString(), key);
             Color color = e.getValue().getColor();
-            config.addIntArray(key.toString(), 
-                    color.getRed(), color.getGreen(), 
-                    color.getBlue(), color.getAlpha());
+            config.addInt(key.toString(), color.getRGB());
         }
     }
     
@@ -118,8 +116,14 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
         Map<DataCell, ColorAttr> map = new HashMap<DataCell, ColorAttr>();
         ConfigRO keyConfig = config.getConfig(CFG_KEYS);
         for (String key : keyConfig.keySet()) {
-            int[] value = config.getIntArray(key.toString());
-            Color color = new Color(value[0], value[1], value[2], value[3]);
+            Color color;
+            try {
+                // load color components before 2.0
+                int[] v = config.getIntArray(key.toString());
+                color = new Color(v[0], v[1], v[2], v[3]);
+            } catch (InvalidSettingsException ise) {
+                color = new Color(config.getInt(key.toString()), true); 
+            }
             DataCell cell = keyConfig.getDataCell(key);
             map.put(cell, ColorAttr.getInstance(color));
         }

@@ -299,14 +299,14 @@ class ColorManager2NodeModel extends NodeModel {
                         new DataCell[0]);
                 for (int i = 0; i < values.length; i++) {
                     m_map.put(values[i], ColorAttr.getInstance(new Color(
-                            settings.getInt(values[i].toString()))));
+                            settings.getInt(values[i].toString()), true)));
                 }
             } else { // range
                 // lower color
-                Color c0 = new Color(settings.getInt(MIN_COLOR));
+                Color c0 = new Color(settings.getInt(MIN_COLOR), true);
                 m_map.put(MIN_VALUE, ColorAttr.getInstance(c0));
                 // upper color
-                Color c1 = new Color(settings.getInt(MAX_COLOR));
+                Color c1 = new Color(settings.getInt(MAX_COLOR), true);
                 m_map.put(MAX_VALUE, ColorAttr.getInstance(c1));
                 if (c0.equals(c1)) {
                     LOGGER.info("Lower and upper color are equal: " + c0);

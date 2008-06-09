@@ -55,15 +55,18 @@ final class ColorManager2DialogNominal extends JPanel {
 
     /** Keeps the all possible column values. */
     private final JList m_columnValues;
-
+    
+    /** list model for column values. */
     private final DefaultListModel m_columnModel;
+    
+    private int m_alpha = 255;
 
     /**
      * Creates an empty nominal dialog.
      */
     ColorManager2DialogNominal() {
         super(new GridLayout());
-
+        
         // map for key to color mapping
         m_map = new LinkedHashMap<String, Map<DataCell, ColorAttr>>();
 
@@ -181,7 +184,9 @@ final class ColorManager2DialogNominal extends JPanel {
                 ColorManager2Icon icon = (ColorManager2Icon)m_columnModel
                         .getElementAt(i);
                 vals[i] = icon.getCell();
-                settings.addInt(vals[i].toString(), icon.getColor().getRGB());
+                Color c = icon.getColor();
+                c = new Color(c.getRed(), c.getGreen(), c.getBlue(), m_alpha);
+                settings.addInt(vals[i].toString(), c.getRGB());
             }
             settings.addDataCellArray(ColorManager2NodeModel.VALUES, vals);
         } else {
@@ -211,11 +216,27 @@ final class ColorManager2DialogNominal extends JPanel {
         }
         for (int i = 0; i < vals.length; i++) {
             if (map.containsKey(vals[i])) {
-                ColorAttr dftColor = map.get(vals[i]);
-                Color color = new Color(settings.getInt(vals[i].toString(),
-                        dftColor.getColor().getRGB()));
+                Color dftColor = map.get(vals[i]).getColor();
+                int c = settings.getInt(vals[i].toString(), dftColor.getRGB());
+                Color color = new Color(c, true);
+                m_alpha = color.getAlpha();
+                color = new Color(color.getRGB(), false);
                 map.put(vals[i], ColorAttr.getInstance(color));
             }
         }
+    }
+    
+    /**
+     * @return intermediate alpha value as read from the current settings
+     */
+    final int getAlpha() {
+        return m_alpha;
+    }
+    
+    /**
+     * @param alpha the new alpha value as set by the alpha color panel
+     */
+    final void setAlpha(final int alpha) {
+        m_alpha = alpha;
     }
 }

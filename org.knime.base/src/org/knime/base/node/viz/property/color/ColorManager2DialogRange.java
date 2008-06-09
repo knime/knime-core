@@ -43,7 +43,7 @@ import org.knime.core.node.NodeSettingsWO;
 
 
 /**
- * Dialog pane used tpo specify colors by minimum and maximum bounds.
+ * Dialog pane used to specify colors by minimum and maximum bounds.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -97,6 +97,8 @@ public class ColorManager2DialogRange extends JPanel {
     private final DefaultListModel m_columnModel;
 
     private final ColorManager2RangeIcon m_rangeLabel;
+    
+    private int m_alpha = 255;
 
     /**
      * Creates a new empty dialog pane.
@@ -215,11 +217,13 @@ public class ColorManager2DialogRange extends JPanel {
     void saveSettings(final NodeSettingsWO settings) {
         assert m_columnModel.getSize() == 2;
         ColorManager2Icon i0 = (ColorManager2Icon)m_columnModel.getElementAt(0);
-        settings.addInt(
-                ColorManager2NodeModel.MIN_COLOR, i0.getColor().getRGB());
+        Color c0 = new Color(i0.getColor().getRed(), i0.getColor().getGreen(), 
+                i0.getColor().getBlue(), getAlpha());
+        settings.addInt(ColorManager2NodeModel.MIN_COLOR, c0.getRGB());
         ColorManager2Icon i1 = (ColorManager2Icon)m_columnModel.getElementAt(1);
-        settings.addInt(
-                ColorManager2NodeModel.MAX_COLOR, i1.getColor().getRGB());
+        Color c1 = new Color(i1.getColor().getRed(), i1.getColor().getGreen(), 
+                i1.getColor().getBlue(), m_alpha);
+        settings.addInt(ColorManager2NodeModel.MAX_COLOR, c1.getRGB());
     }
 
     /**
@@ -232,15 +236,34 @@ public class ColorManager2DialogRange extends JPanel {
         if (column == null) {
             return;
         }
-        Color c0 = new Color(settings.getInt(ColorManager2NodeModel.MIN_COLOR,
-                Color.RED.getRGB()));
-        Color c1 = new Color(settings.getInt(ColorManager2NodeModel.MAX_COLOR,
-                Color.GREEN.getRGB()));
+        int rgba0 = settings.getInt(ColorManager2NodeModel.MIN_COLOR,
+                Color.RED.getRGB());
+        Color c0 = new Color(rgba0, true);
+        m_alpha = c0.getAlpha();
+        int rgba1 = settings.getInt(ColorManager2NodeModel.MAX_COLOR,
+                Color.GREEN.getRGB());
+        Color c1 = new Color(rgba1, true);
+        assert (m_alpha == c1.getAlpha());
         DataCellColorEntry[] ex = m_map.get(column);
         if (ex == null) {
             return;
         }
-        ex[0].setColor(c0);
-        ex[1].setColor(c1);
+        ex[0].setColor(new Color(c0.getRGB(), false));
+        ex[1].setColor(new Color(c1.getRGB(), false));
     }
+    
+    /**
+     * @return intermediate alpha value as read from the current settings
+     */
+    final int getAlpha() {
+        return m_alpha;
+    }
+    
+    /**
+     * @param alpha the new alpha value as set by the alpha color panel
+     */
+    final void setAlpha(final int alpha) {
+        m_alpha = alpha;
+    }
+    
 }

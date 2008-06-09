@@ -131,7 +131,8 @@ public final class ColorModelRange implements ColorModel {
         if (b > 255) {
             b = 255;
         }
-        return ColorAttr.getInstance(new Color(r, g, b));
+        int alpha = (m_minColor.getAlpha() + m_maxColor.getAlpha()) / 2;
+        return ColorAttr.getInstance(new Color(r, g, b, alpha));
     }
 
     /** @return minimum double value. */
@@ -190,10 +191,24 @@ public final class ColorModelRange implements ColorModel {
             throws InvalidSettingsException {
         double lower = config.getDouble(CFG_LOWER_VALUE);
         double upper = config.getDouble(CFG_UPPER_VALUE);
-        int[] min = config.getIntArray(CFG_LOWER_COLOR);
-        Color minColor = new Color(min[0], min[1], min[2], min[3]);
-        int[] max = config.getIntArray(CFG_UPPER_COLOR);
-        Color maxColor = new Color(max[0], max[1], max[2], max[3]);
+        Color minColor;
+        try {
+            // load color components before 2.0
+            int[] min = config.getIntArray(CFG_LOWER_COLOR);
+            minColor = new Color(min[0], min[1], min[2], min[3]);
+        } catch (InvalidSettingsException ise) {
+            int min = config.getInt(CFG_LOWER_COLOR);
+            minColor = new Color(min, true);
+        }
+        Color maxColor;
+        try {
+            // load color components before 2.0
+            int[] max = config.getIntArray(CFG_UPPER_COLOR);
+            maxColor = new Color(max[0], max[1], max[2], max[3]);
+        } catch (InvalidSettingsException ise) {
+            int max = config.getInt(CFG_UPPER_COLOR);
+            maxColor = new Color(max, true);
+        }
         return new ColorModelRange(lower, minColor, upper, maxColor);
     }
 
