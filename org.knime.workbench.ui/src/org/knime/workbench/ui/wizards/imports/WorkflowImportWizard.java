@@ -52,6 +52,7 @@ public class WorkflowImportWizard extends ExternalProjectImportWizard {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void addPages() {
         super.addPages();
         WizardProjectsImportPage importPage =
@@ -64,10 +65,10 @@ public class WorkflowImportWizard extends ExternalProjectImportWizard {
 
         WizardProjectRenameDuplicatesPage renamePage =
                 new WizardProjectRenameDuplicatesPage(importPage);
-        renamePage.setTitle("Double projects");
+        renamePage.setTitle("Duplicate project names");
         renamePage.setDescription("Shows projects which have the same name "
-                + "as a workspace project. Rename them here. Automatic " +
-                        "proposals are the appended numbers in brackets.");
+                + "as a workspace project. Rename them here. Automatic " 
+                + "proposals are the appended numbers in brackets.");
         addPage(renamePage);
     }
 
