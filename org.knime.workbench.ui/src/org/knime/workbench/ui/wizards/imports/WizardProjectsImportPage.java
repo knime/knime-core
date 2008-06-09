@@ -427,15 +427,18 @@ public class WizardProjectsImportPage extends WizardPage implements
     }
 
     private void updateRenamePage() {
-        if (!(getProjectsToRename().length > 0)) {
+        doublesToImport = false; 
+        if (getProjectsToRename().length > 0) {
             renamePageShown = true;
+            doublesToImport = true;
         }
         boolean additionalChanges =
                 ((WizardProjectRenameDuplicatesPage)getWizard().getPages()[1])
                         .updateRenameList();
-        if (renamePageShown) {
-            renamePageShown = !additionalChanges;
-        }
+        renamePageShown |= additionalChanges;
+        setPageComplete(!doublesToImport);
+        //        if (renamePageShown) {
+//        }
 
     }
 
@@ -1454,7 +1457,7 @@ public class WizardProjectsImportPage extends WizardPage implements
      * @return boolean true if the project with the given name is in this
      *         workspace
      */
-    boolean isProjectInWorkspace(String projectName) {
+    boolean isProjectInWorkspace(final String projectName) {
         if (projectName == null) {
             return false;
         }
@@ -1551,6 +1554,7 @@ public class WizardProjectsImportPage extends WizardPage implements
                 resultList.add(project);
             }
         }
+        doublesToImport = resultList.size() > 0;
         return resultList.toArray(new ProjectRecord[resultList.size()]);
     }
 }
