@@ -231,7 +231,7 @@ public final class ColorAttr implements Serializable {
      * @see Color#equals(java.lang.Object)
      */
     public boolean equals(final ColorAttr ca) {
-        return m_attrColor.equals(ca.getColor());
+        return ca != null && m_attrColor.equals(ca.getColor());
     }
     
     /**
