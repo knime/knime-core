@@ -26,17 +26,17 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.commands.Command;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.knime.core.node.workflow.WorkflowManager;
-
 import org.knime.workbench.editor2.editparts.AbstractPortEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeInPortEditPart;
 import org.knime.workbench.editor2.editparts.NodeOutPortEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
+import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  * Command that reconnects a connection. This basically corresponds to remove
@@ -50,6 +50,8 @@ public class ReconnectConnectionCommand extends Command {
     private DeleteConnectionCommand m_deleteCommand;
 
     private CreateConnectionCommand m_createCommand;
+    
+    private boolean m_confirm;
 
     /**
      * Creates a reconnection command encapsulating a delete and create command.
@@ -63,6 +65,9 @@ public class ReconnectConnectionCommand extends Command {
             final ConnectionContainerEditPart connection,
             final WorkflowManager manager, final AbstractPortEditPart host,
             final EditPart target) {
+        
+        m_confirm = KNIMEUIPlugin.getDefault().getPreferenceStore()
+            .getBoolean(PreferenceConstants.P_CONFIRM_RECONNECT);
 
         // create the delete command
         m_deleteCommand = new DeleteConnectionCommand(connection, manager);
@@ -142,13 +147,14 @@ public class ReconnectConnectionCommand extends Command {
      */
     @Override
     public void execute() {
-        MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
-                SWT.ICON_QUESTION | SWT.YES | SWT.NO | SWT.CANCEL);
-        mb.setText("Confirm deletion...");
-        mb.setMessage("Do you really want to reconnect"
-                + " the selected connection ?");
-        if (mb.open() != SWT.YES) {
-            return;
+        if (m_confirm) {
+            MessageDialogWithToggle msgD = CreateConnectionCommand
+                .openReconnectConfirmDialog(m_confirm,
+                        "Do you want to delete existing connection? \n"
+                        + "This will reset the existing target node!");
+            if (msgD.getReturnCode() != IDialogConstants.YES_ID) {
+                return;
+            }
         }
 
         // execute both commands

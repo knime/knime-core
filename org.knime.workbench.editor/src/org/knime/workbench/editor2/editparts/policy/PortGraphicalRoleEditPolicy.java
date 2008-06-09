@@ -32,8 +32,10 @@ import org.eclipse.gef.requests.ReconnectRequest;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.commands.CreateConnectionCommand;
+import org.knime.workbench.editor2.commands.ReconnectConnectionCommand;
 import org.knime.workbench.editor2.editparts.AbstractPortEditPart;
 import org.knime.workbench.editor2.editparts.ConnectableEditPart;
+import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeInPortEditPart;
 import org.knime.workbench.editor2.editparts.NodeOutPortEditPart;
@@ -63,9 +65,7 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
      * possible. However, it is completed by
      * <code>getConnectionCompleteCommand</code>
      *
-     * @see org.eclipse.gef.editpolicies.GraphicalNodeEditPolicy
-     *      #getConnectionCreateCommand(
-     *      org.eclipse.gef.requests.CreateConnectionRequest)
+     * {@inheritDoc}
      */
     @Override
     protected Command getConnectionCreateCommand(
@@ -179,6 +179,8 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
     @Override
     protected Command getReconnectSourceCommand(final ReconnectRequest req) {
 
+        LOGGER.debug("getReconnectSourceCommand. Host: "
+                + getHost() + ". TargetEditPart: " + getTargetEditPart(req));
 //        // get the connection to change
 //        ConnectionContainerEditPart connection
 //            = (ConnectionContainerEditPart)getHost();
@@ -206,7 +208,20 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
      */
     @Override
     protected Command getReconnectTargetCommand(final ReconnectRequest req) {
-
-        return null;
+        if (!(getHost() instanceof NodeInPortEditPart)) {
+            return null;
+        }
+        NodeInPortEditPart target = (NodeInPortEditPart)req.getTarget();
+        NodeContainerEditPart targetNode 
+            = (NodeContainerEditPart)target.getParent();
+        WorkflowManager wfm = ((WorkflowRootEditPart)targetNode.getParent())
+            .getWorkflowManager();
+        ReconnectConnectionCommand reconnectCmd 
+            = new ReconnectConnectionCommand(
+                    (ConnectionContainerEditPart)req.getConnectionEditPart(),
+                    wfm, (AbstractPortEditPart)req.getConnectionEditPart()
+                    .getSource(), 
+                    target);
+        return reconnectCmd;
     }
 }

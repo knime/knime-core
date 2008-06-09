@@ -65,6 +65,10 @@ public class CreateConnectionCommand extends Command {
     private boolean m_confirm;
     
     
+    /**
+     * Initializes from preference store, whether to confirm reconnection or 
+     * not.
+     */
     public CreateConnectionCommand() {
 //        KNIMEUIPlugin.getDefault().getPreferenceStore().setDefault(
 //                PreferenceConstants.P_CONFIRM_RECONNECT, true);
@@ -212,7 +216,7 @@ public class CreateConnectionCommand extends Command {
      * We can undo, if the connection was created and the edit parts are not
      * locked.
      *
-     * @see org.eclipse.gef.commands.Command#canUndo()
+     * {@inheritDoc}
      */
     @Override
     public boolean canUndo() {
@@ -243,15 +247,10 @@ public class CreateConnectionCommand extends Command {
                     m_targetPortID) != null) {
                 // ask user if it should be replaced...
                 if (m_confirm) {
-                    MessageDialogWithToggle msgD = MessageDialogWithToggle
-                        .openYesNoQuestion(
-                            Display.getDefault().getActiveShell(),
-                            "Replace Connection?", 
+                    MessageDialogWithToggle msgD = openReconnectConfirmDialog(
+                            m_confirm, 
                             "Do you want to replace existing connection? \n"
-                            + "This will reset the target node!", 
-                            "Always replace without confirm.", !m_confirm, 
-                            KNIMEUIPlugin.getDefault().getPreferenceStore(),
-                            PreferenceConstants.P_CONFIRM_RECONNECT);
+                            + "This will reset the target node!");
                     m_confirm = !msgD.getToggleState();
                     if (msgD.getReturnCode() != IDialogConstants.YES_ID) {
                         return;
@@ -301,6 +300,23 @@ public class CreateConnectionCommand extends Command {
         mb.open();
     }
     */
+    
+    /**
+     * @param confirm initial toggle state
+     * @param question of the confirmation dialog (not the toggle) 
+     * @return a confirmation dialog
+     */
+    public static MessageDialogWithToggle openReconnectConfirmDialog(
+            final boolean confirm, final String question) {
+        return MessageDialogWithToggle
+        .openYesNoQuestion(
+            Display.getDefault().getActiveShell(),
+            "Replace Connection?", 
+            question,
+            "Always replace without confirm.", !confirm, 
+            KNIMEUIPlugin.getDefault().getPreferenceStore(),
+            PreferenceConstants.P_CONFIRM_RECONNECT);
+    }
 
     /**
      * {@inheritDoc}
