@@ -67,7 +67,7 @@ public class AppendedRowsNodeModel extends NodeModel {
 
     private boolean m_isAppendSuffix = true;
 
-    private String m_suffix = "x";
+    private String m_suffix = "_dup";
 
     private boolean m_isIntersection;
 
