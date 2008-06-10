@@ -11,7 +11,8 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.resources,
  org.eclipse.ui.ide,
  org.knime.workbench.core,
- org.knime.workbench.repository
+ org.knime.workbench.repository,
+ org.eclipse.ui.console
 Eclipse-AutoStart: true
 Provide-Package: org.knime.workbench.ui,
  org.knime.workbench.ui.preferences,

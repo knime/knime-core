@@ -132,6 +132,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 // TODO: remove the listener?
                 nc.addNodeStateChangeListener(this);
         }
+        
     }
     
     
@@ -181,6 +182,22 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         initFilters(viewer);
         initListeners(viewer);
         viewer.getControl().setDragDetect(false);
+        
+        /*
+        // TODO: if we want to support linking to editor
+         * we have to enable this and add a cast to WorkflowRootEditPart
+         * (for this we have to add another dependency from ui to editor)
+         * get the name and select it
+        getSite().getPage().addPostSelectionListener(new ISelectionListener() {
+            public void selectionChanged(IWorkbenchPart part,
+                    ISelection selection) {
+                if (isLinkingEnabled()) {
+                    LOGGER.debug("linking to " +  selection.toString());
+                }
+            }
+        });
+        */
+        
         return viewer;
     }
     

@@ -29,17 +29,21 @@
       <perspectiveExtension
             targetID="org.knime.workbench.ui.ModellerPerspective">
          <view
+               closeable="false"
                id="org.knime.workbench.ui.navigator.KnimeResourceNavigator"
+               moveable="true"
                ratio="0.2"
                relationship="left"
                relative="org.eclipse.ui.editorss"/>
          <view
+               closeable="false"
                id="org.knime.workbench.repository.view.RepositoryView"
+               moveable="true"
                ratio="0.3"
                relationship="bottom"
                relative="org.knime.workbench.ui.navigator.KnimeResourceNavigator"/>
          <view
-               closeable="false"
+               closeable="true"
                visible="true"
                ratio="0.7"
                relationship="bottom"
