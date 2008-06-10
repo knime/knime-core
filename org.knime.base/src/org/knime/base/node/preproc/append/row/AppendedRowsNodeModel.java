@@ -65,9 +65,9 @@ public class AppendedRowsNodeModel extends NodeModel {
     /** NodeSettings key: Use only the intersection of columns. */
     static final String CFG_INTERSECT_COLUMNS = "intersection_of_columns";
 
-    private boolean m_isAppendSuffix = false;
+    private boolean m_isAppendSuffix = true;
 
-    private String m_suffix = null;
+    private String m_suffix = "x";
 
     private boolean m_isIntersection;
 
