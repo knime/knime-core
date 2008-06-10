@@ -282,6 +282,10 @@ public class NodeContainerFigure extends RectangleFigure {
         return m_progressFigure;
     }
 
+    public StatusFigure getStatusFigure() {
+        return m_statusFigure;
+    }
+    
     /**
      * Sets the icon.
      *
@@ -365,7 +369,8 @@ public class NodeContainerFigure extends RectangleFigure {
         m_name.setText(name);
         if (!(m_name.getParent() == this)) {
 
-            add(m_name, 4);
+//            add(m_name, 4);
+            add(m_name,getChildren().size() - 1);
         }
 
         // if the tooltip (description) contains
@@ -616,7 +621,7 @@ public class NodeContainerFigure extends RectangleFigure {
      *
      * @author Florian Georg, University of Konstanz
      */
-    private class ContentFigure extends Figure {
+    public class ContentFigure extends Figure {
         private final Label m_iconFigure;
 
         private final Label m_deleteIcon;
@@ -640,7 +645,7 @@ public class NodeContainerFigure extends RectangleFigure {
                 "icons/node/" + "background_manipulator.png";
 
         private static final String BACKGROUND_META =
-                "icons/node/" + "background_meta.png";
+                "icons/meta/" + "meta_node.png";
 
         private static final String BACKGROUND_VIEWER =
                 "icons/node/" + "background_viewer.png";
@@ -772,7 +777,7 @@ public class NodeContainerFigure extends RectangleFigure {
          *
          * @param icon Image to display as icon
          */
-        void setIcon(final Image icon) {
+        public void setIcon(final Image icon) {
 
             if (m_baseIcon == null) {
                 m_baseIcon = icon;

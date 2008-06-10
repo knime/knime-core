@@ -41,6 +41,7 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeInPortEditPart;
 import org.knime.workbench.editor2.editparts.NodeOutPortEditPart;
 import org.knime.workbench.editor2.editparts.SubWorkFlowOutPortEditPart;
+import org.knime.workbench.editor2.editparts.SubworkflowEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowOutPortBarEditPart;
@@ -124,7 +125,8 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
             } else {
                 // we already have a "root" workflow manager
                 // must be a meta node
-                part = new NodeContainerEditPart();
+//                part = new NodeContainerEditPart();
+                part = new SubworkflowEditPart();
             }
         } else if (model instanceof WorkflowPortBar) {
             WorkflowPortBar bar = (WorkflowPortBar)model;

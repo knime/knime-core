@@ -504,7 +504,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
     }
 
-    private String getCustomName() {
+    protected String getCustomName() {
         String userName = getNodeContainer().getCustomName();
         if (userName == null) {
             userName = "Node " + getNodeContainer().getID();
@@ -711,7 +711,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         NodeContainer container = (NodeContainer)getModel();
 
         if (container instanceof WorkflowManager) {
-            openSubWorkflowEditor(container);
+            openSubWorkflowEditor();
             return;
         }
         // if this node does not have a dialog
@@ -751,10 +751,12 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
         }
 
-    private void openSubWorkflowEditor(NodeContainer container) {
+    public void openSubWorkflowEditor() {
+        
         // open new editor for subworkflow
         LOGGER.debug("opening new editor for sub-workflow");
         try {
+            NodeContainer container = (NodeContainer)getModel();
             final WorkflowEditor parent = (WorkflowEditor)PlatformUI
                 .getWorkbench().getActiveWorkbenchWindow()
                     .getActivePage().getActiveEditor();

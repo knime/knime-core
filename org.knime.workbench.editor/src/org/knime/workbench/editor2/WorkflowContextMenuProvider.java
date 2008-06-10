@@ -38,12 +38,14 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.CancelAction;
 import org.knime.workbench.editor2.actions.ExecuteAction;
 import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
 import org.knime.workbench.editor2.actions.OpenDialogAction;
 import org.knime.workbench.editor2.actions.OpenPortViewAction;
+import org.knime.workbench.editor2.actions.OpenSubworkflowEditorAction;
 import org.knime.workbench.editor2.actions.OpenViewAction;
 import org.knime.workbench.editor2.actions.OpenViewEmbeddedAction;
 import org.knime.workbench.editor2.actions.OpenWorkflowPortViewAction;
@@ -206,16 +208,13 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP,
                             action);
                 }
-
-//                // add meta node option if applicable
-//                if (MetaNodeModel.class.isAssignableFrom(container
-//                        .getModelClass())) {
-//                    LOGGER.debug("adding 'edit meta-node' option "
-//                            + "to context menu...");
-//                    action = new EditMetaWorkflowAction(container);
-//                    manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP,
-//                            action);
-//                }
+                
+                if (container instanceof WorkflowManager) {
+                    action = new OpenSubworkflowEditorAction(
+                            (NodeContainerEditPart)p);
+                    manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP,
+                            action);
+                }
 
                 // add port views
                 LOGGER.debug("adding open port-view action(s) "
