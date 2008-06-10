@@ -1528,10 +1528,22 @@ public final class WorkflowManager extends NodeContainer {
         }
         // else it's a node inside the WFM
         for (ConnectionContainer cc : m_connectionsBySource.get(nodeID)) {
-            NodeID succID = cc.getDest();
-            NodeContainer succNC = m_nodes.get(succID);
-            if (succNC.getState().executionInProgress()) {
-                if (hasSuccessorInProgress(succID)) {
+            switch (cc.getType()) {
+            case WFMIN:
+            case WFMTHROUGH:
+                assert false : "Outgoing connection can't be of type " +
+                    cc.getType();
+            case STD:
+                NodeID succID = cc.getDest();
+                NodeContainer succNC = getNodeContainer(succID);
+                if (succNC.getState().executionInProgress()
+                        || hasSuccessorInProgress(succID)) {
+                    return true;
+                }
+                break;
+            case WFMOUT:
+                // TODO check only nodes connection to the specific WF outport
+                if (getParent().hasSuccessorInProgress(getID())) {
                     return true;
                 }
             }
