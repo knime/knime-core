@@ -50,6 +50,7 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContainer;
@@ -73,6 +74,9 @@ public class WrappedNodeDialog extends Dialog {
 
     private Menu m_menuBar;
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            WrappedNodeDialog.class); 
+    
     /**
      * Creates the (application modal) dialog for a given node.
      * 
@@ -323,13 +327,16 @@ public class WrappedNodeDialog extends Dialog {
                 return true;
             }
         } catch (InvalidSettingsException ise) {
+            LOGGER.error("failed to configure:",  ise);
             showErrorMessage("Invalid Settings\n" + ise.getMessage());
 
         } catch (IllegalStateException ex) {
+            LOGGER.error("failed to configure:", ex);
             showErrorMessage("You cannot apply node settings if the workflow"
                     + " is executing. Please stop execution or wait until all"
                     + " nodes have been finished.");            
         } catch (Throwable t) {
+            LOGGER.error("failed to configure:", t);
             showErrorMessage(t.getClass().getSimpleName() + ": "
                     + t.getMessage());
         }
