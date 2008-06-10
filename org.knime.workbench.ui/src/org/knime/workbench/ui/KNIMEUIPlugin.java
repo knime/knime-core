@@ -125,86 +125,86 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
     
     public void readAndSetPreferences() {
         IPreferenceStore pStore =
-            KNIMEUIPlugin.getDefault().getPreferenceStore();
-    String logLevelConsole =
-            pStore.getString(PreferenceConstants.P_LOGLEVEL_CONSOLE);
-    setLogLevel(logLevelConsole);
-    String logLevelFile =
-            pStore.getString(PreferenceConstants.P_LOGLEVEL_LOG_FILE);
-    LEVEL l = LEVEL.WARN;
-    try {
-        l = LEVEL.valueOf(logLevelFile);
-    } catch (NullPointerException ne) {
-        LOGGER.warn("Null is an invalid log level, using WARN");
-    } catch (IllegalArgumentException iae) {
-        LOGGER.warn("Invalid log level " + logLevelFile + ", using WARN");
-    }
-    NodeLogger.setLevelIntern(l);
-    // Level: warn
-    try {
-        ConsoleViewAppender.WARN_APPENDER
-                .write(KNIMEConstants.WELCOME_MESSAGE);
-        ConsoleViewAppender.WARN_APPENDER.write("Log file is located at: "
-                + KNIMEConstants.getKNIMEHomeDir() + File.separator
-                + NodeLogger.LOG_FILE + "\n");
-    } catch (IOException ioe) {
-        LOGGER.error("Could not print welcome message: ", ioe);
-    }
-    int maxThreads = pStore.getInt(PreferenceConstants.P_MAXIMUM_THREADS);
-    if (maxThreads <= 0) {
-        LOGGER.warn("Can set " + maxThreads
-                + " as number of threads to use");
-    } else {
-        KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(maxThreads);
-        LOGGER.debug("Setting KNIME max thread count to " + maxThreads);
-    }
-    String tmpDir = pStore.getString(PreferenceConstants.P_TEMP_DIR);
-    // check for existence and if writable
-    File tmpDirFile = new File(tmpDir);
-    if (!(tmpDirFile.isDirectory() && tmpDirFile.canWrite())) {
-        LOGGER.error("Can't set temp directory to \"" + tmpDir + "\", "
-                + "not a directory or not writable");
-    } else {
-        System.setProperty("java.io.tmpdir", tmpDir);
-        LOGGER.debug("Setting temp dir environment variable "
-                + "(java.io.tmpdir) to \"" + tmpDir + "\"");
-    }
-    pStore.addPropertyChangeListener(new IPropertyChangeListener() {
-        public void propertyChange(final PropertyChangeEvent event) {
-            if (event.getProperty().equals(
-                    PreferenceConstants.P_LOGLEVEL_CONSOLE)) {
-                String newName = event.getNewValue().toString();
-                setLogLevel(newName);
-            } else if (event.getProperty().equals(
-                    PreferenceConstants.P_LOGLEVEL_LOG_FILE)) {
-                String newName = event.getNewValue().toString();
-                LEVEL level = LEVEL.WARN;
-                try {
-                    level = LEVEL.valueOf(newName);
-                } catch (NullPointerException ne) {
-                    LOGGER.warn("Null is an invalid log level, using WARN");
-                } catch (IllegalArgumentException iae) {
-                    LOGGER.warn("Invalid log level " + newName
-                            + ", using WARN");
-                }
-                NodeLogger.setLevelIntern(level);
-            } else if (event.getProperty().equals(
-                    PreferenceConstants.P_MAXIMUM_THREADS)) {
-                int count;
-                try {
-                    count = (Integer)event.getNewValue();
-                    KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(count);
-                } catch (Exception e) {
-                    LOGGER.warn("Unable to get maximum thread count "
-                            + " from preference page.", e);
-                }
-            } else if (event.getProperty().equals(
-                    PreferenceConstants.P_TEMP_DIR)) {
-                System.setProperty("java.io.tmpdir", (String)event
-                        .getNewValue());
-            }
+                KNIMEUIPlugin.getDefault().getPreferenceStore();
+        String logLevelConsole =
+                pStore.getString(PreferenceConstants.P_LOGLEVEL_CONSOLE);
+        setLogLevel(logLevelConsole);
+        String logLevelFile =
+                pStore.getString(PreferenceConstants.P_LOGLEVEL_LOG_FILE);
+        LEVEL l = LEVEL.WARN;
+        try {
+            l = LEVEL.valueOf(logLevelFile);
+        } catch (NullPointerException ne) {
+            LOGGER.warn("Null is an invalid log level, using WARN");
+        } catch (IllegalArgumentException iae) {
+            LOGGER.warn("Invalid log level " + logLevelFile + ", using WARN");
         }
-    });
+        NodeLogger.setLevelIntern(l);
+        // Level: warn
+        try {
+            ConsoleViewAppender.WARN_APPENDER
+                    .write(KNIMEConstants.WELCOME_MESSAGE);
+            ConsoleViewAppender.WARN_APPENDER.write("Log file is located at: "
+                    + KNIMEConstants.getKNIMEHomeDir() + File.separator
+                    + NodeLogger.LOG_FILE + "\n");
+        } catch (IOException ioe) {
+            LOGGER.error("Could not print welcome message: ", ioe);
+        }
+        int maxThreads = pStore.getInt(PreferenceConstants.P_MAXIMUM_THREADS);
+        if (maxThreads <= 0) {
+            LOGGER.warn("Can set " + maxThreads
+                    + " as number of threads to use");
+        } else {
+            KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(maxThreads);
+            LOGGER.debug("Setting KNIME max thread count to " + maxThreads);
+        }
+        String tmpDir = pStore.getString(PreferenceConstants.P_TEMP_DIR);
+        // check for existence and if writable
+        File tmpDirFile = new File(tmpDir);
+        if (!(tmpDirFile.isDirectory() && tmpDirFile.canWrite())) {
+            LOGGER.error("Can't set temp directory to \"" + tmpDir + "\", "
+                    + "not a directory or not writable");
+        } else {
+            System.setProperty("java.io.tmpdir", tmpDir);
+            LOGGER.debug("Setting temp dir environment variable "
+                    + "(java.io.tmpdir) to \"" + tmpDir + "\"");
+        }
+        pStore.addPropertyChangeListener(new IPropertyChangeListener() {
+            public void propertyChange(final PropertyChangeEvent event) {
+                if (event.getProperty().equals(
+                        PreferenceConstants.P_LOGLEVEL_CONSOLE)) {
+                    String newName = event.getNewValue().toString();
+                    setLogLevel(newName);
+                } else if (event.getProperty().equals(
+                        PreferenceConstants.P_LOGLEVEL_LOG_FILE)) {
+                    String newName = event.getNewValue().toString();
+                    LEVEL level = LEVEL.WARN;
+                    try {
+                        level = LEVEL.valueOf(newName);
+                    } catch (NullPointerException ne) {
+                        LOGGER.warn("Null is an invalid log level, using WARN");
+                    } catch (IllegalArgumentException iae) {
+                        LOGGER.warn("Invalid log level " + newName
+                                + ", using WARN");
+                    }
+                    NodeLogger.setLevelIntern(level);
+                } else if (event.getProperty().equals(
+                        PreferenceConstants.P_MAXIMUM_THREADS)) {
+                    int count;
+                    try {
+                        count = (Integer)event.getNewValue();
+                        KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(count);
+                    } catch (Exception e) {
+                        LOGGER.warn("Unable to get maximum thread count "
+                                + " from preference page.", e);
+                    }
+                } else if (event.getProperty().equals(
+                        PreferenceConstants.P_TEMP_DIR)) {
+                    System.setProperty("java.io.tmpdir", (String)event
+                            .getNewValue());
+                }
+            }
+        });
     }
     
     
