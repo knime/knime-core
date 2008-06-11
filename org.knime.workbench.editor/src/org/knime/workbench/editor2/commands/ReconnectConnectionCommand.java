@@ -179,6 +179,7 @@ public class ReconnectConnectionCommand extends Command {
                 if (newExecuted) {
                     message.append(" new target node");
                 }
+                message.append("!");
             }
             MessageDialogWithToggle msgD = CreateConnectionCommand
                 .openReconnectConfirmDialog(m_confirm,
