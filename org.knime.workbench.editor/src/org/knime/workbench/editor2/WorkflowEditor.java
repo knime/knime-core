@@ -700,7 +700,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         WorkflowManager wfm =
                 ((WorkflowManagerInput)input).getWorkflowManager();
         setWorkflowManager(wfm);
-        setPartName(input.getName());
+        setPartName(m_parentEditor.getPartName() + " : " + input.getName());
         wfm.addListener(this);
         if (getGraphicalViewer() != null) {
             loadProperties();
