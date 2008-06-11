@@ -72,10 +72,12 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
 
             public void run() {                
                 m_viewer.setInput(FavoriteNodesManager.getInstance().getRoot());
+                Object category = FavoriteNodesManager.getInstance().getRoot()
+                    .getChildByID(FavoriteNodesManager.FAV_CAT_ID, false);
+                m_viewer.expandToLevel(category, 1);
             }
             
         });
-        
         NodeUsageRegistry.addNodeUsageListener(this);
     }
 
