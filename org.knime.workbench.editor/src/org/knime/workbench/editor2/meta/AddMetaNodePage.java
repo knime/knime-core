@@ -411,7 +411,7 @@ public class AddMetaNodePage extends WizardPage {
                 } else {
                     remove(false, m_outPorts.getItem(
                             m_outPorts.getSelectionIndex()));
-                    m_outPorts.remove(m_inPorts.getSelectionIndex());
+                    m_outPorts.remove(m_outPorts.getSelectionIndex());
                 }
                 updateStatus();
             }
