@@ -75,13 +75,13 @@ public class DefaultAlphaColorPanel extends AbstractColorChooserPanel {
                 BorderLayout.SOUTH);
         
         m_slider.addChangeListener(new ChangeListener() {
-            @Override
+            
             public void stateChanged(final ChangeEvent e) {
                 setAlpha(m_slider.getValue());
             }
         });
         m_spinner.addChangeListener(new ChangeListener() {
-            @Override
+            
             public void stateChanged(final ChangeEvent e) {
                 try {
                     m_spinner.commitEdit();
