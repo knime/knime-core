@@ -64,6 +64,9 @@ public class WorkflowManagerInput implements IEditorInput {
      * {@inheritDoc}
      */
     public String getName() {
+        if (m_manager.getCustomName() != null) {
+            return m_manager.getCustomName();
+        }
          return m_manager.getName();
     }
 
