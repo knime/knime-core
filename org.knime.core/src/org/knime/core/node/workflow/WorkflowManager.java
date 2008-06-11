@@ -759,21 +759,21 @@ public final class WorkflowManager extends NodeContainer {
                 assert cc.getType() == ConnectionType.WFMOUT;
                 getOutPort(cc.getDestPort()).setUnderlyingPort(null);
             }
-        }
-        // and finally reset the destination node - since it has incomplete
-        // incoming connections now...
-        if (cc.getType().isLeavingWorkflow()) {
-            // in case of WFM being disconnected make sure outside
-            // successors are reset
-            this.getParent().resetSuccessors(this.getID());
-            // reconfigure successors as well (of still existing conns)
-            this.getParent().configureNodeAndSuccessors(this.getID(),
-                    false, true);
-            // make sure to reflect state changes
-            checkForNodeStateChanges(true);
-        } else {
-            // otherwise just reset successor, rest will be handled by WFM
-            resetAndConfigureNode(cc.getDest());
+            // and finally reset the destination node - since it has incomplete
+            // incoming connections now...
+            if (cc.getType().isLeavingWorkflow()) {
+                // in case of WFM being disconnected make sure outside
+                // successors are reset
+                this.getParent().resetSuccessors(this.getID());
+                // reconfigure successors as well (of still existing conns)
+                this.getParent().configureNodeAndSuccessors(this.getID(),
+                        false, true);
+                // make sure to reflect state changes
+                checkForNodeStateChanges(true);
+            } else {
+                // otherwise just reset successor, rest will be handled by WFM
+                resetAndConfigureNode(cc.getDest());
+            }
         }
         setDirty();
         notifyWorkflowListeners(
