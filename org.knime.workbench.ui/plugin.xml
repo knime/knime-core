@@ -32,7 +32,7 @@
                closeable="false"
                id="org.knime.workbench.ui.navigator.KnimeResourceNavigator"
                moveable="true"
-               ratio="0.2"
+               ratio="0.3"
                relationship="left"
                relative="org.eclipse.ui.editorss"/>
          <view
@@ -67,6 +67,15 @@
                ratio="0.7"
                relationship="right"
                relative="org.eclipse.ui.editorss"/>
+         <view
+               closeable="true"
+               id="org.knime.workbench.ui.favorites"
+               moveable="true"
+               ratio="0.2"
+               relationship="top"
+               relative="org.knime.workbench.repository.view.RepositoryView"
+               visible="true">
+         </view>
       </perspectiveExtension>
       <perspectiveExtension
             targetID="org.knime.workbench.ui.ModellerPerspective">
@@ -81,6 +90,9 @@
          </viewShortcut>
          <viewShortcut id="org.knime.workbench.ui.navigator.KnimeResourceNavigator"/>
          <viewShortcut id="org.knime.workbench.repository.view.RepositoryView"/>
+         <viewShortcut
+               id="org.knime.workbench.ui.favorites">
+         </viewShortcut>
       </perspectiveExtension>
       <perspectiveExtension
             targetID="org.knime.workbench.ui.ModellerPerspective">
