@@ -315,6 +315,11 @@ public class NodeContainerFigure extends RectangleFigure {
         m_headingTooltip.setText(text);
     }
 
+    /**
+     * 
+     * @param text to be wrapped
+     * @return wrapped text
+     */
     public String wrapText(final String text) {
         if (text == null || text.length() == 0) {
             return "";
@@ -332,7 +337,8 @@ public class NodeContainerFigure extends RectangleFigure {
         // the closest space is used for a split
         int indexLeft = middle;
         int indexRight = middle + 1;
-        for (; indexLeft >= 0 && indexRight < text.length(); indexLeft--, indexRight++) {
+        for (; indexLeft >= 0 && indexRight < text.length(); 
+            indexLeft--, indexRight++) {
             if (text.charAt(indexLeft) == ' ') {
                 StringBuilder sb = new StringBuilder(text);
                 return sb.replace(indexLeft, indexLeft + 1, "\n").toString();
@@ -370,7 +376,7 @@ public class NodeContainerFigure extends RectangleFigure {
         if (!(m_name.getParent() == this)) {
 
 //            add(m_name, 4);
-            add(m_name,getChildren().size() - 1);
+            add(m_name, getChildren().size() - 1);
         }
 
         // if the tooltip (description) contains
@@ -599,7 +605,7 @@ public class NodeContainerFigure extends RectangleFigure {
     /**
      * We need to set the color before invoking super.
      *
-     * @see org.eclipse.draw2d.Shape#fillShape(org.eclipse.draw2d.Graphics)
+     * {@inheritDoc}
      */
     @Override
     protected void fillShape(final Graphics graphics) {
@@ -645,7 +651,7 @@ public class NodeContainerFigure extends RectangleFigure {
                 "icons/node/" + "background_manipulator.png";
 
         private static final String BACKGROUND_META =
-                "icons/meta/" + "meta_node.png";
+                "icons/node/background_meta.png";
 
         private static final String BACKGROUND_VIEWER =
                 "icons/node/" + "background_viewer.png";
@@ -693,7 +699,8 @@ public class NodeContainerFigure extends RectangleFigure {
             add(m_backgroundIcon);
             m_backgroundIcon.setLayoutManager(new BorderLayout());
             m_backgroundIcon.add(m_iconFigure, BorderLayout.CENTER);
-            setConstraint(m_backgroundIcon, new RelativeLocator(this, 0.5, 0.5));
+            setConstraint(m_backgroundIcon, 
+                    new RelativeLocator(this, 0.5, 0.5));
 
         }
 
@@ -788,6 +795,15 @@ public class NodeContainerFigure extends RectangleFigure {
             // m_iconFigure.setIconDimension(new Dimension(16, 16));
 
             m_iconFigure.revalidate();
+        }
+        
+        /**
+         * Derived classes (like {@link SubworkflowFigure} may set a fixed icon.
+         * 
+         * @param icon background icon
+         */
+        protected void setBackgroundIcon(final Image icon) {
+            m_backgroundIcon.setIcon(icon);
         }
 
         /**

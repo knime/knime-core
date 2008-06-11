@@ -24,6 +24,7 @@
 package org.knime.workbench.editor2.figures;
 
 import org.eclipse.swt.graphics.Image;
+import org.knime.core.node.GenericNodeFactory.NodeType;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.workbench.editor2.ImageRepository;
@@ -46,11 +47,29 @@ public class SubworkflowFigure extends NodeContainerFigure {
     private static final Image EXECUTED_STATE = ImageRepository.getImage(
             "icons/meta/meta_executed.png");
     
+    
+    private static final Image BACKGROUND_ICON = ImageRepository.getImage(
+            "icons/meta/meta_node.png");
+    
+    /**
+     * Everything like the {@link NodeContainerFigure} but without the status
+     * traffic light, state is reflected by icons on the node.
+     * 
+     * @param progress progress figure for super contructor
+     */
     public SubworkflowFigure(final ProgressFigure progress) {
         super(progress);
         remove(getStatusFigure());
+        ((NodeContainerFigure.ContentFigure)
+                getContentFigure()).setBackgroundIcon(BACKGROUND_ICON);
     }
     
+    /**
+     * 
+     * {@inheritDoc}
+     * 
+     * Only reflects three different states: idle, executing, executed.
+     */
     @Override
     public void setState(final State state) {
         if (state.equals(NodeContainer.State.IDLE)
@@ -59,7 +78,7 @@ public class SubworkflowFigure extends NodeContainerFigure {
                     IDLE_STATE);
         } else if (state.equals(NodeContainer.State.EXECUTING)
                 || state.equals(NodeContainer.State.MARKEDFOREXEC)
-                || state.equals(NodeContainer.State.QUEUED)){
+                || state.equals(NodeContainer.State.QUEUED)) {
             ((NodeContainerFigure.ContentFigure)getContentFigure()).setIcon(
                     EXECUTING_STATE);
             
@@ -68,6 +87,15 @@ public class SubworkflowFigure extends NodeContainerFigure {
                     EXECUTED_STATE);
         }
         revalidate();
+    }
+    
+    /**
+     * {@inheritDoc}
+     * Ignores it - since the type is fix.
+     */
+    @Override
+    public void setType(final NodeType type) {
+        // do nothing
     }
 
 }
