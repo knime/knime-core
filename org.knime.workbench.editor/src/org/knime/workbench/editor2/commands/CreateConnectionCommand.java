@@ -31,6 +31,7 @@ import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.ConnectableEditPart;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -80,6 +81,14 @@ public class CreateConnectionCommand extends Command {
     public void setManager(final WorkflowManager workflowManager) {
         m_manager = workflowManager;
 
+    }
+    
+    public void setConfirm(final boolean confirm) {
+        m_confirm = confirm;
+    }
+    
+    public boolean doConfirm() {
+        return m_confirm;
     }
 
     /**
@@ -222,6 +231,7 @@ public class CreateConnectionCommand extends Command {
         // return (m_connection != null) && (!(m_sourceNode.isLocked()))
         // && (!(m_targetNode.isLocked()));
     }
+    
 
     /**
      * {@inheritDoc}
@@ -244,7 +254,11 @@ public class CreateConnectionCommand extends Command {
                     m_targetNode.getNodeContainer().getID(), 
                     m_targetPortID) != null) {
                 // ask user if it should be replaced...
-                if (m_confirm) {
+                if (m_confirm 
+                        // show confirmation message 
+                        // only if target node is executed 
+                        && m_targetNode.getNodeContainer().getState().equals(
+                                NodeContainer.State.EXECUTED)) {
                     MessageDialogWithToggle msgD = openReconnectConfirmDialog(
                             m_confirm, 
                             "Do you want to replace existing connection? \n"

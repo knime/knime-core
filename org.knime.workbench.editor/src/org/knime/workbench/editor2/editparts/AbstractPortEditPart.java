@@ -42,6 +42,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
@@ -118,6 +119,16 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     public int getIndex() {
         return m_index;
     }
+    
+    /**
+     * Convenience, returns the id of the hosting container.
+     * 
+     * @return node id of hosting container
+     */
+    public NodeID getID() {
+        return getNodeContainer().getID();
+    }
+    
     /**
      * Convenience, returns the hosting container.
      *
