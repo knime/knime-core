@@ -50,7 +50,7 @@
             default="true"
             extensions="knime"
             filenames="knime"
-            icon="icons/editor.png"
+            icon="icons/knime.png"
             id="org.knime.workbench.editor.WorkflowEditor"
             name="KNIME Workflow Editor"/>
       <editor

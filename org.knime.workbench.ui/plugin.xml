@@ -7,7 +7,7 @@
       <view
             category="org.knime.workbench.ui.category"
             class="org.knime.workbench.ui.navigator.KnimeResourceNavigator"
-            icon="icons/view.png"
+            icon="icons/workflow_projects.png"
             id="org.knime.workbench.ui.navigator.KnimeResourceNavigator"
             name="Workflow Projects"/>
    </extension>
@@ -254,7 +254,7 @@
              allowMultiple="false"
              category="org.knime.workbench.ui.category"
              class="org.knime.workbench.ui.favorites.FavoritesView"
-             icon="icons/fav/fav_view.png"
+             icon="icons/fav/fav_nodes.png"
              id="org.knime.workbench.ui.favorites"
              name="Favorite Nodes">
        </view>

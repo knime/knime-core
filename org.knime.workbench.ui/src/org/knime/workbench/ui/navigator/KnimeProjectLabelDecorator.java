@@ -49,11 +49,14 @@ public class KnimeProjectLabelDecorator implements ILabelDecorator {
 //            KnimeProjectLabelDecorator.class);
     
     private static final Image EXECUTING = KNIMEUIPlugin.getDefault()
-        .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_executing2.png");
+        .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_executing.png");
     private static final Image EXECUTED = KNIMEUIPlugin.getDefault()
-        .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_executed2.png");
+        .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_executed.png");
     private static final Image CONFIGURED = KNIMEUIPlugin.getDefault()
         .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_configured.png");
+    private static final Image CLOSED = KNIMEUIPlugin.getDefault()
+        .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_closed.png");
+    
     private static final Image NODE = KNIMEUIPlugin.getDefault().getImage(
             KNIMEUIPlugin.PLUGIN_ID, "icons/node.png"); 
 
@@ -115,6 +118,7 @@ public class KnimeProjectLabelDecorator implements ILabelDecorator {
         EXECUTING.dispose();
         CONFIGURED.dispose();
         NODE.dispose();
+        CLOSED.dispose();
         PROJECTS.clear();
     }
 
@@ -145,7 +149,7 @@ public class KnimeProjectLabelDecorator implements ILabelDecorator {
             IProject project = (IProject)element;
             NodeContainer projectNode = PROJECTS.get(project.getName());
             if (projectNode == null) {
-                return img;
+                return CLOSED;
             }
             if (projectNode.getState().equals(NodeContainer.State.EXECUTED)) {
                 img = EXECUTED;
