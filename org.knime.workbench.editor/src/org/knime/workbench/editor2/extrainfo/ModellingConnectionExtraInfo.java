@@ -143,11 +143,11 @@ public class ModellingConnectionExtraInfo implements UIInformation {
     
     /** {@inheritDoc} */
     @Override
-    public UIInformation clone() {
-        try {
-            return (UIInformation)super.clone();
-        } catch (CloneNotSupportedException e) {
-            return null;
-        }
+    public ModellingConnectionExtraInfo clone() {
+        ModellingConnectionExtraInfo newObject 
+            = new ModellingConnectionExtraInfo();
+        newObject.m_bendpoints.clear();
+        newObject.m_bendpoints.addAll(this.m_bendpoints);
+        return newObject;
     }
 }
