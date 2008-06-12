@@ -89,8 +89,8 @@ public abstract class NodeModel extends GenericNodeModel {
      * <code>PortType</code> only used for old {@link NodeModel}s with
      * model ports.
      */
-    public static final PortType OLDSTYLEMODELPORTTYPE = new PortType(
-            ModelContentWrapper.class, ModelContentWrapper.class);
+    public static final PortType OLDSTYLEMODELPORTTYPE = 
+        new PortType(ModelContentWrapper.class);
 
     /**
      *
@@ -184,23 +184,18 @@ public abstract class NodeModel extends GenericNodeModel {
             return this;
         }
         
-        /**
-         * 
-         * @return
-         */
-        static final PortObjectSerializer<ModelContentWrapper> 
+        /** @return serializer as required by class {@link PortObject}. */
+        public static final PortObjectSerializer<ModelContentWrapper> 
             getPortObjectSerializer() {
             return new PortObjectSerializer<ModelContentWrapper>() {
-                /**
-                 * {@inheritDoc}
-                 */
+                
+                /** {@inheritDoc} */
                 @Override
                 protected ModelContentWrapper loadPortObject(
-                        final File directory, final ExecutionMonitor c)
+                        final File directory, final PortObjectSpec spec, 
+                        final ExecutionMonitor exec)
                         throws IOException, CanceledExecutionException {
-                    ModelContent cnt = new ModelContent("predictor");
-                    cnt.load(directory, c);
-                    return new ModelContentWrapper(cnt);
+                    return (ModelContentWrapper)spec;
                 }
                 /**
                  * {@inheritDoc}
@@ -214,11 +209,8 @@ public abstract class NodeModel extends GenericNodeModel {
             };
         }
         
-        /**
-         * 
-         * @return
-         */
-        static PortObjectSpecSerializer<ModelContentWrapper> 
+        /** @return serializer as required by class {@link PortObjectSpec}. */
+        public static PortObjectSpecSerializer<ModelContentWrapper> 
             getPortObjectSpecSerializer() {
             return new PortObjectSpecSerializer<ModelContentWrapper>() {
                 /**

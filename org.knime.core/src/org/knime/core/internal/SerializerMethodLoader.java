@@ -59,6 +59,8 @@ public final class SerializerMethodLoader {
      * @param encapsulatingClass The class defining this method. 
      * @param desiredReturnType The expected return type, implementing 
      *        interface {@link Serializer}
+     * @param allowSuperClass Whether to allow the definition of the method
+     * in a super class of <code>encapsulatingClass</code>. 
      * @param methodName The name of the method.
      * @return The return value of that method.
      * @throws NoSuchMethodException If this method can't be found or invoked
@@ -67,7 +69,8 @@ public final class SerializerMethodLoader {
     @SuppressWarnings("unchecked") // access to CLASS_TO_SERIALIZER_MAP
     public static <T, V extends Serializer<T>> V getSerializer(
             final Class<T> encapsulatingClass, final Class<V> desiredReturnType,
-            final String methodName) throws NoSuchMethodException {
+            final String methodName, final boolean allowSuperClass) 
+        throws NoSuchMethodException {
         if (encapsulatingClass == null || desiredReturnType == null) {
             throw new NullPointerException(
                     "Class argument must not be null.");
@@ -78,8 +81,12 @@ public final class SerializerMethodLoader {
         V result = null;
         Exception exception = null;
         try {
-            Method method = encapsulatingClass.getDeclaredMethod(methodName);
-            method.setAccessible(true);
+            Method method;
+            if (allowSuperClass) {
+                method = encapsulatingClass.getMethod(methodName);
+            } else {
+                method = encapsulatingClass.getDeclaredMethod(methodName);
+            }
             Class rType = method.getReturnType();
             /* The following test realizes 
              * PortObjectSerializer<T>.class.isAssignableFrom(rType).
@@ -96,12 +103,14 @@ public final class SerializerMethodLoader {
             boolean hasRType = false;
             if (isAssignable) {
                 Type genType = method.getGenericReturnType();
-                hasRType = isSerializer(rType, encapsulatingClass) 
-                    || isSerializer(genType, encapsulatingClass);
+                hasRType = isSerializer(rType, encapsulatingClass, 
+                        allowSuperClass) || isSerializer(
+                                genType, encapsulatingClass, allowSuperClass);
                 if (!hasRType) {
                     Type[] ins = rType.getGenericInterfaces();
                     for (int i = 0; (i < ins.length) && !hasRType; i++) {
-                        hasRType = isSerializer(ins[i], encapsulatingClass);
+                        hasRType = isSerializer(
+                                ins[i], encapsulatingClass, allowSuperClass);
                     }
                 }
             }
@@ -143,15 +152,19 @@ public final class SerializerMethodLoader {
      * <code>getCellSerializer()</code> in a 
      * {@link org.knime.core.data.DataCell} has the correct signature.
      */
-    private static <T, V> boolean isSerializer(
-            final Type c, final Class<T> cellClass) {
+    private static <T, V> boolean isSerializer(final Type c, 
+            final Class<T> cellClass, final boolean allowSuperClass) {
         boolean b = c instanceof ParameterizedType;
         if (b) {
             ParameterizedType parType = (ParameterizedType)c;
             Type[] args = parType.getActualTypeArguments();
             b = b && (args.length >= 1);
             b = b && (args[0] instanceof Class);
-            b = b && cellClass.isAssignableFrom((Class<?>)args[0]);
+            if (allowSuperClass) {
+                b = b && ((Class<?>)args[0]).isAssignableFrom(cellClass);
+            } else {
+                b = b && cellClass.isAssignableFrom((Class<?>)args[0]);
+            }
         }
         return b;
     }

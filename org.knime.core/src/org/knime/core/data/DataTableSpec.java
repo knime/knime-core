@@ -106,7 +106,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      * for public use.
      * @return A new serializer responsible for loading/saving.
      */
-    static PortObjectSpecSerializer<DataTableSpec> 
+    public static PortObjectSpecSerializer<DataTableSpec> 
             getPortObjectSpecSerializer() {
         return new PortObjectSpecSerializer<DataTableSpec>() {
             private static final String FILENAME = "spec.xml";

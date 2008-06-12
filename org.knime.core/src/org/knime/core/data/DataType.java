@@ -299,7 +299,7 @@ public final class DataType {
         DataCellSerializer<T> result = null;
         try {
             result = SerializerMethodLoader.getSerializer(
-                    cl, DataCellSerializer.class, "getCellSerializer");
+                    cl, DataCellSerializer.class, "getCellSerializer", false);
         } catch (NoSuchMethodException nsme) {
             LOGGER.debug("Class \"" + cl.getSimpleName()
                     + "\" does not define method \"getCellSerializer\", using " 

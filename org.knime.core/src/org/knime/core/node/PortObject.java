@@ -18,8 +18,6 @@
  * email: contact@knime.org
  * ---------------------------------------------------------------------
  * 
- * History
- *   10.09.2007 (mb): created
  */
 package org.knime.core.node;
 
@@ -27,6 +25,8 @@ import java.io.File;
 import java.io.IOException;
 
 import org.knime.core.internal.SerializerMethodLoader.Serializer;
+import org.knime.core.node.portobject.AbstractPortObject;
+import org.knime.core.node.portobject.AbstractSimplePortObject;
 
 
 /**
@@ -36,10 +36,6 @@ import org.knime.core.internal.SerializerMethodLoader.Serializer;
  * <code>PortObjects</code> contain the actual data or models, which are used
  * during a node's 
  * {@link GenericNodeModel#execute(PortObject[], ExecutionContext) execution}.
- * Their meta-description is represented by a class extending 
- * {@link PortObjectSpec}. Both a specific class of a 
- * <code>PortObjectSpec</code> and a {@link PortObject} describe 
- * {@link PortType}.
  * 
  * <p><b>Important:</b> Implementors of this interface must also provide a 
  * {@link PortObjectSerializer}, which is used to save and load instances. The
@@ -47,9 +43,7 @@ import org.knime.core.internal.SerializerMethodLoader.Serializer;
  * with the following signature: 
  * <pre>
  *  public static PortObjectSerializer&lt;FooPortObject&gt; 
- *          getPortObjectSerializer(
- *              final File directory, final ExecutionMonitor exec) 
- *              throws IOException, CanceledExecutionException {...}
+ *          getPortObjectSerializer();
  * </pre>
  * If the class does not have such a static method (or it has the wrong 
  * signature), an exception will be thrown at runtime. There are two exceptions
@@ -61,9 +55,11 @@ import org.knime.core.internal.SerializerMethodLoader.Serializer;
  * @see org.knime.core.node.BufferedDataTable
  * @see PortObjectSpec
  * @see PortType
- * @author M. Berthold & B. Wiswedel, University of Konstanz
+ * @see AbstractPortObject
+ * @see AbstractSimplePortObject
+ * @author Bernd Wiswedel & Michael Berthold, University of Konstanz
  */
-public interface PortObject {   
+public interface PortObject {
     
     /** Factory class that's used for writing and loading objects of class 
      * denoted by <code>T</code>. See description of class {@link PortObject}
@@ -72,7 +68,11 @@ public interface PortObject {
     abstract static class PortObjectSerializer<T extends PortObject> 
         implements Serializer<T> {
         
-        /** Saves the portObject to a directory location.
+        /** Saves the portObject to a directory location. There is no need
+         * to also save the {@link PortObjectSpec} associated with the port
+         * object as the framework will save both in different places and
+         * will provide the spec when {@link #loadPortObject(
+         * File, PortObjectSpec, ExecutionMonitor)} is called.
          * @param portObject The object to save.
          * @param directory Where to save to
          * @param exec To report progress to and to check for cancelation.
@@ -85,27 +85,28 @@ public interface PortObject {
         
         /** Load a portObject from a directory location.
          * @param directory Where to load from
+         * @param spec The spec that was associated with the object. It can
+         * safely be cast to the expected PortObjectSpec class.
          * @param exec To report progress to and to check for cancelation.
          * @return The restored object.
          * @throws IOException If that fails for IO problems.
          * @throws CanceledExecutionException If canceled.
          */
-        protected abstract T loadPortObject(
-                final File directory, final ExecutionMonitor exec)
+        protected abstract T loadPortObject(final File directory, 
+                final PortObjectSpec spec, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException;
     }
     
     /**
-     * This method has to be implemented by all derived classes. It returns the
-     * corresponding {@link PortObjectSpec} which is used to configure any 
-     * successor node after execution, e.g. a <code>DataTable</code> can return
-     * a <code>DataTableSpec</code>. Make sure that the {@link PortType}
-     * defines the correct type based on the same <code>PortObjectSpec</code>
-     * as returned by this method.
+     * Get specification to this port object. That is, the corresponding
+     * {@link PortObjectSpec} which is used to configure any successor node
+     * after execution, e.g. a <code>BufferedDataTable</code> can return a
+     * <code>DataTableSpec</code>.
      * 
-     * <p>
-     * This method must never return <code>null</code>.
-     * @return underlying <code>PortObjectSpec</code> or any derived spec
+     * <p>Subclasses should narrow the return type if possible.
+     * 
+     * @return underlying <code>PortObjectSpec</code> or any derived spec,
+     *         never <code>null</code>.
      */
     PortObjectSpec getSpec();
     

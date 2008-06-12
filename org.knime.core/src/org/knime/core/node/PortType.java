@@ -23,6 +23,8 @@
  */
 package org.knime.core.node;
 
+import java.lang.reflect.Method;
+
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 
 /** Holds type information about node port types.
@@ -33,13 +35,9 @@ public final class PortType {
     private final Class<? extends PortObjectSpec> m_specClass;
     private final Class<? extends PortObject> m_objectClass;
     
-    public PortType(final Class<? extends PortObjectSpec> specClass,
-            final  Class<? extends PortObject> objectClass) {
-        if ((specClass == null) || (objectClass == null)) {
-            throw new NullPointerException("PortType args must not be null!");
-        }
-        m_specClass = specClass;
+    public PortType(final Class<? extends PortObject> objectClass) {
         m_objectClass = objectClass;
+        m_specClass = getPortObjectSpecClass(objectClass);
     }
     
     public Class<? extends PortObjectSpec> getPortObjectSpecClass() {
@@ -56,8 +54,11 @@ public final class PortType {
      * @throws NullPointerException if the argument is null
      */
     public boolean isSuperTypeOf(final PortType subType) {
-        return m_objectClass.isAssignableFrom(subType.m_objectClass)
-            && m_specClass.isAssignableFrom(subType.m_specClass);
+        boolean result = m_objectClass.isAssignableFrom(subType.m_objectClass);
+        // if it's a super type, also the spec will be a super class
+        // (can only narrow down the return type of the getSpec() method)
+        assert !result || m_specClass.isAssignableFrom(subType.m_specClass);
+        return result;
     }
     
     /** Returns string comprising spec and object class.
@@ -71,7 +72,7 @@ public final class PortType {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        return m_specClass.hashCode() ^ m_objectClass.hashCode();
+        return m_objectClass.hashCode();
     }
     
     /** {@inheritDoc} */
@@ -84,57 +85,54 @@ public final class PortType {
             return false;
         }
         PortType other = (PortType)obj;
-        return m_specClass.equals(other.m_specClass)
-            && m_objectClass.equals(other.m_objectClass);
+        return m_objectClass.equals(other.m_objectClass);
     }
     
     public void save(final NodeSettingsWO settings) {
-        settings.addString("spec_class", m_specClass.getName());
         settings.addString("object_class", m_objectClass.getName());
     }
 
     @SuppressWarnings("unchecked")
     public static PortType load(final NodeSettingsRO settings) 
         throws InvalidSettingsException {
-        String specClassString = settings.getString("spec_class");
         String objectClassString = settings.getString("object_class");
-        if (specClassString == null) {
-            throw new InvalidSettingsException(
-                "No port specification class found to create PortType object");
-        }
         if (objectClassString == null) {
             throw new InvalidSettingsException(
                 "No port object class found to create PortType object");
         }
-        Class<?> spClass = null;
         Class<?> obClass;
         try {
-            spClass = GlobalClassCreator.createClass(specClassString);
             obClass = GlobalClassCreator.createClass(objectClassString);
         } catch (ClassNotFoundException e) {
-            String eSource, eClass;
-            if (spClass != null) {
-                eSource = "object";
-                eClass = objectClassString;
-            } else {
-                eSource = "specification";
-                eClass = specClassString;
-            }
-            throw new InvalidSettingsException("Can't load class \""
-                    + eClass + "\" for port " + eSource);
-        }
-        if (!PortObjectSpec.class.isAssignableFrom(spClass)) {
-            throw new InvalidSettingsException("Port specification class \""
-                    + specClassString + "\" does not extend " 
-                    + PortObjectSpec.class.getSimpleName());
+            throw new InvalidSettingsException("Unable to restore port type, " 
+                    + "can't load class \"" + objectClassString + "\"");
         }
         if (!PortObject.class.isAssignableFrom(obClass)) {
             throw new InvalidSettingsException("Port object class \""
                     + objectClassString + "\" does not extend " 
                     + PortObject.class.getSimpleName());
         }
-        return new PortType((Class<? extends PortObjectSpec>)spClass,
-                (Class<? extends PortObject>)obClass);
+        return new PortType(obClass.asSubclass(PortObject.class));
     }
+    
+    public static Class<? extends PortObjectSpec> getPortObjectSpecClass(
+            final Class<? extends PortObject> objectClass) {
+        Method m;
+        try {
+            m = objectClass.getMethod("getSpec");
+        } catch (SecurityException e) {
+            NodeLogger.getLogger(PortObject.class).fatal(
+                    "Security permissions does not allow " 
+                    + "access of getSpec method", e);
+            throw new RuntimeException(e);
+        } catch (NoSuchMethodException e) {
+            NodeLogger.getLogger(PortObject.class).fatal(
+                    "getSpec() method is not implemented (though it is"
+                    + " required by interface access of getSpec method", e);
+            throw new RuntimeException(e);
+        }
+        return m.getReturnType().asSubclass(PortObjectSpec.class);
+    }
+
     
 }

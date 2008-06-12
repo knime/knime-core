@@ -70,8 +70,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
     
     /** Define port type of objects of this class when used as PortObjects.
      */
-    public static final PortType TYPE =
-        new PortType(DataTableSpec.class, BufferedDataTable.class);
+    public static final PortType TYPE = new PortType(BufferedDataTable.class);
     
     /** internal ID for any generated table. */
     private static final AtomicInteger lastID = new AtomicInteger(0);

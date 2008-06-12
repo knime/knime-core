@@ -37,7 +37,6 @@ public interface ModelPortObject extends PortObject {
      * <code>ModelPortObject.class</code> as underling object spec and object 
      * content.
      */
-    public static final PortType TYPE = new PortType(ModelPortObjectSpec.class,
-            ModelPortObject.class);
+    public static final PortType TYPE = new PortType(ModelPortObject.class);
     
 }

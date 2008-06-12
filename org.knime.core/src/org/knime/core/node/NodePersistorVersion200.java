@@ -27,7 +27,6 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -330,7 +329,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                             getPortObjectClass().getName() + "\"");
             }
             if (objectClass != null) {
-                object = loadBufferedDataTable(portDir, exec, loadTblRep, tblRep);
+                object = loadBufferedDataTable(
+                        portDir, exec, loadTblRep, tblRep);
                 ((BufferedDataTable)object).setOwnerRecursively(node);
                 spec = ((BufferedDataTable)object).getDataTableSpec();
             } else if (specClass != null) {
@@ -358,12 +358,17 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     throw new IOException("Can't read directory "
                             + specDir.getAbsolutePath());
                 }
-                PortObjectSpecSerializer serializer = 
+                PortObjectSpecSerializer<?> serializer = 
                     getPortObjectSpecSerializer(
-                            (Class<? extends PortObjectSpec>)cl);
+                            cl.asSubclass(PortObjectSpec.class));
                 spec = serializer.loadPortObjectSpec(specDir);
+                if (spec == null) {
+                    throw new IOException("Serializer \"" 
+                            + serializer.getClass().getName() 
+                            + "\" restored null spec ");
+                }
             }
-            if (objectClass != null) {
+            if (spec != null && objectClass != null) {
                 Class<?> cl;
                 try {
                     cl = GlobalClassCreator.createClass(objectClass);
@@ -390,14 +395,11 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     object = loadBufferedDataTable(
                             objectDirRef, exec, loadTblRep, tblRep);
                     ((BufferedDataTable)object).setOwnerRecursively(node);
-                } else if (ModelContent.class.isAssignableFrom(cl)) {
-                    object = loadModelContent(objectDirRef, exec, 
-                            (Class<? extends ModelContent>)cl);
                 } else {
-                    PortObjectSerializer serializer =
+                    PortObjectSerializer<?> serializer = 
                         getPortObjectSerializer(
-                                (Class<? extends PortObject>)cl);
-                    object = serializer.loadPortObject(objectDir, exec);
+                                cl.asSubclass(PortObject.class));
+                    object = serializer.loadPortObject(objectDir, spec, exec);
                 }
             }
         }
@@ -433,41 +435,24 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         null, exec, loadTblRep, tblRep);
     }
 
-    private <T extends ModelContent> T loadModelContent(
-            final ReferencedFile objectDir,
-            final ExecutionMonitor exec, final Class<T> cl)
-    throws CanceledExecutionException, IOException, InvalidSettingsException {
-        T newInstance;
-        try {
-            Constructor<T> c;
-            c = cl.getDeclaredConstructor();
-            c.setAccessible(true);
-            newInstance = c.newInstance();
-        } catch (Exception e) {
-            throw new IOException("Unable to call constructor on class \"" 
-                    + cl.getSimpleName() + "\"", e);
-        }
-        newInstance.load(objectDir.getFile(), exec);
-        return newInstance;
-    }
-    
-    private static final Map<Class<? extends PortObjectSpec>, PortObjectSpecSerializer<?>> PORT_SPEC_SERIALIZER_MAP =
-            new HashMap<Class<? extends PortObjectSpec>, PortObjectSpecSerializer<?>>();
+    private static final Map<Class<? extends PortObjectSpec>, 
+        PortObjectSpecSerializer<?>> PORT_SPEC_SERIALIZER_MAP =
+            new HashMap<Class<? extends PortObjectSpec>, 
+            PortObjectSpecSerializer<?>>();
 
     @SuppressWarnings("unchecked")
     // access to CLASS_TO_SERIALIZER_MAP
-    static <T extends PortObjectSpec> PortObjectSpecSerializer<T> getPortObjectSpecSerializer(
-            final Class<T> cl) {
+    static <T extends PortObjectSpec> PortObjectSpecSerializer<T> 
+        getPortObjectSpecSerializer(final Class<T> cl) {
         if (PORT_SPEC_SERIALIZER_MAP.containsKey(cl)) {
             return PortObjectSpecSerializer.class.cast(PORT_SPEC_SERIALIZER_MAP
                     .get(cl));
         }
         PortObjectSpecSerializer<T> result;
         try {
-            result =
-                    SerializerMethodLoader.getSerializer(cl,
+            result = SerializerMethodLoader.getSerializer(cl,
                             PortObjectSpecSerializer.class,
-                            "getPortObjectSpecSerializer");
+                            "getPortObjectSpecSerializer", true);
         } catch (NoSuchMethodException e) {
             LOGGER.coding("Errors while accessing serializer object", e);
             throw new RuntimeException(e);
@@ -476,23 +461,24 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         return result;
     }
 
-    private static final Map<Class<? extends PortObject>, PortObjectSerializer<?>> PORT_OBJECT_SERIALIZER_MAP =
-            new HashMap<Class<? extends PortObject>, PortObjectSerializer<?>>();
+    private static final Map<Class<? extends PortObject>, 
+        PortObjectSerializer<?>> PORT_OBJECT_SERIALIZER_MAP =
+            new HashMap<Class<? extends PortObject>, 
+            PortObjectSerializer<?>>();
 
     @SuppressWarnings("unchecked")
     // access to CLASS_TO_SERIALIZER_MAP
-    static <T extends PortObject> PortObjectSerializer<T> getPortObjectSerializer(
-            final Class<T> cl) {
+    static <T extends PortObject> PortObjectSerializer<T> 
+        getPortObjectSerializer(final Class<T> cl) {
         if (PORT_OBJECT_SERIALIZER_MAP.containsKey(cl)) {
             return PortObjectSerializer.class.cast(PORT_OBJECT_SERIALIZER_MAP
                     .get(cl));
         }
         PortObjectSerializer<T> result;
         try {
-            result =
-                    SerializerMethodLoader.getSerializer(cl,
+            result = SerializerMethodLoader.getSerializer(cl,
                             PortObjectSerializer.class,
-                            "getPortObjectSerializer");
+                            "getPortObjectSerializer", true);
         } catch (NoSuchMethodException e) {
             LOGGER.coding("Errors while accessing serializer object", e);
             throw new RuntimeException(e);

@@ -48,7 +48,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.PortObject;
-import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.PortType;
 
 /**
@@ -62,7 +61,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             .getLogger(WorkflowPersistorVersion1xx.class);
     
     private static final PortType FALLBACK_PORTTYPE = 
-        new PortType(PortObjectSpec.class, PortObject.class);
+        new PortType(PortObject.class);
     
     private static final NodeSettingsRO EMPTY_SETTINGS = 
         new NodeSettings("<<empty>>");
