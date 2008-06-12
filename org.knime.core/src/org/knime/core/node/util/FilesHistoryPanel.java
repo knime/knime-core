@@ -22,7 +22,7 @@
  * History
  *   Dec 17, 2005 (wiswedel): created
  */
-package org.knime.base.util;
+package org.knime.core.node.util;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -45,7 +45,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
 
-import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.SimpleFileFilter;
 
 
