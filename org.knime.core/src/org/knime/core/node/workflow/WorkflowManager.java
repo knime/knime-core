@@ -2384,6 +2384,58 @@ public final class WorkflowManager extends NodeContainer {
         }
     }
 
+    //////////////////////////////////////
+    // copy & paste & collapse & expand
+    //////////////////////////////////////
+    
+    public NodeID[] copy(final NodeContainer[] ids, 
+                 final ConnectionContainer[] conns) {
+        synchronized (m_workflowMutex) {
+            HashSet<NodeID> validNodes = new HashSet<NodeID>();
+            Map<Integer, NodeContainerPersistor> loaderMap =
+                new TreeMap<Integer, NodeContainerPersistor>();
+            NodeID prefixID = null;
+            for (NodeContainer nc : ids) {
+                if (!validNodes.add(nc.getID())) {
+                    throw new IllegalArgumentException(
+                            "Duplicate node container (or ID) :" + nc.getID());
+                }
+                if (prefixID == null) {
+                    prefixID = nc.getID().getPrefix();
+                } else if (!prefixID.equals(nc.getID().getPrefix())) {
+                    throw new IllegalArgumentException(
+                            "Conflicting prefix of nodes being copied: " 
+                            + prefixID + " vs. " + nc.getID().getPrefix());
+                }
+                loaderMap.put(nc.getID().getIndex(), nc.getCopyPersistor());
+            }
+            Set<ConnectionContainerTemplate> connTemplates =
+                new HashSet<ConnectionContainerTemplate>();
+            for (ConnectionContainer cc : conns) {
+                if ((validNodes.contains(cc.getDest())
+                        && validNodes.contains(cc.getSource()))) {
+                    connTemplates.add(new ConnectionContainerTemplate(cc));
+                }
+            }
+            Map<Integer, NodeID> resultIDs = loadNodesAndConnections(
+                    loaderMap, connTemplates, new LoadResult());
+            NodeID[] result = new NodeID[ids.length];
+            for (int i = 0; i < ids.length; i++) {
+                int oldSuffix = ids[i].getID().getIndex();
+                result[i] = resultIDs.get(oldSuffix);
+                assert result[i] != null 
+                    : "Deficient map, no entry for suffix " + oldSuffix;
+            }
+            return result;
+        }
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected NodeContainerPersistor getCopyPersistor() {
+        return new CopyWorkflowPersistor(this);
+    }
+    
     ///////////////////////////////
     ///////// LOAD & SAVE /////////
     ///////////////////////////////
@@ -2501,63 +2553,20 @@ public final class WorkflowManager extends NodeContainer {
         }
         WorkflowPersistor persistor = (WorkflowPersistor)nodePersistor;
         LoadResult loadResult = new LoadResult();
-        // id suffix are made unique by using the entries in this map
-        Map<Integer, NodeID> translationMap = new HashMap<Integer, NodeID>();
         Map<NodeID, NodeContainerPersistor> persistorMap =
             new HashMap<NodeID, NodeContainerPersistor>();
+        Map<Integer, NodeContainerPersistor> nodeLoaderMap =
+            persistor.getNodeLoaderMap();
         m_loadVersion = persistor.getLoadVersion();
-
-        exec.setMessage("node information");
-        for (Map.Entry<Integer, NodeContainerPersistor> nodeEntry
-                : persistor.getNodeLoaderMap().entrySet()) {
-            int suffix = nodeEntry.getKey();
-            NodeID subId = new NodeID(getID(), suffix);
-            if (m_nodes.containsKey(subId)) {
-                subId = createUniqueID();
-            }
-            NodeContainerPersistor pers = nodeEntry.getValue();
-            translationMap.put(suffix, subId);
-            persistorMap.put(subId, pers);
-            NodeContainer container = pers.getNodeContainer(this, subId);
-            addNodeContainer(container);
-        }
-
-        exec.setMessage("connection information");
-        for (ConnectionContainerTemplate c : persistor.getConnectionSet()) {
-            int sourceSuffix = c.getSourceSuffix();
-            int destSuffix = c.getDestSuffix();
-            assert sourceSuffix == -1 || sourceSuffix != destSuffix
-                : "Can't insert connection, source and destination are equal";
-            ConnectionType type = ConnectionType.STD;
-            NodeID source;
-            NodeID dest;
-            if ((sourceSuffix == -1) && (destSuffix == -1)) {
-                source = getID();
-                dest = getID();
-                type = ConnectionType.WFMTHROUGH;
-            } else if (sourceSuffix == -1) {
-                source = getID();
-                dest = translationMap.get(destSuffix);
-                type = ConnectionType.WFMIN;
-            } else if (destSuffix == -1) {
-                dest = getID();
-                source = translationMap.get(sourceSuffix);
-                type = ConnectionType.WFMOUT;
-            } else {
-                dest = translationMap.get(destSuffix);
-                source = translationMap.get(sourceSuffix);
-            }
-            if (!canAddConnection(
-                    source, c.getSourcePort(), dest, c.getDestPort())) {
-                String warn = "Unable to insert connection \"" + c + "\"";
-                LOGGER.warn(warn);
-                loadResult.addError(warn);
-                continue;
-            }
-            ConnectionContainer cc = addConnection(
-                    source, c.getSourcePort(), dest, c.getDestPort(), false);
-            cc.setUIInfo(c.getUiInfo());
-            assert cc.getType() == type;
+        exec.setMessage("node & connection information");
+        Map<Integer, NodeID> translationMap = 
+            loadNodesAndConnections(nodeLoaderMap,
+                    persistor.getConnectionSet(), loadResult);
+        for (Map.Entry<Integer, NodeID> e : translationMap.entrySet()) {
+            NodeID id = e.getValue();
+            NodeContainerPersistor p = nodeLoaderMap.get(e.getKey());
+            assert p != null : "Deficient translation map";
+            persistorMap.put(id, p);
         }
 
         m_inPortsBarUIInfo = persistor.getInPortsBarUIInfo();
@@ -2669,6 +2678,65 @@ public final class WorkflowManager extends NodeContainer {
         }
         sweep(false);
         return loadResult;
+    }
+    
+    private Map<Integer, NodeID> loadNodesAndConnections(
+            final Map<Integer, NodeContainerPersistor> loaderMap, 
+            final Set<ConnectionContainerTemplate> connections,
+            final LoadResult loadResult) {
+        // id suffix are made unique by using the entries in this map
+        Map<Integer, NodeID> translationMap = new HashMap<Integer, NodeID>();
+
+        for (Map.Entry<Integer, NodeContainerPersistor> nodeEntry 
+                : loaderMap.entrySet()) {
+            int suffix = nodeEntry.getKey();
+            NodeID subId = new NodeID(getID(), suffix);
+            if (m_nodes.containsKey(subId)) {
+                subId = createUniqueID();
+            }
+            NodeContainerPersistor pers = nodeEntry.getValue();
+            translationMap.put(suffix, subId);
+            NodeContainer container = pers.getNodeContainer(this, subId);
+            addNodeContainer(container);
+        }
+
+        for (ConnectionContainerTemplate c : connections) {
+            int sourceSuffix = c.getSourceSuffix();
+            int destSuffix = c.getDestSuffix();
+            assert sourceSuffix == -1 || sourceSuffix != destSuffix
+                : "Can't insert connection, source and destination are equal";
+            ConnectionType type = ConnectionType.STD;
+            NodeID source;
+            NodeID dest;
+            if ((sourceSuffix == -1) && (destSuffix == -1)) {
+                source = getID();
+                dest = getID();
+                type = ConnectionType.WFMTHROUGH;
+            } else if (sourceSuffix == -1) {
+                source = getID();
+                dest = translationMap.get(destSuffix);
+                type = ConnectionType.WFMIN;
+            } else if (destSuffix == -1) {
+                dest = getID();
+                source = translationMap.get(sourceSuffix);
+                type = ConnectionType.WFMOUT;
+            } else {
+                dest = translationMap.get(destSuffix);
+                source = translationMap.get(sourceSuffix);
+            }
+            if (!canAddConnection(
+                    source, c.getSourcePort(), dest, c.getDestPort())) {
+                String warn = "Unable to insert connection \"" + c + "\"";
+                LOGGER.warn(warn);
+                loadResult.addError(warn);
+                continue;
+            }
+            ConnectionContainer cc = addConnection(
+                    source, c.getSourcePort(), dest, c.getDestPort(), false);
+            cc.setUIInfo(c.getUiInfo());
+            assert cc.getType().equals(type);
+        }
+        return translationMap;
     }
 
     public void save(final File directory, final ExecutionMonitor exec,

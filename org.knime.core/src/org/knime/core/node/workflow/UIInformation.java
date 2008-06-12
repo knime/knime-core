@@ -33,7 +33,7 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @author Christoph Sieb, University of Konstanz
  */
-public interface UIInformation {
+public interface UIInformation extends Cloneable {
 
     /**
      * Stores all contained information into the given configuration.
@@ -53,5 +53,9 @@ public interface UIInformation {
      * @see #save
      */
     void load(final NodeSettingsRO config) throws InvalidSettingsException;
-
+    
+    /** UIInformation objects are cloneable without further restriction.
+     * {@inheritDoc} */
+    public UIInformation clone();
+    
 }

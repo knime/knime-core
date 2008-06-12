@@ -36,8 +36,6 @@ import java.util.zip.GZIPInputStream;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.Node.MemoryPolicy;
-import org.knime.core.node.Node.SettingsLoaderAndWriter;
 import org.knime.core.node.NodeModel.ModelContentWrapper;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
@@ -64,14 +62,10 @@ public class NodePersistorVersion1xx implements NodePersistor {
 
     private NodeSettingsRO m_modelSettings;
     
-    private NodeSettings m_variablesSettings;
-
     private PortObject[] m_portObjects;
 
     private PortObjectSpec[] m_portObjectSpecs;
 
-    private MemoryPolicy m_memoryPolicy;
-    
     private boolean m_needsResetAfterLoad;
     
     static String createDataFileDirName(final int index) {
@@ -379,18 +373,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
             LOGGER.warn(e, ise);
         }
     
-        try {
-            SettingsLoaderAndWriter nodeSettings = 
-                SettingsLoaderAndWriter.load(settings);
-            m_memoryPolicy = nodeSettings.getMemoryPolicy();
-            m_modelSettings = nodeSettings.getModelSettings();
-            m_variablesSettings = nodeSettings.getVariablesSettings();
-        } catch (InvalidSettingsException ise) {
-            String e = "Unable to load node settings: " + ise.getMessage();
-            result.addError(e);
-            LOGGER.warn(e, ise);
-        }
-    
+        m_modelSettings = settings;
+        
         try {
             m_hasContent = loadHasContent(settings);
         } catch (InvalidSettingsException ise) {
@@ -470,11 +454,6 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return m_modelSettingsFailPolicy;
     }
     
-    /** {@inheritDoc} */
-    public MemoryPolicy getMemoryPolicy() {
-        return m_memoryPolicy;
-    }
-
     public ReferencedFile getNodeDirectory() {
         return m_nodeDirectory;
     }
@@ -485,15 +464,10 @@ public class NodePersistorVersion1xx implements NodePersistor {
     }
 
     /** {@inheritDoc} */
-    public NodeSettingsRO getNodeModelSettings() {
+    public NodeSettingsRO getSettings() {
         return m_modelSettings;
     }
 
-    /** {@inheritDoc} */
-    public NodeSettings getVariablesSettings() {
-        return m_variablesSettings;
-    }
-    
     /** {@inheritDoc} */
     public PortObject getPortObject(final int outportIndex) {
         return m_portObjects[outportIndex];

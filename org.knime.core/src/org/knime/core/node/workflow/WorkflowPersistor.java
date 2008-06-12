@@ -95,6 +95,17 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             m_destPort = destPort;
             m_uiInfo = uiInfo;
         }
+        
+        /** Copies an existing connection (used for copy&paste).
+         * @param original To copy. */
+        ConnectionContainerTemplate(final ConnectionContainer original) {
+            m_sourceSuffix = original.getSource().getIndex();
+            m_sourcePort = original.getSourcePort();
+            m_destSuffix = original.getDest().getIndex();
+            m_destPort = original.getDestPort();
+            UIInformation origUIInfo = original.getUIInfo();
+            m_uiInfo = origUIInfo == null ? null : origUIInfo.clone();
+        }
 
         /** @return the source identifier */
         int getSourceSuffix() {

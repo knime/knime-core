@@ -205,25 +205,12 @@ public final class Node implements NodeModelWarningListener {
         if (nodeFactory == null) {
             throw new IllegalArgumentException("NodeFactory must not be null.");
         }
-        // remember NodeFactory
         m_factory = nodeFactory;
-
-        // keep node name
         m_name = m_factory.getNodeName().intern();
-
-        // keep node model
         m_model = m_factory.callCreateNodeModel();
-
-        // register ourselves as listener for warnings
         m_model.addWarningListener(this);
-
-        // register logger
         m_logger = NodeLogger.getLogger(m_name);
-
-        // init message listener array
         m_messageListeners = new CopyOnWriteArraySet<NodeMessageListener>();
-
-        // init input ports
         m_inputs = new Input[m_model.getNrInPorts()];
         for (int i = 0; i < m_inputs.length; i++) {
             m_inputs[i] = new Input();
@@ -231,7 +218,6 @@ public final class Node implements NodeModelWarningListener {
             m_inputs[i].name = m_factory.getInportName(i);
         }
 
-        // init output ports
         m_outputs = new Output[m_model.getNrOutPorts()];
         // default option: keep small tables in mem (can be changed in dialog)
         m_outDataPortsMemoryPolicy = MemoryPolicy.CacheSmallInMemory;
@@ -249,22 +235,19 @@ public final class Node implements NodeModelWarningListener {
         // let the model create its 'default' table specs
         // configure(null);
     }
-
-    /**
-     * Creates a copy of the passed node.
-     *
-     * @param node the node that should be copied
+    
+    /** Constructor used to copy the node.
+     * @param original To copy from. 
      */
-    public Node(final Node node) {
-        this(node.getFactory());
-        NodeSettings settings = new NodeSettings("settings");
-        node.saveSettingsTo(settings);
+    public Node(final Node original) {
+        this(original.getFactory());
+        NodeSettings settings = new NodeSettings("copy");
         try {
+            original.saveSettingsTo(settings);
             loadSettingsFrom(settings);
-        } catch (InvalidSettingsException ise) {
-            m_logger.error("Could not copy node, reason: " + ise.getMessage());
-        } finally {
-            reset(true);
+        } catch (InvalidSettingsException e) {
+            m_logger.debug("Unable to copy node settings", e);
+            // silently ignore here
         }
     }
 
@@ -279,14 +262,9 @@ public final class Node implements NodeModelWarningListener {
             m_model.setHasContent(hasContent);
         }
         NodeMessage nodeMessage = loader.getNodeMessage();
-        m_outDataPortsMemoryPolicy = loader.getMemoryPolicy();
-        m_variablesSettings = loader.getVariablesSettings();
-        if (m_outDataPortsMemoryPolicy == null) {
-            m_outDataPortsMemoryPolicy = MemoryPolicy.CacheSmallInMemory;
-        }
         try {
             // this also validates the settings
-            m_model.loadSettingsFrom(loader.getNodeModelSettings());
+            loadSettingsFrom(loader.getSettings());
         } catch (Throwable e) {
             String error;
             if (e instanceof InvalidSettingsException) {
@@ -410,7 +388,7 @@ public final class Node implements NodeModelWarningListener {
             m_outDataPortsMemoryPolicy = l.getMemoryPolicy();
         }
     }
-
+    
     /**
      * Validates the argument settings.
      *

@@ -666,6 +666,10 @@ public abstract class NodeContainer {
         m_isDirty = false;
     }
     
+    /** Get a new persistor that is used to copy this node (copy& paste action).
+     * @return A new persistor for copying. */
+    protected abstract NodeContainerPersistor getCopyPersistor();
+    
     /**
      * @param directory the nodeContainerDirectory to set
      */
@@ -684,8 +688,18 @@ public abstract class NodeContainer {
         return m_nodeContainerDirectory;
     }
     
+    /** Restore content from persistor. This represents the second step 
+     * when loading a workflow. 
+     * @param persistor To load from.
+     * @param tblRep A table repository to restore BufferedDatTables
+     * @param inStack Incoming scope object stack.
+     * @param exec For progress
+     * @return A result representing the load process.
+     * @throws CanceledExecutionException If canceled.
+     */
     abstract LoadResult loadContent(final NodeContainerPersistor persistor, 
-            final Map<Integer, BufferedDataTable> tblRep, ScopeObjectStack inStack, final ExecutionMonitor exec)
+            final Map<Integer, BufferedDataTable> tblRep, 
+            final ScopeObjectStack inStack, final ExecutionMonitor exec)
             throws CanceledExecutionException;
     
 

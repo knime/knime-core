@@ -28,7 +28,7 @@ package org.knime.core.node.workflow;
  * 
  * @author M. Berthold, University of Konstanz
  */
-abstract class ScopeObject {
+abstract class ScopeObject implements Cloneable {
 
     private NodeID m_owner;
     
@@ -38,5 +38,24 @@ abstract class ScopeObject {
     
     NodeID getOwner() {
         return m_owner;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected ScopeObject clone() {
+        try {
+            return (ScopeObject)super.clone();
+        } catch (CloneNotSupportedException e) {
+            InternalError error = new InternalError(
+                    "Unexpected exception, object clone failed");
+            error.initCause(e);
+            throw error;
+        }
+    }
+    
+    protected ScopeObject cloneAndUnsetOwner() {
+        ScopeObject clone = clone();
+        clone.setOwner(null);
+        return clone;
     }
 }

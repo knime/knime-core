@@ -150,7 +150,7 @@ public class ModellingNodeExtraInfo implements UIInformation {
      * {@inheritDoc}
      */
     @Override
-    public Object clone() throws CloneNotSupportedException {
+    public ModellingNodeExtraInfo clone() {
         ModellingNodeExtraInfo newObject = new ModellingNodeExtraInfo();
         newObject.m_bounds = this.m_bounds.clone();
         return newObject;

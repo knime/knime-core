@@ -30,7 +30,6 @@ import java.util.Map;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.Node.MemoryPolicy;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
@@ -93,11 +92,9 @@ public interface NodePersistor {
     boolean isExecuted();
     boolean hasContent();
     ReferencedFile getNodeInternDirectory();
-    MemoryPolicy getMemoryPolicy();
     // may return null in which case the node decides what to do.
     LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy();
-    NodeSettingsRO getNodeModelSettings();
-    public NodeSettings getVariablesSettings();
+    NodeSettingsRO getSettings();
     PortObjectSpec getPortObjectSpec(final int outportIndex);
     PortObject getPortObject(final int outportIndex);
     // TODO should use template instead of final object creation, goes

@@ -748,5 +748,11 @@ public final class SingleNodeContainer extends NodeContainer
     void ensureOutputDataIsRead() {
         m_node.ensureOutputDataIsRead();
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected NodeContainerPersistor getCopyPersistor() {
+        return new CopySingleNodeContainerPersistor(this);
+    }
 
 }

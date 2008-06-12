@@ -43,6 +43,9 @@ public final class NodeMessage {
         /** Reset - reset the warning/error. */
         RESET
     }
+    
+    /** Convenience member to signal that there is no message. */
+    public static final NodeMessage NONE = new NodeMessage(Type.RESET, "");
 
     private final String m_message;
 

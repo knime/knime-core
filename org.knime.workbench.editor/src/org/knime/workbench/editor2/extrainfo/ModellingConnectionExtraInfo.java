@@ -140,4 +140,14 @@ public class ModellingConnectionExtraInfo implements UIInformation {
         }
         return bld.toString();
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public UIInformation clone() {
+        try {
+            return (UIInformation)super.clone();
+        } catch (CloneNotSupportedException e) {
+            return null;
+        }
+    }
 }
