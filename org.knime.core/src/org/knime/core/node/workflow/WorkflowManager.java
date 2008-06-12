@@ -2388,40 +2388,36 @@ public final class WorkflowManager extends NodeContainer {
     // copy & paste & collapse & expand
     //////////////////////////////////////
     
-    public NodeID[] copy(final NodeContainer[] ids, 
-                 final ConnectionContainer[] conns) {
+    public NodeID[] copy(final WorkflowManager sourceManager, 
+            final NodeID[] nodeIDs) {
+        HashSet<NodeID> idsHashed = new HashSet<NodeID>(Arrays.asList(nodeIDs));
+        if (idsHashed.size() != nodeIDs.length) {
+            throw new IllegalArgumentException(
+                    "argument list contains duplicates");
+        }
+        Map<Integer, NodeContainerPersistor> loaderMap =
+            new TreeMap<Integer, NodeContainerPersistor>();
+        Set<ConnectionContainerTemplate> connTemplates =
+            new HashSet<ConnectionContainerTemplate>();
+        synchronized (sourceManager.m_workflowMutex) {
+            for (int i = 0; i < nodeIDs.length; i++) {
+                // throws exception if not present in workflow
+                NodeContainer cont = sourceManager.getNodeContainer(nodeIDs[i]);
+                loaderMap.put(cont.getID().getIndex(), cont.getCopyPersistor());
+                for (ConnectionContainer out 
+                        : sourceManager.m_connectionsBySource.get(nodeIDs[i])) {
+                    if (idsHashed.contains(out.getDest())) {
+                        connTemplates.add(new ConnectionContainerTemplate(out));
+                    }
+                }
+            }
+        }
         synchronized (m_workflowMutex) {
-            HashSet<NodeID> validNodes = new HashSet<NodeID>();
-            Map<Integer, NodeContainerPersistor> loaderMap =
-                new TreeMap<Integer, NodeContainerPersistor>();
-            NodeID prefixID = null;
-            for (NodeContainer nc : ids) {
-                if (!validNodes.add(nc.getID())) {
-                    throw new IllegalArgumentException(
-                            "Duplicate node container (or ID) :" + nc.getID());
-                }
-                if (prefixID == null) {
-                    prefixID = nc.getID().getPrefix();
-                } else if (!prefixID.equals(nc.getID().getPrefix())) {
-                    throw new IllegalArgumentException(
-                            "Conflicting prefix of nodes being copied: " 
-                            + prefixID + " vs. " + nc.getID().getPrefix());
-                }
-                loaderMap.put(nc.getID().getIndex(), nc.getCopyPersistor());
-            }
-            Set<ConnectionContainerTemplate> connTemplates =
-                new HashSet<ConnectionContainerTemplate>();
-            for (ConnectionContainer cc : conns) {
-                if ((validNodes.contains(cc.getDest())
-                        && validNodes.contains(cc.getSource()))) {
-                    connTemplates.add(new ConnectionContainerTemplate(cc));
-                }
-            }
             Map<Integer, NodeID> resultIDs = loadNodesAndConnections(
                     loaderMap, connTemplates, new LoadResult());
-            NodeID[] result = new NodeID[ids.length];
-            for (int i = 0; i < ids.length; i++) {
-                int oldSuffix = ids[i].getID().getIndex();
+            NodeID[] result = new NodeID[nodeIDs.length];
+            for (int i = 0; i < nodeIDs.length; i++) {
+                int oldSuffix = nodeIDs[i].getIndex();
                 result[i] = resultIDs.get(oldSuffix);
                 assert result[i] != null 
                     : "Deficient map, no entry for suffix " + oldSuffix;
