@@ -60,6 +60,7 @@ import org.knime.base.node.viz.histogram.util.SettingsModelColorNameColumns;
 import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -231,6 +232,9 @@ public abstract class AbstractHistogramNodeModel extends GenericNodeModel {
             loadAggrColumns();
             //load the data of the implementation
             loadHistogramInternals(histoDataDir, exec);
+        } catch (final FileNotFoundException e) {
+            LOGGER.debug("Previous implementations haven't stored the data");
+            m_tableSpec = null;
         } catch (final Exception e) {
             LOGGER.debug("Error while loading table specification: "
                     + e.getMessage());
