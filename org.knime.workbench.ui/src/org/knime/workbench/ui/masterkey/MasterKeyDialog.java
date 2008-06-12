@@ -13,7 +13,7 @@
  * otherwise expressly permitted in writing by the copyright owner or
  * as specified in the license file distributed with this product.
  *
- * If you have any quesions please contact the copyright holder:
+ * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
@@ -64,11 +64,12 @@ public class MasterKeyDialog extends Dialog {
     protected Control createDialogArea(final Composite parent) {
         Composite composite = (Composite)super.createDialogArea(parent);
         composite.setSize(400, 600);
-        m_prefPage = new MasterKeyPreferencePage(); 
+        m_prefPage = new MasterKeyPreferencePage();
         m_prefPage.setPreferenceStore(KNIMEUIPlugin.getDefault()
                 .getPreferenceStore());
         m_prefPage.createControl(composite);
         m_prefPage.initialize();
+        composite.getShell().setText("Master Key");
         return composite;
     }
     
@@ -82,6 +83,5 @@ public class MasterKeyDialog extends Dialog {
             super.okPressed();
         }
     }
-    
 
 }
