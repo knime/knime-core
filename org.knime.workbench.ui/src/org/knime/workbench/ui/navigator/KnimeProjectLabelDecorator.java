@@ -55,7 +55,7 @@ public class KnimeProjectLabelDecorator implements ILabelDecorator {
     private static final Image CONFIGURED = KNIMEUIPlugin.getDefault()
         .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_configured.png");
     private static final Image CLOSED = KNIMEUIPlugin.getDefault()
-        .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_closed.png");
+        .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_closed2.png");
     
     private static final Image NODE = KNIMEUIPlugin.getDefault().getImage(
             KNIMEUIPlugin.PLUGIN_ID, "icons/node.png"); 
@@ -87,8 +87,8 @@ public class KnimeProjectLabelDecorator implements ILabelDecorator {
             }
             
         });
-        for (NodeContainer nc 
-                : WorkflowManager.ROOT.getNodeContainerBreadthFirstSearch()) {
+        for (NodeContainer nc : WorkflowManager.ROOT
+                    .getNodeContainerBreadthFirstSearch()) {
             // TODO: bad hack to determine projects...
             if (nc.getID().toString().lastIndexOf(":") < 2) {
                 PROJECTS.put(nc.getName(), nc);
@@ -157,7 +157,9 @@ public class KnimeProjectLabelDecorator implements ILabelDecorator {
                     NodeContainer.State.EXECUTING)) {
                 img = EXECUTING;                        
             } else if (projectNode.getState().equals(
-                    NodeContainer.State.CONFIGURED)) {
+                    NodeContainer.State.CONFIGURED)
+                    || projectNode.getState().equals(
+                            NodeContainer.State.IDLE)) {
                 img = CONFIGURED;
             }
         } else if (element instanceof IFolder) {
