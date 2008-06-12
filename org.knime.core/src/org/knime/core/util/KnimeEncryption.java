@@ -85,7 +85,8 @@ public final class KnimeEncryption {
             return new String(password);
         }
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-        byte[] ciphertext = cipher.doFinal(new String(password).getBytes());
+        byte[] ciphertext = cipher.doFinal(
+        	new String(password).getBytes("UTF-8"));
         return new BASE64Encoder().encode(ciphertext);
     }
 
@@ -108,7 +109,7 @@ public final class KnimeEncryption {
         byte[] pw = new BASE64Decoder().decodeBuffer(password);
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
         byte[] decryptedText = cipher.doFinal(pw);
-        return new String(decryptedText);
+        return new String(decryptedText, "UTF-8");
     }
 
     /**
