@@ -38,6 +38,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.PortType;
 
 /**
@@ -48,7 +49,7 @@ public final class RadialBasisFunctionPortObject
         implements BasisFunctionPortObject {
 
     /** The <code>PortType</code> for basisfunction models. */
-    public static final PortType TYPE = new PortType(DataTableSpec.class, 
+    public static final PortType TYPE = new PortType(
             RadialBasisFunctionPortObject.class);
     
     private final BasisFunctionModelContent m_content;
@@ -94,8 +95,9 @@ public final class RadialBasisFunctionPortObject
             /** {@inheritDoc} */
             @Override
             protected RadialBasisFunctionPortObject loadPortObject(
-                    final File directory, final ExecutionMonitor exec)
-                    throws IOException, CanceledExecutionException {
+                    final File directory, final PortObjectSpec spec,
+                    final ExecutionMonitor exec) throws IOException,
+                    CanceledExecutionException {
                 return RadialBasisFunctionPortObject.load(directory);
             }
         };

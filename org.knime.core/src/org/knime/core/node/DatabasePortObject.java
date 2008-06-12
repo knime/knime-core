@@ -25,8 +25,6 @@
 package org.knime.core.node;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.knime.core.data.DataTable;
@@ -45,8 +43,7 @@ public class DatabasePortObject implements PortObject {
      * Database port type formed <code>PortObjectSpec.class</code> and 
      * <code>PortObject.class</code> from this class.
      */
-    public static final PortType TYPE = 
-        new PortType(DatabasePortObjectSpec.class, DatabasePortObject.class);
+    public static final PortType TYPE = new PortType(DatabasePortObject.class);
     
     /**
      * {@inheritDoc}
@@ -107,31 +104,29 @@ public class DatabasePortObject implements PortObject {
                 save(directory, exec, portObject);
 
             }
-
+            
             /** {@inheritDoc} */
             @Override
             protected DatabasePortObject loadPortObject(final File directory,
-                    final ExecutionMonitor exec) throws IOException,
-                    CanceledExecutionException {
-                return load(directory);
+                    final PortObjectSpec spec, final ExecutionMonitor exec)
+                    throws IOException, CanceledExecutionException {
+                return load(directory, (DatabasePortObjectSpec) spec);
             }
+
         };
     }
     
-    private static DatabasePortObject load(final File dir) throws IOException {
-        File connFile = new File(dir, "db_connection.xml");
-        ModelContentRO conn = ModelContent.loadFromXML(
-                new FileInputStream(connFile));
+    private static DatabasePortObject load(
+            final File dir, final DatabasePortObjectSpec spec) 
+                throws IOException {
         File dataFile = new File(dir, "data.zip");
         ContainerTable data = BufferedDataContainer.readFromZip(dataFile);
-        return new DatabasePortObject(data, conn);
+        return new DatabasePortObject(data, spec.getConnectionModel());
     }
     
     private static void save(final File dir, final ExecutionMonitor em,
             final DatabasePortObject portObject) 
             throws IOException, CanceledExecutionException {
-        File connFile = new File(dir, "db_connection.xml");
-        portObject.m_conn.saveToXML(new FileOutputStream(connFile));
         File dataFile = new File(dir, "data.zip");
         BufferedDataContainer.writeToZip(portObject.m_data, dataFile, em);
     }

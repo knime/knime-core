@@ -38,6 +38,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.PortType;
 
 /**
@@ -48,7 +49,7 @@ public final class FuzzyBasisFunctionPortObject
         implements BasisFunctionPortObject {
 
     /** The <code>PortType</code> for basisfunction models. */
-    public static final PortType TYPE = new PortType(DataTableSpec.class, 
+    public static final PortType TYPE = new PortType(
             FuzzyBasisFunctionPortObject.class);
     
     private final BasisFunctionModelContent m_content;
@@ -102,9 +103,11 @@ public final class FuzzyBasisFunctionPortObject
             /** {@inheritDoc} */
             @Override
             protected FuzzyBasisFunctionPortObject loadPortObject(
-                    final File directory, final ExecutionMonitor exec)
+                    final File directory, final PortObjectSpec spec, 
+                    final ExecutionMonitor exec)
                     throws IOException, CanceledExecutionException {
-                return FuzzyBasisFunctionPortObject.load(directory);
+                return FuzzyBasisFunctionPortObject.load(directory,
+                        (DataTableSpec) spec);
             }
         };
     }
@@ -125,8 +128,9 @@ public final class FuzzyBasisFunctionPortObject
      * @return a list of basisfunction rules
      * @throws InvalidSettingsException if the model contains invalid settings
      */
-    private static FuzzyBasisFunctionPortObject load(final File dir) 
-            throws IOException {
+    private static FuzzyBasisFunctionPortObject load(final File dir,
+            final DataTableSpec spec) throws IOException {
+        // TODO use spec
         return new FuzzyBasisFunctionPortObject(
                 BasisFunctionModelContent.load(dir, new FuzzyCreator()));
     }
