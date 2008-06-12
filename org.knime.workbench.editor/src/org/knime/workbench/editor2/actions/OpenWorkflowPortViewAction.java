@@ -32,7 +32,7 @@ import org.knime.core.node.workflow.WorkflowInPort;
  */
 public class OpenWorkflowPortViewAction extends OpenPortViewAction {
 
-    private final NodeLogger LOGGER = NodeLogger.getLogger(
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
             OpenWorkflowPortViewAction.class);
 
     private final NodeOutPort m_port;
@@ -64,7 +64,7 @@ public class OpenWorkflowPortViewAction extends OpenPortViewAction {
         } else if (m_port.getPortType().equals(ModelPortObject.TYPE)){
             name = "Workflow Model Inport " + getPortIndex();
         } else {
-            name ="Unknown Outport " + getPortIndex();
+            name = "Unknown Outport " + getPortIndex();
         }
 
         // the text will be displayed in the context menu
