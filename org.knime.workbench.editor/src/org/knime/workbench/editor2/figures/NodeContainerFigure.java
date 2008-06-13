@@ -527,7 +527,7 @@ public class NodeContainerFigure extends RectangleFigure {
         if (msg == null || msg.getMessageType() == null) {
             removeMessages();
             NodeLogger.getLogger(NodeContainerFigure.class).warn(
-                    "Recieved NULL message!");
+                    "Received NULL message!");
         } else if (msg.getMessageType().equals(NodeMessage.Type.RESET)) {
             removeMessages();
         } else if (msg.getMessageType().equals(NodeMessage.Type.WARNING)) {
