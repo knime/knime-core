@@ -99,10 +99,28 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         /** Copies an existing connection (used for copy&paste).
          * @param original To copy. */
         ConnectionContainerTemplate(final ConnectionContainer original) {
-            m_sourceSuffix = original.getSource().getIndex();
             m_sourcePort = original.getSourcePort();
-            m_destSuffix = original.getDest().getIndex();
             m_destPort = original.getDestPort();
+            switch (original.getType()) {
+            case STD:
+                m_sourceSuffix = original.getSource().getIndex();
+                m_destSuffix = original.getDest().getIndex();
+                break;
+            case WFMIN:
+                m_sourceSuffix = -1;
+                m_destSuffix = original.getDest().getIndex();
+                break;
+            case WFMOUT:
+                m_sourceSuffix = original.getSource().getIndex();
+                m_destSuffix = -1;
+                break;
+            case WFMTHROUGH:
+                m_sourceSuffix = -1;
+                m_destSuffix = -1;
+                break;
+            default:
+                throw new InternalError("Unknown type " + original.getType());
+            }
             UIInformation origUIInfo = original.getUIInfo();
             m_uiInfo = origUIInfo == null ? null : origUIInfo.clone();
         }

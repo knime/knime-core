@@ -25,7 +25,6 @@ package org.knime.core.node.workflow;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -56,28 +55,12 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     CopyWorkflowPersistor(final WorkflowManager original) {
         m_ncs = new LinkedHashMap<Integer, NodeContainerPersistor>();
         m_cons = new LinkedHashSet<ConnectionContainerTemplate>();
-        Set<NodeID> validNodes = new HashSet<NodeID>();
-        NodeID prefixID = null;
         for (NodeContainer nc : original.getNodeContainers()) {
-            if (!validNodes.add(nc.getID())) {
-                throw new IllegalArgumentException(
-                        "Duplicate node container (or ID) :" + nc.getID());
-            }
-            if (prefixID == null) {
-                prefixID = nc.getID().getPrefix();
-            } else if (!prefixID.equals(nc.getID().getPrefix())) {
-                throw new IllegalArgumentException(
-                        "Conflicting prefix of nodes being copied: " + prefixID
-                        + " vs. " + nc.getID().getPrefix());
-            }
             m_ncs.put(nc.getID().getIndex(), nc.getCopyPersistor());
         }
         
         for (ConnectionContainer cc : original.getConnectionContainers()) {
-            if ((validNodes.contains(cc.getDest())
-                    && validNodes.contains(cc.getSource()))) {
-                m_cons.add(new ConnectionContainerTemplate(cc));
-            }
+            m_cons.add(new ConnectionContainerTemplate(cc));
         }
         m_inportUIInfo = original.getInPortsBarUIInfo() != null 
             ? original.getInPortsBarUIInfo().clone() : null;
