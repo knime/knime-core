@@ -111,13 +111,14 @@ public class PasteAction extends AbstractClipboardAction {
         NodeID[] copiedNodes = getManager().copy(sourceWF, nodeIDs.toArray(
                 new NodeID[nodeIDs.size()]));
         
+        int[] moveDist = calculateShift(copiedNodes);
         LOGGER.debug("copied nodes:");
         for (NodeID id : copiedNodes) {
             LOGGER.debug(id);
             NodeContainer nc = getManager().getNodeContainer(id);
             ModellingNodeExtraInfo uiInfo = (ModellingNodeExtraInfo)nc
                 .getUIInformation();
-            uiInfo.changePosition(calculateShift(copiedNodes));
+            uiInfo.changePosition(moveDist);
             nc.setUIInformation(uiInfo);
         }
         
@@ -220,10 +221,8 @@ public class PasteAction extends AbstractClipboardAction {
      * @return
      */
     protected int[] calculateShift(NodeID[] ids) {
-        int counter =
-                (getEditor().getClipboardContent().getRetrievalCounter() + 1);
-        // increment the retrieval counter
-        getEditor().getClipboardContent().incrementRetrievalCounter();
-        return new int[]{80 * counter, 80 * counter};
+        int x = getEditor().getSelectionTool().getXLocation();
+        int y = getEditor().getSelectionTool().getYLocation();
+        return new int[] {x, y};
     }
 }
