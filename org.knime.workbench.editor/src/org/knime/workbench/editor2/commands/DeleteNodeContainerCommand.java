@@ -127,7 +127,7 @@ public class DeleteNodeContainerCommand extends Command {
      * TODO FIXME: no undo by now, as the connections can't be restored and the
      * node gets a new ID.
      *
-     * @see org.eclipse.gef.commands.Command#canUndo()
+     * {@inheritDoc}
      */
     @Override
     public boolean canUndo() {
