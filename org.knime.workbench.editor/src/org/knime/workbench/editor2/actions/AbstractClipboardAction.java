@@ -67,8 +67,8 @@ public abstract class AbstractClipboardAction extends AbstractNodeAction {
      */
     protected ConnectionContainerEditPart[] getSelectedConnectionParts() {
 
-        ArrayList<ConnectionContainerEditPart> objects = new ArrayList<ConnectionContainerEditPart>(
-                getSelectedObjects());
+        ArrayList<ConnectionContainerEditPart> objects 
+            = new ArrayList<ConnectionContainerEditPart>(getSelectedObjects());
 
         // clean list, that is, remove all objects that are not edit
         // parts for a ConnectionContainer

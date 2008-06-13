@@ -38,6 +38,7 @@ import org.eclipse.gef.editparts.ZoomListener;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.requests.SelectionRequest;
 import org.eclipse.gef.tools.ConnectionDragCreationTool;
+import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
@@ -218,26 +219,32 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * @param event the workflow event
      */
     public void workflowChanged(final WorkflowEvent event) {
-        ConnectionContainer c = null;
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
 
-        if (event.getType().equals(WorkflowEvent.Type.CONNECTION_ADDED)) {
-            c = (ConnectionContainer) event.getNewValue();
-        } else if (event.getType().equals(
-                    WorkflowEvent.Type.CONNECTION_REMOVED)) {
-            c = (ConnectionContainer) event.getOldValue();
-        }
+                ConnectionContainer c = null;
 
-        // if we have a connection to refresh...
-        if (c != null && getNodeContainer() != null) {
-            // only refresh if we are actually involved in the connection change
-            if (c.getSource() == getNodeContainer().getID()
-                    || c.getDest() == getNodeContainer().getID()) {
-                refreshChildren();
-                refreshSourceConnections();
-                refreshTargetConnections();
+                if (event.getType().equals(WorkflowEvent.Type.CONNECTION_ADDED)) {
+                    c = (ConnectionContainer)event.getNewValue();
+                } else if (event.getType().equals(
+                        WorkflowEvent.Type.CONNECTION_REMOVED)) {
+                    c = (ConnectionContainer)event.getOldValue();
+                }
+
+                // if we have a connection to refresh...
+                if (c != null && getNodeContainer() != null) {
+                    // only refresh if we are actually involved in the
+                    // connection change
+                    if (c.getSource() == getNodeContainer().getID()
+                            || c.getDest() == getNodeContainer().getID()) {
+                        refreshChildren();
+                        refreshSourceConnections();
+                        refreshTargetConnections();
+                    }
+                }
             }
-        }
-
+        });
     }
 
     /**

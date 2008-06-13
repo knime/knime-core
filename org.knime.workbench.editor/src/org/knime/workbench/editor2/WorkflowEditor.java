@@ -1154,37 +1154,47 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Listener callback, listens to workflow events and triggers UI updates.
      *
-     * @see org.knime.core.node.workflow.WorkflowListener
-     *      #workflowChanged(org.knime.core.node.workflow.WorkflowEvent)
+     * {@inheritDoc}
      */
     public void workflowChanged(final WorkflowEvent event) {
+
         LOGGER.debug("Workflow event triggered: " + event.toString());
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                // TODO Auto-generated method stub
 
-        markDirty();
-        updateActions();
+                markDirty();
+                updateActions();
 
-        if (event.getType().equals(WorkflowEvent.Type.NODE_WAITING)) {
-            NodeContainer nc = (NodeContainer)event.getOldValue();
+                if (event.getType().equals(WorkflowEvent.Type.NODE_WAITING)) {
+                    NodeContainer nc = (NodeContainer)event.getOldValue();
 
-            NodeProgressMonitor pm = (NodeProgressMonitor)event.getNewValue();
+                    NodeProgressMonitor pm =
+                            (NodeProgressMonitor)event.getNewValue();
 
-            ProgressMonitorJob job =
-                    new ProgressMonitorJob(nc.getCustomName() + " ("
-                            + nc.getName() + ")", pm, m_manager, nc,
-                            "Queued for execution...");
-            // Reverted as not properly ordered yet. Improve in next version
-            // job.schedule();
+                    ProgressMonitorJob job =
+                            new ProgressMonitorJob(nc.getCustomName() + " ("
+                                    + nc.getName() + ")", pm, m_manager, nc,
+                                    "Queued for execution...");
+                    // Reverted as not properly ordered yet. Improve in next
+                    // version
+                    // job.schedule();
 
-            Object o = m_dummyNodeJobs.put(event.getID(), job);
-            assert (o == null);
+                    Object o = m_dummyNodeJobs.put(event.getID(), job);
+                    assert (o == null);
 
-        } else if (event.getType().equals(WorkflowEvent.Type.NODE_FINISHED)) {
-        // TODO: Cleanup, Review, Beautify.
-            ProgressMonitorJob j = m_dummyNodeJobs.remove(event.getID());
-            if (j != null) {
-                j.finish();
+                } else if (event.getType().equals(
+                        WorkflowEvent.Type.NODE_FINISHED)) {
+                    // TODO: Cleanup, Review, Beautify.
+                    ProgressMonitorJob j =
+                            m_dummyNodeJobs.remove(event.getID());
+                    if (j != null) {
+                        j.finish();
+                    }
+                }
             }
-        }
+        });
 
     }
 

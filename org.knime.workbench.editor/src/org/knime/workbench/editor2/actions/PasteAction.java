@@ -26,16 +26,20 @@ package org.knime.workbench.editor2.actions;
 
 import java.util.List;
 
+import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
 /**
  * Implements the clipboard paste action to paste nodes and connections from the
@@ -110,7 +114,28 @@ public class PasteAction extends AbstractClipboardAction {
         LOGGER.debug("copied nodes:");
         for (NodeID id : copiedNodes) {
             LOGGER.debug(id);
+            NodeContainer nc = getManager().getNodeContainer(id);
+            ModellingNodeExtraInfo uiInfo = (ModellingNodeExtraInfo)nc
+                .getUIInformation();
+            uiInfo.changePosition(calculateShift(copiedNodes));
+            nc.setUIInformation(uiInfo);
         }
+        
+        // change selection (from copied ones to pasted ones)
+        
+        EditPartViewer partViewer = getEditor().getViewer();
+
+        // deselect the current selection and select the new pasted parts
+        for (NodeContainerEditPart nodePart : nodeParts) {
+            partViewer.deselect(nodePart);
+        }
+
+        for (ConnectionContainerEditPart connectionPart 
+                : getSelectedConnectionParts()) {
+            partViewer.deselect(connectionPart);
+        }
+        
+        // TODO: select the new ones.... 
         
         // update the actions
         getEditor().updateActions();

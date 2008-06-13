@@ -39,6 +39,7 @@ import org.eclipse.gef.SnapToHelper;
 import org.eclipse.gef.commands.CommandStackListener;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.rulers.RulerProvider;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
@@ -257,31 +258,39 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      * {@inheritDoc}
      */
     public void workflowChanged(final WorkflowEvent event) {
+
         LOGGER.debug("WorkflowRoot: workflow changed, refreshing "
                 + "children/connections..");
 
-        // refreshing the children
-        refreshChildren();
+        Display.getDefault().asyncExec(new Runnable() {
 
-        // refresing connections
-        refreshSourceConnections();
-        refreshTargetConnections();
+            public void run() {
 
-        // update out port (workflow in port) tooltips
-        for (Object part : getChildren()) {
+                // refreshing the children
+                refreshChildren();
 
-            if (part instanceof NodeOutPortEditPart
-                    || part instanceof WorkflowInPortEditPart) {
-                AbstractPortEditPart outPortPart =
-                        (AbstractPortEditPart)part;
-                outPortPart.rebuildTooltip();
+                // refresing connections
+                refreshSourceConnections();
+                refreshTargetConnections();
+
+                // update out port (workflow in port) tooltips
+                for (Object part : getChildren()) {
+
+                    if (part instanceof NodeOutPortEditPart
+                            || part instanceof WorkflowInPortEditPart) {
+                        AbstractPortEditPart outPortPart =
+                                (AbstractPortEditPart)part;
+                        outPortPart.rebuildTooltip();
+                    }
+                }
+
+                // always refresh visuals
+                getFigure().revalidate();
+                refreshVisuals();
+
             }
-        }
-
-        // always refresh visuals
-        getFigure().revalidate();
-        refreshVisuals();
-
+        });
+    
     }
 
     /**
