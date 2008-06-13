@@ -2431,7 +2431,8 @@ public final class WorkflowManager extends NodeContainer {
             for (int i = 0; i < nodeIDs.length; i++) {
                 // throws exception if not present in workflow
                 NodeContainer cont = sourceManager.getNodeContainer(nodeIDs[i]);
-                loaderMap.put(cont.getID().getIndex(), cont.getCopyPersistor());
+                loaderMap.put(cont.getID().getIndex(), 
+                        cont.getCopyPersistor(m_globalTableRepository));
                 for (ConnectionContainer out 
                         : sourceManager.m_connectionsBySource.get(nodeIDs[i])) {
                     if (idsHashed.contains(out.getDest())) {
@@ -2466,8 +2467,9 @@ public final class WorkflowManager extends NodeContainer {
     
     /** {@inheritDoc} */
     @Override
-    protected NodeContainerPersistor getCopyPersistor() {
-        return new CopyWorkflowPersistor(this);
+    protected NodeContainerPersistor getCopyPersistor(
+            final HashMap<Integer, ContainerTable> tableRep) {
+        return new CopyWorkflowPersistor(this, tableRep);
     }
     
     ///////////////////////////////

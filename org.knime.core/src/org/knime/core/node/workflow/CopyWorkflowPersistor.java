@@ -51,17 +51,10 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final WorkflowPortTemplate[] m_outportTemplates;
     private final String m_name;
     private final CopyNodeContainerMetaPersistor m_metaPersistor;
+    private final HashMap<Integer, ContainerTable> m_tableRep;
     
-    CopyWorkflowPersistor(final WorkflowManager original) {
-        m_ncs = new LinkedHashMap<Integer, NodeContainerPersistor>();
-        m_cons = new LinkedHashSet<ConnectionContainerTemplate>();
-        for (NodeContainer nc : original.getNodeContainers()) {
-            m_ncs.put(nc.getID().getIndex(), nc.getCopyPersistor());
-        }
-        
-        for (ConnectionContainer cc : original.getConnectionContainers()) {
-            m_cons.add(new ConnectionContainerTemplate(cc));
-        }
+    CopyWorkflowPersistor(final WorkflowManager original, 
+            final HashMap<Integer, ContainerTable> tableRep) {
         m_inportUIInfo = original.getInPortsBarUIInfo() != null 
             ? original.getInPortsBarUIInfo().clone() : null;
         m_outportUIInfo = original.getOutPortsBarUIInfo() != null 
@@ -80,6 +73,20 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         }
         m_name = original.getName();
         m_metaPersistor = new CopyNodeContainerMetaPersistor(original);
+        if (m_outportTemplates.length == 0 && m_inportTemplates.length == 0) {
+            m_tableRep = new HashMap<Integer, ContainerTable>();
+        } else {
+            m_tableRep = tableRep;
+        }
+        m_ncs = new LinkedHashMap<Integer, NodeContainerPersistor>();
+        m_cons = new LinkedHashSet<ConnectionContainerTemplate>();
+        for (NodeContainer nc : original.getNodeContainers()) {
+            m_ncs.put(nc.getID().getIndex(), nc.getCopyPersistor(m_tableRep));
+        }
+        
+        for (ConnectionContainer cc : original.getConnectionContainers()) {
+            m_cons.add(new ConnectionContainerTemplate(cc));
+        }
     }
     
     /** {@inheritDoc} */
@@ -91,7 +98,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     /** {@inheritDoc} */
     @Override
     public HashMap<Integer, ContainerTable> getGlobalTableRepository() {
-        return null;
+        return m_tableRep;
     }
 
     /** {@inheritDoc} */

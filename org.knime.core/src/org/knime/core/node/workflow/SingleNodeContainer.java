@@ -751,7 +751,8 @@ public final class SingleNodeContainer extends NodeContainer
     
     /** {@inheritDoc} */
     @Override
-    protected NodeContainerPersistor getCopyPersistor() {
+    protected NodeContainerPersistor getCopyPersistor(
+            final HashMap<Integer, ContainerTable> tableRep) {
         return new CopySingleNodeContainerPersistor(this);
     }
 

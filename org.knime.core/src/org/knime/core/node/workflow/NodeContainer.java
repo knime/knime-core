@@ -25,10 +25,12 @@ package org.knime.core.node.workflow;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -666,8 +668,10 @@ public abstract class NodeContainer {
     }
     
     /** Get a new persistor that is used to copy this node (copy& paste action).
+     * @param tableRep Table repository of the destination.
      * @return A new persistor for copying. */
-    protected abstract NodeContainerPersistor getCopyPersistor();
+    protected abstract NodeContainerPersistor getCopyPersistor(
+            final HashMap<Integer, ContainerTable> tableRep);
     
     /**
      * @param directory the nodeContainerDirectory to set
