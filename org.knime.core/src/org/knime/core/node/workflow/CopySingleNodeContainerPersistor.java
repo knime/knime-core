@@ -45,7 +45,7 @@ final class CopySingleNodeContainerPersistor implements
         SingleNodeContainerPersistor {
     
     private final SingleNodeContainer m_original;
-    private Node m_node;
+    private final Node m_node;
     
     /**
      * 
@@ -53,6 +53,7 @@ final class CopySingleNodeContainerPersistor implements
     public CopySingleNodeContainerPersistor(
             final SingleNodeContainer original) {
         m_original = original;
+        m_node = new Node(m_original.getNode());
     }
 
     /** {@inheritDoc} */
@@ -111,7 +112,6 @@ final class CopySingleNodeContainerPersistor implements
             final NodeSettingsRO parentSettings)
             throws InvalidSettingsException, CanceledExecutionException,
             IOException {
-        m_node = new Node(m_original.getNode());
         return new LoadResult();
     }
 
