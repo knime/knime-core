@@ -122,6 +122,8 @@ public class PasteAction extends AbstractClipboardAction {
             nc.setUIInformation(uiInfo);
         }
         
+        getEditor().getClipboardContent().incrementRetrievalCounter();
+        
         // change selection (from copied ones to pasted ones)
         
         EditPartViewer partViewer = getEditor().getViewer();
@@ -223,6 +225,8 @@ public class PasteAction extends AbstractClipboardAction {
     protected int[] calculateShift(NodeID[] ids) {
         int x = getEditor().getSelectionTool().getXLocation();
         int y = getEditor().getSelectionTool().getYLocation();
-        return new int[] {x, y};
+        int counter = getEditor().getClipboardContent().getRetrievalCounter();
+        counter += 1;
+        return new int[] {x * counter, y * counter};
     }
 }
