@@ -24,7 +24,12 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.gef.editparts.ZoomManager;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
 /**
  * Implements the clipboard paste action to paste nodes and connections from the
@@ -45,7 +50,6 @@ public class PasteActionContextMenu extends PasteAction {
      * @param editor the workflow editor this action is intended for
      */
     public PasteActionContextMenu(final WorkflowEditor editor) {
-
         super(editor);
     }
 
@@ -54,20 +58,18 @@ public class PasteActionContextMenu extends PasteAction {
      */
     @Override
     public String getId() {
-
         return ID;
     }
 
     @Override
-    protected int[] calculateShift(int[] ids) {
-        // TODO: functionality disabled
-        /*
+    protected int[] calculateShift(NodeID[] ids) {
+        
         int x = getEditor().getSelectionTool().getXLocation();
         int y = getEditor().getSelectionTool().getYLocation();
         int smallestX = Integer.MAX_VALUE;
         int smallestY = Integer.MAX_VALUE;
         for (int i = 0; i < ids.length; i++) {
-            NodeContainer nc = getManager().getNode(ids[i]);
+            NodeContainer nc = getManager().getNodeContainer(ids[i]);
             // finaly change the extra info so that the copies are
             // located differently (if not null)
             ModellingNodeExtraInfo extraInfo =
@@ -96,7 +98,5 @@ public class PasteActionContextMenu extends PasteAction {
         int shifty = y - smallestY;
 
         return new int[]{shiftx, shifty};
-        */
-        return new int[] {};
     }
 }

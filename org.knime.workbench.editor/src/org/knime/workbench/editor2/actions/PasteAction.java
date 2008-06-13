@@ -194,7 +194,7 @@ public class PasteAction extends AbstractClipboardAction {
      * @param ids
      * @return
      */
-    protected int[] calculateShift(int[] ids) {
+    protected int[] calculateShift(NodeID[] ids) {
         int counter =
                 (getEditor().getClipboardContent().getRetrievalCounter() + 1);
         // increment the retrieval counter
