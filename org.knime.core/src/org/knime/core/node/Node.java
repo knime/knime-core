@@ -784,7 +784,7 @@ public final class Node implements NodeModelWarningListener {
      * message is cleared.
      */
     private void createResetMessageAndNotify() {
-        notifyMessageListeners(new NodeMessage(NodeMessage.Type.RESET, null));
+        notifyMessageListeners(NodeMessage.NONE);
     }
 
     /**

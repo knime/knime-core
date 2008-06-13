@@ -92,8 +92,7 @@ public final class WorkflowManager extends NodeContainer {
     private String m_name = "Workflow Manager";
     
     /** Summarization of internal nodes' message(s). */
-    private NodeMessage m_nodeMessage 
-                   = new NodeMessage(NodeMessage.Type.RESET, "");
+    private NodeMessage m_nodeMessage = NodeMessage.NONE;
     
     // Nodes held in this workflow:
 
@@ -1891,14 +1890,14 @@ public final class WorkflowManager extends NodeContainer {
         for (NodeContainer ncIt : m_nodes.values()) {
             nrNodesInState[ncIt.getState().ordinal()]++;
             nrNodes++;
-            if ((ncIt.getNodeMessage() != null) &&
-               (ncIt.getNodeMessage().getMessageType()
-                    .equals(NodeMessage.Type.ERROR))) {
+            if ((ncIt.getNodeMessage() != null)
+                    && (ncIt.getNodeMessage().getMessageType().equals(
+                            NodeMessage.Type.ERROR))) {
                 internalNodeHasError = true;
             }
         }
         // set summarization message if any of the internal nodes has an error
-        NodeMessage newMessage = new NodeMessage(NodeMessage.Type.RESET, "");
+        NodeMessage newMessage = NodeMessage.NONE;
         if (internalNodeHasError) {
             newMessage = new NodeMessage(NodeMessage.Type.ERROR,
                     "Internal Error.");
