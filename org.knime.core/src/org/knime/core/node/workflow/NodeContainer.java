@@ -160,7 +160,6 @@ public abstract class NodeContainer {
         m_customName = persistor.getCustomName();
         m_uiInformation = persistor.getUIInfo();
         m_nodeContainerDirectory = persistor.getNodeContainerDirectory();
-        assert m_nodeContainerDirectory != null : "NC dir must not be null.";
     }
 
     /**

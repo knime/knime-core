@@ -88,7 +88,7 @@ final class CopySingleNodeContainerPersistor implements
     @Override
     public NodeContainer getNodeContainer(final WorkflowManager parent,
             final NodeID id) {
-        return new SingleNodeContainer(parent, m_node, id);
+        return new SingleNodeContainer(parent, id, this);
     }
 
     /** {@inheritDoc} */
