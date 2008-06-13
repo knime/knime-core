@@ -79,8 +79,10 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
                 m_cons.add(new ConnectionContainerTemplate(cc));
             }
         }
-        m_inportUIInfo = original.getInPortsBarUIInfo().clone();
-        m_outportUIInfo = original.getOutPortsBarUIInfo().clone();
+        m_inportUIInfo = original.getInPortsBarUIInfo() != null 
+            ? original.getInPortsBarUIInfo().clone() : null;
+        m_outportUIInfo = original.getOutPortsBarUIInfo() != null 
+            ? original.getOutPortsBarUIInfo().clone() : null;
         m_inportTemplates = new WorkflowPortTemplate[original.getNrInPorts()];
         m_outportTemplates = new WorkflowPortTemplate[original.getNrOutPorts()];
         for (int i = 0; i < m_inportTemplates.length; i++) {
