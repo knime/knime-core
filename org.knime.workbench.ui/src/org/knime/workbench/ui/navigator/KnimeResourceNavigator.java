@@ -114,7 +114,14 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                     ncRem.removeNodeStateChangeListener(
                             KnimeResourceNavigator.this);
                     LOGGER.debug("Workflow " + ncRem.getNameWithID() 
-                            + " removed"); 
+                            + " removed");
+                    if (getViewer() != null) {
+                        Display.getDefault().asyncExec(new Runnable() {
+                            public void run() {
+                                getViewer().refresh();
+                            }
+                        });
+                    }
                     break;
                 default:
                     // ignored, not interesting in this context

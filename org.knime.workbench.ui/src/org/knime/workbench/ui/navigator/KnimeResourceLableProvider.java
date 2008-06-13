@@ -84,6 +84,8 @@ public class KnimeResourceLableProvider extends LabelProvider implements
     private static final Map<String, NodeContainer>PROJECTS 
         = new HashMap<String, NodeContainer>();
     
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            KnimeResourceLableProvider.class);
     
     
     /**
@@ -128,15 +130,15 @@ public class KnimeResourceLableProvider extends LabelProvider implements
                 switch (event.getType()) {
                 case NODE_ADDED:
                     NodeContainer nc = ((NodeContainer)event.getNewValue());
-                    NodeLogger.getLogger(
-                            KnimeResourceLableProvider.class).debug(
-                                    "Node Added: " + nc.getName());
+                    LOGGER.debug("Node Added: " + nc.getName());
                     if (!nc.getName().equals(WorkflowManager.ROOT.getName())) {
                         PROJECTS.put(nc.getName(), nc);
                     }
                     break;
                 case NODE_REMOVED:
-                    PROJECTS.remove(event.getOldValue());
+                    NodeContainer removed = (NodeContainer)event.getOldValue(); 
+                    LOGGER.debug("removing: " + removed.getName());
+                    PROJECTS.remove(removed.getName());
                     break;
                 default: // no interest in other events here
                 }
@@ -246,12 +248,9 @@ public class KnimeResourceLableProvider extends LabelProvider implements
         Image img = PROJECT;
         if (element instanceof IProject) {
             IProject project = (IProject)element;
-            if (!project.isOpen()) {
-                return CLOSED;                
-            }
             NodeContainer projectNode = PROJECTS.get(project.getName());
             if (projectNode == null) {
-                return img;
+                return CLOSED;
             }
             if (projectNode.getState().equals(NodeContainer.State.EXECUTED)) {
                 img = EXECUTED;
