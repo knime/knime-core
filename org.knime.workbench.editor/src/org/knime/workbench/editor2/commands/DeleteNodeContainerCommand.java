@@ -32,7 +32,6 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.WorkflowManagerInput;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
@@ -92,16 +91,14 @@ public class DeleteNodeContainerCommand extends Command {
         // The WFM removes all connections for us, before the node is
         // removed.
         try {
-            // the node must removed before the editor is closed in order to 
-            // get the editor as the parent, otherwise the WorkflowRootEditPart 
-            // is the parent
-            m_manager.removeNode(m_part.getNodeContainer().getID());
-            
+            m_manager.removeNode(m_part.getNodeContainer().getID());            
             if (m_part.getNodeContainer() instanceof WorkflowManager) {
                 WorkflowManagerInput in = new WorkflowManagerInput(
                         (WorkflowManager)m_part.getNodeContainer(),
-                        // thisis meant by the comment above
-                        (WorkflowEditor)m_part.getParent());
+                        // since the equals method of the WorkflowManagerInput
+                        // only looks for the WorkflowManager, we can pass null
+                        // as the editor argument 
+                        null);
                 IEditorPart editor = PlatformUI.getWorkbench()
                     .getActiveWorkbenchWindow().getActivePage().findEditor(in);
                 if (editor != null) {
@@ -118,8 +115,7 @@ public class DeleteNodeContainerCommand extends Command {
                         new MessageBox(Display.getDefault().getActiveShell(),
                                 SWT.ICON_INFORMATION | SWT.OK);
                     mb.setText("Operation not allowed");
-                    mb.setMessage("You cannot remove a node while the workflow"
-                            + " is in execution.");
+                    mb.setMessage("You cannot remove this node");
                     mb.open();
                 }
                 
