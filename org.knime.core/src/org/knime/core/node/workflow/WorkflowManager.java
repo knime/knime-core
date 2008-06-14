@@ -1238,8 +1238,7 @@ public final class WorkflowManager extends NodeContainer {
             LOGGER.debug(snc.getNameWithID() + " doBeforeExecute");
             // allow SNC to update states etc
                 if (snc.getLoopRole().equals(LoopRole.END)) {
-                    // if this is an END to a loop, make sure it knows it's
-                    // head
+                    // if this is an END to a loop, make sure it knows its head
                     ScopeLoopContext slc = snc.getNode().
                                getScopeContextStackContainer().peek(
                                        ScopeLoopContext.class);

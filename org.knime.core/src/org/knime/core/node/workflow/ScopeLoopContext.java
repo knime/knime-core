@@ -24,6 +24,7 @@
 package org.knime.core.node.workflow;
 
 
+
 /**
  * ScopeContext interface holding loop information.
  * 
@@ -44,5 +45,12 @@ public final class ScopeLoopContext extends ScopeObject {
     public NodeID getTailNode() {
         return m_tailNode;
     }
-
+    
+    /** {@inheritDoc} */
+    @Override
+    protected ScopeObject cloneAndUnsetOwner() {
+        ScopeLoopContext clone = (ScopeLoopContext)super.cloneAndUnsetOwner();
+        clone.setTailNode(null);
+        return clone;
+    }
 }

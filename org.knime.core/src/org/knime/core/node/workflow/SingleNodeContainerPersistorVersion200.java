@@ -86,40 +86,45 @@ public class SingleNodeContainerPersistorVersion200 extends
     protected List<ScopeObject> loadScopeObjects(
             final NodeSettingsRO settings)
         throws InvalidSettingsException {
-        // TODO skip this step
-        if (!settings.containsKey("scope_stack")) {
-            return Collections.emptyList();
-        }
         List<ScopeObject> result = new ArrayList<ScopeObject>();
         NodeSettingsRO stackSet = settings.getNodeSettings("scope_stack");
         for (String key : stackSet.keySet()) {
             NodeSettingsRO sub = stackSet.getNodeSettings(key);
-            String name = sub.getString("name");
-            String typeS = sub.getString("type");
-            if (typeS == null || name == null) {
-                throw new InvalidSettingsException("name or type is null");
+            String type = sub.getString("type");
+            if ("variable".equals(type)) {
+                String name = sub.getString("name");
+                String typeS = sub.getString("class");
+                if (typeS == null || name == null) {
+                    throw new InvalidSettingsException("name or type is null");
+                }
+                Type varType;
+                try {
+                    varType = Type.valueOf(typeS);
+                } catch (final IllegalArgumentException e) {
+                    throw new InvalidSettingsException("invalid type " + typeS);
+                }
+                ScopeVariable v;
+                switch (varType) {
+                case DOUBLE:
+                    v = new ScopeVariable(name, sub.getDouble("value"));
+                    break;
+                case INTEGER:
+                    v = new ScopeVariable(name, sub.getInt("value"));
+                    break;
+                case STRING:
+                    v = new ScopeVariable(name, sub.getString("value"));
+                    break;
+                default:
+                    throw new InvalidSettingsException("Unknown type " + type);
+                }
+                result.add(v);
+            } else if ("loopcontext".equals(type)) {
+                result.add(new ScopeLoopContext());
+//                int tailID = sub.getInt("tailID");
+            } else {
+                throw new InvalidSettingsException(
+                        "Unknown scope object type: " + type);
             }
-            Type type;
-            try {
-                type = Type.valueOf(typeS);
-            } catch (final IllegalArgumentException e) {
-                throw new InvalidSettingsException("invalid type " + typeS);
-            }
-            ScopeVariable v;
-            switch (type) {
-            case DOUBLE:
-                v = new ScopeVariable(name, sub.getDouble("value"));
-                break;
-            case INTEGER:
-                v = new ScopeVariable(name, sub.getInt("value"));
-                break;
-            case STRING:
-                v = new ScopeVariable(name, sub.getString("value"));
-                break;
-            default:
-                throw new InvalidSettingsException("Unknown type " + type);
-            }
-            result.add(v);
         }
         return result;
     }
@@ -194,12 +199,14 @@ public class SingleNodeContainerPersistorVersion200 extends
         @SuppressWarnings("unchecked")
         Iterable<ScopeObject> myObjs = stack == null ? Collections.EMPTY_LIST
                 : stack.getScopeObjectsOwnedBy(nc.getID());
+        int c = 0;
         for (ScopeObject s : myObjs) {
             if (s instanceof ScopeVariable) {
                 ScopeVariable v = (ScopeVariable)s;
-                NodeSettingsWO sub = stackSet.addNodeSettings(v.getName());
+                NodeSettingsWO sub = stackSet.addNodeSettings("Variable_" + c);
+                sub.addString("type", "variable");
                 sub.addString("name", v.getName());
-                sub.addString("type", v.getType().name());
+                sub.addString("class", v.getType().name());
                 switch (v.getType()) {
                 case INTEGER:
                     sub.addInt("value", v.getIntValue());
@@ -213,10 +220,15 @@ public class SingleNodeContainerPersistorVersion200 extends
                 default:
                     assert false : "Unknown variable type: " + v.getType();
                 }
+            } else if (s instanceof ScopeLoopContext) {
+                NodeSettingsWO sub = stackSet.addNodeSettings("Loop_" + c);
+                sub.addString("type", "loopcontext");
             } else {
                 NodeLogger.getLogger(getClass()).error(
-                        "Saving of scope objects not implemented");
+                    "Saving of scope objects of type \"" 
+                        + s.getClass().getSimpleName() +  "\" not implemented");
             }
+            c += 1;
         }
     }
 

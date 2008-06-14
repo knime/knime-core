@@ -24,6 +24,7 @@
 package org.knime.core.node.workflow;
 
 
+
 /**
  * ScopeContext interface holding local variables of basic type.
  * 
@@ -87,9 +88,7 @@ public final class ScopeVariable extends ScopeObject {
         return m_valueI;
     }
     
-    /**
-     * @see Object#toString()
-     */
+    /** {@inheritDoc} */
     @Override
     public String toString() {
         String value;
@@ -101,4 +100,5 @@ public final class ScopeVariable extends ScopeObject {
         }
         return "SV: \"" + m_name + "\" (" + m_type + ": " + value + ")"; 
     }
+    
 }
