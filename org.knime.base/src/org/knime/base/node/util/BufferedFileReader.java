@@ -24,6 +24,7 @@
  */
 package org.knime.base.node.util;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -454,10 +455,10 @@ public final class BufferedFileReader extends BufferedReader {
 
     /**
      * Creates a new reader from the specified location with the default
-     * character set from the Java VM. The returned reader can be asked for the 
-     * number of bytes read from the stream ({@link #getNumberOfBytesRead()}), 
-     * and, if the location specifies a local file - and the size of it can be 
-     * retrieved - the overall byte count in the stream 
+     * character set from the Java VM. The returned reader can be asked for the
+     * number of bytes read from the stream ({@link #getNumberOfBytesRead()}),
+     * and, if the location specifies a local file - and the size of it can be
+     * retrieved - the overall byte count in the stream
      * ({@link #getFileSize()}).<br>
      * If the specified file is compressed, it will try to create a ZIP stream
      * (and the byte counts refer both to the compressed file).<br>
@@ -500,7 +501,8 @@ public final class BufferedFileReader extends BufferedReader {
             InputStreamReader readerStream;
             // the stream used to get the byte count from
             ByteCountingStream sourceStream =
-                    new ByteCountingStream(dataLocation.openStream());
+                    new ByteCountingStream(
+                            new BufferedInputStream(dataLocation.openStream()));
 
             try {
                 // first see if its a GZIPped file
@@ -512,7 +514,9 @@ public final class BufferedFileReader extends BufferedReader {
                 // if not, it could be a ZIPped file
                 sourceStream.close(); // close and reopen
                 sourceStream =
-                        new ByteCountingStream(dataLocation.openStream());
+                        new ByteCountingStream(
+                                new BufferedInputStream(
+                                        dataLocation.openStream()));
 
                 try {
                     zipStream = new ZipInputStream(sourceStream);
@@ -539,7 +543,9 @@ public final class BufferedFileReader extends BufferedReader {
             if (readerStream == null) {
                 sourceStream.close(); // close and reopen
                 sourceStream =
-                        new ByteCountingStream(dataLocation.openStream());
+                        new ByteCountingStream(
+                                new BufferedInputStream(
+                                        dataLocation.openStream()));
                 readerStream = new InputStreamReader(sourceStream, cs);
 
             }
