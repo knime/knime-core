@@ -24,8 +24,6 @@
  */
 package org.knime.base.node.mine.bfn.fuzzy;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +36,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.PortType;
 
@@ -46,17 +45,25 @@ import org.knime.core.node.PortType;
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class FuzzyBasisFunctionPortObject 
-        implements BasisFunctionPortObject {
+        extends BasisFunctionPortObject {
 
     /** The <code>PortType</code> for basisfunction models. */
     public static final PortType TYPE = new PortType(
             FuzzyBasisFunctionPortObject.class);
     
-    private final BasisFunctionModelContent m_content;
+    private BasisFunctionModelContent m_content;
+    
+    /**
+     * 
+     */
+    public FuzzyBasisFunctionPortObject() {
+        
+    }
     
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataTableSpec getSpec() {
         return m_content.getSpec();
     }
@@ -64,6 +71,7 @@ public final class FuzzyBasisFunctionPortObject
     /**
      * @return basisfunctions rules by class
      */
+    @Override
     public Map<DataCell, List<BasisFunctionPredictorRow>> getBasisFunctions() {
         return m_content.getBasisFunctions();
     }
@@ -79,64 +87,33 @@ public final class FuzzyBasisFunctionPortObject
     /**
      * {@inheritDoc}
      */
+    @Override
+    protected void save(final ModelContentWO model, final ExecutionMonitor exec)
+            throws CanceledExecutionException {
+        m_content.save(model);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void load(final ModelContentRO model, final PortObjectSpec spec,
+            final ExecutionMonitor exec) throws InvalidSettingsException,
+            CanceledExecutionException {
+        m_content = new BasisFunctionModelContent(model, new FuzzyCreator());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public BasisFunctionPortObject createPortObject(
             final BasisFunctionModelContent content) {
         return new FuzzyBasisFunctionPortObject(content);
     }
     
     /**
-     * @return Serializer for the {@link FuzzyBasisFunctionPortObject}
-     */
-    public static PortObjectSerializer<FuzzyBasisFunctionPortObject> 
-        getPortObjectSerializer() {
-        return new PortObjectSerializer<FuzzyBasisFunctionPortObject>() {
-
-            /** {@inheritDoc} */
-            @Override
-            protected void savePortObject(
-                    final FuzzyBasisFunctionPortObject portObject,
-                    final File directory, final ExecutionMonitor exec)
-                    throws IOException, CanceledExecutionException {
-                portObject.save(directory);
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            protected FuzzyBasisFunctionPortObject loadPortObject(
-                    final File directory, final PortObjectSpec spec, 
-                    final ExecutionMonitor exec)
-                    throws IOException, CanceledExecutionException {
-                return FuzzyBasisFunctionPortObject.load(directory,
-                        (DataTableSpec) spec);
-            }
-        };
-    }
-    
-    /**
-     * Save the given rule model and model spec into this model content object.
-     * @param bfs the rules to save
-     * @param spec the model spec to save
-     */
-    private void save(final File dir) throws IOException {
-        m_content.save(dir);
-    }
-    
-    /**
-     * Reads the rule model used for prediction from the
-     * <code>ModelContentRO</code> object.
-     * @param model predictor model used to create the rules
-     * @return a list of basisfunction rules
-     * @throws InvalidSettingsException if the model contains invalid settings
-     */
-    private static FuzzyBasisFunctionPortObject load(final File dir,
-            final DataTableSpec spec) throws IOException {
-        // TODO use spec
-        return new FuzzyBasisFunctionPortObject(
-                BasisFunctionModelContent.load(dir, new FuzzyCreator()));
-    }
-    
-    /**
-     * Used to create fuzzy predictor rows.
+     * Used to create PNN predictor rows.
      */
     public static class FuzzyCreator implements Creator {
         /**
@@ -148,7 +125,5 @@ public final class FuzzyBasisFunctionPortObject
             return new FuzzyBasisFunctionPredictorRow(pp);
         }
     }
-    
-    
     
 }

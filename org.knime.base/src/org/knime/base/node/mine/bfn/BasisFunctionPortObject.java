@@ -31,18 +31,25 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.ModelPortObject;
+import org.knime.core.node.portobject.AbstractSimplePortObject;
 
 /**
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public interface BasisFunctionPortObject extends ModelPortObject {
+public abstract class BasisFunctionPortObject extends AbstractSimplePortObject {
+    
+    /**
+     * Creates a new abstract <code>BasisFunctionPortObject</code>.
+     */
+    public BasisFunctionPortObject() {
+        
+    }
     
     /**
      * Creator used to instantiate basisfunction predictor rows.
      */
-    interface Creator {
+    public interface Creator {
         /**
          * Return specific predictor row for the given 
          * <code>ModelContent</code>.
@@ -61,16 +68,17 @@ public interface BasisFunctionPortObject extends ModelPortObject {
      * @param content basisfunction model content with spec and rules.
      * @return a new basisfunction port object
      */
-    BasisFunctionPortObject createPortObject(
+    public abstract BasisFunctionPortObject createPortObject(
             final BasisFunctionModelContent content);
     
     /**
      * {@inheritDoc}
      */
-    DataTableSpec getSpec();
+    public abstract DataTableSpec getSpec();
     
     /**
      * @return basisfunction rules by class label
      */
-    Map<DataCell, List<BasisFunctionPredictorRow>> getBasisFunctions();
+    public abstract 
+        Map<DataCell, List<BasisFunctionPredictorRow>> getBasisFunctions();
 }
