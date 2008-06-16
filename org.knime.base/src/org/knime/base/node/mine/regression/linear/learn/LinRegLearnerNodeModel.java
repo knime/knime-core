@@ -232,7 +232,8 @@ public class LinRegLearnerNodeModel extends NodeModel implements
             DataRow row = it.next();
             myProgress++;
             exec.setProgress(myProgress / totalProgress, "Calculating matrix "
-                    + (rowCount + 1) + " (\"" + row.getKey().getId() + "\")");
+                    + (rowCount + 1) + " (\"" 
+                    + row.getKey().getString() + "\")");
             exec.checkCanceled();
             DataCell targetValue = row.getCell(target);
             // read data from row into buffer, skip missing value rows
@@ -240,7 +241,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
                     || readIntoBuffer(row, buffer, colIndizes);
             missingSet.set(rowCount, containsMissing);
             if (containsMissing) {
-                String errorMessage = "Row \"" + row.getKey().getId()
+                String errorMessage = "Row \"" + row.getKey().getString()
                         + "\" contains missing values, skipping it.";
                 if (!hasPrintedWarning) {
                     LOGGER.warn(errorMessage + " Suppress further warnings.");
@@ -276,11 +277,11 @@ public class LinRegLearnerNodeModel extends NodeModel implements
         for (RowIterator it = data.iterator(); it.hasNext(); rowCount++) {
             DataRow row = it.next();
             exec.setMessage("Determining output " + (rowCount + 1) + " (\""
-                    + row.getKey().getId() + "\")");
+                    + row.getKey().getString() + "\")");
             myProgress++;
             exec.setProgress(myProgress / totalProgress);
             exec.checkCanceled();
-            // does row containg missing values?
+            // does row containing missing values?
             if (missingSet.get(rowCount)) {
                 // error has printed above, silently ignore here.
                 continue;
@@ -304,7 +305,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
             for (RowIterator it = data.iterator(); it.hasNext(); rowCount++) {
                 DataRow row = it.next();
                 exec.setMessage("Calculating error " + (rowCount + 1) + " (\""
-                        + row.getKey().getId() + "\")");
+                        + row.getKey().getString() + "\")");
                 myProgress++;
                 exec.setProgress(myProgress / totalProgress);
                 exec.checkCanceled();

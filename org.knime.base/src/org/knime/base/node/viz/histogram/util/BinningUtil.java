@@ -42,6 +42,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.IntCell;
 
 /**
@@ -604,7 +605,7 @@ public final class BinningUtil {
     public static int addDataRow2Bin(final boolean binNominal,
             final List<? extends BinDataModel> bins,
             final BinDataModel missingValueBin, final int startBin,
-            final DataCell xCell, final Color rowColor, final DataCell id,
+            final DataCell xCell, final Color rowColor, final RowKey id,
             final Collection<ColorColumn> aggrColumns,
             final DataCell... aggrCells) throws IllegalArgumentException {
         if (bins == null) {
@@ -656,7 +657,7 @@ public final class BinningUtil {
     private static int addDataRow2NominalBin(
             final List<? extends BinDataModel> bins,
             final int startBin, final DataCell xVal,
-            final Color color, final DataCell id,
+            final Color color, final RowKey id,
             final Collection<ColorColumn> aggrColumns,
             final DataCell... aggrVals) {
         final String xValString = xVal.toString();
@@ -686,7 +687,7 @@ public final class BinningUtil {
      */
     private static int addDataRow2IntervalBin(
             final List<? extends BinDataModel> bins, final int startBin,
-            final DoubleValue xVal, final Color color, final DataCell id,
+            final DoubleValue xVal, final Color color, final RowKey id,
             final Collection<ColorColumn> aggrColumns,
             final DataCell... aggrVals) {
         final double value = xVal.getDoubleValue();

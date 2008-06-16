@@ -26,6 +26,7 @@ package org.knime.base.node.mine.bfn;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
@@ -40,7 +41,7 @@ import org.knime.core.node.ModelContentWO;
 public abstract class BasisFunctionPredictorRow {
     
     /** The key of this row. */
-    private final DataCell m_key;
+    private final RowKey m_key;
 
     /** The class label of this basisfunction. */
     private final DataCell m_classLabel;
@@ -64,7 +65,7 @@ public abstract class BasisFunctionPredictorRow {
      * @param classLabel class label of the target attribute
      * @param dontKnowDegree don't know probability
      */
-    protected BasisFunctionPredictorRow(final DataCell key,
+    protected BasisFunctionPredictorRow(final RowKey key,
             final DataCell classLabel, final double dontKnowDegree) {
         m_key = key;
         m_classLabel = classLabel;
@@ -82,7 +83,14 @@ public abstract class BasisFunctionPredictorRow {
      */
     public BasisFunctionPredictorRow(final ModelContentRO pp)
             throws InvalidSettingsException {
-        m_key = pp.getDataCell("row_id");
+        RowKey key;
+        try {
+            // load key before 2.0
+            key = new RowKey(pp.getDataCell("row_id").toString());
+        } catch (InvalidSettingsException ise) {
+            key = new RowKey(pp.getString("row_id"));
+        }
+        m_key = key;
         m_classLabel = pp.getDataCell("class_label");
         m_dontKnowDegree = pp.getDouble("dont_know_class");
         m_correctCovered = pp.getInt("correct_covered");
@@ -200,7 +208,7 @@ public abstract class BasisFunctionPredictorRow {
     /**
      * @return row key for this row
      */
-    public final DataCell getId() {
+    public final RowKey getId() {
         return m_key;
     }
 
@@ -210,7 +218,7 @@ public abstract class BasisFunctionPredictorRow {
      * @param pp the model content to save this row to
      */
     public void save(final ModelContentWO pp) {
-        pp.addDataCell("row_id", m_key);
+        pp.addString("row_id", m_key.getString());
         pp.addDataCell("class_label", m_classLabel);
         pp.addDouble("dont_know_class", m_dontKnowDegree);
         pp.addInt("correct_covered", m_correctCovered);

@@ -59,6 +59,7 @@ import org.knime.base.util.coordinate.NumericCoordinate;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
@@ -754,11 +755,11 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * @return the hilited keys.
      * @see org.knime.core.node.property.hilite.HiLiteHandler#getHiLitKeys()
      */
-    public Set<DataCell> delegateGetHiLitKeys() {
+    public Set<RowKey> delegateGetHiLitKeys() {
         if (m_hiliteHandler != null) {
             return m_hiliteHandler.getHiLitKeys();
         }
-        return new HashSet<DataCell>();
+        return new HashSet<RowKey>();
     }
 
     /**
@@ -768,7 +769,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * @see org.knime.core.node.property.hilite.HiLiteHandler#fireHiLiteEvent(
      *      org.knime.core.data.DataCell[])
      */
-    public void delegateHiLite(final DataCell... ids) {
+    public void delegateHiLite(final RowKey... ids) {
         if (m_hiliteHandler != null) {
             m_hiliteHandler.fireHiLiteEvent(ids);
         }
@@ -781,7 +782,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * @see org.knime.core.node.property.hilite.HiLiteHandler#fireHiLiteEvent(
      *      java.util.Set)
      */
-    public void delegateHiLite(final Set<DataCell> ids) {
+    public void delegateHiLite(final Set<RowKey> ids) {
         if (m_hiliteHandler != null) {
             m_hiliteHandler.fireHiLiteEvent(ids);
         }
@@ -795,7 +796,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * @see org.knime.core.node.property.hilite.HiLiteHandler#isHiLit(
      *      org.knime.core.data.DataCell[])
      */
-    public boolean delegateIsHiLit(final DataCell... ids) {
+    public boolean delegateIsHiLit(final RowKey... ids) {
         if (m_hiliteHandler != null) {
             return m_hiliteHandler.isHiLit(ids);
         }
@@ -810,10 +811,10 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * @see org.knime.core.node.property.hilite.HiLiteHandler#isHiLit(
      *      org.knime.core.data.DataCell[])
      */
-    public boolean delegateIsHiLit(final Set<DataCell> ids) {
-        DataCell[] cells = new DataCell[ids.size()];
+    public boolean delegateIsHiLit(final Set<RowKey> ids) {
+        RowKey[] cells = new RowKey[ids.size()];
         int i = 0;
-        for (DataCell cell : ids) {
+        for (RowKey cell : ids) {
             cells[i++] = cell;
         }
         return delegateIsHiLit(cells);
@@ -849,7 +850,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * @see org.knime.core.node.property.hilite.HiLiteHandler
      *      #fireUnHiLiteEvent(org.knime.core.data.DataCell[])
      */
-    public void delegateUnHiLite(final DataCell... ids) {
+    public void delegateUnHiLite(final RowKey... ids) {
         if (m_hiliteHandler != null) {
             m_hiliteHandler.fireUnHiLiteEvent(ids);
         }
@@ -862,7 +863,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * @see org.knime.core.node.property.hilite.HiLiteHandler#fireUnHiLiteEvent(
      *      java.util.Set)
      */
-    public void delegateUnHiLite(final Set<DataCell> ids) {
+    public void delegateUnHiLite(final Set<RowKey> ids) {
         if (m_hiliteHandler != null) {
             m_hiliteHandler.fireUnHiLiteEvent(ids);
         }

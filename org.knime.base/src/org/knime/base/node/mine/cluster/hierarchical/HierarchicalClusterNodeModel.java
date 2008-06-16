@@ -278,7 +278,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
             // store the distance per each fusion step
             fusionCont.addRowToTable(new DefaultRow(
             // row key
-                    new IntCell(clusters.size()),
+                    Integer.toString(clusters.size()),
                     // x-axis scatter plotter
                     new IntCell(clusters.size()),
                     // y-axis scatter plotter

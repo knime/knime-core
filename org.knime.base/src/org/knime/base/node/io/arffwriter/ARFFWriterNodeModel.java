@@ -197,7 +197,7 @@ public class ARFFWriterNodeModel extends NodeModel {
 
             rowNr++;
             exec.setProgress(rowNr / (double)rowCnt, "Writing row " + rowNr
-                    + " ('" + row.getKey().getId() + "') of " + rowCnt);
+                    + " ('" + row.getKey() + "') of " + rowCnt);
 
             if (m_sparse) {
                 writer.write("{");

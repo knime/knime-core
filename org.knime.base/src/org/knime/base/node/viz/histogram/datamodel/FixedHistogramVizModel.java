@@ -34,8 +34,8 @@ import java.util.SortedSet;
 import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.RowKey;
 
 
 /**
@@ -124,7 +124,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
      * {@inheritDoc}
      */
     @Override
-    public Set<DataCell> getHilitedKeys() {
+    public Set<RowKey> getHilitedKeys() {
         throw new UnsupportedOperationException("Hiliting not supported");
     }
 
@@ -133,7 +133,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
      * {@inheritDoc}
      */
     @Override
-    public Set<DataCell> getSelectedKeys() {
+    public Set<RowKey> getSelectedKeys() {
         throw new UnsupportedOperationException("Hiliting not supported");
     }
 
@@ -150,7 +150,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
      * {@inheritDoc}
      */
     @Override
-    public void updateHiliteInfo(final Set<DataCell> hilited, 
+    public void updateHiliteInfo(final Set<RowKey> hilited, 
             final boolean hilite) {
         throw new UnsupportedOperationException("Hiliting not supported");
     }

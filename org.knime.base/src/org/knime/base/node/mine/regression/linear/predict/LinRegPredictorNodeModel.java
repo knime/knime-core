@@ -242,7 +242,7 @@ public class LinRegPredictorNodeModel extends NodeModel {
                 }
                 DataCell appendCell;
                 if (containsMissing) {
-                    LOGGER.debug("Row \"" + row.getKey().getId()
+                    LOGGER.debug("Row \"" + row.getKey().getString()
                             + "\" contains missing values, skipping.");
                     appendCell = DataType.getMissingCell();
                 } else {

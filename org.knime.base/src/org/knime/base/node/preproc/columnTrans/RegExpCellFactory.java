@@ -69,7 +69,7 @@ public class RegExpCellFactory extends AbstractMany2OneCellFactory {
                 if (columnIndex >= 0) {
                     throw new IllegalArgumentException(
                             "Multiple columns match in row "
-                            + row.getKey().getId());
+                            + row.getKey().getString());
                 }
                 columnIndex = i;
             }

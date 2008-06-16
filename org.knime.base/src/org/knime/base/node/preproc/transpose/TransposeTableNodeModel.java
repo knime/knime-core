@@ -35,7 +35,6 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -207,7 +206,7 @@ final class TransposeTableNodeModel extends NodeModel {
             for (Map.Entry<String, DataCell[]> e : map.entrySet()) {
                 exec.setMessage("Adding row \"" + e.getKey() + "\" to table.");
                 DataRow row = new DefaultRow(
-                        new StringCell(e.getKey()), e.getValue());
+                        e.getKey(), e.getValue());
                 cont.addRowToTable(row);
             }
         }

@@ -37,6 +37,7 @@ import javax.swing.ToolTipManager;
 
 import org.knime.base.node.viz.plotter.basic.BasicDrawingPane;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ShapeFactory;
 
 /**
@@ -52,7 +53,7 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
     private DotInfoArray m_dots;
     
     // Hash set of selected dots
-    private Set<DataCell> m_selDots;
+    private Set<RowKey> m_selDots;
     
 //    private Shape m_shape = new Rectangle();
     
@@ -67,7 +68,7 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
     public ScatterPlotterDrawingPane() {
         super();
         m_dots = new DotInfoArray(0);
-        m_selDots = new HashSet<DataCell>();
+        m_selDots = new HashSet<RowKey>();
         ToolTipManager.sharedInstance().registerComponent(this);
     }
     
@@ -157,7 +158,7 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
      * 
      * @return row keys of selecte dots.
      */
-    public Set<DataCell> getSelectedDots() {
+    public Set<RowKey> getSelectedDots() {
         return m_selDots;
     }
     
@@ -165,7 +166,7 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
      * for extending classes the possibility to set the selected dots.
      * @param selected the rowkey ids of the selected elements.
      */
-    protected void setSelectedDots(final Set<DataCell> selected) {
+    protected void setSelectedDots(final Set<RowKey> selected) {
         m_selDots = selected;
     }
     

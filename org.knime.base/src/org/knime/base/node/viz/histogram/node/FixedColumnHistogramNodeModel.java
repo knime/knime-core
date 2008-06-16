@@ -169,14 +169,14 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
             final Color color =
                 tableSpec.getRowColor(row).getColor(false, false);
             if (aggrColSize < 1) {
-                m_model.addDataRow(row.getKey().getId(), color,
+                m_model.addDataRow(row.getKey(), color,
                         row.getCell(xColIdx), DataType.getMissingCell());
             } else {
                 final DataCell[] aggrCells = new DataCell[aggrColSize];
                 for (int i = 0, length = aggrColIdxs.length; i < length; i++) {
                     aggrCells[i] = row.getCell(aggrColIdxs[i]);
                 }
-                m_model.addDataRow(row.getKey().getId(), color,
+                m_model.addDataRow(row.getKey(), color,
                         row.getCell(xColIdx), aggrCells);
             }
 

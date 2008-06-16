@@ -35,7 +35,7 @@ import java.util.List;
 
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.base.node.viz.plotter.LabelPaintUtil;
-import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.data.property.ShapeFactory;
 
@@ -220,7 +220,7 @@ public class DendrogramDrawingPane extends AbstractDrawingPane {
                     && p.y > nodePoint.y - (dotSize / 2)
                     && p.y < nodePoint.y + (dotSize / 2)) {
                 if (node.getContent().getRows().size() == 1) {
-                    for (DataCell row : node.getContent().getRows()) {
+                    for (RowKey row : node.getContent().getRows()) {
                         return row.toString();
                     }
                 } else {

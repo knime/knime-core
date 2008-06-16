@@ -25,30 +25,30 @@ package org.knime.core.node.property.hilite;
 
 import java.util.Set;
 
-import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 
 
 /**
  * This mapper has to be implemented by all classes that are interested in 
- * mapping hilite events between {@link DataCell}s.
+ * mapping hilite events between {@link RowKey}s.
  *  
  * @author Thomas Gabriel, University of Konstanz
  */
 public interface HiLiteMapper {
     
     /**
-     * Returns a set of <code>DataCell</code> elements which are associated
+     * Returns a set of <code>RowKey</code> elements which are associated
      * by the specified <b>key</b> or <code>null</code> if no mapping
      * is available.
      * 
      * @param key the key to get the mapping for
-     * @return a set of mapped <code>DataCell</code> elements
+     * @return a set of mapped <code>RowKey</code> elements
      */
-    Set<DataCell> getKeys(DataCell key);
+    Set<RowKey> getKeys(RowKey key);
     
     /**
      * Returns an unmodifiable set of key (source) for hiliting. 
      * @return A set of keys to hilite.
      */
-    Set<DataCell> keySet();
+    Set<RowKey> keySet();
 }

@@ -79,7 +79,7 @@ public final class RadialBasisFunctionPortObject
     /**
      * @return Serializer for the {@link RadialBasisFunctionPortObject}
      */
-    static PortObjectSerializer<RadialBasisFunctionPortObject> 
+    public static PortObjectSerializer<RadialBasisFunctionPortObject> 
         getPortObjectSerializer() {
         return new PortObjectSerializer<RadialBasisFunctionPortObject>() {
 

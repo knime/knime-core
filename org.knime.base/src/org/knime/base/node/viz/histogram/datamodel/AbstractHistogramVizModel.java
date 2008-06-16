@@ -49,6 +49,7 @@ import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeLogger;
 
@@ -897,12 +898,12 @@ public abstract class AbstractHistogramVizModel {
     /**
      * @return all keys of hilited rows
      */
-    public abstract Set<DataCell> getHilitedKeys();
+    public abstract Set<RowKey> getHilitedKeys();
 
     /**
      * @return all keys of the selected elements
      */
-    public abstract Set<DataCell> getSelectedKeys();
+    public abstract Set<RowKey> getSelectedKeys();
 
     /**
      * Selects the element which contains the given point.
@@ -941,7 +942,7 @@ public abstract class AbstractHistogramVizModel {
      * @param hilite if the given keys should be hilited <code>true</code>
      * or unhilited <code>false</code>
      */
-    public abstract void updateHiliteInfo(final Set<DataCell> hilited,
+    public abstract void updateHiliteInfo(final Set<RowKey> hilited,
             final boolean hilite);
 
     /**

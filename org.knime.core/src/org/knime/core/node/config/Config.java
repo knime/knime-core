@@ -48,6 +48,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.ComplexNumberCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.FuzzyIntervalCell;
@@ -1511,6 +1512,79 @@ public abstract class Config extends AbstractConfigEntry
             return def;
         }
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RowKey getRowKey(final String key) throws InvalidSettingsException {
+        String rk = getString(key);
+        return (rk == null ? null : new RowKey(rk));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RowKey getRowKey(final String key, final RowKey def) {
+        String rk;
+        if (def == null) {
+            rk = getString(key, null);
+        } else {
+            rk = getString(key, def.getString());
+        }
+        return (rk == null ? null : new RowKey(rk));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addRowKey(final String key, final RowKey rowKey) {
+        if (rowKey == null) {
+            addString(key, null);
+        } else {
+           addString(key, rowKey.getString());
+        }
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RowKey[] getRowKeyArray(final String key) 
+            throws InvalidSettingsException {
+        String[] strs = getStringArray(key);
+        return RowKey.toString(strs);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RowKey[] getRowKeyArray(final String key, final RowKey... def) {
+        String[] strs;
+        if (def == null) {
+            strs = getStringArray(key, (String[]) null);
+        } else {
+            String[] defStrs = RowKey.toString(def); 
+            strs = getStringArray(key, defStrs);
+        }
+        return (strs == null ? null : RowKey.toString(strs));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addRowKeyArray(final String key, final RowKey... rowKey) {
+        if (rowKey == null) {
+            addStringArray(key, (String[]) null);
+        } else {
+           addStringArray(key, RowKey.toString(rowKey));
+        }
+    }
+
 
     /**
      * Returns an array of DataType objects which can be null.

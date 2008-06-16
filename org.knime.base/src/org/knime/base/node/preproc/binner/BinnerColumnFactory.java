@@ -186,6 +186,6 @@ final class BinnerColumnFactory implements CellFactory {
     public void setProgress(final int curRowNr, final int rowCount,
             final RowKey lastKey, final ExecutionMonitor exec) {
         exec.setProgress(1.0 * curRowNr / rowCount, "Binning row: "
-                + lastKey.getId().toString());
+                + lastKey.getString());
     }
 }

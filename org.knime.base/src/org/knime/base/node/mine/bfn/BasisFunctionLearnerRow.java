@@ -55,7 +55,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     private final DataRow m_centroid;
     
     /** Keeps key of all covered pattern. */
-    private final Set<DataCell> m_coveredPattern;
+    private final Set<RowKey> m_coveredPattern;
 
     /**
      * Initialise a new basisfunction rule with one covered pattern since this
@@ -75,7 +75,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
         m_key = key;
         m_centroid = centroid;
         m_classInfo = classInfo;
-        m_coveredPattern = new LinkedHashSet<DataCell>();
+        m_coveredPattern = new LinkedHashSet<RowKey>();
     }
 
     /**
@@ -177,7 +177,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * 
      * @return set of covered input pattern
      */
-    public final Set<DataCell> getAllCoveredPattern() {
+    public final Set<RowKey> getAllCoveredPattern() {
         return Collections.unmodifiableSet(m_coveredPattern);
     }
     
@@ -273,7 +273,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @param classInfo and class.
      */
     public final void addCovered(final DataRow row, final DataCell classInfo) {
-        m_coveredPattern.add(row.getKey().getId());
+        m_coveredPattern.add(row.getKey());
         getPredictorRow().cover(row, classInfo);
     }
 
@@ -312,10 +312,10 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @return the intersection ratio of both covered sets
      */
     public final double computeCoverage(final BasisFunctionLearnerRow bf) {
-        Set<DataCell> c1 = this.getAllCoveredPattern();
-        Set<DataCell> c2 = bf.getAllCoveredPattern();
+        Set<RowKey> c1 = this.getAllCoveredPattern();
+        Set<RowKey> c2 = bf.getAllCoveredPattern();
         int cnt = 0;
-        for (DataCell cell : c1) {
+        for (RowKey cell : c1) {
             if (c2.contains(cell)) {
                cnt++;
             }

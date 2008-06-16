@@ -63,7 +63,7 @@ public class BinaryCellFactory extends AbstractMany2OneCellFactory {
                 if (colIndex >= 0) {
                     throw new IllegalArgumentException(
                             "Multiple columns match in row "
-                            + row.getKey().getId());
+                            + row.getKey().getString());
                 }
                 colIndex = i;
             }

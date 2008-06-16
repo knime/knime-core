@@ -89,7 +89,7 @@ public class MinMaxCellFactory extends AbstractMany2OneCellFactory {
         if (multipleValue) {
             throw new IllegalArgumentException(
                     "Multiple columns match in row "
-                    + row.getKey().getId());
+                    + row.getKey().getString());
         }
         return columnIndex;
     }
@@ -118,7 +118,7 @@ public class MinMaxCellFactory extends AbstractMany2OneCellFactory {
         if (multipleValue) {
             throw new IllegalArgumentException(
                     "Multiple columns match in row "
-                    + row.getKey().getId());
+                    + row.getKey().getString());
         }
         return columnIndex;
     }

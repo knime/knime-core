@@ -48,6 +48,7 @@ import org.knime.base.node.viz.plotter.columns.TwoColumnPlotter;
 import org.knime.base.util.coordinate.Coordinate;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.property.hilite.KeyEvent;
 
@@ -388,7 +389,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
                 double size = rowsCont.getDataTableSpec().getRowSizeFactor(row);
                 ColorAttr colorAttr =
                         rowsCont.getDataTableSpec().getRowColor(row);
-                boolean isHilite = delegateIsHiLit(row.getKey().getId());
+                boolean isHilite = delegateIsHiLit(row.getKey());
                 if ((isHilite && m_hide) || !m_hide) {
                     if (m_hide) {
                         isHilite = false;
@@ -771,7 +772,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
         }
     }
 
-    private void changeHiliteStateTo(final Set<DataCell> rowIds,
+    private void changeHiliteStateTo(final Set<RowKey> rowIds,
             final boolean state) {
         if (state) {
             delegateHiLite(rowIds);
@@ -796,7 +797,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     /**
      * {@inheritDoc}
      */
-    public void unHiLiteAll() {
+    public void unHiLiteAll(KeyEvent event) {
         if (isScatterPlotterDrawingPane()) {
             DotInfoArray dotArray =
                     getScatterPlotterDrawingPane().getDotInfoArray();

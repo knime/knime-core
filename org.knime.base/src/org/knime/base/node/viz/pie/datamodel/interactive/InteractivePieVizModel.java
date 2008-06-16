@@ -214,7 +214,7 @@ public class InteractivePieVizModel extends PieVizModel {
                     m_sections.add(section);
                 }
             }
-            section.addDataRow(rowColor, row.getKey().getId(), aggrCell);
+            section.addDataRow(rowColor, row.getKey(), aggrCell);
         }
     }
 

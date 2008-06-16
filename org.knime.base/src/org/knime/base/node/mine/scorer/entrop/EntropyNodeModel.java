@@ -29,9 +29,9 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -146,7 +146,7 @@ class EntropyNodeModel extends NodeModel {
                 m_clusteringCol);
         m_calculator = new EntropyCalculator(reference, clustering,
                 referenceColIndex, clusteringColIndex, exec);
-        Map<DataCell, Set<DataCell>> map = m_calculator.getClusteringMap();
+        Map<RowKey, Set<RowKey>> map = m_calculator.getClusteringMap();
         m_translator.setMapper(new DefaultHiLiteMapper(map));
         if (getNrOutPorts() > 0) {
             pushScopeVariable(new ScopeVariable(

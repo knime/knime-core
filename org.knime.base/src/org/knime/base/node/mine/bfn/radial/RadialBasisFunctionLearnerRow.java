@@ -78,7 +78,7 @@ public class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
         m_thetaPlus = thetaPlus;
         m_thetaPlusSqrtMinusLog = Math.sqrt(-Math.log(m_thetaPlus));
         assert (m_thetaPlus >= 0.0 && m_thetaPlus <= 1.0);
-        m_predRow = new RadialBasisFunctionPredictorRow(key.getId(), center,
+        m_predRow = new RadialBasisFunctionPredictorRow(key, center,
                 classInfo, m_thetaMinus, distance);
         addCovered(center, classInfo);
     }

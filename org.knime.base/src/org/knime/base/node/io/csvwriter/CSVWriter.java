@@ -171,7 +171,7 @@ public class CSVWriter extends BufferedWriter {
             first = true;
             // first, the row id
             if (m_settings.writeRowID()) {
-                write(quoteString(row.getKey().getId().toString(), false));
+                write(quoteString(row.getKey().getString(), false));
                 first = false;
             }
             // now all data cells

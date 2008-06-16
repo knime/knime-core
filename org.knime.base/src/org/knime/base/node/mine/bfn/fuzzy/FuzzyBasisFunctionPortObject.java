@@ -87,7 +87,7 @@ public final class FuzzyBasisFunctionPortObject
     /**
      * @return Serializer for the {@link FuzzyBasisFunctionPortObject}
      */
-    static PortObjectSerializer<FuzzyBasisFunctionPortObject> 
+    public static PortObjectSerializer<FuzzyBasisFunctionPortObject> 
         getPortObjectSerializer() {
         return new PortObjectSerializer<FuzzyBasisFunctionPortObject>() {
 

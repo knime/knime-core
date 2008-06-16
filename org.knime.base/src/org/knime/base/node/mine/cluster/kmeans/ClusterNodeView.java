@@ -43,8 +43,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.def.StringCell;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.property.hilite.HiLiteListener;
@@ -63,7 +62,7 @@ implements HiLiteListener {
     // components holding information about ClusterModel
     private final JTree m_jtree; // contents of this tree will be updated
 
-    private Set<DataCell> m_selected;
+    private Set<RowKey> m_selected;
 
     private static final String HILITE = "Hilite selected";
 
@@ -89,7 +88,7 @@ implements HiLiteListener {
         super(nodeModel);
         JComponent myComp = new JPanel();
         myComp.setLayout(new BorderLayout());
-        m_selected = new HashSet<DataCell>();
+        m_selected = new HashSet<RowKey>();
         m_jtree = new JTree();
         m_jtree.setCellRenderer(new ClusterTreeCellRenderer());
         m_jtree.addMouseListener(new MouseAdapter() {
@@ -107,9 +106,9 @@ implements HiLiteListener {
                 for (TreePath path : m_jtree.getSelectionPaths()) {
                     if (path.getLastPathComponent() 
                             instanceof ClusterMutableTreeNode) {
-                        DataCell cell = ((ClusterMutableTreeNode)path
+                        RowKey rowKey = ((ClusterMutableTreeNode)path
                                 .getLastPathComponent()).getRowId();
-                        m_selected.add(cell);
+                        m_selected.add(rowKey);
                         m_openPopup = true;
                     }
                 }
@@ -232,7 +231,7 @@ implements HiLiteListener {
     /**
      * {@inheritDoc}
      */
-    public void unHiLiteAll() {
+    public void unHiLiteAll(final KeyEvent event) {
         getNodeModel().getHiLiteHandler().fireClearHiLiteEvent();
         getComponent().repaint();
     }
@@ -280,7 +279,7 @@ implements HiLiteListener {
                     clusterParent = new ClusterMutableTreeNode(
                             ClusterNodeModel.CLUSTER + c + " (coverage: "
                                     + myModel.getClusterCoverage(c) + ")",
-                            new StringCell(ClusterNodeModel.CLUSTER + c));
+                            new RowKey(ClusterNodeModel.CLUSTER + c));
                     for (int i = 0; i < myModel.getNrUsedColumns(); i++) {
                         clusterParent.add(new DefaultMutableTreeNode(
                                   myModel.getFeatureName(i) + " = "
@@ -296,7 +295,7 @@ implements HiLiteListener {
 
     private class ClusterMutableTreeNode extends DefaultMutableTreeNode {
 
-        private final DataCell m_rowId;
+        private final RowKey m_rowId;
 
         /**
          * Constructor like super but stores also the row key for hiliting
@@ -305,7 +304,7 @@ implements HiLiteListener {
          * @param o the object to be displayed
          * @param rowId the row key srtored internally
          */
-        public ClusterMutableTreeNode(final Object o, final DataCell rowId) {
+        public ClusterMutableTreeNode(final Object o, final RowKey rowId) {
             super(o);
             m_rowId = rowId;
         }
@@ -313,7 +312,7 @@ implements HiLiteListener {
         /**
          * @return the internally stored row key of the cluster
          */
-        public DataCell getRowId() {
+        public RowKey getRowId() {
             return m_rowId;
         }
 

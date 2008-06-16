@@ -40,7 +40,7 @@ import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.aggregation.ValueScale;
 import org.knime.base.node.viz.aggregation.util.GUIUtils;
 import org.knime.base.node.viz.aggregation.util.LabelDisplayPolicy;
-import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -506,7 +506,7 @@ public abstract class PieVizModel {
      * @param keys the keys to (un)hilite
      * @param hilite <code>true</code> if the keys should be hilited
      */
-    public void updateHiliteInfo(final Set<DataCell> keys,
+    public void updateHiliteInfo(final Set<RowKey> keys,
             final boolean hilite) {
         LOGGER.debug("Entering updateHiliteInfo(hilited, hilite) "
                 + "of class InteractiveHistogramVizModel.");
@@ -555,8 +555,8 @@ public abstract class PieVizModel {
     /**
      * @return the keys of all selected sections
      */
-    public Set<DataCell> getSelectedKeys() {
-        final Set<DataCell> keys = new HashSet<DataCell>();
+    public Set<RowKey> getSelectedKeys() {
+        final Set<RowKey> keys = new HashSet<RowKey>();
         for (final PieSectionDataModel section : getSections2Draw()) {
             if (section.isSelected()) {
                 final Collection<PieSubSectionDataModel> subSections =

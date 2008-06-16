@@ -657,16 +657,16 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
                         if (buffer.length() == 0) {
                             buffer.append(line.getDomainValues().get(i) + ": ");
                         }
-                        // if first rowk key without ","
+                        // if first row key without ","
                         if (first) {
-                            buffer.append(line.getRowKey().getId());
+                            buffer.append(line.getRowKey().getString());
                             first = false;
                         } else if (containedPoints > MAX_TOOLTIP_LENGTH) {
                             buffer.append(", ...");
                             break;
                         } else {
                             // more than one: add a ","
-                            buffer.append(", " + line.getRowKey().getId());
+                            buffer.append(", " + line.getRowKey().getString());
                         }
                         containedPoints++;
                     }

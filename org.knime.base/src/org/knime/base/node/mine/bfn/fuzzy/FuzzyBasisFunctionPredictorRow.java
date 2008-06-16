@@ -31,6 +31,7 @@ import org.knime.base.node.mine.bfn.fuzzy.norm.Norm;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
@@ -59,7 +60,7 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      * @param mem An array of membership functions each per dimension. 
      * @param norm A fuzzy norm to combine activations via all dimensions.
      */
-    protected FuzzyBasisFunctionPredictorRow(final DataCell key,
+    protected FuzzyBasisFunctionPredictorRow(final RowKey key,
             final DataCell classLabel, final MembershipFunction[] mem,
             final int norm) {
         super(key, classLabel, MINACT);
@@ -207,7 +208,8 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
     public int getNrUsedFeatures() {
         int used = 0;
         for (MembershipFunction mem : m_mem) {
-            if (mem.isMissingIntern() || !mem.isSuppLeftMax() || !mem.isSuppRightMax()) {
+            if (mem.isMissingIntern() || !mem.isSuppLeftMax() 
+                    || !mem.isSuppRightMax()) {
                 used++;
             }
         }

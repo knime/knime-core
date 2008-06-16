@@ -100,34 +100,6 @@ public class DefaultRow implements DataRow {
      * Inits a new <code>DefaultRow</code> object by row id and an array of
      * <code>DataCell</code>s. The content of the argument array is copied.
      * 
-     * @param rowId A {@link DataCell} containing a row Id.
-     * @param row An array containing the actual data of this row.
-     * @throws NullPointerException if the specified rowID is <code>null</code>
-     * @throws NullPointerException if <code>row</code> or one of its
-     *             cells is <code>null</code>.
-     */
-    public DefaultRow(final DataCell rowId, final DataCell... row) {
-        this(new RowKey(rowId), row);
-    }
-
-    /**
-     * Inits a new <code>DefaultRow</code> object by row id and an array of
-     * <code>DataCell</code>s. The content of the argument array is copied.
-     * 
-     * @param rowId a {@link DataCell} containing a row Id
-     * @param row a list containing the actual data of this row
-     * @throws NullPointerException if the specified rowID is <code>null</code>
-     * @throws NullPointerException if <code>row</code> or one of its
-     *             cells is <code>null</code>.
-     */
-    public DefaultRow(final DataCell rowId, final List<DataCell> row) {
-        this(rowId, row.toArray(new DataCell[row.size()]));
-    }
-    
-    /**
-     * Inits a new <code>DefaultRow</code> object by row id and an array of
-     * <code>DataCell</code>s. The content of the argument array is copied.
-     * 
      * @param rowId a {@link String} containing a row Id
      * @param row a list containing the actual data of this row
      * @throws NullPointerException if the specified rowID is <code>null</code>
@@ -179,19 +151,6 @@ public class DefaultRow implements DataRow {
             m_row[i] = new DoubleCell(row[i]);
         }
     }
-
-    /**
-     * Inits a new <code>DefaultRow</code> object by row ID and an array of
-     * <code>double</code> values.
-     * 
-     * @param rowId to be wrapped in a {@link RowKey} object
-     * @param row the values in the row
-     * @throws NullPointerException As soon as the other constructor does.
-     * @see #DefaultRow(RowKey, double[])
-     */
-    public DefaultRow(final DataCell rowId, final double... row) {
-        this(new RowKey(rowId), row);
-    }
     
     /**
      * Inits a new <code>DefaultRow</code> object by row ID and an array of
@@ -203,21 +162,6 @@ public class DefaultRow implements DataRow {
      * @see #DefaultRow(RowKey, double[])
      */
     public DefaultRow(final String rowId, final double... row) {
-        this(new RowKey(rowId), row);
-    }
-
-    /**
-     * Inits a new <code>DefaultRow</code> object by row id and an array of
-     * <code>int</code> values.
-     * 
-     * Checks if none of the arguments is <code>null</code>.
-     * 
-     * @param rowId a {@link DataCell} containing a unique row Id.
-     * @param row an array containing the actual data of this row.
-     * @throws NullPointerException if the <code>rowKey</code> or
-     *             <code>row</code> is <code>null</code>.
-     */
-    public DefaultRow(final DataCell rowId, final int... row) {
         this(new RowKey(rowId), row);
     }
     
@@ -265,19 +209,6 @@ public class DefaultRow implements DataRow {
             m_row[i] = new IntCell(row[i]);
         }
     }
-
-    /**
-     * Inits a new <code>DefaultRow</code> object by row id and an array of
-     * {@link String} values.
-     * 
-     * @param rowId A {@link DataCell} containing a unique row Id.
-     * @param row An array containing the actual data of this row.
-     * @throws NullPointerException if the <code>rowId</code> or
-     *             <code>row</code> or one of its strings is <code>null</code>.
-     */
-    public DefaultRow(final DataCell rowId, final String... row) {
-        this(new RowKey(rowId), row);
-    }
     
     /**
      * Inits a new <code>DefaultRow</code> object by row id and an array of
@@ -320,20 +251,6 @@ public class DefaultRow implements DataRow {
             m_row[i] = new StringCell(row[i]);
         }
         m_rowKey = rowKey;
-    }
-    
-    /**
-     * Creates an new row, using the data of the specified row, and overwrites
-     * the row key with the given new one.
-     * 
-     * @param rowId the row id to create the new row key.
-     * @param row The row to copy.
-     * @throws IllegalArgumentException If the key or one of the row's cells
-     *             is <code>null</code>.
-     * @throws NullPointerException If the row is <code>null</code>.
-     */
-    public DefaultRow(final DataCell rowId, final DataRow row) {
-        this(new RowKey(rowId), row);
     }
     
     /**

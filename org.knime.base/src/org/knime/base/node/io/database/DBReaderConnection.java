@@ -308,7 +308,7 @@ final class DBReaderConnection implements DataTable {
             }
             m_end = end();
             m_rowCnt++;
-            return new DefaultRow(new StringCell("Row_" + rowId), cells);
+            return new DefaultRow("Row_" + rowId, cells);
         }
 
         private boolean end() {

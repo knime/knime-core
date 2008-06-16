@@ -35,7 +35,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.util.MutableInteger;
 
@@ -281,7 +280,7 @@ class FileRowIterator extends RowIterator {
 
         String token = null;
         boolean isMissingCell;
-        DataCell rowHeader;
+        String rowHeader;
         DataCell[] row = new DataCell[rowLength];
 
         // before anything else: check if there is more in the stream
@@ -306,7 +305,7 @@ class FileRowIterator extends RowIterator {
             throw prepareForException(fte.getMessage() + " (line: "
                     + m_tokenizer.getLineNumber() + " source: '"
                     + m_frSettings.getDataFileLocation() + "')", m_tokenizer
-                    .getLineNumber(), new StringCell("ERR"), row);
+                    .getLineNumber(), "ERR", row);
         }
         // we made sure before that there is at least one token in the stream
         assert rowHeader != null;
@@ -446,7 +445,7 @@ class FileRowIterator extends RowIterator {
      */
     private DataCell createNewDataCellOfType(final DataType type,
             final String data, final boolean createMissingCell,
-            final DataCell rowHeader, final DataCell[] row) {
+            final String rowHeader, final DataCell[] row) {
 
         if (createMissingCell) {
             return DataType.getMissingCell();
@@ -492,7 +491,7 @@ class FileRowIterator extends RowIterator {
      * <missing>+RowNo". Returns null if EOF was reached before a row header (or
      * a delimiter) was read.
      */
-    private StringCell createRowHeader(final int rowNumber) {
+    private String createRowHeader(final int rowNumber) {
 
         // the constructor sets m_rowHeaderPrefix if the file doesn't have one
         assert (m_frSettings.getFileHasRowHeaders()
@@ -531,11 +530,11 @@ class FileRowIterator extends RowIterator {
                 newRowHeader = uniquifyRowHeader(newRowHeader);
             }
 
-            return new StringCell(newRowHeader);
+            return newRowHeader;
 
         } else {
 
-            return new StringCell(m_rowHeaderPrefix + rowNumber);
+            return m_rowHeaderPrefix + rowNumber;
 
         }
     }
@@ -591,7 +590,7 @@ class FileRowIterator extends RowIterator {
      * closes the input stream. !!!!!!!!!!
      */
     private FileReaderException prepareForException(final String msg,
-            final int lineNumber, final DataCell rowHeader,
+            final int lineNumber, final String rowHeader,
             final DataCell[] cellsRead) {
 
         /*
@@ -611,8 +610,7 @@ class FileRowIterator extends RowIterator {
             }
         }
 
-        DataCell errRowHeader =
-                new StringCell("ERROR_ROW (" + rowHeader.toString() + ")");
+        String errRowHeader = "ERROR_ROW (" + rowHeader.toString() + ")";
 
         DataRow errRow = new DefaultRow(errRowHeader, errCells);
 

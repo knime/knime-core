@@ -218,7 +218,8 @@ public final class BasisFunctionLearnerTable implements DataTable {
                 final DataRow oRow = rowIt.next();
                 progMsg = "Learning... no. rules " + getNumBasisFunctions()
                         + " at " + (m_cycles + 1) + ". epoch";
-                exec.setMessage(progMsg + " \"" + oRow.getKey().getId() + "\"");
+                exec.setMessage(progMsg + " \"" 
+                        + oRow.getKey().getString() + "\"");
                 final BasisFunctionFilterRow row = new BasisFunctionFilterRow(
                         this, oRow, dataColumnsIdx, classColumnsIdx, 
                         classColumnNames, missing);
@@ -683,7 +684,8 @@ public final class BasisFunctionLearnerTable implements DataTable {
                 // get current Basisfunction
                 BasisFunctionLearnerRow bf = it.nextBasisFunction();
                 // add basisfunction specific info
-                buf.append(bf.getKey().getId() + ": " + bf.toString() + "\n");
+                buf.append(bf.getKey().getString() 
+                        + ": " + bf.toString() + "\n");
             }
         }
     }
@@ -692,12 +694,12 @@ public final class BasisFunctionLearnerTable implements DataTable {
      * @return the hilite mapper which maps rules to covered instances
      */
     public DefaultHiLiteMapper getHiLiteMapper() {
-        Map<DataCell, Set<DataCell>> map = 
-            new LinkedHashMap<DataCell, Set<DataCell>>();
+        Map<RowKey, Set<RowKey>> map = 
+            new LinkedHashMap<RowKey, Set<RowKey>>();
         for (BasisFunctionIterator i = getBasisFunctionIterator(); 
                 i.hasNext();) {
             BasisFunctionLearnerRow bf = i.nextBasisFunction();
-            map.put(bf.getKey().getId(), bf.getAllCoveredPattern());
+            map.put(bf.getKey(), bf.getAllCoveredPattern());
         }
         return new DefaultHiLiteMapper(map);
     }

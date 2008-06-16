@@ -255,7 +255,7 @@ public class ClusterNode implements DendrogramNode {
         StringBuffer buffer = new StringBuffer();
         buffer.append("dist: " + m_dist);
         if (m_isLeaf) {
-            buffer.append("leaf: " + m_leafDataPoint.getKey().getId());
+            buffer.append("leaf: " + m_leafDataPoint.getKey().getString());
         } else {
             buffer.append("left: " + getFirstSubnode() + " right: "
                     + getSecondSubnode());

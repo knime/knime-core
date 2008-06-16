@@ -30,8 +30,6 @@ package org.knime.core.data;
 
 import java.io.Serializable;
 
-import org.knime.core.data.def.StringCell;
-
 /**
  * Key for a specific row which holds an identifier of type {@link String}.
  * 
@@ -42,19 +40,6 @@ public final class RowKey implements Serializable {
 
     /** Private member holding non-null row id. */
     private final String m_id;
-
-    /**
-     * Creates a row key based on a {@link DataCell}. It uses the cell's 
-     * toString() representation as underlying string.
-     * @param id identifier for a {@link DataRow}
-     * @throws NullPointerException if argument is <code>null</code>
-     * @deprecated The underlying structure of a row key is a plain string
-     * as of KNIME 2.0. Please only use the {@link #RowKey(String)} constructor.
-     */
-    @Deprecated
-    public RowKey(final DataCell id) {
-        this (id.toString());
-    }
     
     /**
      * Creates a row key based on a {@link String}. 
@@ -67,15 +52,6 @@ public final class RowKey implements Serializable {
             throw new NullPointerException("Argument must not be null.");
         }
         m_id = id;
-    }
-
-    /**
-     * Returns the row key as {@link DataCell}.
-     * @return an non-null, ID for a row
-     */
-    @Deprecated
-    public DataCell getId() {
-        return new StringCell(m_id);
     }
     
     /** @return Underlying string of this row key. */
@@ -107,6 +83,40 @@ public final class RowKey implements Serializable {
     @Override
     public int hashCode() {
         return m_id.hashCode();
+    }
+    
+    /**
+     * Converts the given array of <code>RowKey</code>s to an array of
+     * <code>String</code> elements by calling {@link RowKey#getString()}.
+     * @param rowKeys an array of <code>RowKey</code> elements which can be null
+     * @return an array of String elements
+     */
+    public static String[] toString(final RowKey... rowKeys) {
+        if (rowKeys == null) {
+            return (String[]) null;
+        }
+        String[] strs = new String[rowKeys.length];
+        for (int i = 0; i < strs.length; i++) {
+            strs[i] = rowKeys[i].getString();
+        }
+        return strs;
+    }
+    
+    /**
+     * Converts the given array of <code>String</code>s to an array of
+     * <code>RowKey</code> elements by calling {@link #RowKey(String)}.
+     * @param strs an array of <code>String</code> elements which can be null
+     * @return an array of <code>RowKey</code> elements
+     */
+    public static RowKey[] toString(final String... strs) {
+        if (strs == null) {
+            return (RowKey[]) null;
+        }
+        RowKey[] rowKeys = new RowKey[strs.length];
+        for (int i = 0; i < rowKeys.length; i++) {
+            rowKeys[i] = new RowKey(strs[i]);
+        }
+        return rowKeys;
     }
     
 }

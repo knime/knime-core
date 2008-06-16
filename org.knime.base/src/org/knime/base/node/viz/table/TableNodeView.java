@@ -444,7 +444,7 @@ public class TableNodeView extends NodeView {
         @Override
         public boolean matches(final DataRow row, final int rowIndex)
                 throws EndOfTableException, IncludeFromNowOn {
-            return m_filter.matches(m_handler.isHiLit(row.getKey().getId()));
+            return m_filter.matches(m_handler.isHiLit(row.getKey()));
         }
     }
 }

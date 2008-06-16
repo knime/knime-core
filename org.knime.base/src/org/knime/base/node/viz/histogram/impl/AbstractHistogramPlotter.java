@@ -60,6 +60,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
@@ -1066,7 +1067,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
         }
-        final Set<DataCell>hilited = event.keys();
+        final Set<RowKey>hilited = event.keys();
         vizModel.updateHiliteInfo(hilited, true);
         repaint();
     }
@@ -1081,7 +1082,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
         }
-        final Set<DataCell>hilited = event.keys();
+        final Set<RowKey>hilited = event.keys();
         vizModel.updateHiliteInfo(hilited, false);
         repaint();
     }
@@ -1090,7 +1091,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     /**
      * {@inheritDoc}
      */
-    public void unHiLiteAll() {
+    public void unHiLiteAll(final KeyEvent event) {
         final AbstractHistogramVizModel vizModel = getHistogramVizModel();
         if (vizModel == null || vizModel.isFixed()) {
             LOGGER.debug("VizModel doesn't support hiliting or was null");
@@ -1110,7 +1111,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
         }
-        final Set<DataCell> selectedKeys =
+        final Set<RowKey> selectedKeys =
             vizModel.getSelectedKeys();
         delegateHiLite(selectedKeys);
         repaint();
@@ -1126,7 +1127,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
         }
-        final Set<DataCell> selectedKeys =
+        final Set<RowKey> selectedKeys =
             vizModel.getSelectedKeys();
         delegateUnHiLite(selectedKeys);
         repaint();

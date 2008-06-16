@@ -338,36 +338,37 @@ public class FileTable implements DataTable {
 
         // Create a column header
         // Cell (0,0)
-        result.append(sprintDataCell(new StringCell(" "), colLength));
+        result.append(sprintDataCell(" ", colLength));
         // "<ColName>[Type]"
         for (int i = 0; i < m_tableSpec.getNumColumns(); i++) {
             if (m_tableSpec.getColumnSpec(i).getType().equals(
                     StringCell.TYPE)) {
-                result.append(sprintDataCell(new StringCell(m_tableSpec
-                        .getColumnSpec(i).getName().toString()
-                        + "[Str]"), colLength));
+                result.append(sprintDataCell(
+                        m_tableSpec.getColumnSpec(i).getName().toString()
+                        + "[Str]", colLength));
             } else if (m_tableSpec.getColumnSpec(i).getType().equals(
                     IntCell.TYPE)) {
-                result.append(sprintDataCell(new StringCell(m_tableSpec
-                        .getColumnSpec(i).getName().toString()
-                        + "[Int]"), colLength));
+                result.append(sprintDataCell(
+                        m_tableSpec.getColumnSpec(i).getName().toString()
+                        + "[Int]", colLength));
             } else if (m_tableSpec.getColumnSpec(i).getType().equals(
                     DoubleCell.TYPE)) {
-                result.append(sprintDataCell(new StringCell(m_tableSpec
-                        .getColumnSpec(i).getName().toString()
-                        + "[Dbl]"), colLength));
+                result.append(sprintDataCell(
+                        m_tableSpec.getColumnSpec(i).getName().toString()
+                        + "[Dbl]", colLength));
             } else {
-                result.append(sprintDataCell(new StringCell(m_tableSpec
-                        .getColumnSpec(i).getName().toString()
-                        + "[UNKNOWN!!]"), colLength));
+                result.append(sprintDataCell(
+                        m_tableSpec.getColumnSpec(i).getName().toString()
+                        + "[UNKNOWN!!]", colLength));
             }
         }
         result.append("\n");
         while (rowIterator.hasNext()) {
             row = rowIterator.next();
-            result.append(sprintDataCell(row.getKey().getId(), colLength));
+            result.append(sprintDataCell(row.getKey().getString(), colLength));
             for (int i = 0; i < row.getNumCells(); i++) {
-                result.append(sprintDataCell(row.getCell(i), colLength));
+                result.append(
+                        sprintDataCell(row.getCell(i).toString(), colLength));
             }
             result.append("\n");
         }
@@ -380,10 +381,10 @@ public class FileTable implements DataTable {
      * @param dc The value. @param length The length of chars. @return A left
      * aligned string representation.
      */
-    private static String sprintDataCell(final DataCell dc, final int length) {
+    private static String sprintDataCell(final String dc, final int length) {
         assert (dc != null);
         // the final string, with all the spaces
-        final StringBuffer result = new StringBuffer(dc.toString());
+        final StringBuffer result = new StringBuffer(dc);
         for (int i = result.length(); i < length; i++) {
             result.append(" ");
         }

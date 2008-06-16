@@ -38,7 +38,9 @@ import org.knime.base.node.viz.plotter.scatter.ScatterPlotter;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.property.hilite.KeyEvent;
 
 /**
@@ -221,9 +223,13 @@ public class DendrogramPlotter extends ScatterPlotter {
         createYCoordinate(min, max);
         m_dotSize = ((DendrogramDrawingPane)getDrawingPane()).getDotSize();
         getYAxis().setStartTickOffset(OFFSET  + m_dotSize);
-        Set<DataCell> rowKeys = new LinkedHashSet<DataCell>();
+        Set<RowKey> rowKeys = new LinkedHashSet<RowKey>();
         getRowKeys(m_rootNode, rowKeys);
-        createNominalXCoordinate(rowKeys);
+        Set<DataCell> keys = new LinkedHashSet<DataCell>();
+        for (RowKey rk : rowKeys) {
+            keys.add(new StringCell(rk.getString()));
+        }
+        createNominalXCoordinate(keys);
         m_tree = null;
         createViewModel(m_rootNode);
         ((DendrogramDrawingPane)getDrawingPane()).setRootNode(m_tree);
@@ -232,12 +238,12 @@ public class DendrogramPlotter extends ScatterPlotter {
     }
     
     private void getRowKeys(final DendrogramNode node, 
-            final Set<DataCell> ids) {
+            final Set<RowKey> ids) {
         if (node == null) {
             return;
         }
         if (node.isLeaf()) {
-            ids.add(node.getLeafDataPoint().getKey().getId());
+            ids.add(node.getLeafDataPoint().getKey());
             return;
         }
         getRowKeys(node.getFirstSubnode(), ids);
@@ -292,7 +298,7 @@ public class DendrogramPlotter extends ScatterPlotter {
         } else {
             DataRow row = node.getLeafDataPoint();
             x = (int)getXAxis().getCoordinate().calculateMappedValue(
-                    row.getKey().getId(),
+                    new StringCell(row.getKey().getString()),
                     getDrawingPaneDimension().width, true);
             p = new DendrogramPoint(new Point(x, y), 
                     node.getDist());
@@ -301,10 +307,10 @@ public class DendrogramPlotter extends ScatterPlotter {
             p.setColor(spec.getRowColor(row));
             p.setShape(spec.getRowShape(row));
             p.setRelativeSize(spec.getRowSizeFactor(row));
-            p.setHilite(delegateIsHiLit(row.getKey().getId()));
+            p.setHilite(delegateIsHiLit(row.getKey()));
         }
         viewNode = new BinaryTreeNode<DendrogramPoint>(p);
-        Set<DataCell>keys = new LinkedHashSet<DataCell>();
+        Set<RowKey> keys = new LinkedHashSet<RowKey>();
         getRowKeys(node, keys);
         viewNode.getContent().addRows(keys);
         viewNode.getContent().setSelected(m_selected.contains(viewNode
@@ -335,7 +341,8 @@ public class DendrogramPlotter extends ScatterPlotter {
      */
     private int getXPosition(final DendrogramNode node) {
         if (node.isLeaf()) {
-            DataCell value = node.getLeafDataPoint().getKey().getId();
+            DataCell value = new StringCell(
+                    node.getLeafDataPoint().getKey().getString());
             return (int)getXAxis().getCoordinate().calculateMappedValue(
                     value, getDrawingPaneDimension().width, true);
         }
@@ -368,7 +375,7 @@ public class DendrogramPlotter extends ScatterPlotter {
      * {@inheritDoc}
      */
     @Override
-    public void unHiLiteAll() {
+    public void unHiLiteAll(final KeyEvent event) {
         updatePaintModel();
     }
 

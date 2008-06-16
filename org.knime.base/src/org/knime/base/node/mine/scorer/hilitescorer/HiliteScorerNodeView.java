@@ -44,7 +44,7 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
-import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteListener;
@@ -429,7 +429,7 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
 
     private void updateHilitedCells() {
         if (getNodeModel().getInHiLiteHandler(0) != null) {
-            Set<DataCell> hilitedKeys = getNodeModel().getInHiLiteHandler(0)
+            Set<RowKey> hilitedKeys = getNodeModel().getInHiLiteHandler(0)
                     .getHiLitKeys();
         
             Point[] completeHilitedCells = 
@@ -476,7 +476,7 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
     /**
      * {@inheritDoc}
      */
-    public void unHiLiteAll() {
+    public void unHiLiteAll(final KeyEvent event) {
         clearHiliteBackgroundColor();
     }
 

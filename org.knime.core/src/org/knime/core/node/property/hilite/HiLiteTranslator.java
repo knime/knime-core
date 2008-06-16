@@ -28,14 +28,14 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 
 /**
  * A translator for hilite events between one source {@link HiLiteHandler} and a
  * number of target handlers. The source hilite handler is passed through the
  * constructor of this class. The target hilite handlers can be set
  * independently, as well as the mapping which is defined between
- * {@link DataCell} row keys and {@link DataCell} sets. This class hosts two
+ * {@link RowKey} row keys and {@link RowKey} sets. This class hosts two
  * listeners one which is registered with the source handler and one which is
  * registered with all target handlers. These listeners are called when
  * something changes either on the source or target side, and then invoke the
@@ -71,10 +71,10 @@ public class HiLiteTranslator {
          */
         public void hiLite(final KeyEvent event) {
             if (m_mapper != null && m_targetHandlers.size() > 0) {
-                HashSet<DataCell> fireSet = new HashSet<DataCell>();
-                for (DataCell key : event.keys()) {
+                HashSet<RowKey> fireSet = new HashSet<RowKey>();
+                for (RowKey key : event.keys()) {
                     if (key != null) {
-                        Set<DataCell> s = m_mapper.getKeys(key);
+                        Set<RowKey> s = m_mapper.getKeys(key);
                         if (s != null && !s.isEmpty()) {
                             fireSet.addAll(s);
                         }
@@ -93,10 +93,10 @@ public class HiLiteTranslator {
          */
         public void unHiLite(final KeyEvent event) {
             if (m_mapper != null && m_targetHandlers.size() > 0) {
-                HashSet<DataCell> fireSet = new HashSet<DataCell>();
-                for (DataCell key : event.keys()) {
+                HashSet<RowKey> fireSet = new HashSet<RowKey>();
+                for (RowKey key : event.keys()) {
                     if (key != null) {
-                        Set<DataCell> s = m_mapper.getKeys(key);
+                        Set<RowKey> s = m_mapper.getKeys(key);
                         if (s != null && !s.isEmpty()) {
                             fireSet.addAll(s);
                         }
@@ -113,7 +113,7 @@ public class HiLiteTranslator {
         /**
          * {@inheritDoc}
          */
-        public void unHiLiteAll() {
+        public void unHiLiteAll(final KeyEvent event) {
             for (HiLiteHandler h : m_targetHandlers) {
                 // to avoid that the event travels forth and back
                 // do a check here if there is still something to unhilite
@@ -135,13 +135,13 @@ public class HiLiteTranslator {
          */
         public void hiLite(final KeyEvent event) {
 //            // set with all hilit and to be hilit keys
-//            Set<DataCell> all = new HashSet<DataCell>(event.keys());
+//            Set<RowKey> all = new HashSet<RowKey>(event.keys());
 //            for (HiLiteHandler hdl : m_toHandlers) {
 //                all.addAll(hdl.getHiLitKeys());
 //            }
 //            // check overlap with all mappings  
-//            for (DataCell key : m_mapper.keySet()) {
-//                Set<DataCell> keys = m_mapper.getKeys(key);
+//            for (RowKey key : m_mapper.keySet()) {
+//                Set<RowKey> keys = m_mapper.getKeys(key);
 //                // if all mapped keys are hilit fire event
 //                if (all.containsAll(keys)) {
 //                    m_fromHandler.fireHiLiteEvent(key);
@@ -154,12 +154,12 @@ public class HiLiteTranslator {
          */
         public void unHiLite(final KeyEvent event) {
 //            // set with all currently hilit keys
-//            Set<DataCell> all = new HashSet<DataCell>(event.keys());
+//            Set<RowKey> all = new HashSet<RowKey>(event.keys());
 //            // check all mappings
-//            for (DataCell key : m_mapper.keySet()) {
-//                Set<DataCell> keys = m_mapper.getKeys(key);
+//            for (RowKey key : m_mapper.keySet()) {
+//                Set<RowKey> keys = m_mapper.getKeys(key);
 //                // if at least one item is unhilit and fire event
-//                for (DataCell hilite : all) {
+//                for (RowKey hilite : all) {
 //                    if (keys.contains(hilite)) {
 //                        m_fromHandler.fireUnHiLiteEvent(key);
 //                        break;
@@ -170,7 +170,7 @@ public class HiLiteTranslator {
         /**
          * {@inheritDoc}
          */
-        public void unHiLiteAll() {
+        public void unHiLiteAll(final KeyEvent event) {
             // to avoid that the event travels forth and back
             // do a check here if there is still something to unhilite
             if (m_sourceHandler.getHiLitKeys().size() > 0) {

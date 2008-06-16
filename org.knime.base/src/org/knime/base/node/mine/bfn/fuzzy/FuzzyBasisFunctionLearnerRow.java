@@ -81,7 +81,7 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
             mem[i] = new TrapezoidMembershipFunction(value, min[i], max[i]);
         }
 
-        m_predRow = new FuzzyBasisFunctionPredictorRow(key.getId(), classInfo,
+        m_predRow = new FuzzyBasisFunctionPredictorRow(key, classInfo,
                 mem, norm);
         addCovered(centroid, classInfo);
     }

@@ -342,7 +342,7 @@ class Smoter {
                 newCells[i] = ref.getCell(i);
             }
         }
-        String newName = ref.getKey().getId().toString() + "dupl_"
+        String newName = ref.getKey().getString() + "dupl_"
                 + m_appendCounter;
         m_appendCounter++;
         RowKey key = new RowKey(newName);

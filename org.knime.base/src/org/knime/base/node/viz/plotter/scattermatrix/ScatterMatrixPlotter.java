@@ -294,7 +294,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
                         // v offset
                         y += yOffset - getDotSize();
                     }
-                    boolean hilite = delegateIsHiLit(row.getKey().getId());
+                    boolean hilite = delegateIsHiLit(row.getKey());
                     if (!hilite && isHideMode()) {
                         continue;
                     } 

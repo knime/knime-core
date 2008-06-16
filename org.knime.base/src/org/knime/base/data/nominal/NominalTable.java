@@ -237,7 +237,7 @@ public class NominalTable implements DataTable {
             if (exec != null) {
                 exec.checkCanceled(); // throws exception if user canceled
                 exec.setProgress((double) ++rowCount / table.getRowCount(), 
-                        "" + row.getKey().getId());
+                        "" + row.getKey());
             }
         }
         DataColumnSpec[] newColSpecs = new DataColumnSpec[oldSpec

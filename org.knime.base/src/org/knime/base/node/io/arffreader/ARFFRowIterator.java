@@ -161,7 +161,7 @@ public class ARFFRowIterator extends RowIterator {
         }
 
         // create a row ID cell
-        DataCell rowID = new StringCell(m_rowPrefix + m_rowNo);
+        String rowID = m_rowPrefix + m_rowNo;
 
         // Now, read the columns until we have enough or see a row delimiter
         DataCell[] rowCells = new DataCell[m_tSpec.getNumColumns()];

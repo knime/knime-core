@@ -271,7 +271,6 @@ class DataOutPortView extends NodeOutPortView {
 
             // now construct the rows we wanna display
             for (String key : allKeys) {
-                DataCell rowID = new StringCell(key);
                 DataCell[] cells = new DataCell[numOfCols];
                 for (int c = 0; c < numOfCols; c++) {
                     String cellValue = "";
@@ -283,7 +282,7 @@ class DataOutPortView extends NodeOutPortView {
                     }
                     cells[c] = new StringCell(cellValue);
                 }
-                result.addRowToTable(new DefaultRow(rowID, cells));
+                result.addRowToTable(new DefaultRow(key, cells));
             }
             result.close();
             return result.getTable();
@@ -359,8 +358,7 @@ class DataOutPortView extends NodeOutPortView {
             String typename = spec.getColumnSpec(c).getType().toString();
             cols[c] = new StringCell(typename);
         }
-        result.addRowToTable(new DefaultRow(new StringCell("Column Type"),
-                cols));
+        result.addRowToTable(new DefaultRow("Column Type", cols));
 
         
         // 1st row: show the column number 
@@ -368,8 +366,7 @@ class DataOutPortView extends NodeOutPortView {
         for (int c = 0; c < numCols; c++) {
             cols[c] = new StringCell("" + c);
         }
-        result.addRowToTable(new DefaultRow(new StringCell("Column Index"), 
-                cols));
+        result.addRowToTable(new DefaultRow("Column Index", cols));
         
         
         // 3rd row: shows who has a color handler set
@@ -386,8 +383,7 @@ class DataOutPortView extends NodeOutPortView {
                 cols[c] = new StringCell(colHdlStr);
             }
         }
-        result.addRowToTable(new DefaultRow(new StringCell("Color Handler"),
-                cols));
+        result.addRowToTable(new DefaultRow("Color Handler", cols));
 
         // 4th row: shows who has a SizeHandler set
         cols = new DataCell[numCols];
@@ -402,8 +398,7 @@ class DataOutPortView extends NodeOutPortView {
             }
         }
         result
-                .addRowToTable(new DefaultRow(new StringCell("Size Handler"),
-                        cols));
+                .addRowToTable(new DefaultRow("Size Handler", cols));
 
         // 5th row: shows where the shape handler is attached to.
         cols = new DataCell[numCols];
@@ -417,8 +412,7 @@ class DataOutPortView extends NodeOutPortView {
                 cols[c] = new StringCell(hdlrStr);
             }
         }
-        result.addRowToTable(new DefaultRow(new StringCell("Shape Handler"),
-                cols));
+        result.addRowToTable(new DefaultRow("Shape Handler", cols));
 
         // 6th row: displays the lower bound of the domain
         cols = new DataCell[numCols];
@@ -431,8 +425,7 @@ class DataOutPortView extends NodeOutPortView {
             }
             cols[c] = new StringCell(boundText);
         }
-        result.addRowToTable(new DefaultRow(new StringCell("Lower Bound"),
-                        cols));
+        result.addRowToTable(new DefaultRow("Lower Bound", cols));
 
         // 7th row: shows the upper bound value of the domain
         cols = new DataCell[numCols];
@@ -445,10 +438,7 @@ class DataOutPortView extends NodeOutPortView {
             }
             cols[c] = new StringCell(boundText);
         }
-        result
-                .addRowToTable(new DefaultRow(new StringCell("Upper Bound"),
-                        cols));
-
+        result.addRowToTable(new DefaultRow("Upper Bound", cols));
     }
 
     private void addPossValuesRowsToDataContainer(final DataContainer result,
@@ -490,8 +480,7 @@ class DataOutPortView extends NodeOutPortView {
                     cols[c] = new StringCell(valueIter[c].next().toString());
                 }
             }
-            result.addRowToTable(new DefaultRow(new StringCell("Value " + r),
-                    cols));
+            result.addRowToTable(new DefaultRow("Value " + r, cols));
         }
 
     }

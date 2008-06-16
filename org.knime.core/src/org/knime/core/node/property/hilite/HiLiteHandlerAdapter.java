@@ -27,7 +27,7 @@ package org.knime.core.node.property.hilite;
 import java.util.Collections;
 import java.util.Set;
 
-import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 
 /**
  * An abstract adapter class for handling hilite events. All methods in this 
@@ -54,56 +54,42 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
-    public void fireHiLiteEvent(final DataCell... ids) {
+    public void fireHiLiteEvent(final RowKey... ids) {
 
     }
 
     /**
      * {@inheritDoc}
      */
-    public void fireHiLiteEvent(final Set<DataCell> ids) {
+    public void fireHiLiteEvent(final Set<RowKey> ids) {
 
     }
 
     /**
      * {@inheritDoc}
      */
-    public void fireUnHiLiteEvent(final DataCell... ids) {
+    public void fireUnHiLiteEvent(final RowKey... ids) {
 
     }
 
     /**
      * {@inheritDoc}
      */
-    public void fireUnHiLiteEvent(final Set<DataCell> ids) {
+    public void fireUnHiLiteEvent(final Set<RowKey> ids) {
 
     }
 
     /**
      * {@inheritDoc}
      */
-    public Set<DataCell> getHiLitKeys() {
+    public Set<RowKey> getHiLitKeys() {
         return Collections.emptySet();
     }
 
     /**
      * {@inheritDoc}
      */
-    public void hiLite(final DataCell... ids) {
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void hiLite(final Set<DataCell> ids) {
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isHiLit(final DataCell... ids) {
+    public boolean isHiLit(final RowKey... ids) {
         return false;
     }
 
@@ -118,27 +104,6 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
      * {@inheritDoc}
      */
     public void removeHiLiteListener(final HiLiteListener listener) {
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void unHiLite(final DataCell... ids) {
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void unHiLite(final Set<DataCell> ids) {
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void unHiLiteAll() {
 
     }
 

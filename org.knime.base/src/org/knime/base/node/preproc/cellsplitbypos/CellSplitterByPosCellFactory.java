@@ -163,7 +163,7 @@ class CellSplitterByPosCellFactory implements CellFactory {
             final RowKey lastKey, final ExecutionMonitor exec) {
         exec.setProgress((double)curRowNr / (double)rowCount,
                 "processing row #" + curRowNr + " of " + rowCount + " ("
-                        + lastKey.getId() + ")");
+                        + lastKey.getString() + ")");
     }
 
 }

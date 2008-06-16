@@ -337,7 +337,7 @@ public class BinModelPlotter extends AbstractPlotter {
 		// no hilite supported
 	}
 
-	public void unHiLiteAll() {
+	public void unHiLiteAll(KeyEvent event) {
 		// no hilite supported
 	}
 

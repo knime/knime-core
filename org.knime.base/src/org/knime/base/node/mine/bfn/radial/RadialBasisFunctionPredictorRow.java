@@ -30,6 +30,7 @@ import org.knime.base.node.mine.bfn.Distance;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
@@ -64,7 +65,7 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      * @param thetaMinus Theta minus.
      * @param distance Distance measurement.
      */
-    protected RadialBasisFunctionPredictorRow(final DataCell key, 
+    protected RadialBasisFunctionPredictorRow(final RowKey key, 
             final DataRow center, final DataCell classLabel, 
             final double thetaMinus, final int distance) {
         super(key, classLabel, thetaMinus);

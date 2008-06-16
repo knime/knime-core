@@ -317,7 +317,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                 exec.setProgress(rowNr / nrOfRows, "Processing row: " + rowNr);
                 rowNr++;
                 DataCell cell = m_factory.getCell(row);
-                DataRow newRow = new DefaultRow(row.getKey().getId(), cell);
+                DataRow newRow = new DefaultRow(row.getKey(), cell);
                 cont.addRowToTable(newRow);
             }
             cont.close();
@@ -362,7 +362,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             }
             if (!cell.getType().isCompatible(StringValue.class)) {
                 throw new RuntimeException("Found incompatible type in row " 
-                + row.getKey().getId());
+                + row.getKey().getString());
             }
             String toParse = ((StringValue)cell).getStringValue();
             String[] numbers = toParse.split("\\s");

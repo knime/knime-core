@@ -42,6 +42,7 @@ import java.util.Map;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -176,7 +177,7 @@ implements Serializable, AggregationModel<S, H> {
      * @param rowKey the row key
      * @param cell the optional aggregation value cell
      */
-    public void addDataRow(final Color color, final DataCell rowKey,
+    public void addDataRow(final Color color, final RowKey rowKey,
             final DataCell cell) {
         if (color == null) {
             throw new NullPointerException("color must not be null");
@@ -487,7 +488,7 @@ implements Serializable, AggregationModel<S, H> {
      * @param calculator the hilite shape calculator
      * @return if the hilite keys have changed
      */
-    public boolean removeHilitedKeys(final Collection<DataCell> hilited,
+    public boolean removeHilitedKeys(final Collection<RowKey> hilited,
             final HiliteShapeCalculator<S, H> calculator) {
         if (!m_supportHiliting) {
             throw new UnsupportedOperationException(
@@ -508,7 +509,7 @@ implements Serializable, AggregationModel<S, H> {
      * @param calculator the hilite shape calculator
      * @return if the hilite keys have changed
      */
-    public boolean setHilitedKeys(final Collection<DataCell> hilited,
+    public boolean setHilitedKeys(final Collection<RowKey> hilited,
             final HiliteShapeCalculator<S, H> calculator) {
         if (!m_supportHiliting) {
             throw new UnsupportedOperationException(

@@ -55,6 +55,8 @@ public interface HiLiteListener extends EventListener {
     
     /**
      * Invoked, when everything (all rows) are unhilit.
+     * 
+     * @param event contains a list of row key that were unhilit
      */
-    void unHiLiteAll();
+    void unHiLiteAll(final KeyEvent event);
 }

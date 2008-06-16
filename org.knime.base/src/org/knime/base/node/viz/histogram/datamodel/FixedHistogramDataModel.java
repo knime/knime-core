@@ -50,6 +50,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -164,7 +165,7 @@ public class FixedHistogramDataModel {
      * @param xCell the x value
      * @param aggrCells the aggregation values
      */
-    public void addDataRow(final DataCell id, final Color rowColor,
+    public void addDataRow(final RowKey id, final Color rowColor,
             final DataCell xCell, final DataCell... aggrCells) {
         if (xCell == null) {
             throw new NullPointerException("X value must not be null.");

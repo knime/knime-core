@@ -430,7 +430,7 @@ public class TableContentModel extends AbstractTableModel
                     if (current == null) { // rows haven't been cached yet
                         break;             // everything after is also null
                     }
-                    final DataCell key = current.getKey().getId();
+                    final RowKey key = current.getKey();
                     // do the hilite sync
                     final boolean wasHiLit = m_hilitSet.get(indexInCache);
                     final boolean isHiLit = (hiliter != null
@@ -831,7 +831,7 @@ public class TableContentModel extends AbstractTableModel
     /**
      * {@inheritDoc}
      */
-    public void unHiLiteAll() {
+    public void unHiLiteAll(final KeyEvent event) {
         if (!hasData()) {
             return;
         }
@@ -967,7 +967,7 @@ public class TableContentModel extends AbstractTableModel
             m_rowCountInIterator++;
             m_maxRowCount = Math.max(m_maxRowCount, m_rowCountInIterator);
             isHiLit = m_hiLiteHdl != null 
-                ? m_hiLiteHdl.isHiLit(currentRow.getKey().getId()) : false;
+                ? m_hiLiteHdl.isHiLit(currentRow.getKey()) : false;
             // ignore row if we filter for hilit rows and this one is not hilit
         } while (!m_tableFilter.matches(isHiLit));
         // index of row in cache
@@ -1096,10 +1096,10 @@ public class TableContentModel extends AbstractTableModel
             int c = 0;
             // #rows that changed up to m_rowCountOfInterest
             int changedCount = 0;
-            Set<DataCell> keySet = e.keys();
+            Set<RowKey> keySet = e.keys();
             for (RowIterator it = m_data.iterator(); it.hasNext() 
                 && c < m_rowCountOfInterest;) {
-                DataCell currentRowKey = it.next().getKey().getId();
+                RowKey currentRowKey = it.next().getKey();
                 boolean isNowOfInterest = 
                     m_tableFilter.matches(m_hiLiteHdl.isHiLit(currentRowKey));
                 boolean hasChanged = keySet.contains(currentRowKey);
@@ -1146,7 +1146,7 @@ public class TableContentModel extends AbstractTableModel
         }
         
         /* process event if it shows all rows */
-        final Set<DataCell> s = e.keys();
+        final Set<RowKey> s = e.keys();
         final int firstRowCached = firstRowCached();
         int firstI = -1; // remember first and last changed "i" (for event)
         int lastI = -1;
@@ -1158,7 +1158,7 @@ public class TableContentModel extends AbstractTableModel
             if (current == null) { // last row, everything after is null
                 break;
             }
-            DataCell key = current.getKey().getId();
+            RowKey key = current.getKey();
             if (s.contains(key)) { // is newly hilighted
                 if (firstI == -1) {
                     firstI = indexInCache;
@@ -1197,7 +1197,7 @@ public class TableContentModel extends AbstractTableModel
         }
         final int firstSelected = selModel.getMinSelectionIndex();
         final int lastSelected = selModel.getMaxSelectionIndex();
-        final HashSet<DataCell> selectedSet = new HashSet<DataCell>();
+        final HashSet<RowKey> selectedSet = new HashSet<RowKey>();
         // if all selected rows are in cache
         if ((firstSelected >=  m_rowCountOfInterestInIterator - getCacheSize())
             && (lastSelected < m_rowCountOfInterestInIterator)) {
@@ -1207,14 +1207,14 @@ public class TableContentModel extends AbstractTableModel
                 int k = firstSelected + i;
                 if (selModel.isSelectedIndex(k)) {
                     DataRow row = getRow(k);
-                    selectedSet.add(row.getKey().getId());
+                    selectedSet.add(row.getKey());
                 }
             }
         } else { // iteration necessary: use new (private) iterator
             // TODO: check for correctness when m_showOnlyHilited is set
             final RowIterator it = m_data.iterator();
             for (int i = 0; it.hasNext() && i <= lastSelected; i++) {
-                DataCell key = it.next().getKey().getId();
+                RowKey key = it.next().getKey();
                 if (i >= firstSelected && selModel.isSelectedIndex(i)) {
                     selectedSet.add(key);
                 }

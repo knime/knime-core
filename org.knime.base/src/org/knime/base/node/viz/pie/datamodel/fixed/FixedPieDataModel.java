@@ -185,7 +185,7 @@ public class FixedPieDataModel extends PieDataModel {
             }
             m_sectionsInitialized = false;
         }
-        section.addDataRow(rowColor, row.getKey().getId(), aggrCell);
+        section.addDataRow(rowColor, row.getKey(), aggrCell);
     }
 
     /**

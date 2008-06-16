@@ -36,6 +36,7 @@ import org.knime.base.data.util.DataCellStringMapper;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
@@ -282,12 +283,12 @@ public class DecisionTreeNodeSplitNominalBinary extends
      * {@inheritDoc}
      */
     @Override
-    public Set<DataCell> coveredPattern() {
+    public Set<RowKey> coveredPattern() {
         if (getSplitValues() == null) {
             return null;
         }
-        HashSet<DataCell> result =
-                new HashSet<DataCell>(super.getChildNodeAt(0).coveredPattern());
+        HashSet<RowKey> result =
+                new HashSet<RowKey>(super.getChildNodeAt(0).coveredPattern());
         result.addAll(super.getChildNodeAt(1).coveredPattern());
 
         return result;

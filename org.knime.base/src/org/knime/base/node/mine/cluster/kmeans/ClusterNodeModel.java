@@ -42,6 +42,7 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.StringCell;
@@ -356,8 +357,8 @@ public class ClusterNodeModel extends GenericNodeModel {
         BufferedDataTable inData = (BufferedDataTable)data[0];
         // get dimension of feature space
         m_dimension = inData.getDataTableSpec().getNumColumns();
-        HashMap<DataCell, Set<DataCell>> mapping
-          = new HashMap<DataCell, Set<DataCell>>();
+        HashMap<RowKey, Set<RowKey>> mapping
+          = new HashMap<RowKey, Set<RowKey>>();
 
         initialize(inData);
         // --------- create clusters --------------
@@ -458,14 +459,15 @@ public class ClusterNodeModel extends GenericNodeModel {
         DataContainer labeledInput = new DataContainer(m_appendedSpec);
         for (DataRow row : inData) {
             int winner = findClosestPrototypeFor(row);
-            DataCell key = new StringCell(CLUSTER + winner);
-            labeledInput.addRowToTable(new AppendedColumnRow(row, key));
+            DataCell cell = new StringCell(CLUSTER + winner);
+            labeledInput.addRowToTable(new AppendedColumnRow(row, cell));
+            RowKey key = new RowKey(CLUSTER + winner);
             if (mapping.get(key) == null) {
-                Set<DataCell> set = new HashSet<DataCell>();
-                set.add(row.getKey().getId());
+                Set<RowKey> set = new HashSet<RowKey>();
+                set.add(row.getKey());
                 mapping.put(key, set);
             } else {
-                mapping.get(key).add(row.getKey().getId());
+                mapping.get(key).add(row.getKey());
             }
         }
         labeledInput.close();
@@ -584,7 +586,7 @@ public class ClusterNodeModel extends GenericNodeModel {
         // remove the clusters
         m_clusters = null;
         m_translator.setMapper(new DefaultHiLiteMapper(
-                new HashMap<DataCell, Set<DataCell>>()));
+                new HashMap<RowKey, Set<RowKey>>()));
     }
 
     /**

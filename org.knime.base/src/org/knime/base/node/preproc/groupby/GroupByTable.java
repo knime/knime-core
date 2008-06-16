@@ -25,22 +25,6 @@
 
 package org.knime.base.node.preproc.groupby;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.StringCell;
-import org.knime.core.node.BufferedDataContainer;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.NodeLogger;
-
-import org.knime.base.data.sort.SortedTable;
-import org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -49,6 +33,21 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.knime.base.data.sort.SortedTable;
+import org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.node.BufferedDataContainer;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.NodeLogger;
 
 
 /**
@@ -84,7 +83,7 @@ public class GroupByTable {
 
     private final boolean m_keepColName;
 
-    private final Map<DataCell, Set<DataCell>> m_hiliteMapping;
+    private final Map<RowKey, Set<RowKey>> m_hiliteMapping;
 
     private final BufferedDataTable m_resultTable;
 
@@ -141,7 +140,7 @@ public class GroupByTable {
         }
         m_enableHilite = enableHilite;
         if (m_enableHilite) {
-            m_hiliteMapping = new HashMap<DataCell, Set<DataCell>>();
+            m_hiliteMapping = new HashMap<RowKey, Set<RowKey>>();
         } else {
             m_hiliteMapping = null;
         }
@@ -224,7 +223,7 @@ public class GroupByTable {
         }
         final DataCell[] previousGroup = new DataCell[groupColIdx.length];
         final DataCell[] currentGroup = new DataCell[groupColIdx.length];
-        Set<DataCell> rowKeys = new HashSet<DataCell>();
+        Set<RowKey> rowKeys = new HashSet<RowKey>();
         int groupCounter = 0;
         boolean firstRow = true;
         final double progressPerRow = 1.0 / table.getRowCount();
@@ -252,8 +251,8 @@ public class GroupByTable {
 
                 //add the row keys to the hilite map if the flag is true
                 if (m_enableHilite) {
-                    m_hiliteMapping.put(newRow.getKey().getId(), rowKeys);
-                    rowKeys = new HashSet<DataCell>();
+                    m_hiliteMapping.put(newRow.getKey(), rowKeys);
+                    rowKeys = new HashSet<RowKey>();
                 }
             }
             //compute the current row values
@@ -262,7 +261,7 @@ public class GroupByTable {
                 ops[i].compute(cell);
             }
             if (m_enableHilite) {
-                rowKeys.add(row.getKey().getId());
+                rowKeys.add(row.getKey());
             }
             exec.checkCanceled();
             exec.setProgress(progressPerRow * rowCounter++);
@@ -274,7 +273,7 @@ public class GroupByTable {
         dc.addRowToTable(newRow);
         //add the row keys to the hilite map if the flag is true
         if (m_enableHilite) {
-            m_hiliteMapping.put(newRow.getKey().getId(), rowKeys);
+            m_hiliteMapping.put(newRow.getKey(), rowKeys);
         }
         dc.close();
         LOGGER.debug("Exiting createGroupByTable(exec, table) "
@@ -289,8 +288,7 @@ public class GroupByTable {
         LOGGER.debug("Entering createTableRow(spec, groupColIdx, otherColIdx, "
                 + "ops, groupVals, groupCounter) of class GroupByTable.");
         //the current row belongs to the next group
-        final DataCell rowKey =
-            new StringCell(ROW_KEY_PREFIX + groupCounter);
+        final String rowKey = ROW_KEY_PREFIX + groupCounter;
         DataCell[] rowVals =
             new DataCell[groupColIdx.length + otherColIdx.length];
         //add the group values first
@@ -420,7 +418,7 @@ public class GroupByTable {
      * @return the hilite translation <code>Map</code> or <code>null</code> if
      * the enableHilte flag in the constructor was set to <code>false</code>.
      */
-    public Map<DataCell, Set<DataCell>> getHiliteMapping() {
+    public Map<RowKey, Set<RowKey>> getHiliteMapping() {
         return m_hiliteMapping;
     }
 

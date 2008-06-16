@@ -157,7 +157,7 @@ public class RowIDRowFilter extends RowFilter {
     @Override
     public boolean matches(final DataRow row, final int rowIndex) {
         assert row != null;
-        Matcher matcher = m_pattern.matcher(row.getKey().getId().toString());
+        Matcher matcher = m_pattern.matcher(row.getKey().getString());
 
         boolean match;
         if (m_startsWith) {
