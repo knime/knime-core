@@ -65,6 +65,9 @@ public class SimpleFileFilter extends FileFilter {
             if (f.isDirectory()) {
                 return true;
             }
+            if (m_validExtensions.length == 0) {
+                return true;
+            }
             String fileName = f.getName();
             for (String ext : m_validExtensions) {
                 if (fileName.toLowerCase().endsWith(ext.toLowerCase())) {
