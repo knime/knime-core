@@ -106,7 +106,7 @@ public final class ParallelCoordinatesViewContent implements Serializable {
 
     /**
      * <code>m_doubleArray</code> the array containing pairs of min, max
-     * values coresponding to each row and axis.
+     * values corresponding to each row and axis.
      */
     private final TwoDim[][] m_doubleArray;
 
@@ -201,7 +201,7 @@ public final class ParallelCoordinatesViewContent implements Serializable {
     /**
      * <code>getDoubleArray</code>.
      * 
-     * @return the array containing pairs of min, max values coresponding to
+     * @return the array containing pairs of min, max values corresponding to
      *         each row and axis
      */
     public TwoDim[][] getDoubleArray() {

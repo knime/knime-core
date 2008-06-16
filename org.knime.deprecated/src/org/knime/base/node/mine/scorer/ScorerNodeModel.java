@@ -41,7 +41,6 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -193,8 +192,7 @@ public class ScorerNodeModel extends NodeModel {
             exec.createDataContainer(new DataTableSpec(values, colTypes));
         for (int i = 0; i < rows.length; i++) {
             // need to make a data cell for the row key
-            dc.addRowToTable(
-                    new DefaultRow(new StringCell(values[i]), scorerCount[i]));
+            dc.addRowToTable(new DefaultRow(values[i], scorerCount[i]));
         }
         dc.close();
         // print info

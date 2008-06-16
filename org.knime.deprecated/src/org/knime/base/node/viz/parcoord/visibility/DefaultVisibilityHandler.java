@@ -29,7 +29,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.NodeLogger;
 
 
@@ -49,19 +49,19 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
     /**
      * the set with the visible elements.
      */
-    private HashSet<DataCell> m_visible;
+    private HashSet<RowKey> m_visible;
     /**
      * the set with the selected elements.
      */
-    private HashSet<DataCell> m_selected;
+    private HashSet<RowKey> m_selected;
     
     
     /**
      * the constructor.
      */
     public DefaultVisibilityHandler() {
-        m_visible = new HashSet<DataCell>();
-        m_selected = new HashSet<DataCell>();
+        m_visible = new HashSet<RowKey>();
+        m_selected = new HashSet<RowKey>();
         
         //inits empty event listener list
         m_listenerList = new CopyOnWriteArrayList<VisibilityListener>();
@@ -90,14 +90,14 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
      * @return if the row is selected
      * 
      */
-    public boolean isSelected(final DataCell key) {
+    public boolean isSelected(final RowKey key) {
         return m_selected.contains(key);
     }
 
     /**
      * @param key the key to select
      */
-    public void select(final DataCell key) {
+    public void select(final RowKey key) {
         if (key == null) { throw new NullPointerException(); } 
         // synchronize this block
         synchronized (m_selected) {
@@ -110,8 +110,8 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
     /**
      * @param keys the set of keys to select
      */
-    public void select(final Set<DataCell> keys) {        
-        for (DataCell key : keys) {
+    public void select(final Set<RowKey> keys) {        
+        for (RowKey key : keys) {
                 select(key);
         }
     }
@@ -119,7 +119,7 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
     /**
      * @param key the key to unselect
      */
-    public void unselect(final DataCell key) {
+    public void unselect(final RowKey key) {
         if (key == null) { throw new NullPointerException(); } 
         // synchronize this block
         synchronized (m_selected) {
@@ -133,8 +133,8 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
      * @param keys the set of keys to unselect
      * 
      */
-    public void unselect(final Set<DataCell> keys) {
-        for (DataCell key : keys) {
+    public void unselect(final Set<RowKey> keys) {
+        for (RowKey key : keys) {
             unselect(key);
         }
     }
@@ -146,7 +146,7 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
         if (m_selected == null) {
             return;
         }
-        unselect(new HashSet<DataCell>(m_selected));
+        unselect(new HashSet<RowKey>(m_selected));
     }
 
     /**
@@ -154,7 +154,7 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
      * @return if it is visible
      * 
      */
-    public boolean isVisible(final DataCell key) {
+    public boolean isVisible(final RowKey key) {
         return m_visible.contains(key);
     }
 
@@ -162,7 +162,7 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
      * @param key the id of the row to make visible
      * 
      */
-    public void makeVisible(final DataCell key) {
+    public void makeVisible(final RowKey key) {
         if (key == null) { throw new NullPointerException(); } 
         // synchronize this block
         synchronized (m_visible) {
@@ -176,8 +176,8 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
      * @param keys a set of the keys to make visible
      * 
      */
-    public void makeVisible(final Set<DataCell> keys) {
-        for (DataCell key : keys) {
+    public void makeVisible(final Set<RowKey> keys) {
+        for (RowKey key : keys) {
             makeVisible(key);
         }
     }
@@ -186,7 +186,7 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
      * @param key the id of the row to make invisible
      * 
      */
-    public void makeInvisible(final DataCell key) {
+    public void makeInvisible(final RowKey key) {
         if (key == null) { throw new NullPointerException(); } 
         // synchronize this block
         synchronized (m_visible) {
@@ -201,8 +201,8 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
      * @param keys a hash set of the ids to make invisible
      * 
      */
-    public void makeInvisible(final Set<DataCell> keys) {
-        for (DataCell key : keys) {
+    public void makeInvisible(final Set<RowKey> keys) {
+        for (RowKey key : keys) {
             makeInvisible(key);
         }
     }
@@ -211,7 +211,7 @@ public class DefaultVisibilityHandler implements VisibilityHandler {
      * 
      */
     public void resetVisibility() {
-        for (DataCell key : m_selected) {
+        for (RowKey key : m_selected) {
             makeInvisible(key);
         }
     }

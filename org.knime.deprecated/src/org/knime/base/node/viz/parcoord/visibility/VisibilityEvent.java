@@ -28,7 +28,7 @@ import java.util.EventObject;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 
 
 
@@ -38,7 +38,7 @@ import org.knime.core.data.DataCell;
  */
 public class VisibilityEvent extends EventObject {
 
-    private final HashSet<DataCell> m_keys;
+    private final HashSet<RowKey> m_keys;
     
     /** 
      * Creates a new event with the underlying source and one data cell.
@@ -49,9 +49,9 @@ public class VisibilityEvent extends EventObject {
      * 
      * @see java.util.EventObject#EventObject(Object)
      */
-    public VisibilityEvent(final Object src, final DataCell key) {
+    public VisibilityEvent(final Object src, final RowKey key) {
         super(src);
-        m_keys = new HashSet<DataCell>();
+        m_keys = new HashSet<RowKey>();
         m_keys.add(key);
     }
     
@@ -65,17 +65,17 @@ public class VisibilityEvent extends EventObject {
      *
      * @see java.util.EventObject#EventObject(Object)
      */
-    public VisibilityEvent(final Object src, final Set<DataCell> keys) {
+    public VisibilityEvent(final Object src, final Set<RowKey> keys) {
         super(src);
-        m_keys = new HashSet<DataCell>(keys);
+        m_keys = new HashSet<RowKey>(keys);
     }
 
     /** 
      * Returns the set of <code>DataCell</code> row keys on which the event 
-     * initially occured.
+     * initially occurred.
      * @return A set of row keys.
      */
-    public Set<DataCell> keys() { 
+    public Set<RowKey> keys() { 
         return m_keys;
     }
 }

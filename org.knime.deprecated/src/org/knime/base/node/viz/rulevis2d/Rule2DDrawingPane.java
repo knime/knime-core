@@ -41,7 +41,6 @@ import java.util.Map.Entry;
 
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.viz.scatterplot.ScatterPlotDrawingPane;
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.FuzzyIntervalValue;
@@ -85,7 +84,7 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
 
     private HiLiteHandler m_hiLiteHandler;
 
-    private Set<DataCell> m_selectedRules = new HashSet<DataCell>();
+    private final Set<RowKey> m_selectedRules = new HashSet<RowKey>();
 
     private boolean m_hideUnhilitedRules;
 
@@ -121,7 +120,7 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
                     Entry<RowKey, Rectangle> curr = it.next();
                     Rectangle currRec = curr.getValue();
                     if (currRec.contains(click)) {
-                        m_selectedRules.add(curr.getKey().getId());
+                        m_selectedRules.add(curr.getKey());
                         // break;
                     }
                 }
@@ -179,11 +178,11 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
     }
 
     /**
-     * Returns the Ids of the curently selected rules.
+     * Returns the Ids of the currently selected rules.
      * 
      * @return - the ids of the selected rules.
      */
-    public Set<DataCell> getSelectedRules() {
+    public Set<RowKey> getSelectedRules() {
         return m_selectedRules;
     }
 
@@ -251,9 +250,9 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
 
     /**
      * Resets the current hilite. Triggers a repaint.
-     * @see HiLiteListener#unHiLiteAll() 
+     * @see HiLiteListener#unHiLiteAll(KeyEvent) 
      */
-    public void unHiLiteAll() {
+    public void unHiLiteAll(final KeyEvent ke) {
         m_hiLiteHandler.fireClearHiLiteEvent();
         m_hideUnhilitedRules = false;
         repaint();
@@ -293,13 +292,12 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
             // paint either if !m_hideUnhilitedRules
             // or if rule is hilited
             if (!m_hideUnhilitedRules
-                    || m_hiLiteHandler.isHiLit(row.getKey().getId())) {
+                    || m_hiLiteHandler.isHiLit(row.getKey())) {
                 // check whether the rule is selected or hilited
-                boolean selected = m_selectedRules.contains(row.getKey()
-                        .getId());
+                boolean selected = m_selectedRules.contains(row.getKey());
                 boolean hilite = false;
                 if (m_hiLiteHandler != null) {
-                    hilite = m_hiLiteHandler.isHiLit(row.getKey().getId());
+                    hilite = m_hiLiteHandler.isHiLit(row.getKey());
                 }
                 Color currColor = m_orgData.getDataTableSpec().getRowColor(
                         orgRow).getColor(selected, hilite);

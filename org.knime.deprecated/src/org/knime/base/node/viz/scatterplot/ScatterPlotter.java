@@ -42,6 +42,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.KeyEvent;
@@ -841,7 +842,7 @@ public class ScatterPlotter extends AbstractPlotter2D implements
     /**
      * {@inheritDoc}
      */
-    public void unHiLiteAll() {
+    public void unHiLiteAll(final KeyEvent ke) {
         clearHilite();
     }
 
@@ -851,7 +852,7 @@ public class ScatterPlotter extends AbstractPlotter2D implements
      * hash map anymore - now we need to iterate through the entire array
      * everytime a hilite change event comes through.
      */
-    private void changeHiLiteTo(final boolean state, final Set<DataCell> keys) {
+    private void changeHiLiteTo(final boolean state, final Set<RowKey> keys) {
         if (getScatterPlotterDrawingPane().getDotInfoArray() == null) {
             return;
         }

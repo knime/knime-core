@@ -53,7 +53,6 @@ import javax.swing.event.MouseInputListener;
 import org.knime.base.node.viz.parcoord.visibility.VisibilityEvent;
 import org.knime.base.node.viz.parcoord.visibility.VisibilityHandler;
 import org.knime.base.node.viz.parcoord.visibility.VisibilityListener;
-import org.knime.core.data.DataCell;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -308,7 +307,7 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
         }
         m_hilited = new boolean[m_rowCount];
         for (int row = 0; row < m_rowCount; row++) {
-            m_hilited[row] = m_hdl.isHiLit(m_keys[row].getId());
+            m_hilited[row] = m_hdl.isHiLit(m_keys[row]);
         }
     }
 
@@ -325,8 +324,8 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
         if (m_vh != null) {
             m_vh.addVisibilityListener(this);
             for (int row = 0; row < m_rowCount; row++) {
-                m_visible[row] = m_vh.isVisible(m_keys[row].getId());
-                m_selected[row] = m_vh.isSelected(m_keys[row].getId());
+                m_visible[row] = m_vh.isVisible(m_keys[row]);
+                m_selected[row] = m_vh.isSelected(m_keys[row]);
             }
         }
 
@@ -910,9 +909,9 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
      * {@inheritDoc}
      */
     public void hiLite(final KeyEvent event) {
-        Set<DataCell> keySet = event.keys();
+        Set<RowKey> keySet = event.keys();
         for (int row = 0; row < m_rowCount; row++) {
-            if (keySet.contains(m_keys[row].getId())) {
+            if (keySet.contains(m_keys[row])) {
                 m_hilited[row] = true;
             }
         }
@@ -923,9 +922,9 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
      * {@inheritDoc}
      */
     public void unHiLite(final KeyEvent event) {
-        Set<DataCell> keySet = event.keys();
+        Set<RowKey> keySet = event.keys();
         for (int row = 0; row < m_rowCount; row++) {
-            if (keySet.contains(m_keys[row].getId())) {
+            if (keySet.contains(m_keys[row])) {
                 m_hilited[row] = false;
             }
         }
@@ -936,7 +935,7 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
     /**
      * {@inheritDoc}
      */
-    public void unHiLiteAll() {
+    public void unHiLiteAll(final KeyEvent ke) {
         for (int i = 0; i < m_rowCount; i++) {
             m_hilited[i] = false;
         }
@@ -949,14 +948,14 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
     public void hiliteSelected() {
         for (int i = 0; i < m_rowCount; i++) {
             if (m_vh != null) {
-                if (m_vh.isSelected(m_keys[i].getId())) {
-                    m_hdl.fireHiLiteEvent(m_keys[i].getId());
+                if (m_vh.isSelected(m_keys[i])) {
+                    m_hdl.fireHiLiteEvent(m_keys[i]);
                     m_hilited[i] = true;
                 }
             } else {
                 if (m_selected[i]) {
                     m_hilited[i] = true;
-                    m_hdl.fireHiLiteEvent(m_keys[i].getId());
+                    m_hdl.fireHiLiteEvent(m_keys[i]);
                 }
             }
         }
@@ -969,14 +968,14 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
     public void unHiliteSelected() {
         for (int i = 0; i < m_rowCount; i++) {
             if (m_vh != null) {
-                if (m_vh.isSelected(m_keys[i].getId())) {
-                    m_hdl.fireUnHiLiteEvent(m_keys[i].getId());
+                if (m_vh.isSelected(m_keys[i])) {
+                    m_hdl.fireUnHiLiteEvent(m_keys[i]);
                     m_hilited[i] = false;
                 }
             } else {
                 if (m_selected[i]) {
                     m_hilited[i] = false;
-                    m_hdl.fireUnHiLiteEvent(m_keys[i].getId());
+                    m_hdl.fireUnHiLiteEvent(m_keys[i]);
                 }
             }
         }
@@ -1456,9 +1455,9 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
     public void setVisible(final int i, final boolean value) {
         if (m_vh != null) {
             if (value) {
-                m_vh.makeVisible(m_keys[i].getId());
+                m_vh.makeVisible(m_keys[i]);
             } else {
-                m_vh.makeInvisible(m_keys[i].getId());
+                m_vh.makeInvisible(m_keys[i]);
                 // if it's invisible, it's not selectable, and thus
                 // loses selected status
                 // m_vh.unselect(m_keys[i].getId());
@@ -1477,10 +1476,10 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
         if (m_vh != null) {
             if (value) {
                 if (isSelectable(i)) {
-                    m_vh.select(m_keys[i].getId());
+                    m_vh.select(m_keys[i]);
                 }
             } else {
-                m_vh.unselect(m_keys[i].getId());
+                m_vh.unselect(m_keys[i]);
             }
         }
         m_selected[i] = value;
@@ -1502,9 +1501,9 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
      * {@inheritDoc}
      */
     public void select(final VisibilityEvent event) {
-        Set<DataCell> keySet = event.keys();
+        Set<RowKey> keySet = event.keys();
         for (int row = 0; row < m_rowCount; row++) {
-            if (keySet.contains(m_keys[row].getId())) {
+            if (keySet.contains(m_keys[row])) {
 
                 m_selected[row] = true;
 
@@ -1518,9 +1517,9 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
      * {@inheritDoc}
      */
     public void unselect(final VisibilityEvent event) {
-        Set<DataCell> keySet = event.keys();
+        Set<RowKey> keySet = event.keys();
         for (int row = 0; row < m_rowCount; row++) {
-            if (keySet.contains(m_keys[row].getId())) {
+            if (keySet.contains(m_keys[row])) {
                 m_selected[row] = false;
             }
         }
@@ -1532,9 +1531,9 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
      * {@inheritDoc}
      */
     public void makeVisible(final VisibilityEvent event) {
-        Set<DataCell> keySet = event.keys();
+        Set<RowKey> keySet = event.keys();
         for (int row = 0; row < m_rowCount; row++) {
-            if (keySet.contains(m_keys[row].getId())) {
+            if (keySet.contains(m_keys[row])) {
                 m_visible[row] = true;
             }
         }
@@ -1546,9 +1545,9 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
      * {@inheritDoc}
      */
     public void makeInvisible(final VisibilityEvent event) {
-        Set<DataCell> keySet = event.keys();
+        Set<RowKey> keySet = event.keys();
         for (int row = 0; row < m_rowCount; row++) {
-            if (keySet.contains(m_keys[row].getId())) {
+            if (keySet.contains(m_keys[row])) {
                 m_visible[row] = false;
             }
         }

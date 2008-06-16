@@ -110,7 +110,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
      * 
      * @param row input pattern
      * @param spec the corresponding table spec
-     * @throws Exception if something went wrong (unknown attriubte for example)
+     * @throws Exception if something went wrong (unknown attribute for example)
      */
     @Override
     public final void addCoveredPattern(final DataRow row,

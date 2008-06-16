@@ -26,10 +26,7 @@ package org.knime.base.node.viz.parcoord.visibility;
 
 import java.util.Set;
 
-import org.knime.core.data.DataCell;
-
-
-
+import org.knime.core.data.RowKey;
 
 /**
  * 
@@ -53,32 +50,32 @@ public interface VisibilityHandler {
      * @param  key The row to check the hilite status of.
      * @return <code>true</code> if selected.
      */
-    boolean isSelected(final DataCell key);
+    boolean isSelected(final RowKey key);
 
     
     /** 
      * Selects the given item and fires the event to all registered listeners.
      * @param  key The row key to select.
      */
-    void select(final DataCell key);
+    void select(final RowKey key);
 
     /** 
      * Selects the given keys and fires the event to all registered listeners.
      * @param  keys The set of row keys to select.
      */
-    void select(final Set<DataCell> keys);
+    void select(final Set<RowKey> keys);
 
     /** 
      * Unselects the given item and fires the event to all registered listeners.
      * @param  key The row key to reset select status.
      */
-    void unselect(final DataCell key);
+    void unselect(final RowKey key);
 
     /** 
      * Uslects the given keys and fires the event to all registered listeners.
      * @param  keys The set of row keys to unselect.
      */
-    void unselect(final Set<DataCell> keys);
+    void unselect(final Set<RowKey> keys);
     
     /** 
      * Unselects all selected items and fires the event.
@@ -92,31 +89,31 @@ public interface VisibilityHandler {
      * @param  key The row to check the hilite status of.
      * @return <code>true</code> if selected.
      */
-    boolean isVisible(final DataCell key);
+    boolean isVisible(final RowKey key);
     
     /** 
      * Selects the given item and fires the event to all registered listeners.
      * @param  key The row key to select.
      */
-    void makeVisible(final DataCell key);
+    void makeVisible(final RowKey key);
 
     /** 
      * Selects the given keys and fires the event to all registered listeners.
      * @param  keys The set of row keys to select.
      */
-    void makeVisible(final Set<DataCell> keys);
+    void makeVisible(final Set<RowKey> keys);
 
     /** 
      * Unselects the given item and fires the event to all registered listeners.
      * @param  key The row key to reset select status.
      */
-    void makeInvisible(final DataCell key);
+    void makeInvisible(final RowKey key);
 
     /** 
      * Uslects the given keys and fires the event to all registered listeners.
      * @param  keys The set of row keys to unselect.
      */
-    void makeInvisible(final Set<DataCell> keys);
+    void makeInvisible(final Set<RowKey> keys);
     
     /** 
      * Makes all selected items visible and fires the event.

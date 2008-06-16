@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.knime.base.node.viz.plotter2D.AbstractDrawingPane;
-import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.NodeLogger;
 
@@ -62,7 +62,7 @@ public class ScatterPlotDrawingPane extends AbstractDrawingPane {
     private boolean m_hideUnHiLited;
 
     // Hash set of selected dots
-    private HashSet<DataCell> m_selDots;
+    private final HashSet<RowKey> m_selDots;
 
     /**
      * Creates a new empty drawing pane.
@@ -70,7 +70,7 @@ public class ScatterPlotDrawingPane extends AbstractDrawingPane {
     public ScatterPlotDrawingPane() {
         super();
         m_dots = null;
-        m_selDots = new HashSet<DataCell>();
+        m_selDots = new HashSet<RowKey>();
         m_dotSize = INITIAL_DOT_SIZE;
         m_grayUnHilit = false;
         m_hideUnHiLited = false;
@@ -226,7 +226,7 @@ public class ScatterPlotDrawingPane extends AbstractDrawingPane {
     /**
      * @return the set of RowKeys (i.e. Datacells) of currently selected dots.
      */
-    public Set<DataCell> getSelectedSet() {
+    public Set<RowKey> getSelectedSet() {
         return m_selDots;
     }
 
@@ -245,7 +245,7 @@ public class ScatterPlotDrawingPane extends AbstractDrawingPane {
             // select them all for now...
             for (int i = 0; i < selected.size(); i++) {
                 // actually toggle their state
-                DataCell rowKey = selected.get(i).getRowID();
+                RowKey rowKey = selected.get(i).getRowID();
                 if (m_selDots.contains(rowKey)) {
                     m_selDots.remove(rowKey);
                 } else {
@@ -339,9 +339,9 @@ public class ScatterPlotDrawingPane extends AbstractDrawingPane {
             return;
         }
         LOGGER.debug("Selected #" + m_selDots.size() + "(RowKey): ");
-        Iterator<DataCell> i = m_selDots.iterator();
+        Iterator<RowKey> i = m_selDots.iterator();
         while (i.hasNext()) {
-            LOGGER.debug("('" + i.next().toString() + "') ");
+            LOGGER.debug("('" + i.next().getString() + "') ");
         }
     }
 
