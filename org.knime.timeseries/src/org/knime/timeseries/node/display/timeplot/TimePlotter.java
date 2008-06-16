@@ -374,8 +374,8 @@ public class TimePlotter extends LinePlotter {
                         p1 = new Point(x, y);
                         dot = new DotInfo(x, (int)getScreenYCoordinate(y), 
                                 array.getRow(row).getKey(),
-                                delegateIsHiLit(array.getRow(row).getKey()
-                                        .getId()), color, 1, row);
+                                delegateIsHiLit(array.getRow(row).getKey()),
+                                        color, 1, row);
 //                        dot.setXDomainValue(array.getRow(row).getKey().getId());
                         dot.setXDomainValue(dc);
                         dot.setYDomainValue(cell);
