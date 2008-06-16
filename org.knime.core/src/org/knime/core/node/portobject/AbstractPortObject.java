@@ -144,7 +144,9 @@ public abstract class AbstractPortObject implements PortObject {
                 result = acl.newInstance();
             } catch (Exception e) {
                 throw new RuntimeException("Failed to instantiate class \""
-                        + acl.getSimpleName() + "\": " + e.getMessage(), e);
+                        + acl.getSimpleName() 
+                        + "\" (failed to invoke no-arg constructor): " 
+                        + e.getMessage(), e);
             }
             File subDir = new File(directory, "content");
             result.load(subDir, spec, exec);
