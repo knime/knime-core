@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * -------------------------------------------------------------------
  */
 package org.knime.base.node.viz.enrich;
 
@@ -54,13 +54,13 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
 /**
  * This is the dialog for the enrichment plotter in which the two columns for
  * the curves are selected.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class EnrichmentPlotterDialog extends NodeDialogPane {
     /**
      * The model for the list with the curves.
-     * 
+     *
      * @author Thorsten Meinl, University of Konstanz
      */
     private class MyListModel extends AbstractListModel {
@@ -193,7 +193,7 @@ public class EnrichmentPlotterDialog extends NodeDialogPane {
         m_curves.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         p.add(new JScrollPane(m_curves), c);
 
-        
+
         ButtonGroup bg = new ButtonGroup();
         bg.add(m_plotHits);
         bg.add(m_plotSum);
@@ -207,7 +207,7 @@ public class EnrichmentPlotterDialog extends NodeDialogPane {
         p2.add(m_hitThreshold);
         m_hitThreshold.setColumns(3);
         p.add(p2, c);
-        
+
         m_plotHits.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_hitThreshold.setEnabled(m_plotHits.isSelected());
@@ -219,7 +219,7 @@ public class EnrichmentPlotterDialog extends NodeDialogPane {
             }
         });
 
-        
+
         addTab("Curves to plot", p);
     }
 

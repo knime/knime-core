@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * -------------------------------------------------------------------
  */
 package org.knime.base.node.viz.enrich;
 
@@ -58,7 +58,7 @@ import org.knime.base.node.viz.enrich.EnrichmentPlotterSettings.Curve;
  * This class is the model for the enrichment plotter node. It does the
  * precalculation for the view, i.e. it sorts the the data according to the
  * selected columns and computes the y-values for the enrichment curves.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class EnrichmentPlotterModel extends NodeModel {
@@ -90,7 +90,7 @@ public class EnrichmentPlotterModel extends NodeModel {
 
     /**
      * Small container class for a single enrichment curve.
-     * 
+     *
      * @author Thorsten Meinl, University of Konstanz
      */
     static class EnrichmentPlot implements Serializable {
@@ -102,7 +102,7 @@ public class EnrichmentPlotterModel extends NodeModel {
 
         /**
          * Creates a new enrich curve container.
-         * 
+         *
          * @param name the curve's name
          * @param x the curve's x-values
          * @param y the curve's y-values
@@ -118,7 +118,7 @@ public class EnrichmentPlotterModel extends NodeModel {
 
         /**
          * Returns the curve's name.
-         * 
+         *
          * @return the curve's name.
          */
         public String getName() {
@@ -127,7 +127,7 @@ public class EnrichmentPlotterModel extends NodeModel {
 
         /**
          * Returns the curve's area.
-         * 
+         *
          * @return the curve's area.
          */
         public final double getArea() {
@@ -136,7 +136,7 @@ public class EnrichmentPlotterModel extends NodeModel {
 
         /**
          * Returns the curve's x-values.
-         * 
+         *
          * @return the curve's x-values.
          */
         public final double[] getX() {
@@ -145,7 +145,7 @@ public class EnrichmentPlotterModel extends NodeModel {
 
         /**
          * Returns the curve's y-values.
-         * 
+         *
          * @return the curve's y-values.
          */
         public final double[] getY() {
@@ -364,7 +364,7 @@ public class EnrichmentPlotterModel extends NodeModel {
     /**
      * Returns a list with all precalculated curves that should be shown in the
      * view.
-     * 
+     *
      * @return a list with enrichment curves
      */
     List<EnrichmentPlot> getCurves() {

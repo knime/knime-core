@@ -1,5 +1,5 @@
 /*
- * --------------------------------------------------------------------- *
+ * ---------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * --------------------------------------------------------------------- *
+ * ---------------------------------------------------------------------
  */
 package org.knime.base.node.io.filereader;
 

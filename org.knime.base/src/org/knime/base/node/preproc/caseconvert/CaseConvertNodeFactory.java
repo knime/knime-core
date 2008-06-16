@@ -1,4 +1,6 @@
- /* This source code, its documentation and all appendant files
+/* 
+ * --------------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
  * Copyright, 2003 - 2008
@@ -15,6 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
+ * --------------------------------------------------------------------------
  * 
  * History
  *   19.06.2007 (cebron): created

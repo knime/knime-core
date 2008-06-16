@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * -------------------------------------------------------------------
  */
 package org.knime.base.node.viz.enrich;
 
@@ -29,7 +29,7 @@ import org.knime.core.node.NodeView;
 /**
  * This factory creates all necessary components for the enrichment plotter
  * node.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class EnrichmentPlotterFactory extends NodeFactory {

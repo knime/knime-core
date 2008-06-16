@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * -------------------------------------------------------------------
  */
 package org.knime.base.node.viz.enrich;
 
@@ -29,14 +29,14 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * This class holds the settings for the enrichment plotter node.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class EnrichmentPlotterSettings {
     /**
      * A simple container that holds the necessary information for specifying a
      * curve that should be plotted.
-     * 
+     *
      * @author Thorsten Meinl, University of Konstanz
      */
     public static class Curve {
@@ -54,7 +54,7 @@ public class EnrichmentPlotterSettings {
 
         /**
          * Creates a new Curve object.
-         * 
+         *
          * @param sortColumn the column by which the table should be sorted
          * @param hitColumn the column with the hit values
          * @param sortDescending <code>true</code> if the
@@ -135,7 +135,7 @@ public class EnrichmentPlotterSettings {
 
     /**
      * Adds a new curve to the settings.
-     * 
+     *
      * @param sortColumn the column by which the table should be sorted
      * @param hitColumn the column with the hit values
      * @param sortDescending <code>true</code> if the <code>sortColumn</code>
@@ -152,7 +152,7 @@ public class EnrichmentPlotterSettings {
 
     /**
      * Returns the curve settings for the given index.
-     * 
+     *
      * @param index an index
      * @return the curve settings at the index
      */
@@ -162,7 +162,7 @@ public class EnrichmentPlotterSettings {
 
     /**
      * Returns the number of curves that should be plotted.
-     * 
+     *
      * @return the number of curves
      */
     public int getCurveCount() {
@@ -171,7 +171,7 @@ public class EnrichmentPlotterSettings {
 
     /**
      * Removes the given curve from the settings.
-     * 
+     *
      * @param curve a curve
      * @return <code>true</code> if the curve was removed, <code>false</code>
      *         otherwise (likely because the curve does not exist)
@@ -182,7 +182,7 @@ public class EnrichmentPlotterSettings {
 
     /**
      * Saves this object's settings to the given node settings.
-     * 
+     *
      * @param settings the node settings
      */
     public void saveSettingsTo(final NodeSettingsWO settings) {
@@ -203,7 +203,7 @@ public class EnrichmentPlotterSettings {
 
     /**
      * Loads the settings from the given node settings object.
-     * 
+     *
      * @param settings the node settings
      * @throws InvalidSettingsException if the settings are invalid
      */
@@ -227,7 +227,7 @@ public class EnrichmentPlotterSettings {
     /**
      * Returns if the sum of hit values should be plotted on the y-axis instead
      * of the number of hits.
-     * 
+     *
      * @return <code>true</code> if the hit value sum should be plotted,
      *         <code>false</code> if only the hit count should be plotted
      */
@@ -238,10 +238,10 @@ public class EnrichmentPlotterSettings {
     /**
      * Sets if the sum of hits values should be plotted instead of the number of
      * hits on the y-axis.
-     * 
+     *
      * @param b <code>true</code> if the hit value sum should be plotted,
      *            <code>false</code> if only the hit count should be plotted
-     * 
+     *
      */
     public void sumHitValues(final boolean b) {
         m_sumHitValues = b;
@@ -251,7 +251,7 @@ public class EnrichmentPlotterSettings {
      * Returns the threshold above and including which a data point is
      * considered a hit. This settings is only used if {@link #sumHitValues()}
      * is <code>false</code>.
-     * 
+     *
      * @return the hit threshold
      */
     public double hitThreshold() {
@@ -262,7 +262,7 @@ public class EnrichmentPlotterSettings {
      * Sets the threshold above and including which a data point is
      * considered a hit. This settings is only used if {@link #sumHitValues()}
      * is <code>false</code>.
-     * 
+     *
      * @param thres the hit threshold
      */
     public void hitThreshold(final double thres) {

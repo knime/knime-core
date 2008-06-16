@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * -------------------------------------------------------------------
  */
 package org.knime.base.node.viz.enrich;
 
@@ -38,7 +38,7 @@ import org.knime.base.node.viz.enrich.EnrichmentPlotterModel.EnrichmentPlot;
 /**
  * This is the view for the enrichment plotter node that shows all specified
  * enrichment plots.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class EnrichmentPlotterView extends NodeView {
@@ -95,12 +95,12 @@ public class EnrichmentPlotterView extends NodeView {
         public void updatePaintModel() {
             super.updatePaintModel();
             reset();
-            
+
             EnrichmentPlotterModel mod = (EnrichmentPlotterModel)getNodeModel();
 
-            
+
             List<EnrichmentPlot> curves = mod.getCurves();
-            
+
             int i = 0;
             double maxY = Double.MIN_VALUE;
             int maxX = Integer.MIN_VALUE;
@@ -113,7 +113,7 @@ public class EnrichmentPlotterView extends NodeView {
                     for (int k = 0; k < curve.getX().length; k++) {
                         maxY = Math.max(maxY, curve.getY()[k]);
                     }
-    
+
                     addLine(curve.getX(), curve.getY(),
                             COLORS[i++ % COLORS.length], st);
                 }
@@ -131,7 +131,7 @@ public class EnrichmentPlotterView extends NodeView {
 
     /**
      * Creates a new enrichment plotter view.
-     * 
+     *
      * @param model the model for the view
      */
     public EnrichmentPlotterView(final EnrichmentPlotterModel model) {

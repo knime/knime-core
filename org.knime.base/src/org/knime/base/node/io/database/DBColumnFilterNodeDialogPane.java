@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -17,8 +17,8 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * --------------------------------------------------------------------- *
- * 
+ * ---------------------------------------------------------------------
+ *
  */
 package org.knime.base.node.io.database;
 
@@ -34,16 +34,16 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 final class DBColumnFilterNodeDialogPane extends GenericNodeDialogPane {
-    
+
     private final DialogComponentColumnFilter m_panel;
-    
+
     private final DBConnectionDialogPanel m_tableOptions =
         new DBConnectionDialogPanel();
-    
+
     /**
      * Create query dialog with text box to enter table name.
      */
@@ -51,28 +51,28 @@ final class DBColumnFilterNodeDialogPane extends GenericNodeDialogPane {
         m_panel = new DialogComponentColumnFilter(createColumnFilterModel(), 0);
         super.addTab("Column Filter", m_panel.getComponentPanel());
         super.addTab("Table Options", m_tableOptions);
-        
+
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
-        DataTableSpec spec = 
+        DataTableSpec spec =
             ((DatabasePortObjectSpec) specs[0]).getDataTableSpec();
         m_panel.loadSettingsFrom(settings, new DataTableSpec[]{spec});
         m_tableOptions.loadSettingsFrom(settings, new DataTableSpec[]{spec});
     }
-    
+
     /**
      * @return new settings model for column filter
      */
     static final SettingsModelFilterString createColumnFilterModel() {
         return new SettingsModelFilterString("column_filter");
     }
-    
+
     /**
      * {@inheritDoc}
      */
