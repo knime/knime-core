@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.base.node.preproc.valcount;
 
@@ -47,6 +47,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValueComparator;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataContainer;
@@ -66,7 +67,7 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
 
 /**
  * This is the model for the value counter node that does all the work.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ValueCounterNodeModel extends NodeModel {
@@ -122,49 +123,52 @@ public class ValueCounterNodeModel extends NodeModel {
                         m_settings.columnName());
         final double max = inData[0].getRowCount();
         int rowCount = 0;
-        Map<DataCell, Set<DataCell>> map =
-                new HashMap<DataCell, Set<DataCell>>();
+        Map<DataCell, Set<RowKey>> map =
+                new HashMap<DataCell, Set<RowKey>>();
         for (DataRow row : inData[0]) {
             exec.checkCanceled();
             exec.setProgress(rowCount++ / max, map.size()
                     + " different values found");
             DataCell cell = row.getCell(colIndex);
-            Set<DataCell> s = map.get(cell);
+            Set<RowKey> s = map.get(cell);
             if (s == null) {
-                s = new HashSet<DataCell>();
+                s = new HashSet<RowKey>();
                 map.put(cell, s);
             }
-            s.add(row.getKey().getId());
+            s.add(row.getKey());
         }
 
         final DataValueComparator comp =
                 inData[0].getDataTableSpec().getColumnSpec(colIndex).getType()
                         .getComparator();
 
-        List<Map.Entry<DataCell, Set<DataCell>>> sorted =
-                new ArrayList<Map.Entry<DataCell, Set<DataCell>>>(map
+        List<Map.Entry<DataCell, Set<RowKey>>> sorted =
+                new ArrayList<Map.Entry<DataCell, Set<RowKey>>>(map
                         .entrySet());
         Collections.sort(sorted,
-                new Comparator<Map.Entry<DataCell, Set<DataCell>>>() {
+                new Comparator<Map.Entry<DataCell, Set<RowKey>>>() {
                     public int compare(
-                            final Map.Entry<DataCell, Set<DataCell>> o1,
-                            final Entry<DataCell, Set<DataCell>> o2) {
+                            final Map.Entry<DataCell, Set<RowKey>> o1,
+                            final Entry<DataCell, Set<RowKey>> o2) {
                         return comp.compare(o1.getKey(), o2.getKey());
                     }
                 });
 
         BufferedDataContainer cont = exec.createDataContainer(TABLE_SPEC);
-        for (Map.Entry<DataCell, Set<DataCell>> entry : sorted) {
-            cont.addRowToTable(new DefaultRow(entry.getKey(), new int[]{entry
-                    .getValue().size()}));
+        Map<RowKey, Set<RowKey>> hlmap = new HashMap<RowKey, Set<RowKey>>();
+        for (Map.Entry<DataCell, Set<RowKey>> entry : sorted) {
+            RowKey newKey = new RowKey(entry.getKey().toString());
+            cont.addRowToTable(new DefaultRow(newKey,
+                    new int[]{entry.getValue().size()}));
+            hlmap.put(newKey, entry.getValue());
         }
         cont.close();
 
         if (m_settings.hiliting()) {
-            m_translator.setMapper(new DefaultHiLiteMapper(map));
+            m_translator.setMapper(new DefaultHiLiteMapper(hlmap));
         } else {
             m_translator.setMapper(new DefaultHiLiteMapper(
-                    new HashMap<DataCell, Set<DataCell>>()));
+                    new HashMap<RowKey, Set<RowKey>>()));
         }
         return new BufferedDataTable[]{cont.getTable()};
     }

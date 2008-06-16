@@ -71,16 +71,16 @@ public class NewJoinerNodeModel extends NodeModel {
      * @throws CanceledExecutionException if execution has been canceled by the
      *             user
      */
-    private static Map<DataCell, Integer> buildTableOrdering(
+    private static Map<String, Integer> buildTableOrdering(
             final BufferedDataTable table, final ExecutionMonitor exec)
             throws CanceledExecutionException {
-        HashMap<DataCell, Integer> map =
-                new HashMap<DataCell, Integer>(table.getRowCount());
+        HashMap<String, Integer> map =
+                new HashMap<String, Integer>(table.getRowCount());
 
         int i = 0;
         for (DataRow row : table) {
             exec.checkCanceled();
-            map.put(row.getKey().getId(), i++);
+            map.put(row.getKey().getString(), i++);
         }
 
         return map;
@@ -214,7 +214,7 @@ public class NewJoinerNodeModel extends NodeModel {
         exec.setMessage("Reading first table");
         // build a map for sorting the second table which maps the row keys of
         // the first table to their row number
-        final Map<DataCell, Integer> orderMap =
+        final Map<String, Integer> orderMap =
                 buildTableOrdering(leftTable, exec);
         Comparator<DataRow> rowComparator = new Comparator<DataRow>() {
             public int compare(final DataRow o1, final DataRow o2) {
@@ -264,8 +264,8 @@ public class NewJoinerNodeModel extends NodeModel {
         int p = 0;
         DataRow lrow = lit.hasNext() ? lit.next() : null;
         DataRow rrow = rit.hasNext() ? rit.next() : null;
-        DataCell lkey = (lrow != null) ? lrow.getKey().getId() : null;
-        DataCell rkey = (rrow != null) ? getRightJoinKey(rrow) : null;
+        String lkey = (lrow != null) ? lrow.getKey().getString() : null;
+        String rkey = (rrow != null) ? getRightJoinKey(rrow) : null;
         outer: while ((lrow != null) && (rrow != null)) {
             exec.checkCanceled();
 
@@ -295,7 +295,7 @@ public class NewJoinerNodeModel extends NodeModel {
                 break outer;
             }
             lrow = lit.next();
-            lkey = lrow.getKey().getId();
+            lkey = lrow.getKey().getString();
         }
 
         if (lit.hasNext() && lofj) {
@@ -369,12 +369,12 @@ public class NewJoinerNodeModel extends NodeModel {
         return m_hiliteHandler;
     }
 
-    private DataCell getRightJoinKey(final DataRow row) {
+    private String getRightJoinKey(final DataRow row) {
         if (NewJoinerSettings.ROW_KEY_IDENTIFIER.equals(
                 m_settings.secondTableColumn())) {
-            return row.getKey().getId();
+            return row.getKey().getString();
         } else {
-            return row.getCell(m_secondTableColIndex);
+            return row.getCell(m_secondTableColIndex).toString();
         }
     }
 
