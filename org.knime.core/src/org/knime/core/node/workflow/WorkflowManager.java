@@ -2486,8 +2486,6 @@ public final class WorkflowManager extends NodeContainer {
         if (directory == null || exec == null) {
             throw new NullPointerException("Arguments must not be null.");
         }
-        // TODO GUI only needs to provide directory path
-        directory = directory.getParentFile();
         if (!directory.isDirectory() || !directory.canRead()) {
             throw new IOException("Can't read directory " + directory);
         }
@@ -2789,8 +2787,7 @@ public final class WorkflowManager extends NodeContainer {
         }
         // TODO GUI must only provide directory
         synchronized (m_workflowMutex) {
-            ReferencedFile workflowDirRef =
-                new ReferencedFile(directory.getParentFile());
+            ReferencedFile workflowDirRef = new ReferencedFile(directory);
             // if it's the location associated with the workflow we will
             // use same reference since a lock will be acquired
             if (workflowDirRef.equals(getNodeContainerDirectory())) {

@@ -247,15 +247,8 @@ public final class BatchExecutor {
             workflowDir = input;
         }
 
-        File workflowFile =
-                new File(workflowDir, WorkflowPersistor.WORKFLOW_FILE);
-        if (!workflowFile.exists()) {
-            workflowFile = new File(workflowDir.listFiles()[0],
-                            WorkflowPersistor.WORKFLOW_FILE);
-        }
-
         WorkflowLoadResult loadResult = WorkflowManager.load(
-                workflowFile, new ExecutionMonitor());
+                workflowDir, new ExecutionMonitor());
         WorkflowManager wfm = loadResult.getWorkflowManager();
 
         if (reset) {
@@ -267,7 +260,7 @@ public final class BatchExecutor {
         System.out.println(wfm.printNodeSummary(wfm.getID(), 0));
         boolean successful = wfm.executeAllAndWaitUntilDone();
         if (!noSave) {
-            wfm.save(workflowFile, new ExecutionMonitor(), true);
+            wfm.save(workflowDir, new ExecutionMonitor(), true);
 
             if (output != null) {
                 FileUtil.zipDir(output, workflowDir, 9);
