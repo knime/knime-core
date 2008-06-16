@@ -63,7 +63,6 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -106,9 +105,6 @@ class Buffer {
         BLOB_COMPRESS_MAP =
             new HashMap<Class<? extends BlobDataCell>, Boolean>();
 
-    /** Separator for different rows, new line. */
-    private static final char ROW_SEPARATOR = '\n';
-
     /** The char for missing cells. */
     private static final byte BYTE_TYPE_MISSING = Byte.MIN_VALUE;
 
@@ -118,6 +114,9 @@ class Buffer {
     /** The first used char for the map char --> type. */
     private static final byte BYTE_TYPE_START = BYTE_TYPE_MISSING + 2;
 
+    /** Separator for different rows. */
+    private static final byte BYTE_ROW_SEPARATOR = BYTE_TYPE_MISSING + 3;
+    
     /** Name of the zip entry containing the data. */
     static final String ZIP_ENTRY_DATA = "data.bin";
 
@@ -157,10 +156,10 @@ class Buffer {
     private static final String CFG_CELL_CLASSES = "table.datacell.classes";
 
     /** Current version string. */
-    private static final String VERSION = "container_4";
+    private static final String VERSION = "container_5";
 
     /** The version number corresponding to VERSION. */
-    private static final int IVERSION = 4;
+    private static final int IVERSION = 5;
 
     private static final HashMap<String, Integer> COMPATIBILITY_MAP;
 
@@ -169,7 +168,8 @@ class Buffer {
         COMPATIBILITY_MAP.put("container_1.0.0", 1); // version 1.00
         COMPATIBILITY_MAP.put("container_1.1.0", 2); // version 1.1.x
         COMPATIBILITY_MAP.put("container_1.2.0", 3); // never released
-        COMPATIBILITY_MAP.put(VERSION, IVERSION);    // version 1.2.0
+        COMPATIBILITY_MAP.put("container_4", 4); // version 1.2.x - 1.3.x
+        COMPATIBILITY_MAP.put(VERSION, IVERSION);    // version 2.0
     }
 
     /**
@@ -587,11 +587,6 @@ class Buffer {
                 cellCopies[col] = wc;
             }
         }
-        if (row.getKey().getId() instanceof BlobDataCell) {
-            throw new IllegalArgumentException(
-                    "Row IDs must not wrap blob data cells (of class \""
-                        + row.getKey().getId().getClass().getName() + "\"");
-        }
         return cellCopies == null ? (BlobSupportDataRow)row
                 : new BlobSupportDataRow(row.getKey(), cellCopies);
     }
@@ -710,11 +705,6 @@ class Buffer {
             m_containsBlobs = false;
             if (m_version >= 4) { // no blobs in version 1.1.x
                 m_containsBlobs = subSettings.getBoolean(CFG_CONTAINS_BLOBS);
-                // flag added for KNIME 2.0
-                // TODO increment version number (goes along with rowkey-string)
-                if (subSettings.getBoolean(CFG_IS_IN_MEMORY, false)) {
-                    restoreIntoMemory();
-                }
                 int bufferID = subSettings.getInt(CFG_BUFFER_ID);
                 // the bufferIDs may be different in cases when an 1.0.0 table
                 // was read, then converted to a new version (done by
@@ -724,6 +714,11 @@ class Buffer {
                     LOGGER.error("Table's buffer id is different from what has"
                         + " been passed in constructor (" + bufferID + " vs. "
                         + m_bufferID + "), unpredictable errors may occur");
+                }
+            }
+            if (m_version >= 5) { // no back into memory option prior 2.0 
+                if (subSettings.getBoolean(CFG_IS_IN_MEMORY)) {
+                    restoreIntoMemory();
                 }
             }
             String[] cellClasses = subSettings.getStringArray(CFG_CELL_CLASSES);
@@ -824,7 +819,7 @@ class Buffer {
             }
             writeDataCell(cell, outStream);
         }
-        outStream.writeChar(ROW_SEPARATOR);
+        outStream.writeByte(BYTE_ROW_SEPARATOR);
         outStream.reset();
     }
 
@@ -836,8 +831,7 @@ class Buffer {
      */
     void writeRowKey(final RowKey key,
             final DCObjectOutputStream outStream) throws IOException {
-        DataCell id = key.getId();
-        writeDataCell(id, outStream);
+        outStream.writeUTF(key.getString());
     }
 
     /** Reads a row key from a string. Is overridden in {@link NoKeyBuffer}
@@ -847,8 +841,13 @@ class Buffer {
      * @throws IOException If reading fails for IO problems.
      */
     RowKey readRowKey(final DCObjectInputStream inStream) throws IOException {
-        DataCell keyCell = readDataCell(inStream);
-        return new RowKey(keyCell);
+        String key;
+        if (m_version >= 5) { // < 5 is version 1.3.x and before, see above
+            key = inStream.readUTF();
+        } else {
+            key = readDataCell(inStream).toString();
+        }
+        return new RowKey(key);
     }
 
     /** Writes a data cell to the outStream.
@@ -1510,9 +1509,8 @@ class Buffer {
                 handleReadThrowable(throwable);
                 // can't ensure that we generate a unique key but it should
                 // cover 99.9% of all cases
-                DataCell keyCell = new StringCell(
-                        "Read_failed__auto_generated_key_" + m_pointer);
-                key = new RowKey(keyCell);
+                String keyS = "Read_failed__auto_generated_key_" + m_pointer;
+                key = new RowKey(keyS);
             }
             int colCount = m_spec.getNumColumns();
             DataCell[] cells = new DataCell[colCount];
@@ -1527,10 +1525,18 @@ class Buffer {
                 cells[i] = nextCell;
             }
             try {
-                char eoRow = inStream.readChar();
-                if (eoRow != ROW_SEPARATOR) {
-                    throw new IOException("Expected end of row character, "
+                if (m_version >= 5) {
+                    byte eoRow = inStream.readByte();
+                    if (eoRow != BYTE_ROW_SEPARATOR) {
+                        throw new IOException("Expected end of row byte, "
+                            + "got '" + eoRow + "', (byte " + (int)eoRow + ")");
+                    }
+                } else {
+                    char eoRow = inStream.readChar();
+                    if (eoRow != '\n') {
+                        throw new IOException("Expected end of row character, "
                             + "got '" + eoRow + "', (char " + (int)eoRow + ")");
+                    }
                 }
             } catch (IOException ioe) {
                 handleReadThrowable(ioe);
