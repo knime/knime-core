@@ -213,7 +213,7 @@ public class SampleDataNodeModel extends NodeModel {
                 }
             }
             colNames[i] = new StringCell("Cluster_" + i);
-            centerRows[i] = new DefaultRow(colNames[i], cells);
+            centerRows[i] = new DefaultRow(colNames[i].toString(), cells);
         }
         if (noiseFrac > 0.0) {
             colNames[overallClusterCount] = new StringCell("Noise");
@@ -282,12 +282,11 @@ public class SampleDataNodeModel extends NodeModel {
     private static DataRow createRow(final String key, final double[] d,
             final DataCell cl) {
         DataCell[] cells = new DataCell[d.length + 1];
-        DataCell rkey = new StringCell(key);
         for (int i = 0; i < d.length; i++) {
             cells[i] = new DoubleCell(d[i]);
         }
         cells[d.length] = cl;
-        return new DefaultRow(rkey, cells);
+        return new DefaultRow(key, cells);
     }
 
     /**
