@@ -40,7 +40,7 @@ import javax.swing.tree.TreeSelectionModel;
 import org.knime.base.node.mine.decisiontree.predictor.decisiontree.DecisionTree;
 import org.knime.base.node.mine.decisiontree.predictor.decisiontree.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree.predictor.decisiontree.DecisionTreeNodeRenderer;
-import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -147,7 +147,7 @@ public class DecTreePredictorNodeView extends NodeView {
             Object lastNode = path.getLastPathComponent();
             assert (lastNode != null);
             assert (lastNode instanceof DecisionTreeNode);
-            Set<DataCell> covPat = ((DecisionTreeNode)lastNode)
+            Set<RowKey> covPat = ((DecisionTreeNode)lastNode)
                     .coveredPattern();
             if (state) {
                 m_hiLiteHdl.fireHiLiteEvent(covPat);
