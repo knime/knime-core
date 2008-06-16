@@ -87,7 +87,10 @@ final class CopyNodeContainerMetaPersistor implements
     /** {@inheritDoc} */
     @Override
     public UIInformation getUIInfo() {
-        return m_original.getUIInformation().clone();
+        if (m_original.getUIInformation() != null) {
+            return m_original.getUIInformation().clone();
+        }
+        return null;
     }
 
     /** {@inheritDoc} */
