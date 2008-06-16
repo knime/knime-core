@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2007
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -17,3 +17,64 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
+ * --------------------------------------------------------------------- *
+ * 
+ * History
+ *   May 19, 2006 (ritmeier): created
+ */
+package org.knime.testing.node.differNode;
+
+import org.knime.core.node.NodeView;
+import org.knime.core.node.tableview.TableContentModel;
+import org.knime.core.node.tableview.TableView;
+
+/**
+ * 
+ * @author ritmeier, University of Konstanz
+ */
+public class DiffNodeView2 extends NodeView {
+
+    private TableContentModel m_tableModel;
+    private TableView m_tableView;
+
+    /**
+     * @param nodeModel
+     */
+    public DiffNodeView2(final DiffNodeModel nodeModel) {
+        super(nodeModel);
+        if (nodeModel == null) {
+            throw new NullPointerException("Model must not be null.");
+        }
+        m_tableModel = new TableContentModel(nodeModel.getDiffTable());
+        m_tableView = new TableView(m_tableModel);
+        setComponent(m_tableView);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void modelChanged() {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void onClose() {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void onOpen() {
+        // TODO Auto-generated method stub
+
+    }
+
+}
