@@ -51,10 +51,10 @@ class NoKeyBuffer extends Buffer {
     private static final RowKey DUMMY_KEY = new RowKey("non-existing");
     
     /** Current version string. */
-    private static final String VERSION = "noRowKeyContainer_4";
+    private static final String VERSION = "noRowKeyContainer_5";
     
     /** The version number corresponding to VERSION. */
-    private static final int IVERSION = 4;
+    private static final int IVERSION = 5;
     
     private static final HashMap<String, Integer> COMPATIBILITY_MAP;
     
@@ -64,6 +64,7 @@ class NoKeyBuffer extends Buffer {
         COMPATIBILITY_MAP.put("noRowKeyContainer_1.0.0", 1);
         COMPATIBILITY_MAP.put("noRowKeyContainer_1.1.0", 2);
         COMPATIBILITY_MAP.put("noRowKeyContainer_1.2.0", 3);
+        COMPATIBILITY_MAP.put("noRowKeyContainer_4", 4);
         COMPATIBILITY_MAP.put(VERSION, IVERSION);
     }
     /**
