@@ -92,7 +92,7 @@ public class BasicPlotterImpl extends BasicPlotter {
     /**
      * {@inheritDoc}
      */
-    public void unHiLiteAll() {
+    public void unHiLiteAll(final KeyEvent event) {
 
     }
     

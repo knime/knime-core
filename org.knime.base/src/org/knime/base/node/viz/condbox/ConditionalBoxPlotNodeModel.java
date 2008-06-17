@@ -499,8 +499,8 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
                         new LinkedHashMap<Double, Set<RowKey>>();
                 for (int j = 0; j < mild.length; j++) {
                     Set<RowKey> set = new HashSet<RowKey>();
-                    DataCell[] mildKeys =
-                            settings.getDataCellArray("mildKeys" + colName + j);
+                    String[] mildKeys =
+                            settings.getStringArray("mildKeys" + colName + j);
                     for (int k = 0; k < mildKeys.length; k++) {
                         set.add(new RowKey(mildKeys[k]));
                     }
@@ -514,8 +514,8 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
                         new LinkedHashMap<Double, Set<RowKey>>();
                 for (int j = 0; j < extr.length; j++) {
                     Set<RowKey> set = new HashSet<RowKey>();
-                    DataCell[] extrKeys =
-                            settings.getDataCellArray("extremeKeys" + colName
+                    String[] extrKeys =
+                            settings.getStringArray("extremeKeys" + colName
                                     + j);
                     for (int k = 0; k < extrKeys.length; k++) {
 
@@ -586,12 +586,12 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
                     RowKey[] keys =
                             mEnt.getValue().toArray(
                                     new RowKey[mEnt.getValue().size()]);
-                    DataCell[] mildKeys = new DataCell[keys.length];
+                    String[] mildKeys = new String[keys.length];
                     mild[mildIndex] = mEnt.getKey();
                     for (int j = 0; j < keys.length; j++) {
-                        mildKeys[j] = keys[j].getId();
+                        mildKeys[j] = keys[j].getString();
                     }
-                    settings.addDataCellArray("mildKeys" + colName + mildIndex,
+                    settings.addStringArray("mildKeys" + colName + mildIndex,
                             mildKeys);
                     mildIndex++;
                 }
@@ -607,12 +607,12 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
                     RowKey[] keys =
                             eEnt.getValue().toArray(
                                     new RowKey[eEnt.getValue().size()]);
-                    DataCell[] extrKeys = new DataCell[keys.length];
+                    String[] extrKeys = new String[keys.length];
                     extr[extrIndex] = eEnt.getKey();
                     for (int j = 0; j < keys.length; j++) {
-                        extrKeys[j] = keys[j].getId();
+                        extrKeys[j] = keys[j].getString();
                     }
-                    settings.addDataCellArray("extremeKeys" + colName
+                    settings.addStringArray("extremeKeys" + colName
                             + extrIndex, extrKeys);
                     extrIndex++;
                 }
