@@ -146,7 +146,7 @@ public class ColumnCalculator implements CellFactory {
     public DataCell calculate(final DataRow row) {
         HashMap<String, Object> nameValueMap = new HashMap<String, Object>();
         nameValueMap.put(ROWINDEX, m_lastProcessedRow);
-        nameValueMap.put(ROWKEY, row.getKey().getId().toString());
+        nameValueMap.put(ROWKEY, row.getKey().getString());
         for (int i = 0; i < row.getNumCells(); i++) {
             DataCell cell = row.getCell(i);
             DataType cellType = m_spec.getColumnSpec(i).getType();
@@ -186,10 +186,10 @@ public class ColumnCalculator implements CellFactory {
             String message = 
                 cause != null ? cause.getMessage() : ee.getMessage();
             LOGGER.warn("Evaluation of expression failed for row \""
-                    + row.getKey().getId() + "\": " + message, ee);
+                    + row.getKey() + "\": " + message, ee);
         } catch (IllegalPropertyException ipe) {
             LOGGER.warn("Evaluation of expression failed for row \""
-                    + row.getKey().getId() + "\": " + ipe.getMessage(), ipe);
+                    + row.getKey() + "\": " + ipe.getMessage(), ipe);
         }
         DataCell result;
         if (m_returnType.equals(Integer.class)) {
