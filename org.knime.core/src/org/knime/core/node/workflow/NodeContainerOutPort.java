@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -218,6 +219,14 @@ public class NodeContainerOutPort extends NodePortAdaptor
                 || state.getState().equals(NodeContainer.State.CONFIGURED)
                 || state.getState().equals(NodeContainer.State.EXECUTED)) {
             notifyNodeStateChangeListener(state);
+            if (m_portView != null) {
+                try {
+                    m_portView.update(getPortObject(), getPortObjectSpec());
+                } catch (Exception e) {
+                    NodeLogger.getLogger(getClass()).error(
+                            "Failed to update port view.", e);
+                }
+            }
         }
         
     }
