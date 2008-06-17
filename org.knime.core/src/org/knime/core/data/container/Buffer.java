@@ -36,6 +36,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.text.NumberFormat;
@@ -44,10 +45,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.WeakHashMap;
+import java.util.Map.Entry;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.zip.Deflater;
 import java.util.zip.GZIPInputStream;
@@ -335,6 +338,12 @@ class Buffer {
      * provide backward compatibility.
      */
     private int m_version = IVERSION;
+    
+    /*** Hash used to reduce the overhead of reading a blob cell over and 
+     * over again. Useful in cases where a blob is added multiple times to 
+     * a table... the iterator will read the blob address, treat it as unseen
+     * an then ask the owning Buffer to restore the blob. */
+    private BlobLRUCache m_blobLRUCache;
 
     /**
      * Creates new buffer for <strong>writing</strong>. It has assigned a
@@ -1077,52 +1086,60 @@ class Buffer {
             Buffer blobBuffer = cnTbl.getBuffer();
             return blobBuffer.readBlobDataCell(blobAddress, cl);
         }
-        int column = blobAddress.getColumn();
-        int indexInColumn = blobAddress.getIndexOfBlobInColumn();
-        boolean isCompress = blobAddress.isUseCompression();
-        File inFile = getBlobFile(indexInColumn, column, false, isCompress);
-        InputStream in = new BufferedInputStream(new FileInputStream(inFile));
-        if (isCompress) {
-            in = new GZIPInputStream(in);
+        if (m_blobLRUCache == null) {
+            m_blobLRUCache = new BlobLRUCache();
         }
-        DataCellSerializer<? extends DataCell> ser =
-            DataType.getCellSerializer(cl);
-        InputStream inStream = null;
-        try {
-            if (ser != null) {
-                inStream = new DataInputStream(in);
-                DataInput input =
-                    new LongUTFDataInputStream((DataInputStream)inStream);
-                // the DataType class will reject Serializer that do not have
-                // the appropriate return type
-                BlobDataCell c = (BlobDataCell)ser.deserialize(input);
-                c.setBlobAddress(blobAddress);
-                return c;
-            } else {
-                inStream = new PriorityGlobalObjectInputStream(in);
-                ((PriorityGlobalObjectInputStream)inStream).
-                    setCurrentClassLoader(cl.getClassLoader());
-                try {
-                    BlobDataCell c = (BlobDataCell)
-                        ((ObjectInputStream)inStream).readObject();
-                    c.setBlobAddress(blobAddress);
-                    return c;
-                } catch (ClassNotFoundException cnfe) {
-                    IOException e =
-                        new IOException("Unable to restore blob cell");
-                    e.initCause(cnfe);
-                    throw e;
+        SoftReference<BlobDataCell> softRef = m_blobLRUCache.get(blobAddress);
+        BlobDataCell result = softRef != null ? softRef.get() : null;
+        if (result == null) {
+            int column = blobAddress.getColumn();
+            int indexInColumn = blobAddress.getIndexOfBlobInColumn();
+            boolean isCompress = blobAddress.isUseCompression();
+            File inFile = getBlobFile(indexInColumn, column, false, isCompress);
+            InputStream in = new BufferedInputStream(
+                    new FileInputStream(inFile));
+            if (isCompress) {
+                in = new GZIPInputStream(in);
+            }
+            DataCellSerializer<? extends DataCell> ser =
+                DataType.getCellSerializer(cl);
+            InputStream inStream = null;
+            try {
+                if (ser != null) {
+                    inStream = new DataInputStream(in);
+                    DataInput input =
+                        new LongUTFDataInputStream((DataInputStream)inStream);
+                    // the DataType class will reject Serializer that do not 
+                    // have the appropriate return type
+                    result = (BlobDataCell)ser.deserialize(input);
+                    result.setBlobAddress(blobAddress);
+                } else {
+                    inStream = new PriorityGlobalObjectInputStream(in);
+                    ((PriorityGlobalObjectInputStream)inStream).
+                        setCurrentClassLoader(cl.getClassLoader());
+                    try {
+                        result = (BlobDataCell)
+                            ((ObjectInputStream)inStream).readObject();
+                        result.setBlobAddress(blobAddress);
+                    } catch (ClassNotFoundException cnfe) {
+                        IOException e =
+                            new IOException("Unable to restore blob cell");
+                        e.initCause(cnfe);
+                        throw e;
+                    }
+                }
+            } finally {
+                // do the best to minimize the number of open streams.
+                if (inStream != null) {
+                    inStream.close();
                 }
             }
-        } finally {
-            // do the best to minimize the number of open streams.
-            if (inStream != null) {
-                inStream.close();
-            }
+            m_blobLRUCache.put(
+                    blobAddress, new SoftReference<BlobDataCell>(result));
         }
-
+        return result;
     }
-
+    
     private Class<? extends DataCell> getTypeForChar(final byte identifier)
         throws IOException {
         int shortCutIndex = (byte)(identifier - BYTE_TYPE_START);
@@ -1421,6 +1438,39 @@ class Buffer {
                 LOGGER.debug(message, t);
             }
         }
+    }
+    
+    /** Last recently used cache for blobs. */
+    private static final class BlobLRUCache 
+        extends LinkedHashMap<BlobAddress, SoftReference<BlobDataCell>> {
+        
+        
+        /** Default constructor, instructs for access order. */
+        BlobLRUCache() {
+            super(16, 0.75f, true); // args copied from HashMap implementation
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        protected boolean removeEldestEntry(
+                final Entry<BlobAddress, SoftReference<BlobDataCell>> eldest) {
+            return size() >= 50;
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public synchronized SoftReference<BlobDataCell> get(final Object key) {
+            return super.get(key);
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public synchronized SoftReference<BlobDataCell> put(
+                final BlobAddress key, 
+                final SoftReference<BlobDataCell> value) {
+            return super.put(key, value);
+        }
+        
     }
 
     /**
