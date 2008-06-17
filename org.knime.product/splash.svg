@@ -2,7 +2,7 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 <svg:svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:cc="http://creativecommons.org/ns#"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -13,7 +13,7 @@
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
-   inkscape:version="0.45.1"
+   inkscape:version="0.46"
    sodipodi:docbase="C:\Dokumente und Einstellungen\Fabian Dill\Eigene Dateien\workspaces\trunk\org.knime.product"
    sodipodi:docname="splash.svg"
    sodipodi:version="0.32"
@@ -21,6 +21,13 @@
    width="455">
   <svg:defs
      id="defs4">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 147.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="455 : 147.5 : 1"
+       inkscape:persp3d-origin="227.5 : 98.333333 : 1"
+       id="perspective18" />
     <font
        horiz-adv-x="990">
       <font-face
@@ -2378,7 +2385,8 @@
      inkscape:window-y="101"
      inkscape:zoom="1"
      pagecolor="#ffffff"
-     width="455px" />
+     width="455px"
+     showgrid="false" />
   <svg:metadata
      id="metadata7">
     <rdf:RDF>
@@ -2416,14 +2424,14 @@
            inkscape:export-ydpi="90"
            sodipodi:linespacing="125%"
            style="font-size:7.20367289px;font-style:normal;font-weight:normal;line-height:125%;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
-           x="32.018124"
+           x="14.018124"
            xml:space="preserve"
            y="133.74597"><svg:tspan
              id="tspan2161"
              sodipodi:role="line"
              style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold"
-             x="32.018124"
-             y="133.74597"> Copyright, 2003 - 2008, KNIME GmbH, Germany, www.knime.org/, contact@knime.org  </svg:tspan></svg:text>
+             x="14.018124"
+             y="133.74597"> Copyright, 2003 - 2008, KNIME GmbH, Germany, http://www.knime.org/, contact@knime.org  </svg:tspan></svg:text>
         <svg:rect
            height="491.77713"
            id="rect1389"
@@ -2467,8 +2475,8 @@
            id="image3225"
            height="205"
            width="414"
-           sodipodi:absref="C:\Dokumente und Einstellungen\Fabian Dill\Eigene Dateien\Design\KNIME\welcome screen\splash_logo.png"
-           xlink:href="C:\Dokumente und Einstellungen\Fabian Dill\Eigene Dateien\Design\KNIME\welcome screen\splash_logo.png" />
+           sodipodi:absref="icons/logo/splash_logo.png"
+           xlink:href="icons/logo/splash_logo.png" />
       </svg:g>
     </svg:g>
   </svg:g>
