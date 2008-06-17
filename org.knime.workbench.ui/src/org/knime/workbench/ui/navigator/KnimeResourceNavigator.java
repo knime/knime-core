@@ -118,7 +118,9 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                     if (getViewer() != null) {
                         Display.getDefault().asyncExec(new Runnable() {
                             public void run() {
-                                getViewer().refresh();
+                                if (!getViewer().getControl().isDisposed()) {
+                                    getViewer().refresh();
+                                }
                             }
                         });
                     }
