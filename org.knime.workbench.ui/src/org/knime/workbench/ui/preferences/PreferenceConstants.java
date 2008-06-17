@@ -24,7 +24,6 @@
  */
 package org.knime.workbench.ui.preferences;
 
-import org.knime.core.node.NodeLogger.LEVEL;
 
 /**
  * Constant definitions for plug-in preferences. Values are stored under these
@@ -46,15 +45,6 @@ public class PreferenceConstants {
     /** Preference constant: log level for console appender. */
     public static final String P_LOGLEVEL_CONSOLE = "logging.loglevel.console";
 
-    /** Preference constant: log level for console appender. */
-    public static final String P_LOGLEVEL_LOG_FILE = "logging.loglevel.logfile";
-
-    /** Preference constant: maximum threads to use. */
-    public static final String P_MAXIMUM_THREADS = "knime.maxThreads";
-
-    /** Preference constant: directory for temporary files. */
-    public static final String P_TEMP_DIR = "knime.tempDir";
-
     /** Preference constant: whether user needs to confirm reset actions. */
     public static final String P_CONFIRM_RESET = "knime.confirm.reset";
     
@@ -63,18 +53,6 @@ public class PreferenceConstants {
     
     /** Preference constant to confirm reconnecting a node. */
     public static final String P_CONFIRM_RECONNECT = "knime.confirm.reconnect";
-    
-    /** Choice: log >= debug events. */
-    public static final String P_LOGLEVEL_DEBUG = LEVEL.DEBUG.toString();
-
-    /** Choice: log >= info events. */
-    public static final String P_LOGLEVEL_INFO = LEVEL.INFO.toString();
-
-    /** Choice: log >= warn events. */
-    public static final String P_LOGLEVEL_WARN = LEVEL.WARN.toString();
-
-    /** Choice: log >= error events. */
-    public static final String P_LOGLEVEL_ERROR = LEVEL.ERROR.toString();
     
     /** Preference constant for the size of the favorite nodes frequency 
      * history size.

@@ -162,21 +162,21 @@
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
+            category="org.knime.workbench.ui.headless"
             class="org.knime.workbench.ui.preferences.MainPreferencePage"
-            id="org.knime.workbench.ui.preferences"
-            name="KNIME">
+            id="org.knime.workbench.ui.preferences.gui"
+            name="KNIME GUI">
       </page>
       <page
-            category="org.knime.workbench.ui.preferences"
-            class="org.knime.workbench.ui.favorites.FavoritesViewPreferencePage"
-            id="org.knime.workbench.ui.preferences.favorites"
-            name="Favorite Nodes History">
-      </page>
-      <page
-            category="org.knime.workbench.ui.preferences"
+            category="org.knime.workbench.ui.headless"
             class="org.knime.workbench.ui.masterkey.MasterKeyPreferencePage"
             id="org.knime.workbench.ui.preferences.masterkey"
             name="Master Key">
+      </page>
+      <page
+            class="org.knime.workbench.ui.preferences.HeadlessPreferencePage"
+            id="org.knime.workbench.ui.headless"
+            name="KNIME">
       </page>
    </extension>
    <extension
