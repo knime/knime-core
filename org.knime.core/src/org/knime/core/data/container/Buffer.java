@@ -224,38 +224,36 @@ class Buffer {
         if (result != null) {
             return result;
         }
-        if (result == null) {
-            Exception exception = null;
-            try {
-                // Java will fetch a static field that is public, if you
-                // declare it to be non-static or give it the wrong scope, it
-                // automatically retrieves the static field from a super
-                // class/interface. If this field has the wrong type, a coding
-                // problem is reported.
-                Field typeField = cl.getField("USE_COMPRESSION");
-                Object typeObject = typeField.get(null);
-                result = (Boolean)typeObject;
-                if (result == null) {
-                    throw new NullPointerException("USE_COMPRESSION is null.");
-                }
-            } catch (NoSuchFieldException nsfe) {
-                exception = nsfe;
-            } catch (NullPointerException npe) {
-                exception = npe;
-            } catch (IllegalAccessException iae) {
-                exception = iae;
-            } catch (ClassCastException cce) {
-                exception = cce;
+        Exception exception = null;
+        try {
+            // Java will fetch a static field that is public, if you
+            // declare it to be non-static or give it the wrong scope, it
+            // automatically retrieves the static field from a super
+            // class/interface. If this field has the wrong type, a coding
+            // problem is reported.
+            Field typeField = cl.getField("USE_COMPRESSION");
+            Object typeObject = typeField.get(null);
+            result = (Boolean)typeObject;
+            if (result == null) {
+                throw new NullPointerException("USE_COMPRESSION is null.");
             }
-            if (exception != null) {
-                LOGGER.coding("BlobDataCell interface \"" + cl.getSimpleName()
-                        + "\" seems to have a problem with the static field "
-                        + "\"USE_COMPRESSION\"", exception);
-                // fall back - no meta information available
-                result = false;
-            }
-            BLOB_COMPRESS_MAP.put(cl, result);
+        } catch (NoSuchFieldException nsfe) {
+            exception = nsfe;
+        } catch (NullPointerException npe) {
+            exception = npe;
+        } catch (IllegalAccessException iae) {
+            exception = iae;
+        } catch (ClassCastException cce) {
+            exception = cce;
         }
+        if (exception != null) {
+            LOGGER.coding("BlobDataCell interface \"" + cl.getSimpleName()
+                    + "\" seems to have a problem with the static field "
+                    + "\"USE_COMPRESSION\"", exception);
+            // fall back - no meta information available
+            result = false;
+        }
+        BLOB_COMPRESS_MAP.put(cl, result);
         return result;
     }
 
