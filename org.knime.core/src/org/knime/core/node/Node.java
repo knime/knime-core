@@ -891,6 +891,7 @@ public final class Node implements NodeModelWarningListener {
      */
     public void cleanup() {
         cleanOutPorts();
+        closeAllViews();
     }
 
     // /**
