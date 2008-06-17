@@ -94,12 +94,6 @@ public class WorkflowGraphicalViewerCreator {
         viewer.setKeyHandler(new GraphicalViewerKeyHandler(viewer));
 
         // Add a drop listener
-        // This is a bit tricky and needs an explicit cast, as the
-        // deprecated method signature uses a class with the same name
-        // (...gef.dnd.TransferDropTargetListener)
-        // However, both classes not only are named the same, they
-        // actually both implement the same super-interface
-        // - strange stuff %-)
         NodeTemplateDropTargetListener2 listener
             = new NodeTemplateDropTargetListener2(viewer);
         viewer.addDropTargetListener(listener);
@@ -111,6 +105,8 @@ public class WorkflowGraphicalViewerCreator {
         // used in the viewer
         viewer.setEditPartFactory(new WorkflowEditPartFactory());
 
+
+        
         return viewer;
     }
 
