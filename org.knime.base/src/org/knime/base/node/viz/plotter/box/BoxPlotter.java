@@ -315,7 +315,7 @@ public class BoxPlotter extends BasicPlotter {
                                     height)) - (OFFSET / 2);
                     DotInfo dot = new DotInfo(x, y, key, 
                             delegateIsHiLit(key), 
-                            ColorAttr.DEFAULT, 0, 0);
+                            ColorAttr.DEFAULT, 1, 0);
                     dot.setXDomainValue(new StringCell(colName));
                     dot.setYDomainValue(new DoubleCell(value));
                     dot.setShape(ShapeFactory.getShape(ShapeFactory.CIRCLE));
@@ -335,7 +335,7 @@ public class BoxPlotter extends BasicPlotter {
                                     new DoubleCell(value),
                                     height)) - (OFFSET / 2);
                     DotInfo dot = new DotInfo(x, y, key, 
-                            delegateIsHiLit(key), ColorAttr.DEFAULT, 0, 
+                            delegateIsHiLit(key), ColorAttr.DEFAULT, 1, 
                             0);
                     dot.setShape(ShapeFactory.getShape(ShapeFactory.CROSS));
                     dot.setXDomainValue(new StringCell(colName));
