@@ -44,6 +44,7 @@ import org.knime.core.util.KnimeEncryption;
 import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.ui.favorites.FavoriteNodesManager;
 import org.knime.workbench.ui.masterkey.MasterKeyPreferencePage;
+import org.knime.workbench.ui.metanodes.MetaNodeTemplateRepositoryView;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.osgi.framework.BundleContext;
 
@@ -297,6 +298,7 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
          for (int i = 0; i < APPENDERS.size(); i++) {
             removeAppender(APPENDERS.get(i));
         }
+         MetaNodeTemplateRepositoryView.getInstance().dispose();
         super.stop(context);
         plugin = null;
         m_resourceBundle = null;
