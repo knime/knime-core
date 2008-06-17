@@ -27,11 +27,11 @@ package org.knime.core.node.workflow;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContainer.State;
 
 /**
@@ -125,7 +125,7 @@ public class NodeContainerOutPort extends NodePortAdaptor
             throw new NullPointerException("Can't set port view to null");
         }
         if (m_portView != null) {
-            throw new IllegalStateException("Port View can only set once.");
+            throw new IllegalStateException("Port View can only be set once.");
         }
         m_portView = portView;
     }
@@ -155,16 +155,23 @@ public class NodeContainerOutPort extends NodePortAdaptor
     /**
      * Call this when the port is not used anymore, certainly when you've opened
      * a view before. All port views will be closed and disposed.
-     * 
-     * TODO remove this parameter??
-     * @param Node why?
      */
-    protected void disposePortView(final Node node) {
-        if (m_portView != null) {
-            m_portView.setVisible(false);
-            m_portView.dispose();
-            m_portView = null;
+    protected void disposePortView() {
+        if (m_portView == null) {
+            return;
         }
+        Runnable run = new Runnable() {
+            /** {@inheritDoc} */
+            @Override
+            public void run() {
+                if (m_portView != null) {
+                    m_portView.setVisible(false);
+                    m_portView.dispose();
+                    m_portView = null;
+                }
+            }
+        };
+        ViewUtils.runOrInvokeLaterInEDT(run);
     }
 
     /**
@@ -172,9 +179,7 @@ public class NodeContainerOutPort extends NodePortAdaptor
      */
     @Override
     protected void finalize() throws Throwable {
-        // TODO (tg) This method is not guaranteed to be called!
-        // make sure to blow away the port view
-        disposePortView(null);
+        disposePortView();
         super.finalize();
     }
 
