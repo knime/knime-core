@@ -19,10 +19,10 @@
 package org.knime.workbench.ui.metanodes;
 
 import org.eclipse.jface.util.LocalSelectionTransfer;
-import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.jface.viewers.ListViewer;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * The view displaying the meta node templates.
@@ -40,11 +41,18 @@ import org.knime.core.node.workflow.WorkflowManager;
  */
 public class MetaNodeTemplateRepositoryView extends ViewPart {
 
-    private ListViewer m_viewer;
+//    private ListViewer m_viewer;
+    private TreeViewer m_viewer;
     private MetaNodeTemplateRepositoryManager m_manager;
 
     private static MetaNodeTemplateRepositoryView instance;
     
+    private static final Image ICON = KNIMEUIPlugin.imageDescriptorFromPlugin(
+            KNIMEUIPlugin.PLUGIN_ID,
+            "icons/meta/metanode_template.png").createImage();
+    
+    // for the tree viewer content provider (no children at all)
+    private static final Object[] EMPTY_ARRAY = new Object[0];
     
     /**
      * 
@@ -70,7 +78,10 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
      */
     @Override
     public void createPartControl(final Composite parent) {
-        m_viewer = new ListViewer(parent,
+//        m_viewer = new ListViewer(parent,
+//                SWT.BORDER | SWT.SINGLE | SWT.V_SCROLL);
+
+        m_viewer = new TreeViewer(parent,
                 SWT.BORDER | SWT.SINGLE | SWT.V_SCROLL);
         
         this.getSite().setSelectionProvider(m_viewer);
@@ -79,7 +90,7 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
         m_viewer.addDragSupport(DND.DROP_COPY, transfers,
                 new MetaNodeTemplateRepositoryDragSource(this));
         // content provider (which reads from repository)
-        m_viewer.setContentProvider(new IStructuredContentProvider() {
+        m_viewer.setContentProvider(new ITreeContentProvider() {
             
 
             @Override
@@ -100,6 +111,21 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
                     final Object oldInput, final Object newInput) {
                 m_manager = (MetaNodeTemplateRepositoryManager)newInput;
             }
+
+            @Override
+            public Object[] getChildren(final Object parentElement) {
+                return EMPTY_ARRAY;
+            }
+
+            @Override
+            public Object getParent(final Object element) {
+                return null;
+            }
+
+            @Override
+            public boolean hasChildren(final Object element) {
+                return false;
+            }
             
         });
         // set the input
@@ -108,7 +134,8 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
         m_viewer.setLabelProvider(new LabelProvider() {
             @Override
             public Image getImage(final Object element) {
-                return super.getImage(element);
+                return ICON;
+//                return super.getImage(element);
             }
             
             @Override
