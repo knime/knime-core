@@ -315,11 +315,6 @@ public class NodeContainerFigure extends RectangleFigure {
         m_headingTooltip.setText(text);
     }
 
-    /**
-     * 
-     * @param text to be wrapped
-     * @return wrapped text
-     */
     public String wrapText(final String text) {
         if (text == null || text.length() == 0) {
             return "";
@@ -337,8 +332,7 @@ public class NodeContainerFigure extends RectangleFigure {
         // the closest space is used for a split
         int indexLeft = middle;
         int indexRight = middle + 1;
-        for (; indexLeft >= 0 && indexRight < text.length(); 
-            indexLeft--, indexRight++) {
+        for (; indexLeft >= 0 && indexRight < text.length(); indexLeft--, indexRight++) {
             if (text.charAt(indexLeft) == ' ') {
                 StringBuilder sb = new StringBuilder(text);
                 return sb.replace(indexLeft, indexLeft + 1, "\n").toString();
@@ -375,8 +369,7 @@ public class NodeContainerFigure extends RectangleFigure {
         m_name.setText(name);
         if (!(m_name.getParent() == this)) {
 
-//            add(m_name, 4);
-            add(m_name, getChildren().size() - 1);
+            add(m_name, getChildren().size());
         }
 
         // if the tooltip (description) contains
@@ -527,7 +520,7 @@ public class NodeContainerFigure extends RectangleFigure {
         if (msg == null || msg.getMessageType() == null) {
             removeMessages();
             NodeLogger.getLogger(NodeContainerFigure.class).warn(
-                    "Received NULL message!");
+                    "Recieved NULL message!");
         } else if (msg.getMessageType().equals(NodeMessage.Type.RESET)) {
             removeMessages();
         } else if (msg.getMessageType().equals(NodeMessage.Type.WARNING)) {
@@ -563,12 +556,14 @@ public class NodeContainerFigure extends RectangleFigure {
 
         prefWidth = Math.max(WIDTH, widthOfHeading);
 
-        int prefHeight =
+        int prefHeight = 110;
+        /*
                 m_heading.getPreferredSize().height
                         + m_contentFigure.getPreferredSize().height
                         + m_infoWarnErrorPanel.getPreferredSize().height
                         + m_statusFigure.getPreferredSize().height
                         + m_name.getPreferredSize().height + 5;
+                        */
         return new Dimension(prefWidth, prefHeight);
     }
 
@@ -605,7 +600,7 @@ public class NodeContainerFigure extends RectangleFigure {
     /**
      * We need to set the color before invoking super.
      *
-     * {@inheritDoc}
+     * @see org.eclipse.draw2d.Shape#fillShape(org.eclipse.draw2d.Graphics)
      */
     @Override
     protected void fillShape(final Graphics graphics) {
@@ -627,7 +622,7 @@ public class NodeContainerFigure extends RectangleFigure {
      *
      * @author Florian Georg, University of Konstanz
      */
-    public class ContentFigure extends Figure {
+    protected class ContentFigure extends Figure {
         private final Label m_iconFigure;
 
         private final Label m_deleteIcon;
@@ -651,7 +646,7 @@ public class NodeContainerFigure extends RectangleFigure {
                 "icons/node/" + "background_manipulator.png";
 
         private static final String BACKGROUND_META =
-                "icons/node/background_meta.png";
+                "icons/node/" + "background_meta.png";
 
         private static final String BACKGROUND_VIEWER =
                 "icons/node/" + "background_viewer.png";
@@ -699,8 +694,7 @@ public class NodeContainerFigure extends RectangleFigure {
             add(m_backgroundIcon);
             m_backgroundIcon.setLayoutManager(new BorderLayout());
             m_backgroundIcon.add(m_iconFigure, BorderLayout.CENTER);
-            setConstraint(m_backgroundIcon, 
-                    new RelativeLocator(this, 0.5, 0.5));
+            setConstraint(m_backgroundIcon, new RelativeLocator(this, 0.5, 0.5));
 
         }
 
@@ -784,7 +778,7 @@ public class NodeContainerFigure extends RectangleFigure {
          *
          * @param icon Image to display as icon
          */
-        public void setIcon(final Image icon) {
+        void setIcon(final Image icon) {
 
             if (m_baseIcon == null) {
                 m_baseIcon = icon;
@@ -797,12 +791,7 @@ public class NodeContainerFigure extends RectangleFigure {
             m_iconFigure.revalidate();
         }
         
-        /**
-         * Derived classes (like {@link SubworkflowFigure} may set a fixed icon.
-         * 
-         * @param icon background icon
-         */
-        protected void setBackgroundIcon(final Image icon) {
+        void setBackgroundIcon(Image icon) {
             m_backgroundIcon.setIcon(icon);
         }
 
