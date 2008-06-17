@@ -516,6 +516,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                 new WorkflowGraphicalViewerCreator(editorSite, this
                         .getActionRegistry()).createViewer(parent);
 
+        viewer.addDropTargetListener(new MetaNodeTemplateDropTargetListener(
+                this, viewer));
         // Configure the key handler
         GraphicalViewerKeyHandler keyHandler =
                 new GraphicalViewerKeyHandler(viewer);
@@ -726,6 +728,9 @@ public class WorkflowEditor extends GraphicalEditor implements
      * objects to update the actions.
      */
     public void updateActions() {
+        // TODO: update here the actions in the action bar
+        // based on current selection 
+        // -> maybe solves the execute all enabled/disabled problem 
         updateActions(m_editorActions);
     }
 
