@@ -24,7 +24,6 @@ package org.knime.product.headless;
 import org.eclipse.core.runtime.IPlatformRunnable;
 import org.knime.core.node.workflow.BatchExecutor;
 import org.knime.workbench.repository.RepositoryManager;
-import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * The run method of this class is executed when KNIME is run headless, 
@@ -45,7 +44,7 @@ public class KNIMEBatchApplication implements IPlatformRunnable {
             System.setProperty("java.awt.headless", "true");
         }
         // load the ui plugin to read the preferences
-        KNIMEUIPlugin.getDefault();
+//        KNIMEUIPlugin.getDefault();
         // this is just to load the repository plugin
         RepositoryManager.INSTANCE.toString();
         String[] stringArgs;
