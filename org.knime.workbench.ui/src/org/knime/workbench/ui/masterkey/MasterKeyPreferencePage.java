@@ -24,7 +24,7 @@
  */
 package org.knime.workbench.ui.masterkey;
 
-import java.io.IOException;
+import javax.crypto.SecretKey;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
@@ -37,11 +37,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.knime.core.util.EncryptionKeySupplier;
+import org.knime.core.util.KnimeEncryption;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
-
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
 
 /**
  * Preference page used to enter (or not) a master key for KNIME.
@@ -85,12 +83,13 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
                     if (KNIMEUIPlugin.getDefault().getPreferenceStore()
                           .getBoolean(PreferenceConstants.P_MASTER_KEY_SAVED)) {
                         try {
-                            m_lastMasterKey = new String(
-                                new BASE64Decoder().decodeBuffer(
-                                 KNIMEUIPlugin.getDefault().getPreferenceStore()
-                                 .getString(
-                                      PreferenceConstants.P_MASTER_KEY)));
-                        } catch (IOException ioe) {
+                            String mk = KNIMEUIPlugin.getDefault().
+                                getPreferenceStore().getString(
+                                    PreferenceConstants.P_MASTER_KEY);
+                            SecretKey sk = KnimeEncryption.createSecretKey(
+                                    PreferenceConstants.P_MASTER_KEY);
+                            m_lastMasterKey = KnimeEncryption.decrypt(sk, mk);
+                        } catch (Exception e) {
                             m_lastMasterKey = null;
                         } 
                     }
@@ -130,11 +129,11 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
         super.addField(m_isMasterKey);
         m_masterKey = new StringFieldEditor(
                 "master_key_field", "Master Key: ", 20, parent);
-        // m_masterKey.getTextControl(parent).setEchoChar('*');
+        m_masterKey.getTextControl(parent).setEchoChar('*');
         super.addField(m_masterKey);
         m_masterKeyConfirm = new StringFieldEditor(
                 "master_key_field", "Confirm: ", 20, parent);
-        // m_masterKeyConfirm.getTextControl(parent).setEchoChar('*');
+        m_masterKeyConfirm.getTextControl(parent).setEchoChar('*');
         super.addField(m_masterKeyConfirm);
         m_saveMasterKey = new BooleanFieldEditor(
                 PreferenceConstants.P_MASTER_KEY_SAVED, 
@@ -154,12 +153,15 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
         if (SUPPLIER.m_lastMasterKey == null) {
             m_masterKey.load();
             try {
-                SUPPLIER.m_lastMasterKey = new String(
-                        new BASE64Decoder().decodeBuffer(
-                                m_masterKey.getStringValue()));
-            } catch (IOException ioe) {
-                m_masterKey.setErrorMessage("Could not encode Master Key:\n"
-                        + ioe.getMessage());
+                String mk = KNIMEUIPlugin.getDefault().
+                getPreferenceStore().getString(
+                    PreferenceConstants.P_MASTER_KEY);
+                SecretKey sk = KnimeEncryption.createSecretKey(
+                    PreferenceConstants.P_MASTER_KEY);
+                SUPPLIER.m_lastMasterKey = KnimeEncryption.decrypt(sk, mk);
+            } catch (Exception e) {
+                m_masterKey.setErrorMessage("Could not encrypt Master Key:\n"
+                        + e.getMessage());
             }
             m_masterKey.setStringValue(SUPPLIER.m_lastMasterKey);
             m_masterKeyConfirm.setStringValue(SUPPLIER.m_lastMasterKey);
@@ -230,7 +232,18 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
             mb.open();
             return null;
         }
-        return new BASE64Encoder().encode(new String(masterKey).getBytes());
+        try {
+            SecretKey secretKey = KnimeEncryption.createSecretKey(
+                        PreferenceConstants.P_MASTER_KEY);
+            return KnimeEncryption.encrypt(secretKey, masterKey.toCharArray());
+        } catch (Exception e) {
+            MessageBox mb = new MessageBox(Display.getDefault()
+                    .getActiveShell(), SWT.ICON_ERROR | SWT.OK);
+            mb.setText("Master Key Encryption...");
+            mb.setMessage("Master Key Encryption failed:\n" + e.getMessage());
+            mb.open();
+            return null; 
+        }
     }
     
     /**

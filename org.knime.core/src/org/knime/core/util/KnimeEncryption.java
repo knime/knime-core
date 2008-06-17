@@ -72,7 +72,7 @@ public final class KnimeEncryption {
     /**
      * Enrypts password.
      * 
-     * @param password Char array.
+     * @param password as char array
      * @return The password encrypt.
      * @throws Exception If something goes wrong.
      */
@@ -81,12 +81,25 @@ public final class KnimeEncryption {
         if (keySupplier != null) {
             secretKey = createSecretKey(keySupplier.getEncryptionKey());
         }
+        return encrypt(secretKey, password);
+    }
+    
+    /**
+     * Enrypts password with the given <code>SecrectKey</code>.
+     * 
+     * @param secretKey <code>SecretKey</code> used to encrypt the password
+     * @param password as char array
+     * @return The password encrypt.
+     * @throws Exception If something goes wrong.
+     */
+    public static String encrypt(final SecretKey secretKey, 
+            final char[] password) throws Exception {
         if (secretKey == null) {
             return new String(password);
         }
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
         byte[] ciphertext = cipher.doFinal(
-        	new String(password).getBytes("UTF-8"));
+                new String(password).getBytes("UTF-8"));
         return new BASE64Encoder().encode(ciphertext);
     }
 
@@ -102,6 +115,19 @@ public final class KnimeEncryption {
         if (keySupplier != null) {
             secretKey = createSecretKey(keySupplier.getEncryptionKey());
         }
+        return decrypt(secretKey, password);
+    }
+
+    /**
+     * Decrypts password with the given <code>SecrectKey</code>.
+     * 
+     * @param secretKey <code>SecretKey</code> used to decrypt the password
+     * @param password The password to decrypt.
+     * @return The decrypted password.
+     * @throws Exception If something goes wrong.
+     */
+    public static String decrypt(final SecretKey secretKey, 
+            final String password) throws Exception {
         if (secretKey == null) {
             return password;
         }
@@ -111,7 +137,7 @@ public final class KnimeEncryption {
         byte[] decryptedText = cipher.doFinal(pw);
         return new String(decryptedText, "UTF-8");
     }
-
+    
     /**
      * Sets the static encryption key supplier for this global static knime
      * encryptor.
@@ -124,16 +150,21 @@ public final class KnimeEncryption {
         keySupplier = supplier;
     }
 
-    private static SecretKey createSecretKey(final String keyAsString) {
-        if (keyAsString == null || keyAsString.length() == 0) {
+    /**
+     * Generates a <code>SecretKey</code> based on the given key phrase.
+     * @param phrase key phrase used to generate secret key
+     * @return a new secret key
+     */
+    public static SecretKey createSecretKey(final String phrase) {
+        if (phrase == null || phrase.length() == 0) {
             return null;
         }
-        String newKey = keyAsString;
-        if (keyAsString.length() % 8 != 0) {
+        String newKey = phrase;
+        if (phrase.length() % 8 != 0) {
             // key is not a multiple of 8
             do {
                 // extend key
-                newKey += keyAsString;
+                newKey += phrase;
             } while (newKey.length() < 8);
             // trim key to multiple of 8
             newKey = newKey.substring(0, ((int) newKey.length() / 8) * 8); 
