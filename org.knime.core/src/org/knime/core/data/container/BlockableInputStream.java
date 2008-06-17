@@ -59,8 +59,7 @@ final class BlockableInputStream extends InputStream {
     /**
      * Reads next byte from stream and if it is an escape byte, it returns the
      * next following byte. If it is a terminate byte, it returns -1, i.e. eof.
-     * 
-     * @see java.io.InputStream#read()
+     * {@inheritDoc}
      */
     @Override
     public int read() throws IOException {
