@@ -56,7 +56,7 @@ final class BlobSupportDataRow implements DataRow {
     /**
      * If the cell at index is a blob wrapper cell, it will fetch the content
      * and return it.
-     * @see org.knime.core.data.DataRow#getCell(int)
+     * {@inheritDoc}
      */
     public DataCell getCell(final int index) {
         DataCell c = m_cells[index];
