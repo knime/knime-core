@@ -114,6 +114,16 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
     final double getStdDev() {
         return m_stdDev;
     }
+    
+    /**
+     * Returns the standard deviation of this radial basisfunction.
+     * 
+     * @return the standard deviation
+     */
+    @Override
+    public double computeSpread() {
+        return getStdDev();
+    }
 
     /**
      * Shrinks this rules standard deviation by the new value.

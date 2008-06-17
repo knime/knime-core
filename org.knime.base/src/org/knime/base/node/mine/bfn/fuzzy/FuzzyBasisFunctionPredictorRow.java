@@ -201,6 +201,36 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
     }
     
     /**
+     * Returns the aggregated spread of the core.
+     * 
+     * @return the overall spread of the core regions
+     */
+    @Override
+    public double computeSpread() {
+        double vol = 0.0;
+        double dom = 0.0;
+        for (int i = 0; i < getNrMemships(); i++) {
+            MembershipFunction mem = getMemship(i);
+            if (mem.isMissingIntern()) {
+                continue;
+            }
+            double spread = (mem.getMaxCore() - mem.getMinCore());
+            if (spread > 0.0) {
+                if (vol == 0.0) {
+                    vol = spread;
+                    dom = (mem.getMax().doubleValue() 
+                            - mem.getMin().doubleValue());
+                } else {
+                    vol *= spread;
+                    dom *= (mem.getMax().doubleValue() 
+                            - mem.getMin().doubleValue());
+                }
+            }
+        }
+        return (vol > 0 ? vol : 0);
+    }
+    
+    /**
      * 
      * {@inheritDoc}
      */

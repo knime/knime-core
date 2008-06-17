@@ -127,7 +127,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
             assert m_coveredPattern.size() > 0;
             return new IntCell(m_coveredPattern.size());
         } else if (index == nrCells + 2) {
-            return new DoubleCell(computeSpread());
+            return new DoubleCell(getPredictorRow().computeSpread());
         } else if (index == nrCells + 3) {
             return new IntCell(getPredictorRow().getNrUsedFeatures());
         } else {
@@ -180,13 +180,6 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     public final Set<RowKey> getAllCoveredPattern() {
         return Collections.unmodifiableSet(m_coveredPattern);
     }
-    
-    /**
-     * Returns a value for the spread of this rule.
-     * 
-     * @return rule spread value
-     */
-    public abstract double computeSpread();
     
     /**
      * Returns the within-cluster variance.

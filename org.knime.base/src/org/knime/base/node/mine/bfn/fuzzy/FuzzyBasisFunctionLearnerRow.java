@@ -440,7 +440,6 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * 
      * @return the overall spread of the core regions
      */
-    @Override
     public double computeSpread() {
         double vol = 0.0;
         double dom = 0.0;

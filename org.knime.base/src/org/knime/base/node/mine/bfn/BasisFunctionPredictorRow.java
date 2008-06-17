@@ -105,6 +105,13 @@ public abstract class BasisFunctionPredictorRow {
     public abstract double computeDistance(final DataRow row);
     
     /**
+     * Returns a value for the spread of this rule.
+     * 
+     * @return rule spread value
+     */
+    public abstract double computeSpread();
+    
+    /**
      * If the same class as this basisfunction is assigned to, the number of
      * correctly covered pattern is increased, otherwise the number of wrong
      * covered ones.

@@ -186,16 +186,6 @@ public class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     }
 
     /**
-     * Returns the standard deviation of this radial basisfunction.
-     * 
-     * @return the standard deviation
-     */
-    @Override
-    public double computeSpread() {
-        return m_predRow.getStdDev();
-    }
-
-    /**
      * Compares this basis function with the other one by its standard deviation
      * if the number of covered pattern is equal otherwise use this
      * identification.
