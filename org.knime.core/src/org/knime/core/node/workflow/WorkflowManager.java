@@ -98,6 +98,7 @@ public final class WorkflowManager extends NodeContainer {
     /** Summarization of internal nodes' message(s). */
     private NodeMessage m_nodeMessage = NodeMessage.NONE;
     
+    /** Executor for asynchronous event notification. */
     private static final Executor WORKFLOW_NOTIFIER =
         Executors.newSingleThreadExecutor(new ThreadFactory() {
             /** {@inheritDoc} */
@@ -860,12 +861,21 @@ public final class WorkflowManager extends NodeContainer {
     public void loadNodeSettings(final NodeID id, final NodeSettingsRO settings)
     throws InvalidSettingsException {
         // TODO load setting for MetaNodeContainer/WorkflowManager-nodes
-        // TODO synchronize
-        NodeContainer nc = getNodeContainer(id);
-        // TODO propagate reset to parent (what if "this" is sub flow)
-        resetAndConfigureNode(id);
-        nc.loadSettings(settings);
-        configureNodeAndSuccessors(id, true, true);
+        synchronized (m_workflowMutex) {
+            NodeContainer nc = getNodeContainer(id);
+            if (!nc.getState().executionInProgress()
+                    && !hasSuccessorInProgress(id)) {
+                resetSuccessors(id);
+                if (nc.getState().equals(State.EXECUTED)) {
+                    nc.resetAsNodeContainer();
+                }
+                nc.loadSettings(settings);
+                configureNodeAndSuccessors(id, true, true);
+            } else {
+                throw new IllegalStateException("Can not load settings into running"
+                        + " node.");
+            }
+        }
     }
 
     /**

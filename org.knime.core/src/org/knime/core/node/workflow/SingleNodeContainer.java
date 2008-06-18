@@ -314,6 +314,7 @@ public final class SingleNodeContainer extends NodeContainer
     boolean isResetableAsNodeContainer() {
         return (getState().equals(State.EXECUTED)
                 || getState().equals(State.MARKEDFOREXEC)
+                || getState().equals(State.CONFIGURED)
                 || getState().equals(State.UNCONFIGURED_MARKEDFOREXEC));
     }
 
@@ -331,6 +332,10 @@ public final class SingleNodeContainer extends NodeContainer
                 setState(State.CONFIGURED);
                 return;
             case UNCONFIGURED_MARKEDFOREXEC:
+                setState(State.IDLE);
+                return;
+            case CONFIGURED:
+                m_node.reset(true);
                 setState(State.IDLE);
                 return;
             default:
