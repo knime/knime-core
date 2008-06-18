@@ -94,7 +94,8 @@ public class DatabasePortObject implements PortObject {
      * Serializer used to save <code>DatabasePortObject</code>.
      * @return a new database port object serializer
      */
-    static PortObjectSerializer<DatabasePortObject> getPortObjectSerializer() {
+    public static PortObjectSerializer<DatabasePortObject> 
+            getPortObjectSerializer() {
         return new PortObjectSerializer<DatabasePortObject>() {
             /** {@inheritDoc} */
             @Override

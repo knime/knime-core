@@ -72,7 +72,7 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
      * Serializer used to save <code>DatabasePortObjectSpec</code>.
      * @return a new database spec serializer
      */
-    static PortObjectSpecSerializer<DatabasePortObjectSpec> 
+    public static PortObjectSpecSerializer<DatabasePortObjectSpec> 
             getPortObjectSpecSerializer() {
         return new PortObjectSpecSerializer<DatabasePortObjectSpec>() {
 
