@@ -33,6 +33,7 @@ import org.knime.core.node.NodeView;
  * 
  * 
  * @author Thomas Gabriel, University of Konstanz
+ * @deprecated replace by completely new implementation
  */
 public class MDSPivotDataNodeFactory extends NodeFactory {
 
