@@ -1343,7 +1343,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      *
      * @param values the possible values.
      */
-    protected void createNominalXCoordinate(final Set<DataCell> values) {
+    public void createNominalXCoordinate(final Set<DataCell> values) {
         DataColumnDomainCreator domainCreator = new DataColumnDomainCreator();
         domainCreator.setValues(values);
         DataColumnSpecCreator specCreator =
@@ -1364,7 +1364,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      *
      * @param values the possible values.
      */
-    protected void createNominalYCoordinate(final Set<DataCell> values) {
+    public void createNominalYCoordinate(final Set<DataCell> values) {
         DataColumnDomainCreator domainCreator = new DataColumnDomainCreator();
         domainCreator.setValues(values);
         DataColumnSpecCreator specCreator =
