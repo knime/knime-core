@@ -146,8 +146,14 @@ public class LinRegPredictorNodeModel extends GenericNodeModel {
             }
             varsIndices[i] = index;
         }
-        String newColName = DataTableSpec.getUniqueColumnName(inSpec, 
-                regModelSpec.getColumnSpec(varsIndices.length).getName());
+        // try to use some smart naming scheme for the append column
+        String oldName = 
+            regModelSpec.getColumnSpec(varsIndices.length).getName();
+        if (inSpec.containsName(oldName) 
+                && !oldName.toLowerCase().endsWith("(prediction)")) {
+            oldName = oldName + " (prediction)";
+        }
+        String newColName = DataTableSpec.getUniqueColumnName(inSpec, oldName); 
         DataColumnSpec newCol = 
             new DataColumnSpecCreator(newColName, DoubleCell.TYPE).createSpec();
         SingleCellFactory fac = new SingleCellFactory(newCol) {
