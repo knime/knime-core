@@ -39,8 +39,10 @@ import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.NominalValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
@@ -105,6 +107,84 @@ public abstract class BasicPlotter extends AbstractPlotter {
         ((BasicDrawingPane)getDrawingPane()).clearPlot();
     }
 
+    /**
+     * Plots the column in the table specified by the column index as a 
+     * line plot.
+     * 
+     * @param table the table containing the data to be plotted.
+     * @param xIdx - the x column index specifying the data to be plotted.
+     * @param yIdx - the x column index specifying the data to be plotted.
+     * @param color the color of the line (may be null)
+     * @param stroke the stroke of the line (may be null)
+     */
+    public void addLine(final DataArray table, final int xIdx, final int yIdx,
+            final Color color, final Stroke stroke) {
+        if (!(getDrawingPane() instanceof BasicDrawingPane)) {
+            return;
+        }
+        if (!table.getDataTableSpec().getColumnSpec(yIdx).getType()
+                .isCompatible(DoubleValue.class)) {
+            return;
+        }
+//        if (!checkCompatibleAxis()) {
+//            return;
+//        }
+        // x axis
+        DataColumnSpec xColSpec = table.getDataTableSpec().getColumnSpec(xIdx); 
+        if (xColSpec.getType().isCompatible(
+                NominalValue.class)) {
+        Set<DataCell> rowKeys = new LinkedHashSet<DataCell>();
+        for (int i = 0; i < table.size(); i++) {
+            rowKeys.add(new StringCell(table.getRow(i).getKey().getString()));
+        }
+            createNominalXCoordinate(rowKeys);
+        } else if (xColSpec.getType().isCompatible(DoubleValue.class)) {
+            double newXMin = ((DoubleValue)xColSpec.getDomain().getLowerBound())
+                .getDoubleValue();
+            double newXMax = ((DoubleValue)xColSpec.getDomain().getUpperBound())
+                .getDoubleValue();
+            createXCoordinate(newXMin, newXMax);
+        } else {
+            return;
+        }
+
+        double newYMin = ((DoubleValue)table.getDataTableSpec().getColumnSpec(
+                yIdx).getDomain().getLowerBound()).getDoubleValue();
+        double newYMax = ((DoubleValue)table.getDataTableSpec().getColumnSpec(
+                yIdx).getDomain().getUpperBound()).getDoubleValue(); 
+        createYCoordinate(newYMin, newYMax);
+
+        BasicLine line = new BasicLine();
+        if (color != null) {
+            line.setColor(color);
+        }
+        if (stroke != null) {
+            line.setStroke(stroke);
+        }
+//        int x = 0;
+        for (DataRow row : table) {
+            DataCell value = row.getCell(yIdx);
+            if (!value.isMissing()) {
+                int mappedX = getMappedXValue(row.getCell(xIdx));
+                int mappedY = getMappedYValue(value);
+                DataCellPoint domainPoint = new DataCellPoint(
+                        row.getCell(xIdx), value);
+                line.addDomainValue(domainPoint);
+                Point p = new Point(mappedX, mappedY);
+                line.addPoint(p);
+            } else {
+//              if value.isMissing() -> create newLine
+                ((BasicDrawingPane)getDrawingPane()).addDrawingElement(line);
+                line = new BasicLine();
+                line.setColor(color);
+                line.setStroke(stroke);
+            } 
+//            x++;
+        }
+        ((BasicDrawingPane)getDrawingPane()).addDrawingElement(line);
+        fitToScreen();
+    }    
+    
 
     /**
      * Plots the column in the table specified by the column index as a 
@@ -114,7 +194,10 @@ public abstract class BasicPlotter extends AbstractPlotter {
      * @param colIdx - the column index specifying the data to be plotted.
      * @param color the color of the line (may be null)
      * @param stroke the stroke of the line (may be null)
+     * @deprecated use {@link #addLine(DataArray, int, int, Color, Stroke)} 
+     *  instead
      */
+    @Deprecated
     public void addLine(final DataArray table, final int colIdx,
             final Color color, final Stroke stroke) {
         if (!(getDrawingPane() instanceof BasicDrawingPane)) {
