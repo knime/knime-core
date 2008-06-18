@@ -36,15 +36,15 @@ import junit.framework.TestCase;
 /**
  * JUnit test class for the filter column table which test column indices,
  * names, types, and its exceptions.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
- * 
+ *
  * @see FilterColumnTable
  */
 public final class FilterColumnTableTest extends TestCase {
 
     private static final int ROWS = 42;
-    
+
     /**
      * Test table class used for column filtering.
      */
@@ -68,7 +68,7 @@ public final class FilterColumnTableTest extends TestCase {
         public RowIterator iterator() {
             return new MyTestRowIterator(m_spec.getNumColumns());
         }
-        
+
     } // MyTestTable
 
     /**
@@ -83,7 +83,7 @@ public final class FilterColumnTableTest extends TestCase {
          * Creates a new iterator with the given number of columns. The row key
          * is formed as <i>row_ </i> plus row index. Each value is a string such
          * as <i>["row","column"] </i>.
-         * 
+         *
          * @param columns The number of columns to generate.
          */
         MyTestRowIterator(final int columns) {
@@ -92,8 +92,7 @@ public final class FilterColumnTableTest extends TestCase {
                 for (int c = 0; c < columns; c++) {
                     cells[c] = "[" + i + "," + c + "]";
                 }
-                m_rows[i] = new DefaultRow(new StringCell("row_" + i),
-                        cells);
+                m_rows[i] = new DefaultRow("row_" + i, cells);
             }
             m_index = 0;
         }
@@ -122,7 +121,7 @@ public final class FilterColumnTableTest extends TestCase {
 
     /**
      * Init internal members.
-     * 
+     *
      * @see junit.framework.TestCase#setUp()
      */
     @Override
@@ -134,7 +133,7 @@ public final class FilterColumnTableTest extends TestCase {
 
     /**
      * Destroy internal members.
-     * 
+     *
      * @see junit.framework.TestCase#tearDown()
      */
     @Override
@@ -212,7 +211,7 @@ public final class FilterColumnTableTest extends TestCase {
      * Test filtering one column by index.
      */
     public void testInConstructorColumnIndices3() {
-        FilterColumnTable filter = 
+        FilterColumnTable filter =
             new FilterColumnTable(m_table, new int[] {3});
         DataTableSpec fSpec = filter.getDataTableSpec();
         assertTrue(fSpec.getNumColumns() == 1);
@@ -356,7 +355,7 @@ public final class FilterColumnTableTest extends TestCase {
             assertTrue(true);
         }
     }
-    
+
     /**
      * Negative column index in array.
      */
@@ -392,7 +391,7 @@ public final class FilterColumnTableTest extends TestCase {
             assertTrue(true);
         }
     }
-    
+
     /**
      * Column index in array appears twice.
      */
@@ -453,7 +452,7 @@ public final class FilterColumnTableTest extends TestCase {
      * Test all available column indices.
      */
     public void testInExConstructorColumnIndices1() {
-        FilterColumnTable filter = new FilterColumnTable(m_table, false, 
+        FilterColumnTable filter = new FilterColumnTable(m_table, false,
                 new int[] {0, 1, 2, 3, 4});
         DataTableSpec fSpec = filter.getDataTableSpec();
         assertTrue(fSpec.getNumColumns() == 0);
@@ -465,7 +464,7 @@ public final class FilterColumnTableTest extends TestCase {
      * Test all available column indices reverse ordered.
      */
     public void testInExConstructorColumnIndices2() {
-        FilterColumnTable filter = new FilterColumnTable(m_table, false, 
+        FilterColumnTable filter = new FilterColumnTable(m_table, false,
                 new int[] {4, 3, 2, 1, 0});
         DataTableSpec fSpec = filter.getDataTableSpec();
         assertTrue(fSpec.getNumColumns() == 0);
@@ -553,7 +552,7 @@ public final class FilterColumnTableTest extends TestCase {
      */
     public void testInExConstructorException6() {
         try {
-            new FilterColumnTable(m_table, false, 
+            new FilterColumnTable(m_table, false,
                     new int[] {0, 1, 2, 3, 4, 5});
             fail("Exception expected: Column index out of range 5.");
         } catch (ArrayIndexOutOfBoundsException e) {
@@ -563,7 +562,7 @@ public final class FilterColumnTableTest extends TestCase {
 
     /**
      * System entry point.
-     * 
+     *
      * @param args The command line parameters: ignored.
      */
     public static void main(final String[] args) {
