@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.data.join;
 
@@ -46,7 +46,7 @@ import org.knime.core.data.def.StringCell;
 import junit.framework.TestCase;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class JoinedTableTest extends TestCase {
@@ -84,7 +84,7 @@ public class JoinedTableTest extends TestCase {
 
     /**
      * Main method for single test run .
-     * 
+     *
      * @param args Ignored.
      */
     public static void main(final String[] args) {
@@ -267,7 +267,7 @@ public class JoinedTableTest extends TestCase {
         cells[0] = new StringCell(id + "-" + RAND.nextInt(100));
         cells[1] = new IntCell(RAND.nextInt());
         cells[2] = new DoubleCell(RAND.nextDouble());
-        return new DefaultRow(new StringCell(id), cells);
+        return new DefaultRow(id, cells);
     }
 
     private static int checkForEquality(final DataTable merge,
@@ -285,7 +285,8 @@ public class JoinedTableTest extends TestCase {
                 leftNext = new DefaultRow(nextKey, MISSINGS);
             }
             assertEquals(next.getNumCells(), COLS.length);
-            assertEquals(next.getKey().getId(), leftNext.getKey().getId());
+            assertEquals(next.getKey().getString(),
+                        leftNext.getKey().getString());
             for (int i = 0; i < COLS.length; i++) {
                 DataCell cell = next.getCell(i);
                 DataCell compareCell;
