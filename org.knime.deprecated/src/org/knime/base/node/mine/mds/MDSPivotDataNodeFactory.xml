@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Learner" icon="./mds.png">
+	<name>MDS Projector</name>
+	
+	<shortDescription>
+		Performs a Classical Multi-Dimensional Scaling (MDS) on the data of the
+		first input port. The objects from the second port are placed
+		according to the dissimilarities of the first data port.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+		    Performs a Classical Multi-Dimensional Scaling (MDS) on the data of the
+		    first input port. The objects from the second port are placed
+		    according to the dissimilarities of the first data port.
+			For details see 
+			<a href="http://www.inf.uni-konstanz.de/algo/publications/bp-empmdsld-06.pdf">
+    		Eigensolver Methods for Progressive Multidimensional Scaling of Large Data</a>
+    		published by Brandes and Pich.
+		</intro>
+		<option name="Lower dimension:">
+			Select lower dimensionality to embed data into.
+		</option>
+	    <option name="Column selection:">
+			Select number of columns to be embedded into lower dimension.
+		</option>
+		<option name="Append all column not used for MDS:">
+			Appends all columns (numeric and non-numeric) to the resulting
+			lower-dimensional tables.
+		</option>
+	</fullDescription>
+	
+	<ports>
+		<dataIn name="High-dim. data for MDS" index="0">High-dimensional data use for MDS</dataIn>
+		<dataIn name="High-dim. data to project" index="1">High-dimensional data projected into MDS</dataIn>
+		<dataOut name="Lower-dim. data from MDS" index="0">Lower-dimensional from MDS</dataOut>
+    	<dataOut name="Lower-dim. data from projection" index="1">Lower-dimensional data projected into MDS</dataOut>
+	</ports>	
+</knimeNode>
