@@ -71,7 +71,7 @@ public interface PortObjectSpec {
      * 
      * @param <T> class of the object to save or load.
      */
-    static abstract class PortObjectSpecSerializer
+    abstract static class PortObjectSpecSerializer
         <T extends PortObjectSpec> implements Serializer<T> {
         
         /** Saves the port specification to a directory location.
