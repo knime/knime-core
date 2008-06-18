@@ -511,12 +511,12 @@
             id="org.knime.base.node.preproc.valcount.ValueCounterNodeFactory"/>
       <node
             category-path="/mining/mds"
-            factory-class="org.knime.base.node.mine.mds.MDSPivotNodeFactory"
-            id="org.knime.base.node.mine.mds.MDSPivotNodeFactory"/>
+            factory-class="org.knime.base.node.mine.mds.MDSNodeFactory"
+            id="org.knime.base.node.mine.mds.MDSNodeFactory"/>
       <node
             category-path="/mining/mds"
-            factory-class="org.knime.base.node.mine.mds.MDSPivotDataNodeFactory"
-            id="org.knime.base.node.mine.mds.MDSPivotDataNodeFactory"/>
+            factory-class="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeFactory"
+            id="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeFactory"/>
       <node
             category-path="/mining/modeleval"
             factory-class="org.knime.base.node.viz.enrichment.EnrichmentPlotterFactory"
@@ -663,16 +663,6 @@
             category-path="/manipulation/row"
             factory-class="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory"
             id="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory">
-      </node>
-            <node
-            category-path="/mining/mds"
-            factory-class="org.knime.base.node.mine.mds.MDSNodeFactory"
-            id="org.knime.base.node.mine.mds.MDSNodeFactory">
-      </node>
-      <node
-            category-path="/mining/mds"
-            factory-class="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeFactory"
-            id="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeFactory">
       </node>
    </extension>
    
