@@ -37,7 +37,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.knime.base.data.filter.column.FilterColumnTable;
-import org.knime.base.node.mine.regression.linear.LinearRegressionParams;
+import org.knime.base.node.mine.regression.linear.LinearRegressionPortObject;
 import org.knime.base.node.mine.regression.linear.view.LinRegDataProvider;
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.util.DefaultDataArray;
@@ -119,12 +119,12 @@ public class LinRegLearnerNodeModel extends GenericNodeModel implements
     private double m_error;
 
     /** The learned values and also the means for each input variable. */
-    private LinearRegressionParams m_params;
+    private LinearRegressionPortObject m_params;
 
     /** Inits a new node model, it will have 1 data input and 1 model output. */
     public LinRegLearnerNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE}, 
-                new PortType[]{LinearRegressionParams.TYPE});
+                new PortType[]{LinearRegressionPortObject.TYPE});
     }
 
     /**
@@ -331,7 +331,7 @@ public class LinRegLearnerNodeModel extends GenericNodeModel implements
         DataTableSpec outSpec = getOutputSpec(spec);
         double offset = multipliers[0];
         multipliers = Arrays.copyOfRange(multipliers, 1, multipliers.length);
-        m_params = new LinearRegressionParams(
+        m_params = new LinearRegressionPortObject(
                 outSpec, offset, multipliers, means);
         // cache the entire table as otherwise the color information
         // may be lost (filtering out the "colored" column)
@@ -484,7 +484,7 @@ public class LinRegLearnerNodeModel extends GenericNodeModel implements
      * @return a reference to the current values
      * @see LinRegDataProvider#getParams()
      */
-    public LinearRegressionParams getParams() {
+    public LinearRegressionPortObject getParams() {
         return m_params;
     }
 
@@ -557,7 +557,7 @@ public class LinRegLearnerNodeModel extends GenericNodeModel implements
             ModelContentRO specContent = c.getModelContent(CFG_SPEC);
             DataTableSpec outSpec = DataTableSpec.load(specContent);
             ModelContentRO parContent = c.getModelContent(CFG_PARAMS);
-            m_params = LinearRegressionParams.instantiateAndLoad(
+            m_params = LinearRegressionPortObject.instantiateAndLoad(
                     parContent, outSpec, new ExecutionMonitor());
         } catch (InvalidSettingsException ise) {
             IOException ioe = new IOException("Unable to restore state: "

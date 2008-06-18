@@ -47,12 +47,12 @@ import org.knime.core.node.portobject.AbstractSimplePortObject;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public final class LinearRegressionParams extends AbstractSimplePortObject 
+public final class LinearRegressionPortObject extends AbstractSimplePortObject 
     implements RegressionPortObject {
     
     /** convenience access member for port type. */
     public static final PortType TYPE = 
-        new PortType(LinearRegressionParams.class);
+        new PortType(LinearRegressionPortObject.class);
 
     private static final String CFG_OFFSET = "offset";
     private static final String CFG_MULTIPLIER = "multipliers";
@@ -73,7 +73,7 @@ public final class LinearRegressionParams extends AbstractSimplePortObject
     private DataTableSpec m_spec;
     
     /** Public no arg constructor as required by super class. */
-    public LinearRegressionParams() {
+    public LinearRegressionPortObject() {
     }
 
     /**
@@ -84,7 +84,7 @@ public final class LinearRegressionParams extends AbstractSimplePortObject
      * @param multipliers multiplier values
      * @param means means of all variables (used for 2D plot approximation)
      */
-    public LinearRegressionParams(final DataTableSpec spec, final double offset,
+    public LinearRegressionPortObject(final DataTableSpec spec, final double offset,
             final double[] multipliers, final double[] means) {
         if (multipliers == null || means == null) {
             throw new NullPointerException();
@@ -204,10 +204,10 @@ public final class LinearRegressionParams extends AbstractSimplePortObject
         }
     }
     
-    public static LinearRegressionParams instantiateAndLoad(
+    public static LinearRegressionPortObject instantiateAndLoad(
             final ModelContentRO par, final PortObjectSpec spec,
             final ExecutionMonitor exec) throws InvalidSettingsException {
-        LinearRegressionParams result = new LinearRegressionParams();
+        LinearRegressionPortObject result = new LinearRegressionPortObject();
         result.load(par, spec, exec);
         return result;
     }
