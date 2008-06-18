@@ -32,12 +32,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.base.node.mine.regression.linear.LinearRegressionParams;
 import org.knime.base.node.mine.regression.linear.view.LinRegDataProvider;
 import org.knime.base.node.util.DataArray;
@@ -55,21 +54,24 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.PortObject;
+import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.PortType;
 
 /**
  * NodeModel to the linear regression learner node. It performs the calculation.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class LinRegLearnerNodeModel extends NodeModel implements
+public class LinRegLearnerNodeModel extends GenericNodeModel implements
         LinRegDataProvider {
 
     /** Logger to print debug info to. */
@@ -121,7 +123,8 @@ public class LinRegLearnerNodeModel extends NodeModel implements
 
     /** Inits a new node model, it will have 1 data input and 1 model output. */
     public LinRegLearnerNodeModel() {
-        super(1, 0, 0, 1);
+        super(new PortType[]{BufferedDataTable.TYPE}, 
+                new PortType[]{LinearRegressionParams.TYPE});
     }
 
     /**
@@ -194,7 +197,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
         /*
          * What comes next is the matrix calculation, solving A \times w = b
@@ -203,11 +206,11 @@ public class LinRegLearnerNodeModel extends NodeModel implements
          * variables) and b is the target output
          */
         // reset was called, must be cleared
-        final BufferedDataTable data = inData[0];
+        final BufferedDataTable data = (BufferedDataTable)inData[0];
         final DataTableSpec spec = data.getDataTableSpec();
         final int nrUnknown = m_includes.length + 1;
         double[] means = new double[m_includes.length];
-        // indizes of the columns in m_includes
+        // indices of the columns in m_includes
         final int[] colIndizes = new int[m_includes.length];
         for (int i = 0; i < m_includes.length; i++) {
             colIndizes[i] = spec.findColumnIndex(m_includes[i]);
@@ -272,7 +275,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
         double[][] ataInverse = MathUtils.inverse(ata);
         checkForNaN(ataInverse);
         // multiply with A^T and b, i.e. (A^T x A)^-1 x A^T x b
-        double[] outcome = new double[nrUnknown];
+        double[] multipliers = new double[nrUnknown];
         rowCount = 0;
         for (RowIterator it = data.iterator(); it.hasNext(); rowCount++) {
             DataRow row = it.next();
@@ -295,7 +298,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
                 for (int j = 0; j < nrUnknown; j++) {
                     buf += ataInverse[i][j] * buffer[j];
                 }
-                outcome[i] += buf * b;
+                multipliers[i] += buf * b;
             }
         }
 
@@ -309,7 +312,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
                 myProgress++;
                 exec.setProgress(myProgress / totalProgress);
                 exec.checkCanceled();
-                // does row containg missing values?
+                // does row containing missing values?
                 if (missingSet.get(rowCount)) {
                     // error has printed above, silently ignore here.
                     continue;
@@ -320,17 +323,21 @@ public class LinRegLearnerNodeModel extends NodeModel implements
                 double b = ((DoubleValue)targetValue).getDoubleValue();
                 double out = 0.0;
                 for (int i = 0; i < nrUnknown; i++) {
-                    out += outcome[i] * buffer[i];
+                    out += multipliers[i] * buffer[i];
                 }
                 m_error += (b - out) * (b - out);
             }
         }
-        m_params = createParams(outcome, means);
+        DataTableSpec outSpec = getOutputSpec(spec);
+        double offset = multipliers[0];
+        multipliers = Arrays.copyOfRange(multipliers, 1, multipliers.length);
+        m_params = new LinearRegressionParams(
+                outSpec, offset, multipliers, means);
         // cache the entire table as otherwise the color information
         // may be lost (filtering out the "colored" column)
         m_rowContainer = new DefaultDataArray(data, m_firstRowPaint,
                 m_rowCountPaint);
-        return new BufferedDataTable[0];
+        return new PortObject[]{m_params};
     }
 
     /**
@@ -405,50 +412,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
         }
     }
 
-    /*
-     * Create the parameters object for the current execution, called at the
-     * very end of execute().
-     */
-    private LinearRegressionParams createParams(final double[] outcome,
-            final double[] means) {
-        Map<String, Double> parMap = new LinkedHashMap<String, Double>();
-        Map<String, Double> meansMap = new LinkedHashMap<String, Double>();
-        // update the map
-        for (int i = 0; i < outcome.length; i++) {
-            // the offset will have the same name as the target column,
-            // this allows the predictor node to assign the "correct" name
-            // to the prediction column
-            String name;
-            double val;
-            if (i == 0) {
-                name = m_target;
-            } else {
-                name = m_includes[i - 1];
-                double mean = means[i - 1];
-                meansMap.put(name, mean);
-            }
-            val = outcome[i];
-            parMap.put(name, val);
-        }
-        return new LinearRegressionParams(parMap, meansMap);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveModelContent(final int index,
-            final ModelContentWO predParams) throws InvalidSettingsException {
-        if (index != 0) {
-            throw new IndexOutOfBoundsException(
-                    "Invalid model index: " + index);
-        }
-        m_params.saveParams(predParams);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected void reset() {
         m_nrRowsSkipped = 0;
@@ -457,24 +421,27 @@ public class LinRegLearnerNodeModel extends NodeModel implements
         m_params = null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+        DataTableSpec in = (DataTableSpec)inSpecs[0];
+        return new DataTableSpec[]{getOutputSpec(in)};
+    }
+    
+    private DataTableSpec getOutputSpec(final DataTableSpec in)
+        throws InvalidSettingsException {
         if (m_includes == null) {
             throw new InvalidSettingsException("No settings available");
         }
         assert m_target != null;
-        DataTableSpec spec = inSpecs[0];
         // array containing element from m_include and also m_target
         String[] mustHaveColumns = new String[m_includes.length + 1];
         System.arraycopy(m_includes, 0, mustHaveColumns, 0, m_includes.length);
         mustHaveColumns[m_includes.length] = m_target;
         // check if contained in data and if DoubleValue-compatible.
         for (String include : mustHaveColumns) {
-            DataColumnSpec colSpec = spec.getColumnSpec(include);
+            DataColumnSpec colSpec = in.getColumnSpec(include);
             if (colSpec == null) {
                 throw new InvalidSettingsException("No such column in data: "
                         + include);
@@ -484,7 +451,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
                         + include + "\" is not numeric: " + colSpec.getType());
             }
         }
-        return new DataTableSpec[0];
+        return FilterColumnTable.createFilterTableSpec(in, mustHaveColumns);
     }
 
     /**
@@ -509,16 +476,6 @@ public class LinRegLearnerNodeModel extends NodeModel implements
      */
     protected boolean isDataAvailable() {
         return m_params != null;
-    }
-
-    /**
-     * @return the parameters
-     */
-    protected Map<String, Double> getParametersMap() {
-        if (m_params == null) {
-            throw new IllegalStateException("Not executed.");
-        }
-        return m_params.getMap();
     }
 
     /**
@@ -580,6 +537,8 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     private static final String CFG_ERROR = "error";
 
     private static final String CFG_PARAMS = "params";
+    
+    private static final String CFG_SPEC = "spec";
 
     /**
      * {@inheritDoc}
@@ -595,8 +554,11 @@ public class LinRegLearnerNodeModel extends NodeModel implements
             m_nrRows = c.getInt(CFG_NR_ROWS);
             m_nrRowsSkipped = c.getInt(CFG_NR_ROWS_SKIPPED);
             m_error = c.getDouble(CFG_ERROR);
+            ModelContentRO specContent = c.getModelContent(CFG_SPEC);
+            DataTableSpec outSpec = DataTableSpec.load(specContent);
             ModelContentRO parContent = c.getModelContent(CFG_PARAMS);
-            m_params = LinearRegressionParams.loadParams(parContent);
+            m_params = LinearRegressionParams.instantiateAndLoad(
+                    parContent, outSpec, new ExecutionMonitor());
         } catch (InvalidSettingsException ise) {
             IOException ioe = new IOException("Unable to restore state: "
                     + ise.getMessage());
@@ -620,8 +582,10 @@ public class LinRegLearnerNodeModel extends NodeModel implements
         content.addInt(CFG_NR_ROWS, m_nrRows);
         content.addInt(CFG_NR_ROWS_SKIPPED, m_nrRowsSkipped);
         content.addDouble(CFG_ERROR, m_error);
+        ModelContentWO specContent = content.addModelContent(CFG_SPEC);
+        m_params.getSpec().save(specContent);
         ModelContentWO parContent = content.addModelContent(CFG_PARAMS);
-        m_params.saveParams(parContent);
+        m_params.save(parContent, new ExecutionMonitor());
         File outFile = new File(internDir, FILE_SAVE);
         content.saveToXML(new BufferedOutputStream(new GZIPOutputStream(
                 new FileOutputStream(outFile))));

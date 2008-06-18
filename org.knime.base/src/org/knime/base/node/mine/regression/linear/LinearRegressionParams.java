@@ -24,12 +24,21 @@
  */
 package org.knime.base.node.mine.regression.linear;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
+import org.knime.base.node.mine.regression.RegressionPortObject;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.PortType;
+import org.knime.core.node.portobject.AbstractSimplePortObject;
 
 
 /**
@@ -38,84 +47,88 @@ import org.knime.core.node.ModelContentWO;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public final class LinearRegressionParams {
+public final class LinearRegressionParams extends AbstractSimplePortObject 
+    implements RegressionPortObject {
+    
+    /** convenience access member for port type. */
+    public static final PortType TYPE = 
+        new PortType(LinearRegressionParams.class);
 
-    private static final String CFG_SUB_PARAMS = "sub_params";
+    private static final String CFG_OFFSET = "offset";
+    private static final String CFG_MULTIPLIER = "multipliers";
+    private static final String CFG_MEANS = "means";
 
-    private static final String CFG_PARA_NAME = "cell_name";
 
-    private static final String CFG_PARA_VALUE = "para_value";
-
-    private static final String CFG_PARA_MEAN = "para_mean";
-
-    private static final String CFG_OFFSET_NAME = "offset_name";
-
-    private final Map<String, Double> m_map;
-
-    private final Map<String, Double> m_means;
+    /** Offset value. */
+    private double m_offset;
+    
+    /** Multipliers for regression evaluation. */
+    private double[] m_multipliers;
+    /** Mean values of all included columns used for visualization. (The view
+     * shows the 2D-regression line on one input variable. We use the mean
+     * values of the remaining variables to determine the two points that define
+     * the regression line.) */
+    private double[] m_means;
+    
+    private DataTableSpec m_spec;
+    
+    /** Public no arg constructor as required by super class. */
+    public LinearRegressionParams() {
+    }
 
     /**
      * Create new object with the given parameters.
      * 
-     * @param map the map input col name -> value
-     * @param means the map input col name -> mean
+     * @param spec The table spec of the variables
+     * @param offset The fixed (constant) offset
+     * @param multipliers multiplier values
+     * @param means means of all variables (used for 2D plot approximation)
      */
-    public LinearRegressionParams(final Map<String, Double> map,
-            final Map<String, Double> means) {
-        if (map == null || means == null) {
+    public LinearRegressionParams(final DataTableSpec spec, final double offset,
+            final double[] multipliers, final double[] means) {
+        if (multipliers == null || means == null) {
             throw new NullPointerException();
         }
-        boolean first = true;
-        for (String c : map.keySet()) {
-            if (first) {
-                first = false;
-                continue;
-            }
-            if (!means.containsKey(c)) {
-                throw new IllegalArgumentException(
-                        "No mean value for variable " + c);
-            }
+        int expectedLength = spec.getNumColumns() - 1;
+        if (expectedLength != means.length) {
+            throw new IllegalArgumentException(
+                    "Confusing array length: " + means.length + ", expected "
+                    + expectedLength);
         }
-        if (first) {
-            throw new IllegalArgumentException("No reponse column set.");
+        if (expectedLength != multipliers.length) {
+            throw new IllegalArgumentException(
+                    "Confusing array length: " + multipliers.length 
+                    + ", expected " + expectedLength);
         }
-        m_map = map;
+        m_offset = offset;
+        m_multipliers = multipliers;
         m_means = means;
+        m_spec = spec;
     }
 
-    /**
-     * Get reference to the means map, i.e. input column name -> mean value. The
-     * mean values of all included columns are used for visualization. (The view
-     * shows the 2D-regression line on one input variable. We use the mean
-     * values of the remaining variables to determine the two points that define
-     * the regression line.)
-     * 
-     * @return the reference
-     */
-    public Map<String, Double> getMeans() {
-        return m_means;
+    /** {@inheritDoc} */
+    @Override
+    public DataTableSpec getSpec() {
+        return m_spec;
     }
-
-    /**
-     * Get reference to the parameter map, i.e. input column name -> value. The
-     * first entry contains the offset: The (column-)name of the offset will be
-     * the target name - this allows the predictor to append a column with the
-     * "correct" name.
-     * 
-     * @return the reference
-     */
-    public Map<String, Double> getMap() {
-        return m_map;
-    }
-
+    
     /**
      * Get the name of the response column, i.e. the prediction column.
      * 
      * @return the name of the response column
      */
     public String getTargetColumnName() {
-        // map must contain at least one column.
-        return m_map.keySet().iterator().next();
+        return m_spec.getColumnSpec(m_spec.getNumColumns() - 1).getName();
+    }
+    
+    /** @return the offset */
+    public double getOffset() {
+        return m_offset;
+    }
+    
+    /** @return the multipliers */
+    public double[] getMultipliers() {
+        return m_multipliers;
     }
 
     /**
@@ -127,27 +140,19 @@ public final class LinearRegressionParams {
      * @return the value of the linear regression line
      */
     public double getApproximationFor(final String variable, final double v) {
-        Map<String, Double> map = m_map;
-        Map<String, Double> means = m_means;
-        double sum = 0.0;
-        boolean isFirst = true;
+        double sum = m_offset;
         boolean isFound = false;
-        for (Map.Entry<String, Double> entry : map.entrySet()) {
-            if (isFirst) {
-                sum += entry.getValue();
-                isFirst = false;
+        // only iterate to last but one element (last is response column)
+        for (int i = 0; i < m_spec.getNumColumns() - 1; i++) {
+            DataColumnSpec col = m_spec.getColumnSpec(i);
+            double val;
+            if (col.getName().equals(variable)) {
+                isFound = true;
+                val = v;
             } else {
-                String cur = entry.getKey();
-                double multiplier;
-                if (cur.equals(variable)) {
-                    multiplier = v;
-                    isFirst = true;
-                    isFound = true;
-                } else {
-                    multiplier = means.get(cur);
-                }
-                sum += multiplier * entry.getValue();
+                val = m_means[i];
             }
+            sum += m_multipliers[i] * val;
         }
         if (!isFound) {
             throw new IllegalArgumentException("No such column: " + variable);
@@ -155,56 +160,55 @@ public final class LinearRegressionParams {
         return sum;
     }
 
-    /**
-     * Writes the current parameters to <code>par</code>.
-     * 
-     * @param par the object to save to
-     */
-    public void saveParams(final ModelContentWO par) {
-        ModelContentWO sub = par.addModelContent(CFG_SUB_PARAMS);
-        // the first element is the offset value, must put that separately
-        boolean isFirst = true;
-        for (Map.Entry<String, Double> entry : m_map.entrySet()) {
-            String cell = entry.getKey();
-            double val = entry.getValue();
-            ModelContentWO subsub;
-            if (isFirst) {
-                subsub = par.addModelContent(CFG_OFFSET_NAME);
-                isFirst = false;
-            } else {
-                subsub = sub.addModelContent(cell);
-                double mean = m_means.get(cell);
-                subsub.addDouble(CFG_PARA_MEAN, mean);
+    /** {@inheritDoc} */
+    @Override
+    public DataCell predict(final DataRow row) {
+        double sum = m_offset;
+        for (int i = 0; i < row.getNumCells(); i++) {
+            DataCell c = row.getCell(i);
+            if (c.isMissing()) {
+                return DataType.getMissingCell();
             }
-            subsub.addString(CFG_PARA_NAME, cell);
-            subsub.addDouble(CFG_PARA_VALUE, val);
+            double d = ((DoubleCell)c).getDoubleValue();
+            sum += m_multipliers[i] * d;
+        }
+        return new DoubleCell(sum);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void save(final ModelContentWO par, final ExecutionMonitor exec)
+            throws CanceledExecutionException {
+        par.addDouble(CFG_OFFSET, m_offset);
+        par.addDoubleArray(CFG_MULTIPLIER, m_multipliers);
+        par.addDoubleArray(CFG_MEANS, m_means);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected void load(final ModelContentRO par, final PortObjectSpec spec,
+            final ExecutionMonitor exec) throws InvalidSettingsException {
+        m_offset = par.getDouble(CFG_OFFSET);
+        m_multipliers = par.getDoubleArray(CFG_MULTIPLIER);
+        m_means = par.getDoubleArray(CFG_MEANS);
+        m_spec = (DataTableSpec)spec;
+        // exclude last element (response column)
+        int expLength = m_spec.getNumColumns() - 1;
+        if (m_means.length != expLength) {
+            throw new InvalidSettingsException("Unexpected array length: "
+                    + m_means.length + ", expected " + expLength);
+        }
+        if (m_multipliers.length != expLength) {
+            throw new InvalidSettingsException("Unexpected array length: "
+                    + m_multipliers.length + ", expected " + expLength);
         }
     }
-
-    /**
-     * Reads the model from the <code>par</code> argument.
-     * 
-     * @param par the object to read from
-     * @return the map containing the values, or weights, for each column
-     * @throws InvalidSettingsException if that fails
-     */
-    public static LinearRegressionParams loadParams(final ModelContentRO par)
-            throws InvalidSettingsException {
-        Map<String, Double> map = new LinkedHashMap<String, Double>();
-        Map<String, Double> means = new LinkedHashMap<String, Double>();
-        ModelContentRO offsetParam = par.getModelContent(CFG_OFFSET_NAME);
-        String cell = offsetParam.getString(CFG_PARA_NAME);
-        double val = offsetParam.getDouble(CFG_PARA_VALUE);
-        map.put(cell, val);
-        ModelContentRO sub = par.getModelContent(CFG_SUB_PARAMS);
-        for (String id : sub) {
-            ModelContentRO subsub = sub.getModelContent(id);
-            cell = subsub.getString(CFG_PARA_NAME);
-            val = subsub.getDouble(CFG_PARA_VALUE);
-            double mean = subsub.getDouble(CFG_PARA_MEAN);
-            map.put(cell, val);
-            means.put(cell, mean);
-        }
-        return new LinearRegressionParams(map, means);
+    
+    public static LinearRegressionParams instantiateAndLoad(
+            final ModelContentRO par, final PortObjectSpec spec,
+            final ExecutionMonitor exec) throws InvalidSettingsException {
+        LinearRegressionParams result = new LinearRegressionParams();
+        result.load(par, spec, exec);
+        return result;
     }
 }
