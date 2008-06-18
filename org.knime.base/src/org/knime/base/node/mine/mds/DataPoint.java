@@ -22,7 +22,7 @@
  * History
  *   07.03.2008 (Kilian Thiel): created
  */
-package org.knime.base.node.mds;
+package org.knime.base.node.mine.mds;
 
 /**
  * Represents a data point consisting of a values for each dimension. The values

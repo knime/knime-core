@@ -22,9 +22,9 @@
  * History
  *   Jan 12, 2006 (Kilian Thiel): created
  */
-package org.knime.base.node.mds.distances;
+package org.knime.base.node.mine.mds.distances;
 
-import org.knime.base.node.mds.DataPoint;
+import org.knime.base.node.mine.mds.DataPoint;
 import org.knime.core.data.DataRow;
 
 /**

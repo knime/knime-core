@@ -22,7 +22,7 @@
  * History
  *   02.02.2007 (Kilian Thiel): created
  */
-package org.knime.base.node.mds.distances;
+package org.knime.base.node.mine.mds.distances;
 
 
 /**

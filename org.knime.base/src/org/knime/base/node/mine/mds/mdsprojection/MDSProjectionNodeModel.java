@@ -22,7 +22,7 @@
  * History
  *   07.03.2008 (Kilian Thiel): created
  */
-package org.knime.base.node.mdsprojection;
+package org.knime.base.node.mine.mds.mdsprojection;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,8 +33,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.base.data.filter.column.FilterColumnTable;
-import org.knime.base.node.mds.MDSCellFactory;
-import org.knime.base.node.mds.MDSNodeDialog;
+import org.knime.base.node.mine.mds.MDSCellFactory;
+import org.knime.base.node.mine.mds.MDSNodeDialog;
 import org.knime.base.node.mine.sota.logic.SotaUtil;
 import org.knime.base.node.util.DefaultDataArray;
 import org.knime.core.data.DataColumnSpec;

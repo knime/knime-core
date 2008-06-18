@@ -22,7 +22,7 @@
  * History
  *   07.04.2008 (Kilian Thiel): created
  */
-package org.knime.base.node.mdsprojection;
+package org.knime.base.node.mine.mds.mdsprojection;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

@@ -22,7 +22,7 @@
  * History
  *   07.03.2008 (Kilian Thiel): created
  */
-package org.knime.base.node.mds;
+package org.knime.base.node.mine.mds;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +30,7 @@ import java.util.List;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.base.node.som.distances.DistanceManagerFactory;
+import org.knime.base.node.mine.mds.distances.DistanceManagerFactory;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;

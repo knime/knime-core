@@ -22,7 +22,7 @@
  * History
  *   10.03.2008 (Kilian Thiel): created
  */
-package org.knime.base.node.mds;
+package org.knime.base.node.mine.mds;
 
 import java.util.Hashtable;
 

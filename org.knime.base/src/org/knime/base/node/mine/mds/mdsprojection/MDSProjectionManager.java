@@ -22,7 +22,7 @@
  * History
  *   07.03.2008 (Kilian Thiel): created
  */
-package org.knime.base.node.mdsprojection;
+package org.knime.base.node.mine.mds.mdsprojection;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -31,10 +31,10 @@ import java.util.Random;
 import java.util.Set;
 
 import org.knime.base.data.filter.column.FilterColumnTable;
-import org.knime.base.node.mds.DataPoint;
-import org.knime.base.node.mds.MDSManager;
-import org.knime.base.node.mds.distances.DistanceManager;
-import org.knime.base.node.mds.distances.DistanceManagerFactory;
+import org.knime.base.node.mine.mds.DataPoint;
+import org.knime.base.node.mine.mds.MDSManager;
+import org.knime.base.node.mine.mds.distances.DistanceManager;
+import org.knime.base.node.mine.mds.distances.DistanceManagerFactory;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;

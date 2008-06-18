@@ -22,13 +22,13 @@
  * History
  *   07.03.2008 (Kilian Thiel): created
  */
-package org.knime.base.node.mds;
+package org.knime.base.node.mine.mds;
 
 import java.util.Hashtable;
 import java.util.Random;
 
-import org.knime.base.node.mds.distances.DistanceManager;
-import org.knime.base.node.mds.distances.DistanceManagerFactory;
+import org.knime.base.node.mine.mds.distances.DistanceManager;
+import org.knime.base.node.mine.mds.distances.DistanceManagerFactory;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;

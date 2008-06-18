@@ -22,9 +22,9 @@
  * History
  *   Nov 21, 2005 (Kilian Thiel): created
  */
-package org.knime.base.node.mds.distances;
+package org.knime.base.node.mine.mds.distances;
 
-import org.knime.base.node.mds.DataPoint;
+import org.knime.base.node.mine.mds.DataPoint;
 import org.knime.base.node.mine.sota.logic.SotaFuzzyMath;
 import org.knime.base.node.mine.sota.logic.SotaUtil;
 import org.knime.core.data.DataRow;

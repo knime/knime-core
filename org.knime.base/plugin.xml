@@ -664,6 +664,16 @@
             factory-class="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory"
             id="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory">
       </node>
+            <node
+            category-path="/mining/mds"
+            factory-class="org.knime.base.node.mine.mds.MDSNodeFactory"
+            id="org.knime.base.node.mine.mds.MDSNodeFactory">
+      </node>
+      <node
+            category-path="/mining/mds"
+            factory-class="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeFactory"
+            id="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeFactory">
+      </node>
    </extension>
    
    

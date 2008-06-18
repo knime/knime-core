@@ -22,7 +22,7 @@
  * History
  *   07.03.2008 (Kilian Thiel): created
  */
-package org.knime.base.node.mdsprojection;
+package org.knime.base.node.mine.mds.mdsprojection;
 
 /**
  * Contains the additional configuration keys of the MDS projection settings.
