@@ -80,7 +80,9 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
     public void createPartControl(final Composite parent) {
 //        m_viewer = new ListViewer(parent,
 //                SWT.BORDER | SWT.SINGLE | SWT.V_SCROLL);
-
+        if (m_manager == null) {
+            m_manager = MetaNodeTemplateRepositoryManager.getInstance();
+        }
         m_viewer = new TreeViewer(parent,
                 SWT.BORDER | SWT.SINGLE | SWT.V_SCROLL);
         
@@ -103,7 +105,6 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
 
             @Override
             public void dispose() {
-                m_manager.save();
             }
 
             @Override
@@ -161,6 +162,7 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
     public void createMetaNodeTemplate(final String name, 
             final WorkflowManager source, final NodeID[] nodes) {
         m_manager.createMetaNodeTemplate(name, source, nodes[0]);
+        m_manager.save();
         m_viewer.refresh();
     }
     
@@ -171,6 +173,7 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
      */
     public void deleteTemplate(final MetaNodeTemplateRepositoryItem item) {
         m_manager.removeItem(item);
+        m_manager.save();
         m_viewer.refresh();
     }
     
@@ -202,16 +205,6 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
      */
     public IStructuredSelection getSelection() {
         return (IStructuredSelection)m_viewer.getSelection();
-    }
-    
-    /**
-     * Saves the state of the {@link MetaNodeTemplateRepositoryManager}.
-     * {@inheritDoc}
-     */
-    @Override
-    public void dispose() {
-        m_manager.save();
-        super.dispose();
     }
 
 }
