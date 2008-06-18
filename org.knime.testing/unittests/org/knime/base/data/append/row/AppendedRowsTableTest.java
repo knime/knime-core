@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.data.append.row;
 
@@ -37,7 +37,7 @@ import junit.framework.TestCase;
 
 /**
  * Test class for <code>AppendedRowsTable</code>.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class AppendedRowsTableTest extends TestCase {
@@ -49,16 +49,16 @@ public class AppendedRowsTableTest extends TestCase {
             "double_col", "int_col", "string_col"};
 
     private static final DataRow[] DATA = new DataRow[] {
-            new DefaultRow(new StringCell("row_1"), new DataCell[] {
+            new DefaultRow("row_1", new DataCell[] {
                     new DoubleCell(1.0), new IntCell(2),
                     new StringCell("three")}),
-            new DefaultRow(new StringCell("row_2"), new DataCell[] {
+            new DefaultRow("row_2", new DataCell[] {
                     new DoubleCell(4.0), new IntCell(5),
                     new StringCell("six")}),
-            new DefaultRow(new StringCell("row_3"), new DataCell[] {
+            new DefaultRow("row_3", new DataCell[] {
                     new DoubleCell(7.0), new IntCell(8),
                     new StringCell("nine")}),
-            new DefaultRow(new StringCell("row_4"), new DataCell[] {
+            new DefaultRow("row_4", new DataCell[] {
                     new DoubleCell(10.0), new IntCell(11),
                     new StringCell("twelve")})};
 
@@ -69,23 +69,23 @@ public class AppendedRowsTableTest extends TestCase {
             "double_col", "int_col"};
 
     private static final DataRow[] DATA_MISS_LAST = new DataRow[] {
-            new DefaultRow(new StringCell("row_1"), new DataCell[] {
+            new DefaultRow("row_1", new DataCell[] {
                     new DoubleCell(1.0), new IntCell(2)}),
-            new DefaultRow(new StringCell("row_2"), new DataCell[] {
+            new DefaultRow("row_2", new DataCell[] {
                     new DoubleCell(4.0), new IntCell(5)}),
-            new DefaultRow(new StringCell("row_3"), new DataCell[] {
+            new DefaultRow("row_3", new DataCell[] {
                     new DoubleCell(7.0), new IntCell(8)}),
-            new DefaultRow(new StringCell("row_4"), new DataCell[] {
+            new DefaultRow("row_4", new DataCell[] {
                     new DoubleCell(10.0), new IntCell(11)})};
 
     private static final DataRow[] DATA_2 = new DataRow[] {
-            new DefaultRow(new StringCell("row_13"), new DataCell[] {
+            new DefaultRow("row_13", new DataCell[] {
                     new DoubleCell(13.0), new IntCell(14),
                     new StringCell("fifteen")}),
-            new DefaultRow(new StringCell("row_16"), new DataCell[] {
+            new DefaultRow("row_16", new DataCell[] {
                     new DoubleCell(16.0), new IntCell(17),
                     new StringCell("eighteen")}),
-            new DefaultRow(new StringCell("row_19"), new DataCell[] {
+            new DefaultRow("row_19", new DataCell[] {
                     new DoubleCell(19.0), new IntCell(20),
                     new StringCell("twentyone")})};
 
@@ -96,16 +96,16 @@ public class AppendedRowsTableTest extends TestCase {
             "int_col", "double_col", "string_col"};
 
     private static final DataRow[] DATA_SHUFFLE = new DataRow[] {
-            new DefaultRow(new StringCell("row_5"), new DataCell[] {
+            new DefaultRow("row_5", new DataCell[] {
                     new IntCell(2), new DoubleCell(1.0),
                     new StringCell("three")}),
-            new DefaultRow(new StringCell("row_6"), new DataCell[] {
+            new DefaultRow("row_6", new DataCell[] {
                     new IntCell(5), new DoubleCell(4.0),
                     new StringCell("six")}),
-            new DefaultRow(new StringCell("row_7"), new DataCell[] {
+            new DefaultRow("row_7", new DataCell[] {
                     new IntCell(8), new DoubleCell(7.0),
                     new StringCell("nine")}),
-            new DefaultRow(new StringCell("row_8"), new DataCell[] {
+            new DefaultRow("row_8", new DataCell[] {
                     new IntCell(11), new DoubleCell(10.0),
                     new StringCell("twelve")})};
 
