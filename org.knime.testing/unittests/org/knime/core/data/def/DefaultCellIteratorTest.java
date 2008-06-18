@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Nov 23, 2005 (wiswedel): created
  *   21.06.06 (bw & po): reviewed
@@ -36,7 +36,7 @@ import junit.framework.TestCase;
 
 /**
  * Test the default cell iterator class.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class DefaultCellIteratorTest extends TestCase {
@@ -44,7 +44,7 @@ public class DefaultCellIteratorTest extends TestCase {
     /** Test all methods in iterator. */
     public void testIterator() {
         double[] d = new double[]{1.0, 2.0, 3.0};
-        DataRow row = new DefaultRow(new StringCell("Key"), d);
+        DataRow row = new DefaultRow("Key", d);
         Iterator<DataCell> it = row.iterator();
         int i = 0;
         while (it.hasNext()) {
