@@ -1301,7 +1301,21 @@ public final class Node implements NodeModelWarningListener {
         throws NotConfigurableException {
         GenericNodeDialogPane dialogPane = getDialogPane();
         NodeSettingsRO settings = getSettingsFromNode();
-        dialogPane.internalLoadSettingsFrom(settings, inSpecs, scopeStack);
+        PortType[] inTypes = new PortType[getNrInPorts()];
+        for (int i = 0; i < inTypes.length; i++) {
+            PortType t = getInputType(i);
+            if (!t.acceptsPortObjectSpec(inSpecs[i])) {
+                throw new IllegalArgumentException(
+                        "Invalid incoming port object spec \""
+                                + inSpecs[i].getClass().getSimpleName()
+                                + "\", expected \""
+                                + t.getPortObjectSpecClass().getSimpleName()
+                                + "\"");
+            }
+            inTypes[i] = t;
+        }
+        dialogPane.internalLoadSettingsFrom(
+                settings, inTypes, inSpecs, scopeStack);
         return dialogPane;
     }
 

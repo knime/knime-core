@@ -22,8 +22,10 @@
 package org.knime.core.node;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.workflow.ScopeObjectStack;
 
 
 /**
@@ -37,6 +39,30 @@ import org.knime.core.data.DataTableSpec;
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class NodeDialogPane extends GenericNodeDialogPane {
+    
+    /** Remember types in input spec. We use the type information to figure
+     * out, which of the entries in the spec array are of type DataTableSpec
+     * (can't use instanceof as the entry may be null).
+     */
+    private PortObjectSpec[] m_latestInSpecs;
+    private PortType[] m_lastestInTypes;
+    
+    /** {@inheritDoc} */
+    @Override
+    void internalLoadSettingsFrom(final NodeSettingsRO settings,
+            final PortType[] portTypes, final PortObjectSpec[] specs,
+            final ScopeObjectStack scopeStack) throws NotConfigurableException {
+        m_latestInSpecs = specs;
+        assert portTypes != null : "Port Types are null";
+        if (m_lastestInTypes != null) {
+            assert Arrays.equals(portTypes, m_lastestInTypes)
+            : "Changing inport types in dialog, it was \""
+                + Arrays.toString(m_latestInSpecs) + "\", but it is \""
+                + Arrays.toString(portTypes) + "\"";
+        }
+        m_lastestInTypes = portTypes;
+        super.internalLoadSettingsFrom(settings, portTypes, specs, scopeStack);
+    }
 
     /**
      * {@inheritDoc}
@@ -44,11 +70,14 @@ public abstract class NodeDialogPane extends GenericNodeDialogPane {
     @Override
     protected final void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
+        assert Arrays.equals(specs, m_latestInSpecs) 
+            : "Input specs changed when they were not supposed to change.";
         // get the data specs into a new (possibly smaller) array
         ArrayList<DataTableSpec> dataSpecList = new ArrayList<DataTableSpec>();
-        for (PortObjectSpec s : specs) {
-            if (s instanceof DataTableSpec) {
-                dataSpecList.add((DataTableSpec)s);
+        for (int i = 0; i < m_lastestInTypes.length; i++) {
+            if (m_lastestInTypes[i].getPortObjectSpecClass().equals(
+                    DataTableSpec.class)) {
+                dataSpecList.add((DataTableSpec)specs[i]);
             }
         }
         DataTableSpec[] dataSpecs = dataSpecList.toArray(

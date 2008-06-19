@@ -206,19 +206,24 @@ public abstract class GenericNodeDialogPane {
         return result;
     }
 
+    // TODO make method final, remove portTypes argument (added to enable 
+    // type checking in class NodeDialogPane
     /** Method being called from the node when the dialog shall load the
      * settings from a NodeSettingsRO object. This method will call the
      * abstract loadSettingsFrom method and finally load internals
      * (i.e. memory policy of outports, if any).
      * @param settings To load from.
+     * @param portTypes Types of input port, used for type checking in derived
+     * {@link NodeDialogPane} class.
      * @param specs The DTSs from the inports.
      * @param scopeStack Scope object stack (contains flow variables)
      * @throws NotConfigurableException
      * If loadSettingsFrom throws this exception.
      * @see #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])
      */
-    final void internalLoadSettingsFrom(final NodeSettingsRO settings,
-            final PortObjectSpec[] specs, final ScopeObjectStack scopeStack) 
+    void internalLoadSettingsFrom(final NodeSettingsRO settings,
+            final PortType[] portTypes, final PortObjectSpec[] specs, 
+            final ScopeObjectStack scopeStack)
         throws NotConfigurableException {
         NodeSettings modelSettings = null;
         MemoryPolicy memoryPolicy = null;

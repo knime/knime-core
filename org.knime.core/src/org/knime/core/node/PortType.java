@@ -92,6 +92,14 @@ public final class PortType {
     public void save(final NodeSettingsWO settings) {
         settings.addString("object_class", m_objectClass.getName());
     }
+    
+    boolean acceptsPortObjectSpec(final PortObjectSpec spec) {
+        return spec == null || m_specClass.isAssignableFrom(spec.getClass());
+    }
+    
+    boolean acceptsPortObject(final PortObject obj) {
+        return obj == null || m_objectClass.isAssignableFrom(obj.getClass());
+    }
 
     @SuppressWarnings("unchecked")
     public static PortType load(final NodeSettingsRO settings) 
