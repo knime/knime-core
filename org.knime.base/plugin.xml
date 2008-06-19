@@ -664,6 +664,10 @@
             factory-class="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory"
             id="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory">
       </node>
+      <node
+            factory-class="org.knime.core.node.ParameterizedNodeFactory"
+            id="org.knime.core.node.ParameterizedNodeFactory">
+      </node>
    </extension>
    
    
