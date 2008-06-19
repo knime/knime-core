@@ -36,7 +36,7 @@ package org.knime.core.node;
 public class CanceledExecutionException extends Exception {
     
     /**
-     * Creates a new exeception of this type with an error message.
+     * Creates a new exception of this type with an error message.
      */
     public CanceledExecutionException() {
         super();
