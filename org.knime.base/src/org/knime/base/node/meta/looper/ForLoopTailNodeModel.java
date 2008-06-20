@@ -89,11 +89,18 @@ public class ForLoopTailNodeModel extends NodeModel implements LoopEndNode {
         // retrieve variables from the stack which the head of this
         // loop hopefully put there:
         ScopeVariable countVar = peekScopeVariable("currentIteration");
+        if (countVar == null) {
+            throw new Exception("No matching Loop Start node!");
+        }
         int count = countVar.getIntValue();
         ScopeVariable maxCountVar = peekScopeVariable("maxIterations");
+        if (maxCountVar == null) {
+            throw new Exception("No matching Loop Start node!");
+        }
         int maxCount = maxCountVar.getIntValue();
 
-        if (count == 1) {
+        if (count == 0) {
+            // first time we are getting to this: open container
             m_resultContainer =
                     exec.createDataContainer(createSpec(inData[0]
                             .getDataTableSpec()));
@@ -107,7 +114,10 @@ public class ForLoopTailNodeModel extends NodeModel implements LoopEndNode {
             m_resultContainer.addRowToTable(newRow);
         }
 
-        if (count == maxCount) {
+        assert count < maxCount;
+        
+        if (count == maxCount - 1) {
+            // this was the last iteration - close container and continue
             m_resultContainer.close();
             return new BufferedDataTable[]{m_resultContainer.getTable()};
         } else {
