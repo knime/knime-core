@@ -25,6 +25,7 @@
 package org.knime.exp.node.variabletotable;
 
 import java.awt.Component;
+import java.util.Arrays;
 import java.util.Map;
 
 import javax.swing.DefaultListCellRenderer;
@@ -46,8 +47,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.workflow.ScopeVariable;
 import org.knime.core.util.Pair;
-
-import cern.colt.Arrays;
 
 /**
  * 
@@ -85,7 +84,7 @@ class VariableToTableNodeDialogPane extends NodeDialogPane {
             }
             current += 1;
         }
-        selIndices = Arrays.trimToCapacity(selIndices, pointer);
+        selIndices = Arrays.copyOf(selIndices, pointer);
         m_list.setSelectedIndices(selIndices);
     }
 
