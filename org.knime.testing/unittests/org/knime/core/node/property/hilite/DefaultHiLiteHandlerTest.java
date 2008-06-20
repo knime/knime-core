@@ -26,10 +26,9 @@ package org.knime.core.node.property.hilite;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.def.StringCell;
-
 import junit.framework.TestCase;
+
+import org.knime.core.data.RowKey;
   
 /**
  * JUnit test for the <code>DefaultHiLiteHandler</code>.
@@ -40,21 +39,21 @@ import junit.framework.TestCase;
  */
 public final class DefaultHiLiteHandlerTest extends TestCase {
           
-    private DataCell m_c1 = new StringCell("m_c1");
-    private DataCell m_c2 = new StringCell("m_c2");
-    private DataCell m_c3 = new StringCell("m_c3");
+    private RowKey m_c1 = new RowKey("m_c1");
+    private RowKey m_c2 = new RowKey("m_c2");
+    private RowKey m_c3 = new RowKey("m_c3");
 
     /** Set with m_c1 and m_c2. */
-    private Set<DataCell> m_s12;
+    private Set<RowKey> m_s12;
     /** Set with m_c2 and m_c3. */
-    private Set<DataCell> m_s23;
+    private Set<RowKey> m_s23;
     
     private class MyHiLiteListener implements HiLiteListener {
         public void hiLite(final KeyEvent event) {
         }
         public void unHiLite(final KeyEvent event) {
         }
-        public void unHiLiteAll() {
+        public void unHiLiteAll(final KeyEvent event) {
         }
     }
     
@@ -70,13 +69,13 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        m_s12 = new HashSet<DataCell>();
+        m_s12 = new HashSet<RowKey>();
         m_s12.add(m_c1);
         assertTrue(m_s12.contains(m_c1));
         m_s12.add(m_c2);
         assertTrue(m_s12.contains(m_c2));
         assertTrue(m_s12.size() == 2);
-        m_s23 = new HashSet<DataCell>();
+        m_s23 = new HashSet<RowKey>();
         m_s23.add(m_c2);
         assertTrue(m_s23.contains(m_c2));
         m_s23.add(m_c3);
@@ -132,32 +131,32 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         m_hdl.addHiLiteListener(m_l1);
         m_hdl.addHiLiteListener(m_l2);
         try {
-            m_hdl.fireHiLiteEvent((DataCell) null);
+            m_hdl.fireHiLiteEvent((RowKey) null);
             fail();
         } catch (NullPointerException e) {
             assertTrue(true);
         }
         try {
-            m_hdl.fireHiLiteEvent((Set<DataCell>) null);
+            m_hdl.fireHiLiteEvent((Set<RowKey>) null);
             fail();
         } catch (NullPointerException e) {
             assertTrue(true);
         }
 
         try {
-            m_hdl.fireUnHiLiteEvent((DataCell) null);
+            m_hdl.fireUnHiLiteEvent((RowKey) null);
             fail();
         } catch (NullPointerException e) {
             assertTrue(true);
         }
         try {
-            m_hdl.fireUnHiLiteEvent((Set<DataCell>) null);
+            m_hdl.fireUnHiLiteEvent((Set<RowKey>) null);
             fail();
         } catch (NullPointerException e) {
             assertTrue(true);
         }
         try {
-            assertFalse(m_hdl.isHiLit((DataCell) null));
+            assertFalse(m_hdl.isHiLit((RowKey) null));
             fail();
         } catch (NullPointerException e) {
             assertTrue(true);

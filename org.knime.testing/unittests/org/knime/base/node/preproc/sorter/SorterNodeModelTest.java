@@ -24,23 +24,27 @@
  */
 package org.knime.base.node.preproc.sorter;
 
+import java.util.HashMap;
+
+import junit.framework.TestCase;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataType;
-import org.knime.core.data.IntValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettings;
-
-import junit.framework.TestCase;
 
 /**
  * Test class for the SorterNodeModel.
@@ -49,7 +53,8 @@ import junit.framework.TestCase;
  */
 public class SorterNodeModelTest extends TestCase {
     private static final ExecutionContext EXEC_CONTEXT = new ExecutionContext(
-            null, null);
+            new DefaultNodeProgressMonitor(), new Node(new SorterNodeFactory()), 
+                    new HashMap<Integer, ContainerTable>());
 
     private SorterNodeModel m_snm;
 
@@ -229,7 +234,7 @@ public class SorterNodeModelTest extends TestCase {
         myRow[1] = new StringCell("Test");
         myRow[2] = new IntCell(7);
         myRow[3] = new DoubleCell(32432.324);
-        rows[0] = new DefaultRow(new DoubleCell(1), myRow);
+        rows[0] = new DefaultRow(Integer.toString(1), myRow);
 
         DataTable[] inputTable = {new DefaultTable(rows, columnNames,
                 columnTypes)};
@@ -351,8 +356,8 @@ public class SorterNodeModelTest extends TestCase {
         k = dimension - 1;
         while (rowIt.hasNext()) {
             RowKey rk = rowIt.next().getKey();
-            IntValue ic = (IntValue)rk.getId();
-            assertEquals(k, ic.getIntValue());
+            int ic = Integer.parseInt(rk.getString());
+            assertEquals(k, ic);
             k--;
         }
         assertFalse(rowIt.hasNext());
@@ -387,7 +392,7 @@ public class SorterNodeModelTest extends TestCase {
                     myRow[j] = new IntCell(0);
                 }
             }
-            DataRow temprow = new DefaultRow(new IntCell(i), myRow);
+            DataRow temprow = new DefaultRow(Integer.toString(i), myRow);
             unitmatrix[i] = temprow;
         }
         return new DefaultTable(unitmatrix, columnNames, columnTypes);
