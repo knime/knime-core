@@ -87,6 +87,10 @@ public abstract class GenericNodeFactory<T extends GenericNodeModel> {
         Visualizer,
         /** A meta node. */
         Meta,
+        /** Head node of a loop. */
+        LoopHead,
+        /** Tail node of a loop. */
+        LoopTail,
         /** All other nodes. */
         Other,
         /** If not specified. */
