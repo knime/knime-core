@@ -54,11 +54,17 @@ public class ValueCounterSettings {
     }
 
     
+    /**
+     * @param b enable or disable hiliting
+     */
     public void hiliting(final boolean b) {
         m_hiliting = b;
     }
     
     
+    /**
+     * @return boolean for hilting 
+     */
     public boolean hiliting() {
         return m_hiliting;
     }
