@@ -687,8 +687,8 @@
       </node>
        <node
              category-path="/misc"
-             factory-class="org.knime.exp.node.variabletotable.VariableToTableNodeFactory"
-             id="org.knime.exp.node.variabletotable.VariableToTableNodeFactory">
+             factory-class="org.knime.base.node.variabletotable.VariableToTableNodeFactory"
+             id="org.knime.base.node.variabletotable.VariableToTableNodeFactory">
        </node>
    </extension>
    
