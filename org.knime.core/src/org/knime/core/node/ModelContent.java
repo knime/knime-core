@@ -48,23 +48,6 @@ import org.knime.core.node.config.Config;
 public final class ModelContent extends Config 
     implements ModelContentRO, ModelContentWO {
 
-    /** Throws <code>IllegalStateException</code> as this method is not
-     * supposed to be called; refer to the API of {@link PortObject} for details
-     * on this method. The KNIME engine treats objects of this kind differently.
-     * @return Nothing as an exception is being thrown.
-     */
-    static PortObjectSerializer<ModelContent> getPortObjectSpecSerializer() {
-        throw new IllegalStateException("No access on ModelContent "
-                        + "via generic PortObjectSerializer");
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public PortObjectSpec getSpec() {
-        return this;
-    }
-    
     /**
      * Creates new content object. 
      * @param key The key for this ModelContent.
