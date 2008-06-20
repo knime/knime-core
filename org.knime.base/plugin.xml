@@ -646,11 +646,6 @@
             id="org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeFactory"/>
       <node
             category-path="/meta"
-            factory-class="org.knime.base.node.meta.looper.variable.IterateVariablesLoopEndNodeFactory"
-            id="org.knime.base.node.meta.looper.variable.IterateVariablesLoopEndNodeFactory">
-      </node>
-      <node
-            category-path="/meta"
             factory-class="org.knime.base.node.meta.looper.variable.IterateVariablesLoopHeadNodeFactory"
             id="org.knime.base.node.meta.looper.variable.IterateVariablesLoopHeadNodeFactory">
       </node>
