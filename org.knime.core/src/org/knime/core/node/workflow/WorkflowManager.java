@@ -1261,11 +1261,11 @@ public final class WorkflowManager extends NodeContainer {
                                     + " loop-end without corresponding head!");
                     }
                     NodeContainer headNode = m_nodes.get(slc.getOwner());
-                    snc.getNode().setLoopHeadNode(
+                    snc.getNode().setLoopStartNode(
                             ((SingleNodeContainer)headNode).getNode());
                 } else {
                     // or not if it's any other type of node
-                    snc.getNode().setLoopHeadNode(null);
+                    snc.getNode().setLoopStartNode(null);
                 }
                 snc.preExecuteNode();
                 notifyWorkflowListeners(new WorkflowEvent(
@@ -1303,7 +1303,7 @@ public final class WorkflowManager extends NodeContainer {
             if (snc.getLoopRole().equals(LoopRole.BEGIN)) {
                 // if this was BEGIN, it's not anymore (until we do not
                 // restart it explicitly!)
-                snc.getNode().setLoopTailNode(null);
+                snc.getNode().setLoopEndNode(null);
             }
             if (snc.getLoopRole().equals(LoopRole.END)) {
                 // no matter what happened, try to clean up the stack.
@@ -1417,7 +1417,7 @@ public final class WorkflowManager extends NodeContainer {
             tailNode.markForExecutionAsNodeContainer(true);
         }
         // (8) allow access to tail node
-        ((SingleNodeContainer)headNode).getNode().setLoopTailNode(
+        ((SingleNodeContainer)headNode).getNode().setLoopEndNode(
                 ((SingleNodeContainer)tailNode).getNode());
         // (9) try to queue the head of this loop!
         assert headNode.getState().equals(State.MARKEDFOREXEC);

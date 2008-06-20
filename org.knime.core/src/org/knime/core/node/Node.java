@@ -1682,19 +1682,19 @@ public final class Node implements NodeModelWarningListener {
         }
     }
 
-    public void setLoopTailNode(final Node tail) {
+    public void setLoopEndNode(final Node tail) {
         if (tail == null) {
-            m_model.setLoopTailNode(null);
+            m_model.setLoopEndNode(null);
         } else {
-            m_model.setLoopTailNode(tail.m_model);
+            m_model.setLoopEndNode(tail.m_model);
         }
     }
 
-    public void setLoopHeadNode(final Node head) {
+    public void setLoopStartNode(final Node head) {
         if (head == null) {
-            m_model.setLoopHeadNode(null);
+            m_model.setLoopStartNode(null);
         } else {
-            m_model.setLoopHeadNode(head.m_model);
+            m_model.setLoopStartNode(head.m_model);
         }
     }
 
