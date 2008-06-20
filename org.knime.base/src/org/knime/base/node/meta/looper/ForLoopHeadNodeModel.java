@@ -66,6 +66,10 @@ public class ForLoopHeadNodeModel extends NodeModel implements LoopStartNode {
         if (m_settings.loops() < 1) {
             throw new InvalidSettingsException("Cannot loop fewer than once");
         }
+        assert m_iteration == 0;
+        pushScopeVariable(new ScopeVariable("currentIteration", m_iteration));
+        pushScopeVariable(new ScopeVariable("maxIterations",
+                m_settings.loops()));
         return inSpecs;
     }
 
@@ -80,10 +84,10 @@ public class ForLoopHeadNodeModel extends NodeModel implements LoopStartNode {
         if (getLoopTailNode() == null) {
             // if it's null we know that this is the first time the
             // loop is being executed.
-            m_iteration = 1;
+            assert m_iteration == 0;
         } else {
+            assert m_iteration > 0;
             // otherwise we do this again, and we increment our counter
-            m_iteration++;
             // and we can do a quick sanity check
             if (!(getLoopTailNode() instanceof ForLoopTailNodeModel)) {
                 throw new IllegalArgumentException("Loop tail has wrong type!");
@@ -93,6 +97,8 @@ public class ForLoopHeadNodeModel extends NodeModel implements LoopStartNode {
         pushScopeVariable(new ScopeVariable("currentIteration", m_iteration));
         pushScopeVariable(new ScopeVariable("maxIterations",
                 m_settings.loops()));
+        // increment counter for next iteration
+        m_iteration++;
         return inData;
     }
 
