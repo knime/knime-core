@@ -53,9 +53,9 @@ import org.knime.core.node.workflow.ScopeVariable;
  */
 public class IterateVariablesLoopHeadNodeModel extends NodeModel implements
         LoopStartNode {
-    
-    static final String SCOPEVARIABLE_NAME = "isLastIteration"; 
-    
+
+    private int m_iteration;
+    private int m_maxIterations;
     private DataTableSpec m_variablesSpec;
     private RowIterator m_variablesIterator;
     private DataRow m_currentVariables;
@@ -69,20 +69,17 @@ public class IterateVariablesLoopHeadNodeModel extends NodeModel implements
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        resetIfNecessary(inSpecs[1]);
+        m_variablesSpec = inSpecs[1];
         pushVariables();
         return new DataTableSpec[]{inSpecs[0]};
     }
     
     private void pushVariables() {
-        boolean isLastIteration;
-        if (m_currentVariables == null) {
-            isLastIteration = false;
-        } else {
-            isLastIteration = m_variablesIterator != null 
-            && m_variablesIterator.hasNext();
+        int colCount = 0;
+        if (m_variablesSpec != null) {
+            colCount = m_variablesSpec.getNumColumns();
         }
-        for (int i = 0; i < m_variablesSpec.getNumColumns(); i++) {
+        for (int i = 0; i < colCount; i++) {
             DataColumnSpec spec = m_variablesSpec.getColumnSpec(i);
             DataType type = spec.getType();
             String name = spec.getName();
@@ -111,8 +108,8 @@ public class IterateVariablesLoopHeadNodeModel extends NodeModel implements
                 }
             }
         }
-        pushScopeVariable(new ScopeVariable(SCOPEVARIABLE_NAME, 
-                Boolean.toString(isLastIteration)));
+        pushScopeVariable(new ScopeVariable("currentIteration", m_iteration));
+        pushScopeVariable(new ScopeVariable("maxIterations", m_maxIterations));
     }
     
     /** {@inheritDoc} */
@@ -120,7 +117,12 @@ public class IterateVariablesLoopHeadNodeModel extends NodeModel implements
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         BufferedDataTable variables = inData[1];
-        resetIfNecessary(variables.getDataTableSpec());
+        if (m_variablesSpec != null) {
+            assert m_variablesSpec.equalStructure(variables.getDataTableSpec())
+                : "Spec in loop iterations don't match";
+            m_variablesSpec = variables.getDataTableSpec();
+        }
+        m_maxIterations = variables.getRowCount();
         if (m_variablesIterator == null) {
             m_variablesIterator = variables.iterator();
         }
@@ -130,15 +132,8 @@ public class IterateVariablesLoopHeadNodeModel extends NodeModel implements
         }
         m_currentVariables = m_variablesIterator.next();
         pushVariables();
+        m_iteration += 1;
         return new BufferedDataTable[]{inData[0]};
-    }
-    
-    private void resetIfNecessary(final DataTableSpec variablesSpec) {
-        if (!variablesSpec.equalStructure(m_variablesSpec)) {
-            m_variablesSpec = variablesSpec;
-            m_variablesIterator = null;
-            m_currentVariables = null;
-        }
     }
     
     /** {@inheritDoc} */
@@ -147,6 +142,8 @@ public class IterateVariablesLoopHeadNodeModel extends NodeModel implements
         m_variablesSpec = null;
         m_variablesIterator = null;
         m_currentVariables = null;
+        m_iteration = 0;
+        m_maxIterations = 0;
     }
 
     /** {@inheritDoc} */
