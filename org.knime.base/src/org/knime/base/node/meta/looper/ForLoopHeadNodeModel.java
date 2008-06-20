@@ -81,7 +81,7 @@ public class ForLoopHeadNodeModel extends NodeModel implements LoopStartNode {
             final ExecutionContext exec) throws Exception {
         // let's see if we have access to the tail: if we do, it's not the
         // first time we are doing this...
-        if (getLoopTailNode() == null) {
+        if (getLoopEndNode() == null) {
             // if it's null we know that this is the first time the
             // loop is being executed.
             assert m_iteration == 0;
@@ -89,7 +89,7 @@ public class ForLoopHeadNodeModel extends NodeModel implements LoopStartNode {
             assert m_iteration > 0;
             // otherwise we do this again, and we increment our counter
             // and we can do a quick sanity check
-            if (!(getLoopTailNode() instanceof ForLoopTailNodeModel)) {
+            if (!(getLoopEndNode() instanceof ForLoopTailNodeModel)) {
                 throw new IllegalArgumentException("Loop tail has wrong type!");
             }
         }

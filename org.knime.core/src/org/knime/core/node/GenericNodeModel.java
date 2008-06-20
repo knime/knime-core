@@ -929,7 +929,7 @@ public abstract class GenericNodeModel {
     
     private GenericNodeModel m_loopEndNode = null;
     
-    protected final GenericNodeModel getLoopTailNode() {
+    protected final GenericNodeModel getLoopEndNode() {
         return m_loopEndNode;
     }
     
@@ -939,7 +939,7 @@ public abstract class GenericNodeModel {
 
     private GenericNodeModel m_loopStartNode = null;
     
-    protected final GenericNodeModel getLoopHeadNode() {
+    protected final GenericNodeModel getLoopStartNode() {
         return m_loopStartNode;
     }
     

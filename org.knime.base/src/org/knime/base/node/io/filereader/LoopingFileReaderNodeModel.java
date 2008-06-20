@@ -91,7 +91,7 @@ public class LoopingFileReaderNodeModel extends FileReaderNodeModel implements
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws CanceledExecutionException,
             InvalidSettingsException {
-        if (this.getLoopTailNode() == null) {
+        if (this.getLoopEndNode() == null) {
             // start of loop
             assert m_currentIteration == 0;
         } else {
