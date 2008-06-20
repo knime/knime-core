@@ -64,6 +64,7 @@ import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
+import org.knime.core.util.MutableInteger;
 
 /**
  * This is the model for the value counter node that does all the work.
@@ -123,49 +124,65 @@ public class ValueCounterNodeModel extends NodeModel {
                         m_settings.columnName());
         final double max = inData[0].getRowCount();
         int rowCount = 0;
-        Map<DataCell, Set<RowKey>> map =
+        Map<DataCell, Set<RowKey>> hlMap =
                 new HashMap<DataCell, Set<RowKey>>();
+        Map<DataCell, MutableInteger> countMap =
+            new HashMap<DataCell, MutableInteger>();
+
         for (DataRow row : inData[0]) {
             exec.checkCanceled();
-            exec.setProgress(rowCount++ / max, map.size()
+            exec.setProgress(rowCount++ / max, countMap.size()
                     + " different values found");
             DataCell cell = row.getCell(colIndex);
-            Set<RowKey> s = map.get(cell);
-            if (s == null) {
-                s = new HashSet<RowKey>();
-                map.put(cell, s);
+
+            MutableInteger count = countMap.get(cell);
+            if (count == null) {
+                count = new MutableInteger(0);
+                countMap.put(cell, count);
             }
-            s.add(row.getKey());
+            count.inc();
+
+            if (m_settings.hiliting()) {
+                Set<RowKey> s = hlMap.get(cell);
+                if (s == null) {
+                    s = new HashSet<RowKey>();
+                    hlMap.put(cell, s);
+                }
+                s.add(row.getKey());
+            }
         }
 
         final DataValueComparator comp =
                 inData[0].getDataTableSpec().getColumnSpec(colIndex).getType()
                         .getComparator();
 
-        List<Map.Entry<DataCell, Set<RowKey>>> sorted =
-                new ArrayList<Map.Entry<DataCell, Set<RowKey>>>(map
+        List<Map.Entry<DataCell, MutableInteger>> sorted =
+                new ArrayList<Map.Entry<DataCell, MutableInteger>>(countMap
                         .entrySet());
         Collections.sort(sorted,
-                new Comparator<Map.Entry<DataCell, Set<RowKey>>>() {
+                new Comparator<Map.Entry<DataCell, MutableInteger>>() {
                     public int compare(
-                            final Map.Entry<DataCell, Set<RowKey>> o1,
-                            final Entry<DataCell, Set<RowKey>> o2) {
+                            final Map.Entry<DataCell, MutableInteger> o1,
+                            final Entry<DataCell, MutableInteger> o2) {
                         return comp.compare(o1.getKey(), o2.getKey());
                     }
                 });
 
         BufferedDataContainer cont = exec.createDataContainer(TABLE_SPEC);
-        Map<RowKey, Set<RowKey>> hlmap = new HashMap<RowKey, Set<RowKey>>();
-        for (Map.Entry<DataCell, Set<RowKey>> entry : sorted) {
+        for (Map.Entry<DataCell, MutableInteger> entry : sorted) {
             RowKey newKey = new RowKey(entry.getKey().toString());
             cont.addRowToTable(new DefaultRow(newKey,
-                    new int[]{entry.getValue().size()}));
-            hlmap.put(newKey, entry.getValue());
+                    new int[]{entry.getValue().intValue()}));
         }
         cont.close();
 
         if (m_settings.hiliting()) {
-            m_translator.setMapper(new DefaultHiLiteMapper(hlmap));
+            Map<RowKey, Set<RowKey>> temp = new HashMap<RowKey, Set<RowKey>>();
+            for (Map.Entry<DataCell, Set<RowKey>> entry : hlMap.entrySet()) {
+                RowKey newKey = new RowKey(entry.getKey().toString());
+                temp.put(newKey, entry.getValue());
+            }
+            m_translator.setMapper(new DefaultHiLiteMapper(temp));
         } else {
             m_translator.setMapper(new DefaultHiLiteMapper(
                     new HashMap<RowKey, Set<RowKey>>()));
