@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<feature id="org.knime.features.base" image="icons/knime64.gif" label="KNIME" plugin="org.knime.core" provider-name="Chair for Bioinformatics and Information Mining, Prof. Berthold, University of Konstanz, Germany" version="1.3.5">
+<feature id="org.knime.features.base" image="icons/knime64.gif" label="KNIME" plugin="org.knime.core" provider-name="Chair for Bioinformatics and Information Mining, Prof. Berthold, University of Konstanz, Germany" version="1.3.5.1">
 
    <description url="http://www.knime.org/">
       This features containes KNIME. All plugins needed to run the
