@@ -664,6 +664,12 @@
             factory-class="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory"
             id="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory">
       </node>
+      <node
+            after="File Reader"
+            category-path="/io/read"
+            factory-class="org.knime.base.node.io.filereader.LooperFileReaderNodeFactory"
+            id="org.knime.base.node.io.filereader.LooperFileReaderNodeFactory">
+      </node>
    </extension>
    
    
