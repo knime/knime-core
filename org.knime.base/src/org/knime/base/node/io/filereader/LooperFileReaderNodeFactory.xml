@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Source" icon="./filereader.ico">
+	<name>Looping File Reader</name>
+	
+	<shortDescription>
+	    Flexible reader for ASCII files.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>	
+		Provides the same functionality as the File Reader (please refer to
+		the File Reader's page).
+		Additionally this reader's dialog has a tab where you can enter 
+		additional files that will be read after the file in the dialog's 
+		"main" location. The dialog only looks at its "main" file and
+		determines the settings from it - all other additional files must be 
+		readable with these settings.
+		</intro>
+
+	    <option name="Variable name">If you enter a variable name here, the
+	    file name will be pushed on KNIME's variable stack, for successor
+	    nodes in the loop to read. If left empty, the name is not stored on
+	    the variable stack. 
+        </option>	      	
+        <option name="File list">Enter in each line the name of an additional
+        file to read with the same settings entered in the main dialog page.
+        Absolute paths must start with a '/', '\', or 'X:'. Relative paths are
+        relative to their predecessor file. 
+        </option>           
+        
+	</fullDescription>
+	
+	<ports>
+		<dataOut index="0" name="File Table">Datatable just read from the file</dataOut>
+	</ports>	
+</knimeNode>
