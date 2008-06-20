@@ -162,9 +162,13 @@
             name="SVM"
             path="/mining">
       </category>
-            
+      <category
+            level-id="features"
+            name="Feature Selection"
+            path="/meta">
+      </category>
    </extension>
-
+            
      <extension
          point="org.knime.workbench.repository.nodes">
       <node
@@ -691,6 +695,4 @@
              id="org.knime.base.node.variabletotable.VariableToTableNodeFactory">
        </node>
    </extension>
-   
-   
 </plugin>
