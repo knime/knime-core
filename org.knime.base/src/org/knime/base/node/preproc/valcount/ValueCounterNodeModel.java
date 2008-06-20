@@ -3,10 +3,10 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
- * University of Konstanz, Germany.
- * Chair for Bioinformatics and Information Mining
- * Prof. Dr. Michael R. Berthold
+ * Copyright, 2003 - 2008
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
  *
  * You may not modify, publish, transmit, transfer or sell, reproduce,
  * create derivative works from, distribute, perform, display, or in
@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.base.node.preproc.valcount;
 
@@ -63,10 +63,11 @@ import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
+import org.knime.core.util.MutableInteger;
 
 /**
  * This is the model for the value counter node that does all the work.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ValueCounterNodeModel extends NodeModel {
@@ -122,46 +123,64 @@ public class ValueCounterNodeModel extends NodeModel {
                         m_settings.columnName());
         final double max = inData[0].getRowCount();
         int rowCount = 0;
-        Map<DataCell, Set<DataCell>> map =
+        Map<DataCell, Set<DataCell>> hlMap =
                 new HashMap<DataCell, Set<DataCell>>();
+        Map<DataCell, MutableInteger> countMap =
+            new HashMap<DataCell, MutableInteger>();
+
         for (DataRow row : inData[0]) {
             exec.checkCanceled();
-            exec.setProgress(rowCount++ / max, map.size()
+            exec.setProgress(rowCount++ / max, countMap.size()
                     + " different values found");
             DataCell cell = row.getCell(colIndex);
-            Set<DataCell> s = map.get(cell);
-            if (s == null) {
-                s = new HashSet<DataCell>();
-                map.put(cell, s);
+
+            MutableInteger count = countMap.get(cell);
+            if (count == null) {
+                count = new MutableInteger(0);
+                countMap.put(cell, count);
             }
-            s.add(row.getKey().getId());
+            count.inc();
+
+            if (m_settings.hiliting()) {
+                Set<DataCell> s = hlMap.get(cell);
+                if (s == null) {
+                    s = new HashSet<DataCell>();
+                    hlMap.put(cell, s);
+                }
+                s.add(row.getKey().getId());
+            }
         }
 
         final DataValueComparator comp =
                 inData[0].getDataTableSpec().getColumnSpec(colIndex).getType()
                         .getComparator();
 
-        List<Map.Entry<DataCell, Set<DataCell>>> sorted =
-                new ArrayList<Map.Entry<DataCell, Set<DataCell>>>(map
+        List<Map.Entry<DataCell, MutableInteger>> sorted =
+                new ArrayList<Map.Entry<DataCell, MutableInteger>>(countMap
                         .entrySet());
         Collections.sort(sorted,
-                new Comparator<Map.Entry<DataCell, Set<DataCell>>>() {
+                new Comparator<Map.Entry<DataCell, MutableInteger>>() {
                     public int compare(
-                            final Map.Entry<DataCell, Set<DataCell>> o1,
-                            final Entry<DataCell, Set<DataCell>> o2) {
+                            final Map.Entry<DataCell, MutableInteger> o1,
+                            final Entry<DataCell, MutableInteger> o2) {
                         return comp.compare(o1.getKey(), o2.getKey());
                     }
                 });
 
         BufferedDataContainer cont = exec.createDataContainer(TABLE_SPEC);
-        for (Map.Entry<DataCell, Set<DataCell>> entry : sorted) {
-            cont.addRowToTable(new DefaultRow(entry.getKey(), new int[]{entry
-                    .getValue().size()}));
+        for (Map.Entry<DataCell, MutableInteger> entry : sorted) {
+            cont.addRowToTable(new DefaultRow(entry.getKey(),
+                    new int[]{entry.getValue().intValue()}));
         }
         cont.close();
 
         if (m_settings.hiliting()) {
-            m_translator.setMapper(new DefaultHiLiteMapper(map));
+            Map<DataCell, Set<DataCell>> temp = 
+                new HashMap<DataCell, Set<DataCell>>();
+            for (Map.Entry<DataCell, Set<DataCell>> entry : hlMap.entrySet()) {
+                temp.put(entry.getKey(), entry.getValue());
+            }
+            m_translator.setMapper(new DefaultHiLiteMapper(temp));
         } else {
             m_translator.setMapper(new DefaultHiLiteMapper(
                     new HashMap<DataCell, Set<DataCell>>()));
