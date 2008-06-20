@@ -653,6 +653,12 @@ public class NodeContainerFigure extends RectangleFigure {
 
         private static final String BACKGROUND_UNKNOWN =
                 "icons/node/" + "background_unknown.png";
+        
+        private static final String BACKGROUND_LOOPER_START = 
+                "icons/node/background_looper_start.png";
+        
+        private static final String BACKGROUND_LOOPER_END = 
+            "icons/node/background_looper_end.png";
 
         private final Label m_backgroundIcon;
 
@@ -726,6 +732,10 @@ public class NodeContainerFigure extends RectangleFigure {
                 str = BACKGROUND_OTHER;
             } else if (type.equals(NodeType.Visualizer)) {
                 str = BACKGROUND_VIEWER;
+            } else if (type.equals(NodeType.LoopStart)) {
+                str = BACKGROUND_LOOPER_START;
+            } else if (type.equals(NodeType.LoopEnd)) {
+                str = BACKGROUND_LOOPER_END;
             } else {
                 str = BACKGROUND_UNKNOWN;
             }

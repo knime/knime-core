@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="../looper.png" type="Meta">
-    <name>Variables Looper (Tail)</name>
+<knimeNode icon="../looper.png" type="LoopEnd">
+    <name>Variables Looper (End)</name>
 
-    <shortDescription>Termination node of a variables iterator loop.</shortDescription>
+    <shortDescription>End node of a variables iterator loop.</shortDescription>
 
     <fullDescription>
         <intro>
-        Tail node for an encapsulated sub workflow performing a loop over different variables sets.
+        End node for an encapsulated sub workflow performing a loop over different variables sets.
         </intro>
     </fullDescription>
     <ports>

@@ -22,7 +22,7 @@
 -->
 <!ELEMENT knimeNode ( name, shortDescription, fullDescription, ports, views? ) >
 <!ATTLIST knimeNode icon CDATA #IMPLIED>
-<!ATTLIST knimeNode type (Source|Sink|Learner|Predictor|Manipulator|Visualizer|Meta|LoopHead|LoopTail|Other|Unknown) "Unknown">
+<!ATTLIST knimeNode type (Source|Sink|Learner|Predictor|Manipulator|Visualizer|Meta|LoopStart|LoopEnd|Other|Unknown) "Unknown">
 <!ATTLIST knimeNode deprecated (true|false) "false">
 
 <!ELEMENT name (#PCDATA) >
