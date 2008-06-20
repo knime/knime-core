@@ -101,7 +101,7 @@ public abstract class AbstractPortFigure extends Shape {
             // model
             color = Display.getCurrent().getSystemColor(SWT.COLOR_BLUE);
         } else if (AbstractSimplePortObject.class.isAssignableFrom(
-                getType().getClass())) {
+                getType().getPortObjectClass())) {
             // model
             color = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_CYAN);
         } else if (getType().equals(BufferedDataTable.TYPE)) {
