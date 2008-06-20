@@ -22,7 +22,7 @@
  * History
  *   May 1, 2008 (wiswedel): created
  */
-package org.knime.exp.node.variabletotable;
+package org.knime.base.node.variabletotable;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

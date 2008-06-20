@@ -685,6 +685,11 @@
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimFilterNodeFactory"
             id="org.knime.base.node.meta.feature.backwardelim.BWElimFilterNodeFactory">
       </node>
+       <node
+             category-path="/misc"
+             factory-class="org.knime.exp.node.variabletotable.VariableToTableNodeFactory"
+             id="org.knime.exp.node.variabletotable.VariableToTableNodeFactory">
+       </node>
    </extension>
    
    
