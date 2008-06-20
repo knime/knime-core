@@ -1,0 +1,208 @@
+/*
+ * ------------------------------------------------------------------ *
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2008
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   27.02.2008 (thor): created
+ */
+package org.knime.base.node.meta.feature.backwardelim;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.PortObject;
+import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.PortType;
+import org.knime.core.util.Pair;
+
+/**
+ * This the model that holds the result of a backward elimination loop. The
+ * model consists of all levels (i.e. number of included features) together with
+ * the corresponding error rate and a list of all columns included in the level.
+ *
+ * Note that this class is also its spec at the same time, because the stored
+ * information is needed in the dialog of the filter node.
+ *
+ * @author Thorsten Meinl, University of Konstanz
+ */
+public class BWElimModel implements PortObject, PortObjectSpec {
+    /** The type of ports that create or consume such a model. */
+    public static final PortType TYPE = new PortType(BWElimModel.class);
+
+    private final Collection<Pair<Double, Collection<String>>> m_featureLevels =
+            new ArrayList<Pair<Double, Collection<String>>>();
+
+    private final Collection<Pair<Double, Collection<String>>> m_unmodList =
+            Collections.unmodifiableCollection(m_featureLevels);
+
+    private final String m_targetColumn;
+
+    /**
+     * Creates a new model.
+     *
+     * @param targetColumn the target columns's name
+     */
+    public BWElimModel(final String targetColumn) {
+        m_targetColumn = targetColumn;
+    }
+
+    /**
+     * Adds a new feature level.
+     *
+     * @param error the resulting error rate
+     * @param includedColumns a list with the included column names
+     */
+    public void addFeatureLevel(final double error,
+            final Collection<String> includedColumns) {
+        m_featureLevels.add(new Pair<Double, Collection<String>>(error,
+                Collections.unmodifiableCollection(new ArrayList<String>(
+                        includedColumns))));
+    }
+
+    /**
+     * Returns an unmodifieable collection of the stored feature levels. Each
+     * entry if a pair with the error rate as first part and a list of all
+     * columns that were included in the iteration as second part.
+     *
+     * @return a collection with pairs
+     */
+    public Collection<Pair<Double, Collection<String>>> featureLevels() {
+        return m_unmodList;
+    }
+
+    /**
+     * Returns the target column's name.
+     *
+     * @return the name
+     */
+    public String targetColumn() {
+        return m_targetColumn;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public PortObjectSpec getSpec() {
+        return this;
+    }
+
+    /**
+     * Returns a serializer object for this model.
+     *
+     * @return a port object serializer
+     */
+    public static PortObjectSerializer<BWElimModel> getPortObjectSerializer() {
+        return ModelSerializer.INSTANCE;
+    }
+
+    /**
+     * Returns a serializer object for this model's spec (which is the model
+     * itself).
+     *
+     * @return a port object serializer
+     */
+    public static PortObjectSpecSerializer<BWElimModel> getPortObjectSpecSerializer() {
+        return SpecSerializer.INSTANCE;
+    }
+
+    private static class SpecSerializer extends
+            PortObjectSpecSerializer<BWElimModel> {
+        static final SpecSerializer INSTANCE = new SpecSerializer();
+
+        @Override
+        protected BWElimModel loadPortObjectSpec(final File directory)
+                throws IOException {
+            File f = new File(directory, "model.txt");
+            if (!f.exists()) {
+                throw new IOException("Model file 'model.txt' not found");
+            }
+
+            BufferedReader in = new BufferedReader(new FileReader(f));
+            String line;
+            BWElimModel model = new BWElimModel(in.readLine());
+            while ((line = in.readLine()) != null) {
+                int nrOfFeatures = Integer.parseInt(line);
+                double error = Double.parseDouble(in.readLine());
+                List<String> features = new ArrayList<String>();
+                for (int i = 0; i < nrOfFeatures; i++) {
+                    features.add(in.readLine());
+                }
+                model.addFeatureLevel(error, Collections
+                        .unmodifiableCollection(features));
+            }
+            in.close();
+
+            return model;
+        }
+
+        @Override
+        protected void savePortObjectSpec(final BWElimModel pos,
+                final File directory) throws IOException {
+            File f = new File(directory, "model.txt");
+            PrintWriter out =
+                    new PrintWriter(new BufferedWriter(new FileWriter(f)));
+
+            out.println(pos.m_targetColumn);
+            for (Pair<Double, Collection<String>> p : pos.m_featureLevels) {
+                out.println(p.getSecond().size());
+                out.println(p.getFirst());
+                for (String s : p.getSecond()) {
+                    out.println(s);
+                }
+            }
+            out.close();
+        }
+    }
+
+    private static class ModelSerializer extends
+            PortObjectSerializer<BWElimModel> {
+        static final ModelSerializer INSTANCE = new ModelSerializer();
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public BWElimModel loadPortObject(final File directory,
+                final PortObjectSpec spec, final ExecutionMonitor exec) 
+        throws IOException, CanceledExecutionException {
+            return (BWElimModel)spec;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void savePortObject(final BWElimModel portObject,
+                final File directory, final ExecutionMonitor exec)
+                throws IOException, CanceledExecutionException {
+        }
+    }
+}

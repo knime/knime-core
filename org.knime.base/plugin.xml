@@ -670,6 +670,26 @@
             factory-class="org.knime.base.node.io.filereader.LooperFileReaderNodeFactory"
             id="org.knime.base.node.io.filereader.LooperFileReaderNodeFactory">
       </node>
+      <node
+            category-path="/meta/features"
+            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimHead1NodeFactory"
+            id="org.knime.base.node.meta.feature.backwardelim.BWElimHeadNodeFactory">
+      </node>
+      <node
+            category-path="/meta/features"
+            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimHead2NodeFactory"
+            id="org.knime.base.node.meta.feature.backwardelim.BWElimHead2NodeFactory">
+      </node>
+      <node
+            category-path="/meta/features"
+            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimTailNodeFactory"
+            id="org.knime.base.node.meta.feature.backwardelim.BWElimTailNodeFactory">
+      </node>
+      <node
+            category-path="/meta/features"
+            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimFilterNodeFactory"
+            id="org.knime.base.node.meta.feature.backwardelim.BWElimFilterNodeFactory">
+      </node>
    </extension>
    
    
