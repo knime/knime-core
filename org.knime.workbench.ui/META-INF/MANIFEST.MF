@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Workbench UI
 Bundle-SymbolicName: org.knime.workbench.ui;singleton:=true
-Bundle-Version: 1.3.5
+Bundle-Version: 1.3.5.1
 Bundle-ClassPath: workbench-ui.jar
 Bundle-Activator: org.knime.workbench.ui.KNIMEUIPlugin
 Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany

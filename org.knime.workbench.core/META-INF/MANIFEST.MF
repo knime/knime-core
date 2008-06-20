@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Workbench Core
 Bundle-SymbolicName: org.knime.workbench.core
-Bundle-Version: 1.3.5
+Bundle-Version: 1.3.5.1
 Bundle-ClassPath: workbench-core.jar
 Bundle-Activator: org.knime.workbench.core.KNIMECorePlugin
 Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany

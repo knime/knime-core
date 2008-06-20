@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Core API
 Bundle-SymbolicName: org.knime.core
-Bundle-Version: 1.3.5
+Bundle-Version: 1.3.5.1
 Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
 Bundle-ClassPath: lib/log4j.jar,
  knime-core.jar
