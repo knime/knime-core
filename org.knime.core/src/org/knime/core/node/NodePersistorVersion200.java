@@ -195,8 +195,6 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                 if (object instanceof BufferedDataTable) {
                     saveBufferedDataTable(
                             (BufferedDataTable)object, objectDir, exec);
-                } else if (object instanceof ModelContent) {
-                    saveModelContent((ModelContent)object, objectDir, exec);
                 } else {
                     PortObjectSerializer serializer =
                         getPortObjectSerializer(object.getClass());
@@ -212,12 +210,6 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         table.save(directory, exec);
     }
 
-    private void saveModelContent(final ModelContent content,
-            final File directory, final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-        content.save(directory, exec);
-    }
-    
     protected void saveHasContent(final Node node, 
             final NodeSettingsWO settings) {
         boolean hasContent = node.hasContent();
