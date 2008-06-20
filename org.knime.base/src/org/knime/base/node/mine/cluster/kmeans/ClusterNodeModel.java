@@ -52,15 +52,11 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentWO;
-import org.knime.core.node.ModelPortObject;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.PortObject;
-import org.knime.core.node.PortObjectSpec;
-import org.knime.core.node.PortType;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
@@ -75,7 +71,7 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
  * 
  * @author Michael Berthold, University of Konstanz
  */
-public class ClusterNodeModel extends GenericNodeModel {
+public class ClusterNodeModel extends NodeModel {
     /** Constant for the RowKey generation and identification in the view. */
     public static final String CLUSTER = "cluster_";
 
@@ -157,12 +153,7 @@ public class ClusterNodeModel extends GenericNodeModel {
      * Constructor, remember parent and initialize status.
      */
     ClusterNodeModel() {
-        super(new PortType[] {
-                BufferedDataTable.TYPE},
-              new PortType[] {
-                BufferedDataTable.TYPE,
-                ModelPortObject.TYPE}
-                ); // specify one data input, one data output and one model
+        super(1, 1, 0, 1);
         m_mapper = null;
         m_translator = new HiLiteTranslator(new DefaultHiLiteHandler(),
                 m_mapper);
@@ -351,7 +342,7 @@ public class ClusterNodeModel extends GenericNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] data,
+    protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws Exception {
         assert (data.length == 1);
         BufferedDataTable inData = (BufferedDataTable)data[0];
@@ -475,8 +466,7 @@ public class ClusterNodeModel extends GenericNodeModel {
         m_translator.setMapper(m_mapper);
         BufferedDataTable outData = exec.createBufferedDataTable(
                 labeledInput.getTable(), exec);
-        ModelContent outModel = createModelContent();
-        return new PortObject[]{outData, outModel};
+        return new BufferedDataTable[]{outData};
     }
 
     private void initialize(final DataTable input) {
@@ -543,8 +533,12 @@ public class ClusterNodeModel extends GenericNodeModel {
         return winner;
     }
 
-    private ModelContent createModelContent() {
-        ModelContent predParams = new ModelContent("kMeans Cluster Model");
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveModelContent(final int index,
+            final ModelContentWO predParams) throws InvalidSettingsException {
         /*
          * Determine the columns that have been used for clustering.
          */
@@ -573,9 +567,8 @@ public class ClusterNodeModel extends GenericNodeModel {
                             + c));
             proto.save(protoWO);
         }
-        return predParams;
     }
-
+    
     /**
      * Clears the model.
      * 
@@ -598,7 +591,7 @@ public class ClusterNodeModel extends GenericNodeModel {
      * @return the copied input spec
      */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) {
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) {
         // make sure we are a 1-input
         assert (inSpecs.length == 1);
         m_spec = (DataTableSpec)inSpecs[0];

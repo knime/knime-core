@@ -45,7 +45,7 @@ import javax.swing.tree.TreePath;
 
 import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteListener;
 import org.knime.core.node.property.hilite.KeyEvent;
 
@@ -53,8 +53,7 @@ import org.knime.core.node.property.hilite.KeyEvent;
 /**
  * @author Michael Berthold, University of Konstanz
  */
-public class ClusterNodeView extends GenericNodeView<ClusterNodeModel>
-implements HiLiteListener {
+public class ClusterNodeView extends NodeView implements HiLiteListener {
 
     // private static final NodeLogger LOGGER = NodeLogger.getLogger(
     // ClusterNodeView.class);
@@ -134,6 +133,14 @@ implements HiLiteListener {
         m_hiliteMenu = getHiLiteMenu();
         super.getJMenuBar().add(m_hiliteMenu);
         super.setComponent(myComp);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected ClusterNodeModel getNodeModel() {
+        return (ClusterNodeModel) super.getNodeModel();
     }
 
     private JMenu getHiLiteMenu() {
@@ -266,7 +273,7 @@ implements HiLiteListener {
             root = new DefaultMutableTreeNode("No Model");
         } else { // check for empty cluster model before adding content to
             // tree
-            ClusterNodeModel myModel = getNodeModel();
+            ClusterNodeModel myModel = (ClusterNodeModel) getNodeModel();
             if (!myModel.hasModel()) {
                 root = new DefaultMutableTreeNode("Empty Model");
             } else { // put cluster info into the tree
