@@ -56,7 +56,7 @@ public final class KNIMEConstants {
         + BUILD;
 
     /** The build date, is set automatically by the build scripts. */
-    public static final String BUILD_DATE = "Unstable build";
+    public static final String BUILD_DATE = "June 20, 2008";
     
     /**
      * The name of the system property whose value is - if set - used as knime
