@@ -29,7 +29,8 @@ import java.util.Random;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 
-import org.knime.core.data.DataCell;
+import junit.framework.TestCase;
+
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -43,8 +44,7 @@ import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteHandler;
-
-import junit.framework.TestCase;
+import org.knime.core.node.property.hilite.KeyEvent;
 
 /**
  * Test class for public methods in a
@@ -365,10 +365,10 @@ public class TableContentModelTest extends TestCase {
         
         // hilite every other in DATA and check if it is correctly reflected
         // in m
-        final HashSet<DataCell> set = new HashSet<DataCell>();
+        final HashSet<RowKey> set = new HashSet<RowKey>();
         boolean isEvenNumber = true;
         for (RowIterator it = DATA.iterator(); it.hasNext();) {
-            DataCell cell = it.next().getKey().getId();
+            RowKey cell = it.next().getKey();
             if (isEvenNumber) {
                 hiliteHdl.fireHiLiteEvent(cell);
                 set.add(cell);
@@ -376,7 +376,7 @@ public class TableContentModelTest extends TestCase {
             isEvenNumber = !isEvenNumber;
         }
         for (int i = 0; i < m.getRowCount(); i++) {
-            DataCell key = m.getRow(i).getKey().getId();
+            RowKey key = m.getRow(i).getKey();
             boolean isHiLit = m.isHiLit(i);
             assertEquals(set.contains(key), isHiLit);
         }
@@ -558,7 +558,7 @@ public class TableContentModelTest extends TestCase {
         
         // 0 should be ok, it returns the lucky row
         m.getRow(0); 
-        m.unHiLiteAll();
+        m.unHiLiteAll(new KeyEvent(this));
         assertEquals(m.getRowCount(), 0);
     }
 
@@ -720,7 +720,7 @@ public class TableContentModelTest extends TestCase {
                 // change randomly drawn keys
                 for (int c = 0; c < count; c++) {
                     int index = rand.nextInt(data.length);
-                    DataCell keyForIndex = data[index].getKey().getId();
+                    RowKey keyForIndex = data[index].getKey();
                     boolean isHilit = hiliter.isHiLit(keyForIndex);
                     if (isHilit) {
                         hiliter.fireUnHiLiteEvent(keyForIndex);
@@ -733,7 +733,7 @@ public class TableContentModelTest extends TestCase {
             }
             // now the sanity checks
             for (int row = 0; row < model.getRowCount(); row++) {
-                DataCell key = model.getRow(row).getKey().getId();
+                RowKey key = model.getRow(row).getKey();
                 assertTrue(hiliter.isHiLit(key));
                 assertTrue(model.isHiLit(row));
             }

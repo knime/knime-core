@@ -36,6 +36,7 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -68,8 +69,8 @@ public class DataContainerTest extends TestCase {
      */
     public final void testOpen() {
         DataContainer c = new DataContainer(EMPTY_SPEC);
-        c.addRowToTable(new DefaultRow(new StringCell(
-                "no one is going to read me"), new DataCell[] {}));
+        c.addRowToTable(new DefaultRow(
+                "no one is going to read me", new DataCell[] {}));
         assertTrue(c.isOpen());
     }
 
@@ -123,15 +124,15 @@ public class DataContainerTest extends TestCase {
         };
         DataTableSpec spec1 = new DataTableSpec(colNames, colTypes);
         DataContainer c = new DataContainer(spec1);
-        DataCell r1Key = new StringCell("row 1");
+        RowKey r1Key = new RowKey("row 1");
         DataCell r1Cell1 = new StringCell("Row 1, Cell 1");
         DataCell r1Cell2 = new IntCell(12);
         DataRow r1 = new DefaultRow(r1Key, new DataCell[] {r1Cell1, r1Cell2});
-        DataCell r2Key = new StringCell("row 2");
+        RowKey r2Key = new RowKey("row 2");
         DataCell r2Cell1 = new StringCell("Row 2, Cell 1");
         DataCell r2Cell2 = new IntCell(22);
         DataRow r2 = new DefaultRow(r2Key, new DataCell[] {r2Cell1, r2Cell2});
-        DataCell r3Key = new StringCell("row 3");
+        RowKey r3Key = new RowKey("row 3");
         DataCell r3Cell1 = new StringCell("Row 3, Cell 1");
         DataCell r3Cell2 = new IntCell(32);
         DataRow r3 = new DefaultRow(r3Key, new DataCell[] {r3Cell1, r3Cell2});
@@ -149,7 +150,7 @@ public class DataContainerTest extends TestCase {
         c.addRowToTable(r3);
         
         // add incompatible types
-        DataCell r4Key = new StringCell("row 4");
+        RowKey r4Key = new RowKey("row 4");
         DataCell r4Cell1 = new StringCell("Row 4, Cell 1");
         DataCell r4Cell2 = new DoubleCell(42.0); // not allowed
         DataRow r4 = new DefaultRow(r4Key, new DataCell[] {r4Cell1, r4Cell2});
@@ -161,7 +162,7 @@ public class DataContainerTest extends TestCase {
         }
         
         // add wrong sized row
-        DataCell r5Key = new StringCell("row 5");
+        RowKey r5Key = new RowKey("row 5");
         DataCell r5Cell1 = new StringCell("Row 5, Cell 1");
         DataCell r5Cell2 = new IntCell(52); 
         DataCell r5Cell3 = new DoubleCell(53.0);
@@ -185,16 +186,16 @@ public class DataContainerTest extends TestCase {
         // addRow should preserve the order, we try here randomely generated
         // IntCells as key (the container puts it in a linked has map)
         DataCell[] values = new DataCell[0];
-        Vector<DataCell> order = new Vector<DataCell>(500); 
+        Vector<RowKey> order = new Vector<RowKey>(500); 
         for (int i = 0; i < 500; i++) {
             // fill it - this should be easy to preserve (as the int value
             // is also the hash code) 
-            order.add(new IntCell(i));
+            order.add(new RowKey(Integer.toString(i)));
         }
         // shuffle it - that should screw it up
         Collections.shuffle(order);
         c = new DataContainer(EMPTY_SPEC);
-        for (DataCell key : order) {
+        for (RowKey key : order) {
             c.addRowToTable(new DefaultRow(key, values));
         }
         c.close();
@@ -202,7 +203,7 @@ public class DataContainerTest extends TestCase {
         int pos = 0;
         for (RowIterator it = table.iterator(); it.hasNext(); pos++) {
             DataRow cur = it.next();
-            assertEquals(cur.getKey().getId(), order.get(pos));
+            assertEquals(cur.getKey().getString(), order.get(pos).getString());
         }
         assertEquals(pos, order.size());
     } // testAddRowToTable()
@@ -362,15 +363,15 @@ public class DataContainerTest extends TestCase {
     
     /** Test if the domain is retained. */
     public void testTableDomain() {
-        DataCell r1Key = new StringCell("row 1");
+        RowKey r1Key = new RowKey("row 1");
         DataCell r1Cell1 = new StringCell("Row 1, Cell 1");
         DataCell r1Cell2 = new IntCell(12);
         DataRow r1 = new DefaultRow(r1Key, new DataCell[] {r1Cell1, r1Cell2});
-        DataCell r2Key = new StringCell("row 2");
+        RowKey r2Key = new RowKey("row 2");
         DataCell r2Cell1 = new StringCell("Row 2, Cell 1");
         DataCell r2Cell2 = new IntCell(22);
         DataRow r2 = new DefaultRow(r2Key, new DataCell[] {r2Cell1, r2Cell2});
-        DataCell r3Key = new StringCell("row 3");
+        RowKey r3Key = new RowKey("row 3");
         DataCell r3Cell1 = new StringCell("Row 3, Cell 1");
         DataCell r3Cell2 = new IntCell(32);
         DataRow r3 = new DefaultRow(r3Key, new DataCell[] {r3Cell1, r3Cell2});
@@ -427,7 +428,7 @@ public class DataContainerTest extends TestCase {
     
     private static DataRow createRandomRow(final int index, final int colCount,
             final Random rand1, final ObjectToDataCellConverter conv) {
-        DataCell key = new StringCell("Row " + index);
+        RowKey key = new RowKey("Row " + index);
         DataCell[] cells = new DataCell[colCount];
         for (int c = 0; c < colCount; c++) {
             DataCell cell = null;
