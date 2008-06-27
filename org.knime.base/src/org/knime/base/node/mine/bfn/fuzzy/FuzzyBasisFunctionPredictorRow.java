@@ -227,7 +227,7 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
                 }
             }
         }
-        return (vol > 0 ? vol : 0);
+        return (vol > 0 ? vol / dom : 0);
     }
     
     /**
