@@ -137,7 +137,7 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
         super.addField(m_masterKeyConfirm);
         m_saveMasterKey = new BooleanFieldEditor(
                 PreferenceConstants.P_MASTER_KEY_SAVED, 
-                "Save Master Key and don't ask again on restart (unsave)", 
+                "Save Master Key and don't ask again on restart (unsafe)", 
                 parent);
         m_saveMasterKey.load();
         super.addField(m_saveMasterKey);
