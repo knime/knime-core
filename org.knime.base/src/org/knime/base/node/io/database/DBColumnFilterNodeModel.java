@@ -94,7 +94,7 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected String createQuery(final String query, final String tableId) {
+    protected String createQuery(final String query) {
         StringBuilder buf = new StringBuilder();
         for (String s : m_filter.getIncludeList()) {
             if (buf.length() > 0) {
@@ -102,8 +102,7 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
             }
             buf.append(s);
         }
-        return "SELECT " + buf.toString() + " FROM (" + query + ") AS " 
-                + tableId; 
+        return "SELECT " + buf.toString() + " FROM (" + query + ")";
     }
         
 }

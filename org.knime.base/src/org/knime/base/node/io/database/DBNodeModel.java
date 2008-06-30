@@ -37,6 +37,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -64,6 +65,9 @@ abstract class DBNodeModel extends GenericNodeModel {
     private DBQueryConnection m_conn;
 
     private String m_tableId;
+    
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(DBNodeModel.class);
     
     /**
      * Creates a new database reader.
@@ -113,7 +117,8 @@ abstract class DBNodeModel extends GenericNodeModel {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
         m_conn = new DBQueryConnection();
         m_conn.loadValidatedConnection(dbObj.getConnectionModel());
-        String newQuery = createQuery(m_conn.getQuery(), m_tableId); 
+        String newQuery = createQuery(m_conn.getQuery()); 
+        LOGGER.debug("Execute SQL query: " + newQuery);
         if (DBTableOptions.CREATE_TABLE.getActionCommand().equals(
                 m_tableOption.getStringValue())) {
             m_conn.execute("CREATE TABLE " + m_tableId + " AS " + newQuery);
@@ -180,7 +185,8 @@ abstract class DBNodeModel extends GenericNodeModel {
         m_conn = new DBQueryConnection();
         m_conn.loadValidatedConnection(spec.getConnectionModel());
         // replace view place holder and create where clause
-        String newQuery = createQuery(m_conn.getQuery(), m_tableId);
+        String newQuery = createQuery(m_conn.getQuery());
+        LOGGER.debug("Execute SQL query: " + newQuery);
         DBQueryConnection conn = new DBQueryConnection(m_conn, newQuery);
         // try to create database connection
         DataTableSpec outSpec = null;
@@ -189,8 +195,10 @@ abstract class DBNodeModel extends GenericNodeModel {
             DBReaderConnection reader = 
                 new DBReaderConnection(conn, newQuery);
             outSpec = reader.getDataTableSpec();
+        } catch (InvalidSettingsException ise) {
+            throw ise;
         } catch (Exception e) {
-            throw new InvalidSettingsException(e.getMessage());
+            throw new InvalidSettingsException(e.getMessage(), e);
         }
         DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(
                 outSpec, conn.createConnectionModel());
@@ -202,9 +210,8 @@ abstract class DBNodeModel extends GenericNodeModel {
      * <code>oldQuery</code>, the <code>tableId</code> has to be used to 
      * create an unique table. 
      * @param oldQuery the old SQL query from the input
-     * @param tableId unique table identifier
      * @return the new SQL query
      */
-    abstract String createQuery(final String oldQuery, final String tableId);
+    abstract String createQuery(final String oldQuery);
         
 }

@@ -62,18 +62,17 @@ final class DBConnectionWriterNodeModel extends GenericNodeModel {
      */
     @Override
     protected PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec) throws CanceledExecutionException,
-            Exception {
+            final ExecutionContext exec) 
+            throws CanceledExecutionException, Exception {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
         exec.setProgress("Opening database connection...");
         String tableName = m_tableName.getStringValue();
-        // suppress exception thrown when table does not exist in database
         DBQueryConnection conn = new DBQueryConnection();
-        conn.loadValidatedConnection(dbObj.getConnectionModel());
+            conn.loadValidatedConnection(dbObj.getConnectionModel());
         try {
             conn.execute("DROP TABLE " + tableName);
         } catch (Exception e) {
-            // ignored, table might not exist anymore
+            // suppress exception thrown when table does not exist in database
         }
         conn.execute("CREATE TABLE " + tableName 
                 + " AS (" + conn.getQuery() + ")");
@@ -117,8 +116,10 @@ final class DBConnectionWriterNodeModel extends GenericNodeModel {
             DBQueryConnection conn = new DBQueryConnection();
             conn.loadValidatedConnection(spec.getConnectionModel());
             conn.createConnection();
+        } catch (InvalidSettingsException ise) {
+            throw ise;
         } catch (Exception e) {
-            throw new InvalidSettingsException(e.getMessage());
+            throw new InvalidSettingsException(e.getMessage(), e);
         }
         super.setWarningMessage("Existing table \"" 
                 + m_tableName.getStringValue() + "\" will be dropped!");

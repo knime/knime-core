@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.sql.SQLException;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -66,15 +65,20 @@ final class DBReaderNodeModel extends NodeModel {
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws CanceledExecutionException,
-            Exception {
+            final ExecutionContext exec) 
+            throws CanceledExecutionException, Exception {
         exec.setProgress("Opening database connection...");
-        DBReaderConnection load = new DBReaderConnection(m_conn, m_query);
-        m_lastSpec = load.getDataTableSpec();
-        exec.setProgress("Reading data from database...");
-        BufferedDataTable data = exec.createBufferedDataTable(load, exec);
-        load.close();
-        return new BufferedDataTable[]{data};
+        try {
+            DBReaderConnection load = new DBReaderConnection(m_conn, m_query);
+            m_lastSpec = load.getDataTableSpec();
+            exec.setProgress("Reading data from database...");
+            BufferedDataTable data = exec.createBufferedDataTable(load, exec);
+            load.close();
+            return new BufferedDataTable[]{data};
+        } catch (Exception e) {
+            m_lastSpec = null;
+            throw e;
+        }
     }
 
     /**
@@ -136,13 +140,14 @@ final class DBReaderNodeModel extends NodeModel {
             DBReaderConnection conn = new DBReaderConnection(m_conn, m_query);
             m_lastSpec = conn.getDataTableSpec();
             conn.close();
-        } catch (SQLException e) {
-            throw new InvalidSettingsException(e.getMessage(), e);
+            return new DataTableSpec[]{m_lastSpec};
+        } catch (InvalidSettingsException e) {
+            m_lastSpec = null;
+            throw e;
         } catch (Exception e) {
-            throw new InvalidSettingsException(
-                    "Could not decrypt password.", e);
+            m_lastSpec = null;
+            throw new InvalidSettingsException(e.getMessage(), e);
         }
-        return new DataTableSpec[]{m_lastSpec};
     }
     
     /**

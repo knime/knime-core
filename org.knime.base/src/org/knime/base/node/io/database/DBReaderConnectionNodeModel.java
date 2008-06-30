@@ -108,8 +108,8 @@ final class DBReaderConnectionNodeModel extends GenericNodeModel {
      */
     @Override
     protected PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec) throws CanceledExecutionException,
-            Exception {
+            final ExecutionContext exec) 
+            throws CanceledExecutionException, Exception {
         String query = m_conn.getQuery();
         final DBQueryConnection conn;
         if (DBTableOptions.CREATE_TABLE.getActionCommand().equals(
@@ -170,21 +170,22 @@ final class DBReaderConnectionNodeModel extends GenericNodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        DataTableSpec spec = null;
-        // try to create database connection
-        DBQueryConnection conn = 
-            new DBQueryConnection(m_conn, m_conn.getQuery());
         try {
+            // try to create database connection
+            DBQueryConnection conn = 
+                new DBQueryConnection(m_conn, m_conn.getQuery());
             conn.createConnection();
             DBReaderConnection reader = 
                 new DBReaderConnection(conn, conn.getQuery());
-            spec = reader.getDataTableSpec();
+            DataTableSpec spec = reader.getDataTableSpec();
+            DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(spec,
+                    conn.createConnectionModel());
+            return new PortObjectSpec[]{dbSpec};
+        } catch (InvalidSettingsException ise) {
+            throw ise;
         } catch (Exception e) {
-            throw new InvalidSettingsException(e.getMessage());
+            throw new InvalidSettingsException(e.getMessage(), e);
         }
-        DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(spec,
-                conn.createConnectionModel());
-        return new PortObjectSpec[]{dbSpec};
     }
 
 }

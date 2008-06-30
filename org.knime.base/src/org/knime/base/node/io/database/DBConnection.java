@@ -23,9 +23,15 @@
 package org.knime.base.node.io.database;
 
 import java.io.File;
+import java.io.IOException;
+import java.security.InvalidKeyException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.sql.Statement;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
@@ -83,9 +89,16 @@ class DBConnection {
     /**
      * Create a database connection based on this settings.
      * @return a new database connection object.
-     * @throws Exception if an exception is thrown
+     * @throws SQLException {@link SQLException}
+     * @throws InvalidSettingsException {@link InvalidSettingsException}
+     * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
+     * @throws BadPaddingException {@link BadPaddingException}
+     * @throws InvalidKeyException {@link InvalidKeyException}
+     * @throws IOException {@link IOException}
      */
-    Connection createConnection() throws Exception {
+    Connection createConnection() throws InvalidSettingsException, SQLException,
+            BadPaddingException, IllegalBlockSizeException,
+            InvalidKeyException, IOException {
         if (m_dbName == null || m_user == null || m_pass == null
                 || m_driver == null) {
             throw new InvalidSettingsException("No settings available "
@@ -190,9 +203,17 @@ class DBConnection {
     /**
      * Execute statement on current database connection.
      * @param statement to be executed
-     * @throws Exception if the statement could not be executed
+     * @throws SQLException {@link SQLException}
+     * @throws InvalidSettingsException {@link InvalidSettingsException}
+     * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
+     * @throws BadPaddingException {@link BadPaddingException}
+     * @throws InvalidKeyException {@link InvalidKeyException}
+     * @throws IOException {@link IOException}
      */
-    void execute(final String statement) throws Exception {
+    void execute(final String statement) throws InvalidKeyException,
+            BadPaddingException, IllegalBlockSizeException,
+            InvalidSettingsException,
+            SQLException, IOException {
         Connection conn = null;
         Statement stmt = null;
         try {

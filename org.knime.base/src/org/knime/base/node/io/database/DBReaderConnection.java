@@ -25,6 +25,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.security.InvalidKeyException;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
@@ -34,8 +35,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -48,6 +51,7 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -73,10 +77,17 @@ final class DBReaderConnection implements DataTable {
      * 
      * @param conn a database connection object
      * @param query SQL query executed to read data
-     * @throws Exception If connection could not established.
+     * @throws SQLException {@link SQLException}
+     * @throws InvalidSettingsException {@link InvalidSettingsException}
+     * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
+     * @throws BadPaddingException {@link BadPaddingException}
+     * @throws InvalidKeyException {@link InvalidKeyException}
+     * @throws IOException {@link IOException}
      */
-    DBReaderConnection(final DBConnection conn, final String query) 
-            throws Exception {
+    DBReaderConnection(final DBConnection conn, final String query) throws
+            InvalidSettingsException, SQLException,
+            IllegalBlockSizeException, BadPaddingException,
+            InvalidKeyException, IOException {
         this(conn, query, Integer.MAX_VALUE);
     }
 
@@ -86,11 +97,17 @@ final class DBReaderConnection implements DataTable {
      * @param conn a database connection object
      * @param query SQL query executed to read data
      * @param cacheNoRows number of rows cached
-     * @throws Exception If connection could not established.
+     * @throws SQLException {@link SQLException}
+     * @throws InvalidSettingsException {@link InvalidSettingsException}
+     * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
+     * @throws BadPaddingException {@link BadPaddingException}
+     * @throws InvalidKeyException {@link InvalidKeyException}
+     * @throws IOException {@link IOException}
      */
     DBReaderConnection(final DBConnection conn, final String query,
-            final int cacheNoRows) 
-            throws Exception {
+            final int cacheNoRows) throws SQLException, 
+            InvalidSettingsException, IllegalBlockSizeException,
+            BadPaddingException, InvalidKeyException, IOException {
         m_cacheNoRows = cacheNoRows;
         Statement stmt = null;
         ResultSet result = null;
@@ -147,7 +164,7 @@ final class DBReaderConnection implements DataTable {
     private DataTableSpec createTableSpec(final ResultSetMetaData meta)
             throws SQLException {
         int cols = meta.getColumnCount();
-        DataColumnSpec[] cspecs = new DataColumnSpec[cols];
+        DataTableSpec spec = null;
         for (int i = 0; i < cols; i++) {
             int dbIdx = i + 1;
             String name = meta.getColumnName(dbIdx);
@@ -174,9 +191,16 @@ final class DBReaderConnection implements DataTable {
             default:
                 newType = StringCell.TYPE;
             }
-            cspecs[i] = new DataColumnSpecCreator(name, newType).createSpec();
+            if (spec == null) {
+                spec = new DataTableSpec(new DataColumnSpecCreator(
+                        name, newType).createSpec());
+            } else {
+                name = DataTableSpec.getUniqueColumnName(spec, name);
+                spec = new DataTableSpec(spec, new DataTableSpec(
+                       new DataColumnSpecCreator(name, newType).createSpec()));
+            }
         }
-        return new DataTableSpec(cspecs);
+        return spec;
     }
 
     /**

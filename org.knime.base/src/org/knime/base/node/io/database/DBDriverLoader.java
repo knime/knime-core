@@ -23,6 +23,8 @@
 package org.knime.base.node.io.database;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.sql.Driver;
@@ -165,9 +167,9 @@ final class DBDriverLoader {
      * Loads <code>Driver</code> from the given file.
      * 
      * @param file Load driver from.
-     * @throws Exception If an exception occurs.
+     * @throws IOException {@link IOException}
      */
-    static final void loadDriver(final File file) throws Exception {
+    static final void loadDriver(final File file) throws IOException {
         String fileName = file.getAbsolutePath();
         if (file.isDirectory()) {
             // not yet supported
@@ -178,7 +180,7 @@ final class DBDriverLoader {
     }
 
     private static void readZip(final File file, final ZipFile zipFile) 
-            throws Exception {
+            throws MalformedURLException {
         final ClassLoader cl = new URLClassLoader(
                 new URL[]{file.toURI().toURL()}, CLASS_LOADER);
         for (Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
@@ -221,8 +223,8 @@ final class DBDriverLoader {
         return DRIVER_MAP.get(driverName);
     }
 
-    private static Class<?> loadClass(final ClassLoader cl, final String name)
-            throws Exception, Error {
+    private static Class<?> loadClass(final ClassLoader cl, final String name) 
+            throws ClassNotFoundException {
         String newName = name.substring(0, name.indexOf(".class"));
         String className = newName.replace('/', '.');
         return cl.loadClass(className);

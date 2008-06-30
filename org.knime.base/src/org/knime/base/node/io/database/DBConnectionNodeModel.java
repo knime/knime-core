@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.sql.SQLException;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -69,17 +68,23 @@ final class DBConnectionNodeModel extends GenericNodeModel {
      */
     @Override
     protected PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec) throws CanceledExecutionException,
-            Exception {
-        exec.setProgress("Opening database connection...");
-        DatabasePortObject dbObj = (DatabasePortObject) inData[0];
-        DBQueryConnection conn = new DBQueryConnection();
-        conn.loadValidatedConnection(dbObj.getConnectionModel());
-        DBReaderConnection load = new DBReaderConnection(conn, conn.getQuery());
-        m_lastSpec = load.getDataTableSpec();
-        exec.setProgress("Reading data from database...");
-        return new BufferedDataTable[]{
-                exec.createBufferedDataTable(load, exec)};
+            final ExecutionContext exec) 
+            throws CanceledExecutionException, Exception {
+        try {
+            exec.setProgress("Opening database connection...");
+            DatabasePortObject dbObj = (DatabasePortObject) inData[0];
+            DBQueryConnection conn = new DBQueryConnection();
+            conn.loadValidatedConnection(dbObj.getConnectionModel());
+            DBReaderConnection load = new DBReaderConnection(
+                    conn, conn.getQuery());
+            m_lastSpec = load.getDataTableSpec();
+            exec.setProgress("Reading data from database...");
+            return new BufferedDataTable[]{
+                    exec.createBufferedDataTable(load, exec)};
+        } catch (Exception e) {
+            m_lastSpec = null;
+            throw e;
+        }
     }
 
     /**
@@ -143,12 +148,14 @@ final class DBConnectionNodeModel extends GenericNodeModel {
             DBReaderConnection reader = 
                 new DBReaderConnection(conn, conn.getQuery());
             m_lastSpec = reader.getDataTableSpec();
-        } catch (SQLException e) {
-            throw new InvalidSettingsException(e.getMessage());
+            return new DataTableSpec[]{m_lastSpec};
+        } catch (InvalidSettingsException ise) {
+            m_lastSpec = null;
+            throw ise;
         } catch (Exception e) {
-            throw new InvalidSettingsException("Could not decrypt password.");
+            m_lastSpec = null;
+            throw new InvalidSettingsException(e);
         }
-        return new DataTableSpec[]{m_lastSpec};
     }
     
     /**
