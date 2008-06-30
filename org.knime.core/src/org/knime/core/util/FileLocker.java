@@ -73,8 +73,9 @@ public class FileLocker {
 
             throw new IOException(specificMessage);
         }
-        if (m_fileLock != null)
+        if (m_fileLock != null) {
             return true;
+        }
         m_raFile.close();
         m_raFile = null;
         return false;
