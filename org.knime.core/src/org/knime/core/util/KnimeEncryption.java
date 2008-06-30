@@ -26,7 +26,13 @@
  */
 package org.knime.core.util;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESKeySpec;
@@ -74,9 +80,14 @@ public final class KnimeEncryption {
      * 
      * @param password as char array
      * @return The password encrypt.
-     * @throws Exception If something goes wrong.
+     * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
+     * @throws BadPaddingException {@link BadPaddingException}
+     * @throws InvalidKeyException {@link InvalidKeyException}
+     * @throws UnsupportedEncodingException {@link UnsupportedEncodingException}
      */
-    public static String encrypt(final char[] password) throws Exception {
+    public static String encrypt(final char[] password) 
+            throws BadPaddingException, IllegalBlockSizeException,
+            InvalidKeyException, UnsupportedEncodingException {
         SecretKey secretKey = null;
         if (keySupplier != null) {
             secretKey = createSecretKey(keySupplier.getEncryptionKey());
@@ -90,10 +101,15 @@ public final class KnimeEncryption {
      * @param secretKey <code>SecretKey</code> used to encrypt the password
      * @param password as char array
      * @return The password encrypt.
-     * @throws Exception If something goes wrong.
+     * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
+     * @throws BadPaddingException {@link BadPaddingException}
+     * @throws InvalidKeyException {@link InvalidKeyException}
+     * @throws UnsupportedEncodingException {@link UnsupportedEncodingException}
      */
     public static String encrypt(final SecretKey secretKey, 
-            final char[] password) throws Exception {
+            final char[] password) throws BadPaddingException,
+            IllegalBlockSizeException, InvalidKeyException, 
+            UnsupportedEncodingException {
         if (secretKey == null) {
             return new String(password);
         }
@@ -108,9 +124,15 @@ public final class KnimeEncryption {
      * 
      * @param password The password to decrypt.
      * @return The decrypted password.
-     * @throws Exception If something goes wrong.
+     * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
+     * @throws BadPaddingException {@link BadPaddingException}
+     * @throws InvalidKeyException {@link InvalidKeyException}
+     * @throws IOException {@link IOException}
+     * @throws UnsupportedEncodingException {@link UnsupportedEncodingException}
      */
-    public static String decrypt(final String password) throws Exception {
+    public static String decrypt(final String password)
+            throws BadPaddingException, IllegalBlockSizeException,
+            InvalidKeyException, IOException, UnsupportedEncodingException {
         SecretKey secretKey = null;
         if (keySupplier != null) {
             secretKey = createSecretKey(keySupplier.getEncryptionKey());
@@ -124,10 +146,16 @@ public final class KnimeEncryption {
      * @param secretKey <code>SecretKey</code> used to decrypt the password
      * @param password The password to decrypt.
      * @return The decrypted password.
-     * @throws Exception If something goes wrong.
+     * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
+     * @throws BadPaddingException {@link BadPaddingException}
+     * @throws InvalidKeyException {@link InvalidKeyException}
+     * @throws IOException {@link IOException}
+     * @throws UnsupportedEncodingException {@link UnsupportedEncodingException}
      */
     public static String decrypt(final SecretKey secretKey, 
-            final String password) throws Exception {
+            final String password) throws BadPaddingException, 
+            IllegalBlockSizeException, InvalidKeyException, IOException, 
+            UnsupportedEncodingException {
         if (secretKey == null) {
             return password;
         }
