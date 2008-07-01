@@ -74,7 +74,9 @@ public class KnimeResourceChangeListener implements IResourceChangeListener {
                 Display.getDefault().asyncExec(new Runnable() {
 
                     public void run() {
-                        navigator.getViewer().remove(node);
+                        if (!navigator.getViewSite().getShell().isDisposed()) {
+                            navigator.getViewer().remove(node);
+                        }
                     }
                      
                  });
