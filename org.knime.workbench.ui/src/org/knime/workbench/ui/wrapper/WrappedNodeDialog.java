@@ -327,16 +327,16 @@ public class WrappedNodeDialog extends Dialog {
                 return true;
             }
         } catch (InvalidSettingsException ise) {
-            LOGGER.warn("failed to configure:",  ise);
+            LOGGER.warn("failed to configure: " + ise.getMessage(),  ise);
             showErrorMessage("Invalid Settings\n" + ise.getMessage());
 
         } catch (IllegalStateException ex) {
-            LOGGER.error("failed to configure:", ex);
+            LOGGER.error("failed to configure: " + ex.getMessage(), ex);
             showErrorMessage("You cannot apply node settings if the workflow"
                     + " is executing. Please stop execution or wait until all"
                     + " nodes have been finished.");            
         } catch (Throwable t) {
-            LOGGER.error("failed to configure:", t);
+            LOGGER.error("failed to configure: " + t.getMessage(), t);
             showErrorMessage(t.getClass().getSimpleName() + ": "
                     + t.getMessage());
         }
