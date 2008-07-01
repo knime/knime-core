@@ -327,7 +327,7 @@ public class WrappedNodeDialog extends Dialog {
                 return true;
             }
         } catch (InvalidSettingsException ise) {
-            LOGGER.error("failed to configure:",  ise);
+            LOGGER.warn("failed to configure:",  ise);
             showErrorMessage("Invalid Settings\n" + ise.getMessage());
 
         } catch (IllegalStateException ex) {
