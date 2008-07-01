@@ -147,45 +147,6 @@ public class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     }
 
     /**
-     * Computes the overlapping based on the standard deviation of both radial
-     * basisfunctions.
-     * 
-     * @param symmetric if the result is proportional to both basis functions,
-     *            and thus symmetric, or if it is proportional to the area of 
-     *            the basis function on which the function is called.
-     * @param bf the other radial basisfunction to compute the overlap with
-     * @return <code>true</code> if both radial basisfunctions overlap
-     */
-    @Override
-    public double overlap(final BasisFunctionLearnerRow bf,
-            final boolean symmetric) {
-        assert (bf instanceof RadialBasisFunctionLearnerRow);
-        RadialBasisFunctionLearnerRow rbf = (RadialBasisFunctionLearnerRow)bf;
-        assert (this.getAnchor().getNumCells() 
-                == rbf.getAnchor().getNumCells());
-        double overlap = 1.0;
-        for (int i = 0; i < this.getAnchor().getNumCells(); i++) {
-            if (this.getAnchor().getCell(i).isMissing()
-                    || rbf.getAnchor().getCell(i).isMissing()) {
-                continue;
-            }
-            double a = ((DoubleValue)this.getAnchor().getCell(i))
-                    .getDoubleValue();
-            double b = ((DoubleValue)rbf.getAnchor().getCell(i))
-                    .getDoubleValue();
-            double overlapping = overlapping(a - m_predRow.getStdDev(), a
-                    + m_predRow.getStdDev(), b - rbf.m_predRow.getStdDev(), b
-                    + rbf.m_predRow.getStdDev(), symmetric);
-            if (overlapping == 0.0) {
-                return 0.0;
-            } else {
-                overlap *= overlapping;
-            }
-        }
-        return overlap;
-    }
-
-    /**
      * Compares this basis function with the other one by its standard deviation
      * if the number of covered pattern is equal otherwise use this
      * identification.

@@ -100,6 +100,41 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
             m_stdDev = Double.MAX_VALUE;
         }
     }
+    
+    /**
+     * Computes the overlapping based on the standard deviation of both radial
+     * basisfunctions.
+     * 
+     * @param symmetric if the result is proportional to both basis functions,
+     *            and thus symmetric, or if it is proportional to the area of 
+     *            the basis function on which the function is called.
+     * @param bf the other radial basisfunction to compute the overlap with
+     * @return <code>true</code> if both radial basisfunctions overlap
+     */
+    @Override
+    public double overlap(final BasisFunctionPredictorRow bf,
+            final boolean symmetric) {
+        RadialBasisFunctionPredictorRow rbf = 
+            (RadialBasisFunctionPredictorRow) bf;
+        assert (m_center.length == rbf.m_center.length);
+        double overlap = 1.0;
+        for (int i = 0; i < m_center.length; i++) {
+            if (Double.isNaN(m_center[i]) || Double.isNaN(rbf.m_center[i])) {
+                continue;
+            }
+            double a = m_center[i];
+            double b = rbf.m_center[i];
+            double overlapping = overlapping(a - getStdDev(), a
+                    + getStdDev(), b - rbf.getStdDev(), b
+                    + rbf.getStdDev(), symmetric);
+            if (overlapping == 0.0) {
+                return 0.0;
+            } else {
+                overlap *= overlapping;
+            }
+        }
+        return overlap;
+    }
 
     /**
      * @return <code>true</code> If not yet shrunken.

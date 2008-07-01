@@ -39,8 +39,8 @@ public class BasisFunctionSymmetricRowOverlap implements DegreeOfAffinity {
      * 
      */
     public double getAffinityDegree(final DataRow row1, final DataRow row2) {
-        BasisFunctionLearnerRow bf1 = (BasisFunctionLearnerRow)row1;
-        BasisFunctionLearnerRow bf2 = (BasisFunctionLearnerRow)row2;
+        BasisFunctionPredictorRow bf1 = (BasisFunctionPredictorRow)row1;
+        BasisFunctionPredictorRow bf2 = (BasisFunctionPredictorRow)row2;
         return bf1.overlap(bf2, true);
     }
 

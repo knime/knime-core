@@ -35,8 +35,8 @@ public class BasisFunctionRowInclusion implements DegreeOfAffinity {
      * {@inheritDoc}
      */
     public double getAffinityDegree(final DataRow row1, final DataRow row2) {
-        BasisFunctionLearnerRow bf1 = (BasisFunctionLearnerRow)row1;
-        BasisFunctionLearnerRow bf2 = (BasisFunctionLearnerRow)row2;
+        BasisFunctionPredictorRow bf1 = (BasisFunctionPredictorRow)row1;
+        BasisFunctionPredictorRow bf2 = (BasisFunctionPredictorRow)row2;
         if (bf1.overlap(bf2, false) == 1) {
             return 1;
         } else {

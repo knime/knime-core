@@ -85,6 +85,41 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
             i++;
         }
     }
+    
+    /**
+     * Computes the overlapping of two fuzzy basisfunction based on their core
+     * spreads.
+     * 
+     * @param bf the other fuzzy basis function
+     * @param symmetric if the result is proportional to both basis functions,
+     *            and thus symmetric, or if it is proportional to the area of
+     *            the basis function on which the function is called
+     * @return a degree of overlap normalized with the overall volume of both
+     *         basis functions
+     */
+    @Override
+    public double overlap(final BasisFunctionPredictorRow bf,
+            final boolean symmetric) {
+        FuzzyBasisFunctionPredictorRow fbf = (FuzzyBasisFunctionPredictorRow)bf;
+        assert (fbf.getNrMemships() == getNrMemships());
+        double overlap = 1.0;
+        for (int i = 0; i < getNrMemships(); i++) {
+            MembershipFunction memA = getMemship(i);
+            MembershipFunction memB = fbf.getMemship(i);
+            if (memA.isMissingIntern() || memB.isMissingIntern()) {
+                continue;
+            }
+            double overlapping = overlapping(memA.getMinCore(), memA
+                    .getMaxCore(), memB.getMinCore(), memB.getMaxCore(),
+                    symmetric);
+            if (overlapping == 0.0) {
+                return 0.0;
+            } else {
+                overlap *= overlapping;
+            }
+        }
+        return overlap;
+    }
 
     /**
      * Return number of memberships which is equivalent to the number of

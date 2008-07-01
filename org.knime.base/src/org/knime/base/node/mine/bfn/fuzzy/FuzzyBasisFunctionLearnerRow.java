@@ -139,42 +139,6 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     }
 
     /**
-     * Computes the overlapping of two fuzzy basisfunction based on their core
-     * spreads.
-     * 
-     * @param bf the other fuzzy basis function
-     * @param symmetric if the result is proportional to both basis functions,
-     *            and thus symmetric, or if it is proportional to the area of
-     *            the basis function on which the function is called
-     * @return a degree of overlap normalized with the overall volume of both
-     *         basis functions
-     */
-    @Override
-    public double overlap(final BasisFunctionLearnerRow bf,
-            final boolean symmetric) {
-        assert (bf instanceof FuzzyBasisFunctionLearnerRow);
-        FuzzyBasisFunctionLearnerRow fbf = (FuzzyBasisFunctionLearnerRow)bf;
-        assert (fbf.m_predRow.getNrMemships() == m_predRow.getNrMemships());
-        double overlap = 1.0;
-        for (int i = 0; i < m_predRow.getNrMemships(); i++) {
-            MembershipFunction memA = m_predRow.getMemship(i);
-            MembershipFunction memB = fbf.m_predRow.getMemship(i);
-            if (memA.isMissingIntern() || memB.isMissingIntern()) {
-                continue;
-            }
-            double overlapping = overlapping(memA.getMinCore(), memA
-                    .getMaxCore(), memB.getMinCore(), memB.getMaxCore(),
-                    symmetric);
-            if (overlapping == 0.0) {
-                return 0.0;
-            } else {
-                overlap *= overlapping;
-            }
-        }
-        return overlap;
-    }
-
-    /**
      * Called if a new {@link BasisFunctionLearnerRow} has to be adjusted.
      * 
      * @param row conflicting pattern
