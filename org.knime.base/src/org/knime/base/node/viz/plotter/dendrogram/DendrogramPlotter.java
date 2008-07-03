@@ -26,9 +26,7 @@ package org.knime.base.node.viz.plotter.dendrogram;
 
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.swing.event.ChangeEvent;
@@ -180,17 +178,26 @@ public class DendrogramPlotter extends ScatterPlotter {
     @Override
     public void selectElementsIn(final Rectangle selectionRectangle) {
         // traverse through the tree from the drawing pane
-        // if point is in rect
-        // get the keys
-        List<BinaryTreeNode<DendrogramPoint>> nodes 
-            = new ArrayList<BinaryTreeNode<DendrogramPoint>>();
-        nodes = m_tree.getNodes(BinaryTree.Traversal.IN);
-        for (BinaryTreeNode<DendrogramPoint> node : nodes) {
+        // if point is in rect/ get the keys
+        for (BinaryTreeNode<DendrogramPoint> node
+                    : m_tree.getNodes(BinaryTree.Traversal.IN)) {
             if (selectionRectangle.contains(node.getContent().getPoint())) {
                 m_selected.add(node.getContent());
+                selectElementsRecursively(node);
             }
         }
         updatePaintModel();
+    }
+    
+    private void selectElementsRecursively(
+            final BinaryTreeNode<DendrogramPoint> node) {
+        if (node.isLeaf()) {
+            return;
+        }
+        m_selected.add(node.getLeftChild().getContent());
+        selectElementsRecursively(node.getLeftChild());
+        m_selected.add(node.getRightChild().getContent());
+        selectElementsRecursively(node.getRightChild());
     }
 
     /**
@@ -287,7 +294,7 @@ public class DendrogramPlotter extends ScatterPlotter {
         int height = getDrawingPaneDimension().height - (2 * OFFSET) 
             - (m_dotSize / 2);
         int y = (int)getYAxis().getCoordinate().calculateMappedValue(
-                new DoubleCell(node.getDist()), height, true);
+                new DoubleCell(node.getDist()), height);
         y = getDrawingPaneDimension().height - y - OFFSET - m_dotSize;
         int x;
         DendrogramPoint p;
@@ -299,7 +306,7 @@ public class DendrogramPlotter extends ScatterPlotter {
             DataRow row = node.getLeafDataPoint();
             x = (int)getXAxis().getCoordinate().calculateMappedValue(
                     new StringCell(row.getKey().getString()),
-                    getDrawingPaneDimension().width, true);
+                    getDrawingPaneDimension().width);
             p = new DendrogramPoint(new Point(x, y), 
                     node.getDist());
             DataTableSpec spec = getDataProvider().getDataArray(1)
@@ -344,7 +351,7 @@ public class DendrogramPlotter extends ScatterPlotter {
             DataCell value = new StringCell(
                     node.getLeafDataPoint().getKey().getString());
             return (int)getXAxis().getCoordinate().calculateMappedValue(
-                    value, getDrawingPaneDimension().width, true);
+                    value, getDrawingPaneDimension().width);
         }
         return (getXPosition(node.getFirstSubnode()) + getXPosition(
                 node.getSecondSubnode())) / 2;
