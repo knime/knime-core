@@ -653,7 +653,7 @@ public abstract class NodeContainer {
     /**
      * Mark this node container to be changed, that is, it needs to be saved.
      */
-    protected final void setDirty() {
+    protected void setDirty() {
         if (!m_isDirty) {
             LOGGER.debug("Setting dirty flag on " + getNameWithID());
         }
@@ -664,7 +664,7 @@ public abstract class NodeContainer {
     }
     
     /** Called from persistor when node has been saved. */
-    final void unsetDirty() {
+    void unsetDirty() {
         m_isDirty = false;
     }
     
