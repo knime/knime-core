@@ -750,19 +750,13 @@ public final class SingleNodeContainer extends NodeContainer
      */
     @Override
     protected void setDirty() {
-        ensureOutputDataIsRead();
-        super.setDirty();
-    }
-    
-    /** Ensures that any port object in the associated node is read from 
-     * its saved location. Especially BufferedDataTable objects are read as
-     * late as possible (in order to reduce start-up time), this method makes
-     * sure that they are read (and either copied into TMP or into memory), so
-     * the underlying node directory can be savely deleted. 
-     * <p>This method is used when the loaded version is older than the version
-     * used for saving. */
-    void ensureOutputDataIsRead() {
+        /* Ensures that any port object in the associated node is read from its
+         * saved location. Especially BufferedDataTable objects are read as late
+         * as possible (in order to reduce start-up time), this method makes
+         * sure that they are read (and either copied into TMP or into memory),
+         * so the underlying node directory can be savely deleted. */
         m_node.ensureOutputDataIsRead();
+        super.setDirty();
     }
     
     /** {@inheritDoc} */

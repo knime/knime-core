@@ -1629,7 +1629,7 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /** Ensures that any port object is read for later saving with a
-     * newer version, details see same method in class SingleNodeContainer. */
+     * newer version. */
     public void ensureOutputDataIsRead() {
         for (Output p : m_outputs) {
             if (p.object instanceof BufferedDataTable) {
