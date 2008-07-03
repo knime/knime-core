@@ -744,6 +744,16 @@ public final class SingleNodeContainer extends NodeContainer
         return m_node.getXMLDescription();
     }
     
+    /** Overridden to also ensure that outport tables are "open" (node directory
+     * is deleted upon save() - so the tables are better copied into temp).
+     * {@inheritDoc}
+     */
+    @Override
+    protected void setDirty() {
+        ensureOutputDataIsRead();
+        super.setDirty();
+    }
+    
     /** Ensures that any port object in the associated node is read from 
      * its saved location. Especially BufferedDataTable objects are read as
      * late as possible (in order to reduce start-up time), this method makes

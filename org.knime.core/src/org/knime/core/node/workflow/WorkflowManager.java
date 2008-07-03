@@ -2927,9 +2927,7 @@ public final class WorkflowManager extends NodeContainer {
             if (nc instanceof WorkflowManager) {
                 ((WorkflowManager)nc).setDirtyAll();
             } else {
-                SingleNodeContainer snc = (SingleNodeContainer)nc;
-                snc.setDirty();
-                snc.ensureOutputDataIsRead();
+                nc.setDirty();
             }
         }
         for (ContainerTable t : m_globalTableRepository.values()) {
