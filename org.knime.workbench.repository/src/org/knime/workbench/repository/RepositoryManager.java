@@ -314,7 +314,8 @@ public final class RepositoryManager {
         m_lock.release();
 
         // if errors occured show an information box
-        if (errorString.length() > 0) {
+        if (errorString.length() > 0 
+                && !"true".equals(System.getProperty("java.awt.headless"))) {
 
             
             // TODO: validate if the this works without getting the active shell
