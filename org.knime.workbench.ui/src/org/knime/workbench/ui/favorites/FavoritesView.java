@@ -145,8 +145,10 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
         FavoriteNodesManager.getInstance().updateNodes();
         Display.getDefault().syncExec(new Runnable() {
 
-            public void run() {                
-                m_viewer.refresh();
+            public void run() {   
+                if (!m_viewer.getControl().isDisposed()) {
+                    m_viewer.refresh();
+                }
             }
             
         });
@@ -159,7 +161,15 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
      */
     public void frequentHistoryChanged() {
         FavoriteNodesManager.getInstance().updateFrequentUsedNodes();
-        m_viewer.refresh();
+        Display.getDefault().syncExec(new Runnable() {
+
+            public void run() {   
+                if (!m_viewer.getControl().isDisposed()) {
+                    m_viewer.refresh();
+                }
+            }
+            
+        });
     }
 
     /**
@@ -171,7 +181,15 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
         // TODO: if the manager would know the view,
         // or the view would have access to the categories
         // we could refresh more specifically this categroy
-        m_viewer.refresh();
+        Display.getDefault().syncExec(new Runnable() {
+
+            public void run() {   
+                if (!m_viewer.getControl().isDisposed()) {
+                    m_viewer.refresh();
+                }
+            }
+            
+        });
     }
 
 }
