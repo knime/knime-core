@@ -246,6 +246,8 @@ public class SelectMetaNodePage extends WizardPage {
      */
     @Override
     public boolean isPageComplete() {
+        // TODO: replace the last check -> makes no sense 
+        // rather check for nr of ports 
         return m_selectedMetaNode != null && m_selectedMetaNode != CUSTOM;
     }
 

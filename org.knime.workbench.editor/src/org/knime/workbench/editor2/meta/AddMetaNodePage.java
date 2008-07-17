@@ -254,6 +254,13 @@ public class AddMetaNodePage extends WizardPage {
         updateStatus();
     }
     
+    
+    private void updateMetaNodeName() {
+        int nrInPorts = m_inPortList.size();
+        int nrOutPorts = m_outPortList.size();
+        m_name.setText("Meta " + nrInPorts + " : " + nrOutPorts);
+    }
+    
     /**
      *
      * @return list of entered out ports
@@ -291,14 +298,14 @@ public class AddMetaNodePage extends WizardPage {
         if (m_inPortList.size() == 0 && m_outPortList.size() == 0) {
             return false;
         }
-        if (m_template == null || m_template.equals(
-                SelectMetaNodePage.CUSTOM)) {
+        if (m_template == null) {
             return false;
         }
         return true;
     }
 
     private void updateStatus() {
+        updateMetaNodeName();
         m_previewPanel.redraw();
         setPageComplete(isPageComplete());
     }
