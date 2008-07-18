@@ -25,6 +25,17 @@
 
 package org.knime.base.node.viz.aggregation;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowKey;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.config.Config;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
+
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Shape;
@@ -39,17 +50,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.RowKey;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.config.Config;
-import org.knime.core.node.config.ConfigRO;
-import org.knime.core.node.config.ConfigWO;
 
 /**
  * This abstract class holds the data of a particular aggregation value and its
@@ -262,6 +262,27 @@ implements Serializable, AggregationModel<S, H> {
     }
 
     /**
+     * Returns the sub element of this element that contains the given point
+     * or <code>null</code> if none contains the point.
+     * @param p the point to select
+     * @return the sub element that contains the point or
+     * <code>null</code>
+     */
+    public T getSelectedSubElement(final Point p) {
+        if (p == null) {
+            return null;
+        }
+        final Collection<T> elements = getElements();
+        for (final T element : elements) {
+            final S shape = element.getShape();
+            if (shape != null && shape.contains(p)) {
+                return element;
+            }
+        }
+        return null;
+    }
+
+    /**
      * @return the number of sub elements
      */
     public int getNoOfElements() {
@@ -295,6 +316,8 @@ implements Serializable, AggregationModel<S, H> {
     public double getAggregationValue(final AggregationMethod method) {
         if (AggregationMethod.COUNT.equals(method)) {
             return m_rowCounter;
+        } else if (AggregationMethod.VALUE_COUNT.equals(method)) {
+            return m_valueCount;
         } else if (AggregationMethod.SUM.equals(method)) {
             return m_aggrSum;
         } else if (AggregationMethod.AVERAGE.equals(method)) {

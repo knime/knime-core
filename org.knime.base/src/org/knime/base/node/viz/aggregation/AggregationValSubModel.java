@@ -140,8 +140,8 @@ implements Serializable, AggregationModel<S, H> {
         this(new Color(config.getInt(CFG_COLOR_RGB)),
         config.getBoolean(CFG_HILITING),
         config.getDouble(CFG_AGGR_SUM),
-        config.getInt(CFG_ROW_COUNTER),
-        config.getInt(CFG_VALUE_COUNTER));
+        config.getInt(CFG_VALUE_COUNTER),
+        config.getInt(CFG_ROW_COUNTER));
     }
 
     /**
@@ -190,6 +190,8 @@ implements Serializable, AggregationModel<S, H> {
     public double getAggregationValue(final AggregationMethod method) {
         if (AggregationMethod.COUNT.equals(method)) {
             return m_rowCounter;
+        } else if (AggregationMethod.VALUE_COUNT.equals(method)) {
+            return m_valueCounter;
         } else if (AggregationMethod.SUM.equals(method)) {
             return m_aggrSum;
         } else if (AggregationMethod.AVERAGE.equals(method)) {
