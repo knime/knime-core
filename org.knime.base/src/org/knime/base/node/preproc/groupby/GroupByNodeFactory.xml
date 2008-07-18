@@ -20,8 +20,10 @@
            <p>
             Available aggregation methods:
     		<ul>
-    			<li>First: Takes the first value per group.</li>
-    			<li>Last: Takes the last value per group.</li>
+    			<li>First: Takes the first entry per group.</li>
+    			<li>First value: Takes the first value that is not a missing value per group.</li>
+    			<li>Last: Takes the last entry per group.</li>
+    			<li>Last value: Takes the last value that is not a missing value per group.</li>
     			<li>Mode: Takes the value with the most occurrences per
     			 group. If multiple values match this criterion 
     			 the first occurrence is written to the output table.</li>

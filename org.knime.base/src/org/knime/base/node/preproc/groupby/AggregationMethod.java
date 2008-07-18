@@ -25,29 +25,21 @@
 
 package org.knime.base.node.preproc.groupby;
 
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.util.MutableInteger;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Map.Entry;
 
 
 /**
- * Enumeration which lists all available aggregation methods including their
- * implementation and helper methods.
+ * Enumeration which lists all available aggregation methods including
+ * helper methods.
  *
  * @author Tobias Koetter, University of Konstanz
  */
@@ -55,676 +47,63 @@ public enum AggregationMethod {
 
 //The numerical methods
     /**Minimum.*/
-    MIN("Minimum", true, "Min({1})", null, false, true),
+    MIN("Minimum", true, "Min({1})", null, false, true,
+            NumericOperators.getInstance().new MinOperator(0)),
     /**Maximum.*/
-    MAX("Maximum", true, "Max({1})", null, false, true),
+    MAX("Maximum", true, "Max({1})", null, false, true,
+            NumericOperators.getInstance().new MaxOperator(0)),
     /**Average.*/
-    MEAN("Mean", true, "Mean({1})", DoubleCell.TYPE, false, false),
+    MEAN("Mean", true, "Mean({1})", DoubleCell.TYPE, false, false,
+            NumericOperators.getInstance().new MeanOperator(0)),
     /**Sum.*/
-    SUM("Sum", true, "Sum({1})", DoubleCell.TYPE, false, false),
+    SUM("Sum", true, "Sum({1})", DoubleCell.TYPE, false, false,
+            NumericOperators.getInstance().new SumOperator(0)),
     /**Variance.*/
-    VARIANCE("Variance", true, "Variance({1})", DoubleCell.TYPE, false, false),
+    VARIANCE("Variance", true, "Variance({1})", DoubleCell.TYPE, false, false,
+            NumericOperators.getInstance().new VarianceOperator(0)),
     /**Standard deviation.*/
     STD_DEVIATION("Standard deviation", true, "Standard deviation({1})",
-            DoubleCell.TYPE, false, false),
+            DoubleCell.TYPE, false, false,
+            NumericOperators.getInstance().new StdDeviationOperator(0)),
 
 //The none numerical methods
     /**Takes the first cell per group.*/
-    FIRST("First", false, "First({1})", null, false, true),
+    FIRST("First", false, "First({1})", null, false, true,
+            Operators.getInstance().new FirstOperator(0)),
+    /**Takes the first value per group.*/
+    FIRST_VALUE("First value", false, "First value({1})", null, false, true,
+            Operators.getInstance().new FirstValueOperator(0)),
     /**Takes the last cell per group.*/
-    LAST("Last", false, "Last({1})", null, false, true),
+    LAST("Last", false, "Last({1})", null, false, true,
+            Operators.getInstance().new LastOperator(0)),
+    /**Takes the last value per group.*/
+    LAST_VALUE("Last value", false, "Last value({1})", null, false, true,
+            Operators.getInstance().new LastValueOperator(0)),
     /**Takes the value which occurs most.*/
-    MODE("Mode", false, "Mode({1})", null, true, true),
+    MODE("Mode", false, "Mode({1})", null, true, true,
+            Operators.getInstance().new ModeOperator(0)),
     /**Takes the value which occurs most.*/
     CONCATENATE("Concatenate", false, "Concatenate({1})", StringCell.TYPE,
-            false, false),
+            false, false, Operators.getInstance().new ConcatenateOperator(0)),
     /**Takes the value which occurs most.*/
     UNIQUE_CONCATENATE("Unique concatenate", false, "Unique concatenate({1})",
-            StringCell.TYPE, true, false),
+            StringCell.TYPE, true, false,
+            Operators.getInstance().new UniqueConcatenateOperator(0)),
     /**Counts the number of unique group members.*/
     UNIQUE_COUNT("Unique count", false, "Unique count({1})",
-            IntCell.TYPE, true, false),
+            IntCell.TYPE, true, false,
+            Operators.getInstance().new UniqueCountOperator(0)),
     /**Counts the number of group members.*/
-    COUNT("Count", false, "Count({1})", IntCell.TYPE, false, false);
+    COUNT("Count", false, "Count({1})", IntCell.TYPE, false, false,
+            Operators.getInstance().new CountOperator(0));
 
     /**The column name place holder.*/
     private static final String PLACE_HOLDER = "{1}";
 
-    private static final String CONCATENATOR = ", ";
+    /**The String to use by concatenation operators.*/
+    public static final String CONCATENATOR = ", ";
 
-
-    private final class MinOperator extends AggregationOperator {
-
-        private DataCell m_minVal = null;
-
-        /**Constructor for class MinOperator.
-         * @param maxUniqueValues the maximum number of unique values
-         */
-        MinOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected boolean computeInternal(final DataCell cell) {
-            if (cell.isMissing()) {
-                return false;
-            }
-            if (m_minVal == null
-                    || cell.getType().getComparator().compare(cell, m_minVal)
-                        < 0) {
-                m_minVal = cell;
-            }
-            return false;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataCell getResultInternal() {
-            if (m_minVal == null) {
-                return DataType.getMissingCell();
-            }
-            return m_minVal;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected void resetInternal() {
-            m_minVal = null;
-        }
-    }
-
-    private final class MaxOperator extends AggregationOperator {
-
-        private DataCell m_maxVal = null;
-
-        /**Constructor for class MinOperator.
-         * @param maxUniqueValues the maximum number of unique values
-         */
-        MaxOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected boolean computeInternal(final DataCell cell) {
-            if (cell.isMissing()) {
-                return false;
-            }
-            if (m_maxVal == null
-                    || cell.getType().getComparator().compare(cell, m_maxVal)
-                    > 0) {
-                m_maxVal = cell;
-            }
-            return false;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataCell getResultInternal() {
-            if (m_maxVal == null) {
-                return DataType.getMissingCell();
-            }
-            return m_maxVal;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected void resetInternal() {
-            m_maxVal = null;
-        }
-    }
-
-    private final class MeanOperator extends AggregationOperator {
-
-        private double m_sum = 0;
-        private int m_count = 0;
-
-        /**Constructor for class MinOperator.
-         * @param maxUniqueValues the maximum number of unique values
-         */
-        MeanOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected boolean computeInternal(final DataCell cell) {
-            if (cell.isMissing()) {
-                return false;
-            }
-            final double d = ((DoubleValue)cell).getDoubleValue();
-            m_sum += d;
-            m_count++;
-            return false;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataCell getResultInternal() {
-            if (m_count == 0) {
-                return DataType.getMissingCell();
-            }
-            return new DoubleCell(m_sum / m_count);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected void resetInternal() {
-            m_sum = 0;
-            m_count = 0;
-        }
-    }
-
-    private final class SumOperator extends AggregationOperator {
-        private boolean m_valid = false;
-        private double m_sum = 0;
-
-        /**Constructor for class MinOperator.
-         * @param maxUniqueValues the maximum number of unique values
-         */
-        SumOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected boolean computeInternal(final DataCell cell) {
-            if (cell.isMissing()) {
-                return false;
-            }
-            m_valid = true;
-            final double d = ((DoubleValue)cell).getDoubleValue();
-            m_sum += d;
-            return false;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataCell getResultInternal() {
-            if (!m_valid) {
-                return DataType.getMissingCell();
-            }
-            return new DoubleCell(m_sum);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected void resetInternal() {
-            m_valid = false;
-            m_sum = 0;
-        }
-    }
-
-    private class VarianceOperator extends AggregationOperator {
-
-        /**Constructor for class VarianceOperator.
-         * @param maxUniqueValues
-         */
-        VarianceOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
-        }
-
-        private double m_sumSquare = 0;
-        private double m_sum = 0;
-        private int m_validCount = 0;
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected boolean computeInternal(final DataCell cell) {
-            if (cell.isMissing()) {
-                return false;
-            }
-            final double d = ((DoubleValue)cell).getDoubleValue();
-            m_validCount++;
-            m_sum += d;
-            m_sumSquare += d * d;
-            return false;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataCell getResultInternal() {
-            if (m_validCount <= 0) {
-                return DataType.getMissingCell();
-            }
-            if (m_validCount == 1) {
-                return new DoubleCell(0);
-            }
-            double variance = (m_sumSquare - ((m_sum * m_sum)
-                    / m_validCount)) / (m_validCount - 1);
-            // unreported bug fix: in cases in which a column contains
-            // almost only one value (for instance 1.0) but one single
-            // 'outlier' whose value is, for instance 0.9999998, we get
-            // round-off errors resulting in negative variance values
-            if (variance < 0.0 && variance > -1.0E8) {
-                variance = 0.0;
-            }
-            return new DoubleCell(variance);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected void resetInternal() {
-            m_sumSquare = 0;
-            m_sum = 0;
-            m_validCount = 0;
-        }
-
-    }
-
-    private final class StdDeviationOperator extends VarianceOperator {
-
-        /**Constructor for class StdDeviationOperator.
-         * @param maxUniqueValues
-         */
-        StdDeviationOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataCell getResultInternal() {
-            final DataCell result = super.getResult();
-            if (result instanceof DoubleCell) {
-                final double value = ((DoubleCell)result).getDoubleValue();
-                return new DoubleCell(Math.sqrt(Math.abs(value)));
-            }
-            return result;
-        }
-    }
-
-    private final class FirstOperator extends AggregationOperator {
-
-        private DataCell m_firstCell = null;
-
-        /**Constructor for class MinOperator.
-         * @param maxUniqueValues the maximum number of unique values
-         */
-        FirstOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected boolean computeInternal(final DataCell cell) {
-            if (m_firstCell == null) {
-                m_firstCell = cell;
-            }
-            return false;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataCell getResultInternal() {
-            if (m_firstCell == null) {
-                return DataType.getMissingCell();
-            }
-            return m_firstCell;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected void resetInternal() {
-            m_firstCell = null;
-        }
-    }
-
-    private final class LastOperator extends AggregationOperator {
-
-        private DataCell m_lastCell = null;
-
-        /**Constructor for class MinOperator.
-         * @param maxUniqueValues the maximum number of unique values
-         */
-        LastOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected boolean computeInternal(final DataCell cell) {
-            m_lastCell = cell;
-            return false;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataCell getResultInternal() {
-            if (m_lastCell == null) {
-                return DataType.getMissingCell();
-            }
-            return m_lastCell;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected void resetInternal() {
-            m_lastCell = null;
-        }
-    }
-
-    private final class ModeOperator extends AggregationOperator {
-
-        private final Map<DataCell, MutableInteger> m_valCounter;
-
-        /**Constructor for class MinOperator.
-         * @param maxUniqueValues the maximum number of unique values
-         */
-        ModeOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
-            try {
-                m_valCounter =
-                    new LinkedHashMap<DataCell, MutableInteger>(
-                            maxUniqueValues);
-            } catch (final OutOfMemoryError e) {
-                throw new IllegalArgumentException(
-                        "Maximum unique values number to big");
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected boolean computeInternal(final DataCell cell) {
-            MutableInteger counter = m_valCounter.get(cell);
-            if (counter == null) {
-                //check if the maps contains more values than allowed
-                //before adding a new value
-                if (m_valCounter.size() >= getMaxUniqueValues()) {
-                    return true;
-                }
-                counter = new MutableInteger(0);
-                m_valCounter.put(cell, counter);
-            }
-            counter.inc();
-            return false;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataCell getResultInternal() {
-            if (m_valCounter.size() < 1) {
-                return DataType.getMissingCell();
-            }
-            //get the cell with the most counts
-            final Set<Entry<DataCell, MutableInteger>> entries =
-                m_valCounter.entrySet();
-            int max = Integer.MIN_VALUE;
-            DataCell result = null;
-            for (final Entry<DataCell, MutableInteger> entry : entries) {
-                if (entry.getValue().intValue() > max) {
-                    max = entry.getValue().intValue();
-                    result = entry.getKey();
-                }
-            }
-            return result;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected void resetInternal() {
-            m_valCounter.clear();
-        }
-    }
-
-    private final class ConcatenateOperator extends AggregationOperator {
-
-        private final StringBuilder m_buf = new StringBuilder();
-
-        private boolean m_first = true;
-
-        /**Constructor for class Concatenate.
-         * @param maxUniqueValues the maximum number of unique values
-         */
-        public ConcatenateOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected boolean computeInternal(final DataCell cell) {
-            if (cell.isMissing()) {
-                return false;
-            }
-            if (m_first) {
-                m_first = false;
-            } else {
-                m_buf.append(CONCATENATOR);
-            }
-            m_buf.append(cell.toString());
-            return false;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataCell getResultInternal() {
-            return new StringCell(m_buf.toString());
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected void resetInternal() {
-            m_buf.setLength(0);
-            m_first = true;
-        }
-    }
-
-    private final class UniqueConcatenateOperator extends AggregationOperator {
-
-        private final Set<String> m_vals;
-
-        private final StringBuilder m_buf = new StringBuilder();
-
-        private boolean m_first = true;
-
-        /**Constructor for class Concatenate.
-         * @param maxUniqueValues the maximum number of unique values
-         */
-        public UniqueConcatenateOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
-            try {
-                m_vals = new HashSet<String>(maxUniqueValues);
-            } catch (final OutOfMemoryError e) {
-                throw new IllegalArgumentException(
-                        "Maximum unique values number to big");
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected boolean computeInternal(final DataCell cell) {
-            if (cell.isMissing()) {
-                return false;
-            }
-            final String val = cell.toString();
-            if (m_vals.contains(val)) {
-                return false;
-            }
-            //check if the set contains more values than allowed
-            //before adding a new value
-            if (m_vals.size() >= getMaxUniqueValues()) {
-                return true;
-            }
-            m_vals.add(val);
-            if (m_first) {
-                m_first = false;
-            } else {
-                m_buf.append(CONCATENATOR);
-            }
-            m_buf.append(val);
-            return false;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataCell getResultInternal() {
-            return new StringCell(m_buf.toString());
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected void resetInternal() {
-            m_buf.setLength(0);
-            m_first = true;
-            m_vals.clear();
-        }
-    }
-
-
-    private final class UniqueCountOperator extends AggregationOperator {
-
-        private final Set<String> m_vals;
-
-        /**Constructor for class Concatenate.
-         * @param maxUniqueValues the maximum number of unique values
-         */
-        public UniqueCountOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
-            try {
-                m_vals = new HashSet<String>(maxUniqueValues);
-            } catch (final OutOfMemoryError e) {
-                throw new IllegalArgumentException(
-                        "Maximum unique values number to big");
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected boolean computeInternal(final DataCell cell) {
-            if (cell.isMissing()) {
-                return false;
-            }
-            final String val = cell.toString();
-            if (m_vals.contains(val)) {
-                return false;
-            }
-            //check if the set contains more values than allowed
-            //before adding a new value
-            if (m_vals.size() >= getMaxUniqueValues()) {
-                return true;
-            }
-            m_vals.add(val);
-            return false;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataCell getResultInternal() {
-            return new IntCell(m_vals.size());
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected void resetInternal() {
-            m_vals.clear();
-        }
-    }
-
-    private final class CountOperator extends AggregationOperator {
-
-        private int m_counter = 0;
-
-        /**Constructor for class CountOperator.
-         * @param maxUniqueValues the maximum number of unique values
-         */
-        CountOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected boolean computeInternal(final DataCell cell) {
-            m_counter++;
-            return false;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataCell getResultInternal() {
-            return new IntCell(m_counter);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected void resetInternal() {
-            m_counter = 0;
-        }
-    }
-
+    private final AggregationOperator m_operator;
     private final String m_label;
     private final boolean m_numerical;
     private final String m_columnNamePattern;
@@ -743,16 +122,19 @@ public enum AggregationMethod {
      * unique values limit.
      * @param keepColSpec <code>true</code> if the original column specification
      * should be kept if possible
+     * @param operator the {@link AggregationOperator} implementation to use
      */
     private AggregationMethod(final String label, final boolean numerical,
             final String columnNamePattern, final DataType type,
-            final boolean usesLimit, final boolean keepColSpec) {
+            final boolean usesLimit, final boolean keepColSpec,
+            final AggregationOperator operator) {
         m_label = label;
         m_numerical = numerical;
         m_columnNamePattern = columnNamePattern;
         m_dataType = type;
         m_usesLimit = usesLimit;
         m_keepColSpec = keepColSpec;
+        m_operator = operator;
     }
 
 
@@ -776,24 +158,7 @@ public enum AggregationMethod {
      * @return the operator of this method
      */
     public AggregationOperator getOperator(final int maxUniqueValues) {
-        switch (this) {
-            case MIN:       return new MinOperator(maxUniqueValues);
-            case MAX:       return new MaxOperator(maxUniqueValues);
-            case MEAN:       return new MeanOperator(maxUniqueValues);
-            case SUM:       return new SumOperator(maxUniqueValues);
-            case VARIANCE:  return new VarianceOperator(maxUniqueValues);
-            case STD_DEVIATION:  return new StdDeviationOperator(
-                    maxUniqueValues);
-            case FIRST:     return new FirstOperator(maxUniqueValues);
-            case LAST:      return new LastOperator(maxUniqueValues);
-            case MODE:      return new ModeOperator(maxUniqueValues);
-            case CONCATENATE: return new ConcatenateOperator(maxUniqueValues);
-            case UNIQUE_CONCATENATE: return new UniqueConcatenateOperator(
-                    maxUniqueValues);
-            case UNIQUE_COUNT: return new UniqueCountOperator(maxUniqueValues);
-            case COUNT:     return new CountOperator(maxUniqueValues);
-        }
-        throw new IllegalStateException("No operator found");
+        return m_operator.createInstance(maxUniqueValues);
     }
 
     /**
