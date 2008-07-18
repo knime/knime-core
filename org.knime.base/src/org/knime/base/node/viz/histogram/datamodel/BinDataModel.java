@@ -366,6 +366,7 @@ public class BinDataModel implements Serializable {
                 //no data row was added to this bin so we don't  have a bar
                 bar.setBarRectangle(binRectangle, baseLine,
                         barElementColors, calculator);
+                m_presentable = true;
             }
         } else {
             setBarRectangle(baseLine, barElementColors,

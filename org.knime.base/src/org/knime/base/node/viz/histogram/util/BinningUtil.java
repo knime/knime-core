@@ -252,7 +252,7 @@ public final class BinningUtil {
         }
         //it's an integer and less then one
         if (isInteger) {
-            return 1;
+            return Math.ceil(absVal);
         }
     // the given doubleVal is less then one and no integer
         final char[] interval = Double.toString(doubleVal).toCharArray();
