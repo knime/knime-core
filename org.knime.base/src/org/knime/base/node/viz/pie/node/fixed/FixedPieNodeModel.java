@@ -28,7 +28,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowIterator;
+import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -155,22 +155,29 @@ extends PieNodeModel<FixedPieVizModel> {
         }
         final double progressPerRow = 1.0 / noOfRows;
         double progress = 0.0;
-        final RowIterator rowIterator = dataTable.iterator();
-        for (int rowCounter = 0; rowCounter < noOfRows
-                && rowIterator.hasNext(); rowCounter++) {
-            final DataRow row = rowIterator.next();
-            final Color rowColor = spec.getRowColor(row).getColor(false, false);
-            final DataCell pieCell = row.getCell(pieColIdx);
-            final DataCell aggrCell;
-            if (aggrColIdx >= 0) {
-                aggrCell = row.getCell(aggrColIdx);
-            } else {
-                aggrCell = null;
+        final CloseableRowIterator rowIterator = dataTable.iterator();
+        try {
+            for (int rowCounter = 0; rowCounter < noOfRows
+                    && rowIterator.hasNext(); rowCounter++) {
+                final DataRow row = rowIterator.next();
+                final Color rowColor =
+                    spec.getRowColor(row).getColor(false, false);
+                final DataCell pieCell = row.getCell(pieColIdx);
+                final DataCell aggrCell;
+                if (aggrColIdx >= 0) {
+                    aggrCell = row.getCell(aggrColIdx);
+                } else {
+                    aggrCell = null;
+                }
+                m_model.addDataRow(row, rowColor, pieCell, aggrCell);
+                progress += progressPerRow;
+                exec.setProgress(progress, "Adding data rows to pie chart...");
+                exec.checkCanceled();
             }
-            m_model.addDataRow(row, rowColor, pieCell, aggrCell);
-            progress += progressPerRow;
-            exec.setProgress(progress, "Adding data rows to pie chart...");
-            exec.checkCanceled();
+        } finally {
+            if (rowIterator != null) {
+                rowIterator.close();
+            }
         }
     }
 

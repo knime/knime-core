@@ -25,9 +25,18 @@
 
 package org.knime.base.node.viz.pie.datamodel;
 
+import org.knime.core.data.RowKey;
+import org.knime.core.node.NodeLogger;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.aggregation.ValueScale;
+import org.knime.base.node.viz.aggregation.util.GUIUtils;
+import org.knime.base.node.viz.aggregation.util.LabelDisplayPolicy;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.geom.Arc2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,13 +44,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.aggregation.ValueScale;
-import org.knime.base.node.viz.aggregation.util.GUIUtils;
-import org.knime.base.node.viz.aggregation.util.LabelDisplayPolicy;
-import org.knime.core.data.RowKey;
-import org.knime.core.node.NodeLogger;
 
 /**
  * The abstract pie visualization model which provides the basic data and
@@ -581,6 +583,21 @@ public abstract class PieVizModel {
     }
 
     /**
+     * @param point the point to check for selection
+     * @return the element that contains the selected point or
+     * <code>null</code> if none is selected
+     */
+    public PieSectionDataModel getSelectedElement(final Point point) {
+        for (final PieSectionDataModel section : getSections2Draw()) {
+            final Arc2D shape = section.getShape();
+            if (shape != null && shape.contains(point)) {
+                return section;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Selects the element which contains the given point.
      * @param point the point on the screen to select
      * @return <code>true</code> if the selection has changed
@@ -650,6 +667,10 @@ public abstract class PieVizModel {
             final PieSubSectionDataModel subSection) {
         if (section == null) {
             throw new NullPointerException("Section must not be null");
+        }
+        if (section.getElements().size() == 1) {
+            //if the section contains only one label just draw the section label
+            return createLabel(section);
         }
         if (subSection == null) {
             throw new NullPointerException("subSection must not be null");

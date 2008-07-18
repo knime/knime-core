@@ -115,13 +115,13 @@ extends AbstractPlotterProperties {
     private static final String EXPLODE_SELECTED_SECTIONS =
         "Explode selected sections";
 
-    private static final String SHOW_DETAILS = "Show details";
+    private static final String SHOW_DETAILS = "Color selected sections";
 
     private static final String SHOW_DETAILS_TOOLTIP =
-        "Show details for selected sections";
+        "Show colors for selected sections";
 
     private static final String SHOW_DETAILS_TOOLTIP_DISABLED =
-        "No details available";
+        "No colors available";
 
     private static final Dimension HORIZONTAL_SPACER_DIM =
         new Dimension(10, 1);
@@ -370,10 +370,6 @@ extends AbstractPlotterProperties {
         //      the column select tab
         final Box aggrLabelButtonBox = GUIUtils.createButtonGroupBox(
                 m_aggrMethButtonGrp, true, AGGREGATION_METHOD_LABEL, true);
-        final Dimension d = new Dimension(130, 100);
-        aggrLabelButtonBox.setPreferredSize(d);
-        aggrLabelButtonBox.setSize(d);
-        aggrLabelButtonBox.revalidate();
         final Box rootBox = Box.createHorizontalBox();
         rootBox.add(aggrLabelButtonBox);
         rootBox.add(Box.createHorizontalStrut(5));

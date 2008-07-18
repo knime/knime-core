@@ -10,6 +10,9 @@
 		<p>Displays an interactive pie chart with different viewing 
 		options. The interactive pie chart supports hiliting and the changing 
 		of the pie and aggregation column on the fly.</p>
+		<p>If the pie chart appears in gray no color information is set
+		for the selected pie column. Use the 'Color Manager' node in order 
+		to set the color appropriate.</p>
 		<p>The user can change the following view properties on the fly:
 			<ol>
 			<li>Pie column</li>
@@ -27,8 +30,8 @@
 			Each pie column value get its own colored section. 
 			Hiliting is supported.
 		</p>
-		<p><b>Show details option:</b>
-		If the show details option is selected the pie displays also sub 
+		<p><b>Color selected sections:</b>
+		If the color selected sections option is selected the pie displays also sub 
         sections for the selected sections. A sub section represents the rows
         color using the color manager. This option is only available if 
         row colors are set.</p>

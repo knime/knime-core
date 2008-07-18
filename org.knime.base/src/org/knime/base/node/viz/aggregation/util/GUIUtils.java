@@ -25,6 +25,13 @@
 
 package org.knime.base.node.viz.aggregation.util;
 
+import org.knime.core.node.util.ButtonGroupEnumInterface;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.aggregation.AggregationValModel;
+import org.knime.base.node.viz.aggregation.AggregationValSubModel;
+import org.knime.base.node.viz.aggregation.ValueScale;
+
 import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
@@ -40,12 +47,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.aggregation.AggregationValModel;
-import org.knime.base.node.viz.aggregation.AggregationValSubModel;
-import org.knime.base.node.viz.aggregation.ValueScale;
-import org.knime.core.node.util.ButtonGroupEnumInterface;
 
 
 /**
@@ -189,7 +190,8 @@ public final class GUIUtils {
     public static String createLabel(final double aggrVal, final int noOfDigits,
             final AggregationMethod aggrMethod, final ValueScale scale) {
         // return Double.toString(aggrVal);
-        if (AggregationMethod.COUNT.equals(aggrMethod)
+        if ((AggregationMethod.COUNT.equals(aggrMethod)
+                || AggregationMethod.VALUE_COUNT.equals(aggrMethod))
                 && !ValueScale.PERCENT.equals(scale)) {
             return AGGREGATION_LABEL_FORMATER_COUNT.format(aggrVal);
         }
@@ -244,6 +246,9 @@ public final class GUIUtils {
         aggrHeadBuf.append(AggregationMethod.COUNT);
         aggrHeadBuf.append("</th>");
         aggrHeadBuf.append("<th>");
+        aggrHeadBuf.append(AggregationMethod.VALUE_COUNT);
+        aggrHeadBuf.append("</th>");
+        aggrHeadBuf.append("<th>");
         aggrHeadBuf.append(AggregationMethod.SUM);
         aggrHeadBuf.append("</th>");
         aggrHeadBuf.append("<th>");
@@ -286,6 +291,7 @@ public final class GUIUtils {
                 buf.append(aggrMethodHead);
                 buf.append("</tr>");
                 int totalCount = 0;
+                int totalValCount = 0;
                 double totalSum = 0;
                 for (final AggregationValSubModel element
                         : selectedElements) {
@@ -302,6 +308,12 @@ public final class GUIUtils {
                     totalCount += count;
                     buf.append("<td>");
                     buf.append(count);
+                    buf.append("</td>");
+                    final int valCount = (int) element.getAggregationValue(
+                            AggregationMethod.VALUE_COUNT);
+                    totalValCount += valCount;
+                    buf.append("<td>");
+                    buf.append(valCount);
                     buf.append("</td>");
                     final double sum = element.getAggregationValue(
                             AggregationMethod.SUM);
@@ -326,6 +338,9 @@ public final class GUIUtils {
                     buf.append("</td>");
                     buf.append("<td>");
                     buf.append(totalCount);
+                    buf.append("</td>");
+                    buf.append("<td>");
+                    buf.append(totalValCount);
                     buf.append("</td>");
                     buf.append("<td>");
                     buf.append(totalSum);

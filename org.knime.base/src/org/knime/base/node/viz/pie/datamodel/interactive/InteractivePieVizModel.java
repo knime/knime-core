@@ -169,7 +169,11 @@ public class InteractivePieVizModel extends PieVizModel {
         final boolean numeric =
             m_pieColSpec.getType().isCompatible(DoubleValue.class);
         PieDataModel.sortSections(getSections(), numeric, true);
-        PieDataModel.setSectionColor(m_sections);
+        //set the section color only if the colorized column is selected
+        //as aggregation column
+        if (m_pieColSpec.getColorHandler() != null) {
+            PieDataModel.setSectionColor(m_sections);
+        }
     }
 
     /**
