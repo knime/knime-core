@@ -21,20 +21,7 @@
  */
 package org.knime.base.node.viz.histogram.impl;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Paint;
-import java.awt.Rectangle;
-import java.awt.Stroke;
-import java.awt.TexturePaint;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
-import java.util.Collection;
+import org.knime.core.data.property.ColorAttr;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.aggregation.DrawingUtils;
@@ -49,7 +36,24 @@ import org.knime.base.node.viz.histogram.datamodel.InteractiveBarDataModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveBarElementDataModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveBinDataModel;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
-import org.knime.core.data.property.ColorAttr;
+
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.Rectangle;
+import java.awt.Stroke;
+import java.awt.TexturePaint;
+import java.awt.event.MouseEvent;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.util.Collection;
+
+import javax.swing.ToolTipManager;
 
 /**
  * The view class of a Histogram visualisation. It simply uses the given
@@ -196,6 +200,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     protected HistogramDrawingPane(final AbstractHistogramProperties props) {
         super();
         m_properties = props;
+        ToolTipManager.sharedInstance().registerComponent(this);
     }
 
     /**
@@ -591,5 +596,37 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         g2.setFont(origFont);
         g2.setPaint(origPaint);
         g2.setStroke(origStroke);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getToolTipText(final MouseEvent e) {
+//        final Point p = e.getPoint();
+//        if (m_vizModel != null && p != null) {
+//            final BarDataModel bar =
+//                m_vizModel.getSelectedElement(p);
+//            if (bar != null) {
+//                final AggregationMethod aggrMethod =
+//                    m_vizModel.getAggregationMethod();
+//                final double aggrVal;
+////                if (LabelDisplayPolicy.ALL.equals(
+////                        m_vizModel.getLabelDisplayPolicy())) {
+//                    final BarElementDataModel element =
+//                        m_vizModel.getSelectedSubElements(p, bar);
+//                    if (element != null) {
+//                        aggrVal = element.getAggregationValue(aggrMethod);
+//                    } else {
+//                        aggrVal = bar.getAggregationValue(aggrMethod);
+//                    }
+////                } else {
+////                    aggrVal = bar.getAggregationValue(aggrMethod);
+////                }
+//                return GUIUtils.createLabel(aggrVal, NO_OF_LABEL_DIGITS,
+//                        aggrMethod);
+//            }
+//        }
+        return null;
     }
 }

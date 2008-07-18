@@ -30,7 +30,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.RowIterator;
+import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -162,27 +162,34 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
                         aggrCol.getColumnName());
             }
         }
-        final RowIterator rowIterator = table.iterator();
-        for (int rowCounter = 0; rowCounter < noOfRows
-        && rowIterator.hasNext(); rowCounter++) {
-            final DataRow row = rowIterator.next();
-            final Color color =
-                tableSpec.getRowColor(row).getColor(false, false);
-            if (aggrColSize < 1) {
-                m_model.addDataRow(row.getKey(), color,
-                        row.getCell(xColIdx), DataType.getMissingCell());
-            } else {
-                final DataCell[] aggrCells = new DataCell[aggrColSize];
-                for (int i = 0, length = aggrColIdxs.length; i < length; i++) {
-                    aggrCells[i] = row.getCell(aggrColIdxs[i]);
+        final CloseableRowIterator rowIterator = table.iterator();
+        try {
+            for (int rowCounter = 0; rowCounter < noOfRows
+            && rowIterator.hasNext(); rowCounter++) {
+                final DataRow row = rowIterator.next();
+                final Color color =
+                    tableSpec.getRowColor(row).getColor(false, false);
+                if (aggrColSize < 1) {
+                    m_model.addDataRow(row.getKey(), color,
+                            row.getCell(xColIdx), DataType.getMissingCell());
+                } else {
+                    final DataCell[] aggrCells = new DataCell[aggrColSize];
+                    for (int i = 0, length = aggrColIdxs.length;
+                        i < length; i++) {
+                        aggrCells[i] = row.getCell(aggrColIdxs[i]);
+                    }
+                    m_model.addDataRow(row.getKey(), color,
+                            row.getCell(xColIdx), aggrCells);
                 }
-                m_model.addDataRow(row.getKey(), color,
-                        row.getCell(xColIdx), aggrCells);
-            }
 
-            progress += progressPerRow;
-            exec.setProgress(progress, "Adding data rows to histogram...");
-            exec.checkCanceled();
+                progress += progressPerRow;
+                exec.setProgress(progress, "Adding data rows to histogram...");
+                exec.checkCanceled();
+            }
+        } finally {
+            if (rowIterator != null) {
+                rowIterator.close();
+            }
         }
         exec.setMessage("Sorting rows...");
         exec.setProgress(1.0, "Histogram finished.");

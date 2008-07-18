@@ -27,7 +27,7 @@ package org.knime.base.node.viz.histogram.datamodel;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.RowIterator;
+import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -101,20 +101,28 @@ public class InteractiveHistogramDataModel implements Iterable<DataRow> {
         subExec = exec.createSubProgress(0.5);
         final double progressPerRow = 1.0 / noOfRows;
         double progress = 0.0;
-        final RowIterator rowIterator = data.iterator();
-        for (int i = 0; i < noOfRows && rowIterator.hasNext();
-            i++) {
-            final DataRow row = rowIterator.next();
-            final Color color = m_data.getDataTableSpec().
-                getRowColor(row).getColor(false, false);
-            if (!m_rowColors.contains(color)) {
-                m_rowColors.add(color);
+        final CloseableRowIterator rowIterator = data.iterator();
+        try {
+            for (int i = 0; i < noOfRows && rowIterator.hasNext();
+                i++) {
+                final DataRow row = rowIterator.next();
+                final Color color = m_data.getDataTableSpec().
+                    getRowColor(row).getColor(false, false);
+                if (!m_rowColors.contains(color)) {
+                    m_rowColors.add(color);
+                }
+                progress += progressPerRow;
+                subExec.setProgress(progress,
+                        "Adding data rows to histogram...");
+                subExec.checkCanceled();
             }
-            progress += progressPerRow;
-            subExec.setProgress(progress, "Adding data rows to histogram...");
-            subExec.checkCanceled();
+        } finally {
+            if (rowIterator != null) {
+                rowIterator.close();
+            }
         }
         exec.setProgress(1.0, "Histogram finished.");
+
     }
 
     /**Constructor for class InteractiveHistogramDataModel.

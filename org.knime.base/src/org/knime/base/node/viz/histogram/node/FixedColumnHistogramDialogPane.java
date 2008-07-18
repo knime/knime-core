@@ -25,15 +25,16 @@
 
 package org.knime.base.node.viz.histogram.node;
 
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 
 /**

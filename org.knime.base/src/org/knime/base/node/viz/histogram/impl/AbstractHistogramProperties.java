@@ -572,9 +572,9 @@ public abstract class AbstractHistogramProperties extends
         m_noOfBinsLabel.setText(Integer.toString(currentNoOfBins));
         GUIUtils.setSliderLabels(m_noOfBins, 2, true);
         // disable this noOfbins slider for nominal values
-        if (vizModel.isBinNominal() || vizModel.isFixed()) {
+        if (vizModel.isBinNominal() || !vizModel.supportsHiliting()) {
             m_noOfBins.setEnabled(false);
-            if (vizModel.isFixed()) {
+            if (!vizModel.supportsHiliting()) {
                 m_noOfBins.setToolTipText("Not available for "
                         + "this histogram implementation");
             } else {
@@ -602,7 +602,7 @@ public abstract class AbstractHistogramProperties extends
         final Collection<? extends ColorColumn> aggrColumns =
             vizModel.getAggrColumns();
         if ((aggrColumns == null || aggrColumns.size() < 1)
-                && vizModel.isFixed()) {
+                && !vizModel.supportsHiliting()) {
             //if we have no aggregation columns selected disable all
             //aggregation methods but not count
             for (final Enumeration<AbstractButton> buttons = m_aggrMethButtonGrp

@@ -421,8 +421,8 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
      * {@inheritDoc}
      */
     @Override
-    public boolean isFixed() {
-        return false;
+    public boolean supportsHiliting() {
+        return true;
     }
 
     /**

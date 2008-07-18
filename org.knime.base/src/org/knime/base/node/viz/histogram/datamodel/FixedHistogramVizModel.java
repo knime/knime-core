@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *    12.02.2007 (Tobias Koetter): created
  */
@@ -39,31 +39,31 @@ import org.knime.core.data.RowKey;
 
 
 /**
- * This class holds all visualization data of a histogram. 
+ * This class holds all visualization data of a histogram.
  * @author Tobias Koetter, University of Konstanz
  */
 public class FixedHistogramVizModel extends AbstractHistogramVizModel {
 
     private final Collection<ColorColumn> m_aggrColumns;
-    
+
     private final DataColumnSpec m_xColSpec;
-    
+
     /**
      * Constructor for class HistogramVizModel.
      * @param rowColors the different row colors
      * @param bins the bins
      * @param missingValueBin the bin with the rows with missing x values
      * @param xColSpec the column specification of the selected x column
-     * @param aggrColumns the selected aggregation columns. Could be 
+     * @param aggrColumns the selected aggregation columns. Could be
      * <code>null</code>
      * @param aggrMethod the {@link AggregationMethod} to use
      * @param layout {@link HistogramLayout} to use
      */
-    public FixedHistogramVizModel(final SortedSet<Color> rowColors, 
+    public FixedHistogramVizModel(final SortedSet<Color> rowColors,
             final List<BinDataModel> bins, final BinDataModel missingValueBin,
-            final DataColumnSpec xColSpec, 
-            final Collection<ColorColumn> aggrColumns, 
-            final AggregationMethod aggrMethod, 
+            final DataColumnSpec xColSpec,
+            final Collection<ColorColumn> aggrColumns,
+            final AggregationMethod aggrMethod,
             final HistogramLayout layout) {
         super(rowColors, aggrMethod, layout, bins.size());
         if (aggrMethod == null) {
@@ -114,10 +114,10 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
      * {@inheritDoc}
      */
     @Override
-    public boolean isFixed() {
-        return true;
+    public boolean supportsHiliting() {
+        return false;
     }
-    
+
     // hiliting stuff
 
     /**
@@ -150,7 +150,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
      * {@inheritDoc}
      */
     @Override
-    public void updateHiliteInfo(final Set<RowKey> hilited, 
+    public void updateHiliteInfo(final Set<RowKey> hilited,
             final boolean hilite) {
         throw new UnsupportedOperationException("Hiliting not supported");
     }

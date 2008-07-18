@@ -333,7 +333,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                     < 0) {
             final int baseLine = (int)(drawingHeight
                     - yCoordinates.calculateMappedValue(
-                            new DoubleCell(0), drawingHeight, true));
+                            new DoubleCell(0), drawingHeight));
             drawingPane.setBaseLine(new Integer(baseLine));
         } else {
             drawingPane.setBaseLine(null);
@@ -456,7 +456,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         final double drawingHeight = drawingSpace.getHeight();
         final int baseLine =
             (int)(drawingHeight - yCoordinates.calculateMappedValue(
-                            new DoubleCell(0), drawingHeight, true));
+                            new DoubleCell(0), drawingHeight));
         // this is the minimum size of a bar with an aggregation value > 0
         final int minHeight = Math.max(
                 (int)HistogramDrawingPane.getBarStrokeWidth(),
@@ -466,7 +466,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         for (final BinDataModel bin : vizModel.getBins()) {
             final DataCell captionCell = bin.getXAxisCaptionCell();
             final double labelCoord = xCoordinates.calculateMappedValue(
-                    captionCell, drawingWidth, true);
+                    captionCell, drawingWidth);
             if (labelCoord < 0) {
                 //this bin is not on the x axis (because it is empty and the
                 //empty bins shouldn't be displayed) so we simply set the
@@ -487,10 +487,10 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             final int xCoord = (int)(labelCoord - (binWidth / 2));
             final int upperY = (int)(drawingHeight
                     - yCoordinates.calculateMappedValue(
-                            new DoubleCell(maxAggrVal), drawingHeight, true));
+                            new DoubleCell(maxAggrVal), drawingHeight));
             final int lowerY = (int)(drawingHeight
                     - yCoordinates.calculateMappedValue(
-                            new DoubleCell(minAggrVal), drawingHeight, true));
+                            new DoubleCell(minAggrVal), drawingHeight));
             final Rectangle binRect = calculateBorderRectangle(xCoord, lowerY,
                     upperY, minHeight, binWidth, maxAggrVal, baseLine);
             bin.setBinRectangle(binRect, baseLine, barElementColors,
@@ -672,7 +672,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         DataType type = DoubleCell.TYPE;
         final Collection<? extends ColorColumn> columnNames =
             vizModel.getAggrColumns();
-        if (AggregationMethod.COUNT.equals(aggrMethod)) {
+        if (AggregationMethod.COUNT.equals(aggrMethod)
+                || AggregationMethod.VALUE_COUNT.equals(aggrMethod)) {
             type = IntCell.TYPE;
         }
         if (AggregationMethod.SUM.equals(aggrMethod) && columnNames != null) {
@@ -794,6 +795,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             name.append("Sum of ");
         } else if (aggrMethod.equals(AggregationMethod.AVERAGE)) {
             name.append("Avg of ");
+        } else if (aggrMethod.equals(AggregationMethod.VALUE_COUNT)) {
+            name.append("No of values for ");
         } else {
             throw new IllegalArgumentException(
                     "Aggregation method not supported.");
@@ -1034,7 +1037,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
        m_histoProps.updateColumnSelection(m_tableSpec,
                vizModel.getXColumnName(), vizModel.getAggrColumns(),
                vizModel.getAggregationMethod());
-       if (!vizModel.isFixed()) {
+       if (vizModel.supportsHiliting()) {
            //set the hilite information
            vizModel.updateHiliteInfo(delegateGetHiLitKeys(), true);
        }
@@ -1063,7 +1066,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     @Override
     public void hiLite(final KeyEvent event) {
         final AbstractHistogramVizModel vizModel = getHistogramVizModel();
-        if (vizModel == null || vizModel.isFixed()) {
+        if (vizModel == null || !vizModel.supportsHiliting()) {
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
         }
@@ -1078,7 +1081,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     @Override
     public void unHiLite(final KeyEvent event) {
         final AbstractHistogramVizModel vizModel = getHistogramVizModel();
-        if (vizModel == null || vizModel.isFixed()) {
+        if (vizModel == null || !vizModel.supportsHiliting()) {
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
         }
@@ -1093,7 +1096,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
      */
     public void unHiLiteAll(final KeyEvent event) {
         final AbstractHistogramVizModel vizModel = getHistogramVizModel();
-        if (vizModel == null || vizModel.isFixed()) {
+        if (vizModel == null || !vizModel.supportsHiliting()) {
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
         }
@@ -1107,7 +1110,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     @Override
     public void hiLiteSelected() {
         final AbstractHistogramVizModel vizModel = getHistogramVizModel();
-        if (vizModel == null || vizModel.isFixed()) {
+        if (vizModel == null || !vizModel.supportsHiliting()) {
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
         }
@@ -1123,7 +1126,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     @Override
     public void unHiLiteSelected() {
         final AbstractHistogramVizModel vizModel = getHistogramVizModel();
-        if (vizModel == null || vizModel.isFixed()) {
+        if (vizModel == null || !vizModel.supportsHiliting()) {
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
         }
