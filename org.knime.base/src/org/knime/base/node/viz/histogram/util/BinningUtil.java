@@ -86,6 +86,9 @@ public final class BinningUtil {
         if (isInteger && interval == 1 && (maxVal - minVal) >= noOfBins) {
             interval = 2;
         }
+        if (interval == 0) {
+            return 1;
+        }
         return interval;
     }
 
