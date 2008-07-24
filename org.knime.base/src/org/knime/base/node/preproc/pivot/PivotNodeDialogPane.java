@@ -80,8 +80,7 @@ public class PivotNodeDialogPane extends DefaultNodeSettingsPane {
         final SettingsModelString aggMakeModel = 
             createSettingsMakeAggregation();
         DialogComponentButtonGroup aggCheck = new DialogComponentButtonGroup(
-                aggMakeModel, null, true, 
-                MAKE_AGGREGATION[0], MAKE_AGGREGATION);
+                aggMakeModel, true, MAKE_AGGREGATION[0], MAKE_AGGREGATION);
         aggMakeModel.addChangeListener(new ChangeListener() {
             /**
              * {@inheritDoc}

@@ -50,8 +50,7 @@ public class ColumnFilterRefNodeDialogPane extends DefaultNodeSettingsPane {
     public ColumnFilterRefNodeDialogPane() {
         DialogComponentButtonGroup group = new DialogComponentButtonGroup(
                 createInExcludeModel(), 
-                null, true,
-                INCLUDE, new String[]{INCLUDE, EXCLUDE});
+                true, INCLUDE, new String[]{INCLUDE, EXCLUDE});
         group.setToolTipText("Include or exclude columns in first table "
                 + "according to the second reference table.");
         addDialogComponent(group);

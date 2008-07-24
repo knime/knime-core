@@ -48,8 +48,7 @@ public class RowFilterRefNodeDialogPane extends DefaultNodeSettingsPane {
     public RowFilterRefNodeDialogPane() {
         DialogComponentButtonGroup group = new DialogComponentButtonGroup(
                 createInExcludeModel(), 
-                null, true,
-                INCLUDE, new String[]{INCLUDE, EXCLUDE});
+                true, INCLUDE, new String[]{INCLUDE, EXCLUDE});
         group.setToolTipText("Include or exclude rows in first table "
                 + "according to the second reference table.");
         addDialogComponent(group);
