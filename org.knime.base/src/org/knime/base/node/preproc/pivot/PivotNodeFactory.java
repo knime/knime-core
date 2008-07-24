@@ -26,7 +26,6 @@ package org.knime.base.node.preproc.pivot;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
@@ -34,7 +33,7 @@ import org.knime.core.node.NodeView;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class PivotNodeFactory extends NodeFactory {
+public class PivotNodeFactory extends NodeFactory<PivotNodeModel> {
 
     /**
      * {@inheritDoc} 
@@ -48,7 +47,7 @@ public class PivotNodeFactory extends NodeFactory {
      * {@inheritDoc} 
      */
     @Override
-    public NodeModel createNodeModel() {
+    public PivotNodeModel createNodeModel() {
         return new PivotNodeModel();
     }
 
@@ -56,8 +55,8 @@ public class PivotNodeFactory extends NodeFactory {
      * {@inheritDoc} 
      */
     @Override
-    public NodeView createNodeView(final int viewIndex, 
-            final NodeModel nodeModel) {
+    public NodeView<PivotNodeModel> createNodeView(final int viewIndex, 
+            final PivotNodeModel nodeModel) {
         return null;
     }
 

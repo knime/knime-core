@@ -24,6 +24,17 @@
  */
 package org.knime.base.node.preproc.pivot;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -49,17 +60,6 @@ import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
 import org.knime.core.util.Pair;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 
 /**
@@ -176,6 +176,10 @@ public class PivotNodeModel extends NodeModel {
             new LinkedHashMap<Pair<DataCell, DataCell>, Double[]>();
         // list of pivot values
         final Set<DataCell> pivotList = new LinkedHashSet<DataCell>();
+        DataColumnSpec pivotSpec = inspec.getColumnSpec(pivot);
+        if (pivotSpec.getDomain().hasValues()) {
+            pivotList.addAll(pivotSpec.getDomain().getValues());
+        }
         // list of group values
         final Set<DataCell> groupList = new LinkedHashSet<DataCell>();
         final LinkedHashMap<RowKey, Set<RowKey>> mapping =
@@ -216,6 +220,17 @@ public class PivotNodeModel extends NodeModel {
                 set.add(row.getKey());
             }
         }
+        // check pivoted elements
+        if (pivotSpec.getDomain().hasValues()) {
+            Set<DataCell> pivots = pivotSpec.getDomain().getValues();
+            pivotList.removeAll(pivots);
+            if (pivotList.size() > 0) {
+                throw new RuntimeException("Some elements \"" + pivotList 
+                        + "\" not present in possible values.");       
+            }
+            pivotList.addAll(pivots);
+        }
+
         final DataTableSpec outspec = initSpec(pivotList);
         // will contain the final pivoting table
         final BufferedDataContainer buf = exec.createDataContainer(outspec);
