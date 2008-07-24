@@ -23,6 +23,8 @@ package org.knime.base.node.preproc.colcombine;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -45,7 +47,7 @@ import org.knime.core.node.NodeSettingsWO;
 /**
  * This is the model implementation of ColCombine. Takes the contents of a set
  * of columns and combines them into one string column.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class ColCombineNodeModel extends NodeModel {
@@ -64,7 +66,7 @@ public class ColCombineNodeModel extends NodeModel {
     static final String CFG_QUOTE_CHAR = "quote_char";
     /** Config identifier: delimiter replacement string. */
     static final String CFG_REPLACE_DELIMITER_STRING = "replace_delimiter";
-    
+
     private String[] m_columns;
     private String m_newColName;
     private String m_delimString;
@@ -72,7 +74,7 @@ public class ColCombineNodeModel extends NodeModel {
     private boolean m_isQuoting;
     private boolean m_isQuotingAlways;
     private String m_replaceDelimString;
-    
+
     /**
      * Constructor for the node model.
      */
@@ -84,7 +86,7 @@ public class ColCombineNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        ColumnRearranger arranger = 
+        ColumnRearranger arranger =
             createColumnRearranger(inData[0].getDataTableSpec());
         BufferedDataTable out = exec.createColumnRearrangeTable(
                 inData[0], arranger, exec);
@@ -116,16 +118,23 @@ public class ColCombineNodeModel extends NodeModel {
         ColumnRearranger arranger = createColumnRearranger(spec);
         return new DataTableSpec[]{arranger.createSpec()};
     }
-    
+
     private ColumnRearranger createColumnRearranger(final DataTableSpec spec) {
         ColumnRearranger result = new ColumnRearranger(spec);
         DataColumnSpec append = new DataColumnSpecCreator(
                 m_newColName, StringCell.TYPE).createSpec();
         final int[] indices = new int[m_columns.length];
-        for (int i = 0; i < indices.length; i++) {
-            indices[i] = spec.findColumnIndex(m_columns[i]);
+        List<String> colNames = Arrays.asList(m_columns);
+        int j = 0;
+        for (int k = 0; k < spec.getNumColumns(); k++) {
+            DataColumnSpec cs = spec.getColumnSpec(k);
+            if (colNames.contains(cs.getName())) {
+                indices[j] = k;
+                j++;
+            }
         }
-        // ", " -> "," 
+        
+        // ", " -> ","
         // "  " -> "  " (do not let the resulting string be empty)
         // " bla bla " -> "bla bla"
         final String delimTrim = trimDelimString(m_delimString);
@@ -135,7 +144,7 @@ public class ColCombineNodeModel extends NodeModel {
                String[] cellContents = new String[indices.length];
                for (int i = 0; i < indices.length; i++) {
                    DataCell c = row.getCell(indices[i]);
-                   String s = c instanceof StringValue 
+                   String s = c instanceof StringValue
                        ? ((StringValue)c).getStringValue() : c.toString();
                    cellContents[i] = s;
                }
@@ -144,7 +153,7 @@ public class ColCombineNodeModel extends NodeModel {
         });
         return result;
     }
-    
+
     /** Concatenates the elements of the array, used from cell factory.
      * @param cellContents The cell contents
      * @param delimTrim The trimmed delimiter (used as argument to not do the
@@ -153,14 +162,14 @@ public class ColCombineNodeModel extends NodeModel {
      */
     private String handleContent(final String[] cellContents,
             final String delimTrim) {
-        
+
         StringBuilder b = new StringBuilder();
-        
+
         for (int i = 0; i < cellContents.length; i++) {
-        
+
             b.append(i > 0 ? delimTrim : "");
             String s = cellContents[i];
-            
+
             if (m_isQuoting) {
                 if (m_isQuotingAlways
                         || (delimTrim.length() > 0 && s.contains(delimTrim))
@@ -245,7 +254,7 @@ public class ColCombineNodeModel extends NodeModel {
             throw new InvalidSettingsException("Delimiter must not be null");
         }
         delim = trimDelimString(delim);
-        
+
         boolean isQuote = settings.getBoolean(CFG_IS_QUOTING);
         if (isQuote) {
             char quote = settings.getChar(CFG_QUOTE_CHAR);
@@ -285,10 +294,10 @@ public class ColCombineNodeModel extends NodeModel {
 
 
     /**
-     * ', ' gets ','. 
+     * ', ' gets ','.
      * ' ' gets ' ' (do not let the resulting string be empty)
      * ' blah blah ' gets 'blah blah'
-     * 
+     *
      * @param delimString string to trim
      * @return the trimmed string
      */
