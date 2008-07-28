@@ -288,14 +288,15 @@ public class NodePersistorVersion1xx implements NodePersistor {
             NodeSettingsRO portSettings = dataSettings
                     .getNodeSettings(CFG_OUTPUT_PREFIX + index);
             String dataName = portSettings.getString(CFG_DATA_FILE_DIR);
-            ReferencedFile dirRef = new ReferencedFile(dataDirRef, dataName);
-            File dir = dirRef.getFile();
-            if (!(dir.isDirectory() && dir.canRead())) {
-                throw new IOException("Can not read directory "
-                        + dir.getAbsolutePath());
-            }
             DataTableSpec outSpec = null;
             if (portSettings.getBoolean(CFG_HAS_SPEC_FILE, true)) {
+                ReferencedFile dirRef = 
+                    new ReferencedFile(dataDirRef, dataName);
+                File dir = dirRef.getFile();
+                if (!(dir.isDirectory() && dir.canRead())) {
+                    throw new IOException("Can not read directory "
+                            + dir.getAbsolutePath());
+                }
                 outSpec = BufferedDataTable.loadSpec(dirRef);
                 if (portSettings.containsKey(CFG_HAS_SPEC_FILE)
                         && outSpec == null) {
