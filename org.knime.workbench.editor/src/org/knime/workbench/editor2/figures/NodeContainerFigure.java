@@ -504,9 +504,9 @@ public class NodeContainerFigure extends RectangleFigure {
             setStatusAmple();
             m_statusFigure.setIcon(GREEN);
         } else if (state.equals(
-                NodeContainer.State.UNCONFIGURED_MARKEDFOREXEC)) {
-            setProgressBar(false);
-        } else if (state.equals(NodeContainer.State.QUEUED)) {
+                NodeContainer.State.UNCONFIGURED_MARKEDFOREXEC)
+                || state.equals(NodeContainer.State.QUEUED)
+                || state.equals(NodeContainer.State.MARKEDFOREXEC)) {
             setProgressBar(false);
         }
         m_statusFigure.repaint();
@@ -979,7 +979,8 @@ public class NodeContainerFigure extends RectangleFigure {
          */
         public StatusFigure() {
             // status figure must have exact same dimensions as progress bar
-            setBounds(new Rectangle(0,0, ProgressFigure.WIDTH, ProgressFigure.HEIGHT));
+            setBounds(new Rectangle(0,0, ProgressFigure.WIDTH, 
+                    ProgressFigure.HEIGHT));
             ToolbarLayout layout = new ToolbarLayout(false);
             layout.setMinorAlignment(ToolbarLayout.ALIGN_CENTER);
             layout.setStretchMinorAxis(true);
