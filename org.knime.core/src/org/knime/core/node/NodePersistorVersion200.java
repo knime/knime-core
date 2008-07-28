@@ -39,6 +39,7 @@ import org.knime.core.internal.SerializerMethodLoader;
 import org.knime.core.node.PortObject.PortObjectSerializer;
 import org.knime.core.node.PortObjectSpec.PortObjectSpecSerializer;
 import org.knime.core.node.workflow.NodeMessage;
+import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -261,6 +262,30 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     protected boolean loadIsConfigured(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return false;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected NodeMessage loadNodeMessage(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        if (settings.containsKey("node_message")) {
+            NodeSettingsRO sub = settings.getNodeSettings("node_message");
+            String typeS = sub.getString("type");
+            if (typeS == null) {
+                throw new InvalidSettingsException(
+                        "Message type must not be null");
+            }
+            Type type;
+            try {
+                type = Type.valueOf(typeS);
+            } catch (IllegalArgumentException iae) {
+                throw new InvalidSettingsException(
+                    "Invalid message type: " + typeS, iae);
+            }
+            String message = sub.getString("message");
+            return new NodeMessage(type, message);
+        }
+        return null;
     }
 
     /** {@inheritDoc} */
