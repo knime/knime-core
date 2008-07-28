@@ -55,6 +55,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.property.hilite.DefaultHiLiteManager;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.util.DuplicateKeyException;
 
 /**
  * This is the model of the joiner node that does all the dirty work.
@@ -141,8 +142,8 @@ public class NewJoinerNodeModel extends NodeModel {
         }
 
         List<Integer> stci = new ArrayList<Integer>();
-        int i = 0;
-        for (DataColumnSpec colSpec : specs[1]) {
+        for (int i = 0; i < specs[1].getNumColumns(); i++) {
+            DataColumnSpec colSpec = specs[1].getColumnSpec(i);
             if (specs[0].findColumnIndex(colSpec.getName()) != -1) {
                 if (m_settings.duplicateHandling().equals(
                         DuplicateHandling.DontExecute)) {
@@ -152,6 +153,9 @@ public class NewJoinerNodeModel extends NodeModel {
                         DuplicateHandling.AppendSuffix)) {
                     String newName = colSpec.getName() + m_settings.suffix();
 
+                    // TODO: check if name is present in specs[1], also check if
+                    // it was previously assigned (not in specs[0]/specs[1] but
+                    // in output spec)
                     if (specs[0].findColumnIndex(newName) != -1) {
                         throw new InvalidSettingsException("Duplicate column '"
                                 + colSpec.getName() + "', won't execute");
@@ -168,15 +172,14 @@ public class NewJoinerNodeModel extends NodeModel {
                 takeSpecs.add(colSpec);
                 stci.add(i);
             }
-            i++;
         }
 
         m_secondTableSurvivers = new int[stci.size()];
-        for (i = 0; i < m_secondTableSurvivers.length; i++) {
+        for (int i = 0; i < m_secondTableSurvivers.length; i++) {
             m_secondTableSurvivers[i] = stci.get(i);
         }
-        return new DataTableSpec(takeSpecs.toArray(new DataColumnSpec[takeSpecs
-                .size()]));
+        return new DataTableSpec(takeSpecs.toArray(
+                new DataColumnSpec[takeSpecs.size()]));
     }
 
     /**
@@ -301,7 +304,7 @@ public class NewJoinerNodeModel extends NodeModel {
         if (lit.hasNext() && lofj) {
             // add remaining non-joined rows from the left table if left or full
             // outer join
-            while (lit.hasNext() && lofj) {
+            while (lit.hasNext()) {
                 lrow = lit.next();
                 dc.addRowToTable(createJoinedRow(lrow.getKey().toString(),
                         lrow, missingRow));
@@ -317,15 +320,26 @@ public class NewJoinerNodeModel extends NodeModel {
             }
             missingRow = new DefaultRow(new RowKey(""), missingCells);
 
-            dc.addRowToTable(createJoinedRow(rrow.getKey().toString(),
-                    missingRow, rrow));
-            exec.setProgress(0.7 + 0.3 * p++ / max);
-
-            while (rit.hasNext()) {
+            while (true) {
+                String key = rrow.getKey().toString();
+                int c = 0;
+                while (true) {
+                    try {
+                        dc.addRowToTable(
+                                createJoinedRow(key, missingRow, rrow));
+                        exec.setProgress(0.7 + 0.3 * p++ / max);
+                        break;
+                    } catch (DuplicateKeyException ex) {
+                        if (++c > 10) {
+                           throw ex;
+                        }
+                        key = key + "_r";
+                    }
+                }
+                if (!rit.hasNext()) {
+                    break;
+                }
                 rrow = rit.next();
-                dc.addRowToTable(createJoinedRow(rrow.getKey().toString(),
-                        missingRow, rrow));
-                exec.setProgress(0.7 + 0.3 * p++ / max);
             }
         }
         dc.close();
