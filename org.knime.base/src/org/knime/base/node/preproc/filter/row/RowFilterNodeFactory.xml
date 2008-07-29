@@ -13,7 +13,10 @@
  		or exclude: certain ranges (by row number), rows with
  		a certain row ID, and rows with a certain value in a
  		selectable column (attribute). Below are the steps on how to configure the node
- 		in its configuration dialog.
+ 		in its configuration dialog. Note: The node doesn't change the domain of the 
+ 		data table. I. e. the upper and lower bounds or the possible values in the
+ 		table spec are not adapted, even if one of the bounds or one value is
+ 		fully filtered out. 
 		</intro>
 
 		<option name="In- or exclude rows by criteria">You must first select which criteria should
@@ -23,11 +26,17 @@
 		</option>
 		<option name="Column value matching">If filter by attribute value is 
 			selected, select the name of the column whose value should be matched. Then,
-			either enter a regular expression for string matching, or a value range,
-			for range filtering. When using a regular expression, you can set a checkmark, 
-			if you want a case sensitive match to be made. If a range is specified,
-			you specify only one boundary, the other is then set to
-			(plus or minus) infinity. <br />
+			either enter a pattern for string matching, or a value range,
+			for range filtering. When using a pattern match, you can set checkmarks
+			according to whether the pattern contains wildcards or is a regular 
+			expression. Wildcard patterns contain '*' (matching any sequence of
+			characters) and '.' (matching any one character). Examples of regular
+			expressions are given below. Also, a case sensitive match can be enabled
+			by the according checkmark. Note: if you select a pattern from the drop-down
+			menu of the pattern text field, the node still performs a comparison of
+			the string representation of the data values.<br />
+			If a range is specified, and you specify only one boundary, the other 
+			is then set to (plus or minus) infinity. <br />
 			Here are some examples of regular expressions:<br />
 			"<tt>$foo.*</tt>" matches anything that starts with "foo". The dollar
 			stands for the beginning of the word, the dot matches any (one) character,
