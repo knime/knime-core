@@ -49,6 +49,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -88,6 +89,9 @@ public class PivotNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_hiliting =
         PivotNodeDialogPane.createSettingsEnableHiLite();
+    
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(PivotNodeModel.class);
 
     /**
      * Node returns a new hilite handler instance.
@@ -223,12 +227,15 @@ public class PivotNodeModel extends NodeModel {
         // check pivoted elements
         if (pivotSpec.getDomain().hasValues()) {
             Set<DataCell> pivots = pivotSpec.getDomain().getValues();
-            pivotList.removeAll(pivots);
-            if (pivotList.size() > 0) {
-                throw new RuntimeException("Some elements \"" + pivotList 
-                        + "\" not present in possible values.");       
+            if (!pivots.containsAll(pivotList)) {
+                LinkedHashSet<DataCell> copy = 
+                    new LinkedHashSet<DataCell>(pivotList);
+                copy.removeAll(pivots);
+                String warning = "Some pivot values \"" + copy 
+                        + "\" are not present in data table spec.";
+                LOGGER.coding(warning);
+                setWarningMessage(warning);
             }
-            pivotList.addAll(pivots);
         }
 
         final DataTableSpec outspec = initSpec(pivotList);
