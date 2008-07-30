@@ -190,7 +190,6 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         m_metaPersistor = createNodeContainerMetaPersistor(parentRef);
         InputStream in = new BufferedInputStream(new FileInputStream(nodeFile));
         NodeSettingsRO subWFSettings = NodeSettings.loadFromXML(in);
-        loadResult.addError(m_metaPersistor.load(subWFSettings));
         m_workflowSett = subWFSettings;
         m_workflowDir = parentRef;
 
@@ -212,7 +211,12 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             loadResult.addError(error);
             m_name = "Workflow";
         }
-
+        LoadResult metaLoadResult = m_metaPersistor.load(subWFSettings);
+        if (metaLoadResult.hasErrors()) {
+            loadResult.addError(metaLoadResult);
+            setNeedsResetAfterLoad();
+        }
+        
         /* read in and outports */
         NodeSettingsRO inPortsEnum = EMPTY_SETTINGS;
         try {
@@ -224,7 +228,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             String error = "Can't load workflow ports, config not found";
             LOGGER.debug(error, e);
             loadResult.addError(error);
-            needsResetAfterLoad();
+            setNeedsResetAfterLoad();
         }
         int inPortCount = inPortsEnum.keySet().size();
         m_inPortTemplates = new WorkflowPortTemplate[inPortCount];
@@ -238,13 +242,13 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     + key + "\", skipping it: " + e.getMessage();
                 LOGGER.debug(error, e);
                 loadResult.addError(error);
-                needsResetAfterLoad();
+                setNeedsResetAfterLoad();
                 continue;
             }
             int index = p.getPortIndex();
             if (index < 0 || index >= inPortCount) {
                 loadResult.addError("Invalid inport index " + index);
-                needsResetAfterLoad();
+                setNeedsResetAfterLoad();
                 continue;
             }
             if (m_inPortTemplates[index] != null) {
@@ -273,7 +277,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 + e.getMessage();
             LOGGER.debug(error, e);
             loadResult.addError(error);
-            needsResetAfterLoad();
+            setNeedsResetAfterLoad();
         }
         int outPortCount = outPortsEnum.keySet().size();
         m_outPortTemplates = new WorkflowPortTemplate[outPortCount];
@@ -287,13 +291,13 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     + key + "\", skipping it: " + e.getMessage();
                 LOGGER.debug(error, e);
                 loadResult.addError(error);
-                needsResetAfterLoad();
+                setNeedsResetAfterLoad();
                 continue;
             }
             int index = p.getPortIndex();
             if (index < 0 || index >= outPortCount) {
                 loadResult.addError("Invalid inport index " + index);
-                needsResetAfterLoad();
+                setNeedsResetAfterLoad();
                 continue;
             }
             if (m_outPortTemplates[index] != null) {
@@ -331,7 +335,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 + e.getMessage();
             LOGGER.debug(error, e);
             loadResult.addError(error);
-            needsResetAfterLoad();
+            setNeedsResetAfterLoad();
             // stop loading here
             return loadResult;
         }

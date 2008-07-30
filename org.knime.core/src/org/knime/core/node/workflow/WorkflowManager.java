@@ -2727,6 +2727,9 @@ public final class WorkflowManager extends NodeContainer {
             if (nc.isResetableAsNodeContainer()) {
                 invokeResetOnNode(nc.getID());
             }
+            // make sure it's marked as dirty (meta nodes may not be resetable
+            // and hence don't get the dirty flag set)
+            nc.setDirty();
         }
         for (NodeID id : needConfigurationNodes) {
             configureNodeAndSuccessors(id, true, true);

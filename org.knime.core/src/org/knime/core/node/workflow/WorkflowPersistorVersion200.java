@@ -212,10 +212,19 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     
     /** {@inheritDoc} */
     @Override
+    protected NodeContainerMetaPersistorVersion200 
+        createNodeContainerMetaPersistor(final ReferencedFile nodeDirectory) {
+        return new NodeContainerMetaPersistorVersion200(nodeDirectory);
+    }
+
+    
+    /** {@inheritDoc} */
+    @Override
     protected WorkflowPersistorVersion200 createWorkflowPersistor() {
         return new WorkflowPersistorVersion200(getGlobalTableRepository());
     }
     
+    /** {@inheritDoc} */
     @Override
     protected SingleNodeContainerPersistorVersion200 
         createSingleNodeContainerPersistor() {
@@ -241,6 +250,9 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             new NodeSettings(WorkflowPersistor.WORKFLOW_FILE);
         settings.addString(WorkflowManager.CFG_VERSION, getSaveVersion());
         saveWorkflowName(settings, wm.getName());
+        NodeContainerMetaPersistorVersion200 metaPersistor = 
+            createNodeContainerMetaPersistor(null);
+        metaPersistor.save(wm, settings);
         
         NodeSettingsWO nodesSettings = saveSettingsForNodes(settings);
         Collection<NodeContainer> nodes = wm.getNodeContainers();
@@ -292,7 +304,8 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             outPortsSettsEnum = saveOutPortsEnumSetting(outPortsSetts);
         }
         for (int i = 0; i < outCount; i++) {
-            NodeSettingsWO singlePort = saveOutPortSetting(outPortsSettsEnum, i);
+            NodeSettingsWO singlePort = 
+                saveOutPortSetting(outPortsSettsEnum, i);
             saveOutPort(singlePort, wm, i);
         }
         File workflowFile = new File(workflowDir, WORKFLOW_FILE);

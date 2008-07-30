@@ -27,7 +27,6 @@ package org.knime.core.node.workflow;
 import java.io.IOException;
 
 import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
@@ -77,7 +76,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     }
     
     /** {@inheritDoc} */
-    public void setUIInfo(UIInformation uiInfo) {
+    public void setUIInfo(final UIInformation uiInfo) {
         m_uiInfo = uiInfo;
     }
 
@@ -87,7 +86,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     }
     
     /** {@inheritDoc} */
-    public void setNodeIDSuffix(int nodeIDSuffix) {
+    public void setNodeIDSuffix(final int nodeIDSuffix) {
         m_nodeIDSuffix = nodeIDSuffix;
     }
     
@@ -113,8 +112,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     }
 
    /** {@inheritDoc} */
-    public LoadResult load(final NodeSettingsRO settings)
-            throws IOException, CanceledExecutionException {
+    public LoadResult load(final NodeSettingsRO settings) throws IOException {
         LoadResult loadResult = new LoadResult();
         try {
             m_customName = loadCustomName(settings);

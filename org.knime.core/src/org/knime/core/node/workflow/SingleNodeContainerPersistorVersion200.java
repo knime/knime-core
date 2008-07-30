@@ -162,7 +162,7 @@ public class SingleNodeContainerPersistorVersion200 extends
         saveScopeObjectStack(settings, snc);
         NodeContainerMetaPersistorVersion200 metaPersistor = 
             createNodeContainerMetaPersistor(null);
-        metaPersistor.save(snc, settings, exec, isSaveData);
+        metaPersistor.save(snc, settings);
         NodePersistorVersion200 persistor = createNodePersistor(
             translateToFailPolicy(snc.getState()));
         persistor.save(snc.getNode(), nodeXMLFileRef, exec, isSaveData 

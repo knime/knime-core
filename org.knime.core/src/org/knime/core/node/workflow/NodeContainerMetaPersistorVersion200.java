@@ -27,8 +27,6 @@ package org.knime.core.node.workflow;
 import java.io.IOException;
 
 import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -65,10 +63,8 @@ class NodeContainerMetaPersistorVersion200 extends
         }
     }
 
-    public void save(final NodeContainer nc, 
-            final NodeSettingsWO settings, final ExecutionMonitor exec,
-            final boolean isSaveData) throws CanceledExecutionException,
-            IOException {
+    public void save(final NodeContainer nc, final NodeSettingsWO settings)
+        throws IOException {
         saveCustomName(settings, nc);
         saveCustomDescription(settings, nc);
         saveState(settings, nc);
