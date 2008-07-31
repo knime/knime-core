@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -19,8 +19,6 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  * 
- * History
- *   21.08.2005 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
@@ -48,7 +46,7 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class DBWriterNodeModel extends NodeModel {
+final class DBWriterNodeModel extends NodeModel {
 
     /*
      * TODO not yet supported Double.MAX_VALUE, Double.NEGATIVE_INFINITY, and
@@ -130,7 +128,8 @@ class DBWriterNodeModel extends NodeModel {
         String table = settings.getString("table");
         // write settings or skip it
         if (write) {
-            if (table != null && table.contains("<table>")) {
+            if (table != null && table.contains(
+                    DBQueryConnection.TABLE_PLACEHOLDER)) {
                 throw new InvalidSettingsException(
                     "Database table place holder not replaced.");
             }
@@ -142,8 +141,9 @@ class DBWriterNodeModel extends NodeModel {
             for (String fileName : loadedDriver) {
                 try {
                     DBDriverLoader.loadDriver(new File(fileName));
-                } catch (Exception e) {
-                    LOGGER.warn("Could not load driver: " + fileName, e);
+                } catch (Throwable t) {
+                    LOGGER.info("Could not load driver from file \"" 
+                            + fileName + "\".", t);
                 }
             }
             // load SQL type for each column

@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Dec 17, 2005 (wiswedel): created
  */
@@ -38,13 +38,17 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
 
+import org.knime.core.node.workflow.NodeProgress;
+import org.knime.core.node.workflow.NodeProgressEvent;
+import org.knime.core.node.workflow.NodeProgressListener;
+
 /**
  * A dialog that contains a progress bar, a label with a message, and a cancel
  * button. It serves as view and controller of a
  * <code>DefaultNodeProgressMonitor</code>. If you have some long-lasting
  * task to do in your view (for instance, write a big file in current view
  * content) and your task is cancelable, you can write code like this:
- * 
+ *
  * <pre>
  * DefaultNodeProgressMonitor progMon = new DefaultNodeProgressMonitor();
  * ExecutionMonitor execMon = new ExecutionMonitor(progMon);
@@ -55,14 +59,14 @@ import javax.swing.SwingConstants;
  * progView.pack();
  * progView.setVisible(true);
  * </pre>
- * 
+ *
  * This view extends JDialog in order to make it modal (view interaction is not
  * permitted by default). Of course, you can change that by calling the
  * <code>#setModal(boolean)</code> method.
  * <p>
  * Please also not: It's your job to dispose this view once the task is done.
  * Only if cancel has been pressed, the view will dispose automatically.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class NodeProgressMonitorView extends JDialog implements
@@ -81,7 +85,7 @@ public class NodeProgressMonitorView extends JDialog implements
     /**
      * Constructor that takes the underlying model <code>mon</code> and a
      * frame, which is the parent (or the frame to be modal to).
-     * 
+     *
      * @param parent The frame from which the dialog is displayed.
      * @param mon The model.
      * @throws NullPointerException If <code>mon</code> is <code>null</code>.
@@ -119,13 +123,13 @@ public class NodeProgressMonitorView extends JDialog implements
 
     /**
      * Interface method that's called by the underlying model.
-     * 
-     * @see NodeProgressListener#progressChanged(NodeProgressEvent)
+     *
+     * @see NodeProgressListener#progressChanged(NodeProgress)
      */
-    public void progressChanged(final NodeProgressEvent pe) {
+    public void progressChanged(final NodeProgress pe) {
         if (pe.hasProgress()) {
             double progress = pe.getProgress().doubleValue();
-            int val = Math.max(0, Math.min(100, 
+            int val = Math.max(0, Math.min(100,
                     (int)Math.round(100 * progress)));
             m_progressBar.setValue(val);
         }
@@ -137,9 +141,29 @@ public class NodeProgressMonitorView extends JDialog implements
     }
 
     /**
+     * Interface method that's called by the underlying model.
+     *
+     * {@inheritDoc}
+     */
+    public void progressChanged(final NodeProgressEvent pe) {
+        if (pe.getNodeProgress().hasProgress()) {
+            double progress = pe.getNodeProgress().getProgress().doubleValue();
+            int val = Math.max(0, Math.min(100,
+                    (int)Math.round(100 * progress)));
+            m_progressBar.setValue(val);
+        }
+        if (pe.getNodeProgress().hasMessage()) {
+            m_label.setText(pe.getNodeProgress().getMessage());
+        } else {
+            m_label.setText("");
+        }
+    }
+
+
+    /**
      * If you know that your task doesn't report progess, you can hide the
      * progress bar by calling this method.
-     * 
+     *
      * @param showIt If the progress should be shown.
      */
     public void setShowProgress(final boolean showIt) {
@@ -150,7 +174,7 @@ public class NodeProgressMonitorView extends JDialog implements
     /**
      * If you know that your task doesn't use progress message, you can hide
      * the label by calling this method.
-     * 
+     *
      * @param showIt If the label should be shown.
      */
     public void setShowLabel(final boolean showIt) {
@@ -162,7 +186,7 @@ public class NodeProgressMonitorView extends JDialog implements
      * Called when cancel button is pressed. It will set the cancel flag in the
      * underlying <code>DefaultNodeProgressMonitor</code> and call
      * <code>dispose</code>. Intended for overriding.
-     * 
+     *
      * @see DefaultNodeProgressMonitor#setExecuteCanceled()
      */
     protected void onPressCancel() {
@@ -172,7 +196,7 @@ public class NodeProgressMonitorView extends JDialog implements
 
     /**
      * Reference to the underlying progress monitor.
-     * 
+     *
      * @return The progress monitor passed in the constructor.
      */
     public NodeProgressMonitor getMonitor() {

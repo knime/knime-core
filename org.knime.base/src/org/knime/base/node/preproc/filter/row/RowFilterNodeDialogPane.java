@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   07.07.2005 (ohl): created
  */
@@ -35,7 +35,8 @@ import javax.swing.ButtonGroup;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
-import org.knime.base.node.preproc.filter.row.rowfilter.ColValRowFilter;
+import org.knime.base.node.preproc.filter.row.rowfilter.AttrValueRowFilter;
+import org.knime.base.node.preproc.filter.row.rowfilter.ColValFilterOldObsolete;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilterFactory;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowIDRowFilter;
@@ -48,7 +49,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 
 /**
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class RowFilterNodeDialogPane extends NodeDialogPane {
@@ -159,7 +160,7 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
 
     /**
      * Activates the corresponding panel. Called by the radio button listeners.
-     * 
+     *
      * @param activeFilterMethod the active filter method
      */
     protected void filterSelectionChanged(final String activeFilterMethod) {
@@ -211,7 +212,7 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
 
         /*
          * now read the filters. We support three different filters:
-         * RowIDFilter, ColValfilter, and RowNumberFilter. But only one at a
+         * RowIDFilter, AttrValfilter, and RowNumberFilter. But only one at a
          * time.
          */
         RowFilter filter = null;
@@ -232,11 +233,28 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
             return;
         }
 
-        if (filter instanceof ColValRowFilter) {
-            ColValRowFilter f = (ColValRowFilter)filter;
+        if (filter instanceof ColValFilterOldObsolete) {
+            // support the obsolete filter for backward compatibility
+            ColValFilterOldObsolete f = (ColValFilterOldObsolete)filter;
             actionCommand = "colval";
             // activate the corresponding radio button
             if (f.includeMatchingLines()) {
+                m_colValInclRadio.setSelected(true);
+            } else {
+                m_colValExclRadio.setSelected(true);
+            }
+            try {
+                m_colValPanel.loadSettingsFromFilter(f);
+            } catch (InvalidSettingsException ise) {
+                // ignore failure
+            }
+        } else if (filter instanceof AttrValueRowFilter) {
+            // this covers all the attribute value filters:
+            // range, string compare, missing value filter
+            AttrValueRowFilter f = (AttrValueRowFilter)filter;
+            actionCommand = "colval";
+            // activate the corresponding radio button
+            if (f.getInclude()) {
                 m_colValInclRadio.setSelected(true);
             } else {
                 m_colValExclRadio.setSelected(true);

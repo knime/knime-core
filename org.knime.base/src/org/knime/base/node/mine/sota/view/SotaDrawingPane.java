@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -48,8 +48,8 @@ import javax.swing.ToolTipManager;
 import org.knime.base.node.mine.sota.logic.SotaManager;
 import org.knime.base.node.mine.sota.logic.SotaTreeCell;
 import org.knime.base.node.util.DataArray;
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteListener;
@@ -114,9 +114,9 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
     private ArrayList<SotaTreeCell> m_cells;
 
     // Hilited keys Selected keys and Hilitehandler
-    private ArrayList<DataCell> m_selectedKeys;
+    private ArrayList<RowKey> m_selectedKeys;
 
-    private Set<DataCell> m_hilitedKeys;
+    private Set<RowKey> m_hilitedKeys;
 
     private HiLiteHandler m_hiliteHandler;
 
@@ -176,8 +176,8 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
         m_accentHLevel = 0;
         m_hierarchicalMaxLevels = new Hashtable<Integer, Integer>();
 
-        m_selectedKeys = new ArrayList<DataCell>();
-        m_hilitedKeys = new HashSet<DataCell>();
+        m_selectedKeys = new ArrayList<RowKey>();
+        m_hilitedKeys = new HashSet<RowKey>();
         m_cells = null;
         m_hiliteHandler = null;
 
@@ -207,7 +207,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
             DataRow row = getDataRowAtCursor(event.getX(), event.getY());
             if (row != null) {
-                String text = "RowKey: " + row.getKey().getId().toString();
+                String text = "RowKey: " + row.getKey().getString();
                 text += "\nData: ";
 
                 for (int i = 0; i < row.getNumCells(); i++) {
@@ -410,14 +410,14 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
                 // draw hilite rectangle
                 if (m_hilitedKeys != null && m_selectedKeys != null) {
-                    if (m_hilitedKeys.contains(row.getKey().getId())
-                            && m_selectedKeys.contains(row.getKey().getId())) {
+                    if (m_hilitedKeys.contains(row.getKey())
+                            && m_selectedKeys.contains(row.getKey())) {
                         g.setColor(m_selectedHilited);
-                    } else if (m_hilitedKeys.contains(row.getKey().getId())
-                            && !m_selectedKeys.contains(row.getKey().getId())) {
+                    } else if (m_hilitedKeys.contains(row.getKey())
+                            && !m_selectedKeys.contains(row.getKey())) {
                         g.setColor(m_hilit);
-                    } else if (m_selectedKeys.contains(row.getKey().getId())
-                            && !m_hilitedKeys.contains(row.getKey().getId())) {
+                    } else if (m_selectedKeys.contains(row.getKey())
+                            && !m_hilitedKeys.contains(row.getKey())) {
                         g.setColor(m_selected);
                     }
                 }
@@ -942,10 +942,10 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
                 DataRow row = getDataRowAtCursor(e.getX(), e.getY());
                 if (row != null) {
                     // Select Data
-                    if (m_selectedKeys.contains(row.getKey().getId())) {
-                        m_selectedKeys.remove(row.getKey().getId());
+                    if (m_selectedKeys.contains(row.getKey())) {
+                        m_selectedKeys.remove(row.getKey());
                     } else {
-                        m_selectedKeys.add(row.getKey().getId());
+                        m_selectedKeys.add(row.getKey());
                     }
                 } else {
                     SotaTreeCell cell = getCellAtCursor(e.getX(), e.getY());
@@ -1007,12 +1007,12 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
         } else {
             for (int i = 0; i < cell.getDataIds().size(); i++) {
                 if (m_selectedKeys.contains(m_data.getRow(
-                        cell.getDataIds().get(i)).getKey().getId())) {
+                        cell.getDataIds().get(i)).getKey())) {
                     m_selectedKeys.remove(m_data.getRow(
-                            cell.getDataIds().get(i)).getKey().getId());
+                            cell.getDataIds().get(i)).getKey());
                 } else {
                     m_selectedKeys.add(m_data.getRow(cell.getDataIds().get(i))
-                            .getKey().getId());
+                            .getKey());
                 }
             }
         }
@@ -1036,7 +1036,8 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
     /**
      * {@inheritDoc}
      */
-    public void unHiLiteAll() {
+    public void unHiLiteAll(
+            final org.knime.core.node.property.hilite.KeyEvent event) {
         if (m_root != null) {
             m_root.setHilited(false);
         }
@@ -1051,9 +1052,9 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
      */
     public void hiLite(
             final org.knime.core.node.property.hilite.KeyEvent event) {
-        Iterator<DataCell> i = event.keys().iterator();
+        Iterator<RowKey> i = event.keys().iterator();
         while (i.hasNext()) {
-            DataCell cell = i.next();
+            RowKey cell = i.next();
             m_hilitedKeys.add(cell);
         }
 
@@ -1065,11 +1066,11 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
      */
     public void unHiLite(
             final org.knime.core.node.property.hilite.KeyEvent event) {
-        Set<DataCell> tmpSet = new HashSet<DataCell>();
+        Set<RowKey> tmpSet = new HashSet<RowKey>();
 
-        Iterator<DataCell> i = m_hilitedKeys.iterator();
+        Iterator<RowKey> i = m_hilitedKeys.iterator();
         while (i.hasNext()) {
-            DataCell cell = i.next();
+            RowKey cell = i.next();
             if (!event.keys().contains(cell)) {
                 tmpSet.add(cell);
             }
@@ -1182,7 +1183,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
                     repaint();
                 } else if (e.getActionCommand().equals(
                         POPUP_UNHILITE_SELECTED)) {
-                    HashSet<DataCell> unhilite = new HashSet<DataCell>();
+                    HashSet<RowKey> unhilite = new HashSet<RowKey>();
                     for (int i = 0; i < m_selectedKeys.size(); i++) {
                         if (m_hilitedKeys.contains(m_selectedKeys.get(i))) {
                             m_hilitedKeys.remove(m_selectedKeys.get(i));

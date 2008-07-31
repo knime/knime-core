@@ -1,9 +1,9 @@
 /*
- * --------------------------------------------------------------------- *
+ * ---------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * --------------------------------------------------------------------- *
+ * ---------------------------------------------------------------------
  */
 package org.knime.base.data.nominal;
 
@@ -237,7 +237,7 @@ public class NominalTable implements DataTable {
             if (exec != null) {
                 exec.checkCanceled(); // throws exception if user canceled
                 exec.setProgress((double) ++rowCount / table.getRowCount(), 
-                        "" + row.getKey().getId());
+                        "" + row.getKey());
             }
         }
         DataColumnSpec[] newColSpecs = new DataColumnSpec[oldSpec

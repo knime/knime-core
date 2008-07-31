@@ -5,16 +5,17 @@
    xmlns:cc="http://creativecommons.org/ns#"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    height="295"
    id="svg2"
-   inkscape:export-filename="/home/thor/workspace/KNIME-1.3/org.knime.product/splash.bmp.png"
+   inkscape:export-filename="/home/thor/workspace/KNIME/org.knime.product/splash.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
    inkscape:version="0.46"
-   sodipodi:docbase="/var/tmp/kdecache-thor/krun"
+   sodipodi:docbase="C:\Dokumente und Einstellungen\Fabian Dill\Eigene Dateien\workspaces\trunk\org.knime.product"
    sodipodi:docname="splash.svg"
    sodipodi:version="0.32"
    version="1.0"
@@ -22,12 +23,12 @@
   <svg:defs
      id="defs4">
     <inkscape:perspective
-       sodipodi:type="inkscape:persp3d"
+       id="perspective18"
+       inkscape:persp3d-origin="227.5 : 98.333333 : 1"
        inkscape:vp_x="0 : 147.5 : 1"
        inkscape:vp_y="0 : 1000 : 0"
        inkscape:vp_z="455 : 147.5 : 1"
-       inkscape:persp3d-origin="227.5 : 98.333333 : 1"
-       id="perspective30" />
+       sodipodi:type="inkscape:persp3d" />
     <font
        horiz-adv-x="990">
       <font-face
@@ -2385,8 +2386,8 @@
      inkscape:window-y="101"
      inkscape:zoom="1"
      pagecolor="#ffffff"
-     width="455px"
-     showgrid="false" />
+     showgrid="false"
+     width="455px" />
   <svg:metadata
      id="metadata7">
     <rdf:RDF>
@@ -2414,49 +2415,26 @@
            id="rect1391"
            inkscape:export-xdpi="90"
            inkscape:export-ydpi="90"
-           style="fill:#ffd700;stroke:#bd9325;stroke-width:3.41936445;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           style="fill:#ffffff;stroke:#333333;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;fill-opacity:1"
            width="451.58066"
            x="-4.0725126"
-           y="-132.23198" />
+           y="-132.23198"
+           inkscape:export-filename="/home/thor/workspace/KNIME/org.knime.product/splash.png" />
         <svg:text
            id="text1365"
            inkscape:export-xdpi="90"
            inkscape:export-ydpi="90"
            sodipodi:linespacing="125%"
            style="font-size:7.20367289px;font-style:normal;font-weight:normal;line-height:125%;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
-           x="1.0181245"
+           x="14.018124"
            xml:space="preserve"
-           y="88.745972"><svg:tspan
-             id="tspan1367"
-             sodipodi:role="line"
-             style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold"
-             x="1.0181245"
-             y="88.745972">Copyright, 2003 - 2008</svg:tspan><svg:tspan
-             id="tspan1369"
-             sodipodi:role="line"
-             style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold"
-             x="1.0181245"
-             y="100.75209">University of Konstanz, Germany</svg:tspan><svg:tspan
-             id="tspan1921"
-             sodipodi:role="line"
-             style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold"
-             x="1.0181245"
-             y="112.75821">(Prof. Dr. Michael R. Berthold)</svg:tspan><svg:tspan
-             id="tspan1923"
-             sodipodi:role="line"
-             style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold"
-             x="1.0181245"
-             y="124.76434">KNIME GmbH, Germany</svg:tspan><svg:tspan
-             id="tspan2159"
-             sodipodi:role="line"
-             style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold"
-             x="1.0181245"
-             y="136.77045">website: http://www.knime.org/</svg:tspan><svg:tspan
-             id="tspan2161"
-             sodipodi:role="line"
-             style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold"
-             x="1.0181245"
-             y="148.77658">email: contact@knime.org    </svg:tspan></svg:text>
+           y="153.74597"
+           inkscape:export-filename="/home/thor/workspace/KNIME/org.knime.product/splash.png"> <svg:tspan
+   id="tspan2161"
+   sodipodi:role="line"
+   style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial;-inkscape-font-specification:Arial"
+   x="14.018124"
+   y="153.74597"> Copyright, 2003 - 2008, KNIME GmbH, Germany, http://www.knime.org/, contact@knime.org </svg:tspan> </svg:text>
         <svg:rect
            height="491.77713"
            id="rect1389"
@@ -2464,25 +2442,6 @@
            width="729.85242"
            x="6.4344668"
            y="123.96052" />
-        <svg:text
-           id="text3571"
-           inkscape:export-xdpi="90"
-           inkscape:export-ydpi="90"
-           sodipodi:linespacing="100%"
-           style="font-size:42.02141953px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Rounded MT Bold"
-           x="107.80687"
-           xml:space="preserve"
-           y="-60.034332"><svg:tspan
-             id="tspan3573"
-             sodipodi:role="line"
-             style="font-size:38.41958618px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold"
-             x="107.80687"
-             y="-60.034332">KNIME</svg:tspan><svg:tspan
-             id="tspan3577"
-             sodipodi:role="line"
-             style="font-size:24.01224136px"
-             x="107.80687"
-             y="-60.034332">Konstanz Information Miner    </svg:tspan></svg:text>
         <svg:text
            id="KNIME-Version"
            inkscape:export-xdpi="90"
@@ -2492,47 +2451,15 @@
            style="font-size:7.20367289px;font-style:normal;font-weight:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
            x="438.18289"
            xml:space="preserve"
-           y="-11.653717">
+           y="46.346283"
+           inkscape:export-filename="/home/thor/workspace/KNIME/org.knime.product/splash.png">
 <svg:tspan
    id="tspan2165"
    sodipodi:role="line"
-   style="font-size:14.40734577px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold"
+   style="font-size:16;font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial;-inkscape-font-specification:Arial"
    x="440.47625"
-   y="-11.653717">Version 1.3.5</svg:tspan>
+   y="46.346283">Version 2.0.0.0016392</svg:tspan>
 </svg:text>
-        <svg:g
-           id="g1939"
-           inkscape:export-xdpi="90"
-           inkscape:export-ydpi="90"
-           inkscape:label="Layer 1"
-           transform="matrix(0.600306,0,0,0.600306,-151.18962,-149.06986)">
-          <svg:path
-             d="M 258.79162,191.62497 L 404.91401,191.61927 L 331.86493,45.575608 L 289.21015,130.77627 L 319.6777,130.77758 L 319.70321,112.6276 L 350.08264,142.99158 L 319.60119,173.38547 L 319.5082,155.02064 L 276.99744,155.0582 L 258.79162,191.62497 z "
-             id="path1293"
-             inkscape:export-xdpi="300.00000"
-             inkscape:export-ydpi="300.00000"
-             sodipodi:nodetypes="ccccccccccc"
-             style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#000000;stroke-width:9.7483654;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
-        </svg:g>
-        <svg:text
-           id="text1948"
-           inkscape:export-xdpi="90"
-           inkscape:export-ydpi="90"
-           sodipodi:linespacing="125%"
-           style="font-size:8.40428448px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Rounded MT Bold"
-           x="437.39499"
-           xml:space="preserve"
-           y="136.77985"><svg:tspan
-             id="tspan1952"
-             sodipodi:role="line"
-             style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold"
-             x="439.49606"
-             y="136.77985"> Based on Eclipse, www.eclipse.org</svg:tspan><svg:tspan
-             id="tspan1978"
-             sodipodi:role="line"
-             style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold"
-             x="439.7962"
-             y="148.78596"> Uses: Java, GEF, Log4J </svg:tspan></svg:text>
         <svg:text
            id="KNIME-Builddate"
            inkscape:export-xdpi="90"
@@ -2542,12 +2469,24 @@
            style="font-size:7.20367289px;font-style:normal;font-weight:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
            x="439.30548"
            xml:space="preserve"
-           y="0.92131042"> <svg:tspan
+           y="60.92131"
+           inkscape:export-filename="/home/thor/workspace/KNIME/org.knime.product/splash.png"> <svg:tspan
    id="tspan2183"
    sodipodi:role="line"
-   style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold"
-   x="441.59884"
-   y="0.92131042">(Build June 03, 2008)</svg:tspan> </svg:text>
+   style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial;-inkscape-font-specification:Arial"
+   x="441.59885"
+   y="60.92131">(Unstable Build)</svg:tspan> </svg:text>
+        <svg:image
+           height="205"
+           id="image3225"
+           sodipodi:absref="icons/logo/splash_logo.png"
+           width="414"
+           x="13.217804"
+           xlink:href="icons/logo/splash_logo.png"
+           y="-123.44167"
+           inkscape:export-filename="/home/thor/workspace/KNIME/org.knime.product/splash.png"
+           inkscape:export-xdpi="90"
+           inkscape:export-ydpi="90" />
       </svg:g>
     </svg:g>
   </svg:g>

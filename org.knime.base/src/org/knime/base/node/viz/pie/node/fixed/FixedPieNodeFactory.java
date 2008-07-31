@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -26,21 +26,19 @@ package org.knime.base.node.viz.pie.node.fixed;
 
 import org.knime.base.node.viz.pie.datamodel.fixed.FixedPieVizModel;
 import org.knime.base.node.viz.pie.node.PieNodeFactory;
-import org.knime.base.node.viz.pie.node.PieNodeModel;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 
 /**
  * Factory class of the fixed pie chart implementation.
  * @author Tobias Koetter, University of Konstanz
  */
-public class FixedPieNodeFactory extends PieNodeFactory<FixedPieVizModel> {
+public class FixedPieNodeFactory
+extends PieNodeFactory<FixedPieVizModel, FixedPieNodeModel, FixedPieNodeView> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public PieNodeModel<FixedPieVizModel> createNodeModel() {
+    public FixedPieNodeModel createNodeModel() {
         return new FixedPieNodeModel();
     }
 
@@ -48,10 +46,20 @@ public class FixedPieNodeFactory extends PieNodeFactory<FixedPieVizModel> {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
-        assert viewIndex == 0;
-        return new FixedPieNodeView(nodeModel);
+    public FixedPieNodeView createNodeView(final int viewIndex,
+            final FixedPieNodeModel nodeModel) {
+      assert viewIndex == 0;
+      return new FixedPieNodeView(nodeModel);
     }
+
+//    /**
+//     * {@inheritDoc}
+//     */
+//    @Override
+//    public FixedPieNodeView createNodeView(final int viewIndex,
+//            final FixedPieNodeModel nodeModel) {
+//        assert viewIndex == 0;
+//        return new FixedPieNodeView(nodeModel);
+//    }
 
 }

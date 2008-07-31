@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -49,29 +49,6 @@ public abstract class ThreadedNodeModel extends AbstractParallelNodeModel {
     /** The default maximum number of threads for each threaded node. */
     public static final int DEFAULT_MAX_THREAD_COUNT =
             Runtime.getRuntime().availableProcessors() + 1;
-
-    /**
-     * Creates a new AbstractParallelNodeModel.
-     * 
-     * @param nrDataIns the number of {@link org.knime.core.data.DataTable}s
-     *            expected as inputs
-     * @param nrDataOuts the number of {@link org.knime.core.data.DataTable}s
-     *            expected at the output
-     * @param nrPredParamsIns the number of
-     *            {@link org.knime.core.node.ModelContent}s available as inputs
-     * @param nrPredParamsOuts the number of
-     *            {@link org.knime.core.node.ModelContent}s objects available
-     *            at the output
-     * @param chunkSize the default number of rows in the chunked
-     *            {@link org.knime.core.data.DataTable}s
-     */
-    public ThreadedNodeModel(final int nrDataIns, final int nrDataOuts,
-            final int nrPredParamsIns, final int nrPredParamsOuts,
-            final int chunkSize) {
-        super(nrDataIns, nrDataOuts, nrPredParamsIns, nrPredParamsOuts,
-                chunkSize, KNIMEConstants.GLOBAL_THREAD_POOL
-                        .createSubPool(DEFAULT_MAX_THREAD_COUNT));
-    }
 
     /**
      * Creates a new AbstractParallelNodeModel.

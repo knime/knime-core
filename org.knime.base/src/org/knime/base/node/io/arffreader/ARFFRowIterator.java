@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -161,7 +161,7 @@ public class ARFFRowIterator extends RowIterator {
         }
 
         // create a row ID cell
-        DataCell rowID = new StringCell(m_rowPrefix + m_rowNo);
+        String rowID = m_rowPrefix + m_rowNo;
 
         // Now, read the columns until we have enough or see a row delimiter
         DataCell[] rowCells = new DataCell[m_tSpec.getNumColumns()];

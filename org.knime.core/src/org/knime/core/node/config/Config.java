@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -44,9 +44,11 @@ import java.util.Set;
 import java.util.Vector;
 
 import javax.swing.tree.TreeNode;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.ComplexNumberCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.FuzzyIntervalCell;
@@ -64,6 +66,7 @@ import org.knime.core.node.config.Config.DataCellEntry.FuzzyNumberCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.IntCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.MissingCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.StringCellEntry;
+import org.xml.sax.SAXException;
 
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
@@ -86,10 +89,10 @@ import sun.misc.BASE64Encoder;
 public abstract class Config extends AbstractConfigEntry 
         implements Serializable, ConfigRO, ConfigWO {
 
-	private static final long serialVersionUID = -1823858289784818403L;
+    private static final long serialVersionUID = -1823858289784818403L;
    
-	private static final NodeLogger LOGGER = NodeLogger.getLogger(Config.class);
-    
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(Config.class);
+
     private static final String CFG_ARRAY_SIZE = "array-size";
     private static final String CFG_IS_NULL    = "is_null";
     private static final String CFG_DATA_CELL  = "datacell";
@@ -783,7 +786,7 @@ public abstract class Config extends AbstractConfigEntry
     }
 
     /**
-     * Checks if this key for a particluar type is in this Config.
+     * Checks if this key for a particular type is in this Config.
      * 
      * @param key The key.
      * @return <b>true</b> if available, <b>false</b> if key is
@@ -828,11 +831,11 @@ public abstract class Config extends AbstractConfigEntry
      * @return A generic int.
      */
     public int getInt(final String key, final int def) {
-        try {
-            return getInt(key);
-        } catch (InvalidSettingsException ise) {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigIntEntry)) {
             return def;
         }
+        return ((ConfigIntEntry)o).getInt();
     }
 
     /**
@@ -896,11 +899,11 @@ public abstract class Config extends AbstractConfigEntry
      * @return A generic double.
      */
     public double getDouble(final String key, final double def) {
-        try {
-            return getDouble(key);
-        } catch (InvalidSettingsException ise) {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigDoubleEntry)) {
             return def;
         }
+        return ((ConfigDoubleEntry)o).getDouble();
     }
 
     /**
@@ -948,11 +951,11 @@ public abstract class Config extends AbstractConfigEntry
      * @return A generic float.
      */
     public float getFloat(final String key, final float def) {
-        try {
-            return getFloat(key);
-        } catch (InvalidSettingsException ise) {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigFloatEntry)) {
             return def;
         }
+        return ((ConfigFloatEntry)o).getFloat();
     }
 
     /**
@@ -1034,11 +1037,11 @@ public abstract class Config extends AbstractConfigEntry
      * @return A generic char.
      */
     public char getChar(final String key, final char def) {
-        try {
-            return getChar(key);
-        } catch (InvalidSettingsException ise) {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigCharEntry)) {
             return def;
         }
+        return ((ConfigCharEntry)o).getChar();
     }
 
     /**
@@ -1124,11 +1127,11 @@ public abstract class Config extends AbstractConfigEntry
      * @return A generic byte.
      */
     public byte getByte(final String key, final byte def) {
-        try {
-            return getByte(key);
-        } catch (InvalidSettingsException ise) {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigByteEntry)) {
             return def;
         }
+        return ((ConfigByteEntry)o).getByte();
     }
 
     /**
@@ -1231,11 +1234,11 @@ public abstract class Config extends AbstractConfigEntry
      * @return A short value.
      */
     public short getShort(final String key, final short def) {
-        try {
-            return getShort(key);
-        } catch (InvalidSettingsException ise) {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigShortEntry)) {
             return def;
         }
+        return ((ConfigShortEntry)o).getShort();
     }
     
     /**
@@ -1262,11 +1265,11 @@ public abstract class Config extends AbstractConfigEntry
      * @return A long value.
      */
     public long getLong(final String key, final long def) {
-        try {
-            return getLong(key);
-        } catch (InvalidSettingsException ise) {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigLongEntry)) {
             return def;
         }
+        return ((ConfigLongEntry)o).getLong();
     }
 
     /**
@@ -1309,11 +1312,11 @@ public abstract class Config extends AbstractConfigEntry
      * @return A generic boolean.
      */
     public boolean getBoolean(final String key, final boolean def) {
-        try {
-            return getBoolean(key);
-        } catch (InvalidSettingsException ise) {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigBooleanEntry)) {
             return def;
         }
+        return ((ConfigBooleanEntry)o).getBoolean();
     }
 
     /**
@@ -1379,11 +1382,11 @@ public abstract class Config extends AbstractConfigEntry
      * @return A String.
      */
     public String getString(final String key, final String def) {
-        try {
-            return getString(key);
-        } catch (InvalidSettingsException ise) {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigStringEntry)) {
             return def;
         }
+        return ((ConfigStringEntry)o).getString();
     }
 
     /**
@@ -1509,6 +1512,79 @@ public abstract class Config extends AbstractConfigEntry
             return def;
         }
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RowKey getRowKey(final String key) throws InvalidSettingsException {
+        String rk = getString(key);
+        return (rk == null ? null : new RowKey(rk));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RowKey getRowKey(final String key, final RowKey def) {
+        String rk;
+        if (def == null) {
+            rk = getString(key, null);
+        } else {
+            rk = getString(key, def.getString());
+        }
+        return (rk == null ? null : new RowKey(rk));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addRowKey(final String key, final RowKey rowKey) {
+        if (rowKey == null) {
+            addString(key, null);
+        } else {
+           addString(key, rowKey.getString());
+        }
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RowKey[] getRowKeyArray(final String key) 
+            throws InvalidSettingsException {
+        String[] strs = getStringArray(key);
+        return RowKey.toString(strs);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RowKey[] getRowKeyArray(final String key, final RowKey... def) {
+        String[] strs;
+        if (def == null) {
+            strs = getStringArray(key, (String[]) null);
+        } else {
+            String[] defStrs = RowKey.toString(def); 
+            strs = getStringArray(key, defStrs);
+        }
+        return (strs == null ? null : RowKey.toString(strs));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addRowKeyArray(final String key, final RowKey... rowKey) {
+        if (rowKey == null) {
+            addStringArray(key, (String[]) null);
+        } else {
+           addStringArray(key, RowKey.toString(rowKey));
+        }
+    }
+
 
     /**
      * Returns an array of DataType objects which can be null.
@@ -1738,7 +1814,29 @@ public abstract class Config extends AbstractConfigEntry
         if (in == null) {
             throw new NullPointerException();
         }
-        return XMLConfig.load(config, in);
+        config.load(in);
+        return config;
+    }
+    
+    /**
+     * Read config entries from an XML file into this object.
+     * @param is The XML inputstream storing the configuration to read
+     * @throws IOException If the stream could not be read.
+     */
+    protected void load(final InputStream is) throws IOException {
+        try {
+            XMLConfig.load(this, is);
+        } catch (SAXException se) {
+            IOException ioe = new IOException(se.getMessage());
+            ioe.initCause(se);
+            throw ioe;
+        } catch (ParserConfigurationException pce) {
+            IOException ioe = new IOException(pce.getMessage());
+            ioe.initCause(pce);
+            throw ioe;
+        } finally {
+            is.close();
+        }
     }
 
     /* --- serialize objects --- */

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -36,11 +36,12 @@ import org.knime.core.node.NodeView;
  * @author Thomas Gabriel, University of Konstanz
  */
 public class ShapeManagerNodeFactory extends NodeFactory {
+    
     /**
      * Empty default constructor.
      */
     public ShapeManagerNodeFactory() {
-        // empty
+
     }
 
     /**

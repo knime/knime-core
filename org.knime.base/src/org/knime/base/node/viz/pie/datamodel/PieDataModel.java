@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,15 +25,11 @@
 
 package org.knime.base.node.viz.pie.datamodel;
 
-import java.awt.Color;
+import org.knime.base.node.viz.aggregation.util.AggrValModelComparator;
+
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-
-import org.knime.base.node.viz.aggregation.util.AggrValModelComparator;
-import org.knime.base.node.viz.aggregation.util.GUIUtils;
-import org.knime.base.node.viz.pie.util.TooManySectionsException;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataRow;
 
 /**
  * The abstract pie data model which provides method to hold the data which
@@ -76,18 +72,25 @@ public abstract class PieDataModel {
         if (sections == null) {
             throw new NullPointerException("sections must not be null");
         }
-        int noOfNoneEmptySections = 0;
+        boolean useSectionColor = true;
         for (final PieSectionDataModel section : sections) {
-            if (!section.isEmpty()) {
-                noOfNoneEmptySections++;
+            if (section.getNoOfElements() > 1) {
+                useSectionColor = false;
             }
         }
-        int idx = 0;
-        for (final PieSectionDataModel section : sections) {
-            if (!section.isEmpty()) {
-                final Color color = GUIUtils.generateDistinctColor(idx++,
-                        noOfNoneEmptySections);
-                section.setColor(color);
+        if (useSectionColor) {
+            for (final PieSectionDataModel section : sections) {
+                if (!section.isEmpty()) {
+                    final Collection<PieSubSectionDataModel> elements =
+                        section.getElements();
+                    if (elements.size() > 1) {
+                        throw new IllegalArgumentException(
+                                "Section should have only one element");
+                    }
+                    if (elements.size() == 1) {
+                        section.setColor(elements.iterator().next().getColor());
+                    }
+                }
             }
         }
     }
@@ -118,17 +121,4 @@ public abstract class PieDataModel {
     public boolean detailsAvailable() {
         return m_detailsAvailable;
     }
-
-    /**
-     * Adds the given row values to the histogram.
-     * @param row the data row to add
-     * @param rowColor the color of this row
-     * @param pieCell the pie value
-     * @param aggrCell the optional aggregation value
-     * @throws TooManySectionsException if more sections are created than
-     * supported
-     */
-    public abstract void addDataRow(final DataRow row, final Color rowColor,
-            final DataCell pieCell, final DataCell aggrCell)
-    throws TooManySectionsException;
 }

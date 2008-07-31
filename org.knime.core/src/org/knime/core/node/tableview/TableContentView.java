@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -34,6 +34,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -291,7 +292,11 @@ public class TableContentView extends JTable {
      * @param showOnlyHilite <code>true</code>: filter and display only
      *        rows whose hilite status is set
      * @see TableContentModel#showHiLitedOnly(boolean)
+     * @see TableContentModel#getTableContentFilter()
+     * @deprecated Implementors should refer to 
+     * <code>getContentModel().setTableContentFilter(TableContentFilter)</code>
      */
+    @Deprecated
     public final void showHiLitedOnly(final boolean showOnlyHilite) {
         getContentModel().showHiLitedOnly(showOnlyHilite);
     }
@@ -301,8 +306,12 @@ public class TableContentView extends JTable {
      * 
      * @return <code>true</code> if only hilited rows are shown, 
      *         <code>false</code> if all rows are shown.
-     * @see TableContentModel#showsHiLitedOnly() 
+     * @see TableContentModel#showsHiLitedOnly()
+     * @see TableContentModel#getTableContentFilter() 
+     * @deprecated Implementors should refer to 
+     * <code>getContentModel().getTableContentFilter()</code>
      */
+    @Deprecated
     public boolean showsHiLitedOnly() {
         return getContentModel().showsHiLitedOnly();
     }
@@ -474,10 +483,19 @@ public class TableContentView extends JTable {
         DataColumnSpec headerValue = data.getDataTableSpec().getColumnSpec(i);
         aColumn.setHeaderValue(headerValue);
         DataValueRendererFamily renderer = getRendererFamily(headerValue);
-        for (String s : renderer.getRendererDescriptions()) {
-            if (renderer.accepts(s, headerValue)) {
-                renderer.setActiveRenderer(s);
-                break;
+        String[] descs = renderer.getRendererDescriptions();
+        // setting a certain column property will set a preferred renderer
+        String preferredRenderer = headerValue.getProperties().getProperty(
+                DataValueRenderer.PROPERTY_PREFERRED_RENDERER);
+        if (Arrays.asList(descs).contains(preferredRenderer)
+                && renderer.accepts(preferredRenderer, headerValue)) {
+            renderer.setActiveRenderer(preferredRenderer);
+        } else {
+            for (String s : descs) {
+                if (renderer.accepts(s, headerValue)) {
+                    renderer.setActiveRenderer(s);
+                    break;
+                }
             }
         }
         aColumn.setCellRenderer(renderer);

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -49,7 +49,7 @@ import org.knime.base.node.viz.pie.datamodel.PieVizModel;
 import org.knime.base.node.viz.pie.util.GeometryUtil;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
-import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.KeyEvent;
@@ -496,7 +496,7 @@ public abstract class PiePlotter
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
         }
-        final Set<DataCell>hilited = event.keys();
+        final Set<RowKey>hilited = event.keys();
         vizModel.updateHiliteInfo(hilited, true);
         repaint();
     }
@@ -511,7 +511,7 @@ public abstract class PiePlotter
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
         }
-        final Set<DataCell>hilited = event.keys();
+        final Set<RowKey>hilited = event.keys();
         vizModel.updateHiliteInfo(hilited, false);
         repaint();
     }
@@ -526,7 +526,7 @@ public abstract class PiePlotter
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
         }
-        final Set<DataCell> selectedKeys =
+        final Set<RowKey> selectedKeys =
             vizModel.getSelectedKeys();
         delegateHiLite(selectedKeys);
         repaint();
@@ -542,7 +542,7 @@ public abstract class PiePlotter
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
         }
-        final Set<DataCell> selectedKeys =
+        final Set<RowKey> selectedKeys =
             vizModel.getSelectedKeys();
         delegateUnHiLite(selectedKeys);
         repaint();
@@ -551,7 +551,7 @@ public abstract class PiePlotter
     /**
      * {@inheritDoc}
      */
-    public void unHiLiteAll() {
+    public void unHiLiteAll(KeyEvent event) {
         final PieVizModel vizModel = getVizModel();
         if (vizModel == null || !vizModel.supportsHiliting()) {
             LOGGER.debug("VizModel doesn't support hiliting or was null");

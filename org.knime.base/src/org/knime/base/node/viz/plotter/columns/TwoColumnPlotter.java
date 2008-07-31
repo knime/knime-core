@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -301,9 +301,9 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
     public void setDataProvider(final DataProvider provider) {
         super.setDataProvider(provider);
         if (getDataProvider() != null 
-                && getDataProvider().getDataArray(0) != null) {
-            setSelectableColumns(getDataProvider().getDataArray(0)
-                    .getDataTableSpec());
+                && getDataProvider().getDataArray(getDataArrayIdx()) != null) {
+            setSelectableColumns(getDataProvider().getDataArray(
+                    getDataArrayIdx()).getDataTableSpec());
         }
     }
         

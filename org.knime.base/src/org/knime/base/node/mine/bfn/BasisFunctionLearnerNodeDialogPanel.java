@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -142,7 +142,7 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
         m_maxEpochs.setEnabled(false);
         JPanel epochPanel = new JPanel(new FlowLayout());
         epochPanel.setBorder(BorderFactory.createTitledBorder(
-                " Maximum #Epochs "));
+                " Maximum no. Epochs "));
         epochPanel.add(m_isMaxEpochs);
         epochPanel.add(m_maxEpochs);
         JPanel epochPanel2 = new JPanel(new GridLayout(1, 2));

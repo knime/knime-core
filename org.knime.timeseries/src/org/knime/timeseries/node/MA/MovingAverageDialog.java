@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -29,15 +29,16 @@ package org.knime.timeseries.node.MA;
 
 //import javax.swing.JCheckBox;
 
-import java.util.List;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
+import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelOddIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
@@ -55,17 +56,6 @@ public class MovingAverageDialog extends DefaultNodeSettingsPane {
     @SuppressWarnings("unchecked")
     
     public MovingAverageDialog() {
-        
-        SettingsModelString columnName =
-                new SettingsModelString(
-                        MovingAverageNodeModel.CFG_COLUMN_NAME,
-                        null);
-
-        DialogComponent columnChooser =
-                new DialogComponentColumnNameSelection(columnName,
-                        "Columns containing double values: ", 
-                        0, DoubleValue.class);
-        addDialogComponent(columnChooser);
         
         LinkedList ll = new LinkedList();
         List<String> listAllowedWeightsFunctions = ll;
@@ -95,5 +85,15 @@ public class MovingAverageDialog extends DefaultNodeSettingsPane {
             new DialogComponentNumberEdit(winLength, 
                     "Window Length (odd number of samples): ");
         addDialogComponent(editNumber);
+        
+        SettingsModelFilterString columnNames =
+            new SettingsModelFilterString(
+                    MovingAverageNodeModel.CFG_COLUMN_NAMES);
+
+        DialogComponent columnChooser =
+                new DialogComponentColumnFilter(columnNames,
+                        0, DoubleValue.class);
+        addDialogComponent(columnChooser);
+        
     }
 }

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,11 +24,8 @@
  */
 package org.knime.core.data.property;
 
-import java.util.Arrays;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
@@ -94,9 +91,7 @@ public final class ColorHandler implements PropertyHandler {
      * @param config color settings are saved to
      * @throws NullPointerException if the <i>config</i> is <code>null</code>
      */
-    public void save(final Config config) {
-        assert config.keySet().isEmpty() : "Subconfig must be empty: " 
-            +  Arrays.toString(config.keySet().toArray());
+    public void save(final ConfigWO config) {
         config.addString(CFG_COLOR_MODEL_CLASS, m_model.getClass().getName());
         m_model.save(config.addConfig(CFG_COLOR_MODEL));
     }
@@ -139,6 +134,27 @@ public final class ColorHandler implements PropertyHandler {
         return m_model.toString();
     }
     
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || !(obj instanceof ColorHandler)) {
+            return false;
+        }
+        return m_model.equals(((ColorHandler)obj).m_model);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_model.hashCode();
+    }
  
     /**
      * Interface allowing requests for {@link ColorAttr} by {@link DataCell}.

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -28,6 +28,7 @@ import java.awt.Dimension;
 import javax.swing.ListCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
+import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 
 /**
@@ -44,6 +45,32 @@ import org.knime.core.data.DataColumnSpec;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public interface DataValueRenderer extends TableCellRenderer, ListCellRenderer {
+    
+    /** The property identifier that is read from, for instance the table view
+     * to determine which particular renderer (from the set of available 
+     * renderers to a column) is to be used. This property should be attached
+     * using a {@link DataColumnSpec#getDomain() DataColumnSpec's 
+     * domain information} and should map to the description string of the 
+     * renderer. A sample code that sets this property on a newly created 
+     * double column to use the bar renderer is as follows:
+     * <pre>
+     * DataColumnSpecCreator creator = new DataColumnSpecCreator(
+     *          newName, DoubleCell.TYPE);
+     * creator.setProperties(new DataColumnProperties(
+     *          Collections.singletonMap(
+     *              DataValueRenderer.PROPERTY_PREFERRED_RENDERER, 
+     *              DoubleBarRenderer.DESCRIPTION)));
+     * creator.setDomain(new DataColumnDomainCreator(
+     *          new DoubleCell(0.0), new DoubleCell(1.0)).createDomain());
+     * DataColumnSpec spec = creator.createSpec();
+     * </pre> 
+     * <p>Keep in mind that setting the preferred renderer to an instance 
+     * that inherently depends on proper domain information to be available 
+     * (for instance [0,1]) requires the spec's {@link DataColumnDomain} 
+     * to be set appropriately.
+     */ 
+    public static final String PROPERTY_PREFERRED_RENDERER = 
+        "preferred.renderer";
     
     /** Get a description for this renderer implementation. It will serve 
      * to identify this renderer when the user has the choice of different

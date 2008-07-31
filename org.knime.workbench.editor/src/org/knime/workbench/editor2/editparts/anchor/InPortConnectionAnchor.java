@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -70,7 +70,8 @@ public class InPortConnectionAnchor extends ChopboxAnchor {
      */
     @Override
     public Point getLocation(final Point reference) {
-        Point point = getBox().getLeft().getCopy().getTranslated(-2, 0);
+//        int lineWidth = ((Shape)getOwner()).getLineWidth();
+        Point point = getBox().getLeft().getCopy(); //.getTranslated(0, 0);
         getOwner().translateToAbsolute(point);
         // get the box of the input port and get the left middle point
         // translate it one pixel to the left to better see the arrow

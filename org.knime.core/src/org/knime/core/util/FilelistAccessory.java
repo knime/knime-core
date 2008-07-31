@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -34,7 +34,6 @@ import java.io.FileFilter;
 
 import javax.swing.Box;
 import javax.swing.DefaultListCellRenderer;
-import javax.swing.DefaultListSelectionModel;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -179,92 +178,5 @@ public class FilelistAccessory extends JPanel
             }
             return this;
         }
-    }
-
-    /**
-     * A ListSelectionModel not allowing any selection. As the default model
-     * supports only single or multiple selections, we override a couple of
-     * methods and provide this wrapper class.
-     * 
-     * @author ohl, University of Konstanz
-     */
-    public class NoSelectionListSelectionModel extends
-            DefaultListSelectionModel {
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void insertIndexInterval(final int index, final int length,
-                final boolean before) {
-            // skip it.
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void moveLeadSelectionIndex(final int leadIndex) {
-            // skip it.
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void removeIndexInterval(final int index0, final int index1) {
-            // skip it.
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void setAnchorSelectionIndex(final int anchorIndex) {
-            // skip it.
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void setLeadSelectionIndex(final int leadIndex) {
-            // skip it.
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void setSelectionInterval(final int index0, final int index1) {
-            // skip it.
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void addSelectionInterval(final int index0, final int index1) {
-            // skip it.
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void removeSelectionInterval(final int index0, 
-                final int index1) {
-            // skip it.
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void setSelectionMode(final int selectionMode) {
-            throw new IllegalStateException("Can't change the selection mode"
-                    + " of the NO SELECTION model");
-        }
-        
     }
 }

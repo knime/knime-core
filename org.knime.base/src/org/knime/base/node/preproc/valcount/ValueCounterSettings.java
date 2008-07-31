@@ -3,10 +3,10 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
- * University of Konstanz, Germany.
- * Chair for Bioinformatics and Information Mining
- * Prof. Dr. Michael R. Berthold
+ * Copyright, 2003 - 2008
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
  *
  * You may not modify, publish, transmit, transfer or sell, reproduce,
  * create derivative works from, distribute, perform, display, or in
@@ -54,11 +54,17 @@ public class ValueCounterSettings {
     }
 
     
+    /**
+     * @param b enable or disable hiliting
+     */
     public void hiliting(final boolean b) {
         m_hiliting = b;
     }
     
     
+    /**
+     * @return boolean for hilting 
+     */
     public boolean hiliting() {
         return m_hiliting;
     }

@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./sota.png" type="Learner">
-	<name>SOTA Learner</name>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./sota.png" type="Learner" deprecated="true">
+	<name>SOTA Learner (deprecated)</name>
 	
 	<shortDescription>
-	    Clusters numerical data with SOTA.
+	    This node is obsolete! Please use the new SOTA Learner node located in 
+	    the Mining -&gt; Clustering category.
 	</shortDescription>
 	
 	<fullDescription>
-	<intro>		
+	<intro>
+	This node is obsolete! Please use the new SOTA Learner node located in 
+	the Mining -&gt; Clustering category.
 	<p>Clusters numerical and fuzzy data hierarchically with the self organizing 
 	tree algorithm and visualizes the cluster tree similarly like a dendogram.
 	</p>	

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -111,12 +111,12 @@ public class BoxPlotter extends BasicPlotter {
                 }
             });
         if (getDataProvider() != null 
-                && getDataProvider().getDataArray(0) != null
-                && getDataProvider().getDataArray(0)
+                && getDataProvider().getDataArray(getDataArrayIdx()) != null
+                && getDataProvider().getDataArray(getDataArrayIdx())
                 .getDataTableSpec() != null) {
             ((BoxPlotterProperties)getProperties()).getColumnFilter().update(
-                getDataProvider().getDataArray(0).getDataTableSpec(),
-                true, m_selectedColumns);
+                getDataProvider().getDataArray(getDataArrayIdx())
+                .getDataTableSpec(), true, m_selectedColumns);
         }
     }
     
@@ -145,8 +145,8 @@ public class BoxPlotter extends BasicPlotter {
         }
         Map<DataColumnSpec, double[]> statistics = ((BoxPlotDataProvider)
                 getDataProvider()).getStatistics();
-        DataTableSpec tableSpec = getDataProvider().getDataArray(0)
-            .getDataTableSpec();
+        DataTableSpec tableSpec = getDataProvider().getDataArray(
+                getDataArrayIdx()).getDataTableSpec();
         if (m_selectedColumns == null) {
             m_selectedColumns = new LinkedHashSet<String>();
             for (DataColumnSpec colName : tableSpec) {
@@ -196,8 +196,8 @@ public class BoxPlotter extends BasicPlotter {
             createNominalYCoordinate(new LinkedHashSet<DataCell>());
         }
         ((BoxPlotterProperties)getProperties()).getColumnFilter().update(
-                getDataProvider().getDataArray(0).getDataTableSpec(),
-                false, m_selectedColumns);
+                getDataProvider().getDataArray(getDataArrayIdx())
+                    .getDataTableSpec(), false, m_selectedColumns);
         updateSize();
     }
 
@@ -236,29 +236,25 @@ public class BoxPlotter extends BasicPlotter {
             String colName = entry.getKey().getName();
             double[] stats = entry.getValue();
             int x = (int)getXAxis().getCoordinate().calculateMappedValue(
-                    new StringCell(colName), getDrawingPaneDimension().width, 
-                    true);
+                    new StringCell(colName), getDrawingPaneDimension().width);
             int height = getDrawingPaneDimension().height - OFFSET;
             int yMin = (int)getScreenYCoordinate(yCoordinate
                     .calculateMappedValue(
-                    new DoubleCell(stats[BoxPlotNodeModel.MIN]), 
-                    height, true)); 
+                    new DoubleCell(stats[BoxPlotNodeModel.MIN]), height)); 
             int yLowQuart = (int)getScreenYCoordinate(yCoordinate
                     .calculateMappedValue(
                     new DoubleCell(stats[BoxPlotNodeModel.LOWER_QUARTILE]), 
-                    height, true));
+                    height));
             int yMed = (int)getScreenYCoordinate(yCoordinate
                     .calculateMappedValue(
-                    new DoubleCell(stats[BoxPlotNodeModel.MEDIAN]), 
-                    height, true));
+                    new DoubleCell(stats[BoxPlotNodeModel.MEDIAN]), height));
             int yUppQuart = (int)getScreenYCoordinate(yCoordinate
                     .calculateMappedValue(
                     new DoubleCell(stats[BoxPlotNodeModel.UPPER_QUARTILE]), 
-                    height, true));
+                    height));
             int yMax = (int)getScreenYCoordinate(yCoordinate
                     .calculateMappedValue(
-                    new DoubleCell(stats[BoxPlotNodeModel.MAX]), 
-                    height, true));
+                    new DoubleCell(stats[BoxPlotNodeModel.MAX]), height));
             Box box = new Box(x, yMin - (OFFSET / 2), yLowQuart - (OFFSET / 2), 
                     yMed - (OFFSET / 2), yUppQuart - (OFFSET / 2), 
                     yMax - (OFFSET / 2), stats);
@@ -267,13 +263,11 @@ public class BoxPlotter extends BasicPlotter {
             int lowerWhisker = (int)getScreenYCoordinate(
                     yCoordinate.calculateMappedValue(
                             new DoubleCell(
-                            stats[BoxPlotNodeModel.LOWER_WHISKER]), 
-                            height, true));
+                            stats[BoxPlotNodeModel.LOWER_WHISKER]), height));
             int upperWhisker = (int)getScreenYCoordinate(
                     yCoordinate.calculateMappedValue(
                             new DoubleCell(
-                            stats[BoxPlotNodeModel.UPPER_WHISKER]), 
-                            height, true));
+                            stats[BoxPlotNodeModel.UPPER_WHISKER]), height));
             box.setLowerWhiskers(lowerWhisker - (OFFSET / 2));
             box.setUpperWhiskers(upperWhisker - (OFFSET / 2));
             boxes.add(box);
@@ -311,16 +305,17 @@ public class BoxPlotter extends BasicPlotter {
             Map<Double, Set<RowKey>> mildOutliers 
                 = ((BoxPlotDataProvider)getDataProvider()).getMildOutliers()
                 .get(colName);
-            for (Map.Entry<Double, Set<RowKey>> entry : mildOutliers.entrySet()) {
+            for (Map.Entry<Double, Set<RowKey>> entry 
+                        : mildOutliers.entrySet()) {
                 double value = entry.getKey();
                 for (RowKey key : entry.getValue()) {
                     int y = (int)getScreenYCoordinate(
                             yCoordinate.calculateMappedValue(
                                     new DoubleCell(value),
-                                    height, true)) - (OFFSET / 2);
+                                    height)) - (OFFSET / 2);
                     DotInfo dot = new DotInfo(x, y, key, 
-                            delegateIsHiLit(key.getId()), ColorAttr.DEFAULT, 0, 
-                            0);
+                            delegateIsHiLit(key), 
+                            ColorAttr.DEFAULT, 1, 0);
                     dot.setXDomainValue(new StringCell(colName));
                     dot.setYDomainValue(new DoubleCell(value));
                     dot.setShape(ShapeFactory.getShape(ShapeFactory.CIRCLE));
@@ -331,15 +326,16 @@ public class BoxPlotter extends BasicPlotter {
             Map<Double, Set<RowKey>> extremeOutliers 
                 = ((BoxPlotDataProvider)getDataProvider()).getExtremeOutliers()
                 .get(colName);
-            for (Map.Entry<Double, Set<RowKey>> entry : extremeOutliers.entrySet()) {
+            for (Map.Entry<Double, Set<RowKey>> entry 
+                        : extremeOutliers.entrySet()) {
                 double value = entry.getKey();
                 for (RowKey key : entry.getValue()) {
                     int y = (int)getScreenYCoordinate(
                             yCoordinate.calculateMappedValue(
                                     new DoubleCell(value),
-                                    height, true)) - (OFFSET / 2);
+                                    height)) - (OFFSET / 2);
                     DotInfo dot = new DotInfo(x, y, key, 
-                            delegateIsHiLit(key.getId()), ColorAttr.DEFAULT, 0, 
+                            delegateIsHiLit(key), ColorAttr.DEFAULT, 1, 
                             0);
                     dot.setShape(ShapeFactory.getShape(ShapeFactory.CROSS));
                     dot.setXDomainValue(new StringCell(colName));
@@ -422,7 +418,7 @@ public class BoxPlotter extends BasicPlotter {
     /**
      * {@inheritDoc}
      */
-    public void unHiLiteAll() {
+    public void unHiLiteAll(final KeyEvent event) {
         updatePaintModel();
     }
 

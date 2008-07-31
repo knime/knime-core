@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   31.05.2005 (Florian Georg): created
  */
@@ -48,15 +48,17 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.node.NodeProgressListener;
-import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.GenericNodeFactory.NodeType;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeMessage;
 import org.knime.workbench.editor2.ImageRepository;
 
 /**
  * Figure displaying a <code>NodeContainer</code> in a workflow. This serves
  * as a container for <code>NodeInPortFigure</code>s and
  * <code>NodeOutPortFigure</code>s
- * 
+ *
  * This figure is composed of the following sub-figures:
  * <ul>
  * <li><code>ContentFigure</code> - hosts the child visuals (port figures)
@@ -65,7 +67,7 @@ import org.knime.workbench.editor2.ImageRepository;
  * codes</li>
  * <li><code>ProgressFigure</code> - displaying the execution progress</li>
  * </ul>
- * 
+ *
  * @author Florian Georg, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
  */
@@ -95,10 +97,6 @@ public class NodeContainerFigure extends RectangleFigure {
     /** Warning sign. * */
     public static final Image WARNING_SIGN =
             ImageRepository.getImage("icons/warning.gif");
-
-    /** Warning sign. * */
-    public static final Image WARNING_SIGN_TINY =
-            ImageRepository.getImage("icons/warningTiny.gif");
 
     /** Error sign. * */
     public static final Image ERROR_SIGN =
@@ -136,9 +134,11 @@ public class NodeContainerFigure extends RectangleFigure {
 
     private static final Font FONT_NORMAL;
 
+    private static final Font FONT_SMALL;
+
     private static final Font FONT_USER_NAME;
 
-    // private static final Font FONT_EXECUTING;
+//     private static final Font FONT_EXECUTING;
 
     private static final Font FONT_EXECUTED;
 
@@ -157,44 +157,46 @@ public class NodeContainerFigure extends RectangleFigure {
 
         // FONT_NORMAL = new Font(current, name, height, SWT.NORMAL);
         FONT_USER_NAME = new Font(current, name, height, SWT.NORMAL);
-        // FONT_EXECUTING = new Font(current, name, height, SWT.ITALIC);
+//        FONT_EXECUTING = new Font(current, name, height, SWT.ITALIC);
         FONT_EXECUTED = new Font(current, name, height, SWT.BOLD);
         FONT_NORMAL = FONT_EXECUTED;
+
+        FONT_SMALL = new Font(current, name, 2, SWT.NORMAL);
     }
 
     /** tooltip for displaying the full heading. * */
-    private NewToolTipFigure m_headingTooltip;
+    private final NewToolTipFigure m_headingTooltip;
 
     /** content pane, contains the port visuals and the icon. * */
-    private ContentFigure m_contentFigure;
+    private final ContentFigure m_contentFigure;
 
     /** contains the the "traffic light". * */
-    private StatusFigure m_statusFigure;
+    private final StatusFigure m_statusFigure;
 
     /** contains the the "progress bar". * */
     private ProgressFigure m_progressFigure;
 
     /** The background color to apply. */
-    private Color m_backgroundColor;
+    private final Color m_backgroundColor;
 
     /** contains the the warning/error sign. * */
-    private InfoWarnErrorPanel m_infoWarnErrorPanel;
+    private final InfoWarnErrorPanel m_infoWarnErrorPanel;
 
     /**
      * The node name. E.g File Reader
      */
-    private Label m_heading;
+    private final Label m_heading;
 
     /**
      * The user specified node name. E.g. Molecule Data 4
      */
-    private Label m_name;
+    private final Label m_name;
 
     /**
      * Tooltip for displaying the user description. This tooltip is displayed
      * with the user name
      */
-    private NewToolTipFigure m_nameTooltip;
+    private final NewToolTipFigure m_nameTooltip;
 
     /**
      * An optional user description.
@@ -203,7 +205,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /**
      * Creates a new node figure.
-     * 
+     *
      * @param progressFigure the progress figure for this node
      */
     public NodeContainerFigure(final ProgressFigure progressFigure) {
@@ -242,7 +244,7 @@ public class NodeContainerFigure extends RectangleFigure {
         // in this case a text field enable the user to change the specific
         // node name
         // m_name.addMouseListener(this);
-        //        
+        //
         // m_nameTextField = new Text();
 
         // Content (Ports and icon)
@@ -270,8 +272,23 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
+     * Returns the progress figure of this node figure. The figure is also a
+     * progress listener and can be registered with node progress monitors. It
+     * renders the progress then.
+     *
+     * @return the progress figure associated with this node container figure.
+     */
+    public ProgressFigure getProgressFigure() {
+        return m_progressFigure;
+    }
+
+    public StatusFigure getStatusFigure() {
+        return m_statusFigure;
+    }
+    
+    /**
      * Sets the icon.
-     * 
+     *
      * @param icon the icon
      */
     public void setIcon(final Image icon) {
@@ -280,7 +297,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /**
      * Sets the type.
-     * 
+     *
      * @param type the type
      */
     public void setType(final NodeType type) {
@@ -290,7 +307,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /**
      * Sets the text of the heading label.
-     * 
+     *
      * @param text The text to set.
      */
     public void setLabelText(final String text) {
@@ -298,7 +315,10 @@ public class NodeContainerFigure extends RectangleFigure {
         m_headingTooltip.setText(text);
     }
 
-    public String wrapText(String text) {
+    public String wrapText(final String text) {
+        if (text == null || text.length() == 0) {
+            return "";
+        }
         // wrap the text with line breaks if too long
         // we split just one time (i.e. two lines at most)
         if (text.trim().length() < 20) {
@@ -328,7 +348,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /**
      * Sets the user name of the figure.
-     * 
+     *
      * @param name The name to set.
      */
     public void setCustomName(final String name) {
@@ -349,7 +369,7 @@ public class NodeContainerFigure extends RectangleFigure {
         m_name.setText(name);
         if (!(m_name.getParent() == this)) {
 
-            add(m_name, 4);
+            add(m_name, getChildren().size());
         }
 
         // if the tooltip (description) contains
@@ -367,7 +387,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /**
      * Sets the description for this node as the name's tooltip.
-     * 
+     *
      * @param description the description to set as tooltip
      */
     public void setCustomDescription(final String description) {
@@ -407,7 +427,7 @@ public class NodeContainerFigure extends RectangleFigure {
     /**
      * Replaces the status ampel with the progress bar. This is done once the
      * node is queued or executing.
-     * 
+     *
      * @param executing if true the progress bar displays a moving progress if
      *            fals an empty progress bar is set indicating the waiting
      *            situation.
@@ -468,79 +488,49 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
-     * Sets the state of the node, which shall be reflected in the UI.
      * 
-     * @param state The state to set
-     * @param message The message for the state
+     * @param state new state of underlying node
      */
-    public void setState(final int state, final String message) {
-
-        switch (state) {
-        case STATE_NOT_CONFIGURED:
-//            m_heading.setFont(FONT_NORMAL);
-//            m_heading.setEnabled(false);
+    public void setState(final NodeContainer.State state) {
+        if (state.equals(NodeContainer.State.IDLE)) {
             setStatusAmple();
             m_statusFigure.setIcon(RED);
-            break;
-        case STATE_READY:
-//            m_heading.setFont(FONT_NORMAL);
-//            m_heading.setEnabled(true);
-
+        } else if (state.equals(NodeContainer.State.CONFIGURED)) {
             setStatusAmple();
             m_statusFigure.setIcon(YELLOW);
-
-            // m_contentFigure.removeWarningSign();
-            break;
-        // case STATE_QUEUED:
-        // m_statusFigure.setIcon(YELLOW);
-        // m_statusFigure.setEnabled(false);
-        // break;
-        case STATE_EXECUTING:
-            // m_heading.setFont(FONT_EXECUTING);
-           // m_heading.setEnabled(true);
-
+        } else if (state.equals(NodeContainer.State.EXECUTING)) {
             setProgressBar(true);
-            // m_heading.setFont(FONT_EXECUTING);
-            // m_contentFigure.removeWarningSign();
-            break;
-        case STATE_QUEUED:
-            // m_heading.setFont(FONT_NORMAL);
-           // m_heading.setEnabled(true);
-
-            setProgressBar(false);
-            break;
-        case STATE_EXECUTED:
-            // m_heading.setFont(FONT_EXECUTED);
-           // m_heading.setEnabled(true);
-
+        } else if (state.equals(NodeContainer.State.EXECUTED)) {
             setStatusAmple();
             m_statusFigure.setIcon(GREEN);
-            break;
-        case STATE_WARNING:
-            // m_heading.setFont(FONT_NORMAL);
-           // m_heading.setEnabled(true);
-            m_infoWarnErrorPanel.setWarning(message);
-            // m_contentFigure.setWarning(message, WarnErrorToolTip.WARNING);
-            break;
-        case STATE_ERROR:
-            // m_heading.setFont(FONT_NORMAL);
-          //  m_heading.setEnabled(true);
-            m_infoWarnErrorPanel.setError(message);
-            // m_contentFigure.setWarning(message, WarnErrorToolTip.ERROR);
-            break;
-        default:
-            // m_heading.setFont(FONT_NORMAL);
-           // m_heading.setEnabled(false);
-
-            setStatusAmple();
-            m_statusFigure.setIcon(RED);
-            break;
+        } else if (state.equals(
+                NodeContainer.State.UNCONFIGURED_MARKEDFOREXEC)
+                || state.equals(NodeContainer.State.QUEUED)
+                || state.equals(NodeContainer.State.MARKEDFOREXEC)) {
+            setProgressBar(false);
         }
-
-        m_heading.repaint();
         m_statusFigure.repaint();
-
     }
+    
+    /**
+     * 
+     * @param msg the node message
+     */
+    public void setMessage(final NodeMessage msg) {
+        if (msg == null || msg.getMessageType() == null) {
+            removeMessages();
+            NodeLogger.getLogger(NodeContainerFigure.class).warn(
+                    "Recieved NULL message!");
+        } else if (msg.getMessageType().equals(NodeMessage.Type.RESET)) {
+            removeMessages();
+        } else if (msg.getMessageType().equals(NodeMessage.Type.WARNING)) {
+            m_infoWarnErrorPanel.setWarning(msg.getMessage());
+        } else if (msg.getMessageType().equals(NodeMessage.Type.ERROR)) {
+            m_infoWarnErrorPanel.setError(msg.getMessage());
+        }
+        m_statusFigure.repaint();
+    }
+    
 
     /**
      * {@inheritDoc}
@@ -566,12 +556,14 @@ public class NodeContainerFigure extends RectangleFigure {
 
         prefWidth = Math.max(WIDTH, widthOfHeading);
 
-        int prefHeight =
+        int prefHeight = 110;
+        /*
                 m_heading.getPreferredSize().height
                         + m_contentFigure.getPreferredSize().height
                         + m_infoWarnErrorPanel.getPreferredSize().height
                         + m_statusFigure.getPreferredSize().height
-                        + m_name.getPreferredSize().height + 20;
+                        + m_name.getPreferredSize().height + 5;
+                        */
         return new Dimension(prefWidth, prefHeight);
     }
 
@@ -607,7 +599,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /**
      * We need to set the color before invoking super.
-     * 
+     *
      * @see org.eclipse.draw2d.Shape#fillShape(org.eclipse.draw2d.Graphics)
      */
     @Override
@@ -627,13 +619,13 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /**
      * Subfigure, hosts the in/out port figures and the icon.
-     * 
+     *
      * @author Florian Georg, University of Konstanz
      */
-    private class ContentFigure extends Figure {
-        private Label m_iconFigure;
+    protected class ContentFigure extends Figure {
+        private final Label m_iconFigure;
 
-        private Label m_deleteIcon;
+        private final Label m_deleteIcon;
 
         private static final String BACKGROUND_OTHER =
                 "icons/node/" + "background_other.png";
@@ -661,19 +653,25 @@ public class NodeContainerFigure extends RectangleFigure {
 
         private static final String BACKGROUND_UNKNOWN =
                 "icons/node/" + "background_unknown.png";
+        
+        private static final String BACKGROUND_LOOPER_START = 
+                "icons/node/background_looper_start.png";
+        
+        private static final String BACKGROUND_LOOPER_END = 
+            "icons/node/background_looper_end.png";
 
-        private Label m_backgroundIcon;
+        private final Label m_backgroundIcon;
 
         /**
          * The base icon without overlays.
-         * 
+         *
          * Is used once the overlay has to be undone
          */
         private Image m_baseIcon;
 
         /**
          * Creates a new content figure.
-         * 
+         *
          */
         public ContentFigure() {
             // delegating layout, children provide a Locator as constraint
@@ -709,7 +707,7 @@ public class NodeContainerFigure extends RectangleFigure {
         /**
          * This determines the background image according to the "type" of the
          * node as stored in the repository model.
-         * 
+         *
          * @param type The Type
          * @return Image that should be uses as background for this node
          */
@@ -734,6 +732,10 @@ public class NodeContainerFigure extends RectangleFigure {
                 str = BACKGROUND_OTHER;
             } else if (type.equals(NodeType.Visualizer)) {
                 str = BACKGROUND_VIEWER;
+            } else if (type.equals(NodeType.LoopStart)) {
+                str = BACKGROUND_LOOPER_START;
+            } else if (type.equals(NodeType.LoopEnd)) {
+                str = BACKGROUND_LOOPER_END;
             } else {
                 str = BACKGROUND_UNKNOWN;
             }
@@ -745,7 +747,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
         /**
          * Sets a type specific background image.
-         * 
+         *
          * @param type The node type, results in a different background
          * @see org.knime.workbench.repository.model.NodeTemplate
          */
@@ -755,7 +757,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
         /**
          * Overlays the warning sign to indicate a problem or info.
-         * 
+         *
          * @param message the message to display
          * @param type the concrete promblem type to display (info/warn/error)
          */
@@ -764,7 +766,7 @@ public class NodeContainerFigure extends RectangleFigure {
             Image icon = m_baseIcon;
 
             OverlayImage overlayImage =
-                    new OverlayImage(icon, WARNING_SIGN_TINY);
+                    new OverlayImage(icon, WARNING_SIGN);
 
             // parameters are only dummy values. not needed!
             overlayImage.drawCompositeImage(0, 0);
@@ -783,7 +785,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
         /**
          * Sets the icon for the node (now provided from the factory class).
-         * 
+         *
          * @param icon Image to display as icon
          */
         void setIcon(final Image icon) {
@@ -797,6 +799,10 @@ public class NodeContainerFigure extends RectangleFigure {
             // m_iconFigure.setIconDimension(new Dimension(16, 16));
 
             m_iconFigure.revalidate();
+        }
+        
+        void setBackgroundIcon(Image icon) {
+            m_backgroundIcon.setIcon(icon);
         }
 
         /**
@@ -814,7 +820,7 @@ public class NodeContainerFigure extends RectangleFigure {
      * display any combination of the signs and also provides functionality to
      * set tool tips containing one or more messages for each category
      * (info/warning/error).
-     * 
+     *
      * @author Christoph Sieb, University of Konstanz
      */
     private class InfoWarnErrorPanel extends Figure {
@@ -822,17 +828,17 @@ public class NodeContainerFigure extends RectangleFigure {
         /**
          * The info figure.
          */
-        private InfoWarnErrorFigure m_infoFigure;
+        private final InfoWarnErrorFigure m_infoFigure;
 
         /**
          * The warning figure.
          */
-        private InfoWarnErrorFigure m_warningFigure;
+        private final InfoWarnErrorFigure m_warningFigure;
 
         /**
          * The error figure.
          */
-        private InfoWarnErrorFigure m_errorFigure;
+        private final InfoWarnErrorFigure m_errorFigure;
 
         /**
          * Constructor for a new <code>SignPanel</code>.
@@ -871,7 +877,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
         /**
          * Sets a new warning message.
-         * 
+         *
          * @param message the message to set
          */
         public void setWarning(final String message) {
@@ -918,7 +924,7 @@ public class NodeContainerFigure extends RectangleFigure {
                         WarnErrorToolTip.WARNING);
             }
 
-            
+
             repaint();
         }
 
@@ -931,7 +937,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
         /**
          * Sets a new error message.
-         * 
+         *
          * @param message the message to set
          */
         public void setError(final String message) {
@@ -960,19 +966,21 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /**
      * Subfigure, contains the "traffic light".
-     * 
+     *
      * @author Florian Georg, University of Konstanz
      */
     private class StatusFigure extends Figure {
 
-        private Label m_label;
+        private final Label m_label;
 
         /**
          * Creates a new bottom figure.
-         * 
+         *
          */
         public StatusFigure() {
-
+            // status figure must have exact same dimensions as progress bar
+            setBounds(new Rectangle(0,0, ProgressFigure.WIDTH, 
+                    ProgressFigure.HEIGHT));
             ToolbarLayout layout = new ToolbarLayout(false);
             layout.setMinorAlignment(ToolbarLayout.ALIGN_CENTER);
             layout.setStretchMinorAxis(true);
@@ -981,8 +989,11 @@ public class NodeContainerFigure extends RectangleFigure {
 
             // the font is just set due to a bug in the getPreferedSize
             // method of a lable which accesses the font somewhere
-            // if not set a nullpointer is thrown
-            m_label.setFont(FONT_NORMAL);
+            // if not set a nullpointer is thrown.
+            // PO: Set a small font. The status image (as icon of the label) is
+            // placed at the bottom of the label, which is too low, if the
+            // font is bigger than the slot for the image.
+            m_label.setFont(FONT_SMALL);
 
             // m_label.setIconAlignment(PositionConstants.CENTER);
             add(m_label);
@@ -994,7 +1005,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
         /**
          * Sets the icon to display.
-         * 
+         *
          * @param icon The icon (traffic light) to set
          */
         void setIcon(final Image icon) {
@@ -1007,20 +1018,20 @@ public class NodeContainerFigure extends RectangleFigure {
          */
         @Override
         public Dimension getPreferredSize(final int wHint, final int hHint) {
-            return new Dimension(WIDTH,
-                    m_label.getPreferredSize().height);
+            return new Dimension(getBounds().width,
+                    getBounds().height);
         }
 
     }
 
     /**
      * Subfigure, contains the warning error signs.
-     * 
+     *
      * @author Christoph Sieb, University of Konstanz
      */
     private class InfoWarnErrorFigure extends Figure {
 
-        private Label m_label;
+        private final Label m_label;
 
         /**
          * Creates a new bottom figure.
@@ -1040,7 +1051,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
         /**
          * Sets the icon to display.
-         * 
+         *
          * @param icon The icon (traffic light) to set
          */
         public void setIcon(final Image icon) {
@@ -1050,7 +1061,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
         /**
          * Switches to warning mode.
-         * 
+         *
          * @param message the message to set for the tool tip
          */
         void setAsWarning(final String message) {
@@ -1061,7 +1072,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
         /**
          * Switches to error mode.
-         * 
+         *
          * @param message the message to set for the tool tip
          */
         void setAsError(final String message) {
@@ -1081,7 +1092,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
         /**
          * Sets tool tip message.
-         * 
+         *
          * @param message The status message for the tool tip
          */
         private void setToolTip(final String message, final int type) {
@@ -1102,13 +1113,13 @@ public class NodeContainerFigure extends RectangleFigure {
 
     private class OverlayImage extends CompositeImageDescriptor {
 
-        private Image m_baseImage;
+        private final Image m_baseImage;
 
-        private Image m_overlayImage;
+        private final Image m_overlayImage;
 
         /**
          * Creates an overlay image descriptor.
-         * 
+         *
          * @param baseImage the background base image
          * @param overlayImage the image to overlay
          */
@@ -1164,7 +1175,7 @@ public class NodeContainerFigure extends RectangleFigure {
     /**
      * Marks this node parts figure. Used to hilite it from the rest of the
      * parts.
-     * 
+     *
      * @see NodeContainerFigure#unmark()
      */
     public void mark() {
@@ -1175,7 +1186,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /**
      * Resets the marked figure.
-     * 
+     *
      * @see NodeContainerFigure#mark()
      */
     public void unmark() {
@@ -1183,15 +1194,4 @@ public class NodeContainerFigure extends RectangleFigure {
         m_contentFigure.m_backgroundIcon.remove(m_contentFigure.m_deleteIcon);
     }
 
-    /**
-     * Returns the progresslistener of this node container figure. NOTE: This
-     * listener can be registered at progressmonitors accepting this kind of
-     * listeners. The listener will update and render the progress of this node
-     * directly at the node container figure.
-     * 
-     * @return this nodes progress listener
-     */
-    public NodeProgressListener getProgressListener() {
-        return m_progressFigure;
-    }
 }

@@ -1,22 +1,22 @@
 /* 
  * ------------------------------------------------------------------
- * This source code, its documentation and all appendant files
- * are protected by copyright law. All rights reserved.
- *
- * Copyright, 2003 - 2007
- * University of Konstanz, Germany
- * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
- * and KNIME GmbH, Konstanz, Germany
- *
- * You may not modify, publish, transmit, transfer or sell, reproduce,
- * create derivative works from, distribute, perform, display, or in
- * any way exploit any of the content, in whole or in part, except as
- * otherwise expressly permitted in writing by the copyright owner or
- * as specified in the license file distributed with this product.
- *
- * If you have any questions please contact the copyright holder:
- * website: www.knime.org
- * email: contact@knime.org
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2008
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
  * --------------------------------------------------------------------- *
  * 
  * History
@@ -28,15 +28,16 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
@@ -62,11 +63,20 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         m_rowCount = rowCount;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** Internal use.
+     * {@inheritDoc} */
     public void clear() {
         // left empty, it's up to the node to clear our underlying tables.
+    }
+    
+    /** Internal use.
+     * {@inheritDoc} */
+    public void ensureOpen() {
+        for (BufferedDataTable t : m_tables) {
+            // use public method in class Node to do it
+            // (ensureOpen() has only package scope in class BDT)
+            Node.invokeEnsureOpen(t);
+        }
     }
 
     /**
@@ -93,7 +103,7 @@ public final class ConcatenateTable implements KnowsRowCountTable {
     /**
      * {@inheritDoc}
      */
-    public RowIterator iterator() {
+    public CloseableRowIterator iterator() {
         return new MyIterator();
     }
 
@@ -127,14 +137,15 @@ public final class ConcatenateTable implements KnowsRowCountTable {
     }
     
     public static ConcatenateTable load(final NodeSettingsRO s, 
-            final DataTableSpec spec, final int loadID) 
+            final DataTableSpec spec, 
+            final Map<Integer, BufferedDataTable> tblRep) 
         throws InvalidSettingsException {
         NodeSettingsRO subSettings = s.getNodeSettings(CFG_INTERNAL_META);
         int[] referenceIDs = subSettings.getIntArray(CFG_REFERENCE_IDS);
         int rowCount = subSettings.getInt(CFG_ROW_COUNT);
         BufferedDataTable[] tables = new BufferedDataTable[referenceIDs.length];
         for (int i = 0; i < tables.length; i++) {
-            tables[i] = BufferedDataTable.getDataTable(loadID, referenceIDs[i]);
+            tables[i] = BufferedDataTable.getDataTable(tblRep, referenceIDs[i]);
         }
         return new ConcatenateTable(tables, spec, rowCount);
     }
@@ -171,9 +182,9 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         return DataTableSpec.mergeDataTableSpecs(specs);
     }
     
-    private class MyIterator extends RowIterator {
+    private class MyIterator extends CloseableRowIterator {
         private int m_tableIndex;
-        private RowIterator m_curIterator;
+        private CloseableRowIterator m_curIterator;
         private DataRow m_next;
         
         public MyIterator() {
@@ -210,6 +221,13 @@ public final class ConcatenateTable implements KnowsRowCountTable {
                 return internalNext();
             } 
             return null;
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public void close() {
+            m_curIterator.close();
+            m_tableIndex = m_tables.length;
         }
         
     }

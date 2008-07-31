@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -71,6 +71,22 @@ public class TimePlotNodeView extends DefaultVisualizationNodeView {
             getJMenuBar().add(getHiLiteMenu());
         }
         setComponent(plotter);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void modelChanged() {
+        for (AbstractPlotter plotterle : m_plotters) {
+            if (plotterle instanceof TimePlotter) {
+                ((TimePlotter)plotterle)
+                       .setXColumnIndex(((TimePlotNodeModel)getNodeModel())
+                       .getColXIndex());
+            }
+        }
+        // TODO Auto-generated method stub
+        super.modelChanged();
     }
     
     /**

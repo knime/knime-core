@@ -9,7 +9,7 @@
          point="org.eclipse.ui.views">
       <view
             name="Node Repository"
-            icon="icons/view.png"
+            icon="icons/node_repository.png"
             category="org.knime.workbench.ui.category"
             class="org.knime.workbench.repository.view.RepositoryView"
             id="org.knime.workbench.repository.view.RepositoryView">
@@ -18,6 +18,12 @@
 a data &quot;workflow&quot;
          </description>
       </view>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="org.knime.workbench.preferences.HeadlessPreferencesInitializer">
+      </initializer>
    </extension>
 
 </plugin>

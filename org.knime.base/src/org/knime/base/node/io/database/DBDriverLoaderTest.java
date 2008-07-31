@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -19,8 +19,6 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  * 
- * History
- *   01.06.2006 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
@@ -36,7 +34,7 @@ import javax.swing.JFileChooser;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class DBDriverLoaderTest {
+final class DBDriverLoaderTest {
 
     private DBDriverLoaderTest() throws Exception {
         JFileChooser chooser = new JFileChooser();

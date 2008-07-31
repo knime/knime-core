@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,12 +24,12 @@
  */
 package org.knime.core.node;
 
-import java.io.File;
 import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.Node.MemoryPolicy;
 
 /**
@@ -96,6 +96,8 @@ public class BufferedDataContainer extends DataContainer {
      * @param initDomain Whether or not the spec's domain shall be used for
      * initialization.
      * @param node The owner of the outcome table.
+     * @param maxCellsInMemory Number of cells to be kept in memory, if negative
+     * use user settings (according to node)
      * @param globalTableRepository 
      *        The global (WFM) table repository for blob (de)serialization.
      * @param localTableRepository 
@@ -103,10 +105,11 @@ public class BufferedDataContainer extends DataContainer {
      * @see DataContainer#DataContainer(DataTableSpec, boolean)
      */
     BufferedDataContainer(final DataTableSpec spec, final boolean initDomain, 
-            final Node node, 
+            final Node node, final int maxCellsInMemory,
             final Map<Integer, ContainerTable> globalTableRepository,
             final Map<Integer, ContainerTable> localTableRepository) {
-        super(spec, initDomain, getMaxCellsInMemory(node));
+        super(spec, initDomain, maxCellsInMemory < 0 
+                ? getMaxCellsInMemory(node) : maxCellsInMemory);
         m_node = node;
         m_globalTableRepository = globalTableRepository;
         m_localTableRepository = localTableRepository;
@@ -128,14 +131,14 @@ public class BufferedDataContainer extends DataContainer {
         }
     }
     
-    /** @see DataContainer#createInternalBufferID() */
+    /** {@inheritDoc} */ 
     @Override
     protected int createInternalBufferID() {
         return BufferedDataTable.generateNewID();
     }
     
     /** Returns the table repository from this workflow.
-     * @see DataContainer#getGlobalTableRepository() 
+     * {@inheritDoc} 
      */
     @Override
     protected Map<Integer, ContainerTable> getGlobalTableRepository() {
@@ -145,7 +148,7 @@ public class BufferedDataContainer extends DataContainer {
     /**
      * Returns the local repository of tables. It contains tables that have
      * been created during the execution of a node.
-     * @see DataContainer#getLocalTableRepository()
+     * {@inheritDoc} 
      */
     @Override
     protected Map<Integer, ContainerTable> getLocalTableRepository() {
@@ -155,7 +158,7 @@ public class BufferedDataContainer extends DataContainer {
     /**
      * Returns the content of this container in a BufferedDataTable. The result
      * can be returned, e.g. in a NodeModel's execute method.
-     * @see org.knime.core.data.container.DataContainer#getTable()
+     * {@inheritDoc}
      */
     @Override
     public BufferedDataTable getTable() {
@@ -168,21 +171,21 @@ public class BufferedDataContainer extends DataContainer {
     }
     
     /**
-     * Just delegates to {@link 
-     * DataContainer#readFromZipDelayed(File, DataTableSpec, int, Map)} 
+     * Just delegates to {@link DataContainer#readFromZipDelayed(
+     * ReferencedFile, DataTableSpec, int, Map)} 
      * This method is available in this class to enable other classes in this
      * package to use it.
-     * @param zipFile Delegated.
+     * @param zipFileRef Delegated.
      * @param spec Delegated.
      * @param bufID Delegated.
      * @param bufferRep Delegated.
-     * @return {@link 
-     * DataContainer#readFromZipDelayed(File, DataTableSpec, int, Map)}
+     * @return {@link DataContainer#readFromZipDelayed(
+     *      ReferencedFile, DataTableSpec, int, Map)}
      */
     protected static ContainerTable readFromZipDelayed(
-            final File zipFile, final DataTableSpec spec, final int bufID, 
-            final Map<Integer, ContainerTable> bufferRep) {
+            final ReferencedFile zipFileRef, final DataTableSpec spec, 
+            final int bufID, final Map<Integer, ContainerTable> bufferRep) {
         return DataContainer.readFromZipDelayed(
-                zipFile, spec, bufID, bufferRep);
+                zipFileRef, spec, bufID, bufferRep);
     }
 }

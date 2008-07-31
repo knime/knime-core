@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -28,7 +28,7 @@ import java.awt.Point;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.data.property.ShapeFactory;
 
@@ -53,7 +53,7 @@ public class DendrogramPoint {
      * the data rows contained in the referring cluster node or the one that is
      * contained in the leaf.
      */
-    private Set<DataCell>m_containedRows;
+    private Set<RowKey> m_containedRows;
     
     /** Flag whether it is selected. */
     private boolean m_isSelected;
@@ -86,7 +86,7 @@ public class DendrogramPoint {
     public DendrogramPoint(final Point p, final double dist) {
         m_point = p;
         m_dist = dist;
-        m_containedRows = new LinkedHashSet<DataCell>();
+        m_containedRows = new LinkedHashSet<RowKey>();
     }
     
     /**
@@ -94,8 +94,8 @@ public class DendrogramPoint {
      * 
      * @param rowIds adds the row ids to the contained row ids.
      */
-    public void addRow(final DataCell... rowIds) {
-        for (DataCell id : rowIds) {
+    public void addRow(final RowKey... rowIds) {
+        for (RowKey id : rowIds) {
             m_containedRows.add(id);
         }
     }
@@ -104,7 +104,7 @@ public class DendrogramPoint {
      * Adds the rows to thsi <code>DendrogramPoint</code>.
      * @param ids adds the row ids to the contained row ids.
      */
-    public void addRows(final Set<DataCell> ids) {
+    public void addRows(final Set<RowKey> ids) {
         m_containedRows.addAll(ids);
     }
     
@@ -129,7 +129,7 @@ public class DendrogramPoint {
      * 
      * @return row ids of all contained rows.
      */
-    public Set<DataCell> getRows() {
+    public Set<RowKey> getRows() {
         return m_containedRows;
     }
     

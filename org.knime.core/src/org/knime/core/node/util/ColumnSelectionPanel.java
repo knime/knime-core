@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -21,8 +21,14 @@
  */
 package org.knime.core.node.util;
 
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.node.NotConfigurableException;
+
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
 import java.util.Arrays;
@@ -38,56 +44,56 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
-import org.knime.core.node.NotConfigurableException;
-
 
 /**
  * Class implements a panel to choose a column of a certain type retrieved from
  * the <code>DataTableSpec</code>.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
- *  
+ *
  */
 public class ColumnSelectionPanel extends JPanel {
     private static final long serialVersionUID = 9095144868702823700L;
-    
+
     private static final String NONE_OPTION_LABEL = "<none>";
+
+    private static final String ROWID_OPTION_LABEL = "<RowID>";
 
     /** Contains all column names for the given given filter class. */
     private final JComboBox m_chooser;
 
-    
+
     /**Show only columns which pass the given {@link ColumnFilter}.*/
     private final ColumnFilter m_columnFilter;
-    
+
     private boolean m_isRequired;
-    
+
     /**If set to true a no column item is added as first item of the list.*/
     private boolean m_addNoneColOption = false;
-    
-    private DataColumnSpec m_addNoneColSpec;
-    
+
+    /**If set to true a RowID item is added as first item of the list.*/
+    private boolean m_addRowIDOption = false;
+
+    private DataColumnSpec m_noneColSpec;
+
+    private DataColumnSpec m_rowIDColSpec;
+
     private DataTableSpec m_spec;
-    
+
     /**
      * Creates new Panel that will filter columns for particular value classes.
      * The panel will have a titled border with name "Column Selection".
-     * 
+     *
      * @param filterValueClasses classes derived from DataValue. The combo box
-     *            will allow to select only columns compatible with one of 
+     *            will allow to select only columns compatible with one of
      *            these classes. All other columns will be ignored.
-     * 
+     *
      * @see #update(DataTableSpec,String)
      */
     public ColumnSelectionPanel(
             final Class<? extends DataValue>... filterValueClasses) {
             this(" Column Selection ", filterValueClasses);
-            
+
     }
 
     /**
@@ -99,16 +105,16 @@ public class ColumnSelectionPanel extends JPanel {
     public ColumnSelectionPanel(final String borderTitle) {
         this(borderTitle, DataValue.class);
     }
-            
+
     /**
      * Creates new Panel that will filter columns for particular value classes.
      * The panel will have a title border with a given title.
-     * 
+     *
      * @param filterValueClasses a class derived from DataValue. The combo box
-     *            will allow to select only columns compatible with one of 
+     *            will allow to select only columns compatible with one of
      *            these classes. All other columns will be ignored.
      * @param borderTitle The title of the border
-     * 
+     *
      * @see #update(DataTableSpec,String)
      */
     public ColumnSelectionPanel(final String borderTitle,
@@ -117,31 +123,30 @@ public class ColumnSelectionPanel extends JPanel {
     }
 
     /**
-     * Creates new Panel that will filter columns using the given 
-     * {@link ColumnFilter}. The panel will have a border as given. 
+     * Creates new Panel that will filter columns using the given
+     * {@link ColumnFilter}. The panel will have a border as given.
      * If null, no border is set.
-     * 
-     * 
+     *
+     *
      * @param columnFilter {@link ColumnFilter}. The combo box
-     *            will allow to select only columns compatible with the 
+     *            will allow to select only columns compatible with the
      *            column filter. All other columns will be ignored.
      * @param border Border for the panel or null to have no border.
-     * 
+     *
      * @see #update(DataTableSpec,String)
      */
     public ColumnSelectionPanel(final Border border,
             final ColumnFilter columnFilter) {
        this(border, columnFilter, false);
     }
-
     /**
-     * Creates new Panel that will filter columns using the given 
-     * {@link ColumnFilter}. The panel will have a border as given. 
+     * Creates new Panel that will filter columns using the given
+     * {@link ColumnFilter}. The panel will have a border as given.
      * If null, no border is set.
-     * 
-     * 
+     *
+     *
      * @param columnFilter {@link ColumnFilter}. The combo box
-     *            will allow to select only columns compatible with the 
+     *            will allow to select only columns compatible with the
      *            column filter. All other columns will be ignored.
      * @param border Border for the panel or null to have no border.
      * @param addNoneCol true, if a none option should be added to the column
@@ -150,6 +155,27 @@ public class ColumnSelectionPanel extends JPanel {
      */
     public ColumnSelectionPanel(final Border border,
             final ColumnFilter columnFilter, final boolean addNoneCol) {
+        this(border, columnFilter, addNoneCol, false);
+    }
+    /**
+     * Creates new Panel that will filter columns using the given
+     * {@link ColumnFilter}. The panel will have a border as given.
+     * If null, no border is set.
+     *
+     *
+     * @param columnFilter {@link ColumnFilter}. The combo box
+     *            will allow to select only columns compatible with the
+     *            column filter. All other columns will be ignored.
+     * @param border Border for the panel or null to have no border.
+     * @param addNoneCol true, if a none option should be added to the column
+     * list
+     * @param addRowID true, if a RowID option should be added to the column
+     * list
+     * @see #update(DataTableSpec,String)
+     */
+    public ColumnSelectionPanel(final Border border,
+            final ColumnFilter columnFilter, final boolean addNoneCol,
+            final boolean addRowID) {
         if (columnFilter == null) {
             throw new NullPointerException("ColumnFilter must not be null");
         }
@@ -163,45 +189,36 @@ public class ColumnSelectionPanel extends JPanel {
         m_chooser.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
         m_isRequired = true;
         m_addNoneColOption = addNoneCol;
+        m_addRowIDOption = addRowID;
         add(m_chooser);
     }
-    
+
     /**
      * Creates new Panel that will filter columns for particular value classes.
      * The panel will have a border as given. If null, no border is set.
-     * 
+     *
      * @param filterValueClasses classes derived from DataValue. The combo box
      *            will allow to select only columns compatible with one of
      *            theses classes. All other columns will be ignored.
      * @param border Border for the panel or null to have no border.
-     * 
+     *
      * @see #update(DataTableSpec,String)
      */
     public ColumnSelectionPanel(final Border border,
             final Class<? extends DataValue>... filterValueClasses) {
-        super(new FlowLayout());
-        m_columnFilter = new DataValueColumnFilter(filterValueClasses);
-        if (border != null) {
-            setBorder(border);
-        }
-        m_chooser = new JComboBox();
-        m_chooser.setRenderer(new DataColumnSpecListCellRenderer());
-        m_chooser.setMinimumSize(new Dimension(100, 25));
-        m_chooser.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
-        m_isRequired = true;
-        add(m_chooser);
+        this(border, new DataValueColumnFilter(filterValueClasses));
     }
-    
+
     /**
-     * Creates a column selection panel with a label instead of a border which 
-     * preserves the minimum size to either the label width or the combo box 
+     * Creates a column selection panel with a label instead of a border which
+     * preserves the minimum size to either the label width or the combo box
      * width.
      * @param label label of the combo box.
      * @param columnFilter {@link ColumnFilter}. The combo box
-     *            will allow to select only columns compatible with the 
+     *            will allow to select only columns compatible with the
      *            column filter. All other columns will be ignored.
      */
-    public ColumnSelectionPanel(final JLabel label, 
+    public ColumnSelectionPanel(final JLabel label,
             final ColumnFilter columnFilter) {
         if (columnFilter == null) {
             throw new NullPointerException("ColumnFilter must not be null");
@@ -213,97 +230,87 @@ public class ColumnSelectionPanel extends JPanel {
         m_chooser.setMinimumSize(new Dimension(100, 25));
         m_chooser.setMaximumSize(new Dimension(200, 25));
         m_isRequired = true;
-        Box labelBox = Box.createHorizontalBox();
+        final Box labelBox = Box.createHorizontalBox();
         labelBox.add(label);
         labelBox.add(Box.createHorizontalGlue());
         add(labelBox);
         add(Box.createVerticalGlue());
-        Box chooserBox = Box.createHorizontalBox();
+        final Box chooserBox = Box.createHorizontalBox();
         chooserBox.add(m_chooser);
         chooserBox.add(Box.createHorizontalGlue());
-        add(chooserBox);        
+        add(chooserBox);
     }
-    
+
     /**
-     * Creates a column selection panel with a label instead of a border which 
-     * preserves the minimum size to either the label width or the combo box 
+     * Creates a column selection panel with a label instead of a border which
+     * preserves the minimum size to either the label width or the combo box
      * width.
      * @param label label of the combo box.
      * @param filterValueClasses allowed classes.
      */
-    public ColumnSelectionPanel(final JLabel label, 
+    public ColumnSelectionPanel(final JLabel label,
             final Class<? extends DataValue>...filterValueClasses) {
-        m_columnFilter = new DataValueColumnFilter(filterValueClasses);
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        m_chooser = new JComboBox();
-        m_chooser.setRenderer(new DataColumnSpecListCellRenderer());
-        m_chooser.setMinimumSize(new Dimension(100, 25));
-        m_chooser.setMaximumSize(new Dimension(200, 25));
-        m_isRequired = true;
-        Box labelBox = Box.createHorizontalBox();
-        labelBox.add(label);
-        labelBox.add(Box.createHorizontalGlue());
-        add(labelBox);
-        add(Box.createVerticalGlue());
-        Box chooserBox = Box.createHorizontalBox();
-        chooserBox.add(m_chooser);
-        chooserBox.add(Box.createHorizontalGlue());
-        add(chooserBox);        
+        this(label, new DataValueColumnFilter(filterValueClasses));
     }
-    
+
     /**
      * True, if a compatible type is required, false otherwise.
      * If required an exception is thrown in the update method +
      * if no compatible type was found in the input spec. If it is not required
      * this exception is suppressed.
-     * @param isRequired True, if at least one compatible type is required, 
+     * @param isRequired True, if at least one compatible type is required,
      *  false otherwise.
      */
     public final void setRequired(final boolean isRequired) {
         m_isRequired = isRequired;
     }
-    
+
     /**
-     * Indicates whether in the current configuration at least one compatible 
+     * Indicates whether in the current configuration at least one compatible
      * type is required or not.
-     * @return True, if at least one compatible type is required, false 
+     * @return True, if at least one compatible type is required, false
      * otherwise.
      */
     public final boolean isRequired() {
         return m_isRequired;
     }
-    
-    
+
+
     /**
      * Updates this filter panel by removing all current items and adding the
      * columns according to the content of the argument <code>spec</code>. If
      * a column name is provided and it is not filtered out the corresponding
      * item in the combo box will be selected.
-     * 
+     *
      * @param spec To get the column names, types and the current index from.
      * @param selColName The column name to be set as chosen.
      * @throws NotConfigurableException If the spec does not contain at least
      * one compatible type.
      */
-    public final void update(final DataTableSpec spec, final String selColName) 
+    public final void update(final DataTableSpec spec, final String selColName)
     throws NotConfigurableException {
         m_spec = spec;
         m_chooser.removeAllItems();
         if (m_addNoneColOption) {
-            int i = 1;
-            String noneOption = NONE_OPTION_LABEL;
-            while (spec.containsName(noneOption)) {
-                noneOption = NONE_OPTION_LABEL + "(" + i++ + ")";
-            }
-            m_addNoneColSpec = new DataColumnSpecCreator(noneOption, 
+            final String noneOption =
+                DataTableSpec.getUniqueColumnName(spec, NONE_OPTION_LABEL);
+            m_noneColSpec = new DataColumnSpecCreator(noneOption,
                     DataType.getMissingCell().getType()).createSpec();
-            m_chooser.addItem(m_addNoneColSpec);
+            m_chooser.addItem(m_noneColSpec);
             m_chooser.setToolTipText("Select " + noneOption + " for no column");
+        }
+        if (m_addRowIDOption) {
+            final String rowIDOption =
+                DataTableSpec.getUniqueColumnName(spec, ROWID_OPTION_LABEL);
+            m_rowIDColSpec = new DataColumnSpecCreator(rowIDOption,
+                    DataType.getMissingCell().getType()).createSpec();
+            m_chooser.addItem(m_rowIDColSpec);
+            m_chooser.setToolTipText("Select " + rowIDOption + " for RowID");
         }
         if (spec != null) {
             DataColumnSpec selectMe = null;
             for (int c = 0; c < spec.getNumColumns(); c++) {
-                DataColumnSpec current = spec.getColumnSpec(c);
+                final DataColumnSpec current = spec.getColumnSpec(c);
                 if (m_columnFilter.includeColumn(current)) {
                     m_chooser.addItem(current);
                     if (current.getName().equals(selColName)) {
@@ -315,10 +322,12 @@ public class ColumnSelectionPanel extends JPanel {
                 m_chooser.setSelectedItem(selectMe);
             } else {
                 if (m_addNoneColOption) {
-                    m_chooser.setSelectedItem(m_addNoneColSpec);
+                    m_chooser.setSelectedItem(m_noneColSpec);
+                } else if (m_addRowIDOption) {
+                    m_chooser.setSelectedItem(m_rowIDColSpec);
                 } else {
                     // select last element
-                    int size = m_chooser.getItemCount();
+                    final int size = m_chooser.getItemCount();
                     if (size > 0) {
                         m_chooser.setSelectedIndex(size - 1);
                     }
@@ -329,52 +338,67 @@ public class ColumnSelectionPanel extends JPanel {
             throw new NotConfigurableException(m_columnFilter.allFilteredMsg());
         }
     }
-    
+
     /**
-     * Gets the selected column as DataColumnSpec. If the 
+     * @return <code>true</code> if the user has selected the RowID
+     */
+    public boolean rowIDSelected() {
+        return (m_addRowIDOption && m_rowIDColSpec != null
+                && m_rowIDColSpec.equals(m_chooser.getSelectedItem()));
+    }
+
+    /**
+     * Gets the selected column as DataColumnSpec. If the
      * addNoneCol flag is true the method returns <code>null</code> if the user
      * has selected the no column item from the combo box.
-     * 
-     * @return The spec of the column that is currently selected or 
-     * <code>null</code> if the addNoneCol flag is set to true and 
-     * the no column item is selected.
+     *
+     * @return The spec of the column that is currently selected or
+     * <code>null</code> if the addNoneCol flag is set to true and
+     * the no column item is selected or the addRowID flag is set to true and
+     * the RowID column item is selected. Check the useRowID column if the
+     * RowID option was selected.
      */
     public final DataColumnSpec getSelectedColumnAsSpec() {
-        DataColumnSpec selected = (DataColumnSpec)m_chooser.getSelectedItem();
-        if (selected == null || (m_addNoneColOption 
-                && selected.equals(m_addNoneColSpec))) {
+        final DataColumnSpec selected =
+            (DataColumnSpec)m_chooser.getSelectedItem();
+        if (selected == null
+                || (m_addNoneColOption && selected.equals(m_noneColSpec))
+                || (m_addRowIDOption && selected.equals(m_rowIDColSpec))) {
             return null;
         }
         return selected;
     }
-    
+
     /**
      * Gets the selected column. If the addNoneCol flag
      * is true the method returns <code>null</code> if the user
      * has selected the no column item from the combo box.
-     * 
+     *
      * @return The cell that is currently being selected or <code>null</code>
-     * if the addNoneCol flag is set to true and the no column item is selected.
+     * if the addNoneCol flag is set to true and the no column item is selected
+     * or the addRowID flag is set to true and the RowID column item is
+     * selected. Check the useRowID column if the RowID option was selected.
      */
     public final String getSelectedColumn() {
-        DataColumnSpec selected = getSelectedColumnAsSpec();
+        final DataColumnSpec selected = getSelectedColumnAsSpec();
         return selected != null ? selected.getName() : null;
     }
-    
-    
+
+
     /**
      * Attempts to set the argument as selected column and disables the combo
      * box if there is only one available.
-     * 
+     *
      * @param colName Name of the fixed x columns.
      */
     public void fixSelectablesTo(final String... colName) {
-        DataColumnSpec oldSelected = (DataColumnSpec)m_chooser
+        final DataColumnSpec oldSelected = (DataColumnSpec)m_chooser
             .getSelectedItem();
-        HashSet<String> hash = new HashSet<String>(Arrays.asList(colName));
-        Vector<DataColumnSpec> survivers = new Vector<DataColumnSpec>();
+        final HashSet<String> hash =
+            new HashSet<String>(Arrays.asList(colName));
+        final Vector<DataColumnSpec> survivers = new Vector<DataColumnSpec>();
         for (int item = 0; item < m_chooser.getItemCount(); item++) {
-            DataColumnSpec s = (DataColumnSpec)m_chooser.getItemAt(item);
+            final DataColumnSpec s = (DataColumnSpec)m_chooser.getItemAt(item);
             if (hash.contains(s.getName())) {
                 survivers.add(s);
             }
@@ -388,16 +412,21 @@ public class ColumnSelectionPanel extends JPanel {
         }
         m_chooser.setEnabled(survivers.size() > 1);
     }
-    
-    
+
+
     /**
-     * 
-     * @return the selected index. 
+     *
+     * @return the selected index.
      */
     public final int getSelectedIndex() {
         return m_chooser.getSelectedIndex();
     }
     
+    /** @return the number of selectable elements in the list. */
+    public int getNrItemsInList() {
+        return m_chooser.getModel().getSize();
+    }
+
     /**
      * Selects the given index in the combo box.
      * @param index Select this item.
@@ -405,24 +434,33 @@ public class ColumnSelectionPanel extends JPanel {
     public final void setSelectedIndex(final int index) {
         m_chooser.setSelectedIndex(index);
     }
-    
+
     /**
-     * 
+     *
      * @param columnName - the name of the column to select.
      */
     public final void setSelectedColumn(final String columnName) {
-        if (m_addNoneColOption 
-                && m_addNoneColSpec != null
+        if (m_addNoneColOption
+                && m_noneColSpec != null
                 && columnName == null) {
-            m_chooser.setSelectedItem(m_addNoneColSpec);
+            m_chooser.setSelectedItem(m_noneColSpec);
             return;
         }
         if (m_spec != null) {
-            DataColumnSpec colSpec = m_spec.getColumnSpec(columnName);
+            final DataColumnSpec colSpec = m_spec.getColumnSpec(columnName);
             m_chooser.setSelectedItem(colSpec);
         }
     }
-    
+
+    /**
+     * Selects the RowID item in the item list if a RowID entry exists.
+     */
+    public final void setRowIDSelected() {
+        if (m_addRowIDOption && m_rowIDColSpec != null) {
+            m_chooser.setSelectedItem(m_rowIDColSpec);
+        }
+    }
+
     /**
      * @param enabled true if enabled otherwise false.
      * @see java.awt.Component#setEnabled(boolean)
@@ -467,7 +505,7 @@ public class ColumnSelectionPanel extends JPanel {
     public void removeActionListener(final ActionListener l) {
         m_chooser.removeActionListener(l);
     }
-    
-    
+
+
 
 } // ColumnSelectionPanel

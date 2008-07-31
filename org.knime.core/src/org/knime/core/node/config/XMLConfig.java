@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -39,7 +39,6 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
-import org.knime.core.node.InvalidSettingsException;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -77,50 +76,15 @@ final class XMLConfig {
     static final String OLD_DTD_NAME = XMLConfig.class.getName().replace('.',
             '/').replace("org/knime/", "de/unikn/knime/") + ".dtd";
 
-    /**
-     * Read config entries from an XML file. The entries being read are stored
-     * in a newly created <code>Config</code> object.
-     * 
-     * @param config The Config, which is used as factory to create a new
-     *            instance from (representing the root from the XML file).
-     * @param is The XML inputstream storing the configuration to read
-     * @return The root Config.
-     * @throws IOException If the stream could not be read.
+    /** Reads from the given input stream into the given config object.
+     * @param c Where to put the results.
+     * @param in Where to read from, stream will be closed when done.
+     * @throws SAXException If stream can't be properly parsed.
+     * @throws IOException If IO problem occur.
+     * @throws ParserConfigurationException If not properly configured.
+     * @throws NullPointerException If any argument is <code>null</code>.
      */
-    static Config load(final Config config, final InputStream is)
-            throws IOException {
-        Config cfg = config.getInstance("ignored");
-        try {
-            internalLoad(cfg, is);
-        } catch (SAXException se) {
-            IOException ioe = new IOException(se.getMessage());
-            ioe.initCause(se);
-            throw ioe;
-        } catch (ParserConfigurationException pce) {
-            IOException ioe = new IOException(pce.getMessage());
-            ioe.initCause(pce);
-            throw ioe;
-        } finally {
-            is.close();
-        }
-        // return first child of cfg
-        for (String s : cfg.keySet()) {
-            try {
-                return cfg.getConfig(s);
-            } catch (InvalidSettingsException ise) {
-                throw new IOException("Reading from \"" + is.toString()
-                        + "\" failed; does not start with config.");
-            }
-        }
-        throw new IOException("Reading from \"" + is.toString()
-                + "\" failed; no tags defined.");
-    }
-
-    /*
-     * Helper method to read the xml given by the inputstream to the config
-     * object.
-     */
-    private static void internalLoad(final Config c, final InputStream in)
+    static void load(final Config c, final InputStream in)
             throws SAXException, IOException, ParserConfigurationException {
         SAXParser saxParser = parserFactory.newSAXParser();
         XMLReader reader = saxParser.getXMLReader();

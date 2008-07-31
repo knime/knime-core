@@ -1,16 +1,22 @@
-/* -------------------------------------------------------------------
+/*
+ * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
- * 
- * Copyright, 2003 - 2007
- * Universitaet Konstanz, Germany.
- * Lehrstuhl fuer Angewandte Informatik
- * Prof. Dr. Michael R. Berthold
- * 
+ *
+ * Copyright, 2003 - 2008
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
  * You may not modify, publish, transmit, transfer or sell, reproduce,
  * create derivative works from, distribute, perform, display, or in
  * any way exploit any of the content, in whole or in part, except as
- * otherwise expressly permitted in writing by the copyright owner.
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
  * -------------------------------------------------------------------
  * 
  * History
@@ -66,10 +72,16 @@ CellFactory {
      * @param inclClassProbVals if the probability per class instance should
      * be appended as columns
      */
-    protected NaiveBayesCellFactory(final NaiveBayesModel model, 
+    public NaiveBayesCellFactory(final NaiveBayesModel model, 
             final DataTableSpec tableSpec, final boolean inclClassProbVals) {
+        if (model == null) {
+           throw new NullPointerException("Model must not be null.");
+        }
         m_model = model;
         m_sortedClassVals = model.getSortedClassValues();
+        if (tableSpec == null) {
+            throw new NullPointerException("TableSpec must not be null.");
+         }
         m_tableSpec = tableSpec;
         m_inclClassProbVals = inclClassProbVals;
         m_attributeNames = new String[tableSpec.getNumColumns()];

@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   25.05.2005 (Florian Georg): created
  */
@@ -26,33 +26,36 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
-
 import org.knime.workbench.editor2.ImageRepository;
 
 /**
  * Action to open a view of a node.
- * 
+ *
  * TODO: Embedd view in an eclipse view (preference setting)
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class OpenViewAction extends Action {
-    private NodeContainer m_nodeContainer;
+    private final NodeContainer m_nodeContainer;
 
-    private int m_index;
+    private final int m_index;
 
     private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(OpenPortViewAction.class);
+            .getLogger(OpenViewAction.class);
 
     /**
      * New action to opne a node view.
-     * 
+     *
      * @param nodeContainer The node
      * @param viewIndex The index of the node view
      */
-    public OpenViewAction(final NodeContainer nodeContainer, final int viewIndex) {
+    public OpenViewAction(final NodeContainer nodeContainer,
+            final int viewIndex) {
         m_nodeContainer = nodeContainer;
         m_index = viewIndex;
     }
@@ -87,8 +90,37 @@ public class OpenViewAction extends Action {
      */
     @Override
     public void run() {
-        LOGGER.debug("Open Node View " + m_nodeContainer.nodeToString() + " (#"
+        LOGGER.debug("Open Node View " + m_nodeContainer.getName() + " (#"
                 + m_index + ")");
-        m_nodeContainer.showView(m_index);
+        try {
+            String title = m_nodeContainer.getID().toString();
+            if (m_nodeContainer.getCustomName() != null) { 
+                    title = m_nodeContainer.getCustomName();
+            }
+            title += " : " + m_nodeContainer.getViewName(m_index);
+            m_nodeContainer.getView(m_index).createFrame(title);
+        } catch (Throwable t) {
+            MessageBox mb = new MessageBox(
+                    Display.getDefault().getActiveShell(),
+                    SWT.ICON_ERROR | SWT.OK);
+            mb.setText("View cannot be opened");
+            mb.setMessage("The view cannot be opened for the " 
+                    + "following reason:\n" + t.getMessage());
+            mb.open();
+            LOGGER.error("The view for node '"
+                    + m_nodeContainer.getNameWithID() + "' has thrown a '"
+                    + t.getClass().getSimpleName()
+                    + "'. That is most likely an " 
+                    + "implementation error.", t);
+        } 
+    }
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public String getId() {
+        return "knime.open.view.action";
     }
 }

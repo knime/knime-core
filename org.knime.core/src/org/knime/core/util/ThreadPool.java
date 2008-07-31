@@ -345,7 +345,8 @@ public class ThreadPool {
 
         Worker thisWorker = (Worker)Thread.currentThread();
         if (!m_runningWorkers.contains(thisWorker)) {
-            if (!thisWorker.m_startedFrom.m_runningWorkers.contains(thisWorker)) {
+            if (
+              !thisWorker.m_startedFrom.m_runningWorkers.contains(thisWorker)) {
                 throw new IllegalThreadStateException("The current thread is "
                         + "not taken out of this thread pool");
             }

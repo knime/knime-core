@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -50,8 +50,7 @@ public class ColumnFilterRefNodeDialogPane extends DefaultNodeSettingsPane {
     public ColumnFilterRefNodeDialogPane() {
         DialogComponentButtonGroup group = new DialogComponentButtonGroup(
                 createInExcludeModel(), 
-                null, true,
-                INCLUDE, new String[]{INCLUDE, EXCLUDE});
+                true, INCLUDE, new String[]{INCLUDE, EXCLUDE});
         group.setToolTipText("Include or exclude columns in first table "
                 + "according to the second reference table.");
         addDialogComponent(group);

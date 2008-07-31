@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -19,8 +19,6 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  * 
- * History
- *   16.11.2005 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
@@ -32,19 +30,19 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 
-import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.PortObjectSpec;
 
 
 /**
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBReaderDialogPane extends NodeDialogPane {
+class DBReaderDialogPane extends GenericNodeDialogPane {
     
     private final DBDialogPane m_loginPane = new DBDialogPane();
   
@@ -56,7 +54,8 @@ public class DBReaderDialogPane extends NodeDialogPane {
     DBReaderDialogPane() {
         super();
         m_statmnt.setFont(DBDialogPane.FONT);
-        m_statmnt.setText("SELECT * FROM <table>");
+        m_statmnt.setText("SELECT * FROM " 
+                + DBQueryConnection.TABLE_PLACEHOLDER);
         final JScrollPane scrollPane = new JScrollPane(m_statmnt,
                 ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -73,13 +72,14 @@ public class DBReaderDialogPane extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
         m_loginPane.loadSettingsFrom(settings, specs);
         // statement
         String statement = 
             settings.getString(DBConnection.CFG_STATEMENT, null); 
         m_statmnt.setText(statement == null 
-                ? "SELECT * FROM <table>" : statement);
+                ? "SELECT * FROM " + DBQueryConnection.TABLE_PLACEHOLDER 
+                : statement);
     }
 
     /**

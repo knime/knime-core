@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./sota_predictor.png" type="Predictor">
 	<name>SOTA Predictor</name>
 	
@@ -29,7 +29,7 @@
 		<dataOut name="Input table with classes" index="0">
 			Datatable containing the input data and the predicted classes.
 		</dataOut>
-		<modelIn index="0" name="The model of the trained SOTA" type="sotaModel">
+		<modelIn index="0" name="The model of the trained SOTA">
 			The model of the trained SOTA.
 		</modelIn>
 	</ports>	

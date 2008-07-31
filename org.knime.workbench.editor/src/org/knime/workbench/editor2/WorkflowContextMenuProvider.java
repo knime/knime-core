@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -37,21 +37,27 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.meta.MetaNodeModel;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.CancelAction;
-import org.knime.workbench.editor2.actions.EditMetaWorkflowAction;
 import org.knime.workbench.editor2.actions.ExecuteAction;
 import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
 import org.knime.workbench.editor2.actions.OpenDialogAction;
 import org.knime.workbench.editor2.actions.OpenPortViewAction;
+import org.knime.workbench.editor2.actions.OpenSubworkflowEditorAction;
 import org.knime.workbench.editor2.actions.OpenViewAction;
 import org.knime.workbench.editor2.actions.OpenViewEmbeddedAction;
+import org.knime.workbench.editor2.actions.OpenWorkflowPortViewAction;
 import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.editparts.SubworkflowEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
+import org.knime.workbench.editor2.model.WorkflowPortBar;
+import org.knime.workbench.ui.metanodes.CreateMetaNodeTemplateAction;
 
 /**
  * Provider for the Workflow editor's context menus.
@@ -63,9 +69,9 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(WorkflowContextMenuProvider.class);
 
-    private ActionRegistry m_actionRegistry;
+    private final ActionRegistry m_actionRegistry;
 
-    private GraphicalViewer m_viewer;
+    private final GraphicalViewer m_viewer;
 
     /**
      * Creates a new context menu provider, that is, registers some actions from
@@ -149,6 +155,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
 
+        
         // depending on the current selection: add the actions for the port
         // views and the node views
         // also check wether this node part is a meta-node
@@ -158,6 +165,32 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         // by now, we only support one part...
         if (parts.size() == 1) {
             EditPart p = (EditPart)parts.get(0);
+            LOGGER.debug("selected edit part: " + p);
+            if (p instanceof WorkflowInPortBarEditPart) {
+                WorkflowInPortBarEditPart root = (WorkflowInPortBarEditPart)p;
+                manager.add(new Separator("outPortViews"));
+                for (Object o : p.getChildren()) {
+                    EditPart child = (EditPart)o;
+                    if (child instanceof WorkflowInPortEditPart
+                            && ((WorkflowInPortEditPart)child).isSelected()) {
+                        action = new OpenWorkflowPortViewAction(
+                                ((WorkflowPortBar)root.getModel())
+                                    .getWorkflowManager(),
+                                ((WorkflowInPortEditPart)child).getIndex());
+                        manager.appendToGroup("outPortViews", action);
+                        ((WorkflowInPortEditPart)child).setSelected(false);
+                    }
+                }
+            }
+            if (p instanceof SubworkflowEditPart) {
+                // meta node -> add to template repository action
+                SubworkflowEditPart metaNode = (SubworkflowEditPart)p;
+                action = new CreateMetaNodeTemplateAction(
+                        metaNode.getWorkflowManager(), 
+                        metaNode.getNodeContainer());
+                manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP,
+                        action);
+            }
             if (p instanceof NodeContainerEditPart) {
 
                 NodeContainer container = null;
@@ -167,7 +200,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 // add for node views option if applicable
                 LOGGER.debug("adding open node-view action(s) "
                         + "to context menu...");
-                int numNodeViews = container.getNumViews();
+                int numNodeViews = container.getNrViews();
                 /*
                  * BW: disabled this feature, no embedded eclipse views
                  * available (to enable them uncomment the following lines and
@@ -187,13 +220,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP,
                             action);
                 }
-
-                // add meta node option if applicable
-                if (MetaNodeModel.class.isAssignableFrom(container
-                        .getModelClass())) {
-                    LOGGER.debug("adding 'edit meta-node' option "
-                            + "to context menu...");
-                    action = new EditMetaWorkflowAction(container);
+                
+                if (container instanceof WorkflowManager) {
+                    action = new OpenSubworkflowEditorAction(
+                            (NodeContainerEditPart)p);
                     manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP,
                             action);
                 }

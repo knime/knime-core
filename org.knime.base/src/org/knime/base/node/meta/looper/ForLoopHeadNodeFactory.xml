@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="looper.png" type="LoopStart">
+	<name>LoopStart</name>
+	
+	<shortDescription>
+		Node at the start of a loop
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>The LoopStart is the node that starts a loop that is executed a predefined number
+        of times. At the end of the loop you need LoopEnd, which collects the results from
+        all loop iterations. All nodes in between are executed as many times as you specify in the dialog
+        of LoopStart.
+		</intro>
+		<option name="Number of loops">The number of times the inner workflow should be executed.</option>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Any datatable">Any datatable</dataIn>
+		<dataOut index="0" name="Unaltered input">The unaltered input table</dataOut>
+	</ports>
+</knimeNode>

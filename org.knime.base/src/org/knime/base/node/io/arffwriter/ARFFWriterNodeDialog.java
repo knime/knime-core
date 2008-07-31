@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -28,8 +28,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.FontMetrics;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -47,11 +45,9 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.plaf.basic.BasicComboBoxRenderer;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 
@@ -62,6 +58,7 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.ConvenientComboBoxRenderer;
 
 /**
  * Contains the dialog for the ARFF file writer.
@@ -126,7 +123,7 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
                 .setPreferredSize(new Dimension(TEXTFIELD_WIDTH,
                         COMPONENT_HEIGHT));
         m_url.setEditable(true);
-        m_url.setRenderer(new MyComboBoxRenderer());
+        m_url.setRenderer(new ConvenientComboBoxRenderer());
         fileBox.add(m_url);
         fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
 
@@ -331,71 +328,5 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
         m_url.addItemListener(this);
 
         updateFileError();
-    }
-
-    /** Renderer that also supports to show customized tooltip. */
-    private static class MyComboBoxRenderer extends BasicComboBoxRenderer {
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Component getListCellRendererComponent(final JList list,
-                final Object value, final int index, final boolean isSelected,
-                final boolean cellHasFocus) {
-            if (index > -1) {
-                list.setToolTipText(value.toString());
-            }
-            return super.getListCellRendererComponent(list, value, index,
-                    isSelected, cellHasFocus);
-        }
-
-        /**
-         * Does the clipping automatically, clips off characters from the middle
-         * of the string.
-         * 
-         * @see JLabel#getText()
-         */
-        @Override
-        public String getText() {
-            Insets ins = getInsets();
-            int width = getWidth() - ins.left - ins.right;
-            String s = super.getText();
-            FontMetrics fm = getFontMetrics(getFont());
-            String clipped = s;
-            while (clipped.length() > 5 && fm.stringWidth(clipped) > width) {
-                clipped = format(s, clipped.length() - 3);
-            }
-            return clipped;
-        }
-
-        /*
-         * builds strings with the following pattern: if size is smaller than
-         * 30, return the last 30 chars in the string; if the size is larger
-         * than 30: return the first 12 chars + ... + chars from the end. Size
-         * more than 55: the first 28 + ... + rest from the end.
-         */
-        private String format(final String str, final int size) {
-            String result;
-            if (str.length() <= size) {
-                // short enough - return it unchanged
-                return str;
-            }
-            if (size <= 30) {
-                result = "..."
-                        + str.substring(str.length() - size + 3, str.length());
-            } else if (size <= 55) {
-                result = str.substring(0, 12)
-                        + "..."
-                        + str.subSequence(str.length() - size + 15, str
-                                .length());
-            } else {
-                result = str.substring(0, 28)
-                        + "..."
-                        + str.subSequence(str.length() - size + 31, str
-                                .length());
-            }
-            return result;
-        }
     }
 }

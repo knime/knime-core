@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,32 +18,30 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   20.02.2006 (sieb): created
  */
 package org.knime.workbench.editor2.actions;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeSettings;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
-
+import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
  * Implements the clipboard copy action to copy nodes and connections into the
  * clipboard.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class CopyAction extends AbstractClipboardAction {
@@ -51,13 +49,14 @@ public class CopyAction extends AbstractClipboardAction {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(CopyAction.class);
 
+    private final List<NodeID>m_copiedNodeIDs = new ArrayList<NodeID>();
+    
     /**
      * Constructs a new clipboard copy action.
-     * 
+     *
      * @param editor the workflow editor this action is intended for
      */
     public CopyAction(final WorkflowEditor editor) {
-
         super(editor);
     }
 
@@ -91,74 +90,28 @@ public class CopyAction extends AbstractClipboardAction {
 
     /**
      * At least one node must be selected.
-     * 
-     * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
+     *
+     * {@inheritDoc}
      */
     @Override
     protected boolean calculateEnabled() {
         NodeContainerEditPart[] parts = getSelectedNodeParts();
-
         return parts.length > 0;
     }
-
-    /*
-     * Creates a <code>NodesSettings</code> object from the given edit parts.
-     * 
-     * @return the node settings representing the selected nodes
-     */
-    private NodeSettings getNodeSettings(
-            final NodeContainerEditPart[] nodeParts,
-            final ConnectionContainerEditPart[] connectionParts) {
-
-        // copy node setttings root
-        NodeSettings clipboardRootSettings = new NodeSettings(
-                WorkflowEditor.CLIPBOARD_ROOT_NAME);
-
-        // save nodes in an own sub-config object as a series of configs
-        NodeSettingsWO nodes = clipboardRootSettings
-                .addNodeSettings(WorkflowManager.KEY_NODES);
-        for (NodeContainerEditPart nodeEditPart : nodeParts) {
-
-            NodeContainer nextNode = nodeEditPart.getNodeContainer();
-            // and save it to it's own config object
-            NodeSettingsWO nextNodeConfig = nodes.addNodeSettings("node_"
-                    + nextNode.getID());
-            nextNode.saveSettings(nextNodeConfig);
-            // TODO notify about node settings saved ????
-        }
-
-        // save connections in an own sub-config object as a series of configs
-        NodeSettingsWO connections = clipboardRootSettings
-                .addNodeSettings(WorkflowManager.KEY_CONNECTIONS);
-
-        for (ConnectionContainerEditPart connectionEditPart : connectionParts) {
-
-            ConnectionContainer nextConnection = (ConnectionContainer)connectionEditPart
-                    .getModel();
-
-            // // and save it to it's own config object
-            NodeSettingsWO nextConnectionConfig = connections
-                    .addNodeSettings("connection_" + nextConnection.getID());
-            nextConnection.save(nextConnectionConfig);
-        }
-
-        return clipboardRootSettings;
-    }
-
+    
     /**
      * {@inheritDoc}
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
 
-        // additionally to the inherited functionality to get all nodes
-        // the connections must be retrieved as they can be copied as
-        // well if both nodes defining a connection are copied together
-        ConnectionContainerEditPart[] connectionParts = getSelectedConnectionParts();
-
         LOGGER.debug("Clipboard copy action invoked for " + nodeParts.length
-                + " node(s) and " + connectionParts.length + " connection(s).");
+                + " node(s)");
 
+        m_copiedNodeIDs.clear();
+        for (NodeContainerEditPart nodeEP : nodeParts) {
+            m_copiedNodeIDs.add(nodeEP.getNodeContainer().getID());
+        }
         // create the settings object to put in the clipboard
 
         // the information about the nodes is stored in the config XML format
@@ -169,8 +122,8 @@ public class CopyAction extends AbstractClipboardAction {
         // new Transfer[]{ResourceTransfer.getInstance()});
         getEditor()
                 .setClipboardContent(
-                        new ClipboardObject(getNodeSettings(nodeParts,
-                                connectionParts)));
+                        new ClipboardObject(getManager(), 
+                                Collections.unmodifiableList(m_copiedNodeIDs)));
 
         // update the actions
         getEditor().updateActions();
@@ -179,4 +132,5 @@ public class CopyAction extends AbstractClipboardAction {
         // is not updated correctly.
         getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
     }
+    
 }

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -37,6 +37,7 @@ import javax.swing.ToolTipManager;
 
 import org.knime.base.node.viz.plotter.basic.BasicDrawingPane;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ShapeFactory;
 
 /**
@@ -52,7 +53,7 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
     private DotInfoArray m_dots;
     
     // Hash set of selected dots
-    private Set<DataCell> m_selDots;
+    private Set<RowKey> m_selDots;
     
 //    private Shape m_shape = new Rectangle();
     
@@ -67,7 +68,7 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
     public ScatterPlotterDrawingPane() {
         super();
         m_dots = new DotInfoArray(0);
-        m_selDots = new HashSet<DataCell>();
+        m_selDots = new HashSet<RowKey>();
         ToolTipManager.sharedInstance().registerComponent(this);
     }
     
@@ -149,8 +150,7 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
         Color c = dot.getColor().getColor();
         int x = dot.getXCoord();
         int y = dot.getYCoord();
-        int size = (int)(m_dotSize 
-                + (m_dotSize * dot.getSize()));
+        int size = (int)(m_dotSize * dot.getSize());
         shape.paint(g, x, y, size, c, isHilite, isSelected, m_fade);
     }
     
@@ -158,7 +158,7 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
      * 
      * @return row keys of selecte dots.
      */
-    public Set<DataCell> getSelectedDots() {
+    public Set<RowKey> getSelectedDots() {
         return m_selDots;
     }
     
@@ -166,7 +166,7 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
      * for extending classes the possibility to set the selected dots.
      * @param selected the rowkey ids of the selected elements.
      */
-    protected void setSelectedDots(final Set<DataCell> selected) {
+    protected void setSelectedDots(final Set<RowKey> selected) {
         m_selDots = selected;
     }
     
@@ -237,8 +237,13 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
             int y = dot.getYCoord();
             DataCell xDomain = dot.getXDomainValue();
             DataCell yDomain = dot.getYDomainValue();
-            if (x < p.x + (m_dotSize / 2) && x > p.x - (m_dotSize / 2)
-                    && y < p.y + (m_dotSize / 2) && y > p.y - (m_dotSize / 2)) {
+            double dotSize = (m_dotSize * dot.getSize());
+            // assure to have at least one pixel to test
+            if (dotSize < 2) {
+                dotSize = 2;
+            }
+            if (x < p.x + (dotSize / 2) && x > p.x - (dotSize / 2)
+                    && y < p.y + (dotSize / 2) && y > p.y - (dotSize / 2)) {
                 if (first) {
                     if (xDomain != null) {
                         tooltip.append("x: " + xDomain.toString());

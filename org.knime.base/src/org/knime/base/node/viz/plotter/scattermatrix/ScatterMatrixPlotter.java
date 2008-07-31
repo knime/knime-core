@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -194,11 +194,11 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
 
         // get the number of columns c
         if (getDataProvider() == null
-                || getDataProvider().getDataArray(0) == null) {
+                || getDataProvider().getDataArray(getDataArrayIdx()) == null) {
             return;
         }
         
-        DataArray data = getDataProvider().getDataArray(0);
+        DataArray data = getDataProvider().getDataArray(getDataArrayIdx());
         // get the first columns
         if (m_selectedColumns == null) {
             m_selectedColumns = new LinkedHashSet<String>();
@@ -294,7 +294,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
                         // v offset
                         y += yOffset - getDotSize();
                     }
-                    boolean hilite = delegateIsHiLit(row.getKey().getId());
+                    boolean hilite = delegateIsHiLit(row.getKey());
                     if (!hilite && isHideMode()) {
                         continue;
                     } 
@@ -304,7 +304,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
                     DotInfo dot = new DotInfo(x, y, row.getKey(),
                             hilite, data
                                     .getDataTableSpec().getRowColor(row), data
-                                    .getDataTableSpec().getRowSize(row),
+                                    .getDataTableSpec().getRowSizeFactor(row),
                             rowNr);
                     dot.setShape(data.getDataTableSpec().getRowShape(row));
                     dot.setXDomainValue(xValue);

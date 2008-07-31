@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -23,21 +23,11 @@
  */
 package org.knime.base.node.preproc.rowkey;
 
-import java.io.File;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -51,6 +41,13 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+
+import org.knime.base.data.append.column.AppendedColumnTable;
+
+import java.io.File;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 /**
  * The node model of the row key manipulation node. The node allows the user
@@ -113,9 +110,6 @@ public class RowKeyNodeModel extends NodeModel {
      */
     public static final String NEW_COL_NAME_4_ROWKEY_VALS =
         "newColumnName4RowKeyValues";
-
-    /** Holds the <code>DataTableSpec</code> of the input data port. */
-    private DataTableSpec m_tableSpec;
 
     /**If<code>true</code> the user wants to replace the existing row key
      * with the values of the selected column.*/
@@ -219,19 +213,7 @@ public class RowKeyNodeModel extends NodeModel {
             DataColumnSpec newColSpec = null;
             if (m_appendRowKey.getBooleanValue()) {
                 final String newColName = m_newColumnName.getStringValue();
-                final DataType newColType = getCommonSuperType4RowKey(data);
-                if (newColName == null || newColName.length() < 1) {
-                    throw new InvalidSettingsException("Please provide a valid"
-                            + " name for the new column.");
-                }
-                if (newColType == null) {
-                    throw new InvalidSettingsException(
-                            "Internal exception: The DataType of the new "
-                            + "column must not be null.");
-                }
-                final DataColumnSpecCreator colSpecCreater =
-                        new DataColumnSpecCreator(newColName, newColType);
-                newColSpec = colSpecCreater.createSpec();
+                newColSpec = createAppendRowKeyColSpec(newColName);
             }
             final RowKeyUtil util = new RowKeyUtil();
             outData = util.changeRowKey(data, exec,
@@ -263,10 +245,9 @@ public class RowKeyNodeModel extends NodeModel {
             // the user wants only a column with the given name which
             //contains the rowkey as value
             final DataTableSpec tableSpec = data.getDataTableSpec();
-            final DataType type = getCommonSuperType4RowKey(data);
             final String newColumnName = m_newColumnName.getStringValue();
             final ColumnRearranger c = RowKeyUtil.createColumnRearranger(
-                    tableSpec, newColumnName, type);
+                    tableSpec, newColumnName, StringCell.TYPE);
             outData =
                 exec.createColumnRearrangeTable(data, c, exec);
             exec.setMessage("New column created");
@@ -283,33 +264,64 @@ public class RowKeyNodeModel extends NodeModel {
     }
 
     /**
-     * @param data the {@link BufferedDataTable} which row key type should be
-     * determined.
-     * @return the super type of the row key column
+     * @param origSpec the original table specification (could be
+     * <code>null</code>)
+     * @param appendRowKey <code>true</code> if a new column should be created
+     * @param newColName the name of the new column to append
+     * @param replaceKey <code>true</code> if the row key should be replaced
+     * @param newRowKeyCol the name of the row key column
+     * @param removeRowKeyCol removes the selected row key column if set
+     * to <code>true</code>
+     * @throws InvalidSettingsException if the settings are invalid
      */
-    private static DataType getCommonSuperType4RowKey(
-            final BufferedDataTable data) {
-        if (data == null) {
-            return DataType.getType(DataCell.class);
+    protected static void validateInput(final DataTableSpec origSpec,
+            final boolean appendRowKey, final String newColName,
+            final boolean replaceKey, final String newRowKeyCol,
+            final boolean removeRowKeyCol) throws InvalidSettingsException {
+        if (!(replaceKey || appendRowKey)) {
+            //the user hasn't enabled an option
+            throw new InvalidSettingsException(
+                    "Please select at least on option.");
         }
-        final Set<DataType> types = new HashSet<DataType>();
-        for (final DataRow row : data) {
-             types.add(row.getKey().getId().getType());
-        }
-        if (types.size() < 1) {
-            return DataType.getType(DataCell.class);
-        } else if (types.size() == 1) {
-            return types.iterator().next();
-        } else {
-            final Iterator<DataType> dataTypes = types.iterator();
-            DataType currentSuperType = dataTypes.next();
-            while (dataTypes.hasNext()) {
-                final DataType dataType = dataTypes.next();
-                currentSuperType =
-                    DataType.getCommonSuperType(currentSuperType, dataType);
+        if (replaceKey) {
+            if (newRowKeyCol == null || newRowKeyCol.trim().length() < 1) {
+                throw new InvalidSettingsException(
+                        "Please select the new row ID column.");
             }
-            return currentSuperType;
+            if (origSpec != null && !origSpec.containsName(newRowKeyCol)) {
+                throw new InvalidSettingsException(
+                "Selected column: '" + newRowKeyCol
+                + "' not found in input table.");
+            }
         }
+        if (appendRowKey) {
+            if (newColName == null || newColName.trim().length() < 1) {
+                throw new InvalidSettingsException("Please provide a valid"
+                        + " name for the new column.");
+            }
+            if (origSpec != null && origSpec.containsName(newColName)) {
+                if (!replaceKey || !removeRowKeyCol
+                        || !newRowKeyCol.equals(newColName)) {
+                    throw new InvalidSettingsException("Column with name: '"
+                        + newColName + "' already exists.");
+                }
+            }
+        }
+    }
+
+    /**
+     * @param origSpec the original table specification to check for
+     * duplicate name
+     * @param newColName the name of the column to add
+     * @param newColType the type of the column to add
+     * @return the column specification
+     * @throws InvalidSettingsException if the name is invalid or exists in the
+     * original table specification
+     */
+    private DataColumnSpec createAppendRowKeyColSpec(final String newColName) {
+        final DataColumnSpecCreator colSpecCreater =
+                new DataColumnSpecCreator(newColName, StringCell.TYPE);
+        return colSpecCreater.createSpec();
     }
 
     /**
@@ -329,42 +341,24 @@ public class RowKeyNodeModel extends NodeModel {
         // check the input data
         assert (inSpecs != null && inSpecs.length == 1
                 && inSpecs[DATA_IN_PORT] != null);
-        m_tableSpec = inSpecs[DATA_IN_PORT];
-        if (m_tableSpec != null
-                && m_appendRowKey.getBooleanValue()
-                && m_tableSpec.containsName(m_newColumnName.getStringValue())) {
-            throw new InvalidSettingsException("Column with name: '"
-                    + m_newColumnName.getStringValue() + "' already exists."
-                    + " Please enter a new name for the column to append.");
-        }
-        DataTableSpec spec = m_tableSpec;
+        DataTableSpec spec = inSpecs[DATA_IN_PORT];
+        validateInput(spec, m_appendRowKey.getBooleanValue(),
+                m_newColumnName.getStringValue(),
+                m_replaceKey.getBooleanValue(),
+                m_newRowKeyColumn.getStringValue(),
+                m_removeRowKeyCol.getBooleanValue());
         if (m_replaceKey.getBooleanValue()) {
             final String selRowKey =
                 m_newRowKeyColumn.getStringValue();
-            if (selRowKey == null || selRowKey.trim().length() < 1) {
-                throw new InvalidSettingsException(
-                        "Please select the new row ID column");
-            }
-            if (!m_tableSpec.containsName(selRowKey)) {
-                throw new InvalidSettingsException(
-                "Selected column: '" + selRowKey
-                + "' not found in input table.");
-            }
             if (m_removeRowKeyCol.getBooleanValue()) {
                 spec = RowKeyUtil.createTableSpec(spec, selRowKey);
             }
         }
         if (m_appendRowKey.getBooleanValue()) {
-            spec = null;
-            //I can't set the right type of the row key since I don't know it
-            //here so we return no table spec
-//            final DataType type = DataType.getType(DataCell.class);
-//            final DataColumnSpecCreator colSpecCreator =
-//                new DataColumnSpecCreator(m_newColumnName.getStringValue(),
-//                        type);
-//            final DataColumnSpec colSpec = colSpecCreator.createSpec();
-//            spec = AppendedColumnTable.getTableSpec(inSpecs[DATA_IN_PORT],
-//                    colSpec);
+            final DataColumnSpec colSpec = createAppendRowKeyColSpec(
+                    m_newColumnName.getStringValue());
+            spec = AppendedColumnTable.getTableSpec(spec,
+                    colSpec);
         }
         return new DataTableSpec[]{spec};
     }
@@ -423,46 +417,18 @@ public class RowKeyNodeModel extends NodeModel {
         assert (settings != null);
         final SettingsModelBoolean replaceRowKeyModel =
             m_replaceKey.createCloneWithValidatedValue(settings);
-        final boolean replaceRowKey = replaceRowKeyModel.getBooleanValue();
         final SettingsModelBoolean appendRowKeyModel =
             m_appendRowKey.createCloneWithValidatedValue(settings);
-        final boolean appendRowKeyCol = appendRowKeyModel.getBooleanValue();
-        if (!(replaceRowKey || appendRowKeyCol)) {
-            //the user hasn't enabled an option
-            throw new InvalidSettingsException(
-                    "Please select at least on option.");
-        }
-
-        if (replaceRowKey) {
-            final SettingsModelString newRowKeyModel =
-                m_newRowKeyColumn.createCloneWithValidatedValue(
-                        settings);
-            final String newRowKeyCol = newRowKeyModel.getStringValue();
-            if (newRowKeyCol == null || newRowKeyCol.trim().length() < 1) {
-                throw new InvalidSettingsException("Please select a column"
-                        + " which should be used as new row ID");
-            }
-            if (m_tableSpec != null
-                    && !m_tableSpec.containsName(newRowKeyCol)) {
-                throw new InvalidSettingsException(
-                "Selected column: '" + newRowKeyCol
-                + "' not found in table specification.");
-            }
-        }
-        if (appendRowKeyCol) {
-            final SettingsModelString newColNameModel =
+        final SettingsModelString newRowKeyModel =
+            m_newRowKeyColumn.createCloneWithValidatedValue(
+                    settings);
+        final SettingsModelString newColNameModel =
                 m_newColumnName.createCloneWithValidatedValue(settings);
-            final String newColName = newColNameModel.getStringValue();
-            if (newColName == null || newColName.trim().length() < 1) {
-                throw new InvalidSettingsException(
-                        "Please provide a name for the column to append.");
-            }
-            if (m_tableSpec != null && m_tableSpec.containsName(newColName)) {
-                throw new InvalidSettingsException("Column with name: '"
-                        + newColName + "' already exists."
-                        + " Please enter a new name for the column to append.");
-            }
-        }
+        validateInput(null, appendRowKeyModel.getBooleanValue(),
+                newColNameModel.getStringValue(),
+                replaceRowKeyModel.getBooleanValue(),
+                newRowKeyModel.getStringValue(),
+                appendRowKeyModel.getBooleanValue());
     }
 
     /**

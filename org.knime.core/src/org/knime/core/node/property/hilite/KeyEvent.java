@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -29,13 +29,13 @@ import java.util.EventObject;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 
 
 /**
  * Event object that is fired when registered listener need to update its
  * properties. An event keeps an unmodifiable set of row keys as 
- * {@link DataCell}.
+ * {@link RowKey}.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -43,25 +43,25 @@ public class KeyEvent extends EventObject {
     private static final long serialVersionUID = -5555018973664128867L;
     
     /** Internal unmodifiable set of row IDs. */
-    private final Set<DataCell> m_keys;
+    private final Set<RowKey> m_keys;
 
     /** 
      * Creates a new event with the underlying source and one data cell.
      * 
      * @param src the object on which the event initially occurred
-     * @param ids an array of  <code>DataCell</code> elements for which this 
+     * @param ids an array of  <code>RowKey</code> elements for which this 
      *         event is created.
      * @throws IllegalArgumentException if the source is <code>null</code> or
      *         the ids empty
      * 
      * @see java.util.EventObject#EventObject(Object)
      */
-    public KeyEvent(final Object src, final DataCell... ids) {
+    public KeyEvent(final Object src, final RowKey... ids) {
         super(src);
         if (ids.length == 0) {
             throw new IllegalArgumentException("KeyEvent can not be empty.");
         }
-        Set<DataCell> set = new LinkedHashSet<DataCell>(Arrays.asList(ids));
+        Set<RowKey> set = new LinkedHashSet<RowKey>(Arrays.asList(ids));
         m_keys = Collections.unmodifiableSet(set);
     }
     
@@ -69,28 +69,28 @@ public class KeyEvent extends EventObject {
      * Creates a new event with the underlying source and a set of row keys.
      * 
      * @param src the object on which the event initially occurred
-     * @param ids a set of <code>DataCell</code> row IDs for which the 
+     * @param ids a set of <code>RowKey</code> row IDs for which the 
      *         event is created.
      * @throws IllegalArgumentException if the source is <code>null</code>, or
      *         the ids are <code>null</code> or empty
      *
      * @see java.util.EventObject#EventObject(Object)
      */
-    public KeyEvent(final Object src, final Set<DataCell> ids) {
+    public KeyEvent(final Object src, final Set<RowKey> ids) {
         super(src);
         if (ids == null || ids.size() == 0) {
             throw new IllegalArgumentException("KeyEvent can not be empty.");
         }       
-        m_keys = Collections.unmodifiableSet(new LinkedHashSet<DataCell>(ids));
+        m_keys = Collections.unmodifiableSet(new LinkedHashSet<RowKey>(ids));
     }
 
     /** 
-     * Returns the set of <code>DataCell</code> row keys on which the event 
+     * Returns the set of <code>RowKey</code> row keys on which the event 
      * initially occurred.
      * 
      * @return a set of row IDs
      */
-    public Set<DataCell> keys() { 
+    public Set<RowKey> keys() { 
         return m_keys;
     }
     

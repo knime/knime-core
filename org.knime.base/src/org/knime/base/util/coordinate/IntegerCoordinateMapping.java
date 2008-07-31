@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,27 +18,25 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   02.02.2006 (sieb): created
  */
 package org.knime.base.util.coordinate;
 
+import org.knime.core.data.def.IntCell;
+
 /**
  * Holds the original value according to the domain and its mapping.
- * 
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 public class IntegerCoordinateMapping extends CoordinateMapping {
 
-    /**
-     * The original domain value.
-     */
-    private final int m_domainValue;
 
     /**
      * Constructs a coordinate mapping.
-     * 
+     *
      * @param stringDomainValue the domain value as string
      * @param domainValue the domain value
      * @param mappingValue the corresponding mapped value
@@ -47,21 +45,6 @@ public class IntegerCoordinateMapping extends CoordinateMapping {
             final int domainValue, final double mappingValue) {
 
         super(stringDomainValue, mappingValue);
-        m_domainValue = domainValue;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String toString() {
-        return (super.toString() + " integer value: " + m_domainValue);
-    }
-
-    /**
-     * @return the domain value of this mapping
-     */
-    protected int getDomainValue() {
-        return m_domainValue;
+        setValues(new IntCell(domainValue));
     }
 }

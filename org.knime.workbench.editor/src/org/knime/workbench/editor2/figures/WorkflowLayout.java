@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   29.05.2005 (Florian Georg): created
  */
@@ -31,7 +31,7 @@ import org.eclipse.draw2d.geometry.Rectangle;
 /**
  * Subclass of XYLayout which ensures that the children bounds are always used
  * as the layouting constraint. (manual layout).
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class WorkflowLayout extends FreeformLayout {
@@ -46,17 +46,16 @@ public class WorkflowLayout extends FreeformLayout {
     /**
      * This ensures that all for all elements an <code>Rectangle</code>
      * objects is returned as contraint.
-     * 
-     * @see org.eclipse.draw2d.LayoutManager#
-     *      getConstraint(org.eclipse.draw2d.IFigure)
+     *
+     * {@inheritDoc}
      */
     @Override
     public Object getConstraint(final IFigure child) {
         Object constraint = constraints.get(child);
 
         // Do we already have a reactangle constraint ?
-        if (constraint != null || constraint instanceof Rectangle) {
-            return (Rectangle) constraint;
+        if (constraint != null && constraint instanceof Rectangle) {
+            return constraint;
         }
 
         // determine constraint from figures bounds
@@ -67,6 +66,8 @@ public class WorkflowLayout extends FreeformLayout {
             width = -1;
             height = -1;
         }
-        return new Rectangle(currentBounds.x, currentBounds.y, width, height);
+        Rectangle rect = new Rectangle(currentBounds.x, currentBounds.y,
+                width, height);
+        return rect;
     }
 }

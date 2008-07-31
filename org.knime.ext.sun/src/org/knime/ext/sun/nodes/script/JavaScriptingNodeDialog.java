@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -112,6 +112,9 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         });
         m_colList.setCellRenderer(new ListRenderer());
         m_expEdit = new JEditorPane();
+        Font font = m_expEdit.getFont();
+        m_expEdit.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 
+                (font == null ? 12 : font.getSize())));
         m_newColNameField = new JTextField(10);
         m_appendRadio = new JRadioButton("Append Column: ");
         m_appendRadio.setToolTipText("Appends a new column to the input "
@@ -122,6 +125,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         // show all columns
         m_replaceCombo = 
             new ColumnSelectionPanel((Border)null, DataValue.class);
+        m_replaceCombo.setRequired(false);
         ButtonGroup buttonGroup = new ButtonGroup();
         buttonGroup.add(m_appendRadio);
         buttonGroup.add(m_replaceRadio);
@@ -173,7 +177,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         // will select newColName only if it is in the spec list
         m_replaceCombo.update(specs[0], newColName);
         m_currenteSpec = specs[0];
-        if (isReplace) {
+        if (isReplace && m_replaceCombo.getNrItemsInList() > 0) {
             m_replaceRadio.doClick();
         } else {
             m_appendRadio.doClick();
@@ -181,6 +185,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
                     : defaultColName);
             m_newColNameField.setText(newColString);
         }
+        m_replaceRadio.setEnabled(m_replaceCombo.getNrItemsInList() > 0);
         m_expEdit.setText(exp);
         ButtonModel firstButton = null;
         for (Enumeration<?> e = m_returnTypeButtonGroup.getElements(); e

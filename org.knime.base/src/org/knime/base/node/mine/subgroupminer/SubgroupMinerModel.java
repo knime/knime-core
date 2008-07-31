@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -157,7 +157,7 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
 
     private List<String> m_nameMapping;
 
-    private Map<Integer, DataCell> m_tidRowKeyMapping;
+    private Map<Integer, RowKey> m_tidRowKeyMapping;
 
     private int m_nrOfRows;
 
@@ -223,7 +223,7 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
     private List<BitSet> preprocess(final DataTable inData,
             final ExecutionMonitor exec) throws CanceledExecutionException {
         // TODO: check in configure that only Double values are in the table
-        m_tidRowKeyMapping = new HashMap<Integer, DataCell>();
+        m_tidRowKeyMapping = new HashMap<Integer, RowKey>();
         m_nrOfRows = 0;
         int totalNrRows = ((BufferedDataTable)inData).getRowCount();
         m_maxBitsetLength = 0;
@@ -242,7 +242,7 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
             m_maxBitsetLength = Math.max(m_maxBitsetLength, currCell
                     .getNumBits());
             bitSets.add(currBitSet);
-            m_tidRowKeyMapping.put(m_nrOfRows, currRow.getKey().getId());
+            m_tidRowKeyMapping.put(m_nrOfRows, currRow.getKey());
             m_nrOfRows++;
 
             exec.setProgress((double)m_nrOfRows / (double)totalNrRows,
@@ -306,15 +306,15 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
     /**
      * {@inheritDoc}
      */
-    public Set<DataCell> getKeys(final DataCell key) {
+    public Set<RowKey> getKeys(final RowKey key) {
         LOGGER.debug("getKeys for: " + key);
-        Set<DataCell> cells = new HashSet<DataCell>();
+        Set<RowKey> cells = new HashSet<RowKey>();
         for (RowIterator itr = m_itemSetTable.iterator(); itr.hasNext();) {
             DataRow currRow = itr.next();
-            if (currRow.getKey().getId().equals(key)) {
+            if (currRow.getKey().equals(key)) {
                 LOGGER.debug("found key ");
                 for (int i = 1; i < currRow.getNumCells(); i++) {
-                    cells.add(currRow.getCell(i));
+                    cells.add(new RowKey(currRow.getCell(i).toString()));
                 }
             }
         }
@@ -325,8 +325,8 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
     /**
      * {@inheritDoc}
      */
-    public Set<DataCell> keySet() {
-        return Collections.unmodifiableSet(new LinkedHashSet<DataCell>(
+    public Set<RowKey> keySet() {
+        return Collections.unmodifiableSet(new LinkedHashSet<RowKey>(
                 m_tidRowKeyMapping.values()));
     }
 
@@ -459,8 +459,8 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
                 allCells[i] = DataType.getMissingCell();
             }
             if (antecedent.size() > 0) {
-                DataRow row = new DefaultRow(new StringCell("rule"
-                        + rowKeyCounter++), allCells);
+                DataRow row = new DefaultRow("rule"
+                        + rowKeyCounter++, allCells);
                 ruleRows.addRowToTable(row);
             }
         }
@@ -483,17 +483,32 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
             throws InvalidSettingsException {
         // check if there is at least one BitVector column
         boolean hasBitVectorColumn = false;
+        boolean autoguessed = false;
+        boolean autoconfigured = false;
         for (int i = 0; i < inSpecs[0].getNumColumns(); i++) {
             if (inSpecs[0].getColumnSpec(i).getType().isCompatible(
                     BitVectorValue.class)) {
                 hasBitVectorColumn = true;
+                if (autoconfigured) {
+                    autoguessed = true;
+                    autoconfigured = false;
+                }
+                if (m_bitVectorColumn.getStringValue().equals("")) {
+                    m_bitVectorColumn.setStringValue(
+                            inSpecs[0].getColumnSpec(i).getName());
+                    autoconfigured = true;
+                }
             }
         }
         if (!hasBitVectorColumn) {
             throw new InvalidSettingsException(
                     "Expecting at least on BitVector column");
         }
-        if (m_bitVectorColumn == null
+        if (autoguessed) {
+            setWarningMessage("Auto-guessed the bitvector column: " 
+                    + m_bitVectorColumn.getStringValue());
+        }
+        if (m_bitVectorColumn.getStringValue().equals("")
                 || !inSpecs[0].containsName(
                         m_bitVectorColumn.getStringValue())) {
             throw new InvalidSettingsException(

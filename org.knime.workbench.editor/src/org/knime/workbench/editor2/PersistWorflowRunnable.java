@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   11.01.2007 (sieb): created
  */
@@ -30,8 +30,9 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.DefaultNodeProgressMonitor;
-import org.knime.core.node.NodeProgressEvent;
-import org.knime.core.node.NodeProgressListener;
+import org.knime.core.node.workflow.NodeProgress;
+import org.knime.core.node.workflow.NodeProgressEvent;
+import org.knime.core.node.workflow.NodeProgressListener;
 
 /**
  * A runnable which is the abstract super class used by the
@@ -40,7 +41,7 @@ import org.knime.core.node.NodeProgressListener;
  * necessary sucht that all references to the created workflow manager can be
  * deleted, otherwise the manager can not be deleted later and the memeory can
  * not be freed.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 abstract class PersistWorflowRunnable implements IRunnableWithProgress {
@@ -49,15 +50,15 @@ abstract class PersistWorflowRunnable implements IRunnableWithProgress {
 
         private boolean m_finished = false;
 
-        private IProgressMonitor m_pm;
+        private final IProgressMonitor m_pm;
 
-        private DefaultNodeProgressMonitor m_progressMonitor;
+        private final DefaultNodeProgressMonitor m_progressMonitor;
 
-        private boolean m_cancelable;
+        private final boolean m_cancelable;
 
         /**
          * Creates a new cancel execution checker.
-         * 
+         *
          * @param pm
          *            the eclipse progress monitor
          * @param progressMonitor
@@ -78,7 +79,7 @@ abstract class PersistWorflowRunnable implements IRunnableWithProgress {
 
         /**
          * Sets the finished flag.
-         * 
+         *
          */
         public void finished() {
             m_finished = true;
@@ -108,15 +109,15 @@ abstract class PersistWorflowRunnable implements IRunnableWithProgress {
 
     class ProgressHandler implements NodeProgressListener {
 
-        private IProgressMonitor m_progressMonitor;
+        private final IProgressMonitor m_progressMonitor;
 
-        private int m_totalWork;
+        private final int m_totalWork;
 
         private int m_workedSoFar;
 
         /**
          * Handles progress changes during saving the workflow.
-         * 
+         *
          * @param monitor
          *            the eclipse progressmonitor
          * @param totalWork
@@ -135,10 +136,11 @@ abstract class PersistWorflowRunnable implements IRunnableWithProgress {
         /**
          * {@inheritDoc}
          */
-        public synchronized void progressChanged(final NodeProgressEvent pe) {
+        public synchronized void progressChanged(final NodeProgressEvent evt) {
+            final NodeProgress pe = evt.getNodeProgress();
             Display.getDefault().asyncExec(new Runnable() {
                 public void run() {
-                    if (pe.hasProgress()) {
+                    if (pe.hasProgress() && pe.getProgress() >= 0) {
                         double progress = pe.getProgress();
                         int worked = (int) (progress * m_totalWork);
                         m_progressMonitor.worked(worked - m_workedSoFar);

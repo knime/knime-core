@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Deprecated KNIME nodes
 Bundle-SymbolicName: org.knime.deprecated
-Bundle-Version: 1.3.5.1
+Bundle-Version: 2.0.0.0016392
 Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
 Bundle-Localization: plugin
 Require-Bundle: org.knime.workbench.repository,
@@ -11,9 +11,26 @@ Require-Bundle: org.knime.workbench.repository,
  org.eclipse.core.runtime
 Export-Package: org.knime.base.node.mine.decisiontree.predictor,
  org.knime.base.node.mine.decisiontree.predictor.decisiontree,
+ org.knime.base.node.mine.mds,
  org.knime.base.node.mine.scorer,
+ org.knime.base.node.mine.scorer.entrop,
+ org.knime.base.node.mine.sota,
+ org.knime.base.node.preproc.discretization.caim,
+ org.knime.base.node.preproc.discretization.caim.modelapply,
+ org.knime.base.node.preproc.discretization.caim.modelcreator,
+ org.knime.base.node.preproc.join,
  org.knime.base.node.preproc.nominal,
- org.knime.base.node.preproc.normalize
+ org.knime.base.node.preproc.normalize,
+ org.knime.base.node.viz.enrich,
+ org.knime.base.node.viz.parcoord,
+ org.knime.base.node.viz.parcoord.visibility,
+ org.knime.base.node.viz.plotter2D,
+ org.knime.base.node.viz.property.color,
+ org.knime.base.node.viz.property.size,
+ org.knime.base.node.viz.rulevis2d,
+ org.knime.base.node.viz.scatterplot,
+ org.knime.core.node.defaultnodedialog,
+ org.knime.deprecated
 Eclipse-LazyStart: false
 Bundle-Activator: org.knime.deprecated.DeprecatedPlugin
 Bundle-ClassPath: knime-deprecated.jar

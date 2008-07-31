@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -35,9 +35,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
-import org.knime.timeseries.node.display.FinancialShapeFactory;
+import org.knime.core.data.RowKey;
 import org.knime.timeseries.node.display.FinancialDotInfo;
 import org.knime.timeseries.node.display.FinancialDotInfoArray;
+import org.knime.timeseries.node.display.FinancialShapeFactory;
 import org.knime.timeseries.node.display.timeplot.TimePlotterDrawingPane;
 
 /**
@@ -53,7 +54,7 @@ public class BarChartDrawingPane extends TimePlotterDrawingPane {
     private FinancialDotInfoArray m_dots;
     
     // Hash set of selected dots
-    private Set<DataCell> m_selDots;
+    private Set<RowKey> m_selDots;
         
     private int m_dotSize = 4;
     
@@ -71,7 +72,7 @@ public class BarChartDrawingPane extends TimePlotterDrawingPane {
         int m_height = 400;
         super.setPreferredSize(new Dimension(m_width, m_height));
 
-        m_selDots = new HashSet<DataCell>();
+        m_selDots = new HashSet<RowKey>();
         setToolTipText("");
      }
     
@@ -172,7 +173,7 @@ public class BarChartDrawingPane extends TimePlotterDrawingPane {
      * @return row keys of selected dots.
      */
     @Override
-    public Set<DataCell> getSelectedDots() {
+    public Set<RowKey> getSelectedDots() {
         return m_selDots;
     }
     
@@ -181,7 +182,7 @@ public class BarChartDrawingPane extends TimePlotterDrawingPane {
      * @param selected the rowkey ids of the selected elements.
      */
     @Override
-    protected void setSelectedDots(final Set<DataCell> selected) {
+    protected void setSelectedDots(final Set<RowKey> selected) {
         m_selDots = selected;
     }
     

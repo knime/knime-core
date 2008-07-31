@@ -1,31 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="xval.png" type="Other">
-	<name>Aggregator</name>
-	
-	<shortDescription>
-		Node that aggregates the result for cross validation.
-	</shortDescription>
-	
-	<fullDescription>
-		<intro>
-			This node is hard-wired to the outports of the cross validator.
-			Connect it to the predictor node of your choice and select
-			the target column (containing the row's &quot;true&quot; class
-			label) and the prediction column in the dialog.
-		</intro>
-		<option name="Target column">Containing the true class label.</option>
-		<option name="Prediction column">Containing the prediction label</option>
-	</fullDescription>
-	
-	<ports>
-		<dataIn index="0" name="Outport from predictor">
-			Contains the class column and the prediction column to compare.
-		</dataIn>
-		<dataOut index="0" name="Prediction table">
-			A copy of the input table
-		</dataOut>
-		<dataOut index="1" name="Error rates">Error rates for all validations</dataOut>
-	</ports>
-	
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="xval.png" type="LoopEnd">
+    <name>X-Aggregator</name>
+
+    <shortDescription>Node that aggregates the result for cross validation.</shortDescription>
+
+    <fullDescription>
+        <intro>
+            This node must be the end of a cross validation loop and must follow a X-Partitioner node. It collects the
+            result from a predictor node, compares predicted class and real class and outputs the predictions for all
+            rows and the iteration statistics.
+        </intro>
+        <option name="Target column">Column containing the true class label</option>
+        <option name="Prediction column">Column containing the prediction label</option>
+    </fullDescription>
+
+    <ports>
+        <dataIn index="0" name="Outport from predictor">
+            Contains the class column and the prediction column to compare
+        </dataIn>
+        <dataOut index="0" name="Prediction table">Collected output tables from the predictor</dataOut>
+        <dataOut index="1" name="Error rates">Error rates for all iterations</dataOut>
+    </ports>
 </knimeNode>

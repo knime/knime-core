@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -195,9 +195,8 @@ public class PMCCNodeModel extends NodeModel {
                     + Arrays.toString(constantColumnNames));
             int maxLength = 4;
             if (constantColumns.size() > maxLength) {
-                String[] temp = new String[maxLength];
-                System.arraycopy(constantColumnNames, 0, temp, 0, maxLength);
-                constantColumnNames = temp;
+                constantColumnNames = 
+                    Arrays.copyOf(constantColumnNames, maxLength);
                 constantColumnNames[maxLength - 1] = "...";
             }
             setWarningMessage("Some columns contain only one distinct value: "

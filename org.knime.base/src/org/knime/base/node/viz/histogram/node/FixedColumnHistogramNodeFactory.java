@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,27 +18,26 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   11.06.2006 (Tobias Koetter): created
  */
 package org.knime.base.node.viz.histogram.node;
 
+import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * Factory class of the histogram.
  * @author Tobias Koetter, University of Konstanz
  */
-public class FixedColumnHistogramNodeFactory extends NodeFactory {
+public class FixedColumnHistogramNodeFactory
+    extends GenericNodeFactory<FixedColumnHistogramNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public FixedColumnHistogramNodeModel createNodeModel() {
         return new FixedColumnHistogramNodeModel();
     }
 
@@ -54,8 +53,8 @@ public class FixedColumnHistogramNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public FixedColumnHistogramNodeView createNodeView(final int viewIndex,
+            final FixedColumnHistogramNodeModel nodeModel) {
         assert viewIndex == 0;
         return new FixedColumnHistogramNodeView(nodeModel);
     }

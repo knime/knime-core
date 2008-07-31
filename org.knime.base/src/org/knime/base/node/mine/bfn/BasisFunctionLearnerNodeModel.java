@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -33,16 +33,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.knime.base.node.mine.bfn.BasisFunctionLearnerTable.MissingValueReplacementFunction;
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -53,15 +50,17 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.PortObject;
+import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.PortType;
 import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -72,7 +71,7 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
+public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(BasisFunctionLearnerNodeModel.class);
 
@@ -106,7 +105,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
     private String[] m_dataColumns = null;
     
     /** Keeps a value for missing replacement function index. */
-    private int m_missing = -1;
+    private int m_missing = 0;
 
     /** The <i>shrink_after_commit</i> flag. */
     private boolean m_shrinkAfterCommit = true;
@@ -123,41 +122,28 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
     /** Contains model info after training. */
     private ModelContent m_modelInfo;
 
-    private DataColumnSpec[] m_modelSpec;
-
-    private final Map<DataCell, List<BasisFunctionLearnerRow>> m_bfs;
-
     /** Translates hilite events between model and training data. */
     private final HiLiteTranslator m_translator;
-    
-    /** Number of data inports. */
-    public static final int NR_DATA_INS   = 1;
-    /** Number of data outports. */
-    public static final int NR_DATA_OUTS  = 1;
-    /** Number of model inports. */
-    public static final int NR_MODEL_INS  = 0;
-    /** Number of model outports. */
-    public static final int NR_MODEL_OUTS = 1;
 
     /**
-     * Creates a new model with one data in and out port, and model outport.
+     * Creates a new model with one data in and out port, and model out-port.
+     * @param model the port type of the generated basisfunction model
      */
-    protected BasisFunctionLearnerNodeModel() {
-        super(1, 1, 0, 1);
-        m_bfs = new LinkedHashMap<DataCell, List<BasisFunctionLearnerRow>>();
+    protected BasisFunctionLearnerNodeModel(final PortType model) {
+        super(new PortType[]{BufferedDataTable.TYPE},  
+              new PortType[]{BufferedDataTable.TYPE, 
+                model});
         m_translator = new HiLiteTranslator(new DefaultHiLiteHandler());
     }
 
     /**
      * Reset the trained model.
      * 
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
         m_modelInfo = null;
-        m_modelSpec = null;
-        m_bfs.clear();
     }
 
     /**
@@ -175,7 +161,6 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
      */
     @Override
     public HiLiteHandler getOutHiLiteHandler(final int outPortID) {
-        assert (outPortID == 0);
         return m_translator.getFromHiLiteHandler();
     }
 
@@ -183,43 +168,59 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    public DataTableSpec[] configure(final DataTableSpec[] ins)
+    public PortObjectSpec[] configure(final PortObjectSpec[] ins)
             throws InvalidSettingsException {
+        DataTableSpec inSpec = (DataTableSpec) ins[0];
         // check if target column available
         if (m_targetColumns == null) {
-            throw new InvalidSettingsException("Target columns not available.");
-        }
-        for (String target : m_targetColumns) {
-            if (!ins[0].containsName(target)) {
-                throw new InvalidSettingsException(
-                    "Target \"" + target + "\" column not available.");
+            // find first non-numeric column
+            for (int i = 0; i < inSpec.getNumColumns(); i++) {
+                DataColumnSpec cspec = inSpec.getColumnSpec(i);
+                if (!cspec.getType().isCompatible(DoubleValue.class)) {
+                    m_targetColumns = new String[]{cspec.getName()};
+                    super.setWarningMessage("Target column guessed as \""
+                            + cspec.getName() + "\"");
+                    break;
+                }
             }
-            if (m_targetColumns.length > 1) {
-                if (!ins[0].getColumnSpec(target).getType().isCompatible(
-                        DoubleValue.class)) {
+            if (m_targetColumns == null) {
+                throw new InvalidSettingsException(
+                        "Target columns not available.");
+            }
+        } else {
+            for (String target : m_targetColumns) {
+                if (!inSpec.containsName(target)) {
                     throw new InvalidSettingsException(
-                            "Target \"" + target 
-                            + "\" column not of type DoubleValue.");
+                        "Target \"" + target + "\" column not available.");
+                }
+                if (m_targetColumns.length > 1) {
+                    if (!inSpec.getColumnSpec(target).getType().isCompatible(
+                            DoubleValue.class)) {
+                        throw new InvalidSettingsException(
+                                "Target \"" + target 
+                                + "\" column not of type DoubleValue.");
+                    }
                 }
             }
         }
+        
         // check if double type column available
-        if (!ins[0].containsCompatibleType(DoubleValue.class)) {
+        if (!inSpec.containsCompatibleType(DoubleValue.class)) {
             throw new InvalidSettingsException(
                     "No data column of type DoubleValue found.");
         }
         
         List<String> targetHash = Arrays.asList(m_targetColumns);
         // if only one double type column, check if not the target column
-        for (int i = 0; i < ins[0].getNumColumns(); i++) {
-            DataColumnSpec cspec = ins[0].getColumnSpec(i);
+        for (int i = 0; i < inSpec.getNumColumns(); i++) {
+            DataColumnSpec cspec = inSpec.getColumnSpec(i);
             if (cspec.getType().isCompatible(DoubleValue.class)) {
                 if (!targetHash.contains(cspec.getName())) {
                     break;
                 }
             }
             // if last column was tested
-            if (i + 1 == ins[0].getNumColumns()) {
+            if (i + 1 == inSpec.getNumColumns()) {
                 throw new InvalidSettingsException("Found only one column of"
                         + " type DoubleValue: " 
                         + Arrays.toString(m_targetColumns));
@@ -229,54 +230,60 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         // if no data columns are found, use all numeric columns
         List<String> dataCols = new ArrayList<String>();
         if (m_dataColumns == null || m_dataColumns.length == 0) {
-            for (DataColumnSpec cspec : ins[0]) {
+            for (DataColumnSpec cspec : inSpec) {
                 if (!targetHash.contains(cspec.getName())
                         && cspec.getType().isCompatible(DoubleValue.class)) {
                     dataCols.add(cspec.getName());
                 }
             }
             m_dataColumns = dataCols.toArray(new String[dataCols.size()]);
-        }
-        
-        // check data columns, only numeric
-        for (String dataColumn : m_dataColumns) {
-            if (!ins[0].containsName(dataColumn)) {
-                throw new InvalidSettingsException(
-                    "Data \"" + dataColumn + "\" column not available.");
-            }
-            if (!ins[0].getColumnSpec(dataColumn).getType().isCompatible(
-                        DoubleValue.class)) {
+        } else {
+            // check data columns, only numeric
+            for (String dataColumn : m_dataColumns) {
+                if (!inSpec.containsName(dataColumn)) {
                     throw new InvalidSettingsException(
-                            "Data \"" + dataColumn 
-                            + "\" column not of type DoubleValue.");
+                        "Data \"" + dataColumn + "\" column not available.");
+                }
+                if (!inSpec.getColumnSpec(dataColumn).getType().isCompatible(
+                            DoubleValue.class)) {
+                        throw new InvalidSettingsException(
+                                "Data \"" + dataColumn 
+                                + "\" column not of type DoubleValue.");
+                }
             }
         }
-        
-        return new DataTableSpec[]{BasisFunctionFactory.createModelSpec(ins[0],
-                m_dataColumns, m_targetColumns, getModelType())};
+        DataTableSpec modelSpec = BasisFunctionFactory.createModelSpec(inSpec,
+                m_dataColumns, m_targetColumns, getModelType());
+        return new DataTableSpec[]{modelSpec, modelSpec};
     }
-
+    
     /**
      * @return the type of the learned model cells
      */
     public abstract DataType getModelType();
+    
+    /**
+     * Creates a new basisfunction port object given the model content.
+     * @param content basisfunction rules and spec
+     * @return a new basisfunction port object
+     */
+    public abstract BasisFunctionPortObject createPortObject(
+        final BasisFunctionModelContent content);
 
     /**
      * Starts the learning algorithm in the learner.
      * 
-     * @param data the input training data at index 0
+     * @param inData the input training data at index 0
      * @param exec the execution monitor
      * @return the output fuzzy rule model
      * @throws CanceledExecutionException if the training was canceled
      */
     @Override
-    public BufferedDataTable[] execute(final BufferedDataTable[] data,
+    public PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws CanceledExecutionException {
-        // check input data
-        assert (data != null && data.length == 1 && data[0] != null);
-
+        BufferedDataTable data = (BufferedDataTable) inData[0];
         // find all double cell columns in the data
-        DataTableSpec tSpec = data[0].getDataTableSpec();
+        DataTableSpec tSpec = data.getDataTableSpec();
         LinkedHashSet<String> columns = new LinkedHashSet<String>(tSpec
                 .getNumColumns());
         List<String> targetHash = Arrays.asList(m_targetColumns);
@@ -310,15 +317,15 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         ColumnRearranger colRe = new ColumnRearranger(tSpec);
         colRe.keepOnly(cols);
         BufferedDataTable trainData = exec.createColumnRearrangeTable(
-                data[0], colRe, exec);
+                data, colRe, exec);
 
         // print settings info
-        LOGGER.debug("distance     : " + getDistance());
-        LOGGER.debug("missing      : " + getMissingFct());
-        LOGGER.debug("targets      : " + m_targetColumns);
-        LOGGER.debug("shrink_commit: " + isShrinkAfterCommit());
-        LOGGER.debug("max_coverage : " + isMaxClassCoverage());
-        LOGGER.debug("max #epochs  : " + m_maxEpochs);
+        LOGGER.debug("distance      : " + getDistance());
+        LOGGER.debug("missing       : " + getMissingFct());
+        LOGGER.debug("targets       : " + m_targetColumns);
+        LOGGER.debug("shrink commit : " + isShrinkAfterCommit());
+        LOGGER.debug("max coverage  : " + isMaxClassCoverage());
+        LOGGER.debug("max no. epochs: " + m_maxEpochs);
 
         // create factory
         BasisFunctionFactory factory = getFactory(
@@ -329,27 +336,27 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
                 BasisFunctionLearnerTable.MISSINGS[m_missing],
                 m_shrinkAfterCommit, m_maxCoverage, m_maxEpochs, exec);
         DataTableSpec modelSpec = table.getDataTableSpec();
-        m_modelSpec = new DataColumnSpec[modelSpec.getNumColumns()];
-        for (int i = 0; i < m_modelSpec.length; i++) {
+        DataColumnSpec[] modelSpecs = 
+            new DataColumnSpec[modelSpec.getNumColumns()];
+        for (int i = 0; i < modelSpecs.length; i++) {
             DataColumnSpecCreator creator = 
                 new DataColumnSpecCreator(modelSpec.getColumnSpec(i));
             creator.removeAllHandlers();
-            m_modelSpec[i] = creator.createSpec();
+            modelSpecs[i] = creator.createSpec();
         }
 
         // set translator mapping
         m_translator.setMapper(table.getHiLiteMapper());
 
-        m_bfs.putAll(table.getBasisFunctions());
-
         ModelContent modelInfo = new ModelContent(MODEL_INFO);
         table.saveInfos(modelInfo);
         m_modelInfo = modelInfo;
 
-        // set out data table
-        return new BufferedDataTable[]{exec
-                .createBufferedDataTable(table, exec)};
-    } // execute(DataTable[], ExecutionMonitor)
+        // return rules[0] and rule_model[1]
+        return new PortObject[]{exec.createBufferedDataTable(
+                table, exec), createPortObject(new BasisFunctionModelContent(
+                        table.getDataTableSpec(), table.getBasisFunctions()))};
+    }
 
     /**
      * Create factory to generate BasisFunctions.
@@ -389,16 +396,8 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
             msg.append("Target columns not found in settings.\n");
         }
         // get data columns
-        String[] dataColumns = null;
-        try {
-            dataColumns = settings.getStringArray(DATA_COLUMNS);
-        } catch (InvalidSettingsException ise) {
-            // suppress since before 1.2.0 all numeric data columns were used
-            // msg.append("Data columns not found in settings.\n");
-        }
-//        if (dataColumns == null || dataColumns.length == 0) {
-//            msg.append("No data column specified.\n");
-//        }
+        String[] dataColumns = settings.getStringArray(DATA_COLUMNS, 
+                (String[]) null);
         if (dataColumns != null && targetColumns != null) {
             Set<String> hash = new HashSet<String>(Arrays.asList(dataColumns));
             for (String target : targetColumns) {
@@ -442,7 +441,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         }
         // data columns for training
         m_dataColumns = settings.getStringArray(
-                DATA_COLUMNS, (String[]) null);
+                DATA_COLUMNS, new String[0]);
         // missing value replacement
         m_missing = settings.getInt(BasisFunctionLearnerTable.MISSING);
         // distance function
@@ -474,33 +473,6 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         settings.addBoolean(MAX_CLASS_COVERAGE, m_maxCoverage);
         // maximum number of epochs
         settings.addInt(MAX_EPOCHS, m_maxEpochs);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveModelContent(final int index, final ModelContentWO pp)
-            throws InvalidSettingsException {
-        assert index == 0 : index;
-        // add used columns
-        assert m_modelSpec != null;
-        ModelContentWO modelSpec = pp.addModelContent("model_spec");
-        for (int i = 0; i < m_modelSpec.length; i++) {
-            DataColumnSpec cspec = m_modelSpec[i];
-            cspec.save(modelSpec.addConfig(cspec.getName()));
-        }
-        // save basisfunctions
-        ModelContentWO ruleSpec = pp.addModelContent("rules");
-        for (DataCell key : m_bfs.keySet()) {
-            List<BasisFunctionLearnerRow> list = m_bfs.get(key);
-            for (BasisFunctionLearnerRow bf : list) {
-                BasisFunctionPredictorRow predBf = bf.getPredictorRow();
-                ModelContentWO bfParam = ruleSpec.addModelContent(bf.getKey()
-                        .getId().toString());
-                predBf.save(bfParam);
-            }
-        }
     }
 
     /** Model info identifier. */

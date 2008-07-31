@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -45,6 +45,9 @@ import org.knime.core.data.DoubleValue;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
+    
+    /** Description that's returned in {@link #getDescription()}. */
+    public static final String DESCRIPTION = "Gray Scale";
     
     private final Icon m_icon = new GrayIcon();
     private boolean m_isPaintCrossForMissing = false;
@@ -170,7 +173,7 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
      */
     @Override
     public String getDescription() {
-        return "Gray Scale";
+        return DESCRIPTION;
     }
     
     /** Returns <code>true</code> if the spec contains domain information 

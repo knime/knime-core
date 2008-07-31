@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -22,25 +22,23 @@
 package org.knime.base.node.mine.bfn;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.PortObject;
+import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.PortType;
 
 /**
  * The basis function predictor model performing a prediction on the data from
@@ -50,85 +48,42 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
+public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
     
     private String m_applyColumn = "Winner";
 
     private double m_dontKnow = -1.0;
     
     private boolean m_ignoreDontKnow = false;
-
-    private final List<BasisFunctionPredictorRow> m_bfs = 
-        new ArrayList<BasisFunctionPredictorRow>();
-
-    private DataColumnSpec[] m_modelSpec;
     
     /**
      * Creates a new basisfunction predictor model with two inputs, the first
      * one which contains the data and the second with the model.
+     * @param model type of the basisfunction model at the in-port
      */
-    protected BasisFunctionPredictorNodeModel() {
-        super(1, 1, 1, 0);
+    protected BasisFunctionPredictorNodeModel(final PortType model) {
+        super(new PortType[]{model, BufferedDataTable.TYPE},
+              new PortType[]{BufferedDataTable.TYPE});
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public BufferedDataTable[] execute(final BufferedDataTable[] data,
-            final ExecutionContext exec) throws CanceledExecutionException {
-        // data spec
-        final DataTableSpec dataSpec = data[0].getDataTableSpec();
+    public BufferedDataTable[] execute(final PortObject[] portObj,
+            final ExecutionContext exec) 
+            throws CanceledExecutionException, InvalidSettingsException {
+        BasisFunctionPortObject pred = (BasisFunctionPortObject) portObj[0];
+        final DataTableSpec modelSpec = pred.getSpec();
+        final BufferedDataTable data = (BufferedDataTable) portObj[1];
+        final DataTableSpec dataSpec = data.getDataTableSpec();
         final ColumnRearranger colreg = new ColumnRearranger(dataSpec);
         colreg.append(new BasisFunctionPredictorCellFactory(
-                dataSpec, m_modelSpec, m_bfs, m_applyColumn, m_dontKnow,
-                normalizeClassification()));
-        
-        return new BufferedDataTable[]{exec.createColumnRearrangeTable(
-                data[0], colreg, exec)};
+                dataSpec, modelSpec, pred.getBasisFunctions(), 
+                m_applyColumn, m_dontKnow, normalizeClassification()));
+       return new BufferedDataTable[]{exec.createColumnRearrangeTable(
+                data, colreg, exec)};
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void loadModelContent(final int index,
-            final ModelContentRO predParams) throws InvalidSettingsException {
-        assert index == 0;
-        if (predParams != null) {
-            // load rules
-            ModelContentRO ruleModel = predParams.getModelContent("rules");
-            for (String key : ruleModel.keySet()) {
-                ModelContentRO bfParam = ruleModel.getModelContent(key);
-                BasisFunctionPredictorRow bf = createPredictorRow(bfParam);
-                m_bfs.add(bf);
-            }
-            // load model info
-            ModelContentRO modelInfo = predParams.getModelContent("model_spec");
-            Set<String> keySet = modelInfo.keySet();
-            m_modelSpec = new DataColumnSpec[keySet.size()];
-            int idx = 0;
-            for (String key : keySet) {
-                m_modelSpec[idx] = 
-                    DataColumnSpec.load(modelInfo.getConfig(key));
-                idx++;
-            }
-        } else {
-            // reset model
-            reset();
-        }
-    }
-
-    /**
-     * Return specific predictor row for the given <code>ModelContent</code>.
-     * 
-     * @param pp the content the read the predictive row from
-     * @return a new predictor row
-     * @throws InvalidSettingsException if the rule can be read from model
-     *             content
-     */
-    protected abstract BasisFunctionPredictorRow createPredictorRow(
-            ModelContentRO pp) throws InvalidSettingsException;
     
     /**
      * @return <code>true</code> if normalization is required for output
@@ -136,24 +91,10 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
     public abstract boolean normalizeClassification();
     
     /**
-     * @return a list of basisfunction rules
-     */
-    public List<BasisFunctionPredictorRow> getRules() {
-        return m_bfs;
-    }
-    
-    /**
      * @return the column name contained the winner prediction
      */
     public String getApplyColumn() {
         return m_applyColumn;
-    }
-    
-    /**
-     * @return spec of the applied data
-     */
-    public DataColumnSpec[] getModelSpecs() {
-        return m_modelSpec;
     }
     
     /**
@@ -167,78 +108,60 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    public DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    public DataTableSpec[] configure(final PortObjectSpec[] portObjSpec)
             throws InvalidSettingsException {
-        if (m_bfs.size() == 0) {
-            throw new InvalidSettingsException("No rules available!");
-        }
-        if (m_modelSpec == null || m_modelSpec.length == 0) {
-            throw new InvalidSettingsException("No model spec found.");
-        }
-                
-        // data model columns need to be in the data
-        for (int i = 0; i < m_modelSpec.length - 5; i++) {
-            int idx = inSpecs[0].findColumnIndex(m_modelSpec[i].getName());
-            if (idx >= 0) {
-                DataType dataType = inSpecs[0].getColumnSpec(idx).getType();
-                Class<? extends DataValue> prefValue = 
-                    m_modelSpec[i].getType().getPreferredValueClass();
-                if (!dataType.isCompatible(prefValue)) {
-                    throw new InvalidSettingsException("Model column '"
-                            + m_modelSpec[i].getName() + "' of type '"
-                            + m_modelSpec[i].getType() 
-                            + "' is not a super type of '" + dataType + "'");
-                }
-            } else {
-                throw new InvalidSettingsException("Model column name '"
-                        + m_modelSpec[i].getName() + "' not in data spec.");
-            }
-        }
-        return new DataTableSpec[]{createSpec(inSpecs[0]).createSpec()};
-    }
-    
-    private ColumnRearranger createSpec(final DataTableSpec oSpec) {
-        String newColumn = m_applyColumn;
-        int idx = 0;
-        final String dupString = "_duplicate";
-        while (true) {
-            // if apply column exist, "_duplicate<id>" is appended 
-            if (oSpec.containsName(newColumn)) {
-                newColumn = m_applyColumn + dupString;
-                if (idx > 0) {
-                    newColumn += idx;
-                }
-                idx++;
-            } else {
-                if (!m_applyColumn.equals(newColumn)) {
-                    String msg = 
-                        "The apply column name \"" + m_applyColumn 
-                        + "\" has changed to \"" + newColumn
-                        + "\" to avoid duplicate column names.";
-                    setWarningMessage(msg);
-                    NodeLogger.getLogger(
-                            BasisFunctionPredictorNodeModel.class).warn(msg);
-                    // set new column name
-                    m_applyColumn = newColumn;
-                }     
-                break;
-            }
-        }
-        ColumnRearranger colreg = new ColumnRearranger(oSpec);
+        // get model spec
+        final DataTableSpec modelSpec = (DataTableSpec) portObjSpec[0];
+        // get data spec
+        final DataTableSpec dataSpec = (DataTableSpec) portObjSpec[1];
+        
+        final ColumnRearranger colreg = createRearranger(dataSpec, modelSpec);
         colreg.append(new BasisFunctionPredictorCellFactory(
-                m_modelSpec, m_applyColumn));
-        return colreg;
+                modelSpec, m_applyColumn));
+        return new DataTableSpec[]{colreg.createSpec()};
     }
     
     /**
-     * Resets the translator.
+     * Creates a column rearranger based on the data spec. The new apply column
+     * is appended.
+     * @param dataSpec data spec
+     * @param modelSpec model spec
+     * @return column rearranger from data spec
+     * @throws InvalidSettingsException if the settings are not valid against
+     *      data and/or model spec
+     */
+    public final ColumnRearranger createRearranger(final DataTableSpec dataSpec,
+            final DataTableSpec modelSpec) throws InvalidSettingsException {
+        if (modelSpec.getNumColumns() == 0) {
+            throw new InvalidSettingsException("Model spec must not be empty.");
+        }
+        // all model columns need to be in the data spec
+        for (int i = 0; i < modelSpec.getNumColumns() - 5; i++) {
+            DataColumnSpec cspec = modelSpec.getColumnSpec(i);
+            int idx = dataSpec.findColumnIndex(cspec.getName());
+            if (idx >= 0) {
+                DataType dataType = dataSpec.getColumnSpec(idx).getType();
+                if (!dataType.isCompatible(DoubleValue.class)) {
+                    throw new InvalidSettingsException("Data column \""
+                        + dataSpec.getColumnSpec(idx).getName() + "\"" 
+                        + " is not compatible with DoubleValue.");
+                }
+            } else {
+                throw new InvalidSettingsException("Model column \""
+                        + cspec.getName() + "\" not in data spec.");
+            }
+        }
+        m_applyColumn = DataTableSpec.getUniqueColumnName(
+                dataSpec, m_applyColumn);
+        return new ColumnRearranger(dataSpec);
+    }
+    
+    /**
+     * {@inheritDoc}
      */
     @Override
-    public final void reset() {
-        // remove list of basisfunctions
-        m_bfs.clear();
-        // clear model spec
-        m_modelSpec = null;
+    public void reset() {
+
     }
 
     /**
@@ -283,8 +206,8 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
         // prediction column name
         String s = null;
         try {
-            s = settings
-                    .getString(BasisFunctionPredictorNodeDialog.APPLY_COLUMN);
+            s = settings.getString(
+                    BasisFunctionPredictorNodeDialog.APPLY_COLUMN);
         } catch (InvalidSettingsException ise) {
             sb.append(ise.getMessage() + "\n");
         }
@@ -304,12 +227,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
     }
 
     /**
-     * Load internals.
-     * 
-     * @param internDir the intern node directory
-     * @param exec used to report progress or cancel saving
-     * @see org.knime.core.node.NodeModel
-     *      #loadInternals(java.io.File,ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     public void loadInternals(final File internDir,
@@ -318,12 +236,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
     }
 
     /**
-     * Save internals.
-     * 
-     * @param internDir the intern node directory
-     * @param exec used to report progress or cancel saving
-     * @see org.knime.core.node.NodeModel
-     *      #saveInternals(java.io.File,ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     public void saveInternals(final File internDir,

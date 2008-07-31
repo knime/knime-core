@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -123,18 +123,24 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
      * All nominal columns without possible values or with more than 60
      * possible values are ignored. A warning is set if so.
      * 
-     * @see org.knime.core.node.NodeModel#configure(
-     * org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+            throws InvalidSettingsException {
+        findCompatibleColumns(inSpecs[0], true);
+        return new DataTableSpec[0];
+    }
+
+    private void findCompatibleColumns(final DataTableSpec inSpec, 
+            final boolean warn)
             throws InvalidSettingsException {
         // first filter out those nominal columns with
         // possible values == null
         // or possibleValues.size() > 60
         List<Integer>excludedCols = new ArrayList<Integer>();
         int currColIdx = 0;
-        for (DataColumnSpec colSpec : inSpecs[0]) {
+        for (DataColumnSpec colSpec : inSpec) {
             // nominal value
             if (!colSpec.getType().isCompatible(NominalValue.class) 
                     && !colSpec.getType().isCompatible(DoubleValue.class)) {
@@ -161,18 +167,19 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
         for (int i = 0; i < excludedCols.size(); i++) {
             m_excludedColumns[i] = excludedCols.get(i);
         }
-        if (excludedCols.size() > 0) {
+        if (warn && excludedCols.size() > 0) {
             setWarningMessage("Some columns are ignored! Not compatible " 
                     + "with DoubleValue or NominalValue or no or too many" 
                     + " possible values or no lower and upper bound provided.");
         }
         // check for empty table
-        if (inSpecs[0].getNumColumns() - excludedCols.size() <= 0) {
+        if (warn && inSpec.getNumColumns() - excludedCols.size() <= 0) {
             throw new InvalidSettingsException(
                 "No columns to visualize are available!");
         }
-        return new DataTableSpec[0];
     }
+    
+    
 
     /**
      * Converts the input data at inport 0 into a 
@@ -180,9 +187,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
      * defined in the {@link DefaultVisualizationNodeDialog}. Thereby nominal 
      * columns are irgnored whose possible values are null or more than 60.
      * 
-     * @see org.knime.core.node.NodeModel#execute(
-     * org.knime.core.node.BufferedDataTable[], 
-     * org.knime.core.node.ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -190,6 +195,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
         // first filter out those nominal columns with
         // possible values == null
         // or possibleValues.size() > 60
+        findCompatibleColumns(inData[0].getDataTableSpec(), false);
         DataTable filter = new FilterColumnTable(inData[0], false, 
                 m_excludedColumns);
         m_input = new DefaultDataArray(filter, 1, m_last, exec);
@@ -203,8 +209,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     /**
      * Loads the converted {@link org.knime.base.node.util.DataArray}.
      * 
-     * @see org.knime.core.node.NodeModel#loadInternals(java.io.File, 
-     * org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File nodeInternDir, 
@@ -218,8 +223,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     /**
      * Loads the maximum number of rows.
      * 
-     * @see org.knime.core.node.NodeModel#loadValidatedSettingsFrom(
-     * org.knime.core.node.NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -231,7 +235,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     /**
      * Sets the input data <code>null</code>.
      * 
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -242,8 +246,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     /**
      * Saves the converted {@link org.knime.base.node.util.DataArray}.
      * 
-     * @see org.knime.core.node.NodeModel#saveInternals(java.io.File, 
-     * org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File nodeInternDir, 
@@ -256,8 +259,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     /**
      * Saves the maximum number of rows.
      * 
-     * @see org.knime.core.node.NodeModel#saveSettingsTo(
-     * org.knime.core.node.NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {

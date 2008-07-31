@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -27,6 +27,8 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -247,6 +249,15 @@ public class ColumnFilterPanel extends JPanel {
         m_inclList = new JList(m_inclMdl);
         m_inclList.setSelectionMode(
                 ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        m_inclList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(final MouseEvent me) {
+                if (me.getClickCount() == 2) {
+                    onRemIt();
+                    me.consume();
+                }
+            }
+        });
         final JScrollPane jspIncl = new JScrollPane(m_inclList);
         jspIncl.setMinimumSize(new Dimension(150, 155));
 
@@ -288,6 +299,15 @@ public class ColumnFilterPanel extends JPanel {
         m_exclList = new JList(m_exclMdl);
         m_exclList.setSelectionMode(
                 ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        m_exclList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(final MouseEvent me) {
+                if (me.getClickCount() == 2) {
+                    onAddIt();
+                    me.consume();
+                }
+            }
+        });
         setListCellRenderer(new DataColumnSpecListCellRenderer());
         final JScrollPane jspExcl = new JScrollPane(m_exclList);
         jspExcl.setMinimumSize(new Dimension(150, 155));

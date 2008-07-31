@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   12.07.2006 (sieb): created
  */
@@ -45,12 +45,14 @@ import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.handles.HandleBounds;
 import org.eclipse.gef.requests.ChangeBoundsRequest;
 import org.eclipse.gef.requests.GroupRequest;
-
+import org.knime.core.node.PortType;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.AbstractPortEditPart;
+import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeInPortEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
 
 /**
  * A temporary helper used to perform snapping to existing elements. This helper
@@ -70,7 +72,7 @@ import org.knime.workbench.editor2.editparts.NodeInPortEditPart;
  * This helper does not keep up with changes made to the container editpart.
  * Clients should instantiate a new helper each time one is requested and not
  * hold on to instances of the helper.
- * 
+ *
  * @since 3.0
  * @author Randy Hudson
  * @author Pratik Shah
@@ -81,7 +83,7 @@ public class SnapToPortGeometry extends SnapToHelper {
      * A property indicating whether this helper should be used. The value
      * should be an instance of Boolean. Currently, this class does not check to
      * see if the viewer property is set to <code>true</code>.
-     * 
+     *
      * @see org.eclipse.gef.EditPartViewer#setProperty(String, Object)
      */
     public static final String PROPERTY_SNAP_ENABLED = "SnapToGeometry.isEnabled"; //$NON-NLS-1$
@@ -140,13 +142,13 @@ public class SnapToPortGeometry extends SnapToHelper {
         boolean m_inport;
 
         /**
-         * Wheather this is a model port.
+         * Type of this port.
          */
-        boolean m_modelPort;
+        PortType m_portType;
 
         /**
          * Constructs a new entry with the given side and offset.
-         * 
+         *
          * @param side an integer indicating T/L, B/R, or C/M
          * @param offset the location
          */
@@ -157,17 +159,18 @@ public class SnapToPortGeometry extends SnapToHelper {
 
         /**
          * Constructs a new entry with the given side and offset.
-         * 
+         *
          * @param side an integer indicating T/L, B/R, or C/M
          * @param offset the location
          * @param inport wheather this entry belongs to an inport
+         * @param type the type of the port
          */
         Entry(final int side, final int offset, final boolean inport,
-                final boolean modelPort) {
+                final PortType type) {
             this.m_side = side;
             this.m_offset = offset;
             m_inport = inport;
-            m_modelPort = modelPort;
+            m_portType = type;
         }
 
         /**
@@ -208,13 +211,13 @@ public class SnapToPortGeometry extends SnapToHelper {
      */
     protected GraphicalEditPart m_container;
 
-    private ZoomManager m_zoomManager;
+    private final ZoomManager m_zoomManager;
 
     /**
      * Constructs a helper that will use the given part as its basis for
      * snapping. The part's contents pane will provide the coordinate system and
      * its children determine the existing elements.
-     * 
+     *
      * @since 3.0
      * @param container the container editpart
      */
@@ -229,7 +232,7 @@ public class SnapToPortGeometry extends SnapToHelper {
      * Generates a list of parts which should be snapped to. The list is the
      * original children, minus the given exclusions, minus and children whose
      * figures are not visible.
-     * 
+     *
      * @since 3.0
      * @param exclusions the children to exclude
      * @return a list of parts which should be snapped to
@@ -255,7 +258,7 @@ public class SnapToPortGeometry extends SnapToHelper {
     /**
      * Returns the correction value for the given entries and sides. During a
      * move, the left, right, or center is free to snap to a location.
-     * 
+     *
      * @param entries the entries
      * @param extendedData the requests extended data
      * @param vert <code>true</code> if the correction is vertical
@@ -290,7 +293,7 @@ public class SnapToPortGeometry extends SnapToHelper {
     /**
      * Returns the correction value for the given entries and sides. During a
      * move, the left, right, or center is free to snap to a location.
-     * 
+     *
      * @param entries the entries
      * @param extendedData the requests extended data
      * @return the correction amount or THRESHOLD if no correction was made
@@ -312,7 +315,7 @@ public class SnapToPortGeometry extends SnapToHelper {
 
                 // and only ports of same type (data - data, model-model)
                 // are snaped
-                if (entry.m_modelPort ^ y.m_modelPort) {
+                if (!entry.m_portType .equals(y.m_portType)) {
                     continue;
                 }
 
@@ -330,7 +333,7 @@ public class SnapToPortGeometry extends SnapToHelper {
     /**
      * Returns the correction value between {@link #THRESHOLD}, or the
      * THRESHOLD if no corrections were found.
-     * 
+     *
      * @param entries the entries
      * @param extendedData the map for setting values
      * @param vert <code>true</code> if vertical
@@ -384,7 +387,7 @@ public class SnapToPortGeometry extends SnapToHelper {
     /**
      * Returns the rectangular contribution for the given editpart. This is the
      * rectangle with which snapping is performed.
-     * 
+     *
      * @since 3.0
      * @param part the child
      * @return the rectangular guide for that part
@@ -399,13 +402,27 @@ public class SnapToPortGeometry extends SnapToHelper {
 
     private List<AbstractPortEditPart> getPorts(final List parts) {
         // add the port edit parts to a list
-        List<AbstractPortEditPart> portList = new ArrayList<AbstractPortEditPart>();
+        List<AbstractPortEditPart> portList
+            = new ArrayList<AbstractPortEditPart>();
 
         if (parts != null) {
             for (Object part : parts) {
 
                 if (part instanceof NodeContainerEditPart) {
-                    NodeContainerEditPart containerEditPart = (NodeContainerEditPart)part;
+                    NodeContainerEditPart containerEditPart
+                        = (NodeContainerEditPart)part;
+
+                    // get the port parts
+                    for (Object childPart : containerEditPart.getChildren()) {
+                        if (childPart instanceof AbstractPortEditPart) {
+                            // add to list
+                            portList.add((AbstractPortEditPart)childPart);
+                        }
+                    }
+                }
+                if (part instanceof AbstractWorkflowPortBarEditPart) {
+                    AbstractWorkflowPortBarEditPart containerEditPart
+                        = (AbstractWorkflowPortBarEditPart)part;
 
                     // get the port parts
                     for (Object childPart : containerEditPart.getChildren()) {
@@ -425,7 +442,7 @@ public class SnapToPortGeometry extends SnapToHelper {
      * Updates the cached row and column Entries using the provided parts.
      * Columns are only the center of a node figure while rows are all ports of
      * a node.
-     * 
+     *
      * @param parts a List of EditParts
      */
     protected void populateRowsAndCols(final List parts, final List dragedParts) {
@@ -441,13 +458,14 @@ public class SnapToPortGeometry extends SnapToHelper {
 
             // get information is this is an inport
             boolean inport = false;
-            if (portList.get(i) instanceof NodeInPortEditPart) {
+            if (portList.get(i) instanceof NodeInPortEditPart
+                    || portList.get(i) instanceof WorkflowInPortEditPart) {
                 inport = true;
             }
 
             // get information is this is a model port
             rowVector.add(new Entry(0, bounds.y + (bounds.height - 1) / 2,
-                    inport, portList.get(i).isModelPort()));
+                    inport, portList.get(i).getType()));
         }
 
         // add the port edit parts to a list
@@ -459,26 +477,24 @@ public class SnapToPortGeometry extends SnapToHelper {
 
             List sourceConnections = portPart.getSourceConnections();
             for (int j = 0; j < sourceConnections.size(); j++) {
-                ConnectionContainerEditPart conPart = (ConnectionContainerEditPart)sourceConnections
-                        .get(j);
+                ConnectionContainerEditPart conPart
+                    = (ConnectionContainerEditPart)sourceConnections.get(j);
 
                 Point p = ((Connection)conPart.getFigure()).getPoints()
                         .getPoint(2);
 
-                rowVector.add(new Entry(0, p.y - 1, true, portPart
-                        .isModelPort()));
+                rowVector.add(new Entry(0, p.y - 1, true, portPart.getType()));
             }
 
             List targetConnections = portPart.getTargetConnections();
             for (int j = 0; j < targetConnections.size(); j++) {
-                ConnectionContainerEditPart conPart = (ConnectionContainerEditPart)targetConnections
-                        .get(j);
+                ConnectionContainerEditPart conPart
+                    = (ConnectionContainerEditPart)targetConnections.get(j);
 
                 PointList pList = ((Connection)conPart.getFigure()).getPoints();
                 Point p = pList.getPoint(pList.size() - 3);
 
-                rowVector.add(new Entry(0, p.y - 1, false, portPart
-                        .isModelPort()));
+                rowVector.add(new Entry(0, p.y - 1, false, portPart.getType()));
             }
         }
 
@@ -539,12 +555,13 @@ public class SnapToPortGeometry extends SnapToHelper {
             for (AbstractPortEditPart port : ports) {
 
                 boolean inport = false;
-                if (port instanceof NodeInPortEditPart) {
+                if (port instanceof NodeInPortEditPart
+                        || port instanceof WorkflowInPortEditPart) {
                     inport = true;
                 }
 
                 yValues[i] = new Entry(0, getFigureBounds(port).getLeft().y,
-                        inport, port.isModelPort());
+                        inport, port.getType());
                 i++;
             }
             m_yValues = yValues;

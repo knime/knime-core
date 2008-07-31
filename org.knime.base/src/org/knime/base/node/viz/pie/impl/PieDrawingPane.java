@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,17 +25,7 @@
 
 package org.knime.base.node.viz.pie.impl;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.Shape;
-import java.awt.geom.Arc2D;
-import java.awt.geom.Rectangle2D;
-import java.util.Collection;
+import org.knime.core.data.property.ColorAttr;
 
 import org.knime.base.node.viz.aggregation.AggregationModel;
 import org.knime.base.node.viz.aggregation.DrawingUtils;
@@ -45,7 +35,22 @@ import org.knime.base.node.viz.pie.datamodel.PieSubSectionDataModel;
 import org.knime.base.node.viz.pie.datamodel.PieVizModel;
 import org.knime.base.node.viz.pie.util.GeometryUtil;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
-import org.knime.core.data.property.ColorAttr;
+
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Arc2D;
+import java.awt.geom.Rectangle2D;
+import java.util.Collection;
+
+import javax.swing.ToolTipManager;
 
 
 /**
@@ -91,6 +96,12 @@ public class PieDrawingPane extends AbstractDrawingPane {
      */
     private String m_infoMsg = null;
 
+
+    /**Constructor for class PieDrawingPane.*/
+    protected PieDrawingPane() {
+        ToolTipManager.sharedInstance().registerComponent(this);
+    }
+
     /**
      * @param vizModel the visualization model to draw
      */
@@ -104,7 +115,7 @@ public class PieDrawingPane extends AbstractDrawingPane {
 
     /**
      * @return the information message which will be displayed on the screen
-     *         instead of the bars
+     *         instead of the pie sections
      */
     public String getInfoMsg() {
         return m_infoMsg;
@@ -326,5 +337,28 @@ public class PieDrawingPane extends AbstractDrawingPane {
         }
         g2.drawLine((int)linkX1, (int)linkY1, (int)linkX2, (int)linkY2);
         g2.drawString(label, (float)labelX, (float)labelY);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getToolTipText(final MouseEvent e) {
+        final Point p = e.getPoint();
+        if (m_vizModel != null && p != null) {
+            final PieSectionDataModel section =
+                m_vizModel.getSelectedElement(p);
+            if (section != null) {
+                if (section.isSelected() && m_vizModel.showDetails()) {
+                    final PieSubSectionDataModel subSection =
+                        section.getSelectedSubElement(p);
+                    if (subSection != null) {
+                        return m_vizModel.createLabel(section, subSection);
+                    }
+                }
+                return m_vizModel.createLabel(section);
+            }
+        }
+        return null;
     }
 }

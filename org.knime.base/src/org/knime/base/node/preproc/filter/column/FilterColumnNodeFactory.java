@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -21,10 +21,9 @@
  */
 package org.knime.base.node.preproc.filter.column;
 
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * The factory for the column filter node.
@@ -33,13 +32,14 @@ import org.knime.core.node.NodeView;
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-public class FilterColumnNodeFactory extends NodeFactory {
+public class FilterColumnNodeFactory 
+        extends GenericNodeFactory<FilterColumnNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public FilterColumnNodeModel createNodeModel() {
         return new FilterColumnNodeModel();
     }
 
@@ -55,8 +55,9 @@ public class FilterColumnNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int i, final NodeModel nodeModel) {
-        throw new InternalError();
+    public GenericNodeView<FilterColumnNodeModel> createNodeView(final int i, 
+            final FilterColumnNodeModel nodeModel) {
+        return null;
     }
 
     /**

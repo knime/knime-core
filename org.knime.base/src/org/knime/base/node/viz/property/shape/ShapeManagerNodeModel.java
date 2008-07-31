@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,6 +24,7 @@ package org.knime.base.node.viz.property.shape;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -41,7 +42,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
@@ -58,11 +58,14 @@ import org.knime.core.node.NodeSettingsWO;
  */
 class ShapeManagerNodeModel extends NodeModel {
     
+    /** ShapeHandler generated during executed and save into the model port. */
+    private ShapeHandler m_shapeHandler;
+    
     /** Logger for this package. */
     static final NodeLogger LOGGER = NodeLogger.getLogger("Shape Manager");
 
     /** Stores the mapping from column value to shape. */
-    private final LinkedHashMap<DataCell, Shape> m_map;
+    private final Map<DataCell, Shape> m_map;
 
     /** The selected column. */
     private String m_column;
@@ -106,56 +109,62 @@ class ShapeManagerNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws CanceledExecutionException {
-        assert (data != null && data.length == 1 && data[INPORT] != null);
-        DataTableSpec inSpec = data[INPORT].getDataTableSpec();
-        DataColumnSpec[] newColSpecs = new DataColumnSpec[inSpec
-                .getNumColumns()];
-        for (int i = 0; i < newColSpecs.length; i++) {
-            DataColumnSpec cspec = inSpec.getColumnSpec(i);
-            DataColumnSpecCreator dtsCont = new DataColumnSpecCreator(cspec);
-            if (cspec.getName().equals(m_column)) {
-                ShapeHandler shapeHdl = new ShapeHandler(
-                        new ShapeModelNominal(m_map));
-                dtsCont.setShapeHandler(shapeHdl);
-            }
-            newColSpecs[i] = dtsCont.createSpec();
-        }
-        final DataTableSpec newSpec = new DataTableSpec(newColSpecs);
+        final DataTableSpec inSpec = data[INPORT].getDataTableSpec();
+        m_shapeHandler = new ShapeHandler(new ShapeModelNominal(m_map));
+        final DataTableSpec newSpec = appendShapeHandler(inSpec, m_column, 
+                m_shapeHandler);
         BufferedDataTable changedSpecTable = exec.createSpecReplacerTable(
                 data[INPORT], newSpec);
         // return original table with ShapeHandler
         return new BufferedDataTable[]{changedSpecTable};
     }
+    
+    /**
+     * Appends the given <code>ShapeHandler</code> to the given 
+     * <code>DataTableSpec</code> for the given column. If the spec
+     * already contains a ShapeHandler, it will be removed and replaced by
+     * the new one.
+     * @param spec to which the ShapeHandler is appended
+     * @param column for this column
+     * @param shapeHandler ShapeHandler
+     * @return a new spec with ShapeHandler
+     */
+    static final DataTableSpec appendShapeHandler(final DataTableSpec spec, 
+            final String column, final ShapeHandler shapeHandler) {
+        DataColumnSpec[] cspecs = new DataColumnSpec[spec.getNumColumns()];
+        for (int i = 0; i < cspecs.length; i++) {
+            DataColumnSpec cspec = spec.getColumnSpec(i);
+            DataColumnSpecCreator cr = new DataColumnSpecCreator(cspec);
+            if (cspec.getName().equals(column)) {
+                cr.setShapeHandler(shapeHandler);
+            } else {
+                // delete other ShapeHandler
+                cr.setShapeHandler(null);
+            }
+            cspecs[i] = cr.createSpec();
+        }
+        return new DataTableSpec(cspecs);
+    }
 
     /**
      * Saves the shape settings to <code>ModelContent</code> object.
      * 
-     * @see NodeModel#saveModelContent(int, ModelContentWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveModelContent(final int index,
             final ModelContentWO predParams) throws InvalidSettingsException {
-        assert index == 0;
-        if (predParams != null) {
-            NodeSettings settings = new NodeSettings(predParams.getKey());
-            saveSettingsTo(settings);
-            settings.copyTo(predParams);
-        }
+        m_shapeHandler.save(predParams);
     }
 
-    /**
-     * @return the selected column or <code>null</code> if none
-     */
-    protected String getSelectedColumn() {
-        return m_column;
-    }
+
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected void reset() {
-
+        m_shapeHandler = null;
     }
 
     /**
@@ -200,7 +209,11 @@ class ShapeManagerNodeModel extends NodeModel {
         if (m_map.isEmpty()) {
             throw new InvalidSettingsException("No shapes defined to apply.");
         }
-        return new DataTableSpec[]{inSpecs[INPORT]};
+        ShapeHandler shapeHandler = 
+            new ShapeHandler(new ShapeModelNominal(m_map));
+        DataTableSpec outSpec = appendShapeHandler(inSpecs[INPORT], m_column, 
+                shapeHandler);
+        return new DataTableSpec[]{outSpec};
     }
 
     /**

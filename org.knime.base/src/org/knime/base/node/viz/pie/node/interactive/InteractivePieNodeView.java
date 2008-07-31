@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,13 +25,13 @@
 
 package org.knime.base.node.viz.pie.node.interactive;
 
+import org.knime.core.node.property.hilite.HiLiteHandler;
+
 import org.knime.base.node.viz.pie.datamodel.interactive.InteractivePieVizModel;
 import org.knime.base.node.viz.pie.impl.PiePlotter;
 import org.knime.base.node.viz.pie.impl.interactive.InteractivePiePlotter;
 import org.knime.base.node.viz.pie.impl.interactive.InteractivePieProperties;
 import org.knime.base.node.viz.pie.node.PieNodeView;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.property.hilite.HiLiteHandler;
 
 
 /**
@@ -39,12 +39,13 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * @author Tobias Koetter, University of Konstanz
  */
 public class InteractivePieNodeView
-extends PieNodeView<InteractivePieProperties, InteractivePieVizModel> {
+extends PieNodeView<InteractivePieProperties, InteractivePieVizModel,
+InteractivePieNodeModel> {
 
     /**Constructor for class InteractivePieNodeView.
      * @param nodeModel the node model
      */
-    protected InteractivePieNodeView(final NodeModel nodeModel) {
+    protected InteractivePieNodeView(final InteractivePieNodeModel nodeModel) {
         super(nodeModel);
     }
 

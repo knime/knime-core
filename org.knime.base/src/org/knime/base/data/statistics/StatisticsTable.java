@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -291,7 +291,9 @@ public class StatisticsTable implements DataTable {
                     m_varianceValues[j] = 0.0;
                 }
                 assert m_varianceValues[j] >= 0.0 
-                    : "Variance can not be negative: " + m_varianceValues[j];
+                    : "Variance can not be negative (column \"" 
+                        + origSpec.getColumnSpec(j).getName() + "\": " 
+                        + m_varianceValues[j];
             }
         }
 

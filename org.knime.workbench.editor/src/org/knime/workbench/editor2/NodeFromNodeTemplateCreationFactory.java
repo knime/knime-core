@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,8 +25,8 @@
 package org.knime.workbench.editor2;
 
 import org.eclipse.gef.requests.CreationFactory;
-import org.knime.core.node.NodeFactory;
-
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.workbench.repository.model.NodeTemplate;
 
 /**
@@ -43,7 +43,7 @@ import org.knime.workbench.repository.model.NodeTemplate;
  * @author Florian Georg, University of Konstanz
  */
 public class NodeFromNodeTemplateCreationFactory implements CreationFactory {
-    private Class m_factory;
+    private Class<GenericNodeFactory<? extends GenericNodeModel>> m_factory;
 
     /**
      * New factory for the given template.
@@ -58,11 +58,13 @@ public class NodeFromNodeTemplateCreationFactory implements CreationFactory {
     /**
      * Creates a new <code>NodeFactory</code> instance.
      * 
-     * @see org.eclipse.gef.requests.CreationFactory#getNewObject()
+     * {@inheritDoc}
      */
+    @SuppressWarnings("unchecked")
     public Object getNewObject() {
         try {
-            return (NodeFactory) m_factory.newInstance();
+            return (GenericNodeFactory<? extends GenericNodeModel>) 
+                m_factory.newInstance();
         } catch (Exception e) {
             throw new RuntimeException("Can't instantiate NodeFactory "
                     + "from NodeTemplate", e);
@@ -73,6 +75,6 @@ public class NodeFromNodeTemplateCreationFactory implements CreationFactory {
      * {@inheritDoc}
      */
     public Object getObjectType() {
-        return NodeFactory.class;
+        return GenericNodeFactory.class;
     }
 }

@@ -1,8 +1,9 @@
-/* ------------------------------------------------------------------
+/*
+ * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -60,9 +61,9 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 /**
  * Implements a decision tree induction algorithm based on C4.5 and SPRINT.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
- * 
+ *
  * @see DecisionTreeLearnerNodeFactory
  */
 public class DecisionTreeLearnerNodeModel extends NodeModel {
@@ -319,7 +320,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
     /**
      * Saves decision tree to model out port.
-     * 
+     *
      * @param index The outport index.
      * @param predParams holding the model afterwards.
      * @throws InvalidSettingsException if settings are wrong
@@ -335,7 +336,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
     /**
      * Start of decision tree induction.
-     * 
+     *
      * @param exec the execution context for this run
      * @param data the input data to build the decision tree from
      * @return an empty data table array, as just a model is provided
@@ -361,7 +362,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                 + " used threads: "
                 + m_parallelProcessing.getCurrentThreadsInUse());
 
-// TODO        
+// TODO
 //        if (LOGGER.isDebugEnabled()) {
 //            LOGGER.debug("Pruning confidence TH: "
 //                    + m_pruningConfidenceThreshold);
@@ -398,6 +399,10 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         LOGGER.info("Initial table created in (ms) "
                 + (System.currentTimeMillis() - timer));
         int removedRows = tableCreator.getRemovedRowsDueToMissingClassValue();
+        if (removedRows == inData.getRowCount()) {
+            throw new IllegalArgumentException("Class column contains only "
+                    + "missing values");
+        }
         if (removedRows > 0) {
             warningMessageSb.append(removedRows);
             warningMessageSb
@@ -514,7 +519,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
     /**
      * Recursively induces the decision tree.
-     * 
+     *
      * @param table the {@link InMemoryTable} representing the data for this
      *            node to determine the split and after that perform
      *            partitioning
@@ -687,7 +692,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
     /**
      * The number of the class column must be > 0 and < number of input columns.
-     * 
+     *
      * @param inSpecs the tabel specs on the input port to use for configuration
      * @see NodeModel#configure(DataTableSpec[])
      * @throws InvalidSettingsException thrown if the configuration is not
@@ -722,7 +727,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
     /**
      * Loads the class column and the classification value in the model.
-     * 
+     *
      * @param settings the settings object to which the settings are stored
      * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
      * @throws InvalidSettingsException if there occur erros during saving the
@@ -733,7 +738,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             throws InvalidSettingsException {
 
         m_classifyColumn = settings.getString(KEY_CLASSIFYCOLUMN);
-// TODO 
+// TODO
 //        m_pruningConfidenceThreshold =
 //                (float)settings.getDouble(KEY_PRUNING_CONFIDENCE_THRESHOLD,
 //                        DEFAULT_PRUNING_CONFIDENCE_THRESHOLD);
@@ -793,7 +798,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      * <li>The positive value <code>DataCell</code> must not be null</li>
      * </ul>
      * {@inheritDoc}
-     * 
+     *
      * @see NodeModel#validateSettings(NodeSettingsRO)
      */
     @Override
@@ -801,7 +806,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             throws InvalidSettingsException {
         String classifyColumn = settings.getString(KEY_CLASSIFYCOLUMN);
         if (classifyColumn == null || classifyColumn.equals("")) {
-            throw new InvalidSettingsException("Must be a valid string!");
+            throw new InvalidSettingsException(
+                    "Classification column not set.");
         }
 
 // TODO       double significance =
@@ -864,7 +870,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
     /**
      * Returns the decision tree model.
-     * 
+     *
      * @return the decision tree model
      */
     public DecisionTree getDecisionTree() {
@@ -916,7 +922,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
         /**
          * Returns a possible exception after execution.
-         * 
+         *
          * @return a possible exception after execution
          */
         public Exception getException() {
@@ -925,7 +931,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
         /**
          * Returns the result node created in this thread.
-         * 
+         *
          * @return the result node created in this threads
          */
         public DecisionTreeNode getResultNode() {
@@ -972,7 +978,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
     /**
      * Returns whether the memory footprint is critical.
-     * 
+     *
      * @return whether the memory footprint is critical
      */
     public static boolean criticalMemoryFootprint() {

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,8 +18,8 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
- * History: 
+ *
+ * History:
  *   Dec 17, 2005 (wiswedel): created
  *   Mar  7, 2007 (ohl): extended with more options
  */
@@ -50,7 +50,7 @@ import org.knime.core.node.util.StringHistory;
 
 /**
  * NodeModel to write a DataTable to a CSV (comma separated value) file.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class CSVWriterNodeModel extends NodeModel {
@@ -63,7 +63,7 @@ public class CSVWriterNodeModel extends NodeModel {
 
     /**
      * Identifier for StringHistory.
-     * 
+     *
      * @see StringHistory
      */
     public static final String FILE_HISTORY_ID = "csvwrite";
@@ -211,7 +211,7 @@ public class CSVWriterNodeModel extends NodeModel {
 
     /**
      * Writes a comment header to the file, if specified so in the settings.
-     * 
+     *
      * @param settings where it is specified if and how to write the comment
      *            header
      * @param file the writer to write the header out to.
@@ -266,7 +266,7 @@ public class CSVWriterNodeModel extends NodeModel {
             }
             file.newLine();
         }
-        
+
         // add the table name
         if (settings.addTableName()) {
             if (!blockComment) {
@@ -288,7 +288,7 @@ public class CSVWriterNodeModel extends NodeModel {
                 file.newLine();
             }
         }
-        
+
         // close the block comment
         if (blockComment) {
             file.write(settings.getCommentEnd());
@@ -299,11 +299,12 @@ public class CSVWriterNodeModel extends NodeModel {
 
     /**
      * Ignored.
-     * 
+     *
      * @see org.knime.core.node.NodeModel#reset()
      */
     @Override
     protected void reset() {
+        // empty
     }
 
     /**
@@ -333,23 +334,44 @@ public class CSVWriterNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
 
-        checkFileAccess(m_settings.getFileName());
+        String warnMsg = "";
 
+        /*
+         * check file access
+         */
+        String fileName = m_settings.getFileName();
+        if (fileName == null) {
+            throw new InvalidSettingsException("No output file specified.");
+        }
+        File file = new File(fileName);
+
+        if (file.isDirectory()) {
+            throw new InvalidSettingsException("Specified location  is a "
+                    + "directory (\"" + file.getAbsolutePath() + "\").");
+        }
+        if (file.exists()) {
+            if (!file.canWrite()) {
+                throw new InvalidSettingsException("Cannot write to existing "
+                        + "file \"" + file.getAbsolutePath() + "\".");
+            }
+            if (!m_settings.appendToFile()) {
+                warnMsg +=
+                        "Selected output file exists and will be overwritten!";
+            }
+        }
+
+        /*
+         * check settings
+         */
         if (isEmpty(m_settings.getColSeparator())
                 && isEmpty(m_settings.getMissValuePattern())
                 && (isEmpty(m_settings.getQuoteBegin()) || isEmpty(m_settings
                         .getQuoteEnd()))) {
             // we will write the table out - but they will have a hard
             // time reading it in again.
-            String addMsg =
-                    "No separator and no quotes and no missing value pattern"
-                            + " set.\nWritten data will be hard read!";
-            String warnMsg = getWarningMessage();
-            if (notEmtpy(warnMsg)) {
-                setWarningMessage(warnMsg + "\n" + addMsg);
-            } else {
-                setWarningMessage(addMsg);
-            }
+            warnMsg +=
+                    "No separator and no quotes and no missing value "
+                            + "pattern set.\nWritten data will be hard read!";
         }
 
         DataTableSpec inSpec = inSpecs[0];
@@ -362,40 +384,12 @@ public class CSVWriterNodeModel extends NodeModel {
                         "Input table contains not only String or Doubles");
             }
         }
+
+        if (notEmtpy(warnMsg)) {
+            setWarningMessage(warnMsg);
+        }
+
         return new DataTableSpec[0];
-    }
-
-    /**
-     * Helper that checks some properties for the file argument.
-     * 
-     * @param fileName the file to check
-     * @throws InvalidSettingsException if that fails
-     */
-    private void checkFileAccess(final String fileName)
-            throws InvalidSettingsException {
-        if (fileName == null) {
-            throw new InvalidSettingsException("No output file specified.");
-        }
-        File file = new File(fileName);
-
-        if (file.isDirectory()) {
-            throw new InvalidSettingsException("\"" + file.getAbsolutePath()
-                    + "\" is a directory.");
-        }
-        if (!file.exists()) {
-            // dunno how to check the write access to the directory. If we can't
-            // create the file the execute of the node will fail. Well, too bad.
-            return;
-        }
-        if (!file.canWrite()) {
-            throw new InvalidSettingsException("Cannot write to file \""
-                    + file.getAbsolutePath() + "\".");
-        }
-        // here it exists and we can write it: warn user if we will overwrite
-        if (!m_settings.appendToFile()) {
-            setWarningMessage("Selected output file exists and will be "
-                    + "overwritten!");
-        }
     }
 
     /**

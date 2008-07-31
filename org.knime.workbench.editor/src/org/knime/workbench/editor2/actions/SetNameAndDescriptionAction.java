@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -26,10 +26,10 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.window.Window;
-import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.internal.Workbench;
+import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 
@@ -114,9 +114,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
      * dialog is closed the new name and description are set to the node
      * container if applicable.
      * 
-     * @see org.knime.workbench.editor2.actions.AbstractNodeAction#
-     *      runOnNodes(org.knime.workbench.editor2.editparts.
-     *      NodeContainerEditPart[])
+     * {@inheritDoc}
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
@@ -128,29 +126,45 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
             return;
         }
 
-        NodeContainer container = nodeParts[0].getNodeContainer();
+        final NodeContainer container = nodeParts[0].getNodeContainer();
 
         LOGGER.debug("Opening 'Set name and description' dialog"
                 + " for one node ...");
 
-        try {
-            Workbench.getInstance().getActiveWorkbenchWindow().getActivePage()
-                    .showView("org.eclipse.ui.views.ProgressView");
-
-            // Give focus to the editor again. Otherwise the actions (selection)
-            // is not updated correctly.
-            getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
-
-        } catch (PartInitException e) {
-            // ignore
-        }
-
         // open name and description dialog
-        Shell parent = Display.getCurrent().getActiveShell();
+        try {
+            Shell editorShell = PlatformUI.getWorkbench()
+                .getDisplay().getActiveShell();
 
+        Shell parent = new Shell(editorShell, SWT.BORDER
+                | SWT.TITLE | SWT.NO_TRIM | SWT.APPLICATION_MODAL);
+
+        String initialName = "Node " + container.getID();
+        if (container.getCustomName() != null) {
+            initialName = container.getCustomName();
+        }
+        String initialDescr = "";
+        if (container.getCustomDescription() != null) {
+            initialDescr = container.getCustomDescription();
+        }
+        String dialogTitle = container.getNameWithID();
+        if (container.getCustomName() != null) {
+            dialogTitle += " - " + container.getCustomName();
+        }
         NameDescriptionDialog dialog =
-                new NameDescriptionDialog(parent, container.getCustomName(),
-                        container.getDescription());
+            new NameDescriptionDialog(parent, initialName,
+                    initialDescr, dialogTitle);
+
+        Point relativeLocation =  new Point(
+                nodeParts[0].getFigure().getBounds().x,
+                nodeParts[0].getFigure().getBounds().y);
+
+        relativeLocation = editorShell.toDisplay(relativeLocation);
+        parent.setLocation(relativeLocation);
+
+        LOGGER.debug("custom description location: "
+                + parent.getLocation().x
+                + ", " + parent.getLocation().y);
 
         int result = dialog.open();
 
@@ -163,23 +177,27 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
             if (userName.trim().equals("")) {
 
                 if (container.getCustomName() != null
-                        || container.getDescription() != null) {
+                        || container.getCustomDescription() != null) {
 
                     // mark editor as dirty
                     getEditor().markDirty();
                 }
                 container.setCustomName(null);
-                container.setDescription(null);
+                container.setCustomDescription(null);
             } else {
                 // if name or description is different mark editor dirty
                 if (!userName.equals(container.getCustomName())
-                        || !description.equals(container.getDescription())) {
+                        || !description.equals(container
+                                .getCustomDescription())) {
                     getEditor().markDirty();
                 }
 
                 container.setCustomName(userName);
-                container.setDescription(description);
+                container.setCustomDescription(description);
             }
+            }
+        } catch (Throwable t) {
+            LOGGER.error("trying to open description editor: ", t);
         }
         // else do nothing
     }

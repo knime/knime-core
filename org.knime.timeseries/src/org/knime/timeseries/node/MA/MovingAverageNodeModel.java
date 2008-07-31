@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -34,7 +34,6 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.def.DoubleCell;
@@ -46,6 +45,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelOddIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
@@ -55,7 +55,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  */
 public class MovingAverageNodeModel extends NodeModel {
     /** Config identifier: column name. */
-    static final String CFG_COLUMN_NAME = "column_name";
+    static final String CFG_COLUMN_NAMES = "column_names";
     
     /** Config identifier: date format. */
     static final String CFG_WEIGHTS = "weights";
@@ -76,7 +76,7 @@ public class MovingAverageNodeModel extends NodeModel {
     private int m_minWinLength = MIN_ELEMENTS;
     private int m_maxWinLength = MAX_ELEMENTS;
   
-    private MovingAverage m_ma;
+    private MovingAverage[] m_mas;
     private int m_winLength = -1;
 
     private SettingsModelOddIntegerBounded m_winLengthSettings =
@@ -84,13 +84,13 @@ public class MovingAverageNodeModel extends NodeModel {
                  m_defaultWinLength,
                  m_minWinLength, m_maxWinLength);
 
-    private SettingsModelString m_columnName =
-            new SettingsModelString(CFG_COLUMN_NAME, null);
+    private SettingsModelFilterString m_columnNames =
+            new SettingsModelFilterString(CFG_COLUMN_NAMES);
 
     private SettingsModelString m_weights =
         new SettingsModelString(CFG_WEIGHTS, "simple");
 
-     /** Inits node, 1 input, 1 output. */
+     /** Init node, 1 input, 1 output. */
     public MovingAverageNodeModel() {
         super(1, 1);
     }
@@ -102,9 +102,6 @@ public class MovingAverageNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         
-        int colIndex = -1;
-        String weights = null;
-                
         // define moving average window length
         m_winLength = m_winLengthSettings.getIntValue();
         if (m_winLength == -1) {
@@ -112,50 +109,25 @@ public class MovingAverageNodeModel extends NodeModel {
                     "Window length is not selected.");
         } 
 
+        // define column name on which to apply MA
+        if ((m_columnNames.getIncludeList().size() == 0)
+                && (m_columnNames.getExcludeList().size() == 0)) {
+            throw new InvalidSettingsException(
+                  "No double columns available.");
+        }
+
         // define weight function 
         if (m_weights.getStringValue() == null) {
             throw new InvalidSettingsException(
                     "No weight function selected.");
         } else {
-           weights = m_weights.getStringValue();               
-           m_ma = new MovingAverage(m_winLength, weights);
-        }
-         
-        // define column name on which to apply MA
-        if (m_columnName.getStringValue() == null) {
-            int i = 0;
-            for (DataColumnSpec cs : inSpecs[0]) {
-                if (cs.getType().isCompatible(StringValue.class)) {
-                    if (colIndex != -1) {
-                        throw new InvalidSettingsException(
-                                "No column selected.");
-                    }
-                    colIndex = i;
-                }
-                i++;
-            }
-
-            if (colIndex == -1) {
-                throw new InvalidSettingsException("No column selected.");
-            }
-            m_columnName.setStringValue(inSpecs[0].getColumnSpec(colIndex)
-                    .getName());
-            setWarningMessage("Column '" + m_columnName.getStringValue()
-                    + "' auto selected");
-        } else {
-            colIndex =
-                    inSpecs[0].findColumnIndex(m_columnName.getStringValue());
-            if (colIndex < 0) {
-                throw new InvalidSettingsException("No such column: "
-                        + m_columnName.getStringValue());
-            }
-
-            DataColumnSpec colSpec = inSpecs[0].getColumnSpec(colIndex);
-            if (!colSpec.getType().isCompatible(DoubleValue.class)) {
-                throw new InvalidSettingsException("Column \"" + m_columnName
-                        + "\" does not contain double values: "
-                        + colSpec.getType().toString());
-            }
+           String weights = m_weights.getStringValue();
+           // create one MA-compute engine per column (overkill, I know
+           // but much easier to reference later on in our DataCellFactory
+           m_mas = new MovingAverage[inSpecs[0].getNumColumns()];
+           for (int i = 0; i < inSpecs[0].getNumColumns(); i++) {
+               m_mas[i] = new MovingAverage(m_winLength, weights);
+           }
         }
 
         ColumnRearranger c = createColRearranger(inSpecs[0]);
@@ -165,25 +137,29 @@ public class MovingAverageNodeModel extends NodeModel {
     
     private ColumnRearranger createColRearranger(final DataTableSpec spec) {
         ColumnRearranger result = new ColumnRearranger(spec);
-        final int colIndex =
-                spec.findColumnIndex(m_columnName.getStringValue());
-        DataColumnSpec newColSpec =
+
+        for (String thisCol : m_columnNames.getIncludeList()) {
+            final int colIndex =
+                spec.findColumnIndex(thisCol);
+            DataColumnSpec newColSpec =
                 new DataColumnSpecCreator(
-                        "MA(" + m_columnName.getStringValue() + ")",
+                        "MA(" + thisCol + ")",
                         DoubleCell.TYPE).createSpec();
         
-        SingleCellFactory c = new SingleCellFactory(newColSpec) {
-            @Override
-            public DataCell getCell(final DataRow row) {
-                DataCell cell = row.getCell(colIndex);
-                if (cell.isMissing() || !(cell instanceof DoubleValue)) {
-                    return DataType.getMissingCell();
-                }
-                return m_ma.maValue(((DoubleValue)cell).getDoubleValue()); 
-             }
-        };
+            SingleCellFactory c = new SingleCellFactory(newColSpec) {
+                @Override
+                public DataCell getCell(final DataRow row) {
+                    DataCell cell = row.getCell(colIndex);
+                    if (cell.isMissing() || !(cell instanceof DoubleValue)) {
+                        return DataType.getMissingCell();
+                    }
+                    return m_mas[colIndex]
+                                .maValue(((DoubleValue)cell).getDoubleValue()); 
+                 }
+            };
+            result.replace(c, colIndex);
+        }
         
-        result.append(c);
         return result;
     }
 
@@ -212,8 +188,8 @@ public class MovingAverageNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        SettingsModelString temp =
-            new SettingsModelString(CFG_COLUMN_NAME, null);        
+        SettingsModelFilterString temp =
+            new SettingsModelFilterString(CFG_COLUMN_NAMES);        
         temp.loadSettingsFrom(settings);
  
         SettingsModelString temp1 =
@@ -233,7 +209,7 @@ public class MovingAverageNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_columnName.loadSettingsFrom(settings);
+        m_columnNames.loadSettingsFrom(settings);
         m_weights.loadSettingsFrom(settings);
         m_winLengthSettings.loadSettingsFrom(settings);
    }
@@ -243,7 +219,7 @@ public class MovingAverageNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_columnName.saveSettingsTo(settings);
+        m_columnNames.saveSettingsTo(settings);
         m_winLengthSettings.saveSettingsTo(settings);
         m_weights.saveSettingsTo(settings);
     }

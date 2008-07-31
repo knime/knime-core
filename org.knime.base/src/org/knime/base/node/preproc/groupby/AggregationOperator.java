@@ -49,6 +49,14 @@ public abstract class AggregationOperator {
         m_maxUniqueValues = maxUniqueValues;
     }
 
+    /**
+     * Creates a new instance of this operator.
+     *
+     * @param maxUniqueValues the maximum number of unique values
+     * @return a new instance of this operator
+     */
+    public abstract AggregationOperator createInstance(
+            final int maxUniqueValues);
 
     /**
      * @return the maxUniqueValues

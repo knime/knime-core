@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -43,12 +43,12 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.property.hilite.KeyEvent;
-import org.knime.timeseries.node.display.FinancialShapeFactory;
 import org.knime.timeseries.node.display.FinancialDotInfo;
 import org.knime.timeseries.node.display.FinancialDotInfoArray;
-
+import org.knime.timeseries.node.display.FinancialShapeFactory;
 import org.knime.timeseries.node.display.timeplot.TimePlotter;
 
 /**
@@ -285,8 +285,8 @@ public class BarChartPlotter extends TimePlotter {
                             (int)getScreenYCoordinate(yOpen), (int)getScreenYCoordinate(yClose),
                             (int)getScreenYCoordinate(yHigh), (int)getScreenYCoordinate(yLow),
                             array.getRow(row).getKey(),
-                            delegateIsHiLit(array.getRow(row).getKey()
-                                    .getId()), color, 1, row);
+                            delegateIsHiLit(array.getRow(row).getKey()),
+                                    color, 1, row);
                        dot.setShape(
                          FinancialShapeFactory.getShape(FinancialShapeFactory.VERTICAL_BAR));
 
@@ -340,7 +340,7 @@ public class BarChartPlotter extends TimePlotter {
         setPreserve(true);
     }    
 
-    private void changeHiliteStateTo(final Set<DataCell> rowIds,
+    private void changeHiliteStateTo(final Set<RowKey> rowIds,
             final boolean state) {
         if (state) {
             delegateHiLite(rowIds);
@@ -363,10 +363,10 @@ public class BarChartPlotter extends TimePlotter {
     }
 
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener#unHiLiteAll()
+     * {@inheritDoc}
      */
     @Override
-    public void unHiLiteAll() {
+    public void unHiLiteAll(final KeyEvent evt) {
         if (isScatterPlotterDrawingPane()) {
             FinancialDotInfoArray dotArray =
                     getBarChartPlotterDrawingPane().getFinancialDotInfoArray();

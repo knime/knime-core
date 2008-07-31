@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -193,8 +193,8 @@ public final class BasisFunctionLearnerTable implements DataTable {
         LOGGER.info("Start Learning... #rules [#epoch]");
         do { // overall input pattern ... while (goon == true)
             exec.checkCanceled();
-            String progMsg = "Learning... #rules=" + getNumBasisFunctions()
-                    + " at #epoch=" + (m_cycles + 1);
+            String progMsg = "Learning... no. rules " + getNumBasisFunctions()
+                    + " at " + (m_cycles + 1) + ". epoch";
             if (maxNrEpochs > 0 && maxNrEpochs < Integer.MAX_VALUE) {
                 exec.setProgress((m_cycles + 1.0) / maxNrEpochs, progMsg);
             } else {
@@ -216,9 +216,10 @@ public final class BasisFunctionLearnerTable implements DataTable {
                 exec.checkCanceled();
                 // current data row
                 final DataRow oRow = rowIt.next();
-                progMsg = "Learning... #rules=" + getNumBasisFunctions()
-                        + " at #epoch=" + (m_cycles + 1);
-                exec.setMessage(progMsg + " \"" + oRow.getKey().getId() + "\"");
+                progMsg = "Learning... no. rules " + getNumBasisFunctions()
+                        + " at " + (m_cycles + 1) + ". epoch";
+                exec.setMessage(progMsg + " \"" 
+                        + oRow.getKey().getString() + "\"");
                 final BasisFunctionFilterRow row = new BasisFunctionFilterRow(
                         this, oRow, dataColumnsIdx, classColumnsIdx, 
                         classColumnNames, missing);
@@ -376,7 +377,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
      * @param dataColumns used for training only
      * @param targetColumns names of target columns
      */
-    public final void explain(final BufferedDataTable data,
+    public void explain(final BufferedDataTable data,
             final String[] dataColumns, final String[] targetColumns) {
         DataTableSpec spec = data.getDataTableSpec();
         // overall rows to explain
@@ -442,10 +443,10 @@ public final class BasisFunctionLearnerTable implements DataTable {
             removeBasisFunction(remRow);
         }
         // print model info
-        LOGGER.debug("#rules  =" + getNumBasisFunctions());
-        LOGGER.debug("#pruned =" + (oldNumBFs - getNumBasisFunctions()));
-        LOGGER.debug("#cycles =" + cycles);
-        StringBuilder patBuf = new StringBuilder("#pattern=");
+        LOGGER.debug("no. rules : " + getNumBasisFunctions());
+        LOGGER.debug("no. pruned: " + (oldNumBFs - getNumBasisFunctions()));
+        LOGGER.debug("no. cycles: " + cycles);
+        StringBuilder patBuf = new StringBuilder("no. pattern: ");
         for (DataCell classLabel : m_numPatPerClass.keySet()) {
             int value = m_numPatPerClass.get(classLabel)[0];
             patBuf.append(classLabel + "->" + value + " ");
@@ -522,7 +523,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
      * 
      * @see #getNumBasisFunctions(DataCell)
      */
-    public final int getNumBasisFunctions() {
+    public int getNumBasisFunctions() {
         int n = 0;
         for (DataCell c : m_bfs.keySet()) {
             List<BasisFunctionLearnerRow> l = m_bfs.get(c);
@@ -549,7 +550,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
      * 
      * @see #getNumBasisFunctions()
      */
-    final int getNumBasisFunctions(final DataCell classInfo) {
+    int getNumBasisFunctions(final DataCell classInfo) {
         if (classInfo == null) {
             throw new NullPointerException();
         }
@@ -580,14 +581,14 @@ public final class BasisFunctionLearnerTable implements DataTable {
      * 
      * @return the key to list of basis functions' map
      */
-    final Map<DataCell, List<BasisFunctionLearnerRow>> getBasisFunctions() {
+    public Map<DataCell, List<BasisFunctionLearnerRow>> getBasisFunctions() {
         return m_bfs;
     }
 
     /**
      * @return an array holding the number of basis functions for each class
      */
-    final int[] getClassDistribution() {
+    int[] getClassDistribution() {
         int[] ret = new int[m_bfs.size()];
         int idx = 0;
         for (Iterator<DataCell> it = m_bfs.keySet().iterator(); it.hasNext();) {
@@ -601,7 +602,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
     /**
      * @return a new iterator to get all basis functions from this model
      */
-    public final BasisFunctionIterator getBasisFunctionIterator() {
+    public BasisFunctionIterator getBasisFunctionIterator() {
         return new BasisFunctionIterator(this);
     }
 
@@ -683,7 +684,8 @@ public final class BasisFunctionLearnerTable implements DataTable {
                 // get current Basisfunction
                 BasisFunctionLearnerRow bf = it.nextBasisFunction();
                 // add basisfunction specific info
-                buf.append(bf.getKey().getId() + ": " + bf.toString() + "\n");
+                buf.append(bf.getKey().getString() 
+                        + ": " + bf.toString() + "\n");
             }
         }
     }
@@ -692,12 +694,12 @@ public final class BasisFunctionLearnerTable implements DataTable {
      * @return the hilite mapper which maps rules to covered instances
      */
     public DefaultHiLiteMapper getHiLiteMapper() {
-        Map<DataCell, Set<DataCell>> map = 
-            new LinkedHashMap<DataCell, Set<DataCell>>();
+        Map<RowKey, Set<RowKey>> map = 
+            new LinkedHashMap<RowKey, Set<RowKey>>();
         for (BasisFunctionIterator i = getBasisFunctionIterator(); 
                 i.hasNext();) {
             BasisFunctionLearnerRow bf = i.nextBasisFunction();
-            map.put(bf.getKey().getId(), bf.getAllCoveredPattern());
+            map.put(bf.getKey(), bf.getAllCoveredPattern());
         }
         return new DefaultHiLiteMapper(map);
     }

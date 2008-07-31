@@ -4,7 +4,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -36,6 +36,7 @@ import org.knime.base.data.util.DataCellStringMapper;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
@@ -341,7 +342,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
      * {@inheritDoc}
      */
     @Override
-    public abstract Set<DataCell> coveredPattern();
+    public abstract Set<RowKey> coveredPattern();
 
     /**
      * {@inheritDoc}

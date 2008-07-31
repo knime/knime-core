@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   12.01.2005 (Florian Georg): created
  */
@@ -56,7 +56,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.internal.Workbench;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.builder.KNIMEProjectBuilder;
 import org.knime.workbench.ui.nature.KNIMEProjectNature;
 import org.knime.workbench.ui.navigator.KnimeResourceNavigator;
@@ -64,7 +64,7 @@ import org.knime.workbench.ui.navigator.KnimeResourceNavigator;
 /**
  * Wizard for the creation of a new modeller project. TODO FIXME not yet
  * implemented
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class NewProjectWizard extends Wizard implements INewWizard {
@@ -115,7 +115,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
     /**
      * Perform finish - queries the page and creates the project / file.
-     * 
+     *
      * @see org.eclipse.jface.wizard.IWizard#performFinish()
      */
     @Override
@@ -175,8 +175,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                         TreeViewer viewer =
                                 ((KnimeResourceNavigator)viewPart).getViewer();
                         viewer.refresh();
-                        viewer.expandToLevel(2);
-
+//                        viewer.expandToLevel(2);
                     }
                 }
             }
@@ -185,7 +184,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
     /**
      * Worker method, creates the project using the given options.
-     * 
+     *
      * @param projectName Name of the project to create in workspace
      * @param monitor Progress monitor
      * @throws CoreException if error while creating the project
@@ -217,7 +216,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         // 2. Create the optional files, if wanted
         //
         final IFile defaultFile =
-                project.getFile(WorkflowManager.WORKFLOW_FILE);
+                project.getFile(WorkflowPersistor.WORKFLOW_FILE);
 
         InputStream is = new ByteArrayInputStream("".getBytes());
         defaultFile.create(is, true, monitor);
@@ -240,7 +239,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         });
 
         // just to make sure: refresh the new project
-        project.getProject().refreshLocal(IResource.DEPTH_INFINITE, monitor);
+//        project.getProject().refreshLocal(IResource.DEPTH_ONE, monitor);
     }
 
     private void throwCoreException(final String message) throws CoreException {

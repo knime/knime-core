@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,25 +24,26 @@
  */
 package org.knime.base.node.viz.histogram.util;
 
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
-import org.knime.base.node.viz.histogram.datamodel.BinDataModelComparator;
-import org.knime.base.node.viz.histogram.datamodel.InteractiveBinDataModel;
-import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.IntCell;
+
+import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
+import org.knime.base.node.viz.histogram.datamodel.BinDataModelComparator;
+import org.knime.base.node.viz.histogram.datamodel.InteractiveBinDataModel;
+import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
+
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 /**
  * This class provides methods to create the bins of numerical bars.
@@ -415,84 +416,10 @@ public final class BinningUtil {
      */
     public static List<InteractiveBinDataModel> createInteractiveIntervalBins(
                 final DataColumnSpec colSpec, final int numberOfBins) {
-            //set the bounds for binning
-            final DataColumnDomain domain = colSpec.getDomain();
-            final DataCell lowerBoundCell = domain.getLowerBound();
-            if (lowerBoundCell == null || lowerBoundCell.isMissing()
-                    || !lowerBoundCell.getType().isCompatible(
-                            DoubleValue.class)) {
-                throw new IllegalArgumentException(
-                        "The lower bound of the binning column domain "
-                        + "should be defined");
-            }
-            final double lowerBound =
-                ((DoubleValue)lowerBoundCell).getDoubleValue();
-            final DataCell upperBoundCell = domain.getUpperBound();
-            if (upperBoundCell == null || upperBoundCell.isMissing()
-                    || !upperBoundCell.getType().isCompatible(
-                            DoubleValue.class)) {
-                throw new IllegalArgumentException(
-                        "The upper bound of the binning column domain "
-                        + "should be defined");
-            }
-            final double upperBound =
-                ((DoubleValue)upperBoundCell).getDoubleValue();
-            int noOfBins = numberOfBins;
-            //start the binning
-            if (noOfBins < 1) {
-                noOfBins = AbstractHistogramVizModel.DEFAULT_NO_OF_BINS;
-            }
-            if ((lowerBound - upperBound) == 0) {
-                noOfBins = 1;
-            }
-            final boolean isInteger =
-                colSpec.getType().isCompatible(IntValue.class);
-            double binInterval = createBinInterval(upperBound,
-                    lowerBound, noOfBins, isInteger);
-            final double calculatedLowerBound =
-                createBinStart(lowerBound, binInterval, isInteger);
-            if (calculatedLowerBound != lowerBound) {
-                binInterval = createBinInterval(upperBound,
-                        calculatedLowerBound, noOfBins, isInteger);
-            }
-            // increase the number of bars to include the max value
-            while (calculatedLowerBound + (binInterval * noOfBins)
-                    < upperBound) {
-                noOfBins++;
-            }
-            double leftBoundary = myRoundedBorders(calculatedLowerBound,
-                    binInterval, AbstractHistogramVizModel.INTERVAL_DIGITS);
-            boolean firstBar = true;
-            final List<InteractiveBinDataModel> bins =
-                new ArrayList<InteractiveBinDataModel>(noOfBins);
-            for (int i = 0; i < noOfBins; i++) {
-        // I have to use this rounding method to avoid problems with very
-        // small intervals. If the interval is very small it could happen
-        // that we get the same boundaries for several bars by rounding the
-        // borders
-                final double rightBoundary;
-                if (isInteger && binInterval == 1) {
-                    rightBoundary = leftBoundary;
-                } else {
-                    rightBoundary = myRoundedBorders(
-                            leftBoundary + binInterval, binInterval,
-                        AbstractHistogramVizModel.INTERVAL_DIGITS);
-
-                }
-                final String binCaption = createBarName(
-                        firstBar, leftBoundary, rightBoundary);
-                firstBar = false;
-                bins.add(new InteractiveBinDataModel(
-                        binCaption, leftBoundary, rightBoundary));
-                // set the left boundary of the next bar to the current right
-                // boundary
-                if (isInteger && binInterval == 1) {
-                    leftBoundary = rightBoundary + binInterval;
-                } else {
-                    leftBoundary = rightBoundary;
-                }
-            }
-            return bins;
+        final InteractiveIntervalBinCreator binCreator =
+            new InteractiveIntervalBinCreator();
+        binCreator.createBins(colSpec, numberOfBins);
+        return binCreator.getBins();
         }
     /**
      * Creates the given number of interval bins for the given
@@ -503,83 +430,10 @@ public final class BinningUtil {
      */
     public static List<BinDataModel> createIntervalBins(
                 final DataColumnSpec colSpec, final int numberOfBins) {
-            //set the bounds for binning
-            final DataColumnDomain domain = colSpec.getDomain();
-            final DataCell lowerBoundCell = domain.getLowerBound();
-            if (lowerBoundCell == null || lowerBoundCell.isMissing()
-                    || !lowerBoundCell.getType().isCompatible(
-                            DoubleValue.class)) {
-                throw new IllegalArgumentException(
-                        "The lower bound of the binning column domain "
-                        + "should be defined");
-            }
-            final double lowerBound =
-                ((DoubleValue)lowerBoundCell).getDoubleValue();
-            final DataCell upperBoundCell = domain.getUpperBound();
-            if (upperBoundCell == null || upperBoundCell.isMissing()
-                    || !upperBoundCell.getType().isCompatible(
-                            DoubleValue.class)) {
-                throw new IllegalArgumentException(
-                        "The upper bound of the binning column domain "
-                        + "should be defined");
-            }
-            final double upperBound =
-                ((DoubleValue)upperBoundCell).getDoubleValue();
-            int noOfBins = numberOfBins;
-            //start the binning
-            if (noOfBins < 1) {
-                noOfBins = AbstractHistogramVizModel.DEFAULT_NO_OF_BINS;
-            }
-            if ((lowerBound - upperBound) == 0) {
-                noOfBins = 1;
-            }
-            final boolean isInteger =
-                colSpec.getType().isCompatible(IntValue.class);
-            double binInterval = createBinInterval(upperBound,
-                    lowerBound, noOfBins, isInteger);
-            final double calculatedLowerBound = createBinStart(lowerBound,
-                    binInterval, isInteger);
-            if (calculatedLowerBound != lowerBound) {
-                binInterval = createBinInterval(upperBound,
-                        calculatedLowerBound, noOfBins, isInteger);
-            }
-            // increase the number of bars to include the max value
-            while (calculatedLowerBound + (binInterval * noOfBins)
-                    < upperBound) {
-                noOfBins++;
-            }
-            double leftBoundary = myRoundedBorders(calculatedLowerBound,
-                    binInterval, AbstractHistogramVizModel.INTERVAL_DIGITS);
-            boolean firstBar = true;
-            final List<BinDataModel> bins =
-                new ArrayList<BinDataModel>(noOfBins);
-            for (int i = 0; i < noOfBins; i++) {
-        // I have to use this rounding method to avoid problems with very
-        // small intervals. If the interval is very small it could happen
-        // that we get the same boundaries for several bars by rounding the
-        // borders
-                double rightBoundary;
-                if (isInteger && binInterval == 1) {
-                    rightBoundary = leftBoundary;
-                } else {
-                    rightBoundary = myRoundedBorders(
-                        leftBoundary + binInterval, binInterval,
-                        AbstractHistogramVizModel.INTERVAL_DIGITS);
-                }
-                final String binCaption = createBarName(
-                        firstBar, leftBoundary, rightBoundary);
-                firstBar = false;
-                bins.add(new BinDataModel(
-                        binCaption, leftBoundary, rightBoundary));
-                // set the left boundary of the next bar to the current right
-                // boundary
-                if (isInteger && binInterval == 1) {
-                    leftBoundary = rightBoundary + binInterval;
-                } else {
-                    leftBoundary = rightBoundary;
-                }
-            }
-            return bins;
+            final FixedIntervalBinCreator binCreator =
+                new FixedIntervalBinCreator();
+            binCreator.createBins(colSpec, numberOfBins);
+            return binCreator.getBins();
         }
 
     /**
@@ -607,7 +461,7 @@ public final class BinningUtil {
     public static int addDataRow2Bin(final boolean binNominal,
             final List<? extends BinDataModel> bins,
             final BinDataModel missingValueBin, final int startBin,
-            final DataCell xCell, final Color rowColor, final DataCell id,
+            final DataCell xCell, final Color rowColor, final RowKey id,
             final Collection<ColorColumn> aggrColumns,
             final DataCell... aggrCells) throws IllegalArgumentException {
         if (bins == null) {
@@ -659,7 +513,7 @@ public final class BinningUtil {
     private static int addDataRow2NominalBin(
             final List<? extends BinDataModel> bins,
             final int startBin, final DataCell xVal,
-            final Color color, final DataCell id,
+            final Color color, final RowKey id,
             final Collection<ColorColumn> aggrColumns,
             final DataCell... aggrVals) {
         final String xValString = xVal.toString();
@@ -689,7 +543,7 @@ public final class BinningUtil {
      */
     private static int addDataRow2IntervalBin(
             final List<? extends BinDataModel> bins, final int startBin,
-            final DoubleValue xVal, final Color color, final DataCell id,
+            final DoubleValue xVal, final Color color, final RowKey id,
             final Collection<ColorColumn> aggrColumns,
             final DataCell... aggrVals) {
         final double value = xVal.getDoubleValue();

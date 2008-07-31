@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   19.04.2005 (cebron): created
  */
@@ -29,6 +29,7 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.Arrays;
 import java.util.Set;
 
 import javax.swing.Box;
@@ -53,7 +54,7 @@ import org.knime.core.node.util.ColumnFilterPanel;
 /**
  * The NormalizeNodeDialog lets the user choose the three different methods of
  * normalization.
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
  */
 public class NormalizerNodeDialog extends NodeDialogPane {
@@ -76,7 +77,7 @@ public class NormalizerNodeDialog extends NodeDialogPane {
      * GUI elements
      */
     private JRadioButton m_noNormButton;
-    
+
     private JRadioButton m_minmaxButton;
 
     private JRadioButton m_zscoreButton;
@@ -110,18 +111,18 @@ public class NormalizerNodeDialog extends NodeDialogPane {
      */
     private JPanel generateContent() {
         JPanel panel = new JPanel();
-        
+
         // no normalization
         JPanel panel0 = new JPanel();
         panel0.setLayout(new BorderLayout());
         m_noNormButton = new JRadioButton("No Normalization");
         panel0.add(m_noNormButton, BorderLayout.WEST);
-        
+
         // min-max
         JPanel panel1 = new JPanel();
         GridLayout gl = new GridLayout(2, 4);
         panel1.setLayout(gl);
-        
+
         m_minmaxButton = new JRadioButton("Min-Max Normalization");
         m_minmaxButton.setSelected(true);
         JLabel nmin = new JLabel("Min: ");
@@ -154,7 +155,7 @@ public class NormalizerNodeDialog extends NodeDialogPane {
         panel1.add(spanel2);
         panel1.add(nmaxpanel);
         panel1.add(Box.createHorizontalGlue());
-       
+
         // z-score
         JPanel panel2 = new JPanel();
         panel2.setLayout(new BorderLayout());
@@ -173,7 +174,7 @@ public class NormalizerNodeDialog extends NodeDialogPane {
         group.add(m_minmaxButton);
         group.add(m_zscoreButton);
         group.add(m_decButton);
-        
+
         m_noNormButton.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
                 if (m_noNormButton.isSelected()) {
@@ -272,17 +273,19 @@ public class NormalizerNodeDialog extends NodeDialogPane {
             }
         }
 
-        String[] cols = new String[0];
+        String[] cols = null;
         if (settings.containsKey(NormalizerNodeModel.COLUMNS_KEY)) {
             try {
                 cols = settings.getStringArray(NormalizerNodeModel.COLUMNS_KEY);
-                m_filterpanel.update(m_spec, false, cols);
             } catch (InvalidSettingsException e) {
                 LOGGER.debug("Invalid Settings", e);
             }
         }
-        m_filterpanel.update(m_spec, false, cols);
-
+        if (cols == null) {
+            m_filterpanel.update(m_spec, true, new String[0]);
+        } else {
+            m_filterpanel.update(m_spec, false, cols);
+        }
     }
 
     /**
@@ -316,5 +319,9 @@ public class NormalizerNodeDialog extends NodeDialogPane {
         Set<String> inclset = m_filterpanel.getIncludedColumnSet();
         String[] columns = inclset.toArray(new String[inclset.size()]);
         settings.addStringArray(NormalizerNodeModel.COLUMNS_KEY, columns);
+        
+        boolean usedAll = Arrays.deepEquals(columns, 
+                NormalizerNodeModel.findAllNumericColumns(m_spec));
+        settings.addBoolean(NormalizerNodeModel.CFG_USE_ALL_NUMERIC, usedAll);
     }
 }

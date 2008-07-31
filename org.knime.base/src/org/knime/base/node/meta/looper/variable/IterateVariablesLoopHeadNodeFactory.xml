@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="../looper.png" type="LoopStart">
+	<name>Variables Looper (Start)</name>
+	
+	<shortDescription>
+		Start node of a variables iterator loop.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>Start node for an encapsulated sub workflow performing a loop over different variables sets.
+		The loop body will be executed as often as there are rows in the second input table. In each iteration,
+		it will use a different row of this parameters table (the input table #2) to assign new values to 
+		flow variables (it will use the column names as variable identifiers, that is, there will be as many
+		new variables as there are columns in the table).     
+		</intro>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Any datatable">Any datatable</dataIn>
+		<dataIn index="1" name="Parameters table">The table whose rows will constitute 
+		the variables' values, each row representing one iteration.</dataIn>
+		<dataOut index="0" name="Unaltered input">The unaltered input table (first input port)</dataOut>
+	</ports>
+</knimeNode>

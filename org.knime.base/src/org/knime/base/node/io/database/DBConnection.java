@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -19,18 +19,23 @@
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
  * 
- * History
- *   19.09.2007 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
 import java.io.File;
+import java.io.IOException;
+import java.security.InvalidKeyException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContent;
+import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
@@ -40,7 +45,7 @@ import org.knime.core.util.KnimeEncryption;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class DBConnection  {
+class DBConnection {
     
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(DBConnection.class);
@@ -55,7 +60,7 @@ public final class DBConnection  {
 
     /**
      */
-    public DBConnection() {
+    DBConnection() {
         // init default driver with the first from the driver list
         // or use Java JDBC-ODBC as default
         String[] history = DBDialogPane.DRIVER_ORDER.getHistory();
@@ -69,12 +74,33 @@ public final class DBConnection  {
     }
     
     /**
+     * Creates a new <code>DBConnection</code> based on the given connection
+     * object.
+     * @param conn connection used to copy settings from
+     */
+    DBConnection(final DBConnection conn) {
+        this();
+        m_driver = conn.m_driver;
+        m_dbName = conn.m_dbName;
+        m_user   = conn.m_user;
+        m_pass   = conn.m_pass;
+    }
+    
+    /**
      * Create a database connection based on this settings.
      * @return a new database connection object.
-     * @throws Exception if an exception is thrown
+     * @throws SQLException {@link SQLException}
+     * @throws InvalidSettingsException {@link InvalidSettingsException}
+     * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
+     * @throws BadPaddingException {@link BadPaddingException}
+     * @throws InvalidKeyException {@link InvalidKeyException}
+     * @throws IOException {@link IOException}
      */
-    public Connection createConnection() throws Exception {
-        if (m_dbName == null || m_user == null || m_pass == null) {
+    Connection createConnection() throws InvalidSettingsException, SQLException,
+            BadPaddingException, IllegalBlockSizeException,
+            InvalidKeyException, IOException {
+        if (m_dbName == null || m_user == null || m_pass == null
+                || m_driver == null) {
             throw new InvalidSettingsException("No settings available "
                     + "to create database connection.");
         }
@@ -87,7 +113,7 @@ public final class DBConnection  {
             }
         } catch (Exception e) {
             throw new InvalidSettingsException("Could not register database"
-                    + " driver: " + wDriver);
+                    + " driver \"" + wDriver + "\".", e);
         }
         DBDriverLoader.registerDriver(m_driver);
         String password = KnimeEncryption.decrypt(m_pass);
@@ -99,11 +125,13 @@ public final class DBConnection  {
      * Load settings.
      * @param settings connection settings
      */
-    public void saveConnection(final ConfigWO settings) {
+    void saveConnection(final ConfigWO settings) {
         settings.addString("driver", m_driver);
         settings.addString("database", m_dbName);
         settings.addString("user", m_user);
         settings.addString("password", m_pass);
+        settings.addString("loaded_driver", 
+                DBDriverLoader.getDriverFileForDriverClass(m_driver));
         DBDialogPane.DRIVER_ORDER.add(m_driver);
         DBDialogPane.DRIVER_URLS.add(m_dbName);
     }
@@ -113,7 +141,7 @@ public final class DBConnection  {
      * @param settings to validate
      * @throws InvalidSettingsException if the settings are not valid
      */
-    public void validateConnection(final ConfigRO settings)
+    void validateConnection(final ConfigRO settings)
             throws InvalidSettingsException {
         loadConnection(settings, false);
     }
@@ -124,7 +152,7 @@ public final class DBConnection  {
      * @return true, if settings have changed
      * @throws InvalidSettingsException if settings are invalid
      */
-    public boolean loadValidatedConnection(final ConfigRO settings)
+    boolean loadValidatedConnection(final ConfigRO settings)
             throws InvalidSettingsException {
         return loadConnection(settings, true);
     }
@@ -140,7 +168,7 @@ public final class DBConnection  {
         String user = settings.getString("user");
         // password
         String password = settings.getString("password", "");
-        // loaded driver: need to load settings before 1.2
+        // loaded driver
         String[] loadedDriver = settings.getStringArray("loaded_driver", 
                 new String[0]);
         // write settings or skip it
@@ -162,8 +190,9 @@ public final class DBConnection  {
             for (String fileName : loadedDriver) {
                 try {
                     DBDriverLoader.loadDriver(new File(fileName));
-                } catch (Exception e2) {
-                    LOGGER.info("Could not load driver: " + fileName, e2);
+                } catch (Throwable t) {
+                    LOGGER.info("Could not load driver from file \"" 
+                            + fileName + "\".", t);
                 }
             }
             return changed;
@@ -172,28 +201,43 @@ public final class DBConnection  {
     }
     
     /**
-     * Execute statement on current connection settings which are used to
-     * open the database connection.
-     * @param statement used to execute
-     * @return an exception or <code>null</code> if statement was executed 
-     *         successfully
+     * Execute statement on current database connection.
+     * @param statement to be executed
+     * @throws SQLException {@link SQLException}
+     * @throws InvalidSettingsException {@link InvalidSettingsException}
+     * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
+     * @throws BadPaddingException {@link BadPaddingException}
+     * @throws InvalidKeyException {@link InvalidKeyException}
+     * @throws IOException {@link IOException}
      */
-    public Exception execute(final String statement) {
+    void execute(final String statement) throws InvalidKeyException,
+            BadPaddingException, IllegalBlockSizeException,
+            InvalidSettingsException,
+            SQLException, IOException {
         Connection conn = null;
+        Statement stmt = null;
         try {
             conn = createConnection();
-            Statement stmt = conn.createStatement();
+            stmt = conn.createStatement();
             stmt.execute(statement);
-        } catch (Exception e) {
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException sqle) {
-                    return sqle;
-                }
+        } finally {
+            if (stmt != null) {
+                stmt.close();
             }
-            return e;
+            if (conn != null) {
+                conn.close();
+            }
         }
-        return null;
     }
+    
+    /**
+     * Create connection model with all settings used to create a database
+     * connection.
+     * @return database connection model
+     */
+    ModelContentRO createConnectionModel() {
+        ModelContent cont = new ModelContent("database_connection_model");
+        saveConnection(cont);
+        return cont;
+    } 
 }

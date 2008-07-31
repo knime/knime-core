@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -86,7 +86,7 @@ public final class ColorModelRange implements ColorModel {
     /**
      * Returns a ColorAttr for the given DataCell value, or
      * <code>ColorAttr.DEFAULT</code> if not set. The colors red, green, and
-     * blue are merged in the same ratio from the orginal spread of the lower
+     * blue are merged in the same ratio from the original spread of the lower
      * and upper bounds.
      * 
      * @param dc A DataCell value to get color for.
@@ -131,7 +131,8 @@ public final class ColorModelRange implements ColorModel {
         if (b > 255) {
             b = 255;
         }
-        return ColorAttr.getInstance(new Color(r, g, b));
+        int alpha = (m_minColor.getAlpha() + m_maxColor.getAlpha()) / 2;
+        return ColorAttr.getInstance(new Color(r, g, b, alpha));
     }
 
     /** @return minimum double value. */
@@ -190,10 +191,24 @@ public final class ColorModelRange implements ColorModel {
             throws InvalidSettingsException {
         double lower = config.getDouble(CFG_LOWER_VALUE);
         double upper = config.getDouble(CFG_UPPER_VALUE);
-        int[] min = config.getIntArray(CFG_LOWER_COLOR);
-        Color minColor = new Color(min[0], min[1], min[2], min[3]);
-        int[] max = config.getIntArray(CFG_UPPER_COLOR);
-        Color maxColor = new Color(max[0], max[1], max[2], max[3]);
+        Color minColor;
+        try {
+            // load color components before 2.0
+            int[] min = config.getIntArray(CFG_LOWER_COLOR);
+            minColor = new Color(min[0], min[1], min[2], min[3]);
+        } catch (InvalidSettingsException ise) {
+            int min = config.getInt(CFG_LOWER_COLOR);
+            minColor = new Color(min, true);
+        }
+        Color maxColor;
+        try {
+            // load color components before 2.0
+            int[] max = config.getIntArray(CFG_UPPER_COLOR);
+            maxColor = new Color(max[0], max[1], max[2], max[3]);
+        } catch (InvalidSettingsException ise) {
+            int max = config.getInt(CFG_UPPER_COLOR);
+            maxColor = new Color(max, true);
+        }
         return new ColorModelRange(lower, minColor, upper, maxColor);
     }
 
@@ -209,4 +224,31 @@ public final class ColorModelRange implements ColorModel {
         return "DoubleRange ColorModel (min=<" + min + ">,max=<" + max + ">)";
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || !(obj instanceof ColorModelRange)) {
+            return false;
+        }
+        ColorModelRange cmodel = (ColorModelRange) obj;
+        // Double.compare() also handles NaN appropriately 
+        return Double.compare(m_maxValue, cmodel.m_maxValue) == 0
+            && Double.compare(m_minValue, cmodel.m_minValue) == 0
+            && Double.compare(m_range, cmodel.m_range) == 0
+            && m_maxColor.equals(cmodel.m_maxColor)
+            && m_minColor.equals(cmodel.m_minColor); 
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_minColor.hashCode() ^ m_maxColor.hashCode();
+    }
 }

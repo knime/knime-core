@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Manipulator" icon="./db_query.png">
+	<name>Database Query</name>
+	
+	<shortDescription>
+	    Modifies the input SQL query from a incoming database connection.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+		 Modifies the input SQL query from a incoming database connection.
+		 The SQL query is represented by the place holder #view# and will
+		 replaced during execute. The new database connection then available
+		 at the out-port. The database connection settings itself are not 
+		 modified. 
+		</intro>
+		
+   	    <option name="SQL query: ">
+		  Enter a new database query. Don't removed the #view# place
+		  holder which represents the incoming SQL statement.
+	    </option>
+	</fullDescription>
+	
+	<ports>
+		<modelIn index="0" name="Database Connection">Database connection</modelIn>
+		<modelOut index="0" name="Database Connection">Database connection with wrapped SQL query</modelOut>
+	</ports>	
+</knimeNode>

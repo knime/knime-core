@@ -4,7 +4,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -38,7 +38,10 @@ public enum AggregationMethod implements ButtonGroupEnumInterface {
     /** The summary of the selected y column. */
     SUM("Sum", "Calculates the sum"),
     /** The number of rows. */
-    COUNT("Count", "Counts the number of rows");
+    COUNT("Row count", "Counts the number of rows"),
+    /** The number of values without missing values. */
+    VALUE_COUNT("Row count (w/o missing values)",
+            "Counts the number of rows (excl. missing values)");
 
 
     private final String m_name;

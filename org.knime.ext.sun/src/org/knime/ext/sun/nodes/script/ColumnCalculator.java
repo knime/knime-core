@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -22,6 +22,7 @@
  */
 package org.knime.ext.sun.nodes.script;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 
 import org.knime.core.data.DataCell;
@@ -145,7 +146,7 @@ public class ColumnCalculator implements CellFactory {
     public DataCell calculate(final DataRow row) {
         HashMap<String, Object> nameValueMap = new HashMap<String, Object>();
         nameValueMap.put(ROWINDEX, m_lastProcessedRow);
-        nameValueMap.put(ROWKEY, row.getKey().getId().toString());
+        nameValueMap.put(ROWKEY, row.getKey().getString());
         for (int i = 0; i < row.getNumCells(); i++) {
             DataCell cell = row.getCell(i);
             DataType cellType = m_spec.getColumnSpec(i).getType();
@@ -178,11 +179,17 @@ public class ColumnCalculator implements CellFactory {
                 o = null;
             }
         } catch (EvaluationFailedException ee) {
+            Throwable cause = ee.getCause();
+            if (cause instanceof InvocationTargetException) {
+                cause = ((InvocationTargetException)cause).getCause();
+            }
+            String message = 
+                cause != null ? cause.getMessage() : ee.getMessage();
             LOGGER.warn("Evaluation of expression failed for row \""
-                    + row.getKey().getId() + "\": " + ee.getMessage());
+                    + row.getKey() + "\": " + message, ee);
         } catch (IllegalPropertyException ipe) {
             LOGGER.warn("Evaluation of expression failed for row \""
-                    + row.getKey().getId() + "\": " + ipe.getMessage());
+                    + row.getKey() + "\": " + ipe.getMessage(), ipe);
         }
         DataCell result;
         if (m_returnType.equals(Integer.class)) {

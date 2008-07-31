@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   25.05.2005 (Florian Georg): created
  */
@@ -31,7 +31,6 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.workflow.NodeContainer;
-
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -39,18 +38,18 @@ import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
 /**
  * Action to open the dialog of a node.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class OpenDialogAction extends AbstractNodeAction {
-    private static final NodeLogger LOGGER = 
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(OpenDialogAction.class);
 
     /** unique ID for this action. * */
     public static final String ID = "knime.action.openDialog";
 
     /**
-     * 
+     *
      * @param editor The workflow editor
      */
     public OpenDialogAction(final WorkflowEditor editor) {
@@ -112,8 +111,7 @@ public class OpenDialogAction extends AbstractNodeAction {
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         LOGGER.debug("Opening node dialog...");
         NodeContainer container = (NodeContainer) nodeParts[0].getModel();
-
-        //  
+        //
         // This is embedded in a special JFace wrapper dialog
         //
         try {
@@ -130,10 +128,17 @@ public class OpenDialogAction extends AbstractNodeAction {
                     + " reason:\n" + ex.getMessage());
             mb.open();            
         } catch (Throwable t) {
-            LOGGER.error("The dialog pane for node '" 
+            MessageBox mb = new MessageBox(
+                    Display.getDefault().getActiveShell(),
+                    SWT.ICON_ERROR | SWT.OK);
+            mb.setText("Dialog cannot be opened");
+            mb.setMessage("The dialog cannot be opened for the following"
+                    + " reason:\n" + t.getMessage());
+            mb.open();
+            LOGGER.error("The dialog pane for node '"
                     + container.getNameWithID() + "' has thrown a '"
                     + t.getClass().getSimpleName()
                     + "'. That is most likely an implementation error.", t);
-        }
+        } 
     }
 }

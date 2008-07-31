@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -170,7 +170,7 @@ public abstract class BlobDataCell extends DataCell {
             return m_indexOfBlobInColumn;
         }
         
-        /** @see java.lang.Object#toString() */
+        /** {@inheritDoc} */
         @Override
         public String toString() {
             return "Buffer " + m_bufferID + ", col " + m_column 
@@ -203,6 +203,27 @@ public abstract class BlobDataCell extends DataCell {
             BlobAddress address = new BlobAddress(bufferID, column, isCompress);
             address.setIndexOfBlobInColumn(indexOfBlobInColumn);
             return address;
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public boolean equals(final Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (obj instanceof BlobAddress) {
+                BlobAddress a = (BlobAddress)obj;
+                return a.m_bufferID == m_bufferID && a.m_column == m_column 
+                    && a.m_indexOfBlobInColumn == m_indexOfBlobInColumn;
+            }
+            return false;
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public int hashCode() {
+            return m_bufferID ^ (m_column << 8) 
+                ^ (m_indexOfBlobInColumn << 16);
         }
     }
 }

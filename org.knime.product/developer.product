@@ -1,16 +1,18 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde version="3.1"?>
 
 <product application="org.eclipse.ui.ide.workbench" id="org.eclipse.sdk.ide" name="Eclipse platform" useFeatures="true">
 
+   <aboutInfo/>
 
    <configIni use="default"/>
 
    <launcherArgs>
+      <programArgs>-showsplash
+org.eclipse.platform</programArgs>
       <vmArgs>-Xms40m
 -Xmx256m
--XX:MaxPermSize=128m
--server</vmArgs>
+-XX:MaxPermSize=128m</vmArgs>
    </launcherArgs>
 
    <windowImages/>
@@ -23,19 +25,23 @@
       </win>
    </launcher>
 
+
+   <vm>
+   </vm>
+
    <plugins>
    </plugins>
 
    <features>
+      <feature id="org.eclipse.rcp" version="0.0.0"/>
       <feature id="org.eclipse.gef" version="0.0.0"/>
+      <feature id="org.eclipse.platform" version="0.0.0"/>
       <feature id="org.eclipse.jdt" version="0.0.0"/>
       <feature id="org.eclipse.pde" version="0.0.0"/>
-      <feature id="org.eclipse.platform" version="0.0.0"/>
-      <feature id="org.eclipse.rcp" version="0.0.0"/>
       <feature id="org.eclipse.sdk" version="0.0.0"/>
-      <feature id="org.knime.features.base.sdk" version="1.3.5.1"/>
-      <feature id="org.knime.features.product" version="1.3.5.1"/>
-      <feature id="org.knime.features.wizard" version="1.3.5.1"/>
+      <feature id="org.knime.features.base.sdk" version="2.0.0.0016392"/>
+      <feature id="org.knime.features.wizard" version="2.0.0.0016392"/>
+      <feature id="org.knime.features.product" version="2.0.0.0016392"/>
    </features>
 
 </product>

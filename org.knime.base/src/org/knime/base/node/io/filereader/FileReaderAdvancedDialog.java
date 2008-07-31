@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   08.12.2005 (ohl): created
  */
@@ -38,7 +38,7 @@ import javax.swing.JTabbedPane;
 
 /**
  * Dialog for the expert settings of the file reader dialog.
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class FileReaderAdvancedDialog extends JDialog {
@@ -79,18 +79,20 @@ public class FileReaderAdvancedDialog extends JDialog {
     private UniquifyPanel m_uniquifyPanel;
 
     private LimitRowsPanel m_limitRowsPanel;
-    
+
     private CharsetNamePanel m_charsetNamePanel;
-    
+
+    private MissingValuePanel m_missValPanel;
+
     /*
      * !!! READ THIS: Adding new advanced settings?? Don't forget to copy these
      * settings in the FileAnalyzer from the user settings into the result
      * settings.
      */
-    
+
     /**
      * This is the default constructor.
-     * 
+     *
      * @param parent the parent frame for all dialogs this dialog opens
      * @param settings the current settings to take over and show in this dialog
      */
@@ -116,7 +118,7 @@ public class FileReaderAdvancedDialog extends JDialog {
 
     /**
      * This method initializes jTabbedPane.
-     * 
+     *
      * @return javax.swing.JTabbedPane
      */
     private JTabbedPane getJTabbedPane() {
@@ -135,8 +137,11 @@ public class FileReaderAdvancedDialog extends JDialog {
                     "Disable unique making of row IDs");
             m_jTabbedPane.addTab("Limit Rows", null, getLimitRowsPanel(),
                     "Specify the max. number of rows read");
-            m_jTabbedPane.addTab("Character decoding", null, 
+            m_jTabbedPane.addTab("Character decoding", null,
                     getCharsetNamePanel(), "");
+            m_jTabbedPane.addTab("Missing Value Pattern", null,
+                    getMissValPanel(),
+                    "Specify a missing value pattern for string columns");
         }
         return m_jTabbedPane;
     }
@@ -144,7 +149,7 @@ public class FileReaderAdvancedDialog extends JDialog {
     /**
      * Overrides the settings in the passed argument with the settings from this
      * dialog.
-     * 
+     *
      * @param settings the settings to modify. Settings from the dialog will
      *            override settings in the passed object.
      */
@@ -157,6 +162,7 @@ public class FileReaderAdvancedDialog extends JDialog {
         m_doAnalyze |= getUniquifyPanel().overrideSettings(settings);
         m_doAnalyze |= getLimitRowsPanel().overrideSettings(settings);
         m_doAnalyze |= getCharsetNamePanel().overrideSettings(settings);
+        m_doAnalyze |= getMissValPanel().overrideSettings(settings);
     }
 
     /**
@@ -178,6 +184,12 @@ public class FileReaderAdvancedDialog extends JDialog {
         if (panelMsg != null) {
             result.append('\n');
             result.append("Decimal Separator: ");
+            result.append(panelMsg);
+        }
+        panelMsg = getMissValPanel().checkSettings();
+        if (panelMsg != null) {
+            result.append("\n");
+            result.append("Missing Value: ");
             result.append(panelMsg);
         }
         panelMsg = getIngoreWSatEORPanel().checkSettings();
@@ -220,7 +232,7 @@ public class FileReaderAdvancedDialog extends JDialog {
 
     /**
      * This method initializes jContentPane.
-     * 
+     *
      * @return javax.swing.JPanel
      */
     private JPanel getJContentPane() {
@@ -236,7 +248,7 @@ public class FileReaderAdvancedDialog extends JDialog {
 
     /**
      * This method initializes controlPanel.
-     * 
+     *
      * @return javax.swing.JPanel
      */
     private JPanel getControlPanel() {
@@ -259,7 +271,7 @@ public class FileReaderAdvancedDialog extends JDialog {
 
     /**
      * This method initializes okButton.
-     * 
+     *
      * @return javax.swing.JButton
      */
     private JButton getOkButton() {
@@ -286,7 +298,7 @@ public class FileReaderAdvancedDialog extends JDialog {
 
     /**
      * This method initializes cancelButton.
-     * 
+     *
      * @return javax.swing.JButton
      */
     private JButton getCancelButton() {
@@ -304,7 +316,7 @@ public class FileReaderAdvancedDialog extends JDialog {
 
     /**
      * This method initializes xmlButton.
-     * 
+     *
      * @return javax.swing.JButton
      */
     private JButton getXmlButton() {
@@ -321,7 +333,7 @@ public class FileReaderAdvancedDialog extends JDialog {
                                     + "settings and read new settings "
                                     + "from the file.\n" + "DO YOU WANT THIS?",
                             "Confirm override", JOptionPane.YES_NO_OPTION,
-                            JOptionPane.WARNING_MESSAGE, null) 
+                            JOptionPane.WARNING_MESSAGE, null)
                             == JOptionPane.YES_OPTION) {
                         // we just close the dialog and expect the main dlg
                         // to read our result.
@@ -338,7 +350,7 @@ public class FileReaderAdvancedDialog extends JDialog {
     /**
      * After the dialog closes this will return <code>true</code> if the user
      * closed the dialog with the (confirmed) "read from XML file" button).
-     * 
+     *
      * @return <code>true</code> if the dialog was closed via the "read from
      *         XML file" button
      */
@@ -349,7 +361,7 @@ public class FileReaderAdvancedDialog extends JDialog {
     /**
      * After the dialog closes this will return <code>true</code> if the user
      * okayed the dialog and settings should be taken over.
-     * 
+     *
      * @return <code>true</code> if the dialog was closed through the OK
      *         button
      */
@@ -367,7 +379,7 @@ public class FileReaderAdvancedDialog extends JDialog {
 
     /**
      * This method initializes mainPanel which contains all tabs.
-     * 
+     *
      * @return javax.swing.JPanel
      */
     private JPanel getMainPanel() {
@@ -380,7 +392,7 @@ public class FileReaderAdvancedDialog extends JDialog {
 
     /**
      * This method initializes quotePanel.
-     * 
+     *
      * @return javax.swing.JPanel
      */
     private QuotePanel getQuotePanel() {
@@ -399,6 +411,13 @@ public class FileReaderAdvancedDialog extends JDialog {
         }
         return m_decSepPanel;
 
+    }
+
+    private MissingValuePanel getMissValPanel() {
+        if (m_missValPanel == null) {
+            m_missValPanel = new MissingValuePanel(m_settings);
+        }
+        return m_missValPanel;
     }
 
     private IgnoreDelimsPanel getIngoreWSatEORPanel() {
@@ -435,15 +454,15 @@ public class FileReaderAdvancedDialog extends JDialog {
         }
         return m_charsetNamePanel;
     }
-    
+
     /**
      * The main.
-     * 
+     *
      * @param args the args of main.
      */
     public static void main(final String[] args) {
         FileReaderAdvancedDialog dlg =
-                new FileReaderAdvancedDialog(null, 
+                new FileReaderAdvancedDialog(null,
                         new FileReaderNodeSettings());
         dlg.setVisible(true);
         dlg.dispose();

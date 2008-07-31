@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -27,6 +27,7 @@ package org.knime.workbench.editor2.actions;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
@@ -49,7 +50,6 @@ public class PasteActionContextMenu extends PasteAction {
      * @param editor the workflow editor this action is intended for
      */
     public PasteActionContextMenu(final WorkflowEditor editor) {
-
         super(editor);
     }
 
@@ -58,22 +58,22 @@ public class PasteActionContextMenu extends PasteAction {
      */
     @Override
     public String getId() {
-
         return ID;
     }
 
     @Override
-    protected int[] calculateShift(int[] ids) {
+    protected int[] calculateShift(NodeID[] ids) {
+        
         int x = getEditor().getSelectionTool().getXLocation();
         int y = getEditor().getSelectionTool().getYLocation();
         int smallestX = Integer.MAX_VALUE;
         int smallestY = Integer.MAX_VALUE;
         for (int i = 0; i < ids.length; i++) {
-            NodeContainer nc = getManager().getNodeContainerById(ids[i]);
+            NodeContainer nc = getManager().getNodeContainer(ids[i]);
             // finaly change the extra info so that the copies are
             // located differently (if not null)
             ModellingNodeExtraInfo extraInfo =
-                    (ModellingNodeExtraInfo)nc.getExtraInfo();
+                    (ModellingNodeExtraInfo)nc.getUIInformation();
             int currentX = extraInfo.getBounds()[0];
             int currentY = extraInfo.getBounds()[1];
             if (currentX < smallestX) {

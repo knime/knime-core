@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -22,9 +22,6 @@
 package org.knime.base.node.mine.bfn.radial;
 
 import org.knime.base.node.mine.bfn.BasisFunctionPredictorNodeModel;
-import org.knime.base.node.mine.bfn.BasisFunctionPredictorRow;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentRO;
 
 /**
  * The radial basisfunction predictor model performing a prediction on the data
@@ -36,14 +33,12 @@ import org.knime.core.node.ModelContentRO;
  */
 public class RadialBasisFunctionPredictorNodeModel extends
         BasisFunctionPredictorNodeModel {
-
+    
     /**
-     * {@inheritDoc}
+     * 
      */
-    @Override
-    public BasisFunctionPredictorRow createPredictorRow(
-            final ModelContentRO pp) throws InvalidSettingsException {
-        return new RadialBasisFunctionPredictorRow(pp);
+    public RadialBasisFunctionPredictorNodeModel() {
+        super(RadialBasisFunctionPortObject.TYPE);
     }
 
     /**

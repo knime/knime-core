@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -31,7 +31,8 @@ import org.knime.core.node.config.ConfigRO;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public interface ModelContentRO extends ConfigRO {
+public interface ModelContentRO 
+        extends ConfigRO {
 
     /**
      * Returns a read-only <code>ModelContentRO</code> object from this config.

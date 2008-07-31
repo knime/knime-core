@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,13 +24,14 @@
  */
 package org.knime.core.node.config;
 
-
 /**
  * Config entry for String values.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class ConfigStringEntry extends AbstractConfigEntry {
+final class ConfigStringEntry extends AbstractConfigEntry {
+    
+    private static final long serialVersionUID = -1651694785295750285L;
 
     /** The String value. */
     private final String m_string;

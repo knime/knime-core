@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./size.png" type="Visualizer">
+	<name>Size Manager</name>
+	
+	<shortDescription>
+	    Assigns sizes corresponding to the values of one numeric column.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
+	    Assigns sizes corresponding to the values of the selected
+	    numeric column. The higher the value the higher the size.
+		</intro>
+		
+		<option name="Column selection">
+		Select one column from which size should be derived.
+		</option>
+		<option name="Scaling factor">Adjust the maximal scaling factor, i.e.
+			the entered value results in the maximal magnification. 
+			If the entered factor is n, the maximal value will be n times larger 
+			than the minimal value.
+		</option>
+		<option name="Mapping method">Select which mapping method to use, to map 
+		the domain onto the scaled range.
+		</option>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Input for size information">Datatable with column for size assignment</dataIn>
+		<dataOut index="0" name="Input with Sizes">Datatable with size information set.</dataOut>
+		<modelOut index="0" name="Size model">Sizes applied to the input table</modelOut>
+	</ports>	
+</knimeNode>

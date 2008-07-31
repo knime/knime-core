@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.knime.core.data.property.ColorHandler;
+import org.knime.core.data.property.PropertyHandler;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
 import org.knime.core.node.InvalidSettingsException;
@@ -56,7 +57,7 @@ public final class DataColumnSpec {
     
     /** Names array of sub elements such as bit vector positions or 
      * array types. By default contains m_name in an array of length 1.
-     * We use a unmodifiable list here. 
+     * We use a unmodifiable list here, this member is non-null.
      */
     private final List<String> m_elementNames;
 
@@ -233,22 +234,6 @@ public final class DataColumnSpec {
     public ColorHandler getColorHandler() {
         return m_colorHandler;
     }
-
-    /**
-     * Two <code>DataColumnSpec</code>s are equal if they are the same
-     * instance, that is <code>this==obj</code>. 
-     * 
-     * @param obj another object to compare this column to
-     * @return <code>true</code> if both have the same reference,
-     *          otherwise <code>false</code>
-     * 
-     * @see #equalStructure(DataColumnSpec)
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
-    @Override
-    public boolean equals(final Object obj) {
-        return (this == obj);
-    }
     
     /**
      * Two <code>DataColumnSpec</code>s are equal if they have the same
@@ -274,28 +259,40 @@ public final class DataColumnSpec {
     }
     
     /**
-     * Two <code>DataColumnSpec</code>s are equal with domain if the column 
-     * name, type, domain, and properties match. Does not check if the handler
-     * matches.
+     * Two <code>DataColumnSpec</code>s are equal, if the name, type, 
+     * properties, domain, all property handlers, and element names are equal.
      * 
-     * @param cspec the <code>DataColumnSpec</code> to check equality
-     * @return <code>true</code> if name, type, domain, and properties match
-     * @see #equals(Object)
-     * @deprecated use {@link #equalStructure(DataColumnSpec)} and check if 
-     *             domain and properties matches by yourself
+     * @param o the <code>DataColumnSpec</code> to check equality
+     * @return <code>true</code> if both objects are equal, otherwise
+     *      <code>false</code>
      */
-    @Deprecated
-    public boolean equalsWithDomain(final DataColumnSpec cspec) {
-        if (cspec == this) {
+    @Override
+    public boolean equals(final Object o) {
+        if (o == this) {
             return true;
         }
-        if (cspec == null) {
+        if (o == null || !(o instanceof DataColumnSpec)) {
             return false;
         }
-        return getDomain().equals(cspec.getDomain())
-                && getProperties().equals(cspec.getProperties())
-                && getName().equals(cspec.getName())
-                && getType().equals(cspec.getType());
+        DataColumnSpec cspec = (DataColumnSpec) o;
+        boolean areEqual =
+            getName().equals(cspec.getName())
+            && getType().equals(cspec.getType())
+            && getDomain().equals(cspec.getDomain())
+            && getProperties().equals(cspec.getProperties())
+            && getElementNames().equals(cspec.getElementNames());
+        return areEqual && equalsHandlers(m_colorHandler, cspec.m_colorHandler)
+            && equalsHandlers(m_sizeHandler, cspec.m_sizeHandler)
+            && equalsHandlers(m_shapeHandler, cspec.m_shapeHandler);
+    }
+    
+    /** @return helper method that compares two <code>PropertyHandler</code>s */
+    private boolean equalsHandlers(
+            final PropertyHandler h1, final PropertyHandler h2) {
+        if (h1 == null) {
+            return (h2 == null);
+        }
+        return h1.equals(h2);
     }
 
     /**

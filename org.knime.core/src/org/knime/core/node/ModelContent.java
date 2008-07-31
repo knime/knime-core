@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,8 +24,16 @@
  */
 package org.knime.core.node;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.knime.core.node.config.Config;
 
@@ -38,11 +46,10 @@ import org.knime.core.node.config.Config;
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class ModelContent extends Config 
-        implements ModelContentRO, ModelContentWO {
-    
+    implements ModelContentRO, ModelContentWO {
+
     /**
-     * Hides public default constructor.
-     * 
+     * Creates new content object. 
      * @param key The key for this ModelContent.
      */
     public ModelContent(final String key) {
@@ -93,6 +100,43 @@ public final class ModelContent extends Config
     public ModelContent getModelContent(final String key)
             throws InvalidSettingsException {
         return (ModelContent) super.getConfig(key);
-    } 
+    }
 
+    /** File name that's used for the save and load (object-) methods. */
+    private static final String FILE_NAME = "model.xml.gz";
+    
+    /** Saves this object to a directory. This method is used when (derived)
+     * objects represent a {@link PortObject}.
+     * @param directory Where to save to.
+     * @param exec To report progress to.
+     * @throws IOException If saving fails for IO problems.
+     * @throws CanceledExecutionException If canceled.
+     * @see #load(InputStream)
+     */
+    final void save(final File directory, final ExecutionMonitor exec) 
+            throws IOException, CanceledExecutionException {
+        exec.setMessage("Saving model container to file");
+        OutputStream out = new GZIPOutputStream(new BufferedOutputStream(
+                new FileOutputStream(new File(directory, FILE_NAME))));
+        exec.checkCanceled();
+        saveToXML(out);
+    }
+    
+    /** Load this object from a directory. This method is used when (derived)
+     * objects represent a {@link PortObject}.
+     * @param directory Where to load from
+     * @param exec To report progress to.
+     * @throws IOException If loading fails for IO problems.
+     * @throws CanceledExecutionException If canceled.
+     * @see #save(File, ExecutionMonitor)
+     */
+    final void load(final File directory, final ExecutionMonitor exec) 
+            throws IOException, CanceledExecutionException {
+        exec.setMessage("Loading model container from file");
+        InputStream in = new GZIPInputStream(new BufferedInputStream(
+                new FileInputStream(new File(directory, FILE_NAME))));
+        exec.checkCanceled();
+        load(in);
+    }
+    
 }

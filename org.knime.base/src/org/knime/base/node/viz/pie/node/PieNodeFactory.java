@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,25 +25,27 @@
 
 package org.knime.base.node.viz.pie.node;
 
-import org.knime.base.node.viz.pie.datamodel.PieVizModel;
+import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
+
+import org.knime.base.node.viz.pie.datamodel.PieVizModel;
 
 /**
  * Basic node factory class of all pie charts.
  * @author Tobias Koetter, University of Konstanz
  * @param <D> the {@link PieVizModel} implementation
+ * @param <M> the {@link PieNodeModel} implementation
+ * @param <V> the {@link PieNodeView} implementation
  */
-public abstract class PieNodeFactory<D extends PieVizModel>
-extends NodeFactory {
+public abstract class PieNodeFactory<D extends PieVizModel,
+M extends PieNodeModel<D>, V extends PieNodeView>
+extends GenericNodeFactory<M> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public abstract PieNodeModel<D> createNodeModel();
+    public abstract M createNodeModel();
 
     /**
      * {@inheritDoc}
@@ -57,8 +59,8 @@ extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public abstract NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel);
+    public abstract V createNodeView(
+            final int viewIndex, final M nodeModel);
 
     /**
      * {@inheritDoc}

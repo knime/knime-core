@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -171,7 +171,7 @@ public class CSVWriter extends BufferedWriter {
             first = true;
             // first, the row id
             if (m_settings.writeRowID()) {
-                write(quoteString(row.getKey().getId().toString(), false));
+                write(quoteString(row.getKey().getString(), false));
                 first = false;
             }
             // now all data cells

@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   16.11.2005 (gdf): created
  */
@@ -42,17 +42,20 @@ import javax.swing.event.ChangeListener;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.DefaultStringIconOption;
+import org.knime.core.node.util.StringIconListCellRenderer;
+import org.knime.core.node.util.StringIconOption;
 
 /**
  * Provide a standard component for a dialog that allows to select a string from
  * a list of strings.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
- * 
+ *
  */
 public final class DialogComponentStringSelection extends DialogComponent {
 
-    private JComboBox m_combobox;
+    private final JComboBox m_combobox;
 
     private final JLabel m_label;
 
@@ -61,35 +64,75 @@ public final class DialogComponentStringSelection extends DialogComponent {
      * to make a selection, thus, at least one item in the list of selectable
      * items is required. When the settings are applied, the model stores one of
      * the strings of the provided list.
-     * 
+     *
+     * @param stringModel the model that stores the value for this component.
+     * @param label label for dialog in front of combobox
+     * @param list list of items for the combobox
+     */
+    public DialogComponentStringSelection(
+            final SettingsModelString stringModel, final String label,
+            final String... list) {
+        this(stringModel, label,
+                DefaultStringIconOption.createOptionArray(Arrays.asList(list)));
+    }
+
+    /**
+     * Constructor that puts label and combobox into panel. It expects the user
+     * to make a selection, thus, at least one item in the list of selectable
+     * items is required. When the settings are applied, the model stores one of
+     * the strings of the provided list.
+     *
      * @param stringModel the model that stores the value for this component.
      * @param label label for dialog in front of combobox
      * @param list list (not empty) of strings (not null) for the combobox
-     * 
+     *
      * @throws NullPointerException if one of the strings in the list is null
      * @throws IllegalArgumentException if the list is empty or null.
      */
     public DialogComponentStringSelection(
             final SettingsModelString stringModel, final String label,
             final Collection<String> list) {
+        this(stringModel, label,
+                DefaultStringIconOption.createOptionArray(list));
+    }
+
+    /**
+     * Constructor that puts label and combobox into panel. It expects the user
+     * to make a selection, thus, at least one item in the list of selectable
+     * items is required. When the settings are applied, the model stores one of
+     * the strings of the provided list.
+     *
+     * @param stringModel the model that stores the value for this component.
+     * @param label label for dialog in front of combobox
+     * @param list list (not empty) of {@link StringIconOption}s for
+     * the combobox. The text of the selected component is stored in the
+     * {@link SettingsModelString}.
+     *
+     * @throws NullPointerException if one of the strings in the list is null
+     * @throws IllegalArgumentException if the list is empty or null.
+     */
+    public DialogComponentStringSelection(
+            final SettingsModelString stringModel, final String label,
+            final StringIconOption[] list) {
         super(stringModel);
 
-        if ((list == null) || (list.size() == 0)) {
-            throw new IllegalArgumentException("Selection list of strings "
+        if ((list == null) || (list.length == 0)) {
+            throw new IllegalArgumentException("Selection list of options "
                     + "shouldn't be null or empty");
         }
-
         m_label = new JLabel(label);
         getComponentPanel().add(m_label);
         m_combobox = new JComboBox();
+        m_combobox.setRenderer(new StringIconListCellRenderer());
 
-        for (String s : list) {
-            if (s == null) {
-                throw new NullPointerException("Strings in the selection"
+        for (final StringIconOption o : list) {
+            if (o == null) {
+                throw new NullPointerException("Options in the selection"
                         + " list can't be null");
             }
-            m_combobox.addItem(s);
+            m_combobox.addItem(o);
         }
+
         getComponentPanel().add(m_combobox);
 
         m_combobox.addItemListener(new ItemListener() {
@@ -98,7 +141,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
                     // if a new item is selected update the model
                     try {
                         updateModel();
-                    } catch (InvalidSettingsException ise) {
+                    } catch (final InvalidSettingsException ise) {
                         // ignore it here
                     }
                 }
@@ -111,7 +154,6 @@ public final class DialogComponentStringSelection extends DialogComponent {
                 updateComponent();
             }
         });
-
     }
 
     /**
@@ -119,7 +161,22 @@ public final class DialogComponentStringSelection extends DialogComponent {
      */
     @Override
     protected void updateComponent() {
-        String val = ((SettingsModelString)getModel()).getStringValue();
+        final String strVal =
+            ((SettingsModelString)getModel()).getStringValue();
+        StringIconOption val = null;
+        if (strVal == null) {
+            val = null;
+        } else {
+            for (int i = 0, length = m_combobox.getItemCount();
+                i < length; i++) {
+                final StringIconOption curVal =
+                    (StringIconOption)m_combobox.getItemAt(i);
+                if (curVal.getText().equals(strVal)) {
+                    val = curVal;
+                    break;
+                }
+            }
+        }
         boolean update;
         if (val == null) {
             update = (m_combobox.getSelectedItem() != null);
@@ -151,25 +208,8 @@ public final class DialogComponentStringSelection extends DialogComponent {
                     "Please select an item from the list.");
         }
         // we transfer the value from the field into the model
-        ((SettingsModelString)getModel()).setStringValue((String)m_combobox
-                .getSelectedItem());
-
-    }
-
-    /**
-     * Constructor that puts label and combobox into panel. It expects the user
-     * to make a selection, thus, at least one item in the list of selectable
-     * items is required. When the settings are applied, the model stores one of
-     * the strings of the provided list.
-     * 
-     * @param stringModel the model that stores the value for this component.
-     * @param label label for dialog in front of combobox
-     * @param list list of items for the combobox
-     */
-    public DialogComponentStringSelection(
-            final SettingsModelString stringModel, final String label,
-            final String... list) {
-        this(stringModel, label, Arrays.asList(list));
+        ((SettingsModelString)getModel()).setStringValue(
+                ((StringIconOption)m_combobox.getSelectedItem()).getText());
     }
 
     /**
@@ -200,7 +240,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
 
     /**
      * Sets the preferred size of the internal component.
-     * 
+     *
      * @param width The width.
      * @param height The height.
      */
@@ -222,7 +262,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
      * <code>select</code> is specified (not null) and it exists in the
      * collection it will be selected. If <code>select</code> is null, the
      * previous value will stay selected (if it exists in the new list).
-     * 
+     *
      * @param newItems new strings for the combo box
      * @param select the item to select after the replace. Can be null, in which
      *            case the previous selection remains - if it exists in the new
@@ -230,29 +270,56 @@ public final class DialogComponentStringSelection extends DialogComponent {
      */
     public void replaceListItems(final Collection<String> newItems,
             final String select) {
-        if (newItems == null) {
+        if (newItems == null || newItems.size() < 1) {
             throw new NullPointerException("The container with the new items"
-                    + " can't be null");
+                    + " can't be null or empty.");
         }
-        String sel = select;
-        if (sel == null) {
+        final StringIconOption[] options =
+            DefaultStringIconOption.createOptionArray(newItems);
+        replaceListItems(options, select);
+    }
+
+    /**
+     * Replaces the list of selectable strings in the component. If
+     * <code>select</code> is specified (not null) and it exists in the
+     * collection it will be selected. If <code>select</code> is null, the
+     * previous value will stay selected (if it exists in the new list).
+     *
+     * @param newItems new {@link StringIconOption}s for the combo box
+     * @param select the item to select after the replace. Can be null, in which
+     *            case the previous selection remains - if it exists in the new
+     *            list.
+     */
+    public void replaceListItems(final StringIconOption[] newItems,
+            final String select) {
+        if (newItems == null || newItems.length < 1) {
+            throw new NullPointerException("The container with the new items"
+                    + " can't be null or empty.");
+        }
+        final String sel;
+        if (select == null) {
             sel = ((SettingsModelString)getModel()).getStringValue();
+        } else {
+            sel = select;
         }
 
         m_combobox.removeAllItems();
-
-        for (String s : newItems) {
-            if (s == null) {
-                throw new NullPointerException("Strings in the selection"
+        StringIconOption selOption = null;
+        for (final StringIconOption option : newItems) {
+            if (option == null) {
+                throw new NullPointerException("Options in the selection"
                         + " list can't be null");
             }
-            m_combobox.addItem(s);
+            m_combobox.addItem(option);
+            if (option.getText().equals(sel)) {
+                selOption = option;
+            }
         }
 
-        if (!newItems.contains(sel) && (newItems.size() > 0)) {
+        if (selOption == null) {
             m_combobox.setSelectedIndex(0);
         } else {
-            m_combobox.setSelectedItem(sel);
+            m_combobox.setSelectedItem(selOption);
         }
         //update the size of the comboBox and force the repainting
         //of the whole panel

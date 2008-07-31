@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -35,6 +35,7 @@ import java.util.Vector;
 
 import org.knime.base.node.io.filetokenizer.Delimiter;
 import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
+import org.knime.base.node.util.BufferedFileReader;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
@@ -70,6 +71,12 @@ public class FileReaderSettings extends FileTokenizerSettings {
     private char m_decimalSeparator;
 
     /*
+     * in tokens read for a double column, this char (if different to \0)
+     * gets removed
+     */
+    private char m_thousandsSeparator;
+
+    /*
      * if set, the reader will eat all surplus empty tokens at the end of a row.
      */
     private boolean m_ignoreEmptyTokensAtEOR;
@@ -80,10 +87,10 @@ public class FileReaderSettings extends FileTokenizerSettings {
     private boolean m_supportShortLines;
 
     /*
-     * if not null, used as missing value pattern for all columns that don't
-     * have their own missing value pattern set.
+     * if not null, used as missing value pattern for all string columns that
+     * don't have their own missing value pattern set.
      */
-    private String m_globalMissPattern;
+    private String m_globalMissPatternStrCols;
 
     /*
      * if set, the first row in the file will be considered column names - and
@@ -141,6 +148,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
     private static final String CFGKEY_DECIMALSEP = "DecimalSeparator";
 
+    private static final String CFGKEY_THOUSANDSEP = "ThrousandsSeparator";
+
     private static final String CFGKEY_HASCOL = "hasColHdr";
 
     private static final String CFGKEY_HASROW = "hasRowHdr";
@@ -188,12 +197,47 @@ public class FileReaderSettings extends FileTokenizerSettings {
         init();
     }
 
+    /**
+     * Creates a new object holding the same settings values as the one passed
+     * in.
+     *
+     * @param clonee the object to read the settings values from
+     */
+    public FileReaderSettings(final FileReaderSettings clonee) {
+        super(clonee);
+        m_dataFileLocation = clonee.m_dataFileLocation;
+        m_tableName = clonee.m_tableName;
+
+        m_decimalSeparator = clonee.m_decimalSeparator;
+        m_thousandsSeparator = clonee.m_thousandsSeparator;
+
+        m_fileHasColumnHeaders = clonee.m_fileHasColumnHeaders;
+        m_fileHasRowHeaders = clonee.m_fileHasRowHeaders;
+        m_ignoreEmptyLines = clonee.m_ignoreEmptyLines;
+        m_ignoreEmptyTokensAtEOR = clonee.m_ignoreEmptyTokensAtEOR;
+        m_supportShortLines = clonee.m_supportShortLines;
+        m_maxNumberOfRowsToRead = clonee.m_maxNumberOfRowsToRead;
+
+        m_rowHeaderPrefix = clonee.m_rowHeaderPrefix;
+        m_uniquifyRowIDs = clonee.m_uniquifyRowIDs;
+
+        m_rowDelimiters = new HashSet<String>(clonee.m_rowDelimiters);
+        m_missingPatterns = new Vector<String>(clonee.m_missingPatterns);
+        m_globalMissPatternStrCols = clonee.m_globalMissPatternStrCols;
+        m_columnNumberDeterminingLine = clonee.m_columnNumberDeterminingLine;
+
+        m_charsetName = clonee.m_charsetName;
+
+    }
+
     // initializes private members. Needs to be called from two constructors.
     private void init() {
         m_dataFileLocation = null;
         m_tableName = null;
 
         m_decimalSeparator = '.';
+
+        m_thousandsSeparator = '\0';
 
         m_fileHasColumnHeaders = false;
         m_fileHasRowHeaders = false;
@@ -207,7 +251,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
         m_rowDelimiters = new HashSet<String>();
         m_missingPatterns = new Vector<String>();
-        m_globalMissPattern = null; // no global missing value pattern
+        m_globalMissPatternStrCols = null; // no global missing value pattern
         m_columnNumberDeterminingLine = -1;
 
         m_charsetName = null; // uses the default char set name
@@ -300,7 +344,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
                 readMissingPatternsFromConfig(missPattConf);
             }
 
-            m_globalMissPattern = cfg.getString(CFGKEY_GLOBALMISSPATTERN, null);
+            m_globalMissPatternStrCols =
+                    cfg.getString(CFGKEY_GLOBALMISSPATTERN, null);
             NodeSettingsRO rowDelimConf = null;
             try {
                 rowDelimConf = cfg.getNodeSettings(CFGKEY_ROWDELIMS);
@@ -311,9 +356,16 @@ public class FileReaderSettings extends FileTokenizerSettings {
                                 + CFGKEY_ROWDELIMS + "'!");
 
             }
-            // get the decimal separator.
+            // get the decimal and thousands separator.
             // It's optional for backward compatibility and defaults to '.'
             m_decimalSeparator = cfg.getChar(CFGKEY_DECIMALSEP, '.');
+
+            m_thousandsSeparator = cfg.getChar(CFGKEY_THOUSANDSEP, '\0');
+
+            if (m_decimalSeparator == m_thousandsSeparator) {
+                throw new InvalidSettingsException("Decimal separator and "
+                        + "thousands separator can't be the same character");
+            }
 
             // ignore empty tokens at end of row?
             // It'S optional and default to false, for backward compatibility.
@@ -371,8 +423,9 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
         saveRowDelimitersToConfig(cfg.addNodeSettings(CFGKEY_ROWDELIMS));
         saveMissingPatternsToConfig(cfg.addNodeSettings(CFGKEY_MISSINGS));
-        cfg.addString(CFGKEY_GLOBALMISSPATTERN, m_globalMissPattern);
+        cfg.addString(CFGKEY_GLOBALMISSPATTERN, m_globalMissPatternStrCols);
         cfg.addChar(CFGKEY_DECIMALSEP, m_decimalSeparator);
+        cfg.addChar(CFGKEY_THOUSANDSEP, m_thousandsSeparator);
         cfg.addBoolean(CFGKEY_IGNOREATEOR, m_ignoreEmptyTokensAtEOR);
         cfg.addBoolean(CFGKEY_SHORTLINES, m_supportShortLines);
         cfg.addBoolean(CFGKEY_UNIQUIFYID, m_uniquifyRowIDs);
@@ -771,6 +824,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
                     "Can't remove <null> as row delimiter.");
         }
         if (isRowDelimiter(pattern)) {
+            m_rowDelimiters.remove(pattern);
             return removeDelimiterPattern(pattern);
         }
         return null;
@@ -800,6 +854,24 @@ public class FileReaderSettings extends FileTokenizerSettings {
                 || (getDelimiterPattern(pattern) != null);
         return m_rowDelimiters.contains(pattern);
 
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void removeAllDelimiters() {
+        super.removeAllDelimiters();
+        m_rowDelimiters.clear();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Delimiter removeDelimiterPattern(final String pattern) {
+        m_rowDelimiters.remove(pattern);
+        return super.removeDelimiterPattern(pattern);
     }
 
     /**
@@ -884,10 +956,40 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * Sets the character that will be considered decimal separator in the data
      * (token) read for double type columns.
      *
-     * @param sep the new decimal character to set for doubles
+     * @param sep the new decimal character to set for doubles. Can't be the
+     *            same character as the thousands separator.
      */
     public void setDecimalSeparator(final char sep) {
+        if (sep == m_thousandsSeparator) {
+            throw new IllegalArgumentException("Can't set the decimal "
+                    + "separator to the same character as the thousands "
+                    + "separator.");
+
+        }
         m_decimalSeparator = sep;
+    }
+
+    /**
+     * @return the thousandsSeparator. If it is '\0' then it is not set.
+     */
+    public char getThousandsSeparator() {
+        return m_thousandsSeparator;
+    }
+
+    /**
+     * @param thousandsSeparator the thousandsSeparator to set. If set to '\0'
+     *            it will not be applied. Can't be the same as the decimal
+     *            separator.
+     */
+    public void setThousandsSeparator(final char thousandsSeparator) {
+        if ((thousandsSeparator != '\0')
+            && (thousandsSeparator == m_decimalSeparator)) {
+            throw new IllegalArgumentException("Can't set the thousands "
+                    + "separator to the same character as the decimal "
+                    + "separator.");
+
+        }
+        m_thousandsSeparator = thousandsSeparator;
     }
 
     /**
@@ -928,26 +1030,26 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
     /**
      * Sets a new pattern which is translated into a missing value if read from
-     * the data file. Is is used only for colums that don't have their own
-     * missing value pattern set.
+     * the data file in a string column. Is is used only for columns that don't
+     * have their own missing value pattern set (and that are of type string).
      *
-     * @param pattern the new pattern to recognize missing values. Set to
-     *            <code>null</code> to clear it.
+     * @param pattern the new pattern to recognize missing values in string
+     *            columns. Set to <code>null</code> to clear it.
      */
-    public void setGlobalMissingValuePattern(final String pattern) {
-        m_globalMissPattern = pattern;
+    public void setMissValuePatternStrCols(final String pattern) {
+        m_globalMissPatternStrCols = pattern;
     }
 
     /**
      * Returns the pattern that, if read in, will be translated into a missing
-     * value. It is overridden by the column specific missing value pattern. If
-     * it is not defined, null is returned.
+     * value (in string columns only). It is overridden by the column specific
+     * missing value pattern. If it is not defined, null is returned.
      *
-     * @return the pattern for missing values, for all columns. Or null if not
-     *         defined.
+     * @return the pattern for missing values, for all string columns. Or null
+     *         if not defined.
      */
-    public String getGlobalMissingValuePattern() {
-        return m_globalMissPattern;
+    public String getMissValuePatternStrCols() {
+        return m_globalMissPatternStrCols;
     }
 
     /**
@@ -1050,7 +1152,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
                 } catch (Exception ioe) {
                     status.addError("I/O Error while connecting to '"
                             + m_dataFileLocation.toString() + "'.");
-                } 
+                }
                 if (reader != null) {
                     try {
                         reader.close();
@@ -1161,6 +1263,11 @@ public class FileReaderSettings extends FileTokenizerSettings {
             res.append(m_decimalSeparator);
             res.append("'\n");
         }
+        if (m_thousandsSeparator != '\0') {
+            res.append("Thousands separator char for doubles: '");
+            res.append(m_thousandsSeparator);
+            res.append("'\n");
+        }
         res.append("Ignore empty tokens at the end of row: "
                 + m_ignoreEmptyTokensAtEOR + "\n");
         res.append("Fill short lines with missVals: " + m_supportShortLines
@@ -1186,11 +1293,11 @@ public class FileReaderSettings extends FileTokenizerSettings {
             }
         }
         res.append("\n");
-        res.append("Global missing value pattern: ");
-        if (m_globalMissPattern == null) {
+        res.append("Global missing value pattern (string cols): ");
+        if (m_globalMissPatternStrCols == null) {
             res.append("<not defined>");
         } else {
-            res.append(m_globalMissPattern);
+            res.append(m_globalMissPatternStrCols);
         }
         res.append("\n");
         return res.toString();

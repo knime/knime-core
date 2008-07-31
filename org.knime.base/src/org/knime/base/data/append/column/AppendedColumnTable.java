@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -30,6 +30,7 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.RowKey;
 
 
 /**
@@ -90,7 +91,7 @@ public class AppendedColumnTable implements DataTable {
      * 
      */
     public AppendedColumnTable(final DataTable table,
-            final Map<DataCell, DataCell> map,
+            final Map<RowKey, DataCell> map,
             final DataColumnSpec... appendedColSpec) {
         this(table, new DefaultAppendedCellFactory(map), appendedColSpec);
     }

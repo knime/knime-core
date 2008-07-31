@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   04.03.2005 (georg): created
  */
@@ -29,7 +29,7 @@ package org.knime.core.node;
 /**
  * Convenience model class that make some empty stub implementations of methods
  * that are not used by nodes that are not configurable (e.g. have no settings)
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public abstract class NoSettingsNodeModel extends NodeModel {
@@ -42,11 +42,11 @@ public abstract class NoSettingsNodeModel extends NodeModel {
             final int nrOutputs) {
         super(nrInputs, nrOutputs);
     }
-    
+
     /**
      * Creates a new model with the given number of data, and predictor in- and
      * outputs.
-     * 
+     *
      * @param nrDataIns The number of <code>DataTable</code> elements expected
      *            as inputs.
      * @param nrDataOuts The number of <code>DataTable</code> objects expected
@@ -57,7 +57,11 @@ public abstract class NoSettingsNodeModel extends NodeModel {
      *            objects available at the output.
      * @throws NegativeArraySizeException If the number of in- or outputs is
      *             smaller than zero.
+     *
+     * @deprecated Please use the {@link GenericNodeModel} instead of this
+     * constructor if you want to have model ports
      */
+    @Deprecated
     protected NoSettingsNodeModel(final int nrDataIns, final int nrDataOuts,
             final int nrPredParamsIns, final int nrPredParamsOuts) {
         super(nrDataIns, nrDataOuts, nrPredParamsIns, nrPredParamsOuts);
@@ -97,5 +101,5 @@ public abstract class NoSettingsNodeModel extends NodeModel {
     @Override
     protected void reset() {
         // default: do nothing
-    }   
+    }
 }

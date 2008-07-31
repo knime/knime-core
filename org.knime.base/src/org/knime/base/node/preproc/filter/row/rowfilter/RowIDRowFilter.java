@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -79,7 +79,7 @@ public class RowIDRowFilter extends RowFilter {
         m_caseSensitive = caseSensitive;
 
         try {
-            m_pattern = compilePattern(regExpr, caseSensitive);
+            m_pattern = compileRegExpr(regExpr, caseSensitive);
         } catch (PatternSyntaxException pse) {
             throw new IllegalArgumentException("Error in regular expression ('"
                     + pse.getMessage() + "')");
@@ -88,20 +88,23 @@ public class RowIDRowFilter extends RowFilter {
     }
 
     /**
-     * The regular expression is compiled in two places: in the constructor and
-     * in loadSettings. Both places call this method.
+     * We need to compile the pattern in two places (in the constructor and in
+     * loadSettings). Both places call this method.
      *
-     * @param regExpr the expression to compile
-     * @param caseSensitive if true the match is case sensitive
-     * @return the compiled pattern
+     * @param regExpr the pattern to compile.
+     * @param caseSensitive if true, matching is case sensitive
+     * @return the RegExprMachine compiled from the reg expr passed
+     * @throws PatternSyntaxException if the pattern is invalid
      */
-    private Pattern compilePattern(final String regExpr,
-            final boolean caseSensitive) {
-        int flags = Pattern.DOTALL | Pattern.MULTILINE | Pattern.UNICODE_CASE;
+    private Pattern compileRegExpr(final String regExpr,
+            final boolean caseSensitive) throws PatternSyntaxException {
+        // support \n in the data and weird international characters.
+        int flags = Pattern.DOTALL | Pattern.UNICODE_CASE | Pattern.MULTILINE;
         if (!caseSensitive) {
             flags |= Pattern.CASE_INSENSITIVE;
         }
         return Pattern.compile(regExpr, flags);
+
     }
 
     /**
@@ -154,7 +157,7 @@ public class RowIDRowFilter extends RowFilter {
     @Override
     public boolean matches(final DataRow row, final int rowIndex) {
         assert row != null;
-        Matcher matcher = m_pattern.matcher(row.getKey().getId().toString());
+        Matcher matcher = m_pattern.matcher(row.getKey().getString());
 
         boolean match;
         if (m_startsWith) {
@@ -177,7 +180,7 @@ public class RowIDRowFilter extends RowFilter {
         String regExpr = cfg.getString(CFG_PATTERN);
 
         try {
-            m_pattern = compilePattern(regExpr, m_caseSensitive);
+            m_pattern = compileRegExpr(regExpr, m_caseSensitive);
         } catch (PatternSyntaxException pse) {
             throw new InvalidSettingsException("Error in regular expression"
                     + " (" + regExpr + ") read from config object: '"

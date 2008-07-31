@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   27.06.2006 (sieb): created
  */
@@ -26,14 +26,14 @@ package org.knime.workbench.ui.navigator;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.ui.views.navigator.ResourcePatternFilter;
-import org.knime.core.node.workflow.WorkflowManager;
-
+import org.knime.core.node.workflow.WorkflowPersistor;
 /**
  * Implements the knime resource filter for the knime resource navigator. Only
  * the project has to be shown.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class KnimeResourcePatternFilter extends ResourcePatternFilter {
@@ -48,24 +48,19 @@ public class KnimeResourcePatternFilter extends ResourcePatternFilter {
             if (resource.getType() == IResource.PROJECT) {
 
                 IProject project = (IProject)resource;
-
-                // check if a workflow file is contained
-                IResource[] children;
+                /*
                 try {
-                    // refresh to get all children
-                    project.refreshLocal(IResource.DEPTH_INFINITE, null);
-                    children = project.members();
+                    project.refreshLocal(IResource.DEPTH_ZERO, null);
                 } catch (Exception e) {
                     // if crashes for some reason do not display it
                     return false;
                 }
-               
-                for (IResource currentResource : children) {
-                    if (currentResource.getName().equals(
-                            WorkflowManager.WORKFLOW_FILE)) {
-                        return true;
-                    }
-                }
+               */
+                return project.exists(new Path("/" 
+                        + WorkflowPersistor.WORKFLOW_FILE));
+
+            } else if (resource.getType() == IResource.FOLDER) {
+                return true; 
             }
         }
 

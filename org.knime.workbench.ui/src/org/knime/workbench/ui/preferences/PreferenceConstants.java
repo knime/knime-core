@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,7 +24,6 @@
  */
 package org.knime.workbench.ui.preferences;
 
-import org.knime.core.node.NodeLogger.LEVEL;
 
 /**
  * Constant definitions for plug-in preferences. Values are stored under these
@@ -46,30 +45,37 @@ public class PreferenceConstants {
     /** Preference constant: log level for console appender. */
     public static final String P_LOGLEVEL_CONSOLE = "logging.loglevel.console";
 
-    /** Preference constant: log level for console appender. */
-    public static final String P_LOGLEVEL_LOG_FILE = "logging.loglevel.logfile";
-
-    /** Preference constant: maximum threads to use. */
-    public static final String P_MAXIMUM_THREADS = "knime.maxThreads";
-
-    /** Preference constant: directory for temporary files. */
-    public static final String P_TEMP_DIR = "knime.tempDir";
-
     /** Preference constant: whether user needs to confirm reset actions. */
     public static final String P_CONFIRM_RESET = "knime.confirm.reset";
     
     /** Preference constant: whether user needs to confirm delete actions. */
     public static final String P_CONFIRM_DELETE = "knime.confirm.delete";
     
-    /** Choice: log >= debug events. */
-    public static final String P_LOGLEVEL_DEBUG = LEVEL.DEBUG.toString();
-
-    /** Choice: log >= info events. */
-    public static final String P_LOGLEVEL_INFO = LEVEL.INFO.toString();
-
-    /** Choice: log >= warn events. */
-    public static final String P_LOGLEVEL_WARN = LEVEL.WARN.toString();
-
-    /** Choice: log >= error events. */
-    public static final String P_LOGLEVEL_ERROR = LEVEL.ERROR.toString();
+    /** Preference constant to confirm reconnecting a node. */
+    public static final String P_CONFIRM_RECONNECT = "knime.confirm.reconnect";
+    
+    /** Preference constant for the size of the favorite nodes frequency 
+     * history size.
+     */
+    public static final String P_FAV_FREQUENCY_HISTORY_SIZE 
+        = "knime.favorites.frequency";
+    /** Preference constant for the size of the favorite nodes last used
+     * history size.
+     */    
+    public static final String P_FAV_LAST_USED_SIZE 
+        = "knime.favorites.lastused";
+    
+    /* --- Master Key constants --- */
+    
+    /** Preference constant if the master key dialog was opened. */
+    public static final String P_MASTER_KEY_DEFINED 
+        = "knime.master_key.defined";
+    /** Preference constant if a master key should be used. */
+    public static final String P_MASTER_KEY_ENABLED 
+        = "knime.master.key.enabled";
+    /** Preference constant to store the master key flag during a session. */
+    public static final String P_MASTER_KEY_SAVED = "knime.master_key.saved";
+    /** Preference constant to store the master key during a session. */
+    public static final String P_MASTER_KEY = "knime.master_key";
+   
 }

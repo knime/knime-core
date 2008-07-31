@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -55,7 +55,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     private final DataRow m_centroid;
     
     /** Keeps key of all covered pattern. */
-    private final Set<DataCell> m_coveredPattern;
+    private final Set<RowKey> m_coveredPattern;
 
     /**
      * Initialise a new basisfunction rule with one covered pattern since this
@@ -75,7 +75,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
         m_key = key;
         m_centroid = centroid;
         m_classInfo = classInfo;
-        m_coveredPattern = new LinkedHashSet<DataCell>();
+        m_coveredPattern = new LinkedHashSet<RowKey>();
     }
 
     /**
@@ -127,7 +127,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
             assert m_coveredPattern.size() > 0;
             return new IntCell(m_coveredPattern.size());
         } else if (index == nrCells + 2) {
-            return new DoubleCell(computeSpread());
+            return new DoubleCell(getPredictorRow().computeSpread());
         } else if (index == nrCells + 3) {
             return new IntCell(getPredictorRow().getNrUsedFeatures());
         } else {
@@ -177,16 +177,9 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * 
      * @return set of covered input pattern
      */
-    public final Set<DataCell> getAllCoveredPattern() {
+    public final Set<RowKey> getAllCoveredPattern() {
         return Collections.unmodifiableSet(m_coveredPattern);
     }
-    
-    /**
-     * Returns a value for the spread of this rule.
-     * 
-     * @return rule spread value
-     */
-    public abstract double computeSpread();
     
     /**
      * Returns the within-cluster variance.
@@ -196,75 +189,6 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     public final double getVariance() {
         return getPredictorRow().getVariance();
     }
-
-    /**
-     * Computes the overlapping of two basis functions.
-     * 
-     * @param symmetric if the result is proportional to both basis functions,
-     *            and thus symmetric, or if it is proportional to the area of 
-     *            the basisfunction on which the function is called.
-     * @param bf the other basisfunction to compute overlapping with
-     * @return true, if both are overlapping
-     */
-    public abstract double overlap(final BasisFunctionLearnerRow bf,
-            final boolean symmetric);
-
-    /**
-     * Computes the overlapping based on two lines.
-     * 
-     * @param minA left point line A
-     * @param maxA right point line A
-     * @param minB left point line B
-     * @param maxB right point line B
-     * @param symmetric if the result is proportional to both basis functions,
-     *        and thus symmetric, or if it is proportional to the area of the
-     *        basis function on which the function is called
-     * @return the positive overlapping spread of this two lines or zero if none
-     */
-    public static final double overlapping(final double minA,
-            final double maxA, final double minB, final double maxB,
-            final boolean symmetric) {
-        assert (minA <= maxA && minB <= maxB);
-        if (minA == minB && maxA == maxB) {
-            return 1;
-        }
-        if (maxA < minB) {
-            return 0; // maxA - minB;
-        }
-        if (maxB < minA) {
-            return 0; // maxB - minA;
-        }
-        if (minA < minB) {
-
-            if (maxA < maxB) {
-                if (symmetric) {
-                    return (maxA - minB + 1) / (maxB - minA + 1);
-                } else {
-                    return (maxA - minB + 1) / (maxA - minA + 1);
-                }
-
-            } else {
-                return (maxB - minB + 1) / (maxA - minA + 1);
-            }
-        } else {
-            if (minA == maxA || minB == maxB) {
-                return 1;
-            }
-            if (maxA < maxB) {
-                if (symmetric) {
-                    return (maxA - minA + 1) / (maxB - minB + 1);
-                } else {
-                    return 1;
-                }
-            } else {
-                if (symmetric) {
-                    return (maxB - minA + 1) / (maxA - minB + 1);
-                } else {
-                    return (maxB - minA + 1) / (maxA - minA + 1);
-                }
-            }
-        }
-    }
     
     /**
      * If a new instance of this class is covered.
@@ -273,7 +197,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @param classInfo and class.
      */
     public final void addCovered(final DataRow row, final DataCell classInfo) {
-        m_coveredPattern.add(row.getKey().getId());
+        m_coveredPattern.add(row.getKey());
         getPredictorRow().cover(row, classInfo);
     }
 
@@ -312,10 +236,10 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @return the intersection ratio of both covered sets
      */
     public final double computeCoverage(final BasisFunctionLearnerRow bf) {
-        Set<DataCell> c1 = this.getAllCoveredPattern();
-        Set<DataCell> c2 = bf.getAllCoveredPattern();
+        Set<RowKey> c1 = this.getAllCoveredPattern();
+        Set<RowKey> c2 = bf.getAllCoveredPattern();
         int cnt = 0;
-        for (DataCell cell : c1) {
+        for (RowKey cell : c1) {
             if (c2.contains(cell)) {
                cnt++;
             }
@@ -427,13 +351,15 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     public abstract void cover(final DataRow row);
 
     /**
-     * Check if two BasisFunctionLearnerRow objects are equal by its centroid.
+     * Check if two BasisFunctionLearnerRow objects are equal if their 
+     * centroids and class labels are equal.
      * 
      * @param o the other object to check
      * @return <b>true</b> if this instance and the given object are instances
-     *         of the same class and the centroid vector is equal
+     *         of the same class and the centroid vector and class label are
+     *         equal
      * 
-     * @see java.lang.Object#equals(Object)
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(final Object o) {
@@ -460,7 +386,8 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * Returns a hash code computed by the product of the hash code of
      * anchor and class label.
      * @return A new hash code.
-     * @see java.lang.Object#hashCode()
+     *
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Learner" icon="./fuzzybf.png">
 	<name>Fuzzy Rule Learner</name>
 	
@@ -89,7 +89,7 @@
 			Rules with fuzzy intervals in each dimension, classification columns,
 			and additional rule measures.
 		</dataOut>
-		<modelOut index="0" name="Fuzzy Rule Model" type="FuzzyRuleModel">
+		<modelOut index="0" name="Fuzzy Rule Model">
 			Fuzzy Rule Model can be used for prediction.
 		</modelOut>
 	</ports>	

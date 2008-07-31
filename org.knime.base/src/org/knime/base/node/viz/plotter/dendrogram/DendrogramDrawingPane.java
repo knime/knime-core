@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -35,7 +35,7 @@ import java.util.List;
 
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.base.node.viz.plotter.LabelPaintUtil;
-import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.data.property.ShapeFactory;
 
@@ -184,8 +184,8 @@ public class DendrogramDrawingPane extends AbstractDrawingPane {
             if (m_showDots) {
                 Point p = node.getContent().getPoint();
                 ShapeFactory.Shape shape = node.getContent().getShape();
-                int size = m_dotSize 
-                    + (int)(node.getContent().getRelativeSize() * m_dotSize);
+                int size = (int)(node.getContent().getRelativeSize() 
+                        * m_dotSize);
                 shape.paint(g, p.x, p.y, size, 
                         node.getContent().getColor().getColor(), 
                         dendroPoint.isHilite(), dendroPoint.isSelected(), 
@@ -213,12 +213,14 @@ public class DendrogramDrawingPane extends AbstractDrawingPane {
                 BinaryTree.Traversal.IN);
         for (BinaryTreeNode<DendrogramPoint> node : nodes) {
             Point nodePoint = node.getContent().getPoint();
-            if (p.x > nodePoint.x - (m_dotSize / 2) 
-                    && p.x < nodePoint.x + (m_dotSize / 2)
-                    && p.y > nodePoint.y - (m_dotSize / 2)
-                    && p.y < nodePoint.y + (m_dotSize / 2)) {
+            double dotSize = m_dotSize 
+                    * node.getContent().getRelativeSize();
+            if (p.x > nodePoint.x - (dotSize / 2) 
+                    && p.x < nodePoint.x + (dotSize / 2)
+                    && p.y > nodePoint.y - (dotSize / 2)
+                    && p.y < nodePoint.y + (dotSize / 2)) {
                 if (node.getContent().getRows().size() == 1) {
-                    for (DataCell row : node.getContent().getRows()) {
+                    for (RowKey row : node.getContent().getRows()) {
                         return row.toString();
                     }
                 } else {

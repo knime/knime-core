@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -75,7 +75,8 @@ final class ConfigDoubleEntry extends AbstractConfigEntry {
      */
     @Override
     protected boolean hasIdenticalValue(final AbstractConfigEntry ace) {
-        return ((ConfigDoubleEntry) ace).m_double == m_double;
+        return 
+            Double.compare(((ConfigDoubleEntry) ace).m_double, m_double) == 0;
     }
 
 }

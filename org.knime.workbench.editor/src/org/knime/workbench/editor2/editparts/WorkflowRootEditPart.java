@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   26.05.2005 (Florian Georg): created
  */
@@ -31,6 +31,7 @@ import java.util.List;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.LayoutManager;
 import org.eclipse.gef.CompoundSnapToHelper;
+import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.SnapToGrid;
 import org.eclipse.gef.SnapToGuides;
@@ -38,31 +39,41 @@ import org.eclipse.gef.SnapToHelper;
 import org.eclipse.gef.commands.CommandStackListener;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.rulers.RulerProvider;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowContainerEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowXYLayoutPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapToPortGeometry;
+import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 import org.knime.workbench.editor2.figures.ProgressToolTipHelper;
 import org.knime.workbench.editor2.figures.WorkflowFigure;
 import org.knime.workbench.editor2.figures.WorkflowLayout;
+import org.knime.workbench.editor2.model.WorkflowPortBar;
 
 /**
  * Root controller for the <code>WorkflowManager</code> model object. Consider
  * this as the controller for the "background" of the editor. It always has a
  * <code>WorkflowManager</code> as its model object.
  * 
+ * Model: {@link WorkflowManager}
+ * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
-        WorkflowListener, CommandStackListener {
+        WorkflowListener, CommandStackListener, ConnectableEditPart {
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(WorkflowRootEditPart.class);
 
     private ProgressToolTipHelper m_toolTipHelper;
+    
+    private WorkflowPortBar m_inBar;
+    private WorkflowPortBar m_outBar;
 
     /**
      * @return The <code>WorkflowManager</code> that is used as model for this
@@ -72,22 +83,60 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         return (WorkflowManager)getModel();
     }
 
+
+    /**
+     *
+     * {@inheritDoc}
+     */
+    public NodeContainer getNodeContainer() {
+        return getWorkflowManager();
+    }
+
     /**
      * Returns the model chidlren, that is, the <code>NodeConatiner</code>s
      * that are stored in the workflow manager.
-     * 
-     * @see org.eclipse.gef.editparts.AbstractEditPart#getModelChildren()
+     *
+     * {@inheritDoc}
      */
     @Override
     @SuppressWarnings("unchecked")
     protected List getModelChildren() {
-        return new ArrayList(getWorkflowManager().getNodes());
+        List modelChildren = new ArrayList();
+        WorkflowManager wfm = getWorkflowManager();
+        modelChildren.addAll(wfm.getNodeContainers());
+        if (wfm.getNrWorkflowIncomingPorts() > 0) {
+            if (m_inBar == null) {
+                m_inBar = new WorkflowPortBar(wfm, true);
+                ModellingNodeExtraInfo uiInfo = (ModellingNodeExtraInfo)
+                wfm.getInPortsBarUIInfo();
+                if (uiInfo != null && uiInfo.isFilledProperly()) {
+                    m_inBar.setUIInfo((ModellingNodeExtraInfo)
+                            wfm.getInPortsBarUIInfo());
+                }
+            }
+            modelChildren.add(m_inBar);
+        }
+        if (wfm.getNrWorkflowOutgoingPorts() > 0) {
+            if (m_outBar == null) {
+                m_outBar = new WorkflowPortBar(wfm, false);
+                ModellingNodeExtraInfo uiInfo = (ModellingNodeExtraInfo)
+                wfm.getOutPortsBarUIInfo();
+                if (uiInfo != null && uiInfo.isFilledProperly()) {
+                    m_outBar.setUIInfo((ModellingNodeExtraInfo)
+                            wfm.getOutPortsBarUIInfo());
+                }                
+            }
+            modelChildren.add(m_outBar);
+        }
+        return modelChildren;
     }
+
 
     /**
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("unchecked")
     public Object getAdapter(final Class adapter) {
         if (adapter == SnapToHelper.class) {
             List<SnapToHelper> snapStrategies = new ArrayList<SnapToHelper>();
@@ -128,32 +177,34 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
 
     /**
      * Activate controller, register as workflow listener.
-     * 
-     * @see org.eclipse.gef.EditPart#activate()
+     *
+     * {@inheritDoc}
      */
     @Override
     public void activate() {
         super.activate();
-        LOGGER.debug("WorkflowRootEditPart activated");
-
         // register as listener on model object
         getWorkflowManager().addListener(this);
 
         // add as listener on the command stack
         getViewer().getEditDomain().getCommandStack().addCommandStackListener(
                 this);
+
     }
 
     /**
      * Deactivate controller.
-     * 
-     * @see org.eclipse.gef.EditPart#deactivate()
+     *
+     * {@inheritDoc}
      */
     @Override
     public void deactivate() {
         super.deactivate();
         LOGGER.debug("WorkflowRootEditPart deactivated");
-
+        for (Object o : getChildren()) {
+            EditPart editPart = (EditPart)o;
+            editPart.deactivate();
+        }
         getWorkflowManager().removeListener(this);
         getViewer().getEditDomain().getCommandStack()
                 .removeCommandStackListener(this);
@@ -162,8 +213,8 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     /**
      * Creates the root(="background") figure and sets the appropriate lazout
      * manager.
-     * 
-     * @see org.eclipse.gef.editparts.AbstractGraphicalEditPart#createFigure()
+     *
+     * {@inheritDoc}
      */
     @Override
     protected IFigure createFigure() {
@@ -184,8 +235,8 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      * <li><code>EditPolicy.LAYOUT_ROLE</code> - this edit part a layout that
      * allows children to be moved</li>.
      * </ul>
-     * 
-     * @see org.eclipse.gef.editparts.AbstractEditPart#createEditPolicies()
+     *
+     * {@inheritDoc}
      */
     @Override
     protected void createEditPolicies() {
@@ -203,21 +254,43 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     /**
      * Controller is getting notified about model changes. This invokes
      * <code>refreshChildren</code> keep in sync with the model.
-     * 
-     * @see org.knime.core.node.workflow.WorkflowListener
-     *      #workflowChanged(org.knime.core.node.workflow.WorkflowEvent)
+     *
+     * {@inheritDoc}
      */
     public void workflowChanged(final WorkflowEvent event) {
+
         LOGGER.debug("WorkflowRoot: workflow changed, refreshing "
                 + "children/connections..");
 
-        // refreshing the children
-        refreshChildren();
+        Display.getDefault().asyncExec(new Runnable() {
 
-        // refresing connections
-        refreshSourceConnections();
-        refreshTargetConnections();
+            public void run() {
 
+                // refreshing the children
+                refreshChildren();
+
+                // refresing connections
+                refreshSourceConnections();
+                refreshTargetConnections();
+
+                // update out port (workflow in port) tooltips
+                for (Object part : getChildren()) {
+
+                    if (part instanceof NodeOutPortEditPart
+                            || part instanceof WorkflowInPortEditPart) {
+                        AbstractPortEditPart outPortPart =
+                                (AbstractPortEditPart)part;
+                        outPortPart.rebuildTooltip();
+                    }
+                }
+
+                // always refresh visuals
+                getFigure().revalidate();
+                refreshVisuals();
+
+            }
+        });
+    
     }
 
     /**
@@ -235,11 +308,16 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         return m_toolTipHelper;
     }
 
+    /**
+     *
+     * @param underlyingShell underlying shell
+     */
     public void createToolTipHelper(final Shell underlyingShell) {
         // create a tooltip helper for all child figures
         ZoomManager zoomManager = (ZoomManager)(getRoot().getViewer()
                 .getProperty(ZoomManager.class.toString()));
-        m_toolTipHelper = new ProgressToolTipHelper(getViewer().getControl(), zoomManager);
+        m_toolTipHelper = new ProgressToolTipHelper(getViewer().getControl(),
+                zoomManager);
         ((WorkflowFigure)getFigure()).setProgressToolTipHelper(m_toolTipHelper);
     }
 }

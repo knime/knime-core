@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -29,9 +29,9 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -44,13 +44,14 @@ import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
+import org.knime.core.node.workflow.ScopeVariable;
 
 
 /**
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class EntropyNodeModel extends NodeModel {
+class EntropyNodeModel extends NodeModel {
     // DO NOT SWAP VALUES WITHOUT UPDATING THE XML!
     /** Inport port of the reference clustering. */
     static final int INPORT_REFERENCE = 0;
@@ -75,10 +76,10 @@ public class EntropyNodeModel extends NodeModel {
     /**
      * The Entropy node model with two data inports for the two clustering
      * results.
-     *
+     * @param enableOutput whether to enable output port (no outport in 1.x.x).
      */
-    public EntropyNodeModel() {
-        super(2, 0);
+    EntropyNodeModel(final boolean enableOutput) {
+        super(2, enableOutput ? 1 : 0);
         m_translator = new HiLiteTranslator(new DefaultHiLiteHandler());
     }
 
@@ -145,8 +146,17 @@ public class EntropyNodeModel extends NodeModel {
                 m_clusteringCol);
         m_calculator = new EntropyCalculator(reference, clustering,
                 referenceColIndex, clusteringColIndex, exec);
-        Map<DataCell, Set<DataCell>> map = m_calculator.getClusteringMap();
+        Map<RowKey, Set<RowKey>> map = m_calculator.getClusteringMap();
         m_translator.setMapper(new DefaultHiLiteMapper(map));
+        if (getNrOutPorts() > 0) {
+            pushScopeVariable(new ScopeVariable(
+                    "clusteringQuality", m_calculator.getQuality()));
+            pushScopeVariable(new ScopeVariable(
+                    "clusteringEntropy", m_calculator.getEntropy()));
+            BufferedDataTable out = exec.createBufferedDataTable(
+                    m_calculator.getScoreTable(), exec);
+            return new BufferedDataTable[]{out};
+        }
         return new BufferedDataTable[0];
     }
 
@@ -181,6 +191,11 @@ public class EntropyNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "Invalid clustering column name " + m_clusteringCol);
         }
+        if (getNrOutPorts() > 0) {
+            pushScopeVariable(new ScopeVariable("clusteringQuality", 0.0));
+            pushScopeVariable(new ScopeVariable("clusteringEntropy", 0.0));
+            return new DataTableSpec[]{EntropyCalculator.getScoreTableSpec()};
+        }
         return new DataTableSpec[0];
     }
 
@@ -195,6 +210,15 @@ public class EntropyNodeModel extends NodeModel {
             m_translator.addToHiLiteHandler(hiLiteHdl);
         }
         super.setInHiLiteHandler(inIndex, hiLiteHdl);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
+        if (outIndex == 0) {
+            return m_translator.getFromHiLiteHandler();
+        }
+        return super.getOutHiLiteHandler(outIndex);
     }
 
     /**

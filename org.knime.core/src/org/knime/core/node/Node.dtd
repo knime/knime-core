@@ -22,18 +22,18 @@
 -->
 <!ELEMENT knimeNode ( name, shortDescription, fullDescription, ports, views? ) >
 <!ATTLIST knimeNode icon CDATA #IMPLIED>
-<!ATTLIST knimeNode type (Source|Sink|Learner|Predictor|Manipulator|Visualizer|Meta|Other|Unknown) "Unknown">
+<!ATTLIST knimeNode type (Source|Sink|Learner|Predictor|Manipulator|Visualizer|Meta|LoopStart|LoopEnd|Other|Unknown) "Unknown">
 <!ATTLIST knimeNode deprecated (true|false) "false">
 
 <!ELEMENT name (#PCDATA) >
 <!ELEMENT shortDescription (#PCDATA) >
 
 <!ELEMENT fullDescription (intro, option*) >
-<!ELEMENT intro (#PCDATA | p | h | br | b | i | u | a | ul | ol | h3 | h4 | pre)* >
-<!ELEMENT option (#PCDATA | p | h | br | b | i | u | tt | a | ul | ol | pre)* >
+<!ELEMENT intro (#PCDATA | p | h | br | b | i | u | a | ul | ol | h3 | h4 | pre | sub | sup)* >
+<!ELEMENT option (#PCDATA | p | h | br | b | i | u | tt | a | ul | ol | pre | sub | sup)* >
 <!ATTLIST option name CDATA #REQUIRED>
 
-<!ELEMENT p (#PCDATA | br | b | i | u | a | tt | ul | ol)* >
+<!ELEMENT p (#PCDATA | br | b | i | u | a | tt | ul | ol | sup | sub)* >
 <!ELEMENT ul (li)+ >
 <!ELEMENT ol (li)+ >
 <!ELEMENT li (#PCDATA) >
@@ -46,10 +46,12 @@
 <!ELEMENT a (#PCDATA) >
 <!ELEMENT tt (#PCDATA) >
 <!ELEMENT pre (#PCDATA) >
+<!ELEMENT sup (#PCDATA) >
+<!ELEMENT sub (#PCDATA) >
 <!ELEMENT br EMPTY >
 <!ATTLIST a href CDATA #REQUIRED>
 
-<!ELEMENT ports (dataIn*, dataOut*, (predParamIn | modelIn)*, (predParamOut | modelOut)*) >
+<!ELEMENT ports (dataIn*, dataOut*, modelIn*, modelOut*) >
 <!ELEMENT dataIn (#PCDATA | br | b | i | u | tt | ul | ol)* >
 <!ATTLIST dataIn index CDATA #REQUIRED>
 <!ATTLIST dataIn name CDATA #REQUIRED>
@@ -57,24 +59,12 @@
 <!ATTLIST dataOut index CDATA #REQUIRED>
 <!ATTLIST dataOut name CDATA #REQUIRED>
 
-<!ELEMENT predParamIn (#PCDATA | br | b | i | u | tt | ul | ol)* >
-<!ATTLIST predParamIn index CDATA #REQUIRED>
-<!ATTLIST predParamIn name CDATA #REQUIRED>
-<!ATTLIST predParamIn type CDATA "default">
-<!ELEMENT predParamOut (#PCDATA | br | b | i | u | tt | ul | ol)* >
-<!ATTLIST predParamOut index CDATA #REQUIRED>
-<!ATTLIST predParamOut name CDATA #REQUIRED>
-<!ATTLIST predParamOut type CDATA "default">
-
 <!ELEMENT modelIn (#PCDATA | br | b | i | u | tt | ul | ol)* >
 <!ATTLIST modelIn index CDATA #REQUIRED>
 <!ATTLIST modelIn name CDATA #REQUIRED>
-<!ATTLIST modelIn type CDATA "default">
 <!ELEMENT modelOut (#PCDATA | br | b | i | u | tt | ul | ol)* >
 <!ATTLIST modelOut index CDATA #REQUIRED>
 <!ATTLIST modelOut name CDATA #REQUIRED>
-<!ATTLIST modelOut type CDATA "default">
-
 
 <!ELEMENT views (view+) >
 <!ELEMENT view (#PCDATA | br | b | i | u | a | tt | ul | ol)* >

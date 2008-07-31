@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   04.07.2005 (ohl): created
  */
@@ -31,13 +31,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * Negates the match results from the filter passed. Unfortunately
- * {@link EndOfTableException}s
- * (indicating that matches from now on will always fail) will be caught and
- * swallowed by this filter. Thus using this filter in a filter hierarchy will
- * cause the row filter table to always iterate through the end of the original
- * table before it flags an EOT.
- * 
+ * Negates the match results from the filter passed.
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class NegRowFilter extends RowFilter {
@@ -56,7 +51,7 @@ public class NegRowFilter extends RowFilter {
 
     /**
      * Creates a new row filter negating the match results of the input filter.
-     * 
+     *
      * @param inFilter the input filter to negate
      */
     public NegRowFilter(final RowFilter inFilter) {

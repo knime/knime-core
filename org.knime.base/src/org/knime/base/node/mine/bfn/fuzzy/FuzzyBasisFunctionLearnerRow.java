@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -81,7 +81,7 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
             mem[i] = new TrapezoidMembershipFunction(value, min[i], max[i]);
         }
 
-        m_predRow = new FuzzyBasisFunctionPredictorRow(key.getId(), classInfo,
+        m_predRow = new FuzzyBasisFunctionPredictorRow(key, classInfo,
                 mem, norm);
         addCovered(centroid, classInfo);
     }
@@ -136,39 +136,6 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     public boolean explains(final DataRow row) {
         assert (m_predRow.getNrMemships() == row.getNumCells());
         return (computeActivation(row) == 1.0);
-    }
-
-    /**
-     * Computes the overlapping of two fuzzy basisfunction based on their core
-     * spreads.
-     * 
-     * @param bf the other fuzzy basis function
-     * @param symmetric if the result is proportional to both basis functions,
-     *            and thus symmetric, or if it is proportional to the area of
-     *            the basis function on which the function is called
-     * @return a degree of overlap normalized with the overall volume of both
-     *         basis functions
-     */
-    @Override
-    public double overlap(final BasisFunctionLearnerRow bf,
-            final boolean symmetric) {
-        assert (bf instanceof FuzzyBasisFunctionLearnerRow);
-        FuzzyBasisFunctionLearnerRow fbf = (FuzzyBasisFunctionLearnerRow)bf;
-        assert (fbf.m_predRow.getNrMemships() == m_predRow.getNrMemships());
-        double overlap = 1.0;
-        for (int i = 0; i < m_predRow.getNrMemships(); i++) {
-            MembershipFunction memA = m_predRow.getMemship(i);
-            MembershipFunction memB = fbf.m_predRow.getMemship(i);
-            double overlapping = overlapping(memA.getMinCore(), memA
-                    .getMaxCore(), memB.getMinCore(), memB.getMaxCore(),
-                    symmetric);
-            if (overlapping == 0.0) {
-                return 0.0;
-            } else {
-                overlap *= overlapping;
-            }
-        }
-        return overlap;
     }
 
     /**
@@ -437,12 +404,14 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * 
      * @return the overall spread of the core regions
      */
-    @Override
     public double computeSpread() {
         double vol = 0.0;
         double dom = 0.0;
         for (int i = 0; i < m_predRow.getNrMemships(); i++) {
             MembershipFunction mem = m_predRow.getMemship(i);
+            if (mem.isMissingIntern()) {
+                continue;
+            }
             double spread = (mem.getMaxSupport() - mem.getMinSupport());
             if (spread > 0.0) {
                 if (vol == 0.0) {
@@ -466,7 +435,7 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * 
      * @return a String summary of this fuzzy bf
      * 
-     * @see BasisFunctionLearnerRow#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,26 +24,33 @@
  */
 package org.knime.workbench.editor2.editparts;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.draw2d.IFigure;
+import org.knime.core.node.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.workbench.editor2.figures.NewToolTipFigure;
+import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.workbench.editor2.figures.NodeOutPortFigure;
 
 /**
- * Edit part for <code>NodeOutPort</code>s.
+ * Edit part for a {@link NodeOutPort}.
+ * Model: {@link NodeOutPort}
+ * View: {@link NodeOutPortFigure}
+ * Controller: {@link NodeOutPortEditPart}
  * 
  * @author Florian Georg, University of Konstanz
  */
 public class NodeOutPortEditPart extends AbstractPortEditPart {
+    
     /**
-     * @param portID The ID of this out port
+     * @param type the port type
+     * @param portIndex the port index
      */
-    public NodeOutPortEditPart(final int portID) {
-        super(portID);
+    public NodeOutPortEditPart(final PortType type, final int portIndex) {
+        super(type, portIndex, false);
     }
 
     /**
@@ -51,84 +58,46 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
      */
     @Override
     protected IFigure createFigure() {
-
         // Create the figure, we need the number of ports from the parent
         // container
         NodeContainer container = getNodeContainer();
-        boolean isModelPort = container.isPredictorOutPort(getId());
+        NodeOutPort port = container.getOutPort(getIndex());
+        String tooltip = getTooltipText(port.getPortName(), port);
         NodeOutPortFigure portFigure =
-                new NodeOutPortFigure(getId(), container
-                        .getNrModelContentOutPorts(), container
-                        .getNrDataOutPorts(),
-                        container.getOutportName(getId()), isModelPort);
-
-        // BW: double click on port has been disabled
-        // portFigure.addMouseListener(this);
-
+                new NodeOutPortFigure(getType(), getIndex(), container
+                        .getNrOutPorts(), tooltip);
         return portFigure;
     }
 
     /**
-     * Tries to build the tooltip from the port name and if this is a data
-     * outport and the node is configured/executed, it appends also the number
-     * of columns and rows
-     */
-    public void rebuildTooltip() {
-        String name = getNodeContainer().getOutportName(getId());
-        int cols = getNodeContainer().getNumOutportCols(getId());
-        int rows = getNodeContainer().getNumOutportRows(getId());
-        StringBuilder sb = new StringBuilder();
-        sb.append(name);
-        if (cols >= 0) {
-            sb.append(" (Cols: " + cols);
-            if (rows >= 0) {
-                sb.append(", Rows: " + rows + ")");
-            } else {
-                sb.append(")");
-            }
-        }
-        ((NewToolTipFigure)getFigure().getToolTip()).setText(sb.toString());
-    }
-
-    /**
      * This returns the (single !) connection that has this in-port as a target.
-     * 
+     *
      * @return singleton list containing the connection, or an empty list. Never
      *         <code>null</code>
-     * 
-     * @see org.eclipse.gef.GraphicalEditPart#getTargetConnections()
-     */
-    @Override
-    public List getModelSourceConnections() {
-        List<ConnectionContainer> containers;
-        containers =
-                getManager().getOutgoingConnectionsAt(getNodeContainer(),
-                        getId());
-
-        if (containers != null) {
-            return containers;
-        }
-
-        return Collections.EMPTY_LIST;
-    }
-
-    /**
+     *
      * {@inheritDoc}
      */
     @Override
-    public boolean isModelPort() {
-        return getNodeContainer().isPredictorOutPort(getId());
+    public List<ConnectionContainer> getModelSourceConnections() {
+        Set<ConnectionContainer> containers =
+                getManager().getOutgoingConnectionsFor(
+                        getNodeContainer().getID(),
+                        getIndex());
+        List<ConnectionContainer>conns = new ArrayList<ConnectionContainer>();
+        if (containers != null) {
+            conns.addAll(containers);
+        }
+        return conns;
     }
 
     /**
      * 
      * @return empty list, as out-ports are never target for connections
      * 
-     * @see org.eclipse.gef.editparts.AbstractGraphicalEditPart
-     *      #getModelSourceConnections()
+     * {@inheritDoc}
      */
     @Override
-    protected List getModelTargetConnections() {
-        return Collections.EMPTY_LIST;
+    protected List<ConnectionContainer> getModelTargetConnections() {
+        return EMPTY_LIST;
     }
 }

@@ -5,7 +5,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -26,7 +26,13 @@
  */
 package org.knime.core.util;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESKeySpec;
@@ -54,8 +60,6 @@ public final class KnimeEncryption {
 
     private static EncryptionKeySupplier keySupplier;
 
-    private static SecretKey secretKey;
-
     static {
 
         try {
@@ -71,26 +75,47 @@ public final class KnimeEncryption {
         // empty private default constructor as this is a static utility class
     }
 
-    private static void checkKey() {
-        if (secretKey == null) {
-            throw new RuntimeException("No proper key was provided!");
-        }
-    }
-
     /**
      * Enrypts password.
      * 
-     * @param password Char array.
+     * @param password as char array
      * @return The password encrypt.
-     * @throws Exception If something goes wrong.
+     * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
+     * @throws BadPaddingException {@link BadPaddingException}
+     * @throws InvalidKeyException {@link InvalidKeyException}
+     * @throws UnsupportedEncodingException {@link UnsupportedEncodingException}
      */
-    public static String encrypt(final char[] password) throws Exception {
-        if (secretKey == null && keySupplier != null) {
+    public static String encrypt(final char[] password) 
+            throws BadPaddingException, IllegalBlockSizeException,
+            InvalidKeyException, UnsupportedEncodingException {
+        SecretKey secretKey = null;
+        if (keySupplier != null) {
             secretKey = createSecretKey(keySupplier.getEncryptionKey());
         }
-        checkKey();
+        return encrypt(secretKey, password);
+    }
+    
+    /**
+     * Enrypts password with the given <code>SecrectKey</code>.
+     * 
+     * @param secretKey <code>SecretKey</code> used to encrypt the password
+     * @param password as char array
+     * @return The password encrypt.
+     * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
+     * @throws BadPaddingException {@link BadPaddingException}
+     * @throws InvalidKeyException {@link InvalidKeyException}
+     * @throws UnsupportedEncodingException {@link UnsupportedEncodingException}
+     */
+    public static String encrypt(final SecretKey secretKey, 
+            final char[] password) throws BadPaddingException,
+            IllegalBlockSizeException, InvalidKeyException, 
+            UnsupportedEncodingException {
+        if (secretKey == null) {
+            return new String(password);
+        }
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-        byte[] ciphertext = cipher.doFinal(new String(password).getBytes());
+        byte[] ciphertext = cipher.doFinal(
+                new String(password).getBytes("UTF-8"));
         return new BASE64Encoder().encode(ciphertext);
     }
 
@@ -99,29 +124,48 @@ public final class KnimeEncryption {
      * 
      * @param password The password to decrypt.
      * @return The decrypted password.
-     * @throws Exception If something goes wrong.
+     * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
+     * @throws BadPaddingException {@link BadPaddingException}
+     * @throws InvalidKeyException {@link InvalidKeyException}
+     * @throws IOException {@link IOException}
+     * @throws UnsupportedEncodingException {@link UnsupportedEncodingException}
      */
-    public static String decrypt(final String password) throws Exception {
-        if (secretKey == null && keySupplier != null) {
+    public static String decrypt(final String password)
+            throws BadPaddingException, IllegalBlockSizeException,
+            InvalidKeyException, IOException, UnsupportedEncodingException {
+        SecretKey secretKey = null;
+        if (keySupplier != null) {
             secretKey = createSecretKey(keySupplier.getEncryptionKey());
         }
-        checkKey();
-        cipher.init(Cipher.DECRYPT_MODE, secretKey);
-        // perform the decryption
-        byte[] pw = new BASE64Decoder().decodeBuffer(password);
-
-        byte[] decryptedText;
-        try {
-            decryptedText = cipher.doFinal(pw);
-        } catch (Exception e) {
-            secretKey = createSecretKey(keySupplier.getEncryptionKey());
-            cipher.init(Cipher.DECRYPT_MODE, secretKey);
-            decryptedText = cipher.doFinal(pw);
-        }
-
-        return new String(decryptedText);
+        return decrypt(secretKey, password);
     }
 
+    /**
+     * Decrypts password with the given <code>SecrectKey</code>.
+     * 
+     * @param secretKey <code>SecretKey</code> used to decrypt the password
+     * @param password The password to decrypt.
+     * @return The decrypted password.
+     * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
+     * @throws BadPaddingException {@link BadPaddingException}
+     * @throws InvalidKeyException {@link InvalidKeyException}
+     * @throws IOException {@link IOException}
+     * @throws UnsupportedEncodingException {@link UnsupportedEncodingException}
+     */
+    public static String decrypt(final SecretKey secretKey, 
+            final String password) throws BadPaddingException, 
+            IllegalBlockSizeException, InvalidKeyException, IOException, 
+            UnsupportedEncodingException {
+        if (secretKey == null) {
+            return password;
+        }
+        // perform the decryption
+        byte[] pw = new BASE64Decoder().decodeBuffer(password);
+        cipher.init(Cipher.DECRYPT_MODE, secretKey);
+        byte[] decryptedText = cipher.doFinal(pw);
+        return new String(decryptedText, "UTF-8");
+    }
+    
     /**
      * Sets the static encryption key supplier for this global static knime
      * encryptor.
@@ -135,43 +179,32 @@ public final class KnimeEncryption {
     }
 
     /**
-     * Directly sets an encryption key.
-     * 
-     * @param key the encryption key to set
+     * Generates a <code>SecretKey</code> based on the given key phrase.
+     * @param phrase key phrase used to generate secret key
+     * @return a new secret key
      */
-    public static void setEncryptionKey(final SecretKey key) {
-        secretKey = key;
-    }
-    
-    /**
-     * Sets an encryption key given as string.
-     * The key is transformed to a {@link SecretKey} before it is set.
-     * 
-     * @param key the encryption key to set as string
-     */
-    public static void setEncryptionKeyAsString(final String key) {
-        secretKey = createSecretKey(key);
-    }
-
-    private static SecretKey createSecretKey(final String keyAsString) {
-
-        SecretKey secretKey1 = null;
-        try {
-            if (keyAsString.length() < 8) {
-                throw new IllegalArgumentException(
-                        "The encryption key must be at least 8 "
-                                + "characters long.");
-            }
-            byte[] key = keyAsString.getBytes();
-
-            secretKey1 =
-                    SecretKeyFactory.getInstance("DES").generateSecret(
-                            new DESKeySpec(key));
-
-        } catch (Exception e) {
-            secretKey1 = null;
+    public static SecretKey createSecretKey(final String phrase) {
+        if (phrase == null || phrase.length() == 0) {
+            return null;
         }
-
-        return secretKey1;
+        String newKey = phrase;
+        if (phrase.length() % 8 != 0) {
+            // key is not a multiple of 8
+            do {
+                // extend key
+                newKey += phrase;
+            } while (newKey.length() < 8);
+            // trim key to multiple of 8
+            newKey = newKey.substring(0, ((int) newKey.length() / 8) * 8); 
+        }
+        try {
+            byte[] key = newKey.getBytes();
+            return SecretKeyFactory.getInstance("DES").generateSecret(
+                            new DESKeySpec(key));
+        } catch (Exception e) {
+            LOGGER.error(e);
+            return null;
+        }
     }
+
 }

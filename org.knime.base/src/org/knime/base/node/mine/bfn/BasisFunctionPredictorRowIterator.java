@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -27,6 +27,7 @@ import org.knime.base.data.append.column.AppendedColumnRow;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.RowKey;
 
 /**
  * Class wraps a row iterator in order to exents the given
@@ -44,7 +45,7 @@ final class BasisFunctionPredictorRowIterator extends RowIterator {
     /*
      * Keeps the row key to class label.
      */
-    private final Map<DataCell, DataCell> m_map;
+    private final Map<RowKey, DataCell> m_map;
 
     /**
      * Creates a new row iterator used for the basisfunction predictor node
@@ -54,7 +55,7 @@ final class BasisFunctionPredictorRowIterator extends RowIterator {
      * @param map maps the row keys to class labels
      */
     BasisFunctionPredictorRowIterator(final RowIterator rowIt,
-            final Map<DataCell, DataCell> map) {
+            final Map<RowKey, DataCell> map) {
         assert (rowIt != null);
         m_rowIt = rowIt;
         assert (map != null);
@@ -75,7 +76,7 @@ final class BasisFunctionPredictorRowIterator extends RowIterator {
     @Override
     public DataRow next() {
         DataRow row = m_rowIt.next();
-        DataCell classInfo = m_map.get(row.getKey().getId());
+        DataCell classInfo = m_map.get(row.getKey().getString());
         return new AppendedColumnRow(row, classInfo);
     }
 }

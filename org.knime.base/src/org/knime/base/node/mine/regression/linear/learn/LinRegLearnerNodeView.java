@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,13 +24,13 @@
  */
 package org.knime.base.node.mine.regression.linear.learn;
 
-import java.util.Map;
-
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 
+import org.knime.base.node.mine.regression.linear.LinearRegressionPortObject;
 import org.knime.base.node.util.DoubleFormat;
-import org.knime.core.node.NodeView;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.GenericNodeView;
 
 /**
  * View on the linear regression learner node. It only has a text pane where
@@ -38,7 +38,8 @@ import org.knime.core.node.NodeView;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class LinRegLearnerNodeView extends NodeView {
+public class LinRegLearnerNodeView 
+    extends GenericNodeView<LinRegLearnerNodeModel> {
     
     /** The text pane that holds the information. */
     private final JEditorPane m_pane;
@@ -57,26 +58,13 @@ public class LinRegLearnerNodeView extends NodeView {
     }
 
     /**
-     * Does cast.
-     * 
-     * @see NodeView#getNodeModel()
-     */
-    @Override
-    protected LinRegLearnerNodeModel getNodeModel() {
-        return (LinRegLearnerNodeModel)super.getNodeModel();
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
     protected void modelChanged() {
         LinRegLearnerNodeModel model = getNodeModel();
         m_pane.setText("");
-        if (!model.isDataAvailable()) {
-            return;
-        }
-        Map<String, Double> parameter = model.getParametersMap();
+        LinearRegressionPortObject params = model.getParams();
         int nrRows = model.getNrRows();
         int nrSkipped = model.getNrRowsSkipped();
         final StringBuilder buffer = new StringBuilder();
@@ -84,31 +72,33 @@ public class LinRegLearnerNodeView extends NodeView {
         buffer.append("<body>\n");
         buffer.append("<h1>Statistics on Linear Regression</h1>");
         buffer.append("<hr>\n");
-        if (parameter == null || parameter.isEmpty()) {
+        if (params == null) {
             buffer.append("No parameters available.\n");
         } else {
+            DataTableSpec outSpec = params.getSpec();
+            double[] multipliers = params.getMultipliers();
             buffer.append("<table>\n");
             buffer.append("<caption align=\"left\">Parameters</caption>");
             buffer.append("<tr>");
             buffer.append("<th>Column</th>");
             buffer.append("<th>Value</th>");
             buffer.append("</tr>");
-            boolean isFirst = true;
-            for (Map.Entry<String, Double> entry : parameter.entrySet()) {
+            for (int i = 0; i < multipliers.length + 1; i++) {
                 buffer.append("<tr>\n");
                 buffer.append("<td>\n");
                 String key;
-                if (isFirst) {
-                    isFirst = false;
+                double value;
+                if (i == 0) {
                     key = "offset";
+                    value = params.getOffset();
                 } else {
-                    key = entry.getKey();
+                    key = outSpec.getColumnSpec(i - 1).getName();
+                    value = multipliers[i - 1];
                 }
                 buffer.append(key);
                 buffer.append("\n</td>\n");
                 buffer.append("<td>\n");
-                String format = DoubleFormat.formatDouble(entry.getValue()
-                        .doubleValue());
+                String format = DoubleFormat.formatDouble(value);
                 buffer.append(format);
                 buffer.append("\n</td>\n");
                 buffer.append("</tr>\n");

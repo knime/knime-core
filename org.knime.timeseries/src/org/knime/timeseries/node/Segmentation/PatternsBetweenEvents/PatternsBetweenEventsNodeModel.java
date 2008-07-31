@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -38,7 +38,6 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -341,7 +340,7 @@ public class PatternsBetweenEventsNodeModel extends NodeModel {
                 rowLength++;
                 
                 if (event.equals(m_event)) {
-                    RowKey rk = new RowKey(new IntCell(count));
+                    RowKey rk = new RowKey("" + count);
                     DefaultRow outRow = new DefaultRow(rk, newCells);
                     t.addRowToTable(outRow);               
                     count++;
@@ -349,7 +348,7 @@ public class PatternsBetweenEventsNodeModel extends NodeModel {
 
               }
         } finally {      
-            RowKey rk = new RowKey(new IntCell(count));
+            RowKey rk = new RowKey("" + count);
             DefaultRow outRow = new DefaultRow(rk, newCells);
             t.addRowToTable(outRow);               
             count++;

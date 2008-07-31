@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -246,8 +246,7 @@ public class AppendedRowsIterator extends RowIterator {
                     }
                 }
                 keyHasChanged = true;
-                DataCell cell = key.getId();
-                String newId = cell.toString() + m_suffix;
+                String newId = key.toString() + m_suffix;
                 key = new RowKey(newId);
                 // do not print warning here, user specified explicitly
                 // to do duplicate handling.
@@ -271,8 +270,8 @@ public class AppendedRowsIterator extends RowIterator {
         DataRow nextRow;
         if (m_curMissingCells != null) { 
             // no missing cells implies the base row is complete
-            assert (m_curMissingCells.length + baseRow.getNumCells() == 
-                m_spec.getNumColumns());
+            assert (m_curMissingCells.length + baseRow.getNumCells()
+                == m_spec.getNumColumns());
             DataRow filledBaseRow = // row enlarged by "missing" columns
             new AppendedColumnRow(baseRow, m_curMissingCells);
             nextRow = new ResortedCellsRow(filledBaseRow, m_curMapping);
@@ -347,7 +346,7 @@ public class AppendedRowsIterator extends RowIterator {
         /**
          * Get reference to causing exception.
          * 
-         * @see java.lang.Throwable#getCause()
+         * {@inheritDoc}
          */
         @Override
         public CanceledExecutionException getCause() {

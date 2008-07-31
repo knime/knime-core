@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -48,6 +48,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
@@ -766,12 +767,12 @@ public class DataContainer implements RowAppender {
      */
     public static ContainerTable readFromZip(final File zipFile) 
         throws IOException {
-        return readFromZip(zipFile, new BufferCreator());
+        return readFromZip(new ReferencedFile(zipFile), new BufferCreator());
     }
     
     /**
      * Factory method used to restore table from zip file.  
-     * @param zipFile To read from.
+     * @param zipFileRef To read from.
      * @param creator Factory object to create a buffer instance.
      * @return The table contained in the zip file.
      * @throws IOException If that fails.
@@ -780,7 +781,7 @@ public class DataContainer implements RowAppender {
     // This method is used from #readFromZip(File) or from a 
     // RearrangeColumnsTable when it reads a table that has been written
     // with KNIME 1.1.x or before.
-    static ContainerTable readFromZip(final File zipFile, 
+    static ContainerTable readFromZip(final ReferencedFile zipFileRef, 
             final BufferCreator creator) throws IOException {
         /*
          * Ideally, the entire functionality of reading the zip file should take
@@ -794,7 +795,7 @@ public class DataContainer implements RowAppender {
          */
         // bufferID = -1: all blobs are contained in buffer, no fancy
         // reference handling to other buffer objects
-        CopyOnAccessTask coa = new CopyOnAccessTask(zipFile, null, -1, 
+        CopyOnAccessTask coa = new CopyOnAccessTask(zipFileRef, null, -1, 
                 new HashMap<Integer, ContainerTable>(), creator);
         // executing the createBuffer() method will start the copying process
         Buffer buffer = coa.createBuffer();
@@ -810,7 +811,8 @@ public class DataContainer implements RowAppender {
      * @param bufferRep Repository of buffers for blob (de)serialization.
      * @return Table contained in <code>zipFile</code>.
      */
-    protected static ContainerTable readFromZipDelayed(final File zipFile, 
+    protected static ContainerTable readFromZipDelayed(
+            final ReferencedFile zipFile, 
             final DataTableSpec spec, final int bufferID, 
             final Map<Integer, ContainerTable> bufferRep) {
         CopyOnAccessTask t = new CopyOnAccessTask(

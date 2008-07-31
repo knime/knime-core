@@ -1,9 +1,9 @@
-/* 
+/*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   03.05.2007 (gabriel): created
  */
@@ -40,6 +40,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.BufferedDataContainer;
@@ -48,6 +49,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -63,16 +65,16 @@ import org.knime.core.util.Pair;
 
 /**
  * The pivoting node uses on column as grouping (row header) and one as pivoting
- * column (column header) to aggregate a column by its values. One additional 
+ * column (column header) to aggregate a column by its values. One additional
  * column (table content) can be selected the compute an aggregation value
  * for each pair of pivot and group value.
- * 
+ *
  * @see PivotAggregationMethod
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class PivotNodeModel extends NodeModel {
-    
+
     private final SettingsModelString m_group =
         PivotNodeDialogPane.createSettingsGroup();
     private final SettingsModelString m_pivot =
@@ -84,9 +86,12 @@ public class PivotNodeModel extends NodeModel {
         PivotNodeDialogPane.createSettingsAggregationMethod();
     private final SettingsModelString m_makeAgg =
         PivotNodeDialogPane.createSettingsMakeAggregation();
-    
-    private final SettingsModelBoolean m_hiliting = 
+
+    private final SettingsModelBoolean m_hiliting =
         PivotNodeDialogPane.createSettingsEnableHiLite();
+    
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(PivotNodeModel.class);
 
     /**
      * Node returns a new hilite handler instance.
@@ -94,7 +99,7 @@ public class PivotNodeModel extends NodeModel {
     private final HiLiteTranslator m_hilite = new HiLiteTranslator(
             new DefaultHiLiteHandler());
 
-    
+
     /**
      * Creates a new pivot model with one in- and outport.
      */
@@ -103,32 +108,32 @@ public class PivotNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        int group = inSpecs[0].findColumnIndex(m_group.getStringValue());
+        final int group = inSpecs[0].findColumnIndex(m_group.getStringValue());
         if (group < 0) {
             throw new InvalidSettingsException("Group column not found.");
         }
-        int pivot = inSpecs[0].findColumnIndex(m_pivot.getStringValue());
+        final int pivot = inSpecs[0].findColumnIndex(m_pivot.getStringValue());
         if (pivot < 0) {
             throw new InvalidSettingsException("Pivot column not found.");
         }
         if (m_makeAgg.getStringValue().equals(
                 PivotNodeDialogPane.MAKE_AGGREGATION[1])) {
-        int agg = inSpecs[0].findColumnIndex(m_agg.getStringValue());
+        final int agg = inSpecs[0].findColumnIndex(m_agg.getStringValue());
             if (agg < 0) {
                 throw new InvalidSettingsException(
                         "Aggregation column not found.");
             }
         }
-        DataColumnSpec cspec = inSpecs[0].getColumnSpec(pivot);
+        final DataColumnSpec cspec = inSpecs[0].getColumnSpec(pivot);
         if (!cspec.getDomain().hasValues()) {
             return new DataTableSpec[1];
         } else {
-            Set<DataCell> vals = cspec.getDomain().getValues();
+            final Set<DataCell> vals = cspec.getDomain().getValues();
             return new DataTableSpec[]{initSpec(vals)};
         }
     }
@@ -140,10 +145,10 @@ public class PivotNodeModel extends NodeModel {
      * @return possible values as DataTableSpec
      */
     private DataTableSpec initSpec(final Set<DataCell> vals) {
-        String[] names = new String[vals.size()];
-        DataType[] types = new DataType[vals.size()];
+        final String[] names = new String[vals.size()];
+        final DataType[] types = new DataType[vals.size()];
         int idx = 0;
-        for (DataCell val : vals) {
+        for (final DataCell val : vals) {
             names[idx] = val.toString();
             types[idx] = DoubleCell.TYPE;
             idx++;
@@ -152,18 +157,18 @@ public class PivotNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        DataTableSpec inspec = inData[0].getDataTableSpec(); 
-        int group = inspec.findColumnIndex(m_group.getStringValue());
-        int pivot = inspec.findColumnIndex(m_pivot.getStringValue());
-        int aggre = (m_makeAgg.getStringValue().equals(
+        final DataTableSpec inspec = inData[0].getDataTableSpec();
+        final int group = inspec.findColumnIndex(m_group.getStringValue());
+        final int pivot = inspec.findColumnIndex(m_pivot.getStringValue());
+        final int aggre = (m_makeAgg.getStringValue().equals(
                 PivotNodeDialogPane.MAKE_AGGREGATION[1])
                 ? inspec.findColumnIndex(m_agg.getStringValue()) : -1);
-        PivotAggregationMethod aggMethod; 
+        PivotAggregationMethod aggMethod;
         if (aggre < 0) {
             aggMethod = PivotAggregationMethod.COUNT;
         } else {
@@ -171,28 +176,32 @@ public class PivotNodeModel extends NodeModel {
                         m_aggMethod.getStringValue());
         }
         // pair contains group and pivot plus the aggregation value
-        Map<Pair<DataCell, DataCell>, Double[]> map = 
+        final Map<Pair<DataCell, DataCell>, Double[]> map =
             new LinkedHashMap<Pair<DataCell, DataCell>, Double[]>();
         // list of pivot values
-        Set<DataCell> pivotList = new LinkedHashSet<DataCell>();
+        final Set<DataCell> pivotList = new LinkedHashSet<DataCell>();
+        DataColumnSpec pivotSpec = inspec.getColumnSpec(pivot);
+        if (pivotSpec.getDomain().hasValues()) {
+            pivotList.addAll(pivotSpec.getDomain().getValues());
+        }
         // list of group values
-        Set<DataCell> groupList = new LinkedHashSet<DataCell>();
-        final LinkedHashMap<DataCell, Set<DataCell>> mapping = 
-            new LinkedHashMap<DataCell, Set<DataCell>>();
-        double nrRows = inData[0].getRowCount();
+        final Set<DataCell> groupList = new LinkedHashSet<DataCell>();
+        final LinkedHashMap<RowKey, Set<RowKey>> mapping =
+            new LinkedHashMap<RowKey, Set<RowKey>>();
+        final double nrRows = inData[0].getRowCount();
         int rowCnt = 0;
         ExecutionContext subExec = exec.createSubExecutionContext(0.75);
         // final all group, pivot pair and aggregate the values of each group
-        for (DataRow row : inData[0]) {
+        for (final DataRow row : inData[0]) {
             subExec.checkCanceled();
-            subExec.setProgress(++rowCnt / nrRows, 
-                    "Aggregating row: \"" + row.getKey().getId() + "\" (" 
+            subExec.setProgress(++rowCnt / nrRows,
+                    "Aggregating row: \"" + row.getKey().getString() + "\" ("
                     + rowCnt + "\\" + (int) nrRows + ")");
-            DataCell groupCell = row.getCell(group);
+            final DataCell groupCell = row.getCell(group);
             groupList.add(groupCell);
-            DataCell pivotCell = row.getCell(pivot);
+            final DataCell pivotCell = row.getCell(pivot);
             pivotList.add(pivotCell);
-            Pair<DataCell, DataCell> pair = 
+            final Pair<DataCell, DataCell> pair =
                 new Pair<DataCell, DataCell>(groupCell, pivotCell);
             Double[] aggValue = map.get(pair);
             if (aggValue == null) {
@@ -202,41 +211,56 @@ public class PivotNodeModel extends NodeModel {
             if (aggre < 0) {
                 aggMethod.compute(aggValue, null);
             } else {
-                DataCell value = row.getCell(aggre);
+                final DataCell value = row.getCell(aggre);
                 aggMethod.compute(aggValue, value);
             }
             if (m_hiliting.getBooleanValue()) {
-                Set<DataCell> set = mapping.get(groupCell); 
+                final RowKey groupKey = new RowKey(groupCell.toString());
+                Set<RowKey> set = mapping.get(groupKey);
                 if (set == null) {
-                    set = new LinkedHashSet<DataCell>();
-                    mapping.put(groupCell, set);
+                    set = new LinkedHashSet<RowKey>();
+                    mapping.put(groupKey, set);
                 }
-                set.add(row.getKey().getId());
+                set.add(row.getKey());
             }
         }
-        DataTableSpec outspec = initSpec(pivotList);
+        // check pivoted elements
+        if (pivotSpec.getDomain().hasValues()) {
+            Set<DataCell> pivots = pivotSpec.getDomain().getValues();
+            if (!pivots.containsAll(pivotList)) {
+                LinkedHashSet<DataCell> copy = 
+                    new LinkedHashSet<DataCell>(pivotList);
+                copy.removeAll(pivots);
+                String warning = "Some pivot values \"" + copy 
+                        + "\" are not present in data table spec.";
+                LOGGER.coding(warning);
+                setWarningMessage(warning);
+            }
+        }
+
+        final DataTableSpec outspec = initSpec(pivotList);
         // will contain the final pivoting table
-        BufferedDataContainer buf = exec.createDataContainer(outspec);
-        double nrElements = groupList.size();
+        final BufferedDataContainer buf = exec.createDataContainer(outspec);
+        final double nrElements = groupList.size();
         int elementCnt = 0;
         subExec = exec.createSubExecutionContext(0.25);
-        for (DataCell groupCell : groupList) {
+        for (final DataCell groupCell : groupList) {
             subExec.checkCanceled();
             subExec.setProgress(++elementCnt / nrElements,
-                    "Computing aggregation of group \"" + groupCell + "\" (" 
+                    "Computing aggregation of group \"" + groupCell + "\" ("
                     + elementCnt + "\\" + (int) nrElements + ")");
             // contains the aggregated values
-            DataCell[] aggValues = new DataCell[pivotList.size()];
+            final DataCell[] aggValues = new DataCell[pivotList.size()];
             int idx = 0; // pivot index
-            for (DataCell pivotCell : pivotList) {
-                Pair<DataCell, DataCell> newPair = 
+            for (final DataCell pivotCell : pivotList) {
+                final Pair<DataCell, DataCell> newPair =
                     new Pair<DataCell, DataCell>(groupCell, pivotCell);
-                Double[] aggValue = map.get(newPair);
+                final Double[] aggValue = map.get(newPair);
                 aggValues[idx] = aggMethod.done(aggValue);
                 idx++;
             }
             // create new row with the given group id and aggregation values
-            buf.addRowToTable(new DefaultRow(groupCell, aggValues));
+            buf.addRowToTable(new DefaultRow(groupCell.toString(), aggValues));
         }
         buf.close();
         if (m_hiliting.getBooleanValue()) {
@@ -246,26 +270,26 @@ public class PivotNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         if (m_hiliting.getBooleanValue()) {
-            NodeSettingsRO config = NodeSettings.loadFromXML(
+            final NodeSettingsRO config = NodeSettings.loadFromXML(
                     new GZIPInputStream(new FileInputStream(
                     new File(nodeInternDir, "hilite_mapping.xml.gz"))));
             try {
                 m_hilite.setMapper(DefaultHiLiteMapper.load(config));
-            } catch (InvalidSettingsException ex) {
+            } catch (final InvalidSettingsException ex) {
                 throw new IOException(ex.getMessage());
             }
         }
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -279,7 +303,7 @@ public class PivotNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -288,14 +312,14 @@ public class PivotNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         if (m_hiliting.getBooleanValue()) {
-            NodeSettings config = new NodeSettings("hilite_mapping");
+            final NodeSettings config = new NodeSettings("hilite_mapping");
             ((DefaultHiLiteMapper) m_hilite.getMapper()).save(config);
             config.saveToXML(new GZIPOutputStream(new FileOutputStream(new File(
                     nodeInternDir, "hilite_mapping.xml.gz"))));
@@ -303,7 +327,7 @@ public class PivotNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -316,7 +340,7 @@ public class PivotNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -328,21 +352,21 @@ public class PivotNodeModel extends NodeModel {
         m_makeAgg.validateSettings(settings);
         m_hiliting.validateSettings(settings);
     }
-    
+
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
-    protected void setInHiLiteHandler(final int inIndex, 
+    protected void setInHiLiteHandler(final int inIndex,
             final HiLiteHandler hiLiteHdl) {
         m_hilite.removeAllToHiliteHandlers();
         if (hiLiteHdl != null) {
             m_hilite.addToHiLiteHandler(hiLiteHdl);
         }
     }
-    
+
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {

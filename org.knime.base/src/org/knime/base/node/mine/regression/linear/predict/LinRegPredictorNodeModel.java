@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -26,16 +26,14 @@ package org.knime.base.node.mine.regression.linear.predict;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.Map;
 
-import org.knime.base.node.mine.regression.linear.LinearRegressionParams;
+import org.knime.base.data.filter.column.FilterColumnRow;
+import org.knime.base.node.mine.regression.RegressionPortObject;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
@@ -44,28 +42,25 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.PortObject;
+import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.PortType;
 
 /**
  * Node model for the linear regression predictor.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class LinRegPredictorNodeModel extends NodeModel {
-
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(LinRegPredictorNodeModel.class);
-
-    private LinearRegressionParams m_parameters;
+public class LinRegPredictorNodeModel extends GenericNodeModel {
 
     /** Initialization with 1 data input, 1 model input and 1 data output. */
     public LinRegPredictorNodeModel() {
-        super(1, 1, 1, 0);
+        super(new PortType[]{RegressionPortObject.TYPE, BufferedDataTable.TYPE},
+                new PortType[]{BufferedDataTable.TYPE});
     }
 
     /**
@@ -95,32 +90,16 @@ public class LinRegPredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        DataTableSpec spec = inData[0].getDataTableSpec();
-        ColumnRearranger c = createRearranger(spec);
-        BufferedDataTable out = exec.createColumnRearrangeTable(inData[0], c,
-                exec);
+        RegressionPortObject regModel = (RegressionPortObject)inData[0];
+        BufferedDataTable data = (BufferedDataTable)inData[1]; 
+        DataTableSpec spec = data.getDataTableSpec();
+        ColumnRearranger c = createRearranger(
+                spec, regModel.getSpec(), regModel);
+        BufferedDataTable out = 
+            exec.createColumnRearrangeTable(data, c, exec);
         return new BufferedDataTable[]{out};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadModelContent(final int index,
-            final ModelContentRO predParams) throws InvalidSettingsException {
-        if (index != 0) {
-            throw new IndexOutOfBoundsException(
-                    "Invalid model input: " + index);
-        }
-        LinearRegressionParams param;
-        if (predParams == null) {
-            param = null;
-        } else {
-            param = LinearRegressionParams.loadParams(predParams);
-        }
-        m_parameters = param;
     }
 
     /**
@@ -130,125 +109,58 @@ public class LinRegPredictorNodeModel extends NodeModel {
     protected void reset() {
     }
 
-    /**
-     * {@inheritDoc}
-     */
+     /** {@inheritDoc} */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        Map<String, Double> map = m_parameters == null ? null : m_parameters
-                .getMap();
-        if (map == null || map.isEmpty()) {
-            throw new InvalidSettingsException("No model available.");
+        DataTableSpec regModelSpec = (DataTableSpec)inSpecs[0];
+        DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
+        if (dataSpec == null || regModelSpec == null) {
+            throw new InvalidSettingsException(
+                    "No input specification available");
         }
-        if (map.size() == 1) {
-            throw new InvalidSettingsException("Model is empty..");
-        }
-        boolean isFirst = true;
-        for (Map.Entry<String, Double> entry : map.entrySet()) {
-            // first one is the offset value
-            if (isFirst) {
-                isFirst = false;
-                if (Double.isNaN(entry.getValue())) {
-                    throw new InvalidSettingsException(
-                            "Invalid offset value: NaN");
-                }
-                continue;
-            }
-            String name = entry.getKey();
-            DataColumnSpec colSpec = inSpecs[0].getColumnSpec(name);
-            if (colSpec == null) {
-                throw new InvalidSettingsException("No such column: " + name);
-            }
-            if (!colSpec.getType().isCompatible(DoubleValue.class)) {
-                throw new InvalidSettingsException("Not a double type: "
-                        + colSpec.getType().toString());
-            }
-            double val = entry.getValue();
-            if (Double.isNaN(val)) {
-                throw new InvalidSettingsException(
-                        "Invalid value for parameter " + name + ": " + val);
-            }
-        }
-        // settings seem to be ok, create out spec
-        ColumnRearranger c = createRearranger(inSpecs[0]);
-        DataTableSpec outSpec = c.createSpec();
+        ColumnRearranger rearranger = 
+            createRearranger(dataSpec, regModelSpec, null);
+        DataTableSpec outSpec = rearranger.createSpec();
         return new DataTableSpec[]{outSpec};
     }
 
-    /**
-     * Creates the name of the new appended column, possibly the original name
-     * of the response (or target) column used in the learner. If that column
-     * exists in the data, it is concatenated with "(prediction)"
-     * 
-     * @param spec the input spec
-     * @return the output spec with one(!) column. The two tables will be
-     *         joined.
-     */
-    private DataColumnSpec createAppendSpec(final DataTableSpec spec) {
-        String name = null;
-        Map<String, Double> map = m_parameters == null ? null : m_parameters
-                .getMap();
-        if (map != null && !map.isEmpty()) {
-            name = map.keySet().iterator().next();
-        }
-        if (name == null) {
-            // node is not executable if map is null or empty, though
-            name = "prediction";
-        } else if (spec.containsName(name)) {
-            name = name.toString() + " (prediction)";
-        }
-        while (spec.containsName(name)) {
-            name = name.toString() + "_";
-        }
-        DataColumnSpecCreator creator = new DataColumnSpecCreator(name,
-                DoubleCell.TYPE);
-        return creator.createSpec();
-    }
-
-    private ColumnRearranger createRearranger(final DataTableSpec inSpec) {
-        DataColumnSpec appendSpec = createAppendSpec(inSpec);
-        Map<String, Double> par = m_parameters.getMap();
-        final double[] parameters = new double[par.size()];
-        // -1 because the offset value is not contained in the data
-        final int[] columns = new int[par.size() - 1];
-        // find the indizes of the columns to include
-        int count = 0;
-        for (Iterator<Map.Entry<String, Double>> it = par.entrySet().iterator();
-            it.hasNext(); count++) {
-            Map.Entry<String, Double> entry = it.next();
-            String colName = entry.getKey();
-            parameters[count] = entry.getValue();
-            if (count == 0) {
-                continue;
+    private ColumnRearranger createRearranger(final DataTableSpec inSpec, 
+            final DataTableSpec regModelSpec, 
+            final RegressionPortObject regModel) 
+        throws InvalidSettingsException {
+        // exclude last (response column)
+        final int[] varsIndices = new int[regModelSpec.getNumColumns() - 1];
+        for (int i = 0; i < varsIndices.length; i++) {
+            DataColumnSpec regressor = regModelSpec.getColumnSpec(i);
+            String name = regressor.getName();
+            int index = inSpec.findColumnIndex(name);
+            if (index < 0) {
+                throw new InvalidSettingsException("Missing column for " 
+                        + "regressor variable : \"" + name + "\"");
             }
-            int index = inSpec.findColumnIndex(colName);
-            columns[count - 1] = index;
+            DataColumnSpec col = inSpec.getColumnSpec(index);
+            if (!col.getType().isCompatible(DoubleValue.class)) {
+                throw new InvalidSettingsException("Incompatible type of " 
+                        + "column \"" + name + "\": " + col.getType());
+            }
+            varsIndices[i] = index;
         }
-        SingleCellFactory fac = new SingleCellFactory(appendSpec) {
+        // try to use some smart naming scheme for the append column
+        String oldName = 
+            regModelSpec.getColumnSpec(varsIndices.length).getName();
+        if (inSpec.containsName(oldName) 
+                && !oldName.toLowerCase().endsWith("(prediction)")) {
+            oldName = oldName + " (prediction)";
+        }
+        String newColName = DataTableSpec.getUniqueColumnName(inSpec, oldName); 
+        DataColumnSpec newCol = 
+            new DataColumnSpecCreator(newColName, DoubleCell.TYPE).createSpec();
+        SingleCellFactory fac = new SingleCellFactory(newCol) {
             @Override
             public DataCell getCell(final DataRow row) {
-                // sum of the product
-                double sum = parameters[0]; // offset value
-                boolean containsMissing = false;
-                for (int i = 0; i < columns.length && !containsMissing; i++) {
-                    DataCell val = row.getCell(columns[i]);
-                    if (val.isMissing()) {
-                        containsMissing = true; // will be skipped
-                    } else {
-                        double v = ((DoubleValue)val).getDoubleValue();
-                        sum += v * parameters[i + 1];
-                    }
-                }
-                DataCell appendCell;
-                if (containsMissing) {
-                    LOGGER.debug("Row \"" + row.getKey().getId()
-                            + "\" contains missing values, skipping.");
-                    appendCell = DataType.getMissingCell();
-                } else {
-                    appendCell = new DoubleCell(sum);
-                }
-                return appendCell;
+                FilterColumnRow reduced = new FilterColumnRow(row, varsIndices);
+                return regModel.predict(reduced);
             }
         };
         ColumnRearranger c = new ColumnRearranger(inSpec);

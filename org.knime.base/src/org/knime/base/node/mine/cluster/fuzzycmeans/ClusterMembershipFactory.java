@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,13 +18,17 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   17.07.2006 (cebron): created
  */
 package org.knime.base.node.mine.cluster.fuzzycmeans;
 
+import java.util.Collections;
+
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomainCreator;
+import org.knime.core.data.DataColumnProperties;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -32,13 +36,15 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.renderer.DataValueRenderer;
+import org.knime.core.data.renderer.DoubleBarRenderer;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
  * This {@link CellFactory} produces appended cells: for each {@link DataRow}
  * the memberships to the cluster prototypes and the winner cluster in the last
  * column.
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
  */
 public class ClusterMembershipFactory implements CellFactory {
@@ -52,7 +58,7 @@ public class ClusterMembershipFactory implements CellFactory {
 
     /**
      * Constructor.
-     * 
+     *
      * @param algo the trained FCM-model
      */
     public ClusterMembershipFactory(final FCMAlgorithm algo) {
@@ -95,16 +101,33 @@ public class ClusterMembershipFactory implements CellFactory {
         int nrclusters = m_nrClusters;
         DataColumnSpec[] newSpec = new DataColumnSpec[nrclusters + 1];
         int cluster = 0;
+        DataColumnSpecCreator colspecCreator = null;
         for (int j = 0; j < nrclusters; j++) {
             if (m_noise && j == (newSpec.length - 2)) {
-                newSpec[j] = new DataColumnSpecCreator(
-                        FuzzyClusterNodeModel.NOISESPEC_KEY, DoubleCell.TYPE)
-                        .createSpec();
+                colspecCreator =
+                        new DataColumnSpecCreator(
+                                FuzzyClusterNodeModel.NOISESPEC_KEY,
+                                DoubleCell.TYPE);
+                colspecCreator.setProperties(new DataColumnProperties(
+                        Collections.singletonMap(
+                                DataValueRenderer.PROPERTY_PREFERRED_RENDERER,
+                                DoubleBarRenderer.DESCRIPTION)));
+                colspecCreator.setDomain(new DataColumnDomainCreator(
+                        new DoubleCell(0.0), new DoubleCell(1.0))
+                        .createDomain());
+                newSpec[j] = colspecCreator.createSpec();
                 break;
             }
-            newSpec[j] = new DataColumnSpecCreator(
-                    FuzzyClusterNodeModel.CLUSTER_KEY + cluster,
-                    DoubleCell.TYPE).createSpec();
+            colspecCreator =
+                    new DataColumnSpecCreator(FuzzyClusterNodeModel.CLUSTER_KEY
+                            + cluster, DoubleCell.TYPE);
+            colspecCreator.setProperties(new DataColumnProperties(Collections
+                    .singletonMap(
+                            DataValueRenderer.PROPERTY_PREFERRED_RENDERER,
+                            DoubleBarRenderer.DESCRIPTION)));
+            colspecCreator.setDomain(new DataColumnDomainCreator(
+                    new DoubleCell(0.0), new DoubleCell(1.0)).createDomain());
+            newSpec[j] = colspecCreator.createSpec();
             cluster++;
         }
         newSpec[newSpec.length - 1] = new DataColumnSpecCreator(

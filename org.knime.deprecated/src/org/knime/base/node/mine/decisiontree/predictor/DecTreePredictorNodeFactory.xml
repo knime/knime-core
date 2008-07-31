@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./dtreepred.ico" type="Predictor"  deprecated="true">
-	<name>Decision Tree Predictor Deprecated</name>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./dtreepred.ico" type="Predictor" deprecated="true">
+	<name>Decision Tree Predictor (deprecated)</name>
 	
 	<shortDescription>
-	    This node is obsolete! Please use the new decision tree predictor located in 
-	    the Mining category.
+	    This node is obsolete! Please use the new Decision Tree Predictor node 
+	    located in the Mining category.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>		
-		This node is obsolete! Please use the new decision tree predictor located in 
-	    the Mining category.<p />
+		This node is obsolete! Please use the new Decision Tree Predictor node
+		located in the Mining category.<p />
 		This node uses an existing decision tree (passed in through the model
 		port) to predict the class value for new patterns.
 		The Node can be configured as follows:

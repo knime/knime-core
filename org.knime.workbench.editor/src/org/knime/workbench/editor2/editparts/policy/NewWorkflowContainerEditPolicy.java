@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -31,7 +31,8 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.ContainerEditPolicy;
 import org.eclipse.gef.requests.CreateRequest;
-import org.knime.core.node.NodeFactory;
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
 
@@ -58,7 +59,7 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
         Object obj = request.getNewObject();
 
         // Today, we only support nodes to be created here
-        if (!(obj instanceof NodeFactory)) {
+        if (!(obj instanceof GenericNodeFactory)) {
             LOGGER.error("Illegal drop object: " + obj);
             return null;
         }
@@ -85,8 +86,9 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
 
         // Case 1:
         // create a new node
-        if (obj instanceof NodeFactory) {
-            NodeFactory factory = (NodeFactory)obj;
+        if (obj instanceof GenericNodeFactory) {
+            GenericNodeFactory<? extends GenericNodeModel> factory 
+                = (GenericNodeFactory<? extends GenericNodeModel>)obj;
 
             CreateNodeCommand cmd = new CreateNodeCommand(manager, factory,
                     location);

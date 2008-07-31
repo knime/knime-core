@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   19.07.2006 (ohl): created
  */
@@ -37,9 +37,9 @@ import org.knime.base.node.io.filetokenizer.Delimiter;
 /**
  * Dialog panel for the expert dialog of the filereader. Panel for the flag
  * "ignore extra delimiters at the end of the rows".
- * 
+ *
  * @author Peter Ohl, University of Konstanz
- * 
+ *
  */
 public class IgnoreDelimsPanel extends JPanel {
 
@@ -48,7 +48,7 @@ public class IgnoreDelimsPanel extends JPanel {
     /**
      * Constructs the panels and loads it with the settings from the passed
      * object.
-     * 
+     *
      * @param settings containing the settings to show in the panel
      */
     IgnoreDelimsPanel(final FileReaderNodeSettings settings) {
@@ -87,7 +87,7 @@ public class IgnoreDelimsPanel extends JPanel {
         result.add(new JLabel("cell will be introduced."));
         result.add(Box.createVerticalStrut(5));
         result.add(new JLabel("Note: With this set, missing values at the"));
-        result.add(new JLabel("\t\tend of a row must be quoted (e.g. \"\")"));
+        result.add(new JLabel("\t\tend of a row must be quoted (e.g. \"\")."));
         result.add(Box.createVerticalStrut(3));
         result.add(new JLabel("This setting is ignored if a delimiter other"));
         result.add(new JLabel("than space or tab is selected."));
@@ -98,7 +98,7 @@ public class IgnoreDelimsPanel extends JPanel {
 
     /**
      * Checks the current values in the panel.
-     * 
+     *
      * @return null, if settings are okay and can be applied. An error message
      *         if not.
      */
@@ -109,7 +109,7 @@ public class IgnoreDelimsPanel extends JPanel {
     /**
      * Transfers the current settings from the panel in the passed object.
      * Overwriting the corresponding values in the object.
-     * 
+     *
      * @param settings the settings object to fill in the currently set values
      * @return true if the new settings are different from the one passed in.
      */
@@ -151,7 +151,7 @@ public class IgnoreDelimsPanel extends JPanel {
 
     /**
      * Transfers the corresponding values from the passed object into the panel.
-     * 
+     *
      * @param settings object holding the values to display in the panel
      */
     private void loadSettings(final FileReaderNodeSettings settings) {

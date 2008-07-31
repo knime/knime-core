@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
@@ -40,41 +41,40 @@ import org.knime.core.node.config.ConfigWO;
 
 /**
  * A default mapper for hilite translation which holds a map from 
- * {@link DataCell} to a set of {@link DataCell}s as value.
+ * {@link RowKey} to a set of {@link RowKey}s as value.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DefaultHiLiteMapper implements HiLiteMapper {    
-    /*
-     * Keep the mapping.
-     */
-    private final Map<DataCell, Set<DataCell>> m_map;
+public class DefaultHiLiteMapper implements HiLiteMapper {
     
+    /** Keep the mapping. */
+    private final Map<RowKey, Set<RowKey>> m_map;
+
     /**
      * Creates a new default hilite mapper.
      * 
-     * @param map keeps the <code>DataCell</code> to set of
-     *      <code>DataCell</code>s mapping
+     * @param map keeps the <code>RowKey</code> to set of
+     *      <code>RowKey</code>s mapping
      * @throws NullPointerException if <code>map</code> is <code>null</code>
      */
-    public DefaultHiLiteMapper(final Map<DataCell, Set<DataCell>> map) {
+    public DefaultHiLiteMapper(final Map<RowKey, Set<RowKey>> map) {
         if (map == null) {
             throw new NullPointerException("Map must not be null.");
         }
         m_map = map;
     }
-
+    
     /**
      * {@inheritDoc}
      */
-    public Set<DataCell> getKeys(final DataCell key) {
+    public Set<RowKey> getKeys(final RowKey key) {
         return m_map.get(key);
     }
 
     /**
      * {@inheritDoc}
      */
-    public Set<DataCell> keySet() {
+    public Set<RowKey> keySet() {
         return Collections.unmodifiableSet(m_map.keySet());
     }
     
@@ -88,12 +88,12 @@ public class DefaultHiLiteMapper implements HiLiteMapper {
      * @param config The config to write to.
      */
     public void save(final ConfigWO config) {
-        for (DataCell key : keySet()) {
-            Set<DataCell> mappedKey = getKeys(key);
+        for (RowKey key : keySet()) {
+            Set<RowKey> mappedKeys = getKeys(key);
             ConfigWO keySettings = config.addConfig(key.toString());
-            keySettings.addDataCell(key.toString(), key);
-            keySettings.addDataCellArray(CFG_MAPPED_KEYS, 
-                    mappedKey.toArray(new DataCell[mappedKey.size()]));
+            keySettings.addString(key.getString(), key.getString());
+            keySettings.addRowKeyArray(CFG_MAPPED_KEYS, 
+                    mappedKeys.toArray(new RowKey[mappedKeys.size()]));
         }
     }
     
@@ -106,15 +106,32 @@ public class DefaultHiLiteMapper implements HiLiteMapper {
     public static DefaultHiLiteMapper load(final ConfigRO config) 
         throws InvalidSettingsException {
         // load hilite mapping
-        LinkedHashMap<DataCell, Set<DataCell>> mapping 
-            = new LinkedHashMap<DataCell, Set<DataCell>>();
+        LinkedHashMap<RowKey, Set<RowKey>> mapping 
+            = new LinkedHashMap<RowKey, Set<RowKey>>();
         for (String key : config.keySet()) {
             ConfigRO keySettings = config.getConfig(key);
-            DataCell cellKey = keySettings.getDataCell(key);
-            DataCell[] mappedKeys = keySettings.getDataCellArray(
+            String cellKey;
+            try {
+                // load keys before 2.0
+                cellKey = keySettings.getDataCell(key).toString();
+            } catch (InvalidSettingsException ise) {
+                cellKey = keySettings.getString(key);
+            }
+            Set<RowKey> keySet;
+            try {
+                // load mapping before 2.0
+                DataCell[] mappedKeys = keySettings.getDataCellArray(
                     CFG_MAPPED_KEYS);
-            mapping.put(cellKey, new LinkedHashSet<DataCell>(
-                    Arrays.asList(mappedKeys)));
+                keySet = new LinkedHashSet<RowKey>();
+                for (DataCell dc : mappedKeys) {
+                    keySet.add(new RowKey(dc.toString()));
+                }
+            } catch (InvalidSettingsException ise) {
+                RowKey[] mappedKeys =
+                        keySettings.getRowKeyArray(CFG_MAPPED_KEYS);
+                keySet = new LinkedHashSet<RowKey>(Arrays.asList(mappedKeys));
+            }
+            mapping.put(new RowKey(cellKey), keySet);
         }
         return new DefaultHiLiteMapper(mapping);
     }

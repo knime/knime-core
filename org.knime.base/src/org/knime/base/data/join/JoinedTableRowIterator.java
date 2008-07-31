@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -28,6 +28,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.JoinedRow;
 import org.knime.core.node.NodeLogger;
@@ -64,7 +65,7 @@ class JoinedTableRowIterator extends RowIterator {
      * traverse the right table only once when we look for an id. If the
      * iterator had a pushBack method that wouldn't be necessary.
      */
-    private DataCell m_lastRightID;
+    private RowKey m_lastRightID;
 
     /**
      * Gets important when we have traversed the left table and now gather the
@@ -128,10 +129,10 @@ class JoinedTableRowIterator extends RowIterator {
     public DataRow next() {
         if (m_leftIt.hasNext()) {
             final DataRow left = m_leftIt.next();
-            final DataCell leftID = left.getKey().getId();
+            final RowKey leftID = left.getKey();
             assert (!leftID.equals(m_lastRightID));
             DataRow right;
-            DataCell rightID;
+            RowKey rightID;
             boolean cont = true;
             do {
                 right = null;
@@ -140,7 +141,7 @@ class JoinedTableRowIterator extends RowIterator {
                     break;
                 }
                 right = nextRight();
-                rightID = right.getKey().getId();
+                rightID = right.getKey();
                 boolean madeWholeLoop = (m_lastRightID == null && !m_rightIt
                         .hasNext())
                         || rightID.equals(m_lastRightID);
@@ -185,7 +186,7 @@ class JoinedTableRowIterator extends RowIterator {
         } else {
             // in a perfect world, you don't come here...
             DataRow maybeNext = findNextRightRow();
-            DataRow left = getLeftMissing(m_nextRightRow.getKey().getId());
+            DataRow left = getLeftMissing(m_nextRightRow.getKey());
             DataRow merged = new JoinedRow(left, m_nextRightRow);
             m_nextRightRow = maybeNext;
             return merged;
@@ -206,7 +207,7 @@ class JoinedTableRowIterator extends RowIterator {
     }
 
     /* Called when there is no corresponding right row to the left one. */
-    private DataRow getRightMissing(final DataCell key) {
+    private DataRow getRightMissing(final RowKey key) {
         DataTableSpec spec = m_table.getRightTable().getDataTableSpec();
         if (m_rightMissingCells == null) {
             LOGGER.debug("Creating missing values for right table on key \""
@@ -221,7 +222,7 @@ class JoinedTableRowIterator extends RowIterator {
     }
 
     /* Called when there is no corresponding left row to the right one. */
-    private DataRow getLeftMissing(final DataCell key) {
+    private DataRow getLeftMissing(final RowKey key) {
         DataTableSpec spec = m_table.getLeftTable().getDataTableSpec();
         if (m_leftMissingCells == null) {
             LOGGER.debug("Creating missing values for left table on key \""

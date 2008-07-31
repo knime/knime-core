@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./joiner.png" type="Manipulator">
-    <name>Joiner</name>
-    <shortDescription>Joins two tables based on their row IDs.</shortDescription>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./joiner.png" type="Manipulator" deprecated="true">
+    <name>Joiner (deprecated)</name>
+    <shortDescription>
+    	This node is obsolete! Please use the new Joiner node located in 
+	    the Data Manipulation -&gt; Column category.
+    </shortDescription>
     <fullDescription>
         <intro>
+            This node is obsolete! Please use the new Joiner node located in 
+	    	the Data Manipulation -&gt; Column category.
 	        This node joins two tables (database join-like). The join on the two tables
 			is carried out so that the first table (from the first, top input 
 			port) provides the left part of the output table and the second table

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *    12.03.2007 (Tobias Koetter): created
  */
@@ -40,11 +40,11 @@ import org.knime.core.node.util.ColumnFilter;
 public final class NoDomainColumnFilter implements ColumnFilter {
 
     private static NoDomainColumnFilter instance;
-    
+
     private NoDomainColumnFilter() {
         //private constructor to avoid object creation
     }
-    
+
     /**
      * @return the single instance of this class
      */
@@ -54,7 +54,7 @@ public final class NoDomainColumnFilter implements ColumnFilter {
         }
         return instance;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -80,8 +80,18 @@ public final class NoDomainColumnFilter implements ColumnFilter {
             }
             return true;
         } else if (colSpec.getType().isCompatible(DoubleValue.class)) {
-            if (domain.getLowerBound() == null 
+            if (domain.getLowerBound() == null
                     || domain.getUpperBound() == null) {
+                return false;
+            }
+            final double lowerVal =
+                ((DoubleValue)domain.getLowerBound()).getDoubleValue();
+            if (Double.isInfinite(lowerVal) || Double.isNaN(lowerVal)) {
+                return false;
+            }
+            final double upperVal =
+                ((DoubleValue)domain.getUpperBound()).getDoubleValue();
+            if (Double.isInfinite(upperVal) || Double.isNaN(upperVal)) {
                 return false;
             }
             return true;

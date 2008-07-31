@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -30,7 +30,7 @@ import org.knime.core.node.NodeView;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class EntropyNodeView extends NodeView {
+public class EntropyNodeView extends NodeView<EntropyNodeModel> {
     private final EntropyView m_view;
 
     /**
@@ -38,25 +38,13 @@ public class EntropyNodeView extends NodeView {
      * 
      * @param nodeModel the node model to look at
      */
-    public EntropyNodeView(final EntropyNodeModel nodeModel) {
+    EntropyNodeView(final EntropyNodeModel nodeModel) {
         super(nodeModel);
         m_view = new EntropyView();
         setComponent(m_view);
     }
 
-    /**
-     * Calls super and does typecast.
-     * 
-     * @see NodeView#getNodeModel()
-     */
-    @Override
-    protected EntropyNodeModel getNodeModel() {
-        return (EntropyNodeModel)super.getNodeModel();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected void modelChanged() {
         EntropyCalculator calculator = getNodeModel().getCalculator();

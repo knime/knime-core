@@ -1,11 +1,12 @@
-/* ------------------------------------------------------------------
+/*
+ * ------------------------------------------------------------------ *
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
- * University of Konstanz, Germany.
- * Chair for Bioinformatics and Information Mining
- * Prof. Dr. Michael R. Berthold
+ * Copyright, 2003 - 2008
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
  *
  * You may not modify, publish, transmit, transfer or sell, reproduce,
  * create derivative works from, distribute, perform, display, or in
@@ -33,16 +34,17 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.PlainDocument;
 
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.GenericNodeView;
 
 /**
  * Base class for both output views. Provides a text field and the ability to
  * add a line to this field, or to update the entire field.
  *
  * @author ohl, University of Konstanz
+ * @param <T> the actual implementation of the abstract node model
  */
-public abstract class ExtToolOutputNodeView extends NodeView {
+public abstract class ExtToolOutputNodeView<T extends ExtToolOutputNodeModel>
+        extends GenericNodeView<T> {
 
     private final JTextArea m_output;
 
@@ -57,7 +59,7 @@ public abstract class ExtToolOutputNodeView extends NodeView {
      *
      * @param nodeModel the model associated with this view.
      */
-    public ExtToolOutputNodeView(final NodeModel nodeModel) {
+    public ExtToolOutputNodeView(final T nodeModel) {
         super(nodeModel);
         setViewTitle("Output to StdErr");
         m_output = new JTextArea();
@@ -94,7 +96,7 @@ public abstract class ExtToolOutputNodeView extends NodeView {
      * reset, load, execute, etc.). It removes the current content and retrieves
      * the new output to display from the node model.
      *
-     * @see org.knime.core.node.NodeView#modelChanged()
+     * {@inheritDoc}
      */
     @Override
     protected void modelChanged() {
@@ -119,7 +121,6 @@ public abstract class ExtToolOutputNodeView extends NodeView {
 
         setTextInSwingThreadLater(output, col);
     }
-
 
     private void setTextInSwingThreadLater(final Collection<String> lines,
             final Color fgColor) {
@@ -152,7 +153,6 @@ public abstract class ExtToolOutputNodeView extends NodeView {
      * field contains more than 500 lines, it removes the first line.<br>
      * Call this method if you are not sure in which thread you are.
      *
-     * @see #addLine(String)
      * @param s the line to add
      */
     protected void addLineInSwingThreadLater(final String s) {
@@ -171,8 +171,8 @@ public abstract class ExtToolOutputNodeView extends NodeView {
      * removes all output from the view.
      */
     protected void clearText() {
-        setTextInSwingThreadLater(Arrays.asList(new String[]{}),
-                m_colorDefault);
+        setTextInSwingThreadLater(
+                Arrays.asList(new String[]{}), m_colorDefault);
     }
 
     /**
@@ -257,7 +257,7 @@ public abstract class ExtToolOutputNodeView extends NodeView {
     protected abstract Collection<String> getNoOutputText();
 
     /**
-     * @see org.knime.core.node.NodeView#onClose()
+     * {@inheritDoc}
      */
     @Override
     protected void onClose() {
@@ -265,7 +265,7 @@ public abstract class ExtToolOutputNodeView extends NodeView {
     }
 
     /**
-     * @see org.knime.core.node.NodeView#onOpen()
+     * {@inheritDoc}
      */
     @Override
     protected void onOpen() {

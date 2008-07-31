@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,6 +25,7 @@
 package org.knime.workbench.repository.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -37,6 +38,17 @@ import java.util.List;
  */
 public abstract class AbstractContainerObject extends AbstractRepositoryObject
         implements IContainerObject {
+    
+    private boolean m_sortChildren = true;
+    
+    public void setSortChildren(final boolean sort) {
+        m_sortChildren = sort;
+    }
+    
+    protected boolean sortChildren() {
+        return m_sortChildren;
+    }
+    
     /**
      * The list of categories and nodes.
      */
@@ -75,11 +87,18 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
         if (child == this) {
             throw new IllegalArgumentException("Can't add 'this' as a child");
         }
-
         m_children.add(child);
 
         child.setParent(this);
 
+    }
+    
+    public void removeAllChildren() {
+        m_children.clear();
+    }
+    
+    public void addAllChildren(Collection<? extends AbstractRepositoryObject> children) {
+        m_children.addAll(children);
     }
 
     /**
@@ -89,11 +108,12 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
      * @return The children (category and nodes of current level)
      * @see org.knime.workbench.repository.model.IContainerObject# getChildren()
      */
-    public IRepositoryObject[] getChildren() {
+    public synchronized IRepositoryObject[] getChildren() {
 
         // Collections.sort(m_children, m_comparator);
-        m_children = sortChildren(m_children);
-
+        if (m_sortChildren) {
+            m_children = sortChildren(m_children);
+        }
         return m_children.toArray(new IRepositoryObject[m_children.size()]);
     }
 
@@ -313,7 +333,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
     /**
      * {@inheritDoc}
      */
-    public IRepositoryObject getChildByID(final String id, final boolean rec) {
+    public synchronized IRepositoryObject getChildByID(final String id, final boolean rec) {
         // The slash and the empty string represent 'this'
         if ("/".equals(id) || "".equals(id.trim())) {
             return this;

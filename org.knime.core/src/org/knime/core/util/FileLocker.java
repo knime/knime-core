@@ -1,8 +1,9 @@
-/* ------------------------------------------------------------------
+/*
+ * ------------------------------------------------------------------ *
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -72,8 +73,9 @@ public class FileLocker {
 
             throw new IOException(specificMessage);
         }
-        if (m_fileLock != null)
+        if (m_fileLock != null) {
             return true;
+        }
         m_raFile.close();
         m_raFile = null;
         return false;

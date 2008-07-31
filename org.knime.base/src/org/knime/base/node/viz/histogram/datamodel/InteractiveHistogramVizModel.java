@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -45,6 +45,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.NodeLogger;
 
 
@@ -358,12 +359,12 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
 //      add the data rows to the new bins
         int startBin = 0;
         if (m_aggrColumns == null || m_aggrColumns.size() < 1) {
-            //if the user hsn't selected a aggregation column
+            //if the user hasn't selected a aggregation column
             for (final DataRow row : getSortedRows()) {
                 final DataCell xCell = row.getCell(m_xColIdx);
                 final Color color =
                     m_tableSpec.getRowColor(row).getColor(false, false);
-                final DataCell id = row.getKey().getId();
+                final RowKey id = row.getKey();
                 try {
                     startBin = BinningUtil.addDataRow2Bin(
                             isBinNominal(), bins, missingValBin, startBin,
@@ -393,7 +394,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
                 final DataCell xCell = row.getCell(m_xColIdx);
                 final Color color =
                     m_tableSpec.getRowColor(row).getColor(false, false);
-                final DataCell id = row.getKey().getId();
+                final RowKey id = row.getKey();
                 final DataCell[] aggrVals = new DataCell[aggrSize];
                 for (int j = 0, length = aggrIdx.length; j < length; j++) {
                     aggrVals[j] = row.getCell(aggrIdx[j]);
@@ -420,8 +421,8 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
      * {@inheritDoc}
      */
     @Override
-    public boolean isFixed() {
-        return false;
+    public boolean supportsHiliting() {
+        return true;
     }
 
     /**
@@ -436,8 +437,8 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
      * {@inheritDoc}
      */
     @Override
-    public Set<DataCell> getHilitedKeys() {
-        final Set<DataCell> keys = new HashSet<DataCell>();
+    public Set<RowKey> getHilitedKeys() {
+        final Set<RowKey> keys = new HashSet<RowKey>();
         for (final BinDataModel bin : getBins()) {
             final Collection<BarDataModel> bars = bin.getBars();
             for (final BarDataModel bar : bars) {
@@ -457,8 +458,8 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
      * {@inheritDoc}
      */
     @Override
-    public Set<DataCell> getSelectedKeys() {
-        final Set<DataCell> keys = new HashSet<DataCell>();
+    public Set<RowKey> getSelectedKeys() {
+        final Set<RowKey> keys = new HashSet<RowKey>();
         for (final BinDataModel bin : getBins()) {
             if (bin.isSelected()) {
                 final Collection<BarDataModel> bars = bin.getBars();
@@ -483,7 +484,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
      * {@inheritDoc}
      */
     @Override
-    public void updateHiliteInfo(final Set<DataCell> hilited,
+    public void updateHiliteInfo(final Set<RowKey> hilited,
             final boolean hilite) {
         LOGGER.debug("Entering updateHiliteInfo(hilited, hilite) "
                 + "of class InteractiveHistogramVizModel.");

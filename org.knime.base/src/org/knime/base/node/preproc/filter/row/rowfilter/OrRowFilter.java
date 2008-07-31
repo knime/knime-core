@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   29.06.2005 (ohl): created
  */
@@ -31,7 +31,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * 
+ *
  * @author ohl, University of Konstanz
  */
 public class OrRowFilter extends RowFilter {
@@ -53,10 +53,10 @@ public class OrRowFilter extends RowFilter {
      * results with a logical OR. If filter <code>in1</code> returns a match
      * the {@link RowFilter#matches(DataRow, int)} method of filter
      * <code>in2</code> is not invoked!
-     * 
+     *
      * @param in1 row filter as first input into the OR result
      * @param in2 row filter for the second input of the OR result; might be
-     *            short cutted
+     *            short cut.
      */
     public OrRowFilter(final RowFilter in1, final RowFilter in2) {
         if (in1 == null) {
@@ -72,8 +72,8 @@ public class OrRowFilter extends RowFilter {
     }
 
     /**
-     * The row filter created by this contructor can not be used without setting
-     * two input filters by loading settings from a config object.
+     * The row filter created by this constructor can not be used without
+     * setting two input filters by loading settings from a config object.
      */
     public OrRowFilter() {
         m_in1 = null;
@@ -84,7 +84,7 @@ public class OrRowFilter extends RowFilter {
 
     /**
      * @return the row filter connected to one of the inputs of the logical OR.
-     *         Returns the one that is not short cutted.
+     *         Returns the one that is not short cut.
      */
     public RowFilter getInput1() {
         return m_in1;
@@ -92,7 +92,7 @@ public class OrRowFilter extends RowFilter {
 
     /**
      * @return the row filter connected to one of the inputs of the logical OR.
-     *         Returns the one that could be short cutted.
+     *         Returns the one that could be short cut.
      */
     public RowFilter getInput2() {
         return m_in2;

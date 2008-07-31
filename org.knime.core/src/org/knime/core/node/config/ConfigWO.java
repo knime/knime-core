@@ -5,7 +5,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -28,6 +28,7 @@ package org.knime.core.node.config;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
+import org.knime.core.data.RowKey;
 
 /**
  * Write-only interface for <code>Config</code> objects providing only access
@@ -123,6 +124,25 @@ public interface ConfigWO {
      * @param cell The DataCell to add.
      */
     public void addDataCell(final String key, final DataCell cell);
+    
+    /**
+     * Adds this <code>RowKey</code> object to this Config by the given key. 
+     * The row key can be null.
+     * 
+     * @param key identifier used to store and the load the <code>RowKey</code>
+     * @param rowKey value to store
+     */
+    public void addRowKey(final String key, final RowKey rowKey);
+    
+    /**
+     * Adds this <code>RowKey</code> array to this Config by the given key. 
+     * The row key array can be null.
+     * 
+     * @param key identifier used to store and the load the <code>RowKey</code>
+     *        array
+     * @param rowKey array to store
+     */
+    public void addRowKeyArray(final String key, final RowKey... rowKey);
 
     /**
      * Adds this DataType object value to the Config by the given key. The type

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -19,8 +19,6 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  * 
- * History
- *   16.11.2005 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
@@ -31,6 +29,8 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
@@ -45,11 +45,11 @@ import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.KnimeEncryption;
 import org.knime.core.util.SimpleFileFilter;
@@ -59,7 +59,7 @@ import org.knime.core.util.SimpleFileFilter;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBDialogPane extends JPanel {
+final class DBDialogPane extends JPanel {
 
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(DBDialogPane.class);
@@ -93,6 +93,9 @@ public class DBDialogPane extends JPanel {
     static final StringHistory DATABASE_URLS = StringHistory.getInstance(
             "database_urls");
     
+    /** Default user place holder, <code>&ltuser&gt</code>. */
+    static final String DFT_USER_TAG = "<user>";
+    
     /**
      * Creates new dialog.
      */
@@ -111,8 +114,9 @@ public class DBDialogPane extends JPanel {
                     try {
                         DBDriverLoader.loadDriver(file);
                         updateDriver();
-                    } catch (Exception exc) {
-                        LOGGER.warn("No driver loaded from: " + file, exc);
+                    } catch (Throwable t) {
+                        LOGGER.info("Could not load driver from file \"" 
+                                + file.getAbsolutePath() + "\".", t);
                     }
                 }
             }
@@ -135,6 +139,14 @@ public class DBDialogPane extends JPanel {
         userPanel.setBorder(BorderFactory.createTitledBorder(" User name "));
         m_user.setPreferredSize(new Dimension(400, 20));
         m_user.setFont(FONT);
+        m_user.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(final FocusEvent fe) {
+                if (m_user.getText().equals(DFT_USER_TAG)) {
+                    m_user.setText("");
+                }
+            } 
+        });
         userPanel.add(m_user);
         super.add(userPanel);
         JPanel passPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -152,7 +164,14 @@ public class DBDialogPane extends JPanel {
                 m_passwordChanged = true;
             }
         });
-
+        m_pass.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(final FocusEvent fe) {
+                if (!m_passwordChanged) {
+                    m_pass.setText("");
+                }
+            } 
+        });
         passPanel.add(m_pass);
         super.add(passPanel);
     }
@@ -174,7 +193,7 @@ public class DBDialogPane extends JPanel {
      * @param specs input spec
      */
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) {
+            final PortObjectSpec[] specs) {
         // database driver and name
         m_driver.removeAllItems();
         m_db.removeAllItems();
@@ -186,7 +205,7 @@ public class DBDialogPane extends JPanel {
                 dbName == null ? "jdbc:odbc:<database_name>" : dbName);
         // user
         String user = settings.getString("user", null);
-        m_user.setText(user == null ? "<user>" : user);
+        m_user.setText(user == null ? DFT_USER_TAG : user);
         // password
         String password = settings.getString("password", null);
         m_pass.setText(password == null ? "" : password);
@@ -197,8 +216,9 @@ public class DBDialogPane extends JPanel {
         for (String driver : loadedDriver) {
             try {
                 DBDriverLoader.loadDriver(new File(driver));
-            } catch (Exception e) {
-                LOGGER.warn("Could not load driver: " + driver, e);
+            } catch (Throwable t) {
+                LOGGER.warn("Could not load driver \"" + driver + "\", reason: "
+                        + t.getMessage(), t);
             }
         }
         updateDriver();
@@ -238,22 +258,19 @@ public class DBDialogPane extends JPanel {
                 throw new InvalidSettingsException("Driver \"" + driverName 
                         + "\" does not accept URL: " + url);
             }
-        } catch (Exception e) {
-            InvalidSettingsException ise = new InvalidSettingsException(
+        } catch (Throwable t) {
+            throw new InvalidSettingsException(
                     "Couldn't test connection to URL \"" + url + "\" "
-                            + " with driver: " + driverName);
-            ise.initCause(e);
-            throw ise;
+                            + " with driver \"" + driverName + "\".", t);
         }        
         settings.addString("user", m_user.getText().trim());
         if (m_passwordChanged) {
             try {
                 settings.addString("password", KnimeEncryption.encrypt(
                         m_pass.getPassword()));
-            } catch (Exception e) {
-                LOGGER.warn("Could not encrypt password.", e);
-                throw new InvalidSettingsException(
-                        "Could not encrypt password.");
+            } catch (Throwable t) {
+                LOGGER.warn("Could not encrypt password, reason: " 
+                        + t.getMessage(), t);
             }
         } else {
             settings.addString("password", new String(m_pass.getPassword()));

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -31,6 +31,7 @@ import org.knime.base.node.mine.bfn.fuzzy.norm.Norm;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
@@ -59,7 +60,7 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      * @param mem An array of membership functions each per dimension. 
      * @param norm A fuzzy norm to combine activations via all dimensions.
      */
-    protected FuzzyBasisFunctionPredictorRow(final DataCell key,
+    protected FuzzyBasisFunctionPredictorRow(final RowKey key,
             final DataCell classLabel, final MembershipFunction[] mem,
             final int norm) {
         super(key, classLabel, MINACT);
@@ -72,7 +73,7 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      * @param pp Content to read rule from.
      * @throws InvalidSettingsException If the content is invalid.
      */
-    FuzzyBasisFunctionPredictorRow(final ModelContentRO pp)
+    public FuzzyBasisFunctionPredictorRow(final ModelContentRO pp)
             throws InvalidSettingsException {
         super(pp);
         m_norm = pp.getInt(Norm.NORM_KEY);
@@ -83,6 +84,41 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
             m_mem[i] = new MembershipFunction(memParams.getModelContent(key));
             i++;
         }
+    }
+    
+    /**
+     * Computes the overlapping of two fuzzy basisfunction based on their core
+     * spreads.
+     * 
+     * @param bf the other fuzzy basis function
+     * @param symmetric if the result is proportional to both basis functions,
+     *            and thus symmetric, or if it is proportional to the area of
+     *            the basis function on which the function is called
+     * @return a degree of overlap normalized with the overall volume of both
+     *         basis functions
+     */
+    @Override
+    public double overlap(final BasisFunctionPredictorRow bf,
+            final boolean symmetric) {
+        FuzzyBasisFunctionPredictorRow fbf = (FuzzyBasisFunctionPredictorRow)bf;
+        assert (fbf.getNrMemships() == getNrMemships());
+        double overlap = 1.0;
+        for (int i = 0; i < getNrMemships(); i++) {
+            MembershipFunction memA = getMemship(i);
+            MembershipFunction memB = fbf.getMemship(i);
+            if (memA.isMissingIntern() || memB.isMissingIntern()) {
+                continue;
+            }
+            double overlapping = overlapping(memA.getMinCore(), memA
+                    .getMaxCore(), memB.getMinCore(), memB.getMaxCore(),
+                    symmetric);
+            if (overlapping == 0.0) {
+                return 0.0;
+            } else {
+                overlap *= overlapping;
+            }
+        }
+        return overlap;
     }
 
     /**
@@ -200,6 +236,36 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
     }
     
     /**
+     * Returns the aggregated spread of the core.
+     * 
+     * @return the overall spread of the core regions
+     */
+    @Override
+    public double computeSpread() {
+        double vol = 0.0;
+        double dom = 0.0;
+        for (int i = 0; i < getNrMemships(); i++) {
+            MembershipFunction mem = getMemship(i);
+            if (mem.isMissingIntern()) {
+                continue;
+            }
+            double spread = (mem.getMaxCore() - mem.getMinCore());
+            if (spread > 0.0) {
+                if (vol == 0.0) {
+                    vol = spread;
+                    dom = (mem.getMax().doubleValue() 
+                            - mem.getMin().doubleValue());
+                } else {
+                    vol *= spread;
+                    dom *= (mem.getMax().doubleValue() 
+                            - mem.getMin().doubleValue());
+                }
+            }
+        }
+        return (vol > 0 ? vol / dom : 0);
+    }
+    
+    /**
      * 
      * {@inheritDoc}
      */
@@ -207,7 +273,8 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
     public int getNrUsedFeatures() {
         int used = 0;
         for (MembershipFunction mem : m_mem) {
-            if (!mem.isSuppLeftMax() || !mem.isSuppRightMax()) {
+            if (mem.isMissingIntern() || !mem.isSuppLeftMax() 
+                    || !mem.isSuppRightMax()) {
                 used++;
             }
         }

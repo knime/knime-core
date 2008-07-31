@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,9 +25,11 @@
 
 package org.knime.base.node.viz.pie.datamodel.interactive;
 
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.List;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.pie.datamodel.PieDataModel;
@@ -35,11 +37,10 @@ import org.knime.base.node.viz.pie.datamodel.PieSectionDataModel;
 import org.knime.base.node.viz.pie.datamodel.PieVizModel;
 import org.knime.base.node.viz.pie.util.PieColumnFilter;
 import org.knime.base.node.viz.pie.util.TooManySectionsException;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DoubleValue;
+
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -168,7 +169,11 @@ public class InteractivePieVizModel extends PieVizModel {
         final boolean numeric =
             m_pieColSpec.getType().isCompatible(DoubleValue.class);
         PieDataModel.sortSections(getSections(), numeric, true);
-        PieDataModel.setSectionColor(m_sections);
+        //set the section color only if the colorized column is selected
+        //as aggregation column
+        if (m_pieColSpec.getColorHandler() != null) {
+            PieDataModel.setSectionColor(m_sections);
+        }
     }
 
     /**
@@ -184,7 +189,7 @@ public class InteractivePieVizModel extends PieVizModel {
         } else {
             aggrColIdx = m_model.getColIndex(m_aggrColSpec.getName());
         }
-        for (final DataRow row : m_model.getDataRows()) {
+        for (final DataRow row : m_model) {
             final DataCell pieCell = row.getCell(pieColIdx);
             final DataCell aggrCell;
             if (aggrColIdx < 0) {
@@ -213,7 +218,7 @@ public class InteractivePieVizModel extends PieVizModel {
                     m_sections.add(section);
                 }
             }
-            section.addDataRow(rowColor, row.getKey().getId(), aggrCell);
+            section.addDataRow(rowColor, row.getKey(), aggrCell);
         }
     }
 

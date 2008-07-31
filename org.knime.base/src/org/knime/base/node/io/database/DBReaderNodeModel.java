@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -19,8 +19,6 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  * 
- * History
- *   21.08.2005 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
@@ -28,7 +26,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.sql.SQLException;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -45,7 +42,7 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class DBReaderNodeModel extends NodeModel {
+final class DBReaderNodeModel extends NodeModel {
     
     private DataTableSpec m_lastSpec = null;
     
@@ -68,15 +65,20 @@ class DBReaderNodeModel extends NodeModel {
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws CanceledExecutionException,
-            Exception {
+            final ExecutionContext exec) 
+            throws CanceledExecutionException, Exception {
         exec.setProgress("Opening database connection...");
-        DBReaderConnection load = new DBReaderConnection(m_conn, m_query);
-        m_lastSpec = load.getDataTableSpec();
-        exec.setProgress("Reading data from database...");
-        BufferedDataTable data = exec.createBufferedDataTable(load, exec);
-        load.close();
-        return new BufferedDataTable[]{data};
+        try {
+            DBReaderConnection load = new DBReaderConnection(m_conn, m_query);
+            m_lastSpec = load.getDataTableSpec();
+            exec.setProgress("Reading data from database...");
+            BufferedDataTable data = exec.createBufferedDataTable(load, exec);
+            load.close();
+            return new BufferedDataTable[]{data};
+        } catch (Exception e) {
+            m_lastSpec = null;
+            throw e;
+        }
     }
 
     /**
@@ -138,12 +140,14 @@ class DBReaderNodeModel extends NodeModel {
             DBReaderConnection conn = new DBReaderConnection(m_conn, m_query);
             m_lastSpec = conn.getDataTableSpec();
             conn.close();
-        } catch (SQLException e) {
-            throw new InvalidSettingsException(e.getMessage());
+            return new DataTableSpec[]{m_lastSpec};
+        } catch (InvalidSettingsException e) {
+            m_lastSpec = null;
+            throw e;
         } catch (Exception e) {
-            throw new InvalidSettingsException("Could not decrypt password.");
+            m_lastSpec = null;
+            throw new InvalidSettingsException(e.getMessage(), e);
         }
-        return new DataTableSpec[]{m_lastSpec};
     }
     
     /**
@@ -153,7 +157,8 @@ class DBReaderNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         String query = settings.getString(DBConnection.CFG_STATEMENT);
-        if (query != null && query.contains("<table>")) {
+        if (query != null 
+                && query.contains(DBQueryConnection.TABLE_PLACEHOLDER)) {
             throw new InvalidSettingsException(
                     "Database table place holder not replaced.");
         }

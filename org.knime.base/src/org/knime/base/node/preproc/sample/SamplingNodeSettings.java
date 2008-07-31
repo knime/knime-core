@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.preproc.sample;
 
@@ -28,12 +28,14 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * This class holds the settings for the sampling and the partioning node.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class SamplingNodeSettings {
     /** NodeSettings key: Which method to use (relative or absolute). */
-    private static final String CFG_METHOD = "method";
+    private static final String CFG_COUNT_METHOD = "method";
+
+    private static final String CFG_SAMPLING_METHOD = "samplingMethod";
 
     /** NodeSettings key: Fraction to use (relative method). */
     private static final String CFG_FRACTION = "fraction";
@@ -55,15 +57,29 @@ public class SamplingNodeSettings {
      * Enum for the two methods for setting the number of rows in the output
      * table.
      */
-    public enum Methods {
+    public enum CountMethods {
         /** Relative fraction. */
         Relative,
         /** Absolute number. */
         Absolute
     }
 
+    /**
+     * Enum for the four different sampling methods.
+     */
+    public enum SamplingMethods {
+        /** Selects the first <em>x</em> rows. */
+        First,
+        /** Selects rows randomly. */
+        Random,
+        /** Select rows randomly but maintain the class distribution. */
+        Stratified,
+        /** Select the rows linearly over the whole table. */
+        Linear
+    }
+
     /** The method to use, METHOD_RELATIVE or METHOD_ABSOLUTE. */
-    private Methods m_method;
+    private CountMethods m_countMethod;
 
     /** Fraction to use (if relative sampling). */
     private double m_fraction;
@@ -71,41 +87,38 @@ public class SamplingNodeSettings {
     /** Count of samples to choose (if absolute sampling). */
     private int m_count;
 
-    /** If to choose samples randomly, if false take from beginning. */
-    private boolean m_random;
-
     /**
      * The seed to use for random initialization. Will be null if no
      * deterministic sampling is required as from the dialog.
      */
     private Long m_seed;
 
-    private boolean m_stratifiedSampling;
+    private SamplingMethods m_samplingMethod;
 
     private String m_classColumnName;
 
     /**
      * Saves the settings to the given object.
-     * 
+     *
      * @param settings the node settings object
      */
     public void saveSettingsTo(final NodeSettingsWO settings) {
-        if (m_method != null) {
-            settings.addString(CFG_METHOD, m_method.toString());
-            settings.addBoolean(CFG_RANDOM, m_random);
+        if (m_countMethod != null) {
+            settings.addString(CFG_COUNT_METHOD, m_countMethod.toString());
+            settings
+                    .addString(CFG_SAMPLING_METHOD, m_samplingMethod.toString());
             settings.addDouble(CFG_FRACTION, m_fraction);
             settings.addInt(CFG_COUNT, m_count);
             // write null here if no deterministic behaviour required.
             settings.addString(CFG_RANDOM_SEED, m_seed != null ? Long
                     .toString(m_seed) : null);
-            settings.addBoolean(CFG_STRATIFIED, m_stratifiedSampling);
             settings.addString(CFG_CLASS_COLUMN, m_classColumnName);
         }
     }
 
     /**
      * Loads the setting from the given object.
-     * 
+     *
      * @param settings the settings
      * @param guessValues If <code>true</code>, default values are used in
      *            case the settings are incomplete, <code>false</code> will
@@ -120,42 +133,82 @@ public class SamplingNodeSettings {
         String seed;
         if (guessValues) {
             String method =
-                    settings.getString(CFG_METHOD, Methods.Absolute.toString());
+                    settings.getString(CFG_COUNT_METHOD, CountMethods.Absolute
+                            .toString());
             if (method == null) {
-                method = Methods.Absolute.toString();
+                method = CountMethods.Absolute.toString();
             }
             try {
-                m_method = Methods.valueOf(method);
+                m_countMethod = CountMethods.valueOf(method);
             } catch (IllegalArgumentException iae) {
-                m_method = Methods.Absolute;
+                m_countMethod = CountMethods.Absolute;
             }
-            m_random = settings.getBoolean(CFG_RANDOM, true);
+
+            String samplingMethod =
+                    settings.getString(CFG_SAMPLING_METHOD,
+                            SamplingMethods.Random.toString());
+            if (samplingMethod == null) {
+                samplingMethod = SamplingMethods.Random.toString();
+            }
+
+            try {
+                m_samplingMethod = SamplingMethods.valueOf(samplingMethod);
+            } catch (IllegalArgumentException iae) {
+                m_samplingMethod = SamplingMethods.Random;
+            }
+
             seed = settings.getString(CFG_RANDOM_SEED, null);
             m_fraction = settings.getDouble(CFG_FRACTION, 0.1);
             m_count = settings.getInt(CFG_COUNT, 100);
         } else {
-            String method = settings.getString(CFG_METHOD);
+            String method = settings.getString(CFG_COUNT_METHOD);
             if (method == null) {
                 throw new InvalidSettingsException("Method must not be null.");
             }
             try {
-                m_method = Methods.valueOf(method);
+                m_countMethod = CountMethods.valueOf(method);
             } catch (IllegalArgumentException iae) {
                 throw new InvalidSettingsException("Invalid sampling method: "
                         + method);
             }
-            m_random = settings.getBoolean(CFG_RANDOM);
+
+            String samplingMethod =
+                    settings.getString(CFG_SAMPLING_METHOD, null);
+            if (samplingMethod == null) {
+                try {
+                    boolean random = settings.getBoolean(CFG_RANDOM);
+                    boolean stratified =
+                            settings.getBoolean(CFG_STRATIFIED, false);
+
+                    if (stratified) {
+                        m_samplingMethod = SamplingMethods.Stratified;
+                    } else if (random) {
+                        m_samplingMethod = SamplingMethods.Random;
+                    } else {
+                        m_samplingMethod = SamplingMethods.First;
+                    }
+                } catch (InvalidSettingsException ex) {
+                    throw new InvalidSettingsException(
+                            "No valid sampling method selected");
+                }
+            } else {
+                try {
+                    m_samplingMethod = SamplingMethods.valueOf(samplingMethod);
+                } catch (IllegalArgumentException iae) {
+                    throw new InvalidSettingsException(iae);
+                }
+            }
+
             seed = settings.getString(CFG_RANDOM_SEED);
             m_fraction = settings.getDouble(CFG_FRACTION);
             m_count = settings.getInt(CFG_COUNT);
         }
-        m_stratifiedSampling = settings.getBoolean(CFG_STRATIFIED, false);
         m_classColumnName = settings.getString(CFG_CLASS_COLUMN, null);
         if (seed != null) {
             try {
                 m_seed = Long.parseLong(seed);
             } catch (NumberFormatException nfe) {
-                throw new InvalidSettingsException("Unable to parse seed " 
+                throw new InvalidSettingsException("Unable to parse seed "
                         + "string \"" + seed + "\", not a number");
             }
         } else {
@@ -165,7 +218,7 @@ public class SamplingNodeSettings {
 
     /**
      * Returns the absolute number of rows in the output table.
-     * 
+     *
      * @return the absolute number of rows
      */
     public int count() {
@@ -174,7 +227,7 @@ public class SamplingNodeSettings {
 
     /**
      * Sets the absolute number of rows in the output table.
-     * 
+     *
      * @param count the number of rows
      */
     public void count(final int count) {
@@ -184,7 +237,7 @@ public class SamplingNodeSettings {
     /**
      * Returns the relative number of rows in the output table (in relation to
      * the number of input rows).
-     * 
+     *
      * @return the relative number of rows (a value between 0 and 1)
      */
     public double fraction() {
@@ -194,7 +247,7 @@ public class SamplingNodeSettings {
     /**
      * Sets the relative number of rows in the output table (in relation to the
      * number of input rows).
-     * 
+     *
      * @param fraction the relative number of rows, a value between 0 and 1
      */
     public void fraction(final double fraction) {
@@ -203,45 +256,45 @@ public class SamplingNodeSettings {
 
     /**
      * Returns the method use for sampling the rows.
-     * 
+     *
      * @return the sampling method
      */
-    public Methods method() {
-        return m_method;
+    public CountMethods countMethod() {
+        return m_countMethod;
     }
 
     /**
      * Sets the method use for sampling the rows.
-     * 
+     *
      * @param method the sampling method
      */
-    public void method(final Methods method) {
-        m_method = method;
+    public void countMethod(final CountMethods method) {
+        m_countMethod = method;
     }
 
-    /**
-     * Returns if the rows should be sampled randomly.
-     * 
-     * @return <code>true</code> if the rows should be sampled randomly,
-     *         <code>false</code> otherwise
-     */
-    public boolean random() {
-        return m_random;
-    }
 
     /**
-     * Sets if the rows should be sampled randomly.
-     * 
-     * @param random <code>true</code> if the rows should be sampled randomly,
-     *            <code>false</code> otherwise
+     * Returns the sampling method.
+     *
+     * @return the sampling method
      */
-    public void random(final boolean random) {
-        m_random = random;
+    public SamplingMethods samplingMethod() {
+        return m_samplingMethod;
+    }
+
+
+    /**
+     * Sets the sampling method.
+     *
+     * @param method the sampling method
+     */
+    public void samplingMethod(final SamplingMethods method) {
+        m_samplingMethod = method;
     }
 
     /**
      * Returns the optional random seed.
-     * 
+     *
      * @return the random seed or <code>null</code> if none is specified
      */
     public Long seed() {
@@ -250,7 +303,7 @@ public class SamplingNodeSettings {
 
     /**
      * Sets the seed for the random number generator.
-     * 
+     *
      * @param seed a seed or <code>null</code> if none is set
      */
     public void seed(final Long seed) {
@@ -258,29 +311,9 @@ public class SamplingNodeSettings {
     }
 
     /**
-     * Sets if stratified should be used instead of pure random sampling.
-     * 
-     * @param b <code>true</code> if stratified sampling should be used,
-     *            <code>false</code> otherwise
-     */
-    public void stratifiedSampling(final boolean b) {
-        m_stratifiedSampling = b;
-    }
-
-    /**
-     * Returns if stratified should be used instead of pure random sampling.
-     * 
-     * @return <code>true</code> if stratified sampling should be used,
-     *            <code>false</code> otherwise
-     */
-    public boolean stratifiedSampling() {
-        return m_stratifiedSampling;
-    }
-
-    /**
      * Sets the class column whose distribution should be retained when using
      * stratified sampling.
-     * 
+     *
      * @param columnName the name of the class column
      */
     public void classColumn(final String columnName) {
@@ -290,7 +323,7 @@ public class SamplingNodeSettings {
     /**
      * Returns the class column whose distribution should be retained when using
      * stratified sampling.
-     * 
+     *
      * @return the name of the class column
      */
     public String classColumn() {

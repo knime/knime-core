@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   11.01.2006 (ohl): created
  */
@@ -32,14 +32,14 @@ import org.knime.core.data.RowIterator;
  * {@link FileReaderPreviewTable}. Wraps
  * the iterator of the underlying file table. Catches exceptions thrown by the
  * underlying iterator, returns an "error row" instead and will end the table.
- * If an error occures it sets an error message in the underlying table.
- * 
+ * If an error occurres it sets an error message in the underlying table.
+ *
  * @author Peter, University of Konstanz
  */
 class FileReaderPreviewRowIterator extends RowIterator {
 
     // the underlying iterator we wrap and catch the exceptions from
-    private RowIterator m_rowIter;
+    private FileRowIterator m_rowIter;
 
     private FileReaderPreviewTable m_table;
 
@@ -49,16 +49,36 @@ class FileReaderPreviewRowIterator extends RowIterator {
     /**
      * A new non-failing file row iterator. It wraps the passed iterator and
      * catches its exceptions, converting them into rows with error messages.
-     * 
+     *
      * @param rowIterator the row iterator to wrap
-     * @param previewTable the corrensponding talbe this is the iterator from.
+     * @param previewTable the corresponding table this is the iterator from.
      *            Needed to pull the sprc from for creating the row in case of
-     *            an error/exception and to tell the table an errro occured.
+     *            an error/exception and to tell the table an error occurred.
      */
-    FileReaderPreviewRowIterator(final RowIterator rowIterator,
+    FileReaderPreviewRowIterator(final FileRowIterator rowIterator,
             final FileReaderPreviewTable previewTable) {
         m_rowIter = rowIterator;
         m_table = previewTable;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void finalize() throws Throwable {
+        dispose();
+        super.finalize();
+    }
+
+    /**
+     * Call this before releasing the last reference to this iterator. It closes
+     * the underlying source. Especially if the iterator didn't run to the end
+     * of the table, it is required to call this method. Otherwise the file
+     * handle is not released until the garbage collector cleans up. A call to
+     * {@link #next()} after disposing of the iterator has undefined behavior.
+     */
+    public void dispose() {
+        m_rowIter.dispose();
     }
 
     /**

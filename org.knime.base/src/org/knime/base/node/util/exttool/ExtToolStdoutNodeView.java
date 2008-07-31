@@ -1,11 +1,12 @@
-/* ------------------------------------------------------------------
+/*
+ * ------------------------------------------------------------------ *
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
- * University of Konstanz, Germany.
- * Chair for Bioinformatics and Information Mining
- * Prof. Dr. Michael R. Berthold
+ * Copyright, 2003 - 2008
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
  *
  * You may not modify, publish, transmit, transfer or sell, reproduce,
  * create derivative works from, distribute, perform, display, or in
@@ -26,22 +27,22 @@ package org.knime.base.node.util.exttool;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.knime.core.node.NodeModel;
-
 /**
- * The view showing the output to standard output. Listens to notifications
- * (see {@link ViewUpdateNotice}) of type <code>stdout</code>.
+ * The view showing the output to standard output. Listens to notifications (see
+ * {@link ViewUpdateNotice}) of type <code>stdout</code>.
  *
  * @author ohl, University of Konstanz
+ * @param <T> the actual implementation of the abstract node model
  */
-public class ExtToolStdoutNodeView extends ExtToolOutputNodeView {
+public class ExtToolStdoutNodeView<T extends ExtToolOutputNodeModel> extends
+        ExtToolOutputNodeView<T> {
 
     /**
      * The constructor.
      *
      * @param nodeModel the model associated with this view.
      */
-    public ExtToolStdoutNodeView(final NodeModel nodeModel) {
+    public ExtToolStdoutNodeView(final T nodeModel) {
         super(nodeModel);
         setViewTitle("Output to standard output");
     }
@@ -66,8 +67,7 @@ public class ExtToolStdoutNodeView extends ExtToolOutputNodeView {
      */
     @Override
     protected Collection<String> getFullFailureOutput() {
-        return ((ExtToolOutputNodeModel)getNodeModel()).
-            getFailedExternalOutput();
+        return (getNodeModel()).getFailedExternalOutput();
     }
 
     /**
@@ -75,8 +75,7 @@ public class ExtToolStdoutNodeView extends ExtToolOutputNodeView {
      */
     @Override
     protected Collection<String> getFullOutput() {
-        return ((ExtToolOutputNodeModel)getNodeModel()).
-            getExternalOutput();
+        return (getNodeModel()).getExternalOutput();
     }
 
     /**

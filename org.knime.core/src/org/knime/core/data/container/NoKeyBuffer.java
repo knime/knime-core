@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -51,10 +51,10 @@ class NoKeyBuffer extends Buffer {
     private static final RowKey DUMMY_KEY = new RowKey("non-existing");
     
     /** Current version string. */
-    private static final String VERSION = "noRowKeyContainer_4";
+    private static final String VERSION = "noRowKeyContainer_5";
     
     /** The version number corresponding to VERSION. */
-    private static final int IVERSION = 4;
+    private static final int IVERSION = 5;
     
     private static final HashMap<String, Integer> COMPATIBILITY_MAP;
     
@@ -64,6 +64,7 @@ class NoKeyBuffer extends Buffer {
         COMPATIBILITY_MAP.put("noRowKeyContainer_1.0.0", 1);
         COMPATIBILITY_MAP.put("noRowKeyContainer_1.1.0", 2);
         COMPATIBILITY_MAP.put("noRowKeyContainer_1.2.0", 3);
+        COMPATIBILITY_MAP.put("noRowKeyContainer_4", 4);
         COMPATIBILITY_MAP.put(VERSION, IVERSION);
     }
     /**
@@ -111,7 +112,7 @@ class NoKeyBuffer extends Buffer {
     }
     /**
      * Does nothing as row keys are not stored.
-     * @see Buffer#writeRowKey(RowKey, DCObjectOutputStream)
+     * {@inheritDoc}
      */
     @Override
     void writeRowKey(final RowKey key, final DCObjectOutputStream outStream) 
@@ -121,10 +122,10 @@ class NoKeyBuffer extends Buffer {
     
     /**
      * Returns always the same key, does nothing to the stream.
-     * @see Buffer#readRowKey(DCObjectInputStream)
+     * {@inheritDoc}
      */
     @Override
-    RowKey readRowKey(final DCObjectInputStream inStream) throws IOException {
+    RowKey readRowKey(final DCObjectInputStream inStream) {
         return DUMMY_KEY;
     }
 }

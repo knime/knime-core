@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -19,18 +19,19 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  * 
- * History
- *   06.07.2006 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarFile;
@@ -52,14 +53,18 @@ final class DBDriverLoader {
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(DBDriverLoader.class);
     
+    /** Map from driver file to driver class. */
+    private static final Map<String, String> DRIVERFILE_TO_DRIVERCLASS
+        = new LinkedHashMap<String, String>();
+    
     /**
      * Name of the standard JDBC-ODBC database driver, 
      * <i>sun.jdbc.odbc.JdbcOdbcDriver</i> object. Loaded per default.
      */
     static final String JDBC_ODBC_DRIVER = "sun.jdbc.odbc.JdbcOdbcDriver";
     
-    private static final HashMap<String, String> DRIVER_TO_URL
-        = new HashMap<String, String>();
+    private static final Map<String, String> DRIVER_TO_URL
+        = new LinkedHashMap<String, String>();
     
     static {
         DRIVER_TO_URL.put(JDBC_ODBC_DRIVER, "jdbc:odbc:");
@@ -111,8 +116,9 @@ final class DBDriverLoader {
                     .newInstance());
             // DriverManager.registerDriver(d);
             DRIVER_MAP.put(d.toString(), d);
-        } catch (Exception e) {
-            LOGGER.warn("Could not load driver class: " + JDBC_ODBC_DRIVER, e);
+        } catch (Throwable t) {
+            LOGGER.warn("Could not load driver class \"" 
+                    + JDBC_ODBC_DRIVER + "\".", t);
         }
     }
     
@@ -124,8 +130,9 @@ final class DBDriverLoader {
             try {
                 File histFile = new File(hist);
                 loadDriver(histFile);
-            } catch (Exception e) {
-                LOGGER.warn("Could not load driver library: " + hist, e);
+            } catch (Throwable t) {
+                LOGGER.info("Could not load driver library file \"" 
+                        + hist + "\" from history.", t);
             }
         }
 
@@ -152,7 +159,7 @@ final class DBDriverLoader {
                     .getWrappedDriver(driver));
         } catch (Exception e) {
             throw new InvalidSettingsException("Could not register database"
-                    + " driver: " + driver);
+                    + " driver \"" + driver);
         }
     }
 
@@ -160,9 +167,9 @@ final class DBDriverLoader {
      * Loads <code>Driver</code> from the given file.
      * 
      * @param file Load driver from.
-     * @throws Exception If an exception occurs.
+     * @throws IOException {@link IOException}
      */
-    static final void loadDriver(final File file) throws Exception {
+    static final void loadDriver(final File file) throws IOException {
         String fileName = file.getAbsolutePath();
         if (file.isDirectory()) {
             // not yet supported
@@ -173,7 +180,7 @@ final class DBDriverLoader {
     }
 
     private static void readZip(final File file, final ZipFile zipFile) 
-            throws Exception {
+            throws MalformedURLException {
         final ClassLoader cl = new URLClassLoader(
                 new URL[]{file.toURI().toURL()}, CLASS_LOADER);
         for (Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
@@ -190,12 +197,11 @@ final class DBDriverLoader {
                         WrappedDriver d = new WrappedDriver(
                                 (Driver)c.newInstance());
                         DRIVER_MAP.put(d.toString(), d);
-//                        DriverManager.registerDriver(d);
+                        DRIVERFILE_TO_DRIVERCLASS.put(d.toString(), 
+                                file.getAbsolutePath());
                     }
-                } catch (Exception ex) {
-                    // ignore
-                } catch (Error er) {
-                    // ignore
+                } catch (Throwable t) {
+                    // ignored
                 }
             }
         }
@@ -217,8 +223,8 @@ final class DBDriverLoader {
         return DRIVER_MAP.get(driverName);
     }
 
-    private static Class<?> loadClass(final ClassLoader cl, final String name)
-            throws Exception, Error {
+    private static Class<?> loadClass(final ClassLoader cl, final String name) 
+            throws ClassNotFoundException {
         String newName = name.substring(0, name.indexOf(".class"));
         String className = newName.replace('/', '.');
         return cl.loadClass(className);
@@ -232,11 +238,22 @@ final class DBDriverLoader {
      * @return an String containing protocol, port, host, and database name
      *      place holder 
      */
-    public static final String getURLForDriver(final String driver) {
+    static final String getURLForDriver(final String driver) {
         String url = DRIVER_TO_URL.get(driver);
         if (url == null) {
             return "<protocol>://<host>:<port>/<database_name>";
         }
         return url + "//<host>:<port>/<database_name>";
     }
+    
+    /**
+     * Returns the absolute path for the driver class name from which it has
+     * been loaded.
+     * @param driverClass driver class name
+     * @return driver file location
+     */
+    static final String getDriverFileForDriverClass(final String driverClass) {
+        return DRIVERFILE_TO_DRIVERCLASS.get(driverClass);
+    }
+    
 }

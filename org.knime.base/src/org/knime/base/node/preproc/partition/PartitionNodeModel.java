@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -28,7 +28,6 @@ import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.base.node.preproc.sample.AbstractSamplingNodeModel;
 import org.knime.base.node.preproc.sample.StratifiedSamplingRowFilter;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -62,7 +61,7 @@ public class PartitionNodeModel extends AbstractSamplingNodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
-        DataTable in = inData[0];
+        BufferedDataTable in = inData[0];
         BufferedDataTable[] outs = new BufferedDataTable[2];
         RowFilter filterTrain = getSamplingRowFilter(in, exec);
         RowFilter filterTest = new NegRowFilter((RowFilter)filterTrain.clone());

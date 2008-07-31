@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -50,6 +50,9 @@ import org.knime.core.data.DoubleValue;
  */
 public class DoubleBarRenderer extends DefaultDataValueRenderer {
 
+    /** Description that's returned in {@link #getDescription()}. */
+    public static final String DESCRIPTION = "Bars";
+    
     private BarIcon m_icon;
 
     /** Creates new instance given a column spec. This object will get the
@@ -135,7 +138,7 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
      */
     @Override
     public String getDescription() {
-        return "Bars";
+        return DESCRIPTION;
     }
     
     /** Returns <code>true</code> if the spec contains domain information 

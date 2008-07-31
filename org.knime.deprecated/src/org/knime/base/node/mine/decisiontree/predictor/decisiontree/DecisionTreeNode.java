@@ -4,7 +4,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -34,10 +34,12 @@ import java.util.Map.Entry;
 
 import javax.swing.tree.TreeNode;
 
+import org.knime.base.data.util.DataCellStringMapper;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
@@ -45,8 +47,6 @@ import org.knime.core.node.NodeLogger;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import org.knime.base.data.util.DataCellStringMapper;
 
 /**
  * The base abstract implementations of a node of a decision tree. Separate
@@ -289,7 +289,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * @return set of data cells which are the row keys that are covered by all
      *         nodes of this branch
      */
-    public abstract Set<DataCell> coveredPattern();
+    public abstract Set<RowKey> coveredPattern();
 
     /**
      * @return list of colors and coverage counts covered by this node

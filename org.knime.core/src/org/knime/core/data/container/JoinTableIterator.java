@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -26,7 +26,6 @@ package org.knime.core.data.container;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.RowIterator;
 
 /**
  * Internal iterator class that concatenates two rows. The iterator assumes
@@ -34,10 +33,10 @@ import org.knime.core.data.RowIterator;
  * check is done.
  * @author wiswedel, University of Konstanz
  */
-class JoinTableIterator extends RowIterator {
+class JoinTableIterator extends CloseableRowIterator {
 
-    private final RowIterator m_itReference;
-    private final RowIterator m_itAppended;
+    private final CloseableRowIterator m_itReference;
+    private final CloseableRowIterator m_itAppended;
     private final int[] m_map;
     private final boolean[] m_flags;
     
@@ -49,8 +48,8 @@ class JoinTableIterator extends RowIterator {
      *         iterator
      * @param flags The flags from which row to use.
      */
-    JoinTableIterator(final RowIterator itReference, 
-            final RowIterator itAppended, final int[] map, 
+    JoinTableIterator(final CloseableRowIterator itReference, 
+            final CloseableRowIterator itAppended, final int[] map, 
             final boolean[] flags) {
         m_itReference = itReference;
         m_itAppended = itAppended;
@@ -89,6 +88,13 @@ class JoinTableIterator extends RowIterator {
                     + " vs. " + app.getNumCells());
         }
         return new BlobSupportDataRow(ref.getKey(), cells);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void close() {
+        m_itAppended.close();
+        m_itReference.close();
     }
     
     private static DataCell getUnwrappedCell(final DataRow row, final int i) {

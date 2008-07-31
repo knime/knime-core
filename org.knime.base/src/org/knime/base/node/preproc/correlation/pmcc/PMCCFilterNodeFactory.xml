@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Manipulator" icon="correlation_filter.png">
 	<name>Correlation Filter</name>
 	<shortDescription>
@@ -52,7 +52,7 @@
 			correlation node here.)</dataIn>
 		<dataOut index="0" name="Filtered data from input">
 			Filtered data from input.</dataOut>
-		<modelIn name="Correlation Model" index="0" type="correlation">
+		<modelIn name="Correlation Model" index="0">
 			The model from the correlation node.</modelIn>
 	</ports>
 	

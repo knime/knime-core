@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,7 +24,7 @@
  */
 package org.knime.base.node.mine.regression.linear.view;
 
-import org.knime.base.node.mine.regression.linear.LinearRegressionParams;
+import org.knime.base.node.mine.regression.linear.LinearRegressionPortObject;
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.viz.plotter.DataProvider;
 
@@ -40,7 +40,7 @@ public interface LinRegDataProvider extends DataProvider {
      * 
      * @return the parameters, may be <code>null</code>
      */
-    public LinearRegressionParams getParams();
+    public LinearRegressionPortObject getParams();
 
     /**
      * Get the row container for the rows to paint in the view.

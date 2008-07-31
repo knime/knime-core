@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,6 +25,7 @@
 package org.knime.core.util;
 
 import java.io.File;
+import java.util.Arrays;
 
 import javax.swing.filechooser.FileFilter;
 
@@ -41,10 +42,16 @@ public class SimpleFileFilter extends FileFilter {
      * matching the given extensions.
      * 
      * @param exts allowed extensions
+     * @throws NullPointerException if the extensions array or one of its 
+     *          elements is null
      */
     public SimpleFileFilter(final String... exts) {
         if (exts == null) {
             throw new NullPointerException("Extensions must not be null");
+        }
+        if (Arrays.asList(exts).contains(null)) {
+            throw new NullPointerException("Extensions must not contain null"
+                + " elements: " + Arrays.toString(exts));
         }
         m_validExtensions = exts;
     }
@@ -58,9 +65,12 @@ public class SimpleFileFilter extends FileFilter {
             if (f.isDirectory()) {
                 return true;
             }
+            if (m_validExtensions.length == 0) {
+                return true;
+            }
             String fileName = f.getName();
             for (String ext : m_validExtensions) {
-                if (fileName.endsWith(ext)) {
+                if (fileName.toLowerCase().endsWith(ext.toLowerCase())) {
                     return true;
                 }
             }
@@ -82,7 +92,10 @@ public class SimpleFileFilter extends FileFilter {
     public String getDescription() {
         String descr = "";
         for (String ext : m_validExtensions) {
-            descr = descr + " " + ext.toString();
+            descr = descr + " ; *" + ext.toString();
+        }
+        if (descr.length() > 3) {
+            return descr.substring(3);
         }
         return descr;
     }

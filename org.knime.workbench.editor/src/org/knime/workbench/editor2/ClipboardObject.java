@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,6 +24,12 @@
  */
 package org.knime.workbench.editor2;
 
+import java.util.Collections;
+import java.util.List;
+
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowManager;
+
 
 /**
  * Holds a clipboard object and additional information.
@@ -34,26 +40,31 @@ public class ClipboardObject {
     /**
      * The content to hold in the clipboard.
      */
-    private final Object m_content;
+    private final List<NodeID>m_nodeIDs;
 
+    private final WorkflowManager m_sourceWorkflow;
+    
     /**
      * To remember how often the object was retrieved.
      */
     private int m_retrievalCounter;
 
-    public ClipboardObject(final Object content) {
-        m_content = content;
-
+    public ClipboardObject(final WorkflowManager sourceWorkflow,
+            List<NodeID>nodeIds) {
+        m_sourceWorkflow = sourceWorkflow;
+        m_nodeIDs = nodeIds;
         m_retrievalCounter = 0;
     }
 
-    /**
-     * @return returns the content of this clipboard object
-     */
-    public Object getContent() {
-        return m_content;
+    
+    public List<NodeID>getNodeIDs(){
+        return Collections.unmodifiableList(m_nodeIDs);
     }
 
+    public WorkflowManager getSourceWorkflow() {
+        return m_sourceWorkflow;
+    }
+    
     /**
      * @return returns the number of retrievals of this clipboard object
      */

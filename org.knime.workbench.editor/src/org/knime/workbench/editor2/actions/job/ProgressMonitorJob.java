@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.workbench.editor2.actions.job;
 
@@ -26,17 +26,17 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.knime.core.node.NodeProgressEvent;
-import org.knime.core.node.NodeProgressListener;
 import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeProgressEvent;
+import org.knime.core.node.workflow.NodeProgressListener;
 import org.knime.core.node.workflow.WorkflowManager;
 
 
 /**
  * This class is a dummy node job whose only responsibility is to show a
  * progress bar for the running (or waiting) node.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ProgressMonitorJob extends Job implements NodeProgressListener {
@@ -58,7 +58,7 @@ public class ProgressMonitorJob extends Job implements NodeProgressListener {
 
     /**
      * Creates a new dummy node job.
-     * 
+     *
      * @param name the job's name
      * @param monitor the progress monitor to listen to
      * @param wfm the workflow manage responsole for the node
@@ -115,21 +115,21 @@ public class ProgressMonitorJob extends Job implements NodeProgressListener {
 
     /**
      * Updates UI after progress has changed.
-     * 
+     *
      * @see org.knime.core.node.NodeProgressListener
      *      #progressChanged(NodeProgressEvent)
      */
     public synchronized void progressChanged(final NodeProgressEvent pe) {
-        
-        String message = pe.getMessage();
+
+        String message = pe.getNodeProgress().getMessage();
 
         int newWorked = m_currentWorked;
-        if (pe.hasProgress()) {
-            double progress = pe.getProgress().doubleValue(); 
+        if (pe.getNodeProgress().getProgress() >= 0) {
+            double progress = pe.getNodeProgress().getProgress().doubleValue();
             newWorked = (int)Math.round(Math.max(0, Math.min(progress * 100,
                 100)));
         }
-        
+
         boolean change = newWorked > m_currentWorked
                 || !m_currentProgressMessage.equals(message);
 
@@ -165,7 +165,7 @@ public class ProgressMonitorJob extends Job implements NodeProgressListener {
 
     /**
      * Sets a new state message.
-     * 
+     *
      * @param stateMessage the state message to set
      */
     public void setStateMessage(final String stateMessage) {

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,20 +25,31 @@
  */
 package org.knime.core.data;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.data.property.ShapeFactory;
 import org.knime.core.data.property.SizeHandler;
 import org.knime.core.data.property.ShapeFactory.Shape;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContent;
+import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
@@ -76,8 +87,9 @@ import org.knime.core.node.config.ConfigWO;
  * 
  * @author Peter Ohl, University of Konstanz
  */
-public final class DataTableSpec implements Iterable<DataColumnSpec> {
-
+public final class DataTableSpec
+implements PortObjectSpec, Iterable<DataColumnSpec> {
+    
     /** Key for column spec sub-configs. */
     private static final String CFG_COLUMN_SPEC = "column_spec_";
 
@@ -89,6 +101,41 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(DataTableSpec.class);
+    
+    /** Method required by the interface {@link PortObjectSpec}. Not meant
+     * for public use.
+     * @return A new serializer responsible for loading/saving.
+     */
+    public static PortObjectSpecSerializer<DataTableSpec> 
+            getPortObjectSpecSerializer() {
+        return new PortObjectSpecSerializer<DataTableSpec>() {
+            private static final String FILENAME = "spec.xml";
+            
+            /** {@inheritDoc} */
+            @Override
+            protected DataTableSpec loadPortObjectSpec(final File directory)
+                throws IOException {
+                InputStream in = new BufferedInputStream(
+                        new FileInputStream(new File(directory, FILENAME)));
+                ModelContentRO cnt = ModelContent.loadFromXML(in);
+                try {
+                    return DataTableSpec.load(cnt);
+                } catch (InvalidSettingsException e) {
+                    throw new IOException(e.getMessage(), e);
+                }
+            }
+            
+            /** {@inheritDoc} */
+            @Override
+            protected void savePortObjectSpec(final DataTableSpec spec,
+                    final File directory) throws IOException {
+                ModelContent cnt = new ModelContent(FILENAME);
+                spec.save(cnt);
+                cnt.saveToXML(new BufferedOutputStream(
+                        new FileOutputStream(new File(directory, FILENAME))));
+            }
+        };
+    }
 
     private static DataColumnSpec[] appendTableSpecs(final DataTableSpec spec1,
             final DataTableSpec spec2) {
@@ -115,7 +162,33 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         }
         // copy spec2
         for (; idx < columnSpecs.length; idx++) {
-            columnSpecs[idx] = spec2.getColumnSpec(idx - l1);
+            DataColumnSpec cspec = spec2.getColumnSpec(idx - l1);
+            DataColumnSpecCreator cr = new DataColumnSpecCreator(cspec);
+            // remove color handler from second spec, when also present in first
+            if (spec1.m_colorHandlerColIndex >= 0 
+                    && spec1.m_colorHandlerColIndex >= 0) {
+                LOGGER.warn("DataColumnSpec already contains a color "
+                         + "handler, ignoring color handler from second spec.");
+                // reset second handler
+                cr.setColorHandler(null);
+            }
+            // remove size handler from second spec, when also present in first
+            if (spec1.m_sizeHandlerColIndex >= 0 
+                    && spec1.m_sizeHandlerColIndex >= 0) {
+                LOGGER.warn("DataColumnSpec already contains a size "
+                         + "handler, ignoring size handler from second spec.");
+                // reset second handler
+                cr.setSizeHandler(null);
+            }
+            // remove shape handler from second spec, when also present in first
+            if (spec1.m_shapeHandlerColIndex >= 0 
+                    && spec1.m_shapeHandlerColIndex >= 0) {
+                LOGGER.warn("DataColumnSpec already contains a shape "
+                         + "handler, ignoring shape handler from second spec.");
+                // reset second handler
+                cr.setSizeHandler(null);
+            }
+            columnSpecs[idx] = cr.createSpec();
         }
         return columnSpecs;
     }
@@ -203,19 +276,16 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
 
     /** The index of the column holding the SizeHandler or -1 if not set. */
     private final int m_sizeHandlerColIndex;
-
-    /**
-     * An unmodifiable List to create an iterator from. Therefore, remove
-     * operations are not allowed on an iterator object.
-     */
-    private final List<DataColumnSpec> m_columnSpecList;
+    
+    /** Name used to create a new spec when no other name has been defined. */
+    private static final String DFT_SPEC_NAME = "default";
 
     /**
      * Creates an empty <code>DataTableSpec</code> with no columns defined and
      * <i>default</i> as name.
      */
     public DataTableSpec() {
-        this("default");
+        this(DFT_SPEC_NAME);
     }
 
     /**
@@ -230,7 +300,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      *             method
      */
     public DataTableSpec(final DataColumnSpec... colSpecs) {
-        this("default", colSpecs);
+        this(DFT_SPEC_NAME, colSpecs);
     }
 
     /**
@@ -272,9 +342,12 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      *             method
      */
     public DataTableSpec(final String name, final DataColumnSpec... colSpecs) {
-        m_name = (name == null ? "default" : name);
+        m_name = (name == null ? DFT_SPEC_NAME : name);
         final int colCount = colSpecs.length;
         m_columnSpecs = new DataColumnSpec[colCount];
+        int colorHdlIdx = -1;
+        int sizeHdlIdx  = -1;
+        int shapeHdlIdx = -1;
         for (int i = 0; i < colCount; i++) {
             // disallow duplicates
             String currentName = colSpecs[i].getName();
@@ -282,25 +355,59 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
                 throw new NullPointerException("Column name must not be null.");
             }
 
-            Integer duplicateValue =
+            // if the value is not null, duplicate column name found
+            final Integer duplicateValue =
                     m_colIndexMap.put(colSpecs[i].getName(), i);
-
-            // if the value is unequal null there is a duplicate value
-            // throw an exception
             if (duplicateValue != null) {
                 throw new IllegalArgumentException("Duplicate column name \""
                         + currentName.toString() + "\" at positions "
                         + duplicateValue + " and " + i + ".");
             }
-            m_columnSpecs[i] = colSpecs[i];
+            
+            // creator used to remove handlers
+            DataColumnSpecCreator cr = new DataColumnSpecCreator(colSpecs[i]);
+            
+            // check for multiple color handlers
+            if (colSpecs[i].getColorHandler() != null) {
+                if (colorHdlIdx >= 0) {
+                    LOGGER.warn("Found multiple color handler at columns "
+                            + "index " + colorHdlIdx + " and " 
+                            + i + ", removed second one.");
+                    cr.setColorHandler(null);
+                } else {
+                    colorHdlIdx = i;
+                }
+            }
+            
+            // check for multiple size handlers
+            if (colSpecs[i].getSizeHandler() != null) {
+                if (sizeHdlIdx >= 0) {
+                    LOGGER.warn("Found multiple color handler at columns "
+                            + "index " + colorHdlIdx + " and " 
+                            + i + ", removed second one.");
+                    cr.setSizeHandler(null);
+                } else {
+                    sizeHdlIdx = i;
+                }
+            }
+            
+            // check for multiple shape handlers
+            if (colSpecs[i].getShapeHandler() != null) {
+                if (shapeHdlIdx >= 0) {
+                    LOGGER.warn("Found multiple color handler at columns "
+                            + "index " + colorHdlIdx + " and " 
+                            + i + ", removed second one.");
+                    cr.setShapeHandler(null);
+                } else {
+                    shapeHdlIdx = i;
+                }
+            }
+            
+            m_columnSpecs[i] = cr.createSpec();
         }
-        m_sizeHandlerColIndex = searchSizeHandler();
-        m_colorHandlerColIndex = searchColorHandler();
-        m_shapeHandlerColIndex = searchShapeHandler();
-
-        // create an unmodifiable list to create iterators from
-        m_columnSpecList =
-                Collections.unmodifiableList(Arrays.asList(m_columnSpecs));
+        m_sizeHandlerColIndex  = sizeHdlIdx;
+        m_colorHandlerColIndex = colorHdlIdx;
+        m_shapeHandlerColIndex = shapeHdlIdx;
     }
 
     /**
@@ -354,7 +461,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      *             the parameter array <code>names</code> contains duplicates
      */
     public DataTableSpec(final String[] names, final DataType[] types) {
-        this("default", names, types);
+        this(CFG_SPEC_NAME, names, types);
     }
 
     /**
@@ -388,20 +495,6 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      */
     public boolean containsName(final String columnName) {
         return findColumnIndex(columnName) >= 0;
-    }
-
-    /**
-     * Returns <code>true</code> if <code>o</code> is a
-     * <code>DataTableSpec</code> equal to this, that is <code>o == this</code>.
-     * @param o the other <code>Object</code> to compare this with
-     * @return <code>true</code> if the two objects have the same reference,
-     *         otherwise <code>false</code>
-     * @see Object#equals(Object)
-     * @see #equalStructure(DataTableSpec)
-     */
-    @Override
-    public boolean equals(final Object o) {
-        return (this == o);
     }
 
     /**
@@ -442,29 +535,33 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
        
 
     /**
-     * Checks if both {@link DataTableSpec}s are equal; in contrast to
-     * {@link #equals(Object)} the domain and properties of the columns must 
-     * be equal as well. Two specs are equal if their {@link DataColumnSpec}s 
-     * are equal according to the 
-     * {@link DataColumnSpec#equalsWithDomain(DataColumnSpec)} method.
-     * This implies that both specs have to have the same number of columns and
-     * the order of the columns has to be the same.
+     * Checks if both {@link DataTableSpec}s are equal. In particular it checks
+     * the name, indices of property handlers, and the equality of the contained
+     * column specs according to the {@link DataColumnSpec#equals(Object)} 
+     * method. This implies that both specs have to have the same number of 
+     * columns and the order of the columns has to be the same.
      * 
-     * @param spec the <code>DataTableSpec</code> to compare this with
-     * @return <code>true</code> if the two specs have equal structure, domain,
-     *         and properties, otherwise <code>false</code>
-     *         
-     * @see #equals(Object)
+     * @param obj the <code>DataTableSpec</code> to compare this with
+     * @return <code>true</code> if the two specs are equal
+     * 
      * @see #equalStructure(DataTableSpec)
-     * @deprecated use {@link #equalStructure(DataTableSpec)} and check if 
-     *             domain and properties matches by yourself
+     * @see DataColumnSpec#equals(Object)
      */
-    @Deprecated
-    public boolean equalsWithDomain(final DataTableSpec spec) {
-        if (spec == this) {
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
             return true;
         }
-        if (spec == null) {
+        if (obj == null || !(obj instanceof DataTableSpec)) {
+            return false;
+        }
+        DataTableSpec spec = (DataTableSpec) obj;
+        if (!m_name.equals(spec.m_name)) {
+            return false;
+        }
+        if (m_shapeHandlerColIndex != spec.m_shapeHandlerColIndex
+                || m_colorHandlerColIndex != spec.m_colorHandlerColIndex
+                || m_sizeHandlerColIndex != spec.m_sizeHandlerColIndex) {
             return false;
         }
         final int colCount = this.getNumColumns();
@@ -476,11 +573,10 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         for (int i = 0; i < colCount; i++) {
             DataColumnSpec thisColumn = getColumnSpec(i);
             DataColumnSpec otherColumn = spec.getColumnSpec(i);
-            if (!thisColumn.equalsWithDomain(otherColumn)) {
+            if (!thisColumn.equals(otherColumn)) {
                 return false;
             }
         }
-        // both are identical
         return true;
     }
     
@@ -592,8 +688,10 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * value of the corresponding cell of the given row.
      * 
      * @param row the row for which the size is requested
-     * @return size in [0,1] or -1 if an error occurred (illegal cell, missing)
+     * @return size in [0,1] or 0 if an error occurred (illegal cell, missing)
+     * @deprecated use row size factor instead
      */
+    @Deprecated
     public double getRowSize(final DataRow row) {
         if (m_sizeHandlerColIndex == -1) {
             return SizeHandler.DEFAULT_SIZE;
@@ -601,6 +699,25 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         return m_columnSpecs[m_sizeHandlerColIndex].getSizeHandler().getSize(
                 row.getCell(m_sizeHandlerColIndex));
     }
+
+    /**
+     * Return the size (as a scaling factor) that an object should have when 
+     * displaying information concerning this row (for instance in a 
+     * scatterplot). The size
+     * is determined by the {@link SizeHandler} of this spec, which is
+     * associated with exactly one column. The size therefore depends on the
+     * value of the corresponding cell of the given row.
+     * 
+     * @param row the row for which the size is requested
+     * @return size in [1, ) or 1 if an error occurred (illegal cell, missing)
+     */
+    public double getRowSizeFactor(final DataRow row) {
+        if (m_sizeHandlerColIndex == -1) {
+            return SizeHandler.DEFAULT_SIZE_FACTOR;
+        }
+        return m_columnSpecs[m_sizeHandlerColIndex].getSizeHandler()
+            .getSizeFactor(row.getCell(m_sizeHandlerColIndex));
+    }    
     
     /**
      * {@inheritDoc}
@@ -624,11 +741,13 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * Returns an iterator for the contained {@link DataColumnSpec} elements.
      * The iterator does not support the remove method (table specs are
      * immutable).
-     * 
+     * @return iterator of the underlying list of <code>DataColumnSpec</code>s
      * @see java.lang.Iterable#iterator()
      */
     public Iterator<DataColumnSpec> iterator() {
-        return m_columnSpecList.iterator();
+        // both method do not copy the data but only keep a reference.
+        return Collections.unmodifiableList(
+                Arrays.asList(m_columnSpecs)).iterator();
     }
 
     /**
@@ -644,51 +763,6 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
             ConfigWO column = config.addConfig(CFG_COLUMN_SPEC + i);
             m_columnSpecs[i].save(column);
         }
-    }
-
-    private int searchColorHandler() {
-        int idx = -1;
-        for (int i = 0; i < m_columnSpecs.length; i++) {
-            if (m_columnSpecs[i].getColorHandler() != null) {
-                if (idx == -1) {
-                    idx = i;
-                } else {
-                    LOGGER.coding("Found more ColorHandlers for columns: "
-                            + idx + " and " + i + ".");
-                }
-            }
-        }
-        return idx;
-    }
-
-    private int searchShapeHandler() {
-        int idx = -1;
-        for (int i = 0; i < m_columnSpecs.length; i++) {
-            if (m_columnSpecs[i].getShapeHandler() != null) {
-                if (idx == -1) {
-                    idx = i;
-                } else {
-                    LOGGER.coding("Found more ShapeHandlers for columns: "
-                            + idx + " and " + i + ".");
-                }
-            }
-        }
-        return idx;
-    }
-
-    private int searchSizeHandler() {
-        int idx = -1;
-        for (int i = 0; i < m_columnSpecs.length; i++) {
-            if (m_columnSpecs[i].getSizeHandler() != null) {
-                if (idx == -1) {
-                    idx = i;
-                } else {
-                    LOGGER.coding("Found more SizeHandlers for columns: " + idx
-                            + " and " + i + ".");
-                }
-            }
-        }
-        return idx;
     }
     
     /**
@@ -718,7 +792,8 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * @return a DataTableSpec with merged domain information
      * from both input DataTableSpecs.
      * @throws IllegalArgumentException if the structures of the DataTableSpecs
-     * do not match, the array is empty, or the array is <code>null</code>.
+     * do not match, the array is empty, or the array or one of its elements is 
+     * <code>null</code>.
      */
     public static DataTableSpec mergeDataTableSpecs(
             final DataTableSpec... specs) {
@@ -793,7 +868,62 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         }
         return result;
     }
-
+    
+    /** Columns used to guess class column in the order they are specified. */
+    public static final String[] CLASS_COLUMN_NAMES = 
+        {"class", "target", "klasse", "ziel"};
+    
+    /**
+     * Guesses the column in the argument spec that likely contains the class
+     * attribute. The guessing is based on column names, whereby names as
+     * specified in {@link #CLASS_COLUMN_NAMES} are preferably considered. The
+     * returned column's name, if not null, is ensured to be compatible to
+     * <code>NominalValue</code> and also has possible values attached, if so
+     * specified by the boolean argument; it returns <code>null</code> if
+     * there are no such columns fulfilling these constraints.
+     * 
+     * @param spec the argument spec
+     * @param withValues with or without possible values
+     * @return first hit in spec or null
+     */
+    public static final String guessNominalClassColumn(final DataTableSpec spec,
+            final boolean withValues) {
+        // sorted map that holds indices from the CLASS_COLUMN_NAMES to
+        // column names, first entry value will be returned
+        TreeMap<Integer, String> map = new TreeMap<Integer, String>(
+                new Comparator<Integer>() {
+                    public int compare(final Integer i, final Integer j) {
+                        return Double.compare(i, j);
+                    }
+                    
+                });
+        for (int i = spec.getNumColumns(); --i >= 0;) {
+            DataColumnSpec cspec = spec.getColumnSpec(i);
+            // NominalValue type check
+            if (cspec.getType().isCompatible(NominalValue.class)) {
+                // has value check
+                if (withValues && cspec.getDomain().hasValues()) {
+                    String colName = cspec.getName();
+                    for (int j = 0; j < CLASS_COLUMN_NAMES.length; j++) {
+                        if (colName.toLowerCase().contains(
+                                CLASS_COLUMN_NAMES[j])) {
+                            // add only first appearance 
+                            if (!map.containsKey(j)) {
+                                map.put(j, colName);
+                                continue;
+                            }
+                        }
+                    }
+                    // add only first appearance 
+                    if (!map.containsKey(Integer.MAX_VALUE)) {
+                        map.put(Integer.MAX_VALUE, colName);
+                    }
+                }
+            }
+        }
+        return map.isEmpty() ? null : map.firstEntry().getValue();
+    }
+    
     /**
      * The string summary of all column specs of this table spec.
      * 

@@ -1,9 +1,9 @@
-/* 
- * -------------------------------------------------------------------
+/*
+ * ------------------------------------------------------------------ *
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,101 +18,80 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
- *   Aug 8, 2005 (georg): created
+ *   22.01.2008 (Fabian Dill): created
  */
 package org.knime.workbench.editor2.figures;
 
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Locator;
-import org.eclipse.draw2d.geometry.Dimension;
-import org.eclipse.draw2d.geometry.Point;
-import org.eclipse.draw2d.geometry.Rectangle;
+import org.knime.core.node.PortType;
 
 /**
- * Locator for port figures. Makes sure that the ports are "near" the centered
- * icon of the surrounding <code>NodeContainerFigure</code>
- * 
- * @author Florian Georg, University of Konstanz
+ *
+ * @author Fabian Dill, University of Konstanz
  */
-public class PortLocator implements Locator {
-    /** in-port type. */
-    public static final int TYPE_INPORT = 0;
+public abstract class PortLocator implements Locator {
 
-    /** out-port type. */
-    public static final int TYPE_OUTPORT = 1;
+    private final boolean m_isInport;
 
-    private NodeContainerFigure m_parent;
+    private final int m_maxPorts;
 
-    private int m_type;
+    private final int m_portIndex;
 
-    private boolean m_modelPort;
-
-    private int m_maxModelPorts;
-
-    private int m_maxDataPorts;
-
-    private int m_portIndex;
+    private final PortType m_portType;
 
     /**
-     * Creates a new locator.
-     * 
-     * @param parent The parent figure (NodeContainerFigure)
-     * @param type The type
-     * @param maxModelPorts max number of model ports to locate
-     * @param maxDataPorts max number of data ports to locate
-     * @param portIndex The port index
-     * @param modelPort whether this is a model port locator
+     *
+     * @param type port type
+     * @param portIndex port index
+     * @param isInPort true if it's an in port, false if it's an out port
+     * @param nrPorts total number of  ports
      */
-    public PortLocator(final NodeContainerFigure parent, final int type,
-            final int maxModelPorts, final int maxDataPorts,
-            final int portIndex, final boolean modelPort) {
-        m_parent = parent;
-        m_type = type;
-        m_maxModelPorts = maxModelPorts;
-        m_maxDataPorts = maxDataPorts;
+    public PortLocator(final PortType type, final int portIndex,
+            final boolean isInPort, final int nrPorts) {
+        m_isInport = isInPort;
+        m_portType = type;
+        m_maxPorts = nrPorts;
         m_portIndex = portIndex;
-        m_modelPort = modelPort;
+    }
+
+    /**
+     *
+     * @return type of the port (data, model, database)
+     */
+    protected PortType getType() {
+        return m_portType;
+    }
+
+    /**
+     *
+     * @return total number of ports
+     */
+    protected int getNrPorts() {
+        return m_maxPorts;
+    }
+
+    /**
+     *
+     * @return port index
+     */
+    protected int getPortIndex() {
+        return m_portIndex;
+    }
+
+    /**
+     *
+     * @return true if in port, fdalse if out port
+     */
+    protected boolean isInPort() {
+        return m_isInport;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void relocate(final IFigure fig) {
-        Rectangle parentBounds = m_parent.getContentFigure().getBounds()
-                .getCopy();
+    public abstract void relocate(IFigure target);
 
-        int portHeight = (parentBounds.height - 10)
-                / (m_maxDataPorts + m_maxModelPorts);
-        int portWidth = parentBounds.width / 2;
-
-        int x = 0;
-        int y = 0;
-        if (m_type == TYPE_INPORT) {
-
-            x = parentBounds.getLeft().x - 1;
-
-            int position = 0;
-            if (m_modelPort) {
-                position = m_portIndex - (m_maxDataPorts);
-            } else {
-                // data port
-                position = m_portIndex + (m_maxModelPorts);
-            }
-
-            y = parentBounds.getTopLeft().y  + 5 + (position * portHeight);
-
-        } else {
-
-            x = parentBounds.getCenter().x + 4;
-
-            y = parentBounds.getTopRight().y + 5 + (m_portIndex * portHeight);
-        }
-
-        Rectangle portBounds = new Rectangle(new Point(x, y), new Dimension(
-                portWidth, portHeight));
-
-        fig.setBounds(portBounds);
-    }
 }

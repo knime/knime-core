@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,11 +25,19 @@
 
 package org.knime.base.node.viz.aggregation.util;
 
+import org.knime.core.node.util.ButtonGroupEnumInterface;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.aggregation.AggregationValModel;
+import org.knime.base.node.viz.aggregation.AggregationValSubModel;
+import org.knime.base.node.viz.aggregation.ValueScale;
+
 import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.List;
 
 import javax.swing.AbstractButton;
@@ -38,12 +46,7 @@ import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
 import javax.swing.JRadioButton;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.aggregation.AggregationValModel;
-import org.knime.base.node.viz.aggregation.AggregationValSubModel;
-import org.knime.base.node.viz.aggregation.ValueScale;
-import org.knime.core.node.util.ButtonGroupEnumInterface;
+import javax.swing.JSlider;
 
 
 /**
@@ -187,7 +190,8 @@ public final class GUIUtils {
     public static String createLabel(final double aggrVal, final int noOfDigits,
             final AggregationMethod aggrMethod, final ValueScale scale) {
         // return Double.toString(aggrVal);
-        if (AggregationMethod.COUNT.equals(aggrMethod)
+        if ((AggregationMethod.COUNT.equals(aggrMethod)
+                || AggregationMethod.VALUE_COUNT.equals(aggrMethod))
                 && !ValueScale.PERCENT.equals(scale)) {
             return AGGREGATION_LABEL_FORMATER_COUNT.format(aggrVal);
         }
@@ -242,6 +246,9 @@ public final class GUIUtils {
         aggrHeadBuf.append(AggregationMethod.COUNT);
         aggrHeadBuf.append("</th>");
         aggrHeadBuf.append("<th>");
+        aggrHeadBuf.append(AggregationMethod.VALUE_COUNT);
+        aggrHeadBuf.append("</th>");
+        aggrHeadBuf.append("<th>");
         aggrHeadBuf.append(AggregationMethod.SUM);
         aggrHeadBuf.append("</th>");
         aggrHeadBuf.append("<th>");
@@ -284,6 +291,7 @@ public final class GUIUtils {
                 buf.append(aggrMethodHead);
                 buf.append("</tr>");
                 int totalCount = 0;
+                int totalValCount = 0;
                 double totalSum = 0;
                 for (final AggregationValSubModel element
                         : selectedElements) {
@@ -300,6 +308,12 @@ public final class GUIUtils {
                     totalCount += count;
                     buf.append("<td>");
                     buf.append(count);
+                    buf.append("</td>");
+                    final int valCount = (int) element.getAggregationValue(
+                            AggregationMethod.VALUE_COUNT);
+                    totalValCount += valCount;
+                    buf.append("<td>");
+                    buf.append(valCount);
                     buf.append("</td>");
                     final double sum = element.getAggregationValue(
                             AggregationMethod.SUM);
@@ -324,6 +338,9 @@ public final class GUIUtils {
                     buf.append("</td>");
                     buf.append("<td>");
                     buf.append(totalCount);
+                    buf.append("</td>");
+                    buf.append("<td>");
+                    buf.append(totalValCount);
                     buf.append("</td>");
                     buf.append("<td>");
                     buf.append(totalSum);
@@ -369,5 +386,59 @@ public final class GUIUtils {
             hue = index / (float)size;
         }
         return Color.getColor(null, Color.HSBtoRGB(hue, 1.0f, 1.0f));
+    }
+
+    /**
+     * Sets the label of the given slider.
+     *
+     * @param slider the slider to label
+     * @param divisor the steps are calculated
+     *            <code>maxVal - minVal / divisor</code>
+     */
+    public static void setSliderLabels(final JSlider slider,
+            final int divisor, final boolean showDigitsAndTicks) {
+        // show at least the min, middle and max value on the slider.
+        final int minimum = slider.getMinimum();
+        final int maximum = slider.getMaximum();
+        final int increment = (maximum - minimum) / divisor;
+        if (increment < 1) {
+            // if their is no increment we don't need to enable this slider
+            // Hashtable labels = m_barWidth.createStandardLabels(1);
+            final Hashtable<Integer, JLabel> labels =
+                new Hashtable<Integer, JLabel>(1);
+            labels.put(new Integer(minimum), new JLabel("Min"));
+            slider.setLabelTable(labels);
+            slider.setPaintLabels(true);
+            slider.setEnabled(false);
+        } else if (showDigitsAndTicks) {
+            // slider.setLabelTable(slider.createStandardLabels(increment));
+            final Hashtable<Integer, JLabel> labels =
+                new Hashtable<Integer, JLabel>();
+            // labels.put(minimum, new JLabel("Min"));
+            labels.put(new Integer(minimum),
+                    new JLabel(Integer.toString(minimum)));
+            for (int i = 1; i < divisor; i++) {
+                final int value = minimum + i * increment;
+                labels.put(new Integer(value),
+                        new JLabel(Integer.toString(value)));
+            }
+            // labels.put(maximum, new JLabel("Max"));
+            labels.put(new Integer(maximum),
+                    new JLabel(Integer.toString(maximum)));
+            slider.setLabelTable(labels);
+            slider.setPaintLabels(true);
+            slider.setMajorTickSpacing(divisor);
+            slider.setPaintTicks(true);
+            // slider.setSnapToTicks(true);
+            slider.setEnabled(true);
+        } else {
+            final Hashtable<Integer, JLabel> labels =
+                new Hashtable<Integer, JLabel>();
+            labels.put(new Integer(minimum), new JLabel("Min"));
+            labels.put(new Integer(maximum), new JLabel("Max"));
+            slider.setLabelTable(labels);
+            slider.setPaintLabels(true);
+            slider.setEnabled(true);
+        }
     }
 }

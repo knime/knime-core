@@ -4,7 +4,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -58,7 +58,7 @@ public class DotInfo {
 
     private boolean m_hilit; // the hilite status
 
-    private DataCell m_rowID; // the associated row
+    private RowKey m_rowID; // the associated row
 
     private int m_rowIndex; // the associated row index
 
@@ -80,7 +80,7 @@ public class DotInfo {
             final int rowIndex) {
         m_xCoord = x;
         m_yCoord = y;
-        m_rowID = rowKey.getId();
+        m_rowID = rowKey;
         m_color = colorAttr;
         m_size = size;
         m_hilit = hilit;
@@ -92,7 +92,7 @@ public class DotInfo {
      * @return the DataCell containing the row key of the row this data point is
      *         extracted from.
      */
-    public DataCell getRowID() {
+    public RowKey getRowID() {
         return m_rowID;
     }
 

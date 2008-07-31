@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   18.07.2005 (ohl): created
  */
@@ -36,7 +36,9 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -45,8 +47,13 @@ import javax.swing.border.Border;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.knime.base.node.preproc.filter.row.rowfilter.ColValRowFilter;
+import org.knime.base.node.preproc.filter.row.rowfilter.AttrValueRowFilter;
+import org.knime.base.node.preproc.filter.row.rowfilter.ColValFilterOldObsolete;
+import org.knime.base.node.preproc.filter.row.rowfilter.MissingValueRowFilter;
+import org.knime.base.node.preproc.filter.row.rowfilter.RangeRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
+import org.knime.base.node.preproc.filter.row.rowfilter.StringCompareRowFilter;
+import org.knime.base.util.WildcardMatcher;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -63,10 +70,11 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
-public class ColumnRowFilterPanel extends RowFilterPanel {
+public class ColumnRowFilterPanel extends RowFilterPanel implements
+        ItemListener {
 
     /** object version for serialization. */
     static final long serialVersionUID = 1;
@@ -89,9 +97,13 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
 
     private JLabel m_regLabel;
 
-    private JTextField m_regExpr;
+    private JComboBox m_regExpr;
 
     private JCheckBox m_caseSensitive;
+
+    private JCheckBox m_hasWildCards;
+
+    private JCheckBox m_isRegExpr;
 
     private JLabel m_errText;
 
@@ -101,7 +113,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
 
     /**
      * Craetes a new panel for column content filter settings.
-     * 
+     *
      * @param tSpec table spec containing column specs to select from
      * @throws NotConfigurableException it tspec is <code>null</code> or emtpy
      */
@@ -144,19 +156,33 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         regBox.add(m_useRegExpr);
         regBox.add(Box.createHorizontalGlue());
         matchPanel.add(regBox);
+
         Box exprBox = Box.createHorizontalBox(); // reg expr edit field
-        exprBox.add(Box.createHorizontalGlue());
         exprBox.add(m_regLabel);
         exprBox.add(Box.createHorizontalStrut(3));
         exprBox.add(m_regExpr);
-        m_regExpr.setPreferredSize(new Dimension(100, 20));
-        m_regExpr.setMaximumSize(new Dimension(100, 20));
-        m_regExpr.setPreferredSize(new Dimension(100, 20));
-        matchPanel.add(exprBox);
-        Box caseBox = Box.createHorizontalBox(); // case sensitive checkbox
+        m_regExpr.setPreferredSize(new Dimension(150, 20));
+        m_regExpr.setMaximumSize(new Dimension(150, 20));
+        m_regExpr.setPreferredSize(new Dimension(150, 20));
+        Box caseBox = Box.createHorizontalBox();
         caseBox.add(Box.createHorizontalGlue());
         caseBox.add(m_caseSensitive);
-        matchPanel.add(caseBox);
+        Box patternBox = Box.createVerticalBox();
+        patternBox.add(exprBox);
+        patternBox.add(Box.createVerticalStrut(5));
+        patternBox.add(caseBox);
+        Box wildBox = Box.createVerticalBox(); // wildcard / regExpr
+        wildBox.add(m_hasWildCards);
+        wildBox.add(Box.createVerticalStrut(5));
+        wildBox.add(m_isRegExpr);
+        Box regEditBox = Box.createHorizontalBox();
+        regEditBox.add(Box.createHorizontalStrut(25));
+        regEditBox.add(Box.createHorizontalGlue());
+        regEditBox.add(patternBox);
+        regEditBox.add(Box.createHorizontalStrut(10));
+        regEditBox.add(wildBox);
+        matchPanel.add(regEditBox);
+
         Box rrBox = Box.createHorizontalBox(); // range radio
         rrBox.add(m_useRange);
         rrBox.add(Box.createHorizontalGlue());
@@ -183,7 +209,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         mvBox.add(m_useMissValue);
         mvBox.add(Box.createHorizontalGlue());
         matchPanel.add(mvBox);
-        
+
         panel.add(Box.createVerticalStrut(7));
         panel.add(matchPanel);
 
@@ -218,8 +244,8 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         for (int c = 0; c < tSpec.getNumColumns(); c++) {
             colNames.add(tSpec.getColumnSpec(c).getName());
         }
-        m_colCombo = new ColumnSelectionComboxBox(
-                (Border)null, DataValue.class);
+        m_colCombo =
+                new ColumnSelectionComboxBox((Border)null, DataValue.class);
         m_colCombo.update(tSpec, null);
         m_colCombo.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
@@ -229,7 +255,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
 
         /* the selectors for what kind of checking will be done */
         m_useRange = new JRadioButton("use range checking");
-        m_useRegExpr = new JRadioButton("use regular expr. pattern matching");
+        m_useRegExpr = new JRadioButton("use pattern matching");
         m_useMissValue = new JRadioButton("only missing values match");
         m_useRange.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
@@ -283,9 +309,13 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
             }
         });
         /* the regular expression stuff */
-        m_regLabel = new JLabel("regular expression:");
-        m_regExpr = new JTextField();
-        m_regExpr.getDocument().addDocumentListener(new DocumentListener() {
+        m_regLabel = new JLabel("pattern:");
+        // it's important that the column selection is created before!
+        m_regExpr = new JComboBox(getPossibleValuesOfSelectedColumn());
+        m_regExpr.setEditable(true);
+        m_regExpr.setSelectedItem("");
+        JTextField ed = (JTextField)m_regExpr.getEditor().getEditorComponent();
+        ed.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(final DocumentEvent e) {
                 regExprChanged();
             }
@@ -298,8 +328,26 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
                 regExprChanged();
             }
         });
+        m_regExpr.addItemListener(this);
         m_caseSensitive = new JCheckBox("case sensitive match");
-
+        m_isRegExpr = new JCheckBox("regular expression");
+        m_hasWildCards = new JCheckBox("contains wild cards");
+        m_hasWildCards.setToolTipText("insert '?' or '*' to match any one "
+                + "character or any sequence (including none) of characters.");
+        m_isRegExpr.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                wildRegExprChanged(e);
+                // also trigger regular expression recompile
+                regExprChanged();
+            }
+        });
+        m_hasWildCards.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                wildRegExprChanged(e);
+                // also trigger regular expression recompile
+                regExprChanged();
+            }
+        });
         /* and a label to display errors/warnings */
         m_errText = new JLabel("");
         setErrMsg("");
@@ -318,6 +366,69 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
     }
 
     /**
+     * The item change listener for the regular expression box. Needs to be
+     * re-registered from time to time.
+     *
+     * @param e the item event.
+     */
+    public void itemStateChanged(final ItemEvent e) {
+        if (e.getSource() == m_regExpr) {
+            if (m_regExpr.getSelectedIndex() >= 0) {
+                // if user selected a possible value, it must match exactly
+                m_caseSensitive.setSelected(true);
+                m_isRegExpr.setSelected(false);
+                m_hasWildCards.setSelected(false);
+                regExprChanged();
+            }
+        }
+    }
+
+    /**
+     * For the selected column (from the combobox) it get the possible values,
+     * and returns a vector with the string representations for them. If no
+     * possible values are specified, an empty vector is returned.
+     *
+     * @return it returns a vector with the string representations of the
+     *         currently selected column. If that's not possible (because no
+     *         column is selected, or the selected one has no possible values)
+     *         it returns an empty vector.
+     */
+    protected Vector<String> getPossibleValuesOfSelectedColumn() {
+        Vector<String> result = new Vector<String>();
+        String col = m_colCombo.getSelectedColumn();
+        if (col == null) {
+            return result;
+        }
+        DataColumnSpec spec = m_tSpec.getColumnSpec(col);
+        if (spec == null) {
+            return result;
+        }
+        if (!spec.getDomain().hasValues()) {
+            return result;
+        }
+        // convert all data cells to string representations
+        for (DataCell v : spec.getDomain().getValues()) {
+            result.add(v.toString());
+        }
+        return result;
+    }
+
+    /**
+     * Called when the 'is regular expression' or 'has wildcards' checkbox was
+     * clicked. Ensures only one of them is checked.
+     *
+     * @param e the event flying
+     */
+    protected void wildRegExprChanged(final ItemEvent e) {
+        if ((e.getSource() == m_isRegExpr) && m_isRegExpr.isSelected()) {
+            m_hasWildCards.setSelected(false);
+        }
+        if ((e.getSource() == m_hasWildCards) && m_hasWildCards.isSelected()) {
+            m_isRegExpr.setSelected(false);
+        }
+    }
+
+    /**
      * Called when user pushes the buttons.
      */
     protected void radiosChanged() {
@@ -330,6 +441,8 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         m_regLabel.setEnabled(m_useRegExpr.isSelected());
         m_regExpr.setEnabled(m_useRegExpr.isSelected());
         m_caseSensitive.setEnabled(m_useRegExpr.isSelected());
+        m_isRegExpr.setEnabled(m_useRegExpr.isSelected());
+        m_hasWildCards.setEnabled(m_useRegExpr.isSelected());
 
         // have the err text updated
         if (m_useMissValue.isSelected()) {
@@ -376,8 +489,9 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         }
         if ((lowBound != null) && (hiBound != null)) {
             DataValueComparator comp;
-            comp = DataType.getCommonSuperType(lowBound.getType(),
-                    hiBound.getType()).getComparator();
+            comp =
+                    DataType.getCommonSuperType(lowBound.getType(),
+                            hiBound.getType()).getComparator();
             if (comp.compare(hiBound, lowBound) == -1) {
                 setErrMsg("The lower bound must be smaller than the"
                         + " upper bound");
@@ -398,26 +512,48 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
      * Called when the user selects a new column.
      */
     protected void selectedColChanged() {
-        // we trigger 'boundsChanged' to get bounds checked against the new
-        // column type
+
+        /*
+         * fill the regExpr combo with the new possible values
+         */
+        // de-register the item listener - we are changing the selection
+        m_regExpr.removeItemListener(this);
+
+        String oldVal = (String)m_regExpr.getEditor().getItem();
+        m_regExpr.setModel(new DefaultComboBoxModel(
+                getPossibleValuesOfSelectedColumn()));
+        m_regExpr.setSelectedItem(oldVal);
+
+        // register us again with the regExpr box
+        m_regExpr.addItemListener(this);
+        regExprChanged();
+
+        /*
+         * trigger bounds check
+         */
         boundsChanged();
     }
 
     /**
-     * Called when the user changes the regular expression.
+     * Checks the entered (or selected) regular expression and sets an error.
      */
     protected void regExprChanged() {
         setErrMsg("");
-        if (m_regExpr.getText().length() <= 0) {
-            setErrMsg("Enter valid regular expression");
+        if (((String)m_regExpr.getEditor().getItem()).length() <= 0) {
+            setErrMsg("Enter valid pattern");
             validate();
             return;
         }
         try {
-            Pattern.compile(m_regExpr.getText());
+            String pattern = (String)m_regExpr.getEditor().getItem();
+            if (m_hasWildCards.isSelected()) {
+                pattern = WildcardMatcher.wildcardToRegex(pattern);
+                Pattern.compile(pattern);
+            } else if (m_isRegExpr.isSelected()) {
+                Pattern.compile(pattern);
+            }
         } catch (PatternSyntaxException pse) {
-            setErrMsg("Error in regular expression. ('" + pse.getMessage()
-                    + "')");
+            setErrMsg("Error in pattern. ('" + pse.getMessage() + "')");
             validate();
         }
     }
@@ -428,26 +564,72 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
     @Override
     public void loadSettingsFromFilter(final RowFilter filter)
             throws InvalidSettingsException {
-        if (!(filter instanceof ColValRowFilter)) {
-            throw new InvalidSettingsException("ColVal filter panel can only "
-                    + "load settings from a ColValRowFilter");
-        }
+        // accept ColValFilterOldObsolete for backward compatibility
+        if (filter instanceof ColValFilterOldObsolete) {
+            loadSettingsFromColValFilter((ColValFilterOldObsolete)filter);
+        } else {
+            if (!(filter instanceof AttrValueRowFilter)) {
+                throw new InvalidSettingsException("Column value row filter "
+                        + "panel can only load settings from a range filter, "
+                        + "an attribute value filter.");
+            }
+            AttrValueRowFilter avFilter = (AttrValueRowFilter)filter;
+            String colName = avFilter.getColName();
+            if (colName != null) {
+                m_colCombo.setSelectedColumn(colName);
+            }
 
-        ColValRowFilter colFilter = (ColValRowFilter)filter;
-        String colName = colFilter.getColumnName();
+            if (filter instanceof StringCompareRowFilter) {
+                StringCompareRowFilter f = (StringCompareRowFilter)filter;
+
+                m_useRegExpr.setSelected(true);
+                m_regExpr.setSelectedItem(f.getPattern());
+                m_isRegExpr.setSelected(f.getIsRegExpr());
+                m_hasWildCards.setSelected(f.getHasWildcards());
+                m_caseSensitive.setSelected(f.getCaseSensitive());
+
+            } else if (filter instanceof RangeRowFilter) {
+                RangeRowFilter f = (RangeRowFilter)filter;
+
+                m_useRange.setSelected(true);
+                String upper = "";
+                String lower = "";
+                if (f.getUpperBound() != null) {
+                    upper = f.getUpperBound().toString();
+                }
+                if (f.getLowerBound() != null) {
+                    lower = f.getLowerBound().toString();
+                }
+                m_upperBound.setText(upper);
+                m_lowerBound.setText(lower);
+
+            } else if (filter instanceof MissingValueRowFilter) {
+
+                m_useMissValue.setSelected(true);
+            } else {
+                // you must implement functionality here if you create a new
+                // attribute value filter.
+                assert false;
+            }
+        }
+    }
+
+    private void loadSettingsFromColValFilter(final ColValFilterOldObsolete f) {
+
+        String colName = f.getColumnName();
         if (colName != null) {
             m_colCombo.setSelectedColumn(colName);
         }
-        if (colFilter.getFilterMissingValues()) {
+        if (f.getFilterMissingValues()) {
             m_useMissValue.setSelected(true);
-        } else if (colFilter.rangeSet()) {
+        } else if (f.rangeSet()) {
             String upper = "";
             String lower = "";
-            if (colFilter.getUpperBound() != null) {
-                upper = colFilter.getUpperBound().toString();
+            if (f.getUpperBound() != null) {
+                upper = f.getUpperBound().toString();
             }
-            if (colFilter.getLowerBound() != null) {
-                lower = colFilter.getLowerBound().toString();
+            if (f.getLowerBound() != null) {
+                lower = f.getLowerBound().toString();
             }
             m_upperBound.setText(upper);
             m_lowerBound.setText(lower);
@@ -456,9 +638,13 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
             }
         } else {
             m_useRegExpr.setSelected(true);
-            m_regExpr.setText(colFilter.getRegExpr());
-            m_caseSensitive.setSelected(colFilter.caseSensitiveMatch());
+            m_regExpr.setSelectedItem(f.getRegExpr());
+            m_caseSensitive.setSelected(f.caseSensitiveMatch());
         }
+
+        m_isRegExpr.setSelected(true);
+        m_hasWildCards.setSelected(false);
+
     }
 
     /**
@@ -487,27 +673,27 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
                 throw new InvalidSettingsException(getErrMsg());
             }
 
-            return new ColValRowFilter(m_tSpec.getColumnSpec(colName).getType()
-                    .getComparator(), loBound, hiBound, colName, include);
+            return new RangeRowFilter(colName, include, loBound, hiBound);
         }
 
         if (m_useRegExpr.isSelected()) {
-            if (m_regExpr.getText().length() <= 0) {
-                setErrMsg("Enter a valid regular expression");
+            String regExpr = (String)m_regExpr.getEditor().getItem();
+            if (regExpr.length() <= 0) {
+                setErrMsg("Enter a valid pattern to match");
                 validate();
                 throw new InvalidSettingsException(getErrMsg());
             }
-            return new ColValRowFilter(m_regExpr.getText(), colName, include,
-                    m_caseSensitive.isSelected(), false);
-
+            return new StringCompareRowFilter(regExpr, colName,
+                    include, m_caseSensitive.isSelected(), m_hasWildCards
+                            .isSelected(), m_isRegExpr.isSelected());
         }
 
         if (m_useMissValue.isSelected()) {
-            return new ColValRowFilter(colName, include);
+            return new MissingValueRowFilter(colName, include);
         }
-        
+
         throw new InvalidSettingsException("Internal Error. "
-                + "Please change some setting and try again. Sorry");
+                + "Please change some settings and try again. Sorry");
     }
 
     /**
@@ -526,7 +712,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
      * the latter case the errText field is updated. If no table spec is set it
      * will create the most specific cell that can hold the value (IntCell,
      * DoubleCell, or finally StringCell)
-     * 
+     *
      * @return a DataCell of the entered value in the upper bound field or null
      * if a problem occurred.
      */
@@ -542,7 +728,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
      * tablespec is set). It will not update the errText field. If no table spec
      * is set it will create the most specific cell that can hold the value
      * (IntCell, DoubleCell, or finally StringCell)
-     * 
+     *
      * @return a DataCell of the entered value in the lower bound field or no
      * text was entered.
      */

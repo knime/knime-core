@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,18 +25,14 @@
 package org.knime.workbench.ui.preferences;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
-import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.jface.preference.RadioGroupFieldEditor;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
-import org.eclipse.ui.internal.Workbench;
+import org.knime.core.node.NodeLogger.LEVEL;
+import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
@@ -54,9 +50,8 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
 public class MainPreferencePage extends FieldEditorPreferencePage implements
         IWorkbenchPreferencePage {
 
-    boolean m_apply = false;
-
-    String m_tempPath;
+    private IntegerFieldEditor m_freqHistorySizeEditor;
+    private IntegerFieldEditor m_usedHistorySizeEditor; 
 
     /**
      * Constructor .
@@ -64,83 +59,9 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
     public MainPreferencePage() {
         super(GRID);
 
-        // we use the pref store of the UI plugin
-        setPreferenceStore(KNIMEUIPlugin.getDefault().getPreferenceStore());
-
-        setDescription("KNIME global preferences");
-
-        // get the preference store for the UI plugin
-        IPreferenceStore store = KNIMEUIPlugin.getDefault()
-                .getPreferenceStore();
-        m_tempPath = store.getString(PreferenceConstants.P_TEMP_DIR);
+//        setDescription("KNIME GUI preferences");
     }
 
-    @Override
-    protected void performApply() {
-        m_apply = true;
-        super.performApply();
-    }
-
-    /**
-     * Overriden to display a message box in case the temp directory was
-     * changed.
-     * 
-     * @see org.eclipse.jface.preference.FieldEditorPreferencePage#performOk()
-     */
-    @Override
-    public boolean performOk() {
-
-        boolean result = super.performOk();
-
-        checkChanges();
-
-        return result;
-    }
-
-    /**
-     * Overriden to react when the users applies but then presses cancel.
-     * 
-     * @see org.eclipse.jface.preference.PreferencePage#performCancel()
-     */
-    @Override
-    public boolean performCancel() {
-        boolean result = super.performCancel();
-
-        checkChanges();
-
-        return result;
-    }
-
-    private void checkChanges() {
-        boolean apply = m_apply;
-        m_apply = false;
-
-        if (apply) {
-            return;
-        }
-
-        // get the preference store for the UI plugin
-        IPreferenceStore store = KNIMEUIPlugin.getDefault()
-                .getPreferenceStore();
-        String currentTmpDir = store.getString(PreferenceConstants.P_TEMP_DIR);
-        boolean tempDirChanged = !m_tempPath.equals(currentTmpDir);
-        if (tempDirChanged) {
-
-            // reset the directory
-            m_tempPath = currentTmpDir;
-            MessageBox mb = new MessageBox(Display.getDefault()
-                    .getActiveShell(), SWT.ICON_QUESTION | SWT.YES | SWT.NO);
-            mb.setText("Restart workbench...");
-            mb.setMessage("Changes of the temporary directory become "
-                    + "first available after restarting the workbench.\n"
-                    + "Do you want to restart the workbench now?");
-            if (mb.open() != SWT.YES) {
-                return;
-            }
-
-            Workbench.getInstance().restart();
-        }
-    }
 
     /**
      * Creates the field editors. Field editors are abstractions of the common
@@ -151,73 +72,85 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
     public void createFieldEditors() {
         Composite parent = getFieldEditorParent();
 
-        // Open views as JFrame or embedded in an eclipse view
-        /* BW: disabled this feature as the eclipse embedded views do not
-         * have a menu associated. 
-         * NOTE: If you enable this option again, also undo my changes
-         * in WorkflowContextMenuProvider*/
-//        addField(new RadioGroupFieldEditor(
-//                PreferenceConstants.P_CHOICE_VIEWMODE,
-//                "Select the mode how &views are opened", 1, new String[][] {
-//                        { "External &JFrame",
-//                          PreferenceConstants.P_CHOICE_VIEWMODE_JFRAME },
-//                        { "Eclipse &view (embedded)",
-//                          PreferenceConstants.P_CHOICE_VIEWMODE_VIEW } },
-//                parent));
-
         // Specify the minimum log level for the console
         addField(new RadioGroupFieldEditor(
-                PreferenceConstants.P_LOGLEVEL_CONSOLE, "Console Log Level", 4,
+                PreferenceConstants.P_LOGLEVEL_CONSOLE, 
+                "Console View Log Level", 4,
                 new String[][] {
-                        { "&DEBUG", PreferenceConstants.P_LOGLEVEL_DEBUG },
+                        {"&DEBUG", LEVEL.DEBUG.name()},
 
-                        { "&INFO", PreferenceConstants.P_LOGLEVEL_INFO },
+                        {"&INFO", LEVEL.INFO.name()},
 
-                        { "&WARN", PreferenceConstants.P_LOGLEVEL_WARN },
+                        {"&WARN", LEVEL.WARN.name()},
 
-                        { "&ERROR", PreferenceConstants.P_LOGLEVEL_ERROR } },
+                        {"&ERROR", LEVEL.ERROR.name()} },
                 parent));
 
-        // Specify the minimum log level
-        addField(new RadioGroupFieldEditor(
-                PreferenceConstants.P_LOGLEVEL_LOG_FILE, "Log File Log Level",
-                4, new String[][] {
-                        { "&DEBUG", PreferenceConstants.P_LOGLEVEL_DEBUG },
-
-                        { "&INFO", PreferenceConstants.P_LOGLEVEL_INFO },
-
-                        { "&WARN", PreferenceConstants.P_LOGLEVEL_WARN },
-
-                        { "&ERROR", PreferenceConstants.P_LOGLEVEL_ERROR } },
-                parent));
-
-        IntegerFieldEditor maxThreadEditor = new IntegerFieldEditor(
-                PreferenceConstants.P_MAXIMUM_THREADS,
-                "Maximum working threads for all nodes", parent, 3);
-        maxThreadEditor.setValidRange(1, Math.max(100, Runtime.getRuntime()
-                .availableProcessors() * 4));
-        maxThreadEditor.setTextLimit(3);
-        addField(maxThreadEditor);
-
-        DirectoryFieldEditor tempDirEditor = new TempDirFieldEditor(
-                PreferenceConstants.P_TEMP_DIR,
-                "Directory for temporary files\n(you should restart KNIME after"
-                        + " changing this value)", parent);
-        tempDirEditor.setEmptyStringAllowed(false);
-        
-        addField(tempDirEditor);
 
         addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_RESET, 
                 "Confirm Node Reset", parent));
 
         addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_DELETE, 
                 "Confirm Node/Connection Deletion", parent));
+        
+        addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_RECONNECT,
+                "Confirm reconnection of already connected nodes", parent));
+       
+        
+        m_freqHistorySizeEditor = new IntegerFieldEditor(
+                PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE,
+                "Maximal size for most frequently used nodes", parent, 3);
+        m_freqHistorySizeEditor.setValidRange(1, 50);
+        m_freqHistorySizeEditor.setTextLimit(3);
+        m_freqHistorySizeEditor.load();
+        
+        m_usedHistorySizeEditor = new IntegerFieldEditor(
+                PreferenceConstants.P_FAV_LAST_USED_SIZE,
+                "Maximal size for last used nodes", parent, 3);
+        m_usedHistorySizeEditor.setValidRange(1, 50);
+        m_usedHistorySizeEditor.setTextLimit(3);
+        m_usedHistorySizeEditor.load();
+        
+        addField(m_usedHistorySizeEditor);
+        addField(m_freqHistorySizeEditor);
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean performOk() {
+        super.performOk();
+        getPreferenceStore().setValue(
+                PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE, 
+                m_freqHistorySizeEditor.getIntValue());
+        getPreferenceStore().setValue(
+                PreferenceConstants.P_FAV_LAST_USED_SIZE, 
+                m_usedHistorySizeEditor.getIntValue());
+        
+        NodeUsageRegistry.setMaxFrequentSize(
+                m_freqHistorySizeEditor.getIntValue());
+        
+        NodeUsageRegistry.setMaxLastUsedSize(
+                m_usedHistorySizeEditor.getIntValue());
+        return true;
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    protected void performApply() {
+        performOk();
     }
 
     /**
      * {@inheritDoc}
      */
     public void init(final IWorkbench workbench) {
-        // ignore
+        // we use the pref store of the UI plugin
+        setPreferenceStore(KNIMEUIPlugin.getDefault().getPreferenceStore());
     }
 }

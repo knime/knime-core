@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -66,7 +66,7 @@ public class DefaultTab extends PropertiesTab {
         m_mouseModeSelection = new JComboBox();
         m_mouseModeSelection.setPreferredSize(new Dimension(COMPONENT_WIDTH,
                 m_mouseModeSelection.getPreferredSize().height));
-        m_fitToScreenBtn = new JButton("Fit to screen");
+        m_fitToScreenBtn = new JButton("Fit to size");
         m_chooser = new JColorChooser();
         m_chooser.setPreviewPanel(new JPanel());
         m_chooseBackground = new JButton("Background Color");

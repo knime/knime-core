@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,6 +24,7 @@ package org.knime.base.node.mine.svm.util;
 
 import java.util.ArrayList;
 
+import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
@@ -49,20 +50,44 @@ public class DoubleVector {
 
     // the class value
     private String m_classValue;
+    
+    // RowKey
+    private RowKey m_key;
 
     /**
      * Default constructor.
+     * 
+     * @param key the RowKey of the row associated with this vector.
+     * @param values the double values of the vector.
+     * @param classvalue the class value.
+     */
+    public DoubleVector(final RowKey key, final ArrayList<Double> values,
+            final String classvalue) {
+        m_key = key;
+        m_values = new double[values.size()];
+        for (int i = 0; i < values.size(); ++i) {
+            m_values[i] = values.get(i);
+        }
+        m_classValue = classvalue;
+    }
+    
+    /**
+     * Default constructor with no associated {@link RowKey}.
      * 
      * @param values the double values of the vector.
      * @param classvalue the class value.
      */
     public DoubleVector(final ArrayList<Double> values,
             final String classvalue) {
-        m_values = new double[values.size()];
-        for (int i = 0; i < values.size(); ++i) {
-            m_values[i] = values.get(i);
-        }
-        m_classValue = classvalue;
+        this(null, values, classvalue);
+    }
+    
+    /**
+     * @return the RowKey of the row associated with this vector.
+     * Can be <code>null</code>.
+     */
+    public RowKey getKey() {
+        return m_key;
     }
 
     /**

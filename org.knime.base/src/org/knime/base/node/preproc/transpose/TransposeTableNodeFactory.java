@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,7 +24,6 @@ package org.knime.base.node.preproc.transpose;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
@@ -32,12 +31,14 @@ import org.knime.core.node.NodeView;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class TransposeTableNodeFactory extends NodeFactory {
+public class TransposeTableNodeFactory 
+        extends NodeFactory<TransposeTableNodeModel> {
+    
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public TransposeTableNodeModel createNodeModel() {
         return new TransposeTableNodeModel();
     }
 
@@ -53,9 +54,8 @@ public class TransposeTableNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
-        assert false;
+    public NodeView<TransposeTableNodeModel> createNodeView(final int viewIndex,
+            final TransposeTableNodeModel nodeModel) {
         return null;
     }
 
@@ -64,7 +64,7 @@ public class TransposeTableNodeFactory extends NodeFactory {
      */
     @Override
     public boolean hasDialog() {
-        return false;
+        return true;
     }
 
     /**
@@ -72,7 +72,6 @@ public class TransposeTableNodeFactory extends NodeFactory {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        assert false;
-        return null;
+        return new TransposeTableNodeDialogPane();
     }
 }

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -374,8 +374,8 @@ public class TimePlotter extends LinePlotter {
                         p1 = new Point(x, y);
                         dot = new DotInfo(x, (int)getScreenYCoordinate(y), 
                                 array.getRow(row).getKey(),
-                                delegateIsHiLit(array.getRow(row).getKey()
-                                        .getId()), color, 1, row);
+                                delegateIsHiLit(array.getRow(row).getKey()),
+                                        color, 1, row);
 //                        dot.setXDomainValue(array.getRow(row).getKey().getId());
                         dot.setXDomainValue(dc);
                         dot.setYDomainValue(cell);

@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   25.05.2005 (Florian Georg): created
  */
@@ -26,6 +26,7 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -33,7 +34,7 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
  * Action to execute a node.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class ExecuteAction extends AbstractNodeAction {
@@ -45,7 +46,7 @@ public class ExecuteAction extends AbstractNodeAction {
     public static final String ID = "knime.action.execute";
 
     /**
-     * 
+     *
      * @param editor The workflow editor
      */
     public ExecuteAction(final WorkflowEditor editor) {
@@ -75,8 +76,8 @@ public class ExecuteAction extends AbstractNodeAction {
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor("icons/execute.GIF");
     }
-    
-    
+
+
 
     /**
      * {@inheritDoc}
@@ -104,12 +105,15 @@ public class ExecuteAction extends AbstractNodeAction {
         NodeContainerEditPart[] parts = getSelectedNodeParts();
 
         // enable if we have at least one executable node in our selection
-        boolean atLeastOneNodeIsExecutable = false;
         for (int i = 0; i < parts.length; i++) {
-            atLeastOneNodeIsExecutable |= parts[i].getNodeContainer()
-                    .isExecutableUpToHere();
+            NodeContainer nc = parts[i].getNodeContainer();
+            // TODO: allow execution only if all selected nodes are configured?
+            if (nc.getState().equals(
+                    NodeContainer.State.CONFIGURED)) {
+                return true;
+            }
         }
-        return atLeastOneNodeIsExecutable;
+        return false;
 
     }
 
@@ -117,7 +121,7 @@ public class ExecuteAction extends AbstractNodeAction {
      * This starts an execution job for the selected nodes. Note that this is
      * all controlled by the WorkflowManager object of the currently open
      * editor.
-     * 
+     *
      * @see org.knime.workbench.editor2.actions.AbstractNodeAction
      *      #runOnNodes(org.knime.workbench.editor2.
      *      editparts.NodeContainerEditPart[])
@@ -129,7 +133,7 @@ public class ExecuteAction extends AbstractNodeAction {
         WorkflowManager manager = getManager();
 
         for (NodeContainerEditPart p : nodeParts) {
-            manager.executeUpToNode(p.getNodeContainer().getID(), false);
+            manager.executeUpToHere(p.getNodeContainer().getID());
         }
 
         try {

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -59,8 +59,7 @@ final class BlockableInputStream extends InputStream {
     /**
      * Reads next byte from stream and if it is an escape byte, it returns the
      * next following byte. If it is a terminate byte, it returns -1, i.e. eof.
-     * 
-     * @see java.io.InputStream#read()
+     * {@inheritDoc}
      */
     @Override
     public int read() throws IOException {

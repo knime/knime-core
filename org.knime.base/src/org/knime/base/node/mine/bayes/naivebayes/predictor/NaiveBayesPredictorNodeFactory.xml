@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./naiveBayesPredictor.png" type="Predictor">
 	<name>Naive Bayes Predictor</name>
 	
@@ -29,7 +29,7 @@
 	<ports>
 		<dataIn index="0" name="Data to classify">Data to classify</dataIn>
 		<dataOut index="0" name="The classified data">Classified data</dataOut>
-		<modelIn index="0" name="The model to use" type="naiveBayesModel">
+		<modelIn index="0" name="The model to use">
 		Naive Bayes Model</modelIn>
 	</ports>
 </knimeNode>

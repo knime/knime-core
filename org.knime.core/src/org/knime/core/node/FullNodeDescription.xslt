@@ -94,9 +94,6 @@
 	</xsl:if>					
 </xsl:template>
 	
-<xsl:template match="a[@href]">
-    <xsl:value-of select="text()" /><span style="font-style: italic;">(<xsl:value-of select="@href" />)</span>
-</xsl:template> 
     
 <xsl:template match="@*|node()" priority="-1" mode="copy">
         <xsl:copy><xsl:apply-templates select="@*|node()" mode="copy" /></xsl:copy>

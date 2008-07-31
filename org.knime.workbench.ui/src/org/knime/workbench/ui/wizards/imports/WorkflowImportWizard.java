@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -52,6 +52,7 @@ public class WorkflowImportWizard extends ExternalProjectImportWizard {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void addPages() {
         super.addPages();
         WizardProjectsImportPage importPage =
@@ -64,10 +65,10 @@ public class WorkflowImportWizard extends ExternalProjectImportWizard {
 
         WizardProjectRenameDuplicatesPage renamePage =
                 new WizardProjectRenameDuplicatesPage(importPage);
-        renamePage.setTitle("Double projects");
+        renamePage.setTitle("Duplicate project names");
         renamePage.setDescription("Shows projects which have the same name "
-                + "as a workspace project. Rename them here. Automatic " +
-                        "proposals are the appended numbers in brackets.");
+                + "as a workspace project. Rename them here. Automatic " 
+                + "proposals are the appended numbers in brackets.");
         addPage(renamePage);
     }
 

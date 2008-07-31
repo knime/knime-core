@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -148,4 +148,26 @@ public final class ShapeModelNominal implements ShapeModel, Iterable<DataCell> {
         return "Nominal ShapeModel";
     }
     
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || !(obj instanceof ShapeModelNominal)) {
+            return false;
+        }
+        ShapeModelNominal model = (ShapeModelNominal) obj;
+        return m_map.equals(model.m_map);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_map.hashCode();
+    }
 }   

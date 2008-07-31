@@ -1,10 +1,9 @@
 /* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
- * are protected by copyright l
-doaw. All rights reserved.
+ * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -74,7 +73,7 @@ final class ConfigFloatEntry extends AbstractConfigEntry {
      */
     @Override
     protected boolean hasIdenticalValue(final AbstractConfigEntry ace) {
-        return ((ConfigFloatEntry) ace).m_float == m_float;
+        return Float.compare(((ConfigFloatEntry) ace).m_float, m_float) == 0;
     }
 
 }

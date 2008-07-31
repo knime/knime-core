@@ -1,8 +1,9 @@
-/* ------------------------------------------------------------------
+/*
+ * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -17,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 26, 2007 (ohl): created
  */
@@ -41,7 +42,7 @@ import javax.swing.event.DocumentListener;
 import org.knime.core.node.NodeLogger;
 
 /**
- * 
+ *
  * @author ohl, University of Konstanz
  */
 class LimitRowsPanel extends JPanel {
@@ -55,7 +56,7 @@ class LimitRowsPanel extends JPanel {
     /**
      * Constructs the panels and loads it with the settings from the passed
      * object.
-     * 
+     *
      * @param settings containing the settings to show in the panel
      */
     LimitRowsPanel(final FileReaderNodeSettings settings) {
@@ -78,11 +79,13 @@ class LimitRowsPanel extends JPanel {
     private Container getPanel() {
 
         m_limitRows = new JCheckBox("Read only the first");
-        m_limitRows.setSelected(false);
         m_maxNumber = new JTextField();
         m_maxNumber.setColumns(6);
         m_maxNumber.setPreferredSize(new Dimension(125, 25));
         m_maxNumber.setMaximumSize(new Dimension(125, 25));
+
+        m_limitRows.setSelected(false);
+        m_maxNumber.setEnabled(false);
 
         // make sure we always have a valid value. Reject invalid characters.
         m_maxNumber.getDocument().addDocumentListener(new DocumentListener() {
@@ -187,7 +190,7 @@ class LimitRowsPanel extends JPanel {
 
     /**
      * Checks the current values in the panel.
-     * 
+     *
      * @return null, if settings are okay and can be applied. An error message
      *         if not.
      */
@@ -199,7 +202,7 @@ class LimitRowsPanel extends JPanel {
     /**
      * Transfers the current settings from the panel in the passed object.
      * Overwriting the corresponding values in the object.
-     * 
+     *
      * @param settings the settings object to fill in the currently set values
      * @return always false.
      */
@@ -226,7 +229,7 @@ class LimitRowsPanel extends JPanel {
 
     /**
      * Transfers the corresponding values from the passed object into the panel.
-     * 
+     *
      * @param settings object holding the values to display in the panel
      */
     private void loadSettings(final FileReaderNodeSettings settings) {

@@ -5,7 +5,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -212,13 +212,13 @@ public class SortedTable implements DataTable {
 
         exec.setMessage("Sorting");
         time = System.currentTimeMillis();
-        Arrays.sort(rows, new RowComparator());
+        Arrays.sort(rows, m_rowComparator);
         LOGGER.debug("Sort time: " + (System.currentTimeMillis() - time));
 
         exec.setMessage("Creating sorted table");
 
         final BufferedDataContainer dc =
-                exec.createDataContainer(dataTable.getDataTableSpec());
+                exec.createDataContainer(dataTable.getDataTableSpec(), true);
         time = System.currentTimeMillis();
         for (i = 0; i < rows.length; i++) {
             exec.checkCanceled();
@@ -246,7 +246,7 @@ public class SortedTable implements DataTable {
         // wrap all DataRows in Containers of size containerSize
         // sort each container before it is'stored'.
         BufferedDataContainer newContainer =
-            exec.createDataContainer(m_spec, false);
+            exec.createDataContainer(m_spec, true);
         int nrRowsinContainer = 0;
         // TODO: can be omitted due to new buffered table with known row size
         final ArrayList<DataRow> containerrowlist = new ArrayList<DataRow>();
@@ -258,7 +258,7 @@ public class SortedTable implements DataTable {
                     "Reading in data-chunk " + chunkCounter + "...");
             exec.checkCanceled();
             if (newContainer.isClosed()) {
-                newContainer = exec.createDataContainer(m_spec, false);
+                newContainer = exec.createDataContainer(m_spec, true);
                 nrRowsinContainer = 0;
             }
             final DataRow row = rowIt.next();
@@ -298,7 +298,7 @@ public class SortedTable implements DataTable {
 
         // merge all sorted containers together
         final BufferedDataContainer mergeContainer =
-                exec.createDataContainer(m_spec, false);
+                exec.createDataContainer(m_spec, true);
 
         // an array of RowIterators gives access to all (sorted) containers
         final RowIterator[] currentRowIterators =

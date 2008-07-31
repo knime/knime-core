@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,19 +24,25 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import org.eclipse.gef.EditPart;
 import org.eclipse.gef.commands.Command;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
+import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
-
 import org.knime.workbench.editor2.editparts.AbstractPortEditPart;
+import org.knime.workbench.editor2.editparts.ConnectableEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeInPortEditPart;
 import org.knime.workbench.editor2.editparts.NodeOutPortEditPart;
+import org.knime.workbench.editor2.editparts.SubWorkFlowOutPortEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowOutPortEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
+import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  * Command that reconnects a connection. This basically corresponds to remove
@@ -46,79 +52,81 @@ import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
  * @author Christoph Sieb, University of Konstanz
  */
 public class ReconnectConnectionCommand extends Command {
+    
+//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+//            ReconnectConnectionCommand.class); 
+    
     private DeleteConnectionCommand m_deleteCommand;
 
     private CreateConnectionCommand m_createCommand;
+    
+    private final WorkflowManager m_manager;
+    
+    private final NodeID m_oldTarget;
+    
+    private final NodeID m_newTarget;
+    
+    private boolean m_confirm;
+    
+    private boolean m_identical = false;
 
     /**
      * Creates a reconnection command encapsulating a delete and create command.
      * 
      * @param connection The edit part of the connection to delete
-     * @param manager The hosting workflow manager
      * @param host the source (NodeOutPortEditPart - normaly) of the connection
      * @param target the target edit part
      */
     public ReconnectConnectionCommand(
             final ConnectionContainerEditPart connection,
-            final WorkflowManager manager, final AbstractPortEditPart host,
-            final EditPart target) {
+            final AbstractPortEditPart host,
+            final AbstractPortEditPart target) {
+        
+        m_confirm = KNIMEUIPlugin.getDefault().getPreferenceStore()
+            .getBoolean(PreferenceConstants.P_CONFIRM_RECONNECT);
 
+        // get the source node
+        NodeContainerEditPart sourceNode = (NodeContainerEditPart)host
+            .getParent();
+
+        // get the responsible workflow manager
+        m_manager = ((WorkflowRootEditPart)sourceNode.getParent())
+            .getWorkflowManager();
+        
         // create the delete command
-        m_deleteCommand = new DeleteConnectionCommand(connection, manager);
+        m_deleteCommand = new DeleteConnectionCommand(connection, m_manager);
+        
+        ConnectionContainer oldConnection = (ConnectionContainer)connection
+            .getModel(); 
+        m_oldTarget = oldConnection.getDest();
+        
+        m_newTarget = target.getID();
+        
+        if (m_oldTarget.equals(m_newTarget)) {
+            if (oldConnection.getDestPort() == target.getIndex()) {
+                m_identical = true;
+            }
+        }
 
         // create the create command
         CreateConnectionCommand cmd = new CreateConnectionCommand();
 
-        NodeContainerEditPart nodePart = (NodeContainerEditPart)host
-                .getParent();
 
-        if (host instanceof NodeOutPortEditPart) {
-
-            // request started on out port?
-            cmd.setSourceNode(nodePart);
-            cmd.setSourcePortID(((NodeOutPortEditPart)host).getId());
+        if (host instanceof NodeOutPortEditPart 
+                    || host instanceof WorkflowInPortEditPart
+                    || host instanceof SubWorkFlowOutPortEditPart) {
+            cmd.setSourceNode(sourceNode);
+            cmd.setSourcePortID(host.getIndex());
             cmd.setStartedOnOutPort(true);
-            // LOGGER.debug("Started connection on out-port...");
-        } else if (host instanceof NodeInPortEditPart) {
-            // // request started on in port ?
-            // cmd.setTargetNode(nodePart);
-            // cmd.setTargetPortID(((NodeInPortEditPart) getHost()).getId());
-            // cmd.setStartedOnOutPort(false);
-            return;
-            // LOGGER.debug("Started connection on in-port...");
-        }
-
-        // we need the manager to execute the command
-
-        cmd.setManager(((WorkflowRootEditPart)nodePart.getParent())
-                .getWorkflowManager());
-
-        if (cmd == null) {
+            // we need the manager to execute the command
+            cmd.setManager(m_manager);
+        } else {
             return;
         }
-
-        if ((target instanceof NodeOutPortEditPart)) {
-            // cmd.setSourcePortID(((NodeOutPortEditPart) target).getId());
-            // cmd.setSourceNode((NodeContainerEditPart) target.getParent());
-            return;
-
-            // LOGGER.debug("Ending connection on out-port...");
-        } else if (target instanceof NodeInPortEditPart) {
-            cmd.setTargetPortID(((NodeInPortEditPart)target).getId());
-            cmd.setTargetNode((NodeContainerEditPart)target.getParent());
-
-            // LOGGER.debug("Ending connection on in-port...");
-        } else if (target instanceof NodeContainerEditPart) {
-
-            if (cmd.wasStartedOnOutPort()) {
-                cmd.setTargetPortID(-1);
-                cmd.setTargetNode((NodeContainerEditPart)target);
-            } else {
-                cmd.setSourcePortID(-1);
-                cmd.setSourceNode((NodeContainerEditPart)target);
-            }
-            // LOGGER.debug("Ending connection on NODE...");
-
+        if (target instanceof NodeInPortEditPart 
+                || target instanceof WorkflowOutPortEditPart) {
+            cmd.setTargetPortID(((AbstractPortEditPart)target).getIndex());
+            cmd.setTargetNode((ConnectableEditPart)target.getParent());
         } else {
             return;
 
@@ -132,7 +140,9 @@ public class ReconnectConnectionCommand extends Command {
      */
     @Override
     public boolean canExecute() {
-        return m_deleteCommand.canExecute() && m_createCommand.canExecute();
+        return !m_identical 
+            && m_deleteCommand.canExecute() 
+            && m_createCommand.canExecute();
 
     }
 
@@ -141,17 +151,48 @@ public class ReconnectConnectionCommand extends Command {
      */
     @Override
     public void execute() {
-        MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
-                SWT.ICON_QUESTION | SWT.YES | SWT.NO | SWT.CANCEL);
-        mb.setText("Confirm deletion...");
-        mb.setMessage("Do you really want to reconnect"
-                + " the selected connection ?");
-        if (mb.open() != SWT.YES) {
+        // confirm replacement?
+        // check if old target node was executed 
+        NodeContainer oldTarget = m_manager.getNodeContainer(m_oldTarget);
+        NodeContainer newTarget = m_manager.getNodeContainer(m_newTarget);
+        if (oldTarget == null || newTarget == null) {
+            // something is very wrong here
             return;
+        }
+        boolean oldExecuted = oldTarget.getState().equals(
+                NodeContainer.State.EXECUTED);
+        boolean newExecuted = newTarget.getState().equals(
+                NodeContainer.State.EXECUTED);
+        // or new target node is executed
+        if (m_confirm && (oldExecuted || newExecuted)) {
+            // create comprehensible and correct confirmation message
+            StringBuffer message = new StringBuffer(
+                    "Do you want to delete existing connection? \n");
+            if (oldExecuted || newExecuted) {
+                message.append("This will reset ");
+                if (oldExecuted) {
+                    message.append("current target node");
+                }
+                if (oldExecuted && newExecuted) {
+                    message.append(" and");
+                }
+                if (newExecuted) {
+                    message.append(" new target node");
+                }
+                message.append("!");
+            }
+            MessageDialogWithToggle msgD = CreateConnectionCommand
+                .openReconnectConfirmDialog(m_confirm,
+                        message.toString());
+            m_confirm = !msgD.getToggleState();
+            if (msgD.getReturnCode() != IDialogConstants.YES_ID) {
+                return;
+            }
         }
 
         // execute both commands
         m_deleteCommand.execute();
+        m_createCommand.setConfirm(false);
         m_createCommand.execute();
     }
 }

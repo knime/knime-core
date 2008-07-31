@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -80,8 +80,7 @@ public class PivotNodeDialogPane extends DefaultNodeSettingsPane {
         final SettingsModelString aggMakeModel = 
             createSettingsMakeAggregation();
         DialogComponentButtonGroup aggCheck = new DialogComponentButtonGroup(
-                aggMakeModel, null, true, 
-                MAKE_AGGREGATION[0], MAKE_AGGREGATION);
+                aggMakeModel, true, MAKE_AGGREGATION[0], MAKE_AGGREGATION);
         aggMakeModel.addChangeListener(new ChangeListener() {
             /**
              * {@inheritDoc}

@@ -1,4 +1,5 @@
-/* ------------------------------------------------------------------
+/*
+ * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -234,16 +235,9 @@ public class ROCNodeModel extends NodeModel {
                 }
             }
 
-            double[] copy = new double[k + 1];
-            System.arraycopy(xValues, 0, copy, 0,
-                             Math.min(xValues.length, k+1));
-            xValues = copy;
+            xValues = Arrays.copyOf(xValues, k + 1);
+            yValues = Arrays.copyOf(yValues, k + 1);
 
-            copy = new double[k + 1];
-            System.arraycopy(yValues, 0, copy, 0,
-                             Math.min(yValues.length, k+1));
-            yValues = copy;
-            
             while (--k >= 0) {
                 xValues[k] /= fp;
                 yValues[k] /= tp;
@@ -289,7 +283,7 @@ public class ROCNodeModel extends NodeModel {
         try {
             curves = Integer.parseInt(in.readLine());
         } catch (final NumberFormatException e) {
-            throw new IOException("Can't parse as int: " + e.getMessage());
+            throw new IOException("Can't parse as int: " + e.getMessage(), e);
         }
         m_curves.clear();
         for (int i = 0; i < curves; i++) {
@@ -299,7 +293,7 @@ public class ROCNodeModel extends NodeModel {
                 area = Double.parseDouble(in.readLine());
             } catch (final NumberFormatException e) {
                 throw new IOException("Can't parse double: " 
-                        + e.getMessage());
+                        + e.getMessage(), e);
             }
 
             String line = in.readLine();
@@ -311,7 +305,7 @@ public class ROCNodeModel extends NodeModel {
                     x[k] = Double.parseDouble(parts[k]);
                 } catch (final NumberFormatException e) {
                     throw new IOException("Can't parse double: " 
-                            + e.getMessage());
+                            + e.getMessage(), e);
                 }
             }
 
@@ -324,7 +318,7 @@ public class ROCNodeModel extends NodeModel {
                     y[k] = Double.parseDouble(parts[k]);
                 } catch (final NumberFormatException e) {
                     throw new IOException("Can't parse double: " 
-                            + e.getMessage());
+                            + e.getMessage(), e);
                 }
             }
 

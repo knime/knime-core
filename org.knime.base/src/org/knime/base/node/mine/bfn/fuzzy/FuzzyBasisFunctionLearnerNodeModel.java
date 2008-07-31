@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -23,18 +23,20 @@ package org.knime.base.node.mine.bfn.fuzzy;
 
 import org.knime.base.node.mine.bfn.BasisFunctionFactory;
 import org.knime.base.node.mine.bfn.BasisFunctionLearnerNodeModel;
+import org.knime.base.node.mine.bfn.BasisFunctionModelContent;
 import org.knime.base.node.mine.bfn.fuzzy.norm.Norm;
 import org.knime.base.node.mine.bfn.fuzzy.shrink.Shrink;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.FuzzyIntervalCell;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.PortObject;
+import org.knime.core.node.PortObjectSpec;
 
 /**
  * The fuzzy basis function model training
@@ -57,7 +59,7 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
 
     /** Inits a new model for fuzzy basisfunctions. */
     public FuzzyBasisFunctionLearnerNodeModel() {
-        super();
+        super(FuzzyBasisFunctionPortObject.TYPE);
     }
 
     /**
@@ -69,7 +71,7 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
      * @throws CanceledExecutionException if the training was canceled
      */
     @Override
-    public BufferedDataTable[] execute(final BufferedDataTable[] data,
+    public PortObject[] execute(final PortObject[] data,
             final ExecutionContext exec) throws CanceledExecutionException {
         return super.execute(data, exec);
     }
@@ -89,7 +91,7 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
      * {@inheritDoc}
      */
     @Override
-    public DataTableSpec[] configure(final DataTableSpec[] ins)
+    public PortObjectSpec[] configure(final PortObjectSpec[] ins)
             throws InvalidSettingsException {
         return super.configure(ins);
     }
@@ -173,5 +175,14 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
      */
     public final int getNorm() {
         return m_norm;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public FuzzyBasisFunctionPortObject createPortObject(
+            final BasisFunctionModelContent content) {
+        return new FuzzyBasisFunctionPortObject(content);
     }
 }

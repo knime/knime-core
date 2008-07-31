@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -36,7 +36,7 @@ package org.knime.core.node;
 public class CanceledExecutionException extends Exception {
     
     /**
-     * Creates a new exeception of this type with an error message.
+     * Creates a new exception of this type with an error message.
      */
     public CanceledExecutionException() {
         super();

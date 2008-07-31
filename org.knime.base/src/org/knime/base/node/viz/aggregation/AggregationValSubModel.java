@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -40,6 +40,7 @@ import java.util.Set;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -78,8 +79,8 @@ implements Serializable, AggregationModel<S, H> {
     private boolean m_isSelected = false;
     private boolean m_presentable = false;
     private S m_shape;
-    private final Set<DataCell> m_rowKeys;
-    private final Set<DataCell> m_hilitedRowKeys;
+    private final Set<RowKey> m_rowKeys;
+    private final Set<RowKey> m_hilitedRowKeys;
     private H m_hilitedShape;
 
     /**Constructor for class AttributeValColorModel.
@@ -98,8 +99,8 @@ implements Serializable, AggregationModel<S, H> {
         m_color = color;
         m_supportHiliting = supportHiliting;
         if (m_supportHiliting) {
-            m_rowKeys  = new HashSet<DataCell>();
-            m_hilitedRowKeys = new HashSet<DataCell>();
+            m_rowKeys  = new HashSet<RowKey>();
+            m_hilitedRowKeys = new HashSet<RowKey>();
         } else {
             m_rowKeys = null;
             m_hilitedRowKeys = null;
@@ -122,8 +123,8 @@ implements Serializable, AggregationModel<S, H> {
         m_rowCounter = rowCounter;
         m_supportHiliting = supportHiliting;
         if (m_supportHiliting) {
-            m_rowKeys  = new HashSet<DataCell>();
-            m_hilitedRowKeys = new HashSet<DataCell>();
+            m_rowKeys  = new HashSet<RowKey>();
+            m_hilitedRowKeys = new HashSet<RowKey>();
         } else {
             m_rowKeys = null;
             m_hilitedRowKeys = null;
@@ -149,7 +150,7 @@ implements Serializable, AggregationModel<S, H> {
      * @param aggrValCell the value cell of the aggregation column of this sub
      * element
      */
-    protected void addDataRow(final DataCell rowKey,
+    protected void addDataRow(final RowKey rowKey,
             final DataCell aggrValCell) {
         if (aggrValCell != null && !aggrValCell.isMissing()) {
             m_aggrSum += ((DoubleValue)aggrValCell).getDoubleValue();
@@ -189,6 +190,8 @@ implements Serializable, AggregationModel<S, H> {
     public double getAggregationValue(final AggregationMethod method) {
         if (AggregationMethod.COUNT.equals(method)) {
             return m_rowCounter;
+        } else if (AggregationMethod.VALUE_COUNT.equals(method)) {
+            return m_valueCounter;
         } else if (AggregationMethod.SUM.equals(method)) {
             return m_aggrSum;
         } else if (AggregationMethod.AVERAGE.equals(method)) {
@@ -328,7 +331,7 @@ implements Serializable, AggregationModel<S, H> {
     /**
      * @return the keys of the rows in this element.
      */
-    public Set<DataCell> getKeys() {
+    public Set<RowKey> getKeys() {
         return m_rowKeys;
     }
 
@@ -346,7 +349,7 @@ implements Serializable, AggregationModel<S, H> {
     /**
      * @return the keys of the hilited rows in this element
      */
-    public Set<DataCell> getHilitedKeys() {
+    public Set<RowKey> getHilitedKeys() {
         if (!m_supportHiliting) {
             throw new UnsupportedOperationException(
                     "Hilitign is not supported");
@@ -371,14 +374,14 @@ implements Serializable, AggregationModel<S, H> {
      * @param calculator the hilite shape calculator
      * @return <code>true</code> if at least one key has been added
      */
-    protected boolean setHilitedKeys(final Collection<DataCell> hilitedKeys,
+    protected boolean setHilitedKeys(final Collection<RowKey> hilitedKeys,
             final HiliteShapeCalculator<S, H> calculator) {
         if (!m_supportHiliting) {
             throw new UnsupportedOperationException(
                     "Hilitign is not supported");
         }
         boolean changed = false;
-        for (final DataCell key : hilitedKeys) {
+        for (final RowKey key : hilitedKeys) {
             if (m_rowKeys.contains(key)) {
                 if (m_hilitedRowKeys.add(key)) {
                     changed = true;
@@ -397,7 +400,7 @@ implements Serializable, AggregationModel<S, H> {
      * @return <code>true</code> if at least one key has been removed
      */
     protected boolean removeHilitedKeys(
-            final Collection<DataCell> unhilitedKeys,
+            final Collection<RowKey> unhilitedKeys,
             final HiliteShapeCalculator<S, H> calculator) {
         if (!m_supportHiliting) {
             throw new UnsupportedOperationException(

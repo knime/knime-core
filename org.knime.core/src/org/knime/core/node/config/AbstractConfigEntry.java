@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -42,13 +42,13 @@ abstract class AbstractConfigEntry implements Serializable, TreeNode {
     
     private AbstractConfigEntry m_parent = null;
 
-    private final String m_key;
+    private String m_key;
     
     /**
      * Creates a new Config entry by the given key and type.
      * @param type enum type within the <code>ConfigEntries</code>
      * @param key The key under which this value is added.
-     * @throws IllegalArgumentException If the type is null.
+     * @throws IllegalArgumentException if the type or key is null
      */
     AbstractConfigEntry(final ConfigEntries type, final String key) {
         if (type == null) {
@@ -60,13 +60,13 @@ abstract class AbstractConfigEntry implements Serializable, TreeNode {
     }
     
     /**
-     * Check key on null and if empty.
+     * Check key for null value.
      * @param key The key to check.
      * @return The original key.
      */
     private static final String checkKey(final String key) {
-        if (key == null || key.trim().length() == 0) {
-            throw new IllegalArgumentException("Key must not be empty: " + key);
+        if (key == null) {
+            throw new IllegalArgumentException("Key must not be null!");
         }
         return key;
     }
@@ -78,6 +78,14 @@ abstract class AbstractConfigEntry implements Serializable, TreeNode {
      */
     public final String getKey() {
         return m_key;
+    }
+    
+    /** Set a new key.
+     * @param key the key to set
+     * @throws IllegalArgumentException If argument is null. 
+     */
+    final void setKey(final String key) {
+        m_key = checkKey(key);
     }
     
     /**
@@ -168,7 +176,7 @@ abstract class AbstractConfigEntry implements Serializable, TreeNode {
      */
     @Override
     public final int hashCode() {
-        return super.hashCode();
+        return m_key.hashCode() ^ m_type.name().hashCode();
     }
     
     // tree node methods

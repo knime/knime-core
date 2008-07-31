@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Workbench Help
 Bundle-SymbolicName: org.knime.workbench.help;singleton:=true
-Bundle-Version: 1.3.5.1
+Bundle-Version: 2.0.0.0016392
 Bundle-ClassPath: workbench-help.jar
 Bundle-Activator: org.knime.workbench.help.KNIMEHelpPlugin
 Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany

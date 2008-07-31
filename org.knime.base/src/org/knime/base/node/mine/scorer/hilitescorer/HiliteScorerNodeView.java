@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -44,7 +44,7 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
-import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteListener;
@@ -56,7 +56,8 @@ import org.knime.core.node.property.hilite.KeyEvent;
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
+final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel> 
+        implements HiLiteListener {
     /*
      * Components displaying the scorer table, number of correct/wrong
      * classified patterns, and the error percentage number.
@@ -428,7 +429,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
 
     private void updateHilitedCells() {
         if (getNodeModel().getInHiLiteHandler(0) != null) {
-            Set<DataCell> hilitedKeys = getNodeModel().getInHiLiteHandler(0)
+            Set<RowKey> hilitedKeys = getNodeModel().getInHiLiteHandler(0)
                     .getHiLitKeys();
         
             Point[] completeHilitedCells = 
@@ -475,7 +476,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
     /**
      * {@inheritDoc}
      */
-    public void unHiLiteAll() {
+    public void unHiLiteAll(final KeyEvent event) {
         clearHiliteBackgroundColor();
     }
 

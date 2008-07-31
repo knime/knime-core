@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * -------------------------------------------------------------------
  */
 
 package org.knime.base.node.mine.cluster.hierarchical;
@@ -37,7 +37,7 @@ import org.knime.core.node.NodeSettingsWO;
 /**
  * Represents a Node in the hierarchy tree (Dendrogram) of a hierarchical
  * clustering.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class ClusterNode implements DendrogramNode {
@@ -66,7 +66,7 @@ public class ClusterNode implements DendrogramNode {
 
     /**
      * Constructs a new leaf node from a data row.
-     * 
+     *
      * @param row data row to create a node for
      * @param rowIdx the row index for later reconstruction in load/save
      *            internals.
@@ -77,10 +77,10 @@ public class ClusterNode implements DendrogramNode {
         m_isLeaf = true;
     }
 
-    
+
     /**
      * Returns the index of the row stored inside this leaf node.
-     * 
+     *
      * @return the index of the row if the node is a leaf node -1 otherwise.
      */
     public int getRowIndex() {
@@ -89,7 +89,7 @@ public class ClusterNode implements DendrogramNode {
 
     /**
      * Constructs a new parent node from two child nodes.
-     * 
+     *
      * @param node1 the first node to create a parent node for
      * @param node2 the second node to create a parent node for
      * @param dist the distance to the node.
@@ -105,7 +105,7 @@ public class ClusterNode implements DendrogramNode {
 
     /**
      * Returns all data row (leaf nodes) this sub tree.
-     * 
+     *
      * @return the array of data rows which are included in this sub tree.
      */
     public DataRow[] getAllDataRows() {
@@ -133,7 +133,7 @@ public class ClusterNode implements DendrogramNode {
      * Puts all data rows of a node in a vector if the node is a leaf. Otherwise
      * the method is invoked with the nodes child nodes. This is a recursive
      * tree traversing method.
-     * 
+     *
      * @param clusterNode the node to get the data rows from.
      * @param rowVector the vector to store the found data rows in.
      */
@@ -164,7 +164,7 @@ public class ClusterNode implements DendrogramNode {
 
     /**
      * Returns an Iterable over all leaf nodes contained in this node.
-     * 
+     *
      * @return an iterable over leaf nodes
      */
     public Iterable<ClusterNode> leafs() {
@@ -178,7 +178,7 @@ public class ClusterNode implements DendrogramNode {
     /**
      * Returns the number of leaf nodes contained in this node. Leaf nodes
      * return 1 by definition.
-     * 
+     *
      * @return the number of leaf nodes
      */
     public int getLeafCount() {
@@ -255,7 +255,7 @@ public class ClusterNode implements DendrogramNode {
         StringBuffer buffer = new StringBuffer();
         buffer.append("dist: " + m_dist);
         if (m_isLeaf) {
-            buffer.append("leaf: " + m_leafDataPoint.getKey().getId());
+            buffer.append("leaf: " + m_leafDataPoint.getKey().getString());
         } else {
             buffer.append("left: " + getFirstSubnode() + " right: "
                     + getSecondSubnode());
@@ -280,7 +280,7 @@ public class ClusterNode implements DendrogramNode {
     /**
      * Saves the tree structure into the config. Stores the distance, the rowy
      * key (if its a leaf) and the left and right child.
-     * 
+     *
      * @param settings the config to save to.
      */
     public void saveToXML(final NodeSettingsWO settings) {
@@ -304,7 +304,7 @@ public class ClusterNode implements DendrogramNode {
 
     /**
      * Loads a cluster node from the settings.
-     * 
+     *
      * @param settings the config to load from
      * @param orgTable the original table containing the rows in the same order!
      * @return a cluster node

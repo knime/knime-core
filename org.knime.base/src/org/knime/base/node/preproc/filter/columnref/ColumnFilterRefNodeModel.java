@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -82,8 +82,7 @@ public class ColumnFilterRefNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         ColumnRearranger cr =
-            createRearranger(inData[0].getDataTableSpec(),
-                    inData[1].getDataTableSpec());
+            createRearranger(inData[0].getSpec(), inData[1].getSpec());
         BufferedDataTable out =
             exec.createColumnRearrangeTable(inData[0], cr, exec);
         return new BufferedDataTable[]{out};

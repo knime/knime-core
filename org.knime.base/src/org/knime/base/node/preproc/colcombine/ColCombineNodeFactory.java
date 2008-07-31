@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -23,28 +23,27 @@ package org.knime.base.node.preproc.colcombine;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
  * <code>NodeFactory</code> for the "ColCombine" Node.
- * Takes the contents of a set of columns and combines them into one 
+ * Takes the contents of a set of columns and combines them into one
  * string column.
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class ColCombineNodeFactory extends NodeFactory {
+public class ColCombineNodeFactory extends NodeFactory<ColCombineNodeModel> {
 
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeModel()
+     * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public ColCombineNodeModel createNodeModel() {
         return new ColCombineNodeModel();
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#getNrNodeViews()
+     * {@inheritDoc}
      */
     @Override
     public int getNrNodeViews() {
@@ -52,17 +51,16 @@ public class ColCombineNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeView(int,
-     *      org.knime.core.node.NodeModel)
+     * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public NodeView<ColCombineNodeModel> createNodeView(final int viewIndex,
+            final ColCombineNodeModel nodeModel) {
         throw new IllegalStateException("No view available");
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#hasDialog()
+     * {@inheritDoc}
      */
     @Override
     public boolean hasDialog() {
@@ -70,7 +68,7 @@ public class ColCombineNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeDialogPane()
+     * {@inheritDoc}
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {

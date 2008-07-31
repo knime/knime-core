@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   ${date} (${user}): created
  */
@@ -28,41 +28,43 @@ import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.ZoomManager;
-import org.knime.core.node.workflow.ConnectionContainer;
-
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 
 /**
  * Command for creation of connection bendpoints. The bendpoints are stored in a
  * default implementation of an <code>ExtraInfo</code> object.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class NewBendpointCreateCommand extends Command {
-    private Point m_location;
+    private final Point m_location;
 
-    private int m_index;
+    private final int m_index;
 
     private ModellingConnectionExtraInfo m_extraInfo;
 
     private AbsoluteBendpoint m_bendpoint;
 
-    private ConnectionContainer m_connection;
+    private final ConnectionContainerEditPart m_connection;
 
-    private ZoomManager m_zoomManager;
+    private final ZoomManager m_zoomManager;
 
     /**
      * New NewBendpointCreateCommand.
-     * 
+     *
      * @param connection The connection model
      * @param index bendpoint index
      * @param location where ?
      */
-    public NewBendpointCreateCommand(final ConnectionContainer connection,
-            final int index, final Point location, final ZoomManager zoomManager) {
+    public NewBendpointCreateCommand(
+            final ConnectionContainerEditPart connection,
+            final int index, final Point location, 
+            final ZoomManager zoomManager) {
         m_connection = connection;
-        m_extraInfo = (ModellingConnectionExtraInfo)connection.getExtraInfo();
+        m_extraInfo = (ModellingConnectionExtraInfo)connection
+            .getUIInformation();
         if (m_extraInfo == null) {
             m_extraInfo = new ModellingConnectionExtraInfo();
         }
@@ -85,7 +87,8 @@ public class NewBendpointCreateCommand extends Command {
         m_extraInfo.addBendpoint(m_bendpoint.x, m_bendpoint.y, m_index);
 
         // we need this to fire some update event up
-        m_connection.setExtraInfo(m_extraInfo);
+        m_connection.setUIInformation(m_extraInfo);
+
     }
 
     /**
@@ -99,7 +102,7 @@ public class NewBendpointCreateCommand extends Command {
         m_extraInfo.addBendpoint(location.x, location.y, m_index);
 
         // we need this to fire some update event up
-        m_connection.setExtraInfo(m_extraInfo);
+        m_connection.setUIInformation(m_extraInfo);
     }
 
     /**
@@ -110,6 +113,6 @@ public class NewBendpointCreateCommand extends Command {
         m_extraInfo.removeBendpoint(m_index);
 
         // we need this to fire some update event up
-        m_connection.setExtraInfo(m_extraInfo);
+        m_connection.setUIInformation(m_extraInfo);
     }
 }

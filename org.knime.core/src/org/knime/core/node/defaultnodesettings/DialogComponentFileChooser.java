@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   29.10.2005 (mb): created
  *   2006-05-26 (tm): reviewed
@@ -62,7 +62,7 @@ import org.knime.core.util.SimpleFileFilter;
 /**
  * A standard component allowing to choose a location(directory) and/or file
  * name.
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
 public class DialogComponentFileChooser extends DialogComponent {
@@ -76,15 +76,19 @@ public class DialogComponentFileChooser extends DialogComponent {
     private final TitledBorder m_border;
 
     private final List<SimpleFileFilter> m_fileFilter;
-    
+
     /**
      * Constructor that creates a file chooser with an
      * {@link JFileChooser#OPEN_DIALOG} that filters files according to the
      * given extensions. Also non-existing paths are accepted.
-     * 
+     *
      * @param stringModel the model holding the value
      * @param historyID to identify the file history
-     * @param validExtensions only show files with those extensions
+     * @param validExtensions only show files with those extensions. An entry
+     * in this array may contain the <code>|</code> character between two
+     * file extensions that will be shown in one item of the file type
+     * combo box. This means that one item allows for more than one file type.
+     * Specify extension including the dot &quot;.&quot;.
      */
     public DialogComponentFileChooser(final SettingsModelString stringModel,
             final String historyID, final String... validExtensions) {
@@ -94,7 +98,7 @@ public class DialogComponentFileChooser extends DialogComponent {
     /**
      * Constructor that creates a file/directory chooser of the given type
      * without a file filter. Also non-existing paths are accepted.
-     * 
+     *
      * @param stringModel the model holding the value
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
      *            {@link JFileChooser#SAVE_DIALOG} or
@@ -113,13 +117,17 @@ public class DialogComponentFileChooser extends DialogComponent {
      * Constructor that creates a file chooser of the given type that filters
      * the files according to the given extensions. Also non-existing paths are
      * accepted.
-     * 
+     *
      * @param stringModel the model holding the value
      * @param historyID id for the file history
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
      *            {@link JFileChooser#SAVE_DIALOG} or
      *            {@link JFileChooser#CUSTOM_DIALOG}
-     * @param validExtensions only show files with those extensions
+     * @param validExtensions only show files with those extensions. An entry
+     * in this array may contain the <code>|</code> character between two
+     * file extensions that will be shown in one item of the file type
+     * combo box. This means that one item allows for more than one file type.
+     * Specify extension including the dot &quot;.&quot;.
      */
     public DialogComponentFileChooser(final SettingsModelString stringModel,
             final String historyID, final int dialogType,
@@ -131,15 +139,19 @@ public class DialogComponentFileChooser extends DialogComponent {
      * Constructor that creates a file or directory chooser of the given type
      * that filters the files according to the given extensions. Also
      * non-existing paths are accepted.
-     * 
+     *
      * @param stringModel the model holding the value
-     * @param historyID to identify the file histroy
+     * @param historyID to identify the file history
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
      *            {@link JFileChooser#SAVE_DIALOG} or
      *            {@link JFileChooser#CUSTOM_DIALOG}
      * @param directoryOnly <code>true</code> if only directories should be
      *            selectable, otherwise only files can be selected
-     * @param validExtensions only show files with those extensions
+     * @param validExtensions only show files with those extensions. An entry
+     * in this array may contain the <code>|</code> character between two
+     * file extensions that will be shown in one item of the file type
+     * combo box. This means that one item allows for more than one file type.
+     * Specify extension including the dot &quot;.&quot;.
      */
     public DialogComponentFileChooser(final SettingsModelString stringModel,
             final String historyID, final int dialogType,
@@ -155,7 +167,7 @@ public class DialogComponentFileChooser extends DialogComponent {
                 .getPreferredSize().height));
         m_fileComboBox.setRenderer(new ConvenientComboBoxRenderer());
         m_fileComboBox.setEditable(true);
-        
+
         for (String fileName : m_fileHistory.getHistory()) {
             m_fileComboBox.addItem(fileName);
         }
@@ -170,30 +182,32 @@ public class DialogComponentFileChooser extends DialogComponent {
         getComponentPanel().add(p);
 
         if (validExtensions != null) {
-            m_fileFilter = 
+            m_fileFilter =
                 new ArrayList<SimpleFileFilter>(validExtensions.length);
             for (String extension : validExtensions) {
-                m_fileFilter.add(new SimpleFileFilter(extension));
+                if (extension.indexOf('|') > 0) {
+                    m_fileFilter.add(new SimpleFileFilter(
+                            extension.split("\\|")));
+                } else {
+                    m_fileFilter.add(new SimpleFileFilter(extension));
+                }
             }
         } else {
             m_fileFilter = new ArrayList<SimpleFileFilter>(0);
         }
-        
+
         m_browseButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
                 // sets the path in the file text field.
-                String selectedFile = 
+                String selectedFile =
                     m_fileComboBox.getEditor().getItem().toString();
-                if (selectedFile.length() == 0) { 
-                    selectedFile = (String)m_fileComboBox.getItemAt(0);
-                }
                 JFileChooser chooser = new JFileChooser(selectedFile);
                 chooser.setDialogType(dialogType);
                 if (directoryOnly) {
                     chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 } else {
                     // if extensions are defined
-                    if (m_fileFilter != null 
+                    if (m_fileFilter != null
                             && m_fileFilter.size() > 0) {
                         // disable "All Files" selection
                         chooser.setAcceptAllFileFilterUsed(false);
@@ -218,7 +232,7 @@ public class DialogComponentFileChooser extends DialogComponent {
                         if (!directoryOnly && m_fileFilter != null) {
                             boolean extensionFound = false;
                             for (SimpleFileFilter filter : m_fileFilter) {
-                                final String[] extensions = 
+                                final String[] extensions =
                                     filter.getValidExtensions();
                                 for (String extension : extensions) {
                                     if (newFile.endsWith(extension)) {
@@ -233,16 +247,16 @@ public class DialogComponentFileChooser extends DialogComponent {
                             //otherwise add the extension of the selected
                             //FileFilter
                             if (!extensionFound) {
-                                final FileFilter fileFilter = 
+                                final FileFilter fileFilter =
                                     chooser.getFileFilter();
-                                if (fileFilter != null 
-                                        && fileFilter 
+                                if (fileFilter != null
+                                        && fileFilter
                                         instanceof SimpleFileFilter) {
-                                    final SimpleFileFilter filter = 
+                                    final SimpleFileFilter filter =
                                         (SimpleFileFilter)fileFilter;
-                                    final String[] extensions = 
+                                    final String[] extensions =
                                         filter.getValidExtensions();
-                                    if (extensions != null 
+                                    if (extensions != null
                                             && extensions.length > 0) {
                                         //append the first extension
                                         newFile = newFile + extensions[0];
@@ -322,12 +336,12 @@ public class DialogComponentFileChooser extends DialogComponent {
             updateModel(true); // don't color the combobox red.
         } catch (InvalidSettingsException ise) {
             // ignore it here.
-        } 
+        }
     }
-    
+
     /**
      * Transfers the value from the component into the settings model.
-     * 
+     *
      * @param noColoring if set true, the component will not be marked red, even
      *            if the entered value was erroneous.
      * @throws InvalidSettingsException if the entered filename is null or
@@ -360,7 +374,7 @@ public class DialogComponentFileChooser extends DialogComponent {
     /**
      * Seems the super.showError doesn't work with comboboxes. This is to
      * replace it with a working version.
-     * 
+     *
      * @param box the box to color red.
      */
     private void showError(final JComboBox box) {
@@ -390,7 +404,7 @@ public class DialogComponentFileChooser extends DialogComponent {
 
     /**
      * Sets the coloring of the specified component back to normal.
-     * 
+     *
      * @param box the component to clear the error status for.
      */
     protected void clearError(final JComboBox box) {
@@ -461,9 +475,9 @@ public class DialogComponentFileChooser extends DialogComponent {
      * Replaces the title displayed in the border that surrounds the editfield
      * and browse button with the specified new title. The default title of the
      * component is "Selected File:" or "Selected Directory:".
-     * 
+     *
      * @param newTitle the new title to display in the border.
-     * 
+     *
      * @throws NullPointerException if the new title is null.
      */
     public void setBorderTitle(final String newTitle) {

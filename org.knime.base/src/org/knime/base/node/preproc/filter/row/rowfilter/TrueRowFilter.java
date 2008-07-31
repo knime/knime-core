@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   04.07.2005 (ohl): created
  */
@@ -31,9 +31,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * Row filter that always matches all rows. Not really usefull - but used if the
- * user absolutly wants it.
- * 
+ * Row filter that always matches all rows. Not really useful.
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class TrueRowFilter extends RowFilter {

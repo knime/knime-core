@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -79,7 +79,7 @@ public class FileReaderNodeModel extends NodeModel {
      * default data file name for the configuration dialog. Settings in the
      * model resulting from this constructor must not necessarily be correct or
      * valid.
-     * 
+     *
      * @param filename valid URL to a data file or a XML configuration file. If
      *            the filename ends with ".xml" it's considered a xml file spec.
      */
@@ -140,7 +140,7 @@ public class FileReaderNodeModel extends NodeModel {
         }
 
         DataTableSpec tSpec = m_frSettings.createDataTableSpec();
-        
+
         FileTable fTable =
                 new FileTable(tSpec, m_frSettings, m_frSettings
                         .getSkippedColumns(), exec);
@@ -151,7 +151,7 @@ public class FileReaderNodeModel extends NodeModel {
         // the error message is printed during file reader execution (were it
         // belongs to) and not some time later when a node uses the row
         // iterator from the file table.
-        
+
         BufferedDataContainer c = exec.createDataContainer(
                 fTable.getDataTableSpec(), /*initDomain=*/true);
         int row = 0;
@@ -162,7 +162,7 @@ public class FileReaderNodeModel extends NodeModel {
                 LOGGER.info("Reading entry '" + it.getZipEntryName()
                         + "' from the specified ZIP archive.");
             }
-            
+
             while (it.hasNext()) {
                 row++;
                 DataRow next = it.next();
@@ -172,28 +172,36 @@ public class FileReaderNodeModel extends NodeModel {
                 exec.checkCanceled();
                 c.addRowToTable(next);
             }
-            
+
             if (it.zippedSourceHasMoreEntries()) {
                 // after reading til the end of the file this returns a valid
                 // result
                 setWarningMessage("Source is a ZIP archive with multiple "
                         + "entries. Only reading first entry!");
             }
-            
+
         } catch (DuplicateKeyException dke) {
-            setWarningMessage("Duplicate row IDs. Consider making IDs unique in"
-                    + " the advanced settings.");
-            throw dke;
+            String msg = dke.getMessage();
+            if (msg == null) {
+                msg = "Duplicate row IDs";
+            }
+            msg += ". Consider making IDs unique in the advanced settings.";
+            DuplicateKeyException newDKE = new DuplicateKeyException(msg);
+            newDKE.initCause(dke);
+            throw newDKE;
         } finally {
             c.close();
         }
-        
+
         // user settings allow for truncating the table
         if (it.iteratorEndedEarly()) {
             setWarningMessage("Data was truncated due to user settings.");
         }
         BufferedDataTable out = c.getTable();
-            
+
+        // closes all sources.
+        fTable.dispose();
+
         return new BufferedDataTable[]{out};
     }
 
@@ -259,7 +267,7 @@ public class FileReaderNodeModel extends NodeModel {
     /**
      * Reads in all user settings of the model. If they are incomplete,
      * inconsistent, or in any way invalid it will throw an exception.
-     * 
+     *
      * @param settings the object to read the user settings from. Must not be
      *            <code>null</code> and must be validated with the validate
      *            method below.
@@ -277,7 +285,7 @@ public class FileReaderNodeModel extends NodeModel {
 
     /**
      * Writes the current user settings into a configuration object.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -300,7 +308,7 @@ public class FileReaderNodeModel extends NodeModel {
      * Checks all user settings in the specified spec object. If they are
      * incomplete, inconsistent, or in any way invalid it will throw an
      * exception.
-     * 
+     *
      * @param settings the object to read the user settings from. Must not be
      *            <code>null</code>.
      * @throws InvalidSettingsException if the settings in the specified object
@@ -398,5 +406,5 @@ public class FileReaderNodeModel extends NodeModel {
         }
         return validLoc.toArray(new String[0]);
     }
-    
+
 }

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -30,6 +30,7 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
@@ -37,26 +38,33 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import javax.swing.AbstractButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JViewport;
+import javax.swing.KeyStroke;
+import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputAdapter;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTable;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.tableview.TableContentModel.TableContentFilter;
+import org.knime.core.node.util.ConvenienceMethods;
 
 
 /** 
@@ -90,6 +98,15 @@ public class TableView extends JScrollPane {
     
     /** Whether or not column header resizing is allowed. Defaults to false. */
     private boolean m_isColumnHeaderResizingAllowed;
+    
+    /** Next row to start search from (defaults to 0). */
+    private int m_searchRow;
+    
+    /** Last search string, needed for continued search. */
+    private String m_searchString;
+    
+    /** Whether continued search only search row id column or entire data. */
+    private boolean m_searchIDOnly;
     
     /** 
      * Creates new empty <code>TableView</code>. Content and handlers are set
@@ -245,7 +262,7 @@ public class TableView extends JScrollPane {
     /** Delegates to super implementation but sets an appropriate preferred
      * size before returning. If the table has no columns (but more than 0 
      * rows), the corner was not shown (because of 0,0 preferred dimension).
-     * @see javax.swing.JScrollPane#getColumnHeader()
+     * {@inheritDoc}
      */
     @Override
     public JViewport getColumnHeader() {
@@ -371,9 +388,13 @@ public class TableView extends JScrollPane {
      * @param showOnlyHilite <code>true</code> Filter and display only
      *        rows whose hilite status is set.
      * @see TableContentModel#showHiLitedOnly(boolean)
+     * @see TableContentModel#getTableContentFilter()
+     * @deprecated Implementors should refer to 
+     * <code>getContentModel().setTableContentFilter(TableContentFilter)</code>
      */
+    @Deprecated
     public final void showHiLitedOnly(final boolean showOnlyHilite) {
-        getContentTable().showHiLitedOnly(showOnlyHilite);
+        getContentModel().showHiLitedOnly(showOnlyHilite);
     }
 
     /**
@@ -382,9 +403,13 @@ public class TableView extends JScrollPane {
      * @return <code>true</code>: only hilited rows are shown, 
      *         <code>false</code>: all rows are shown.
      * @see TableContentModel#showsHiLitedOnly() 
+     * @see TableContentModel#getTableContentFilter() 
+     * @deprecated Implementors should refer to 
+     * <code>getContentModel().getTableContentFilter()</code>
      */
+    @Deprecated
     public boolean showsHiLitedOnly() {
-        return getContentTable().showsHiLitedOnly();
+        return getContentModel().showsHiLitedOnly();
     }
     
     /**
@@ -582,53 +607,111 @@ public class TableView extends JScrollPane {
             }
         }
     }
-
+    
     /**
-     * Tries to find a row key that matches on the given pattern starting
-     * at position <code>startRow</code>. If a matching row is found, the view
-     * is scrolled to that position.
+     * Find cells (or row IDs) that match the search string. If a matching 
+     * element is found, the view is scrolled to that position. Successive calls
+     * of this method with the same arguments will continue the search.
      * 
-     * @param pattern pattern to look for
-     * @param startRow row, where to start the search
+     * @param search The search string.
+     * @param idOnly If only the ID column should be searched.
+     * @throws NullPointerException If <code>search</code> argument is null.
      */
-    protected void findRow(final String pattern, final int startRow) {
-        final int start = Math.min(0, startRow);
-        final TableRowHeaderView view = getHeaderTable();
-        for (int i = start; i < view.getRowCount(); i++) {
-            DataCell key = (DataCell)view.getValueAt(i, 0);
-            if (key.toString().matches(pattern)) {
-                goToRow(startRow + i);
+    protected void find(final String search, final boolean idOnly) {
+        /* assert idOnly = true;
+         * Searching the content is currently disabled for different reasons:
+         * - For continuing at last hit position, we need to store the last
+         *   hit column (not only the row number)
+         * - Need to define a "match" (the implementation below checks whether
+         *   the string, which is rendered, contains the search string
+         */
+        // new search string, reset search position and start on top
+        if (!search.equals(m_searchString) || idOnly != m_searchIDOnly) {
+            m_searchRow = 0;
+        }
+        setLastSearchString(search);
+        m_searchIDOnly = idOnly;
+        TableContentView cView = getContentTable();
+        if (cView == null) {
+            return;
+        }
+        int rowCount = cView.getRowCount();
+        int lastSearchPosition = m_searchRow;
+        for (int i = 0; i < rowCount; i++) {
+            int pos = (m_searchRow + i) % rowCount;
+            int col = 0;
+            if (pos < lastSearchPosition) {
+                JOptionPane.showMessageDialog(this, 
+                        "Reached end of table, starting at top");
+                lastSearchPosition = -1;
+            }
+            boolean matches = cView.getContentModel().getRowKey(pos).
+                toString().contains(search);
+            if (!m_searchIDOnly) {
+                for (int c = 0; c < cView.getColumnCount(); c++) {
+                    TableCellRenderer rend = cView.getCellRenderer(pos, c);
+                    Component comp = rend.getTableCellRendererComponent(cView, 
+                            cView.getValueAt(pos, c), false, false, pos, c);
+                    if (comp instanceof JLabel 
+                            && ((JLabel)comp).getText().contains(search)) {
+                        col = c;
+                        matches = true;
+                        break;
+                    }
+                }
+            }
+            if (matches) {
+                m_searchRow = pos + 1;
+                gotoCell(pos, col);
                 return;
             }
         }
-        int r = JOptionPane.showConfirmDialog(this, 
-                "<html>No occurences!<br><br>Continue from top?</html>", 
-                "Reached end", JOptionPane.YES_NO_OPTION);
-        if (r == JOptionPane.YES_OPTION) {
-            findRow(pattern, 0);
+        JOptionPane.showMessageDialog(this, "Search string not found");
+        m_searchRow = 0;
+    }
+
+    /** Sets a new search string and sends event if it differs from the
+     * previous search string. (Event is important for Find Next button's
+     * enable status.
+     * @param searchString The new search string.
+     */
+    private void setLastSearchString(final String searchString) {
+        if (!ConvenienceMethods.areEqual(m_searchString, searchString)) {
+            String old = m_searchString;
+            m_searchString = searchString;
+            firePropertyChange("search_string", old, searchString);
         }
     }
 
     /**
-     * Scrolls to row number <code>rowNumber</code>. This method is invoked
-     * from the navigation menu. If there is no such line number it will 
+     * Scrolls to the given coordinate cell This method is invoked
+     * from the navigation menu. If there is no such coordinate it will 
      * display an error message.
      * 
-     * @param rowNumber the row to scroll to 
+     * @param row the row to scroll to 
+     * @param col the col to scroll to
      */
-    public void goToRow(final int rowNumber) {
+    public void gotoCell(final int row, final int col) {
         TableContentView cView = getContentTable();
         try {
-            cView.getValueAt(rowNumber, 0);
+            cView.getValueAt(row, col);
         } catch (IndexOutOfBoundsException ioe) {
             if (cView.getColumnCount() != 0) {
-                JOptionPane.showMessageDialog(cView, "No such Row: " 
-                        + (rowNumber + 1), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "No such row/col: (" 
+                        + (row + 1) + ", " + (col + 1) + ")", 
+                        "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
         }
-        Rectangle rec = cView.getCellRect(rowNumber, 0, false);
-        cView.getSelectionModel().setSelectionInterval(rowNumber, rowNumber);
+        Rectangle rec = cView.getCellRect(row, Math.max(col, 0), false);
+        cView.getSelectionModel().setSelectionInterval(row, row);
+        if (col >= 0) {
+            ListSelectionModel colSelModel = 
+                cView.getColumnModel().getSelectionModel();
+            if (colSelModel != null) {
+                colSelModel.setSelectionInterval(col, col);
+            }
+        }
         cView.scrollRectToVisible(rec);
     }
 
@@ -659,19 +742,20 @@ public class TableView extends JScrollPane {
     public JMenu createNavigationMenu() {
         final JMenu result = new JMenu("Navigation");
         result.setMnemonic('N');
-        JMenuItem item = new JMenuItem("Go to Row...");
-        item.setMnemonic('G');
-        item.addActionListener(new ActionListener() {
+        JMenuItem goToRowItem = new JMenuItem("Go to Row...");
+        goToRowItem.setAccelerator(KeyStroke.getKeyStroke(
+                KeyEvent.VK_L, KeyEvent.CTRL_DOWN_MASK));
+        goToRowItem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 String rowString = JOptionPane.showInputDialog(
                         TableView.this, "Enter row number:", "Go to Row", 
                         JOptionPane.QUESTION_MESSAGE);
-                if (rowString == null) { // cancelled
+                if (rowString == null) { // canceled
                      return;
                 }
                 try { 
                     int row = Integer.parseInt(rowString);
-                    goToRow(row - 1);
+                    gotoCell(row - 1, 0);
                 } catch (NumberFormatException nfe) {
                     JOptionPane.showMessageDialog(TableView.this, 
                             "Can't parse " + rowString, "Error", 
@@ -679,26 +763,63 @@ public class TableView extends JScrollPane {
                 }
             }
         });
-        item.addPropertyChangeListener(new EnableListener(this, true, false));
-        item.setEnabled(hasData());
-        result.add(item);
-//        item = new JMenuItem("Search Row ID...");
-//        item.setMnemonic('S');
-//        item.addActionListener(new ActionListener() {
-//            public void actionPerformed(final ActionEvent e) {
-//                String in = JOptionPane.showInputDialog(
-//                        m_tableView, "Search Key ( \"*\" = any string, " 
-//                        + "\"?\" = any character): ", "Search for Row ID", 
-//                        JOptionPane.QUESTION_MESSAGE);
-//                if (in == null) { // cancelled
-//                     return;
-//                }
-//                String pattern = in.replaceAll("\\*", ".*");
-//                pattern = pattern.replaceAll("\\?", ".");
-//                findRow(pattern, 0);
-//            }
-//        });
-//        result.add(item);
+        goToRowItem.addPropertyChangeListener(
+                new EnableListener(this, true, false));
+        goToRowItem.setEnabled(hasData());
+        result.add(goToRowItem);
+        JMenuItem findItem = new JMenuItem("Find Row ID...");
+        findItem.setAccelerator(KeyStroke.getKeyStroke(
+                KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK));
+        findItem.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+//                JCheckBox rowKeyBox = 
+//                    new JCheckBox("ID only", m_searchIDOnly);
+//                JPanel panel = new JPanel(new BorderLayout());
+//                panel.add(new JLabel("Find String: "), BorderLayout.WEST);
+//                panel.add(rowKeyBox, BorderLayout.EAST);
+                String panel = "Find Row ID:";
+                String in = JOptionPane.showInputDialog(
+                        TableView.this, panel, "Search",
+                        JOptionPane.QUESTION_MESSAGE);
+                if (in == null) { // canceled
+                     return;
+                }
+                find(in, true/*rowKeyBox.isSelected()*/);
+            }
+        });
+        findItem.addPropertyChangeListener(
+                new EnableListener(this, true, false));
+        findItem.setEnabled(hasData());
+        result.add(findItem);
+        final JMenuItem findNextItem = new JMenuItem("Find Next");
+        findNextItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F3, 0));
+        findNextItem.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                if (m_searchString == null) {
+                    return;
+                }
+                find(m_searchString, m_searchIDOnly);
+            }
+        });
+        findNextItem.addPropertyChangeListener(
+                new EnableListener(this, true, false) {
+            /** {@inheritDoc} */
+            @Override
+            protected boolean checkEnabled(final JComponent source) {
+                return super.checkEnabled(source) && m_searchString != null;
+            }
+        });
+        addPropertyChangeListener("search_string", 
+                new PropertyChangeListener() {
+            /** {@inheritDoc} */
+            public void propertyChange(final PropertyChangeEvent evt) {
+                // firePropertyChange with object args is not visible.
+                // the item does not care ... (see above)
+                findNextItem.firePropertyChange(evt.getPropertyName(), 0, 1);
+            }
+        });
+        findNextItem.firePropertyChange("update", true, false);
+        result.add(findNextItem);
         return result;
     } // createNavigationMenu()
     
@@ -756,25 +877,72 @@ public class TableView extends JScrollPane {
         chitem.setEnabled(hasData() && hasHiLiteHandler());
         result.add(chitem);
         
-        JMenuItem shoitem = new JCheckBoxMenuItem("Show Hilited Only");
-        shoitem.setMnemonic('O');
-        shoitem.addPropertyChangeListener(
+        JMenu filterSubMenu = new JMenu("Filter");
+        
+        JRadioButtonMenuItem showAllItem = 
+            new JRadioButtonMenuItem("Show All");
+        showAllItem.addPropertyChangeListener(
                 "ancestor", new PropertyChangeListener() {
             public void propertyChange(final PropertyChangeEvent evt) {
-                JCheckBoxMenuItem source = (JCheckBoxMenuItem)evt.getSource();
-                source.setSelected(showsHiLitedOnly());
+                boolean selected = getContentModel().
+                    getTableContentFilter().equals(TableContentFilter.All);
+                ((AbstractButton)evt.getSource()).setSelected(selected);
             }
         });
-        shoitem.addActionListener(new ActionListener() {
+        showAllItem.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                boolean i = ((JCheckBoxMenuItem)e.getSource()).isSelected();
-                showHiLitedOnly(i);
+                getContentModel().setTableContentFilter(TableContentFilter.All);
             }
         });
-        shoitem.addPropertyChangeListener(new EnableListener(this, true, true));
-        shoitem.setEnabled(hasData() && hasHiLiteHandler());
-        result.add(shoitem);
+        showAllItem.addPropertyChangeListener(
+                new EnableListener(this, true, false));
+        showAllItem.setEnabled(hasData());
+        filterSubMenu.add(showAllItem);
         
+        JRadioButtonMenuItem showHiliteItem = 
+            new JRadioButtonMenuItem("Show Hilited Only");
+        showHiliteItem.addPropertyChangeListener(
+                "ancestor", new PropertyChangeListener() {
+            public void propertyChange(final PropertyChangeEvent evt) {
+                boolean selected = getContentModel().
+                getTableContentFilter().equals(TableContentFilter.HiliteOnly);
+                ((AbstractButton)evt.getSource()).setSelected(selected);
+            }
+        });
+        showHiliteItem.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                getContentModel().setTableContentFilter(
+                        TableContentFilter.HiliteOnly);
+            }
+        });
+        showHiliteItem.addPropertyChangeListener(
+                new EnableListener(this, true, true));
+        showHiliteItem.setEnabled(hasData() && hasHiLiteHandler());
+        filterSubMenu.add(showHiliteItem);
+        
+        JRadioButtonMenuItem showUnHiliteItem = 
+            new JRadioButtonMenuItem("Show UnHilited Only");
+        showUnHiliteItem.addPropertyChangeListener(
+                "ancestor", new PropertyChangeListener() {
+            public void propertyChange(final PropertyChangeEvent evt) {
+                boolean selected = getContentModel().
+                    getTableContentFilter().equals(
+                            TableContentFilter.UnHiliteOnly);
+                ((AbstractButton)evt.getSource()).setSelected(selected);
+            }
+        });
+        showUnHiliteItem.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                getContentModel().setTableContentFilter(
+                        TableContentFilter.UnHiliteOnly);
+            }
+        });
+        showUnHiliteItem.addPropertyChangeListener(
+                new EnableListener(this, true, true));
+        showUnHiliteItem.setEnabled(hasData() && hasHiLiteHandler());
+        filterSubMenu.add(showUnHiliteItem);
+
+        result.add(filterSubMenu);
         return result;
     }
     
@@ -795,7 +963,7 @@ public class TableView extends JScrollPane {
                     String in = JOptionPane.showInputDialog(
                             TableView.this, "Enter new row height:", 
                             "" + curRowHeight);
-                    if (in == null) { // cancelled
+                    if (in == null) { // canceled
                          return;
                     }
                     try {
@@ -829,7 +997,7 @@ public class TableView extends JScrollPane {
                     String in = JOptionPane.showInputDialog(
                             TableView.this, "Enter new column width:", 
                             "" + curWidth);
-                    if (in == null) { // cancelled
+                    if (in == null) { // canceled
                         return;
                     }
                     try {
@@ -881,7 +1049,7 @@ public class TableView extends JScrollPane {
         private final boolean m_watchData;
         private final boolean m_watchHilite;
         private final TableView m_view;
-        
+                
         /**
          * Constructor. Will respect the hasData(), hasHiliteHandler() flag
          * according to the arguments.
@@ -897,14 +1065,21 @@ public class TableView extends JScrollPane {
             m_watchHilite = watchHilite;
         }
         
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
         public void propertyChange(final PropertyChangeEvent evt) {
             JComponent source = (JComponent)evt.getSource();
+            boolean isEnabled = checkEnabled(source);
+            source.setEnabled(isEnabled);
+        }
+        
+        /** Determines whether component is to be enabled.
+         * @param source Event source (for reference)
+         * @return if to enable (true) or disable (false);
+         */
+        protected boolean checkEnabled(final JComponent source) {
             boolean data = !m_watchData || m_view.hasData();
             boolean hilite = !m_watchHilite || m_view.hasHiLiteHandler();
-            source.setEnabled(data && hilite);
+            return data && hilite;
         }
     }
     

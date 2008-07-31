@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,7 +25,6 @@
 package org.knime.base.node.preproc.sorter;
 
 import java.awt.Dimension;
-import java.awt.GridLayout;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
@@ -33,7 +32,6 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.border.Border;
@@ -99,26 +97,28 @@ public class SortItem extends JPanel {
         m_id = id;
         m_combovalues = values;
 
-        GridLayout gl = new GridLayout(2, 2);
-        super.setLayout(gl);
+       
+        super.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         m_combo = new JComboBox(m_combovalues);
         m_combo.setRenderer(new DataColumnSpecListCellRenderer());
         m_combo.setLightWeightPopupEnabled(false);
         m_combo.setSelectedItem(selected);
-        m_combo.setMaximumSize(new Dimension(150, 25));
-        m_combo.setPreferredSize(new Dimension(150, 25));
+        m_combo.setMaximumSize(new Dimension(800, 30));
         
         JPanel comboPanel = new JPanel();
         comboPanel.setLayout(new BoxLayout(comboPanel, BoxLayout.Y_AXIS));
-        comboPanel.add(Box.createGlue());
         comboPanel.add(m_combo);
-        comboPanel.add(Box.createGlue());
+        comboPanel.add(Box.createVerticalGlue());
         
         
-        
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
         ButtonGroup group = new ButtonGroup();
         group.add(m_ascRB);
         group.add(m_descRB);
+        buttonPanel.add(m_ascRB);
+        buttonPanel.add(m_descRB);
+        buttonPanel.add(Box.createVerticalGlue());
         String bordertext = (id == 0) ? "Sort by:" : "Next by:";
         Border outsideborder = BorderFactory.createTitledBorder(bordertext);
         Border insideborder = BorderFactory.createEmptyBorder(10, 10, 10, 10);
@@ -132,9 +132,8 @@ public class SortItem extends JPanel {
         }
        
         super.add(comboPanel);
-        super.add(m_ascRB);
-        super.add(new JLabel());
-        super.add(m_descRB);
+        super.add(Box.createHorizontalStrut(20));
+        super.add(buttonPanel);
     }
 
     /**

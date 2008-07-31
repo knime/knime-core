@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Visualizer" icon="./shapemanager.png">
 	<name>Shape Manager</name>
 	
@@ -30,7 +30,7 @@
 		Select the nominal column whose possible values should be associated 
 		with shapes.  
     </option>
-    <option name="Shape Mapping:Shape">
+    <option name="Shape Mapping: ">
     	The possible values of the selected nominal column are listed in the 
     	left column. In order to associate a shape with that value click on the 
     	shape displayed in the right column and select the desired shape.
@@ -39,7 +39,7 @@
 	
 	<ports>
 		<dataIn index="0" name="Table">Table to which shape settings should be applied to</dataIn>
-		<dataOut index="0" name="Table with Shapes">Same table with shape information applied to one column</dataOut>
-		<modelOut index="0" name="Shape Settings">Shape settings applied to the input table</modelOut>
+		<dataOut index="0" name="Table with shapes">Same table with shape information applied to one column</dataOut>
+		<modelOut index="0" name="Shape model">Shapes applied to the input table</modelOut>
 	</ports>	
 </knimeNode>

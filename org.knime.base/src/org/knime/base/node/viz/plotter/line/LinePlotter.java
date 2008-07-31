@@ -54,6 +54,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.util.ColumnFilterPanel;
 
@@ -344,8 +345,9 @@ public class LinePlotter extends ScatterPlotter {
                     int y = -1;
                     DotInfo dot;
                     int x = (int)getXAxis().getCoordinate()
-                    .calculateMappedValue(array.getRow(row).getKey()
-                            .getId(), width, true);
+                    .calculateMappedValue(new StringCell(
+                            array.getRow(row).getKey()
+                            .getString()), width, true);
                     if (!cell.isMissing()) {
                         y = (int)getYAxis().getCoordinate()
                         .calculateMappedValue(cell, height, true);
@@ -365,22 +367,23 @@ public class LinePlotter extends ScatterPlotter {
                         p1 = new Point(x, y);
                         dot = new DotInfo(x, (int)getScreenYCoordinate(y), 
                                 array.getRow(row).getKey(),
-                                delegateIsHiLit(array.getRow(row).getKey()
-                                        .getId()), color, 1, row);
-                        dot.setXDomainValue(array.getRow(row).getKey().getId());
+                                delegateIsHiLit(array.getRow(row).getKey()), 
+                                color, 1, row);
+                        dot.setXDomainValue(new StringCell(
+                                array.getRow(row).getKey().getString()));
                         dot.setYDomainValue(cell);
                         dotList.add(dot);
                     } else if (!m_interpolate) {
 //                        LOGGER.debug("missing value");
                         dot = new DotInfo(x, -1, array.getRow(row).getKey(),
-                                delegateIsHiLit(array.getRow(row).getKey()
-                                        .getId()), color, 1, row);
+                                delegateIsHiLit(array.getRow(row).getKey()), 
+                                color, 1, row);
                         dotList.add(dot);
                     } else {
                         // interpolate
                         dot = new DotInfo(x, -1, array.getRow(row).getKey(),
-                                delegateIsHiLit(array.getRow(row).getKey()
-                                        .getId()), color, 1, row);
+                                delegateIsHiLit(array.getRow(row).getKey()), 
+                                color, 1, row);
                         missingValues.add(dot);
                     }
                 }
@@ -418,7 +421,7 @@ public class LinePlotter extends ScatterPlotter {
         double minY = Double.POSITIVE_INFINITY;
         double maxY = Double.NEGATIVE_INFINITY;
         for (DataRow row : array) {
-            rowKeys.add(row.getKey().getId());
+            rowKeys.add(new StringCell(row.getKey().getString()));
             for (String column : m_columnNames) {
                 int colIdx = array.getDataTableSpec().findColumnIndex(column);
                 if (colIdx == -1) {
@@ -488,4 +491,7 @@ public class LinePlotter extends ScatterPlotter {
         }
         return interpolated;
     }
+    
+    
+    
 }

@@ -1,9 +1,9 @@
-/*  
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   06.12.2005 (dill): created
  */
@@ -51,20 +51,20 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodedialog.DialogComponentColumnSelection;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 
 
 /**
  * The dialog for the BitvectorGeneratorNode. Simply provides a threshold above
  * all incoming values are presented with a bit set to one, items below that
  * threshold are presented as a bit set to zero.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
     private JSpinner m_threshold;
 
-    private DialogComponentColumnSelection m_stringColumn;
+    private DialogComponentColumnNameSelection m_stringColumn;
 
     private JComboBox m_stringType;
 
@@ -77,7 +77,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
     private JRadioButton m_stringRadio;
 
     private boolean m_hasStringCol = false;
-    
+
     private JCheckBox m_replaceBox;
 
 
@@ -88,6 +88,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
      * adjustable threshold. All values above or equal to that threshold are
      * represented by a bit set to 1.
      */
+    @SuppressWarnings("unchecked")
     public BitVectorGeneratorNodeDialog() {
         super();
 
@@ -110,12 +111,11 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         m_meanPercentage = new JSpinner(new SpinnerNumberModel(100, 0,
                 Integer.MAX_VALUE, 10));
         m_meanPercentage.setEnabled(false);
-
-        m_stringColumn = new DialogComponentColumnSelection(
-                BitVectorGeneratorNodeModel.CFG_STRING_COLUMN,
+        m_stringColumn = new DialogComponentColumnNameSelection(
+                BitVectorGeneratorNodeModel.createStringColModel(),
                 "String column to be parsed", 0, false,
                 StringValue.class);
-        m_stringColumn.setEnabled(false);
+        m_stringColumn.getModel().setEnabled(false);
         m_threshold = new JSpinner(new SpinnerNumberModel(1.0, 0.0,
                 Integer.MAX_VALUE, 0.1));
 
@@ -132,7 +132,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
             public void stateChanged(final ChangeEvent arg0) {
                 if (m_numericRadio.isSelected()) {
                     // disable
-                    m_stringColumn.setEnabled(false);
+                    m_stringColumn.getModel().setEnabled(false);
                     m_stringType.setEnabled(false);
                     // enable
                     m_threshold.setEnabled(!m_useMean.isSelected());
@@ -157,7 +157,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
                     m_useMean.setEnabled(false);
                     m_meanPercentage.setEnabled(false);
                     // enable
-                    m_stringColumn.setEnabled(true);
+                    m_stringColumn.getModel().setEnabled(true);
                     m_stringType.setEnabled(true);
                 }
             }
@@ -174,10 +174,10 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         panel.add(numericPanel);
         panel.add(stringPanel);
         panel.add(createReplacePanel());
-        
+
         addTab("Default Settings", panel);
     }
-    
+
     private JPanel createReplacePanel() {
         JPanel panel = new JPanel();
         m_replaceBox = new JCheckBox("Replace column(s)", false);
@@ -238,7 +238,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         Box stringBox = Box.createVerticalBox();
 
         Box colBox = Box.createHorizontalBox();
-        colBox.add(m_stringColumn);
+        colBox.add(m_stringColumn.getComponentPanel());
         Box methodBox = Box.createHorizontalBox();
         JLabel methodLabel = new JLabel("Kind of string representation: ");
         m_stringType.setMinimumSize(new Dimension(100, COMP_HEIGHT));
@@ -292,7 +292,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         String typeString = settings.getString(
                 BitVectorGeneratorNodeModel.CFG_STRING_TYPE,
                 BitVectorGeneratorNodeModel.STRING_TYPES.BIT.name());
-        BitVectorGeneratorNodeModel.STRING_TYPES type 
+        BitVectorGeneratorNodeModel.STRING_TYPES type
             = BitVectorGeneratorNodeModel.STRING_TYPES.valueOf(typeString);
         m_stringType.setSelectedItem(type);
         m_useMean.setSelected(settings.getBoolean(
@@ -303,11 +303,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
                 BitVectorGeneratorNodeModel.CFG_MEAN_THRESHOLD, 100));
         m_replaceBox.setSelected(settings.getBoolean(
                 BitVectorGeneratorNodeModel.CFG_REPLACE, false));
-        try {
-            m_stringColumn.loadSettingsFrom(settings, specs);
-        } catch (InvalidSettingsException e) {
-            // do nothing here since it is the dialog
-        }
+        m_stringColumn.loadSettingsFrom(settings, specs);
     }
 
     /**
@@ -327,7 +323,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
                 (Double)m_threshold.getValue());
         settings.addInt(BitVectorGeneratorNodeModel.CFG_MEAN_THRESHOLD,
                 (Integer)m_meanPercentage.getValue());
-        settings.addBoolean(BitVectorGeneratorNodeModel.CFG_REPLACE, 
+        settings.addBoolean(BitVectorGeneratorNodeModel.CFG_REPLACE,
                 m_replaceBox.isSelected());
         m_stringColumn.saveSettingsTo(settings);
     }

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -48,9 +48,9 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -105,7 +105,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     /**
      * Stores the row keys for the confusion matrix fields to allow hiliting.
      */
-    private List<DataCell>[][] m_keyStore;
+    private List<RowKey>[][] m_keyStore;
 
     /**
      * The confusion matrix as int 2-D array.
@@ -174,7 +174,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
         // init the matrix
         for (int i = 0; i < m_keyStore.length; i++) {
             for (int j = 0; j < m_keyStore[i].length; j++) {
-                m_keyStore[i][j] = new ArrayList<DataCell>();
+                m_keyStore[i][j] = new ArrayList<RowKey>();
             }
         }
 
@@ -206,7 +206,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
             assert i2 >= 0 : "column spec lacks possible value " + cell2;
             // i2 must be equal to i1 if cells are equal (implication)
             assert (!areEqual || i1 == valuesList.indexOf(cell2.toString()));
-            m_keyStore[i1][i2].add(row.getKey().getId());
+            m_keyStore[i1][i2].add(row.getKey());
             m_scorerCount[i1][i2]++;
 
             if (areEqual) {
@@ -223,7 +223,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
                 .createDataContainer(new DataTableSpec(m_values, colTypes));
         for (int i = 0; i < m_values.length; i++) {
             // need to make a datacell for the row key
-            container.addRowToTable(new DefaultRow(new StringCell(m_values[i]),
+            container.addRowToTable(new DefaultRow(m_values[i],
                     m_scorerCount[i]));
         }
         container.close();
@@ -390,9 +390,9 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
      * 
      * @return a set of DataCells containing the row keys
      */
-    Set<DataCell> getSelectedSet(final Point[] cells) {
+    Set<RowKey> getSelectedSet(final Point[] cells) {
 
-        Set<DataCell> keySet = new HashSet<DataCell>();
+        Set<RowKey> keySet = new HashSet<RowKey>();
 
         for (Point cell : cells) {
 
@@ -530,12 +530,12 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
      * @return true if at least one key is contained in the specified cell
      */
     boolean containsConfusionMatrixKeys(final int x, final int y,
-            final Set<DataCell> keys) {
+            final Set<RowKey> keys) {
 
         // get the list with the keys
-        List<DataCell> keyList = m_keyStore[x][y];
-        for (DataCell key : keyList) {
-            for (DataCell keyToCheck : keys) {
+        List<RowKey> keyList = m_keyStore[x][y];
+        for (RowKey key : keyList) {
+            for (RowKey keyToCheck : keys) {
                 if (key.equals(keyToCheck)) {
                     return true;
                 }
@@ -554,7 +554,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
      * 
      * @return the cells that fullfill the above condition
      */
-    Point[] getCompleteHilitedCells(final Set<DataCell> keys) {
+    Point[] getCompleteHilitedCells(final Set<RowKey> keys) {
 
         Vector<Point> result = new Vector<Point>();
 
@@ -564,13 +564,13 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
                 // for all keys to check
                 boolean allKeysIncluded = true;
 
-                for (DataCell key : m_keyStore[i][j]) {
+                for (RowKey key : m_keyStore[i][j]) {
 
                     boolean wasKeyFound = false;
-                    Iterator<DataCell> keysToCheckIterator = keys.iterator();
+                    Iterator<RowKey> keysToCheckIterator = keys.iterator();
                     while (keysToCheckIterator.hasNext()) {
 
-                        DataCell keyToCheck = keysToCheckIterator.next();
+                        RowKey keyToCheck = keysToCheckIterator.next();
 
                         if (key.equals(keyToCheck)) {
                             // if the keys equal remove it, as it can only
@@ -621,8 +621,17 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
                 NodeSettingsRO subSub = sub.getNodeSettings("hilightMap");
                 for (int j = 0; j < m_values.length; j++) {
                     NodeSettingsRO sub3 = subSub.getNodeSettings(m_values[j]);
-                    DataCell[] cells = sub3.getDataCellArray("keyStore");
-                    m_keyStore[i][j] = Arrays.asList(cells);
+                    m_keyStore[i][j] = new ArrayList<RowKey>();
+                    try {
+                        // load key stores before 2.0
+                        DataCell[] cells = sub3.getDataCellArray("keyStore");
+                        for (DataCell dc : cells) {
+                            m_keyStore[i][j].add(new RowKey(dc.toString()));
+                        }
+                    } catch (InvalidSettingsException ise) {
+                        m_keyStore[i][j] = Arrays.asList(
+                                sub3.getRowKeyArray("keyStore"));
+                    }    
                 }
             }
         } catch (InvalidSettingsException ise) {
@@ -649,14 +658,13 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
             NodeSettingsWO subSub = sub.addNodeSettings("hilightMap");
             for (int j = 0; j < m_values.length; j++) {
                 NodeSettingsWO sub3 = subSub.addNodeSettings(m_values[j]);
-                DataCell[] cells = m_keyStore[i][j]
-                        .toArray(new DataCell[m_keyStore[i][j].size()]);
-                sub3.addDataCellArray("keyStore", cells);
+                RowKey[] rowKeys = m_keyStore[i][j]
+                        .toArray(new RowKey[m_keyStore[i][j].size()]);
+                sub3.addRowKeyArray("keyStore", rowKeys);
             }
         }
 
-        set
-                .saveToXML(new GZIPOutputStream(new BufferedOutputStream(
+        set.saveToXML(new GZIPOutputStream(new BufferedOutputStream(
                         new FileOutputStream(new File(internDir,
                                 "internals.xml.gz")))));
     }

@@ -162,9 +162,13 @@
             name="SVM"
             path="/mining">
       </category>
-            
+      <category
+            level-id="features"
+            name="Feature Selection"
+            path="/meta">
+      </category>
    </extension>
-
+            
      <extension
          point="org.knime.workbench.repository.nodes">
       <node
@@ -178,20 +182,37 @@
       </node>
       <node
             category-path="/view/property"
-            factory-class="org.knime.base.node.viz.property.color.ColorManagerNodeFactory"
-            id="org.knime.base.node.viz.property.color.ColorManagerNodeFactory">
+            factory-class="org.knime.base.node.viz.property.color.ColorManager2NodeFactory"
+            id="org.knime.base.node.viz.property.color.ColorManager2NodeFactory">
       </node>
       <node
-	        after="org.knime.base.node.viz.property.size.SizeManagerNodeFactory"
+            after="org.knime.base.node.viz.property.color.ColorManager2NodeFactory"
+            category-path="/view/property"
+            factory-class="org.knime.base.node.viz.property.size.SizeManager2NodeFactory"
+            id="org.knime.base.node.viz.property.size.SizeManager2NodeFactory"/>
+      <node
+	        after="org.knime.base.node.viz.property.size.SizeManager2NodeFactory"
             category-path="/view/property"
             factory-class="org.knime.base.node.viz.property.shape.ShapeManagerNodeFactory"
             id="org.knime.base.node.viz.property.shape.ShapeManagerNodeFactory">
       </node>
       <node
-                  after="org.knime.base.node.viz.property.size.ShapeManagerNodeFactory"
-                  category-path="/view/property"
-                  factory-class="org.knime.base.node.viz.property.color.ColorAppenderNodeFactory"
-                  id="org.knime.base.node.viz.property.color.ColorAppenderNodeFactory">
+            after="org.knime.base.node.viz.property.shape.ShapeManagerNodeFactory"
+            category-path="/view/property"
+            factory-class="org.knime.base.node.viz.property.color.ColorAppender2NodeFactory"
+            id="org.knime.base.node.viz.property.color.ColorAppenderNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.viz.property.color.ColorAppenderNodeFactory"
+            category-path="/view/property"
+            factory-class="org.knime.base.node.viz.property.size.SizeAppenderNodeFactory"
+            id="org.knime.base.node.viz.property.size.SizeAppenderNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.viz.property.size.SizeAppenderNodeFactory"
+            category-path="/view/property"
+            factory-class="org.knime.base.node.viz.property.shape.ShapeAppenderNodeFactory"
+            id="org.knime.base.node.viz.property.shape.ShapeAppenderNodeFactory">
       </node>
       <node
             category-path="/view"
@@ -333,10 +354,6 @@
             factory-class="org.knime.base.node.mine.decisiontree2.predictor.DecTreePredictorNodeFactory"
             id="org.knime.base.node.mine.decisiontreenew.predictor.DecTreePredictorNodeFactory"/>
       <node
-            category-path="/view"
-            factory-class="org.knime.base.node.viz.rulevis2d.Rule2DNodeFactory"
-            id="org.knime.base.node.viz.rulevis2d.Rule2DNodeFactory"/>
-      <node
             category-path="/mining/clustering"
             factory-class="org.knime.base.node.mine.sota.SotaLearnerNodeFactory"
             id="org.knime.base.node.mine.sota.SotaLearnerNodeFactory"/>
@@ -344,11 +361,6 @@
             category-path="/manipulation/column"
             factory-class="org.knime.base.node.preproc.rename.RenameNodeFactory"
             id="org.knime.base.node.preproc.rename.RenameNodeFactory"/>
-      <node
-            after="org.knime.base.node.viz.property.color.ColorManagerNodeFactory"
-            category-path="/view/property"
-            factory-class="org.knime.base.node.viz.property.size.SizeManagerNodeFactory"
-            id="org.knime.base.node.viz.property.size.SizeManagerNodeFactory"/>
       <node
             category-path="/mining/subgroup"
             factory-class="org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeFactory"
@@ -367,8 +379,8 @@
           id="org.knime.base.node.mine.regression.linear.predict.LinRegPredictorNodeFactory"/>
 	    <node
 	          category-path="/mining/modeleval"
-	          factory-class="org.knime.base.node.mine.scorer.entrop.EntropyNodeFactory"
-	          id="org.knime.base.node.mine.scorer.entrop.EntropyNodeFactory"/>
+	          factory-class="org.knime.base.node.mine.scorer.entrop.NewEntropyNodeFactory"
+	          id="org.knime.base.node.mine.scorer.entrop.NewEntropyNodeFactory"/>
 	    <node
 	          category-path="/io/read"
 	          factory-class="org.knime.base.node.io.table.read.ReadTableNodeFactory"
@@ -390,37 +402,9 @@
            factory-class="org.knime.base.node.viz.histogram.node.HistogramNodeFactory"
            id="org.knime.base.node.viz.histogram.node.HistogramNodeFactory"/>
      <node
-           category-path="/meta"
-           factory-class="org.knime.base.node.meta.xvalidation.XValidateNodeFactory"
-           id="org.knime.base.node.meta.xvalidation.XValidateNodeFactory"/>
-     <node
-           category-path="/meta"
-           factory-class="org.knime.base.node.meta.MetaNodeFactory11"
-           id="org.knime.base.node.meta.MetaNodeFactory11"/>
-     <node
-           category-path="/meta"
-           factory-class="org.knime.base.node.meta.MetaNodeFactory12"
-           id="org.knime.base.node.meta.MetaNodeFactory12"/>
-     <node
-           category-path="/meta"
-           factory-class="org.knime.base.node.meta.MetaNodeFactory21"
-           id="org.knime.base.node.meta.MetaNodeFactory21"/>
-     <node
-           category-path="/meta"
-           factory-class="org.knime.base.node.meta.MetaNodeFactory22"
-           id="org.knime.base.node.meta.MetaNodeFactory22"/>
-     <node
            category-path="/view"
            factory-class="org.knime.base.node.viz.histogram.node.FixedColumnHistogramNodeFactory"
            id="org.knime.base.node.viz.histogram.node.FixedColumnHistogramNodeFactory"/>
-     <node
-           category-path="/meta"
-           factory-class="org.knime.base.node.meta.looper.LooperFactory"
-           id="org.knime.base.node.meta.looper.LooperFactory"/>
-     <node
-           category-path="/meta"
-           factory-class="org.knime.base.node.meta.MetaNodeFactory01"
-           id="org.knime.base.node.meta.MetaNodeFactory01"/>
      <node
            category-path="/manipulation/column"
            factory-class="org.knime.base.node.preproc.normalize.NormalizerApplyNodeFactory"
@@ -451,11 +435,11 @@
            id="org.knime.base.node.preproc.hilite"/>
     <node
 		 category-path="/manipulation/column"
-         factory-class="org.knime.base.node.preproc.discretization.caim.modelcreator.CAIMDiscretizationNodeFactory"
+         factory-class="org.knime.base.node.preproc.discretization.caim2.modelcreator.CAIMDiscretization2NodeFactory"
          id="org.knime.base.node.preproc.discretization.caim.modelcreator.CAIMDiscretizationNodeFactory"/>
     <node
    		 category-path="/manipulation/column"
-         factory-class="org.knime.base.node.preproc.discretization.caim.modelapply.DiscretizationApplyNodeFactory"
+         factory-class="org.knime.base.node.preproc.discretization.caim2.modelapply.DiscretizationApplyNodeFactory"
          id="org.knime.base.node.preproc.discretization.caim.modelapply.DiscretizationApplyNodeFactory"/>
     <node
          factory-class="org.knime.base.node.preproc.rowkey.RowKeyNodeFactory"
@@ -531,11 +515,15 @@
             id="org.knime.base.node.preproc.valcount.ValueCounterNodeFactory"/>
       <node
             category-path="/mining/mds"
-            factory-class="org.knime.base.node.mine.mds.MDSPivotNodeFactory"
-            id="org.knime.base.node.mine.mds.MDSPivotNodeFactory"/>
+            factory-class="org.knime.base.node.mine.mds.MDSNodeFactory"
+            id="org.knime.base.node.mine.mds.MDSNodeFactory"/>
+      <node
+            category-path="/mining/mds"
+            factory-class="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeFactory"
+            id="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeFactory"/>
       <node
             category-path="/mining/modeleval"
-            factory-class="org.knime.base.node.viz.enrich.EnrichmentPlotterFactory"
+            factory-class="org.knime.base.node.viz.enrichment.EnrichmentPlotterFactory"
             id="org.knime.chem.node.viz.enrich.EnrichmentPlotterFactory"/>
       <node
             category-path="/mining/svm"
@@ -592,7 +580,12 @@
       <node
             category-path="/manipulation/column"
             factory-class="org.knime.base.node.preproc.colcombine.ColCombineNodeFactory"
-            id="org.knime.base.node.preproc.colcombine.ColCombineSimNodeFactory">
+            id="org.knime.base.node.preproc.colcombine.ColCombineNodeFactory">
+      </node>
+      <node
+            category-path="/mining/clustering"
+            factory-class="org.knime.base.node.mine.cluster.assign.ClusterAssignerNodeFactory"
+            id="org.knime.base.node.mine.cluster.assign.ClusterAssignerNodeFactory">
       </node>
       <node
             category-path="/mining/modeleval"
@@ -600,19 +593,106 @@
             id="org.knime.base.node.viz.roc.ROCNodeFactory">
       </node>
       <node
+            category-path="/meta"
+            factory-class="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory"
+            id="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory">
+      </node>
+      <node
+            category-path="/meta"
+            factory-class="org.knime.base.node.meta.xvalidation.AggregateOutputNodeFactory"
+            id="org.knime.base.node.meta.xvalidation.AggregateOutputNodeFactory">
+      </node>
+      <node
+            category-path="/meta"
+            factory-class="org.knime.base.node.meta.looper.ForLoopHeadNodeFactory"
+            id="org.knime.base.node.meta.looper.ForLoopHeadNodeFactory">
+      </node>
+      <node
+            category-path="/meta"
+            factory-class="org.knime.base.node.meta.looper.ForLoopTailNodeFactory"
+            id="org.knime.base.node.meta.looper.ForLoopTailNodeFactory">
+      </node>
+       <node
+            category-path="/database"
+            factory-class="org.knime.base.node.io.database.DBConnectionNodeFactory"
+            id="org.knime.base.node.io.database.DBConnectionNodeFactory">
+   	  </node>
+      <node
+            category-path="/database"
+            factory-class="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"
+            id="org.knime.base.node.io.database.DBConnectionWriterNodeFactory">
+      </node>
+      <node
+            category-path="/database"
+            factory-class="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
+            id="org.knime.base.node.io.database.DBReaderConnectionNodeFactory">
+      </node>
+      <node
+            category-path="/database"
+            factory-class="org.knime.base.node.io.database.DBQueryNodeFactory"
+            id="org.knime.base.node.io.database.DBQueryNodeFactory"/>
+      <node
+            category-path="/database"
+            factory-class="org.knime.base.node.io.database.DBColumnFilterNodeFactory"
+            id="org.knime.base.node.io.database.DBColumnFilterNodeFactory"/>
+      <node
+            category-path="/database"
+            factory-class="org.knime.base.node.io.database.DBRowFilterNodeFactory"
+            id="org.knime.base.node.io.database.DBRowFilterNodeFactory"/>
+      <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.cellsplitbypos.CellSplitterByPosNodeFactory"
+            id="org.knime.base.node.preproc.cellsplitbypos.CellSplitterByPositionNodeFactory">
+      </node>
+      <node
             category-path="/view"
             factory-class="org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeFactory"
-            id="ConditionalBoxPlotNodeFactory">
+            id="org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeFactory"/>
+      <node
+            category-path="/meta"
+            factory-class="org.knime.base.node.meta.looper.variable.IterateVariablesLoopHeadNodeFactory"
+            id="org.knime.base.node.meta.looper.variable.IterateVariablesLoopHeadNodeFactory">
       </node>
       <node
             category-path="/manipulation/column"
             factory-class="org.knime.base.node.preproc.filter.columnref.ColumnFilterRefNodeFactory"
-            id="org.knime.base.node.preproc.filter.columnref.ColumnFilterRefNodeFactory"/>
+            id="org.knime.base.node.preproc.filter.columnref.ColumnFilterRefNodeFactory">
+      </node>
       <node
             category-path="/manipulation/row"
             factory-class="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory"
-            id="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory"/>
+            id="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory">
+      </node>
+      <node
+            after="File Reader"
+            category-path="/io/read"
+            factory-class="org.knime.base.node.io.filereader.LooperFileReaderNodeFactory"
+            id="org.knime.base.node.io.filereader.LooperFileReaderNodeFactory">
+      </node>
+      <node
+            category-path="/meta/features"
+            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimHead1NodeFactory"
+            id="org.knime.base.node.meta.feature.backwardelim.BWElimHeadNodeFactory">
+      </node>
+      <node
+            category-path="/meta/features"
+            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimHead2NodeFactory"
+            id="org.knime.base.node.meta.feature.backwardelim.BWElimHead2NodeFactory">
+      </node>
+      <node
+            category-path="/meta/features"
+            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimTailNodeFactory"
+            id="org.knime.base.node.meta.feature.backwardelim.BWElimTailNodeFactory">
+      </node>
+      <node
+            category-path="/meta/features"
+            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimFilterNodeFactory"
+            id="org.knime.base.node.meta.feature.backwardelim.BWElimFilterNodeFactory">
+      </node>
+       <node
+             category-path="/misc"
+             factory-class="org.knime.base.node.variabletotable.VariableToTableNodeFactory"
+             id="org.knime.base.node.variabletotable.VariableToTableNodeFactory">
+       </node>
    </extension>
-   
-   
 </plugin>

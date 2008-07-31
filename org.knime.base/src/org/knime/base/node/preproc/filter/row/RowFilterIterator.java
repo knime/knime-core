@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -137,7 +137,8 @@ public class RowFilterIterator extends RowIterator {
     /**
      * This implementation may throw an RuntimeCanceledExecutionException
      * if this class has been initialized with a non-null execution monitor.
-     * @see org.knime.core.data.RowIterator#next()
+     * 
+     * {@inheritDoc}
      */
     @Override
     public DataRow next() throws RuntimeCanceledExecutionException {
@@ -219,7 +220,7 @@ public class RowFilterIterator extends RowIterator {
         /**
          * Get reference to causing exception.
          * 
-         * @see java.lang.Throwable#getCause()
+         * {@inheritDoc}
          */
         @Override
         public CanceledExecutionException getCause() {

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,6 +25,9 @@
 package org.knime.core.data.container;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Vector;
@@ -304,10 +307,17 @@ public final class ColumnRearranger {
      * <li>The columns between <code>from</code> and <code>to</code> (excl)
      * will have an index one less than they had before.</li>
      * </ul>
+     * 
+     * <p> This method is inherently expensive as it shifts elements 
+     * back and forth. If you change the order of all columns (and hence would 
+     * need to call this method often), use the permute method instead. 
+     *
      * @param from The from index. 
      * @param to The destination index.
      * @throws IndexOutOfBoundsException If any of the values is out of range,
      * i.e. less than 0 or greater or equal to the current set of columns. 
+     * @see #move(String, int)
+     * @see #permute(String[])
      */
     public void move(final int from, final int to) {
         if (from < to) {
@@ -318,6 +328,96 @@ public final class ColumnRearranger {
             SpecAndFactoryObject val = m_includes.remove(from);
             m_includes.insertElementAt(val, to);
         }
+    }
+    
+    /**
+     * Moves the column named <code>colName</code> to the index
+     * <code>to</code>. This method can be used to re-sort the set of
+     * columns. The implementation first determines the index of the
+     * argument column and then calls {@link #move(int, int)} with the correct
+     * arguments.
+     * 
+     * <p>This method is expensive if called multiple times (for instance when
+     * re-sorting the entire table). See the {@link #move(int, int)} method for
+     * details.
+     * @param colName The name of the column in question.
+     * @param to The destination index.
+     * @throws IndexOutOfBoundsException If <code>to</code> is out of range,
+     *             i.e. less than 0 or greater or equal to the current set of
+     *             columns.
+     * @throws NullPointerException If <code>colName</code> is null.
+     * @throws IllegalArgumentException 
+     *             If there is no column <code>colName</code>.
+     * @see #move(int, int)
+     * @see #permute(String[])
+     */
+    public void move(final String colName, final int to) {
+        for (int i = 0; i < m_includes.size(); i++) {
+            if (colName.equals(m_includes.get(i).getColSpec().getName())) {
+                move(i, to);
+                return;
+            }
+        }
+        throw new IllegalArgumentException(
+                "No such column \"" + colName + "\"");
+    }
+    
+    /** Changes the order of the columns according to the argument array. 
+     * The array must contain the column names in the desired order. 
+     * If this rearrange object contains names that are not contained in the
+     * argument array, those columns are moved to the end of the new ordering. 
+     * 
+     * <p>This method is efficient compared to the implementation of the 
+     * {@link #move(int, int)} method and should be used if the entire table 
+     * is to be re-sorted. 
+     * 
+     * @param colNamesInOrder The new column ordering. It may contain fewer 
+     * names than actually present in this re-arrange object. However, it must 
+     * not contain unknown columns, nor should it contain duplicates or null
+     * elements.
+     * @throws NullPointerException If the argument is <code>null</code> or 
+     *          contains <code>null</code> elements.
+     * @throws IllegalArgumentException If the array contains duplicates or 
+     *          unknown columns.
+     */
+    public void permute(final String[] colNamesInOrder) {
+        final HashMap<String, Integer> order = new HashMap<String, Integer>();
+        for (int i = 0; i < colNamesInOrder.length; i++) {
+            String name = colNamesInOrder[i];
+            if (name == null) {
+                throw new NullPointerException(
+                        "List must not contain null elements");
+            }
+            if (order.put(name, i) != null) {
+                throw new IllegalArgumentException(
+                        "Duplicate column names in argument array: " + name);
+            }
+        }
+        // add remaining columns to order
+        for (SpecAndFactoryObject spec : m_includes) {
+            if (!order.containsKey(spec.getColSpec().getName())) {
+                order.put(spec.getColSpec().getName(), order.size());
+            }
+        }
+        // argument array contains unknown column names
+        if (order.size() != m_includes.size()) {
+            assert order.size() > m_includes.size();
+            // determine bad column names
+            for (SpecAndFactoryObject spec : m_includes) {
+                order.remove(spec.getColSpec().getName());
+            }
+            throw new IllegalArgumentException("Column name(s) not found: "
+                    + Arrays.toString(order.keySet().toArray()));
+        }
+        Collections.sort(m_includes, new Comparator<SpecAndFactoryObject>() {
+           /** {@inheritDoc} */
+            public int compare(final SpecAndFactoryObject o1, 
+                    final SpecAndFactoryObject o2) {
+                String s1 = o1.getColSpec().getName();
+                String s2 = o2.getColSpec().getName();
+                return order.get(s1).compareTo(order.get(s2)); 
+            } 
+        });
     }
     
     /** Inserts the columns provided by <code>fac</code> at a given position.

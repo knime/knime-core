@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -31,7 +31,6 @@ import java.util.zip.ZipOutputStream;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowIterator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -97,7 +96,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     /**
      * {@inheritDoc}
      */
-    public RowIterator iterator() {
+    public CloseableRowIterator iterator() {
         ensureBufferOpen();
         return m_buffer.iterator();
     }
@@ -129,12 +128,22 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
         }
         return m_readTask.getBufferID();
     }
-
+    
+    /** Instruct the underlying buffer to cache the rows into main 
+     * memory to accelerate future iterations. This method does nothing
+     * if the buffer is reading from memory already.
+     * @see Buffer#restoreIntoMemory() */
+    protected void restoreIntoMemory() {
+        if (m_buffer != null) {
+            m_buffer.restoreIntoMemory();
+        } else {
+            m_readTask.setRestoreIntoMemory();
+        }
+    }
 
     /**
      * Do not call this method! Internal use!
-     * @see KnowsRowCountTable#saveToFile(
-     * File, NodeSettingsWO, ExecutionMonitor)
+     * {@inheritDoc}
      */
     public void saveToFile(final File f, final NodeSettingsWO settings, 
             final ExecutionMonitor exec) throws IOException, 
@@ -167,7 +176,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     
     /**
      * Do not call this method! It's used internally to delete temp files. 
-     * Any iteration on the table will fail!
+     * Any subsequent iteration on the table will fail!
      * @see KnowsRowCountTable#clear()
      */
     public void clear() {
@@ -178,12 +187,18 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
         }
     }
     
+    /** Do not use this method (only invoked by the framework).
+     * {@inheritDoc} */
+    public void ensureOpen() {
+        ensureBufferOpen();
+    }
+    
     private static final BufferedDataTable[] EMPTY_ARRAY = 
         new BufferedDataTable[0];
     
     /**
      * Returns an empty array. This method is used internally.
-     * @see KnowsRowCountTable#getReferenceTables()
+     * {@inheritDoc}
      */
     public BufferedDataTable[] getReferenceTables() {
         return EMPTY_ARRAY;

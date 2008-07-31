@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   06.12.2005 (dill): created
  */
@@ -56,19 +56,20 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * The BitvectorGenerator translates all values above or equal to a given
  * threshold to a set bit, values below that threshold to bits set to zero.
  * Thus, an n-column input will be translated to a 1-column table, where each
  * column contains a bitvector of length n.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class BitVectorGeneratorNodeModel extends NodeModel {
     /**
      * Represents the string types that can be parsed.
-     * 
+     *
      * @author Fabian Dill, University of Konstanz
      */
     public enum STRING_TYPES {
@@ -92,9 +93,6 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
     /** Config key if a StringCell should be parsed. */
     public static final String CFG_FROM_STRING = "FROM_STRING";
 
-    /** Config key for the StringColumn to parse. */
-    public static final String CFG_STRING_COLUMN = "STRING_COLUMN";
-
     /** Config key for the type of string (Hex, Id, Bit). */
     public static final String CFG_STRING_TYPE = "stringType";
 
@@ -106,8 +104,8 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
 
     /** Default value for the threshold. */
     public static final double DEFAULT_THRESHOLD = 1.0;
-    
-    /** Flag whether column(s) should be replaced or not. */ 
+
+    /** Flag whether column(s) should be replaced or not. */
     public static final String CFG_REPLACE = "replace";
 
     private double m_threshold = DEFAULT_THRESHOLD;
@@ -120,7 +118,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
 
     private STRING_TYPES m_type = STRING_TYPES.BIT;
 
-    private String m_stringColumn;
+    private final SettingsModelString m_stringColumn = createStringColModel();
 
     private static final String FILE_NAME = "bitVectorParams";
 
@@ -129,9 +127,9 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
     private static final String INT_CFG_NR_ZEROS = "nrOfZeros";
 
     private static final String INT_CFG_NR_ONES = "nrOfOnes";
-    
+
     private BitVectorCellFactory m_factory;
-    
+
     private boolean m_replace = false;
 
     private int m_nrOfProcessedRows;
@@ -160,7 +158,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
     }
 
     /**
-     * 
+     *
      * @return the number of 1s generated
      */
     public int getTotalNrOf1s() {
@@ -171,7 +169,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
     }
 
     /**
-     * 
+     *
      * @return the number of 0s generated
      */
     public int getTotalNrOf0s() {
@@ -188,7 +186,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addDouble(CFG_THRESHOLD, m_threshold);
         settings.addBoolean(CFG_FROM_STRING, m_fromString);
-        settings.addString(CFG_STRING_COLUMN, m_stringColumn);
+        m_stringColumn.saveSettingsTo(settings);
         settings.addBoolean(CFG_USE_MEAN, m_useMean);
         settings.addInt(CFG_MEAN_THRESHOLD, m_meanPercentage);
         settings.addString(CFG_STRING_TYPE, m_type.name());
@@ -205,7 +203,9 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         settings.getBoolean(CFG_USE_MEAN);
         settings.getInt(CFG_MEAN_THRESHOLD);
         boolean fromString = settings.getBoolean(CFG_FROM_STRING);
-        String stringCol = settings.getString(CFG_STRING_COLUMN);
+        SettingsModelString tmp =
+            m_stringColumn.createCloneWithValidatedValue(settings);
+        String stringCol = tmp.getStringValue();
         if (fromString && stringCol == null) {
             throw new InvalidSettingsException(
                     "A String column must be specified!");
@@ -222,7 +222,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             throws InvalidSettingsException {
         m_threshold = settings.getDouble(CFG_THRESHOLD);
         m_fromString = settings.getBoolean(CFG_FROM_STRING);
-        m_stringColumn = settings.getString(CFG_STRING_COLUMN);
+        m_stringColumn.loadSettingsFrom(settings);
         m_useMean = settings.getBoolean(CFG_USE_MEAN);
         m_meanPercentage = settings.getInt(CFG_MEAN_THRESHOLD);
         m_type = STRING_TYPES.valueOf(settings.getString(CFG_STRING_TYPE));
@@ -258,27 +258,27 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         if (m_fromString) {
             // parse id, hex or bit strings
             int stringColumnPos = inData[0].getDataTableSpec().findColumnIndex(
-                    m_stringColumn);
+                    m_stringColumn.getStringValue());
             BufferedDataTable[] bfdt = createBitVectorsFromStrings(
                     inData[0], stringColumnPos, exec);
             if (!m_factory.wasSuccessful() && inData[0].getRowCount() > 0) {
                 throw new IllegalArgumentException(
-                        "Nothing to convert in String column: " 
+                        "Nothing to convert in String column: "
                         + inData[0].getDataTableSpec().getColumnSpec(
                                 stringColumnPos).getName()
                         + ". Check NodeDescription for correct input formats!");
             }
             return bfdt;
 
-        } else {          
+        } else {
             BufferedDataTable[] bfdt = createBitVectorsFromNumericData(
                     inData[0], exec);
             return bfdt;
         }
     }
-    
+
     private BufferedDataTable[] createBitVectorsFromNumericData(
-            final BufferedDataTable data, 
+            final BufferedDataTable data,
             final ExecutionContext exec)
             throws CanceledExecutionException {
         DataColumnSpec colSpec =
@@ -302,9 +302,9 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         ColumnRearranger c = new ColumnRearranger(data.getDataTableSpec());
         if (!m_replace) {
             c.append(m_factory);
-            BufferedDataTable out = exec.createColumnRearrangeTable(data, c, 
+            BufferedDataTable out = exec.createColumnRearrangeTable(data, c,
                     exec);
-            return new BufferedDataTable[]{out};            
+            return new BufferedDataTable[]{out};
         } else {
             // put out only the generated one
             DataTableSpec spec = new DataTableSpec(createNumericOutputSpec(
@@ -317,18 +317,18 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                 exec.setProgress(rowNr / nrOfRows, "Processing row: " + rowNr);
                 rowNr++;
                 DataCell cell = m_factory.getCell(row);
-                DataRow newRow = new DefaultRow(row.getKey().getId(), cell);
+                DataRow newRow = new DefaultRow(row.getKey(), cell);
                 cont.addRowToTable(newRow);
             }
             cont.close();
             return new BufferedDataTable[]{cont.getTable()};
         }
     }
-    
+
 
     private BufferedDataTable[] createBitVectorsFromStrings(
             final BufferedDataTable data,
-            final int stringColIndex, final ExecutionContext exec) 
+            final int stringColIndex, final ExecutionContext exec)
             throws CanceledExecutionException, InvalidSettingsException {
         ColumnRearranger c = createColumnRearranger(data.getDataTableSpec(),
                 stringColIndex);
@@ -341,28 +341,29 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             ((IdString2BitVectorCellFactory)m_factory).setMaxPos(maxPos);
         }
         exec.setMessage("creating output");
-        BufferedDataTable out = exec.createColumnRearrangeTable(data, c, 
+        BufferedDataTable out = exec.createColumnRearrangeTable(data, c,
                 creationExec);
         return new BufferedDataTable[]{out};
     }
-    
-    private int scanMaxPos(final BufferedDataTable data, 
+
+    private int scanMaxPos(final BufferedDataTable data,
             final ExecutionMonitor exec) {
         int maxPos = Integer.MIN_VALUE;
-        int cellIdx = data.getDataTableSpec().findColumnIndex(m_stringColumn);
+        int cellIdx = data.getDataTableSpec().findColumnIndex(
+                m_stringColumn.getStringValue());
         int nrRows = data.getRowCount();
         int currRow = 0;
         for (DataRow row : data) {
             currRow++;
-            exec.setProgress((double)currRow / (double)nrRows, 
+            exec.setProgress((double)currRow / (double)nrRows,
                     "scanning row " + currRow);
             DataCell cell = row.getCell(cellIdx);
             if (cell.isMissing()) {
                 continue;
             }
             if (!cell.getType().isCompatible(StringValue.class)) {
-                throw new RuntimeException("Found incompatible type in row " 
-                + row.getKey().getId());
+                throw new RuntimeException("Found incompatible type in row "
+                + row.getKey().getString());
             }
             String toParse = ((StringValue)cell).getStringValue();
             String[] numbers = toParse.split("\\s");
@@ -370,8 +371,8 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                 int pos = -1;
                 try {
                     pos = Integer.parseInt(numbers[i].trim());
-                    maxPos = Math.max(maxPos, pos);            
-                } catch (NumberFormatException nfe) { 
+                    maxPos = Math.max(maxPos, pos);
+                } catch (NumberFormatException nfe) {
                     // nothing to do here
                     // same exception will be logged from cell factory
                 }
@@ -379,8 +380,8 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         }
         return maxPos + 1;
     }
-    
-    private ColumnRearranger createColumnRearranger(final DataTableSpec spec, 
+
+    private ColumnRearranger createColumnRearranger(final DataTableSpec spec,
             final int colIdx) throws InvalidSettingsException {
         // BW: fixed here locally: the annotation and the column name
         // are taken from input spec (21 Sep 2006)
@@ -392,7 +393,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             String colName = spec.getColumnSpec(colIdx).getName() + "_bits";
             creator.setName(colName);
             if (spec.containsName(colName)) {
-                throw new InvalidSettingsException("Column " + colName 
+                throw new InvalidSettingsException("Column " + colName
                         + " already exist in table!");
             }
         }
@@ -415,7 +416,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         } else {
             c.append(m_factory);
         }
-        return c; 
+        return c;
     }
 
 
@@ -432,7 +433,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
 
     /**
      * Assume to get numeric data only. Output is one column of type BitVector.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -452,20 +453,22 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                 throw new InvalidSettingsException("No numeric column found");
             }
         } else {
-            if (!spec.containsName(m_stringColumn) 
-                    || !(spec.getColumnSpec(m_stringColumn).getType()
-                    .isCompatible(StringValue.class))) {
+            if (!spec.containsName(m_stringColumn.getStringValue())
+                    || !(spec.getColumnSpec(m_stringColumn.getStringValue())
+                            .getType().isCompatible(StringValue.class))) {
                 throw new InvalidSettingsException("Selected string column "
-                        + m_stringColumn + " not in the input spec");
+                        + m_stringColumn.getStringValue()
+                        + " not in the input spec");
             }
         }
         if (m_fromString) {
-            int stringColIdx = inSpecs[0].findColumnIndex(m_stringColumn);
+            int stringColIdx =
+                inSpecs[0].findColumnIndex(m_stringColumn.getStringValue());
             ColumnRearranger c = createColumnRearranger(
                     inSpecs[0], stringColIdx);
             return new DataTableSpec[]{c.createSpec()};
         } else {
-            DataTableSpec newSpec; 
+            DataTableSpec newSpec;
             if (m_replace) {
                 newSpec = new DataTableSpec(
                         createNumericOutputSpec(spec));
@@ -476,13 +479,13 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             return new DataTableSpec[]{newSpec};
         }
     }
-    
-    
+
+
     private DataColumnSpec createNumericOutputSpec(final DataTableSpec spec) {
         String name;
         int j = 0;
         do {
-            name = "BitVectors" + (j == 0 ? "" : "_" + j); 
+            name = "BitVectors" + (j == 0 ? "" : "_" + j);
             j++;
         } while (spec.containsName(name));
         // get the names of numeric columns
@@ -490,12 +493,12 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         for (int i = 0; i < spec.getNumColumns(); i++) {
             nameMapping.add(spec.getColumnSpec(i)
                     .getName().toString());
-        }  
+        }
         DataColumnSpecCreator creator = new DataColumnSpecCreator(
                 name, BitVectorCell.TYPE);
         creator.setElementNames(nameMapping.toArray(
                 new String[nameMapping.size()]));
-        return creator.createSpec(); 
+        return creator.createSpec();
     }
 
     /**
@@ -516,7 +519,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         }
     }
 
-    
+
     /**
      * {@inheritDoc}
      */
@@ -530,5 +533,13 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         File f = new File(internDir, FILE_NAME);
         FileOutputStream fos = new FileOutputStream(f);
         internSettings.saveToXML(fos);
+    }
+
+    /**
+     * @return the settings model holding the selected string column name
+     */
+    static SettingsModelString createStringColModel() {
+        return new SettingsModelString("STRING_COLUMN", null);
+
     }
 }

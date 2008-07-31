@@ -1,8 +1,9 @@
-/* ------------------------------------------------------------------
+/*
+ * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -17,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 7, 2007 (ohl): created
  */
@@ -28,7 +29,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * 
+ *
  * @author ohl, University of Konstanz
  */
 class FileWriterNodeSettings extends FileWriterSettings {
@@ -72,7 +73,7 @@ class FileWriterNodeSettings extends FileWriterSettings {
     private String m_customCommentLine;
 
     /**
-     * 
+     *
      */
     FileWriterNodeSettings() {
         m_fileName = null;
@@ -91,7 +92,7 @@ class FileWriterNodeSettings extends FileWriterSettings {
      * NodeSettings object. If the settings object doesn't contain all settings
      * an exception is thrown. Settings are accepted and set internally even if
      * they are invalid or inconsistent.
-     * 
+     *
      * @param settings the object to read the initial values from.
      * @throws InvalidSettingsException if the settings object contains
      *             incomplete, invalid, or inconsistent values.
@@ -100,8 +101,10 @@ class FileWriterNodeSettings extends FileWriterSettings {
             throws InvalidSettingsException {
         super(settings);
         m_fileName = settings.getString(CFGKEY_FILE);
-        m_appendToFile = settings.getBoolean(CFGKEY_APPEND);
-        
+
+        // only available since 1.3.x
+        m_appendToFile = settings.getBoolean(CFGKEY_APPEND, false);
+
         // only available since 1.1.x
         m_skipColHeaderIfFileExists =
                 settings.getBoolean(CFGKEY_COLHEADER_SKIP_ON_APPEND, false);

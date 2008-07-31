@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -199,7 +199,6 @@ public class DefaultTable implements DataTable {
             }
             // name of the row ... if provided
             String rowHead = (rowHeader != null ? rowHeader[r] : "Row_" + r);
-            DataCell rowHeaderCell = new StringCell(rowHead);
             DataCell[] rowContent = new DataCell[colCount];
             // traverse columns in row
             for (int c = 0; c < colCount; c++) {
@@ -214,7 +213,7 @@ public class DefaultTable implements DataTable {
                             DataType.getCommonSuperType(myTypes[c], cellType);
                 }
             } // for all columns in row
-            DataRow row = new DefaultRow(rowHeaderCell, rowContent);
+            DataRow row = new DefaultRow(rowHead, rowContent);
             m_rowList.add(row);
         } // for all rows
 

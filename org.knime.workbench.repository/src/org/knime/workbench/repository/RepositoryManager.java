@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -27,6 +27,7 @@ package org.knime.workbench.repository;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.concurrent.Semaphore;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
@@ -74,6 +75,8 @@ public final class RepositoryManager {
     static {
         GlobalClassCreator.setClassCreator(new EclipseClassCreator(ID_NODE));
     }
+    
+    private static Semaphore m_lock = new Semaphore(1);
 
     private Root m_root;
 
@@ -162,8 +165,12 @@ public final class RepositoryManager {
      * only be called once at the (plugin) startup.
      */
     public void create() {
+        try {
+            m_lock.acquire();
+        } catch (InterruptedException e1) {
+            LOGGER.error("Root in use by another thread", e1);
+        }
         m_root = new Root();
-
         IExtension[] nodeExtensions = this.getExtensions(ID_NODE);
         IExtension[] categoryExtensions = this.getExtensions(ID_CATEGORY);
 
@@ -303,9 +310,12 @@ public final class RepositoryManager {
 
             } // for
         }
+        
+        m_lock.release();
 
         // if errors occured show an information box
-        if (errorString.length() > 0) {
+        if (errorString.length() > 0 
+                && !"true".equals(System.getProperty("java.awt.headless"))) {
 
             
             // TODO: validate if the this works without getting the active shell
@@ -372,10 +382,20 @@ public final class RepositoryManager {
     /**
      * Returns the repository root.
      * 
-     * @return The root object
+     * @return The root object 
      */
     public Root getRoot() {
         return m_root;
+    }
+    
+    public void releaseRoot() {
+        m_lock.release();
+    }
+    
+    
+    
+    public boolean isRootAvailable() {
+        return m_lock.tryAcquire();
     }
 
     /**

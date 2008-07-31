@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -128,7 +128,7 @@ final class ShapeManagerNodeDialogPane extends NodeDialogPane implements
         for (int i = 0; i < cols; i++) {
             DataColumnSpec cspec = specs[0].getColumnSpec(i);
             DataColumnDomain domain = cspec.getDomain();
-            if (domain.hasValues() && domain.getValues().size() > 0) {
+            if (domain.hasValues()) {
                 LinkedHashMap<DataCell, Shape> domMap = 
                     new LinkedHashMap<DataCell, Shape>();
                 for (DataCell value : domain.getValues()) {

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./enrichment.png" type="Visualizer">
+    <name>Enrichment Plotter</name>
+    <shortDescription>Draws enrichment curves</shortDescription>
+    <fullDescription>
+        <intro>
+            This node draws enrichment curves often used in virtual screening. For this the user can choose a column by
+            which the data is sorted and represents the x-axis. The values on the y-axis are formed by the sum of the
+            hits in a second column that is also selected by the user. A row is considered a hit if the value is greater
+            than 0. The steeper the resulting curve, the better the enrichment is. Optionally the y-axis can show the
+            sum of the hit values instead of the number of hits.
+            <br />
+            The two gray lines in the view show the enrichment if the data points were ordered randomly (lower diagonal)
+            and the optimal enrichment if all hits are ordered before the first non-hit (upper diagonal).
+        </intro>
+
+        <option name="Sort column">
+            Select the column by which the rows should be sorted and plotted as the x-axis.
+        </option>
+        <option name="Hit column">Select the column that contains the hit values.</option>
+        <option name="Sort descending">
+            Checking this before adding a curve sorts the data points in the sort column descendingly instead if
+            ascendingly. This is a setting specific to each curve.
+        </option>
+        <option name="Plot sum of hit values">
+            Check this if the y-axis should show the sum of the values in the hit column.
+        </option>
+        <option name="Hit threshold">
+            Check this and enter a threshold if the y-axis should show the sum of data points that have values equal or
+            greater than the threshold.
+        </option>
+    </fullDescription>
+    <ports>
+        <dataIn index="0" name="Input table">Input data with predicted values and actual values</dataIn>
+        <dataOut index="0" name="Areas under curve">
+            A one-column table with the area(s) under the enrichment curve(s)
+        </dataOut>
+        <dataOut index="1" name="Discovery rates">
+            Table with the discovery rates (either hits or clusters) for the different curves at selected points (given
+            as fraction of the complete dataset).
+        </dataOut>
+    </ports>
+    <views>
+        <view index="0" name="Enrichment plot">Enrichment plot</view>
+    </views>
+</knimeNode>

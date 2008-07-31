@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,27 +18,19 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *    03.11.2006 (Tobias Koetter): created
  */
 package org.knime.base.node.preproc.rowkey;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
@@ -51,67 +43,77 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.MutableInteger;
 
+import org.knime.base.data.append.column.AppendedColumnTable;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 /**
- * Provides methods to append a new row with the row key values or 
+ * Provides methods to append a new row with the row key values or
  * to replace the row key by the values of another column.
- * 
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 public class RowKeyUtil {
     private static final NodeLogger LOGGER = NodeLogger
         .getLogger(RowKeyUtil.class);
-    
+
     /**This value is used instead of a missing value as new row key if the
      * replaceMissingVals variable is set to <code>true</code>.*/
     protected static final String MISSING_VALUE_REPLACEMENT = "?";
-    
+
     private int m_duplicatesCounter = 0;
-    
+
     private int m_missingValueCounter = 0;
 
 
     /**
      * Creates the {@link ColumnRearranger} that appends a new column with the
      * values of the row id to a data table.
-     * 
-     * @param inSpec the <code>DataTableSpec</code> of table were the column 
+     *
+     * @param inSpec the <code>DataTableSpec</code> of table were the column
      * should be appended
      * @param newColName the name of the added column
      * @param type the <code>DataType</code> of the new column
      * @return the {@link ColumnRearranger} to use
      */
     public static ColumnRearranger createColumnRearranger(
-            final DataTableSpec inSpec, final String newColName, 
+            final DataTableSpec inSpec, final String newColName,
             final DataType type) {
         final ColumnRearranger c = new ColumnRearranger(inSpec);
         // column specification of the appended column
-        final DataColumnSpecCreator colSpecCreater = 
+        final DataColumnSpecCreator colSpecCreater =
             new DataColumnSpecCreator(newColName, type);
         final DataColumnSpec newColSpec = colSpecCreater.createSpec();
         // utility object that performs the calculation
         final CellFactory factory = new SingleCellFactory(newColSpec) {
             @Override
             public DataCell getCell(final DataRow row) {
-                return row.getKey().getId();
+                return new StringCell(row.getKey().getString());
             }
         };
         c.append(factory);
         return c;
     }
-    
-    
+
+
     /**
      * <p>Replaces the row key by the values of the column with the given name
-     * and appends a new column with the old key values if the 
+     * and appends a new column with the old key values if the
      * <code>newColName</code> variable is a non empty <code>String</code>.</p>
      * <p>
-     * Call the {@link RowKeyUtil#getDuplicatesCounter()} and 
-     * {@link RowKeyUtil#getMissingValueCounter()} 
+     * Call the {@link RowKeyUtil#getDuplicatesCounter()} and
+     * {@link RowKeyUtil#getMissingValueCounter()}
      * methods to get information about the replaced duplicates and missing
      * values after this method is completed.
      * </p>
      * @param inData The {@link BufferedDataTable} with the input data
-     * @param exec the {@link ExecutionContext} to check for cancel and to 
+     * @param exec the {@link ExecutionContext} to check for cancel and to
      * provide status messages
      * @param selRowKeyColName the name of the column which should replace
      * the row key
@@ -119,24 +121,24 @@ public class RowKeyUtil {
      * @param newColSpec the {@link DataColumnSpec} of the new column or
      * <code>null</code>  if no column should be created at all
      * @param ensureUniqueness if set to <code>true</code> the method ensures
-     * the uniqueness of the row key even if the values of the selected row 
+     * the uniqueness of the row key even if the values of the selected row
      * aren't unique
-     * @param replaceMissingVals if set to <code>true</code> the method 
+     * @param replaceMissingVals if set to <code>true</code> the method
      * replaces missing values with ?
      * @param removeRowKeyCol removes the selected row key column if set
-     * to <code>true</code> 
+     * to <code>true</code>
      * @return the {@link BufferedDataTable} with the replaced row key and
      * the optional appended new column with the old row keys.
      * @throws Exception if the cancel button was pressed or the input data
      * isn't valid.
      */
     public BufferedDataTable changeRowKey(final BufferedDataTable inData,
-            final ExecutionContext exec, final String selRowKeyColName, 
+            final ExecutionContext exec, final String selRowKeyColName,
             final boolean appendColumn, final DataColumnSpec newColSpec,
-            final boolean ensureUniqueness, final boolean replaceMissingVals, 
+            final boolean ensureUniqueness, final boolean replaceMissingVals,
             final boolean removeRowKeyCol)
     throws Exception {
-        LOGGER.debug("Entering changeRowKey(inData, exec, selRowKeyColName, " 
+        LOGGER.debug("Entering changeRowKey(inData, exec, selRowKeyColName, "
                 + "newColName) of class RowKeyUtil.");
         final DataTableSpec inSpec = inData.getDataTableSpec();
         DataTableSpec outSpec = inSpec;
@@ -158,7 +160,7 @@ public class RowKeyUtil {
             throw new InvalidSettingsException("Column name not found.");
         }
         final int totalNoOfRows = inData.getRowCount();
-        final Map<String, MutableInteger> vals = 
+        final Map<String, MutableInteger> vals =
             new HashMap<String, MutableInteger>(totalNoOfRows);
         final double progressPerRow = 1.0 / totalNoOfRows;
         //update the progress monitor every percent
@@ -167,7 +169,7 @@ public class RowKeyUtil {
         exec.setProgress(0.0, "Processing data...");
         m_missingValueCounter = 0;
         m_duplicatesCounter = 0;
-        for (DataRow row : inData) {
+        for (final DataRow row : inData) {
             rowCounter++;
             final DataCell[] cells = new DataCell[noOfCols];
             int newCellCounter = 0;
@@ -178,7 +180,7 @@ public class RowKeyUtil {
                 cells[newCellCounter++] = row.getCell(i);
             }
             if (appendColumn) {
-                cells[noOfCols - 1] = row.getKey().getId();
+                cells[noOfCols - 1] = new StringCell(row.getKey().getString());
             }
             final DataCell keyCell = row.getCell(newRowKeyColIdx);
             String key = null;
@@ -191,7 +193,7 @@ public class RowKeyUtil {
                             "Missing value found in row " + rowCounter);
                 }
             } else {
-                key = keyCell.toString();   
+                key = keyCell.toString();
             }
             if (vals.containsKey(key)) {
                 if (!keyCell.isMissing()) {
@@ -212,34 +214,34 @@ public class RowKeyUtil {
                     if (keyCell.isMissing()) {
                         throw new InvalidSettingsException(
                                 "Error in row " + rowCounter + ": "
-                                + "Multiple missing values found. Check the '" 
-                                + RowKeyNodeDialog.ENSURE_UNIQUENESS_LABEL 
+                                + "Multiple missing values found. Check the '"
+                                + RowKeyNodeDialog.ENSURE_UNIQUENESS_LABEL
                                 + "' option to handle multiple occurrences.");
-                    }  
+                    }
                     throw new InvalidSettingsException(
                             "Error in row " + rowCounter + ": "
-                            + "Duplicate value: " + key 
-                            + " already exists. Check the '" 
-                            + RowKeyNodeDialog.ENSURE_UNIQUENESS_LABEL 
+                            + "Duplicate value: " + key
+                            + " already exists. Check the '"
+                            + RowKeyNodeDialog.ENSURE_UNIQUENESS_LABEL
                             + "' option to handle duplicates.");
                 }
             }
             //put the current key which is new into the values map
             final MutableInteger index = new MutableInteger(0);
             vals.put(key, index);
-            final DataCell newKeyVal = new StringCell(key);
+            final RowKey newKeyVal = new RowKey(key);
             final DefaultRow newRow = new DefaultRow(newKeyVal, cells);
             newContainer.addRowToTable(newRow);
             exec.checkCanceled();
             if (rowCounter % checkPoint == 0) {
-                exec.setProgress(progressPerRow * rowCounter, 
-                        rowCounter + " rows of " + totalNoOfRows 
+                exec.setProgress(progressPerRow * rowCounter,
+                        rowCounter + " rows of " + totalNoOfRows
                         + " rows processed.");
             }
         }
         exec.setProgress(1.0, "Finished");
         newContainer.close();
-        LOGGER.debug("Exiting changeRowKey(inData, exec, selRowKeyColName, " 
+        LOGGER.debug("Exiting changeRowKey(inData, exec, selRowKeyColName, "
                 + "newColName) of class RowKeyUtil.");
         return newContainer.getTable();
     }
@@ -253,18 +255,18 @@ public class RowKeyUtil {
     }
 
     /**
-     * @return the number of duplicates which were found while changing 
+     * @return the number of duplicates which were found while changing
      * the row key
      */
     public int getDuplicatesCounter() {
         return m_duplicatesCounter;
     }
-    
+
     /**
      * @param spec the original {@link DataTableSpec}
-     * @param columnNames2Drop the names of the column to remove from the 
+     * @param columnNames2Drop the names of the column to remove from the
      * original table specification
-     * @return the original table specification without the column 
+     * @return the original table specification without the column
      * specifications of the given names
      */
     public static DataTableSpec createTableSpec(final DataTableSpec spec,
@@ -280,11 +282,11 @@ public class RowKeyUtil {
             throw new IllegalArgumentException("Number of skipped columns is "
                     + "greater than total number of columns.");
         }
-        final Set<String> names2Drop = 
+        final Set<String> names2Drop =
             new HashSet<String>(Arrays.asList(columnNames2Drop));
-        final Collection<DataColumnSpec> newColSpecs = 
+        final Collection<DataColumnSpec> newColSpecs =
             new ArrayList<DataColumnSpec>(numColumns - columnNames2Drop.length);
-        for (DataColumnSpec columnSpec : spec) {
+        for (final DataColumnSpec columnSpec : spec) {
             if (names2Drop.contains(columnSpec.getName())) {
                 continue;
             }

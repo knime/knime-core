@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./naiveBayesLearner.png" type="Learner">
 	<name>Naive Bayes Learner</name>
 	
@@ -33,7 +33,7 @@
 	
 	<ports>
 		<dataIn index="0" name="The training data">Training data</dataIn>
-		<modelOut index="0" name="Naive Bayes Model" type="naiveBayesModel">
+		<modelOut index="0" name="Naive Bayes Model">
 		Learned naive Bayes model</modelOut>
 	</ports>
 	<views>

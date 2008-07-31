@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -43,7 +43,7 @@ import org.knime.core.node.NodeSettingsRO;
 /**
  * This class provides a generic implementation of a node that can be stopped
  * and resumed during execution. Therefore a derived class has to provide a
- * method which realises one iteration of the algorithm that should be processed
+ * method which realizes one iteration of the algorithm that should be processed
  * interruptible.
  * 
  * @author Fabian Dill, University of Konstanz
@@ -51,8 +51,8 @@ import org.knime.core.node.NodeSettingsRO;
 public abstract class InterruptibleNodeModel extends NodeModel {
 
     /**
-     * A constant to define the inital delay, so the algorithm and the slider
-     * have the same inital values.
+     * A constant to define the initial delay, so the algorithm and the slider
+     * have the same initial values.
      */
     public static final int INITIAL_DELAY = 10;
 
@@ -90,11 +90,11 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     private static final String INTERN_CFG_FINIS = "finished";
 
     /**
-     * Constructs a NodeModel with the desired in- and outports, setting the
-     * state to paused, that is waiting for an intial event to start executing.
+     * Constructs a NodeModel with the desired in- and out-ports, setting the
+     * state to paused, that is waiting for an initial event to start executing.
      * 
-     * @param nrInPorts - the desired number of inports.
-     * @param nrOutPorts - the desired number of outports.
+     * @param nrInPorts - the desired number of in-ports.
+     * @param nrOutPorts - the desired number of out-ports.
      */
     public InterruptibleNodeModel(final int nrInPorts, final int nrOutPorts) {
         super(nrInPorts, nrOutPorts);
@@ -123,7 +123,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     }
 
     /**
-     * Returns the number of proessed iterations so far.
+     * Returns the number of processed iterations so far.
      * 
      * @return - the number of processed iterations so far.
      */
@@ -256,8 +256,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * and finishes it. At the end the from the derived NodeModel provided
      * output data is set to the output.
      * 
-     * @see org.knime.core.node.NodeModel#execute( BufferedDataTable[],
-     *      ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     public final BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -283,7 +282,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
                         // if the status was changed we have to update the views
                         notifyViews(this);
                         // don't catch InterruptedException
-                        // if thrown it will be catched in the catch block
+                        // if thrown it will be caught in the catch block
                         // below where the finish() method is called
                         m_lock.wait();
                     }
@@ -406,7 +405,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      *      ExecutionContext)
      * @return - an BufferedDataTable[] as should be returned from the
      *         NodeModel's execute method.
-     * @throws CanceledExecutionException If writting output tables has been
+     * @throws CanceledExecutionException If writing output tables has been
      *             canceled.
      * 
      */

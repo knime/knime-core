@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,13 +25,13 @@
 
 package org.knime.base.node.viz.pie.node.fixed;
 
+import org.knime.core.node.property.hilite.HiLiteHandler;
+
 import org.knime.base.node.viz.pie.datamodel.fixed.FixedPieVizModel;
 import org.knime.base.node.viz.pie.impl.PiePlotter;
 import org.knime.base.node.viz.pie.impl.fixed.FixedPiePlotter;
 import org.knime.base.node.viz.pie.impl.fixed.FixedPieProperties;
 import org.knime.base.node.viz.pie.node.PieNodeView;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.property.hilite.HiLiteHandler;
 
 
 /**
@@ -39,12 +39,12 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * @author Tobias Koetter, University of Konstanz
  */
 public class FixedPieNodeView
-extends PieNodeView<FixedPieProperties, FixedPieVizModel> {
+extends PieNodeView<FixedPieProperties, FixedPieVizModel, FixedPieNodeModel> {
 
     /**Constructor for class FixedPieNodeView.
      * @param nodeModel the node model
      */
-    FixedPieNodeView(final NodeModel nodeModel) {
+    FixedPieNodeView(final FixedPieNodeModel nodeModel) {
         super(nodeModel);
     }
 

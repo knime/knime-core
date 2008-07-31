@@ -1,8 +1,9 @@
-/* ------------------------------------------------------------------
+/*
+ * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -17,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 25, 2008 (sellien): created
  */
@@ -45,9 +46,9 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
 /**
  * This class provides the configuration dialog for the conditional box plot
  * node.
- * 
+ *
  * @author Stephan Sellien, University of Konstanz
- * 
+ *
  */
 public class ConditionalBoxPlotNodeDialog extends NodeDialogPane {
     private final ConditionalBoxPlotSettings m_settings =

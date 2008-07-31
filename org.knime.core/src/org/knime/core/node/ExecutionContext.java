@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -208,8 +208,40 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public BufferedDataContainer createDataContainer(final DataTableSpec spec,
             final boolean initDomain) {
+        return createDataContainer(spec, initDomain, -1);
+    }
+    
+    /**
+     * Creates a container to which rows can be added, overwriting the 
+     * node's memory policy. This method has the same behavior as 
+     * {@link #createDataContainer(DataTableSpec, boolean)} except for the 
+     * last argument <code>maxCellsInMemory</code>. It controls the memory 
+     * policy of the data container (which is otherwise controlled by a user
+     * setting in the dialog). 
+     * 
+     * <p>
+     * <b>Note:</b> It's strongly advised to use 
+     * {@link #createDataContainer(DataTableSpec, boolean)} instead of this 
+     * method as the above method realizes the memory policy specified by the 
+     * user. Use this method only if you have good reasons to do so 
+     * (for instance if you create many containers, whose default memory
+     * options would yield a high accumulated memory consumption).  
+     * @param spec The spec to open the container.
+     * @param initDomain If the domain information from the argument shall
+     * be used to initialize the domain (min, max, possible values). If false,
+     * the domain will be determined on the fly.
+     * @param maxCellsInMemory Number of cells to be kept in memory, especially
+     * 0 forces the table to write to disk immediately. A value smaller than 0
+     * will respect the user setting (as defined by the accompanying node). 
+     * @return A container to which rows can be added and which provides
+     * the <code>BufferedDataTable</code>.
+     * @throws NullPointerException If the spec argument is <code>null</code>.
+     */
+    public BufferedDataContainer createDataContainer(final DataTableSpec spec,
+            final boolean initDomain, final int maxCellsInMemory) {
         return new BufferedDataContainer(spec, initDomain, m_node, 
-                m_globalTableRepository, m_localTableRepository);
+                maxCellsInMemory, m_globalTableRepository, 
+                m_localTableRepository);
     }
 
     /**

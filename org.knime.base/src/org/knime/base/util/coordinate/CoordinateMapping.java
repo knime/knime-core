@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,17 +18,19 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   02.02.2006 (sieb): created
  */
 package org.knime.base.util.coordinate;
 
+import org.knime.core.data.DataValue;
+
 /**
  * Abstract class describing a coordinate mapping. A coordinate mapping
  * describes the mapping from a real data domain to a fixed length coordinate
  * axis.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public abstract class CoordinateMapping {
@@ -44,21 +46,25 @@ public abstract class CoordinateMapping {
     private String m_stringDomainValue;
 
     /**
+     * Text of the tool tip.
+     */
+    private DataValue[] m_values;
+
+    /**
      * Constructs a coordinate mapping from a string representation of the
      * domain value and its mapping value.
-     * 
-     * @param stringDomainValue the domain value as a string
+     *
+     * @param stringDomValue the domain value as a string
      * @param mappingValue the corresponding mapping
      */
-    CoordinateMapping(final String stringDomainValue, 
-            final double mappingValue) {
-        m_stringDomainValue = stringDomainValue;
+    CoordinateMapping(final String stringDomValue, final double mappingValue) {
+        m_stringDomainValue = stringDomValue;
         m_mappingValue = mappingValue;
     }
 
     /**
      * Each coordinate mapping must return the mapping value as a double.
-     * 
+     *
      * @return the mapping value
      */
     public double getMappingValue() {
@@ -68,7 +74,7 @@ public abstract class CoordinateMapping {
     /**
      * A coordinate mapping must also return the corresponding domain value as a
      * string.
-     * 
+     *
      * @return the domain value as string
      */
     public String getDomainValueAsString() {
@@ -87,7 +93,25 @@ public abstract class CoordinateMapping {
      */
     @Override
     public String toString() {
-        return ("Dom. String Value: " + m_stringDomainValue 
-                + ", Map. Value: " + m_mappingValue);
+        return ("Dom. String Value: " + m_stringDomainValue + ", "
+                + "Map. Value: " + m_mappingValue);
+    }
+
+    /**
+     * Returns the values if set.
+     *
+     * @return the values
+     */
+    public DataValue[] getValues() {
+        return m_values;
+    }
+
+    /**
+     * Sets values of this mapping.
+     *
+     * @param values the values
+     */
+    public void setValues(final DataValue... values) {
+        m_values = values;
     }
 }

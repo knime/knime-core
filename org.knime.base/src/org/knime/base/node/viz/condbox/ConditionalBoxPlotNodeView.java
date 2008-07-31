@@ -1,8 +1,9 @@
-/* ------------------------------------------------------------------
+/*
+ * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,8 +25,8 @@
 package org.knime.base.node.viz.condbox;
 
 import org.knime.base.node.viz.plotter.box.BoxPlotter;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * Class for a view of the conditional box plot.
@@ -33,7 +34,7 @@ import org.knime.core.node.NodeView;
  * @author Stephan Sellien, University of Konstanz
  * 
  */
-public class ConditionalBoxPlotNodeView extends NodeView {
+public class ConditionalBoxPlotNodeView extends GenericNodeView<NodeModel> {
 
     private final BoxPlotter m_plotter = new BoxPlotter();
 

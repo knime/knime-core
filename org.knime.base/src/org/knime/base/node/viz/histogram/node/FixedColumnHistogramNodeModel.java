@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,10 +24,23 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
-import java.awt.Color;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.Collection;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.container.CloseableRowIterator;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
@@ -36,22 +49,11 @@ import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
 import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
 import org.knime.base.node.viz.histogram.util.BinningUtil;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.RowIterator;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+
+import java.awt.Color;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Collection;
 
 
 /**
@@ -76,7 +78,6 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
      * The constructor.
      */
     protected FixedColumnHistogramNodeModel() {
-        super(1, 0); // one input, no outputs
         //set the all rows select box to true as default value since that's the
         //reason why we have two implementations and this one is the one which
         //should handle a large amount of data.
@@ -127,7 +128,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
      */
     @Override
     protected void createHistogramModel(final ExecutionContext exec,
-            final int noOfRows, final DataTable table)
+            final int noOfRows, final BufferedDataTable table)
     throws CanceledExecutionException {
         LOGGER.debug("Entering createHistogramModel(exec, table) "
                 + "of class FixedColumnHistogramNodeModel.");
@@ -161,27 +162,34 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
                         aggrCol.getColumnName());
             }
         }
-        final RowIterator rowIterator = table.iterator();
-        for (int rowCounter = 0; rowCounter < noOfRows
-        && rowIterator.hasNext(); rowCounter++) {
-            final DataRow row = rowIterator.next();
-            final Color color =
-                tableSpec.getRowColor(row).getColor(false, false);
-            if (aggrColSize < 1) {
-                m_model.addDataRow(row.getKey().getId(), color,
-                        row.getCell(xColIdx), DataType.getMissingCell());
-            } else {
-                final DataCell[] aggrCells = new DataCell[aggrColSize];
-                for (int i = 0, length = aggrColIdxs.length; i < length; i++) {
-                    aggrCells[i] = row.getCell(aggrColIdxs[i]);
+        final CloseableRowIterator rowIterator = table.iterator();
+        try {
+            for (int rowCounter = 0; rowCounter < noOfRows
+            && rowIterator.hasNext(); rowCounter++) {
+                final DataRow row = rowIterator.next();
+                final Color color =
+                    tableSpec.getRowColor(row).getColor(false, false);
+                if (aggrColSize < 1) {
+                    m_model.addDataRow(row.getKey(), color,
+                            row.getCell(xColIdx), DataType.getMissingCell());
+                } else {
+                    final DataCell[] aggrCells = new DataCell[aggrColSize];
+                    for (int i = 0, length = aggrColIdxs.length;
+                        i < length; i++) {
+                        aggrCells[i] = row.getCell(aggrColIdxs[i]);
+                    }
+                    m_model.addDataRow(row.getKey(), color,
+                            row.getCell(xColIdx), aggrCells);
                 }
-                m_model.addDataRow(row.getKey().getId(), color,
-                        row.getCell(xColIdx), aggrCells);
-            }
 
-            progress += progressPerRow;
-            exec.setProgress(progress, "Adding data rows to histogram...");
-            exec.checkCanceled();
+                progress += progressPerRow;
+                exec.setProgress(progress, "Adding data rows to histogram...");
+                exec.checkCanceled();
+            }
+        } finally {
+            if (rowIterator != null) {
+                rowIterator.close();
+            }
         }
         exec.setMessage("Sorting rows...");
         exec.setProgress(1.0, "Histogram finished.");
@@ -193,7 +201,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected DataTableSpec[] configure(final PortObjectSpec[] inSpecs)
         throws InvalidSettingsException {
         final DataTableSpec[] specs = super.configure(inSpecs);
         //enable/disable the number of bins spinner depending on the selected

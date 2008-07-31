@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -62,15 +62,11 @@ final class FilterColumnNodeModel extends NodeModel {
      */
     static final String KEY = "exclude";
 
-    /*
-     * List contains the data cells to exclude.
-     */
+    /** Contains all column names to exclude. */
     private final ArrayList<String> m_list;
 
     /**
      * Creates a new filter model with one and in- and output.
-     * 
-     * @see #reset
      */
     FilterColumnNodeModel() {
         super(1, 1);
@@ -91,8 +87,6 @@ final class FilterColumnNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws Exception {
-
-        assert (data != null && data.length == 1 && data[INPORT] != null);
         ColumnRearranger c = createColumnRearranger(data[0].getDataTableSpec());
         BufferedDataTable outTable = exec.createColumnRearrangeTable(data[0],
                 c, exec);
@@ -121,7 +115,7 @@ final class FilterColumnNodeModel extends NodeModel {
 
     /**
      * Excludes a number of columns from the input spec and generates a new
-     * ouput spec.
+     * output spec.
      * 
      * @param inSpecs the input table spec
      * @return outSpecs the output table spec with some excluded columns
@@ -138,14 +132,17 @@ final class FilterColumnNodeModel extends NodeModel {
 
     }
 
-    /*
+    /**
      * Creates the output data table spec according to the current settings.
-     * Throws an InvalidSettingsException if colums are specified that don't
+     * Throws an InvalidSettingsException if columns are specified that don't
      * exist in the input table spec.
      */
     private ColumnRearranger createColumnRearranger(final DataTableSpec inSpec)
             throws InvalidSettingsException {
-        assert inSpec != null;
+        if (m_list.isEmpty()) {
+            super.setWarningMessage("All columns retained.");
+            return new ColumnRearranger(inSpec);
+        }
         // check if all specified columns exist in the input spec
         for (String name : m_list) {
             if (!inSpec.containsName(name)) {

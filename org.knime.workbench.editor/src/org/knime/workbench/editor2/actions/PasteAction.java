@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -32,17 +32,14 @@ import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeSettings;
-import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeExtraInfo;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.editparts.AbstractWorkflowEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
+import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
 /**
  * Implements the clipboard paste action to paste nodes and connections from the
@@ -60,7 +57,6 @@ public class PasteAction extends AbstractClipboardAction {
      * @param editor the workflow editor this action is intended for
      */
     public PasteAction(final WorkflowEditor editor) {
-
         super(editor);
     }
 
@@ -69,7 +65,6 @@ public class PasteAction extends AbstractClipboardAction {
      */
     @Override
     public String getId() {
-
         return ActionFactory.PASTE.getId();
     }
 
@@ -78,7 +73,6 @@ public class PasteAction extends AbstractClipboardAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-
         ISharedImages sharedImages =
                 PlatformUI.getWorkbench().getSharedImages();
         return sharedImages.getImageDescriptor(ISharedImages.IMG_TOOL_PASTE);
@@ -95,12 +89,15 @@ public class PasteAction extends AbstractClipboardAction {
     /**
      * At least one <code>NodeSettings</code> object must be in the clipboard.
      * 
-     * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
+     * {@inheritDoc}
      */
     @Override
     protected boolean calculateEnabled() {
         ClipboardObject clipboardContent = getEditor().getClipboardContent();
-        return (clipboardContent != null && clipboardContent.getContent() instanceof NodeSettings);
+        if (clipboardContent == null) {
+            return false;
+        }
+        return clipboardContent.getNodeIDs().size() > 0;
     }
 
     /**
@@ -108,21 +105,50 @@ public class PasteAction extends AbstractClipboardAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-
-        // get the workflow manager
-        WorkflowManager manager = getManager();
-
-        // get the clipboard object
         ClipboardObject clipboardContent = getEditor().getClipboardContent();
-        // ensure there is an object of type NodeSettings
-        if (!(clipboardContent != null)
-                || !(clipboardContent.getContent() instanceof NodeSettings)) {
+        List<NodeID>nodeIDs = clipboardContent.getNodeIDs();
+        WorkflowManager sourceWF = clipboardContent.getSourceWorkflow();
+        NodeID[] copiedNodes = getManager().copy(sourceWF, nodeIDs.toArray(
+                new NodeID[nodeIDs.size()]));
+        
+        int[] moveDist = calculateShift(copiedNodes);
+        LOGGER.debug("copied nodes:");
+        for (NodeID id : copiedNodes) {
+            LOGGER.debug(id);
+            NodeContainer nc = getManager().getNodeContainer(id);
+            ModellingNodeExtraInfo uiInfo = (ModellingNodeExtraInfo)nc
+                .getUIInformation();
+            uiInfo.changePosition(moveDist);
+            nc.setUIInformation(uiInfo);
+        }
+        
+        getEditor().getClipboardContent().incrementRetrievalCounter();
+        
+        // change selection (from copied ones to pasted ones)
+        
+        EditPartViewer partViewer = getEditor().getViewer();
 
-            return;
+        // deselect the current selection and select the new pasted parts
+        for (NodeContainerEditPart nodePart : nodeParts) {
+            partViewer.deselect(nodePart);
         }
 
-        LOGGER.debug("Clipboard paste action invoked ...");
+        for (ConnectionContainerEditPart connectionPart 
+                : getSelectedConnectionParts()) {
+            partViewer.deselect(connectionPart);
+        }
+        
+        // TODO: select the new ones.... 
+        
+        // update the actions
+        getEditor().updateActions();
 
+        // Give focus to the editor again. Otherwise the actions (selection)
+        // is not updated correctly.
+        getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
+        
+        // TODO: functionality disabled
+        /*
         // cast the clipboard object representing a sub workflow
         NodeSettings copySettings = (NodeSettings)clipboardContent.getContent();
         int[][] newPartIds = null;
@@ -169,7 +195,8 @@ public class PasteAction extends AbstractClipboardAction {
             partViewer.deselect(nodePart);
         }
 
-        for (ConnectionContainerEditPart connectionPart : getSelectedConnectionParts()) {
+        for (ConnectionContainerEditPart connectionPart 
+        : getSelectedConnectionParts()) {
             partViewer.deselect(connectionPart);
         }
 
@@ -187,14 +214,19 @@ public class PasteAction extends AbstractClipboardAction {
         // Give focus to the editor again. Otherwise the actions (selection)
         // is not updated correctly.
         getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
-
+    */
     }
 
-    protected int[] calculateShift(int[] ids) {
-        int counter =
-                (getEditor().getClipboardContent().getRetrievalCounter() + 1);
-        // increment the retrieval counter
-        getEditor().getClipboardContent().incrementRetrievalCounter();
-        return new int[]{80 * counter, 80 * counter};
+    /**
+     * 
+     * @param ids
+     * @return
+     */
+    protected int[] calculateShift(NodeID[] ids) {
+        int x = getEditor().getSelectionTool().getXLocation();
+        int y = getEditor().getSelectionTool().getYLocation();
+        int counter = getEditor().getClipboardContent().getRetrievalCounter();
+        counter += 1;
+        return new int[] {x * counter, y * counter};
     }
 }

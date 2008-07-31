@@ -1,8 +1,9 @@
-/* ------------------------------------------------------------------
+/*
+ * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -136,7 +137,7 @@ public class StringReplacerNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         exec.setMessage("Replacing");
         String regex = WildcardMatcher.wildcardToRegex(m_settings.pattern());
-         // for support of \n and international weird characters
+        // support for \n and international characters
         int flags = Pattern.DOTALL | Pattern.MULTILINE;
         if (!m_settings.caseSensitive()) {
             flags |= Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
@@ -149,6 +150,7 @@ public class StringReplacerNodeModel extends NodeModel {
         return new BufferedDataTable[]{exec.createColumnRearrangeTable(
                 inData[0], crea, exec)};
     }
+
 
     /**
      * {@inheritDoc}

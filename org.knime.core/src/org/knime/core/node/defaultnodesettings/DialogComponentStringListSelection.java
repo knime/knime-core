@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -44,6 +44,9 @@ import javax.swing.event.ListSelectionListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.util.DefaultStringIconOption;
+import org.knime.core.node.util.StringIconListCellRenderer;
+import org.knime.core.node.util.StringIconOption;
 
 /**
  * Provide a standard component for a dialog that allows to select one or more
@@ -140,6 +143,46 @@ public final class DialogComponentStringListSelection extends DialogComponent {
             final SettingsModelStringArray stringModel, final String label,
             final Collection<String> list, final int selectionMode,
             final boolean required, final int visibleRowCount) {
+        this(stringModel, label,
+                DefaultStringIconOption.createOptionArray(list), selectionMode,
+                required, visibleRowCount);
+    }
+    /**
+     * Constructor that puts label and select box into panel. When the settings
+     * are applied, the model stores all selected strings of the provided list.
+     * The following <code>selectionMode</code> values are allowed:
+     * <ul>
+     * <li> <code>ListSelectionModel.SINGLE_SELECTION</code> Only one list
+     * index can be selected at a time. In this mode the
+     * <code>setSelectionInterval</code> and <code>addSelectionInterval</code>
+     * methods are equivalent, and only the second index argument is used.
+     * <li> <code>ListSelectionModel.SINGLE_INTERVAL_SELECTION</code> One
+     * contiguous index interval can be selected at a time. In this mode
+     * <code>setSelectionInterval</code> and <code>addSelectionInterval</code>
+     * are equivalent.
+     * <li> <code>ListSelectionModel.MULTIPLE_INTERVAL_SELECTION</code> In
+     * this mode, there's no restriction on what can be selected. This is the
+     * default.
+     * </ul>
+     * 
+     * @param stringModel the model that stores all selected strings.
+     * @param label the optional label of the select box. Set to
+     *            <code>null</code> for none label. Set an empty
+     *            <code>String</code> for a border.
+     * @param list list (not empty) of StringIconOptions (not null) for the
+     *            select box.
+     * @param selectionMode an integer specifying the type of selections that
+     *            are permissible
+     * @param required if at least one item must be selected
+     * @param visibleRowCount the number of visible rows
+     * 
+     * @throws NullPointerException if one of the strings in the list is null
+     * @throws IllegalArgumentException if the list is empty or null.
+     */
+    public DialogComponentStringListSelection(
+            final SettingsModelStringArray stringModel, final String label,
+            final StringIconOption[] list, final int selectionMode,
+            final boolean required, final int visibleRowCount) {
         super(stringModel);
 
         if (list == null) {
@@ -147,29 +190,34 @@ public final class DialogComponentStringListSelection extends DialogComponent {
                     + "shouldn't be null.");
         }
         m_required = required;
-        if (m_required && list.size() < 1) {
+        if (m_required && list.length < 1) {
             throw new IllegalArgumentException("Selection list of strings "
                     + "shouldn't be empty.");
         }
+
         if (label != null) {
             getComponentPanel().add(new JLabel(label));
         }
         m_listModel = new DefaultListModel();
-        for (final String s : list) {
-            if (s == null) {
-                throw new NullPointerException("Strings in the selection"
+
+
+        for (final StringIconOption o : list) {
+            if (o == null) {
+                throw new NullPointerException("Options in the selection"
                         + " list can't be null");
             }
-            m_listModel.addElement(s);
+            m_listModel.addElement(o);
         }
+
         m_selectBox = new JList(m_listModel);
+        m_selectBox.setCellRenderer(new StringIconListCellRenderer());
         m_selectBox.setSelectionMode(selectionMode);
         final int rowCount;
         if (visibleRowCount < 0) {
             //get the default visible row count or the number of available items
             //if they are less than the default row count
             rowCount = Math.max(3,
-                    Math.min(m_selectBox.getVisibleRowCount(), list.size()));
+                    Math.min(m_selectBox.getVisibleRowCount(), list.length));
         } else {
             rowCount = visibleRowCount;
         }
@@ -192,9 +240,7 @@ public final class DialogComponentStringListSelection extends DialogComponent {
                 updateComponent();
             }
         });
-
     }
-
     /**
      * {@inheritDoc}
      */
@@ -205,9 +251,9 @@ public final class DialogComponentStringListSelection extends DialogComponent {
         boolean update;
         final Object[] selectedValues = m_selectBox.getSelectedValues();
         if (modelVals == null) {
-            update = (selectedValues == null || selectedValues.length > 0);
+            update = (selectedValues != null && selectedValues.length > 0);
         } else {
-            update = !Arrays.deepEquals(modelVals, selectedValues);
+            update = !deepEquals(modelVals, selectedValues);
         }
         if (update) {
             if (modelVals == null || modelVals.length < 1) {
@@ -218,7 +264,8 @@ public final class DialogComponentStringListSelection extends DialogComponent {
                 for (final String val : modelVals) {
                     for (int i = 0, size = m_listModel.getSize();
                         i < size; i++) {
-                        if (m_listModel.getElementAt(i).equals(val)) {
+                        if (((StringIconOption)m_listModel.getElementAt(i)).
+                                getText().equals(val)) {
                             selectedIndices.add(new Integer(i));
                             break;
                         }
@@ -236,6 +283,35 @@ public final class DialogComponentStringListSelection extends DialogComponent {
 
         // also update the enable status
         setEnabledComponents(getModel().isEnabled());
+    }
+
+    private boolean deepEquals(final String[] a1,
+            final Object[] a2) {
+        if (a1 == null && a2 == null) {
+            return true;
+        }
+        if (a1 == null || a2 == null) {
+            return false;
+        }
+        final int length = a1.length;
+        if (a2.length != length) {
+            return false;
+        }
+
+        for (int i = 0; i < length; i++) {
+            final String e1 = a1[i];
+            final StringIconOption e2 = (StringIconOption)a2[i];
+            if (e1 == null && e2 == null) {
+                continue;
+            }
+            if (e2 == null && e1 != null) {
+                return false;
+            }
+            if (!e2.getText().equals(e1)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -265,7 +341,7 @@ public final class DialogComponentStringListSelection extends DialogComponent {
         } else {
             final String[] selectedValues = new String[values.length];
             for (int i = 0, length = values.length; i < length; i++) {
-                selectedValues[i] = values[i].toString();
+                selectedValues[i] = ((StringIconOption)values[i]).getText();
             }
             // we transfer the value from the field into the model
             ((SettingsModelStringArray)getModel()).setStringArrayValue(
@@ -344,6 +420,28 @@ public final class DialogComponentStringListSelection extends DialogComponent {
      */
     public void replaceListItems(final Collection<String> newItems,
             final String... select) {
+        if (newItems == null || newItems.size() < 1) {
+            throw new NullPointerException("The container with the new items"
+                    + " can't be null");
+        }
+        final StringIconOption[] options =
+            DefaultStringIconOption.createOptionArray(newItems);
+        replaceListItems(options, select);
+    }
+
+    /**
+     * Replaces the list of selectable options in the component. If
+     * <code>select</code> is specified (not null) and it exists in the
+     * collection it will be selected. If <code>select</code> is null, the
+     * previous value will stay selected (if it exists in the new list).
+     *
+     * @param newItems new {@link StringIconOption}s for the select box
+     * @param select the item to select after the replace. Can be null, in which
+     *            case the previous selection remains - if it exists in the new
+     *            list.
+     */
+    public void replaceListItems(final StringIconOption[] newItems,
+            final String... select) {
         if (newItems == null) {
             throw new NullPointerException("The container with the new items"
                     + " can't be null");
@@ -354,12 +452,7 @@ public final class DialogComponentStringListSelection extends DialogComponent {
         }
 
         m_listModel.removeAllElements();
-
-        for (final String s : newItems) {
-            if (s == null) {
-                throw new NullPointerException("Strings in the selection"
-                        + " list can't be null");
-            }
+        for (final StringIconOption s : newItems) {
             m_listModel.addElement(s);
         }
 
@@ -370,7 +463,8 @@ public final class DialogComponentStringListSelection extends DialogComponent {
             for (final String val : sel) {
                 for (int i = 0, size = m_listModel.getSize();
                     i < size; i++) {
-                    if (m_listModel.getElementAt(i).equals(val)) {
+                    if (((StringIconOption)m_listModel.getElementAt(i)).
+                    getText().equals(val)) {
                         selectedIndices.add(new Integer(i));
                         found = true;
                         break;
@@ -385,7 +479,7 @@ public final class DialogComponentStringListSelection extends DialogComponent {
             }
             m_selectBox.setSelectedIndices(indices);
         }
-        if (!found && newItems.size() > 0) {
+        if (!found && newItems.length > 0) {
             //if none of the preseleted items was found select the first
             m_selectBox.setSelectedIndex(0);
         }

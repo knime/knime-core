@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,8 +25,7 @@
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
-import org.knime.core.node.workflow.ConnectionContainer;
-
+import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 
 /**
@@ -41,7 +40,7 @@ public class NewBendpointDeleteCommand extends Command {
 
     private int[] m_point;
 
-    private ConnectionContainer m_connection;
+    private ConnectionContainerEditPart m_connection;
 
     /**
      * New Bendpoint deletion command.
@@ -49,10 +48,12 @@ public class NewBendpointDeleteCommand extends Command {
      * @param connection The connecton container
      * @param index bendpoint index
      */
-    public NewBendpointDeleteCommand(final ConnectionContainer connection,
+    public NewBendpointDeleteCommand(
+            final ConnectionContainerEditPart connection,
             final int index) {
         m_connection = connection;
-        m_extraInfo = (ModellingConnectionExtraInfo) connection.getExtraInfo();
+        m_extraInfo = (ModellingConnectionExtraInfo) connection
+            .getUIInformation();
         m_index = index;
     }
 
@@ -65,7 +66,7 @@ public class NewBendpointDeleteCommand extends Command {
         m_extraInfo.removeBendpoint(m_index);
 
         // issue notfication
-        m_connection.setExtraInfo(m_extraInfo);
+        m_connection.setUIInformation(m_extraInfo);
     }
 
     /**
@@ -76,7 +77,7 @@ public class NewBendpointDeleteCommand extends Command {
         m_extraInfo.removeBendpoint(m_index);
 
         // issue notfication
-        m_connection.setExtraInfo(m_extraInfo);
+        m_connection.setUIInformation(m_extraInfo);
     }
 
     /**
@@ -87,6 +88,6 @@ public class NewBendpointDeleteCommand extends Command {
         m_extraInfo.addBendpoint(m_point[0], m_point[1], m_index);
 
         // issue notfication
-        m_connection.setExtraInfo(m_extraInfo);
+        m_connection.setUIInformation(m_extraInfo);
     }
 }

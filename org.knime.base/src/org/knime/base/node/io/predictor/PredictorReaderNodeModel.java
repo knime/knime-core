@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   30.10.2005 (mb): created
  */
@@ -47,7 +47,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * Read ModelContent object from file.
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
 public class PredictorReaderNodeModel extends NodeModel {
@@ -81,9 +81,7 @@ public class PredictorReaderNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        SettingsModelString filename =
-                m_fileName.createCloneWithValidatedValue(settings);
-        checkFileAccess(filename.getStringValue());
+        m_fileName.validateSettings(settings);
     }
 
     /**
@@ -97,7 +95,7 @@ public class PredictorReaderNodeModel extends NodeModel {
 
     /**
      * Save model into ModelContent for a specific output port.
-     * 
+     *
      * @param index of the ModelContent's output port.
      * @param predParam The object to write the model into.
      * @throws InvalidSettingsException If the model could not be written to
@@ -115,7 +113,7 @@ public class PredictorReaderNodeModel extends NodeModel {
     /**
      * Execute does nothing - the reading of the file and writing to the
      * NodeSettings object has already happened during savePredictorParams.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -141,7 +139,7 @@ public class PredictorReaderNodeModel extends NodeModel {
                 // ignored, seems to be zip archive
             }
         }
-        exec.setMessage("Reading model from file: " 
+        exec.setMessage("Reading model from file: "
                 + m_fileName.getStringValue());
         m_predParams = ModelContent.loadFromXML(is);
         return new BufferedDataTable[0];
@@ -149,7 +147,7 @@ public class PredictorReaderNodeModel extends NodeModel {
 
     /**
      * Ignored.
-     * 
+     *
      * @see org.knime.core.node.NodeModel#reset()
      */
     @Override
@@ -168,7 +166,7 @@ public class PredictorReaderNodeModel extends NodeModel {
 
     /**
      * Helper that checks some properties for the file argument.
-     * 
+     *
      * @param fileName The file to check @throws InvalidSettingsException If
      * that fails.
      */
@@ -180,16 +178,16 @@ public class PredictorReaderNodeModel extends NodeModel {
         File file = new File(fileName);
         if (file.isDirectory()) {
             throw new InvalidSettingsException("\"" + file.getAbsolutePath()
-                    + "\" is a directory.");
+                    + "\" is a directory, but must be a file.");
         }
         if (!file.exists()) {
-            // dunno how to check the write access to the directory. If we can't
-            // create the file the execute of the node will fail. Well, too bad.
-            throw new InvalidSettingsException("File does not exist: "
-                    + fileName);
+            throw new InvalidSettingsException(
+                    "File \"" + file.getAbsolutePath() + "\""
+                        + " does not exist.");
         }
+        // check read access to file
         if (!file.canRead()) {
-            throw new InvalidSettingsException("Cannot write to file \""
+            throw new InvalidSettingsException("Cannot read from file \""
                     + file.getAbsolutePath() + "\".");
         }
     }

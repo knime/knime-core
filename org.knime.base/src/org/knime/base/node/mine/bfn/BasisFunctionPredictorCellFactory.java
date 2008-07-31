@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -47,7 +47,7 @@ import org.knime.core.node.ExecutionMonitor;
  */
 public class BasisFunctionPredictorCellFactory implements CellFactory {
     
-    private final List<BasisFunctionPredictorRow> m_model;
+    private final Map<DataCell, List<BasisFunctionPredictorRow>> m_model;
     
     private final int[] m_filteredColumns;
     
@@ -65,7 +65,8 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
      * 
      */
     public BasisFunctionPredictorCellFactory(
-            final DataColumnSpec[] modelSpecs, final String newTargetName) {
+            final DataTableSpec modelSpecs,
+            final String newTargetName) {
         m_model = null;
         m_filteredColumns = null;
         m_dontKnowClass = Double.NaN;
@@ -74,10 +75,11 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
     }
     
     private static DataColumnSpec[] createSpec(
-            final DataColumnSpec[] modelSpecs, final String newTargetName) {
-        int modelClassIdx = modelSpecs.length - 5;
+            final DataTableSpec modelSpecs, 
+            final String newTargetName) {
+        int modelClassIdx = modelSpecs.getNumColumns() - 5;
         Set<DataCell> possClasses = 
-            modelSpecs[modelClassIdx].getDomain().getValues();
+            modelSpecs.getColumnSpec(modelClassIdx).getDomain().getValues();
         if (possClasses == null) {
             return new DataColumnSpec[0];
         }
@@ -88,7 +90,7 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
                     it.next().toString(), DoubleCell.TYPE).createSpec();
         }
         DataColumnSpecCreator newTargetSpec = new DataColumnSpecCreator(
-                modelSpecs[modelClassIdx]);
+                modelSpecs.getColumnSpec(modelClassIdx));
         newTargetSpec.setName(newTargetName);
         specs[specs.length - 1] = newTargetSpec.createSpec();
         return specs;
@@ -108,8 +110,8 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
      * @throws NullPointerException if one of the arguments is <code>null</code>
      */
     public BasisFunctionPredictorCellFactory(final DataTableSpec dataSpec, 
-            final DataColumnSpec[] modelSpecs,
-            final List<BasisFunctionPredictorRow> model,
+            final DataTableSpec modelSpecs,
+            final Map<DataCell, List<BasisFunctionPredictorRow>> model,
             final String newTargetName,
             final double dontKnowClass,
             final boolean normClass) {
@@ -128,10 +130,10 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
         
         m_specs = createSpec(modelSpecs, newTargetName);
         
-        m_filteredColumns = new int[modelSpecs.length - 5];
+        m_filteredColumns = new int[modelSpecs.getNumColumns() - 5];
         for (int i = 0; i < m_filteredColumns.length; i++) {
             m_filteredColumns[i] = dataSpec.findColumnIndex(
-                    modelSpecs[i].getName());
+                    modelSpecs.getColumnSpec(i).getName());
         }
     }
     
@@ -143,21 +145,21 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
      * @return mapping class label to array of assigned class degrees
      */
     protected DataCell[] predict(final DataRow row,
-            final List<BasisFunctionPredictorRow> model) {
+            final Map<DataCell, List<BasisFunctionPredictorRow>> model) {
         // maps class to activation
         Map<DataCell, Double> map = new LinkedHashMap<DataCell, Double>();
         // overall basisfunctions in the model
-        for (Iterator<BasisFunctionPredictorRow> it = model.iterator(); 
-                it.hasNext();) {
-            BasisFunctionPredictorRow bf = it.next();
-            DataCell classInfo = bf.getClassLabel();
-            double act;
-            if (map.containsKey(classInfo)) {
-                act = bf.compose(row, map.get(classInfo));
-            } else {
-                act = bf.compose(row, 0.0);
+        for (DataCell key : model.keySet()) {
+            for (BasisFunctionPredictorRow bf : model.get(key)) {
+                DataCell classInfo = bf.getClassLabel();
+                double act;
+                if (map.containsKey(classInfo)) {
+                    act = bf.compose(row, map.get(classInfo));
+                } else {
+                    act = bf.compose(row, 0.0);
+                }
+                map.put(classInfo, act);
             }
-            map.put(classInfo, act);
         }
         
         // hash column specs
@@ -225,6 +227,7 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
      */
     public void setProgress(final int curRowNr, final int rowCount, 
             final RowKey lastKey, final ExecutionMonitor exec) {
-        exec.setProgress((double) curRowNr / rowCount);
+        exec.setProgress((double) curRowNr / rowCount,
+                "Predicting row \"" + lastKey.getString() + "\"");
     }
 }

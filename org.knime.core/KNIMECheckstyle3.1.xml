@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-	This configuration file was written by the eclipse-cs plugin configuration editor
+    This configuration file was written by the eclipse-cs plugin configuration editor
 -->
 <!--
-Checkstyle-Configuration: UniKN KNIME
-Description:
-
+    Checkstyle-Configuration: UniKN KNIME
+    Description: none
 -->
 <!DOCTYPE module PUBLIC "-//Puppy Crawl//DTD Check Configuration 1.2//EN" "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
 <module name="Checker">
@@ -40,7 +39,9 @@ Description:
         <module name="AvoidStarImport"/>
         <module name="IllegalImport"/>
         <module name="RedundantImport"/>
-        <module name="UnusedImports"/>
+        <module name="UnusedImports">
+            <property name="severity" value="ignore"/>
+        </module>
         <module name="FileLength"/>
         <module name="LineLength">
             <metadata name="com.atlassw.tools.eclipse.checkstyle.comment" value="ignores import statements"/>
@@ -129,6 +130,8 @@ Description:
         </module>
     </module>
     <module name="PackageHtml"/>
-    <module name="NewlineAtEndOfFile"/>
+    <module name="NewlineAtEndOfFile">
+        <property name="severity" value="ignore"/>
+    </module>
     <module name="Translation"/>
 </module>

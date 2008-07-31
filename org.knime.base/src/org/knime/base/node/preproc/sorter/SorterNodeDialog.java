@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   02.02.2005 (cebron): created
  */
@@ -41,7 +41,7 @@ import org.knime.core.node.NotConfigurableException;
 /**
  * Dialog for choosing the columns that will be sorted. It is also possible to
  * set the order of columns
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
  */
 public class SorterNodeDialog extends NodeDialogPane {
@@ -78,17 +78,18 @@ public class SorterNodeDialog extends NodeDialogPane {
      * Calls the update method of the underlying update method of the
      * {@link SorterNodeDialogPanel} using the input data table spec from this
      * {@link SorterNodeModel}.
-     * 
+     *
      * @param settings the node settings to read from
      * @param specs the input specs
-     * 
+     *
      * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
      * @throws NotConfigurableException if the dialog can not be opened.
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        if (specs[0].getNumColumns() == 0) {
+        if (specs.length == 0 || specs[0] == null
+                || specs[0].getNumColumns() == 0) {
             throw new NotConfigurableException("No columns to sort.");
         }
         List<String> list = null;
@@ -97,8 +98,9 @@ public class SorterNodeDialog extends NodeDialogPane {
 
         if (settings.containsKey(SorterNodeModel.INCLUDELIST_KEY)) {
             try {
-                String[] alist = settings
-                        .getStringArray(SorterNodeModel.INCLUDELIST_KEY);
+                String[] alist =
+
+                    settings.getStringArray(SorterNodeModel.INCLUDELIST_KEY);
                 if (alist != null) {
                     list = new ArrayList<String>();
                     for (int i = 0; i < alist.length; i++) {
@@ -144,9 +146,9 @@ public class SorterNodeDialog extends NodeDialogPane {
      * Sets the list of columns to include and the sorting order list inside the
      * underlying {@link SorterNodeModel} retrieving them from the
      * {@link SorterNodeDialogPanel}.
-     * 
+     *
      * @param settings the node settings to write into
-     * 
+     *
      * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
      */
     @Override

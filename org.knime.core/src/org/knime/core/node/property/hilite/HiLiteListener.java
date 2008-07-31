@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -55,6 +55,8 @@ public interface HiLiteListener extends EventListener {
     
     /**
      * Invoked, when everything (all rows) are unhilit.
+     * 
+     * @param event contains a list of row key that were unhilit
      */
-    void unHiLiteAll();
+    void unHiLiteAll(final KeyEvent event);
 }

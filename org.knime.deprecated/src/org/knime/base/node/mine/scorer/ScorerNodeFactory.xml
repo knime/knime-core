@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Other" icon="./scorer.png" deprecated="true">
-    <name>Scorer</name>
+    <name>Scorer (deprecated)</name>
     <shortDescription>
-   	    This node is obsolete! Please use the new Scorer located in 
-	    the Mining -&gt; ModelEvaluation category.
+   	    This node is obsolete! Please use the new Scorer node located in 
+	    the Mining -&gt; Scoring category.
     </shortDescription>
     <fullDescription>
         <intro>
         <p />
-        This node is obsolete! Please use the new Scorer located in 
-	    the Mining -&gt; ModelEvaluation category.<p />
+        This node is obsolete! Please use the new Scorer node located in 
+	    the Mining -&gt; Scoring category.<p />
 			Compares two columns by their attribute value pairs and shows the 
 		    confusion matrix, i.e. how many rows of which attribute and their classification. 
 		    The dialog allows you to select two columns to compare;

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -31,8 +31,9 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editpolicies.XYLayoutEditPolicy;
 import org.eclipse.gef.requests.CreateRequest;
 import org.knime.core.node.workflow.NodeContainer;
-
 import org.knime.workbench.editor2.commands.ChangeNodeBoundsCommand;
+import org.knime.workbench.editor2.commands.ChangeWorkflowPortBarCommand;
+import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
 
 /**
  * Handles manual layout editing for the workflow, that is, creates the commands
@@ -56,9 +57,7 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
      * Creates command to move / resize <code>NodeContainer</code> components
      * on the project's client area.
      * 
-     * @see org.eclipse.gef.editpolicies.ConstrainedLayoutEditPolicy
-     *      #createChangeConstraintCommand(org.eclipse.gef.EditPart,
-     *      java.lang.Object)
+     * {@inheritDoc}
      */
     @Override
     protected Command createChangeConstraintCommand(final EditPart child,
@@ -69,21 +68,21 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
             return null;
         }
 
-        // We need a node container model object ...
-        if (!(child.getModel() instanceof NodeContainer)) {
-            return null;
-        }
-
-        NodeContainer container = (NodeContainer) child.getModel();
+        Command command = null;
 
         // Create a copy of the bounds from the model, and return a command
         // that set it into the visuals
         Rectangle rect = ((Rectangle) constraint).getCopy();
         int[] newBounds = new int[] {rect.x, rect.y, rect.width, rect.height};
-
-        ChangeNodeBoundsCommand command = new ChangeNodeBoundsCommand(
-                container, newBounds);
-
+        
+        // We need a node container model object ...
+        if (child.getModel() instanceof NodeContainer) {
+            NodeContainer container = (NodeContainer) child.getModel();
+            command = new ChangeNodeBoundsCommand(container, newBounds);
+        } else if (child instanceof AbstractWorkflowPortBarEditPart) {
+            command = new ChangeWorkflowPortBarCommand(
+                    (AbstractWorkflowPortBarEditPart)child, rect);
+        }
         return command;
     }
 

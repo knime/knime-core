@@ -24,17 +24,12 @@
 -->
 </head>
 <body>
-The <b>xvalidation</b> package contains all classes for the cross validation node.
-The cross validation node is derived from {@link org.knime.core.node.meta.MetaNodeModel} and
-offers an internal workflow. When a new cross validation node is created it contains (in addition
-to the normal in- and output node) a cross validation partitioner that splits the incoming
-data into training and test data set. It is configured via the outer cross validation node
-(e.g. number of validations, random sampling). This node cannot be deleted as it is crucial for
-the functionality of the cross validation node.<br />
-The inner workflow should consists of at least some learner and its predictor. The output
-of the predictor should be connected to the meta output node. The class column set in the cross validation
-node and the predictor has to be the same.<br />
-The cross validation nodes' view shows a confusion matrix, its output port offers a table with the
-error rates of each validation run.
+The
+<b>xvalidation</b>
+package contains all classes for a cross validation flow. The workflow between
+the {@link XValidatePartionModel} node and the {@link AggregateOutputNodeModel}
+node should consist of at least a learner and its predictor. The output of
+the predictor should be connected to the aggregator node. The class column set
+in the aggregator node and the predictor has to be the same.
 </body>
 </html>

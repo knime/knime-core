@@ -1,9 +1,9 @@
 /*
- * --------------------------------------------------------------------- *
+ * ---------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * --------------------------------------------------------------------- *
+ * ---------------------------------------------------------------------
  */
 package org.knime.base.node.viz.table;
 
@@ -59,6 +59,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.tableview.TableContentModel;
 import org.knime.core.node.tableview.TableContentView;
 import org.knime.core.node.tableview.TableView;
+import org.knime.core.node.tableview.TableContentModel.TableContentFilter;
 
 /**
  * Table view on a {@link org.knime.core.data.DataTable}. It simply uses a
@@ -133,28 +134,6 @@ public class TableNodeView extends NodeView {
      */
     public void setHiLiteHandler(final HiLiteHandler hiLiteHdl) {
         m_tableView.setHiLiteHandler(hiLiteHdl);
-    }
-
-    /**
-     * Control behaviour to show only hilited rows.
-     * 
-     * @param showOnlyHilit <code>true</code> filter and display only rows
-     *            whose hiLite status is set
-     * @see TableContentModel#showHiLitedOnly(boolean)
-     */
-    public final void showHiLitedOnly(final boolean showOnlyHilit) {
-        m_tableView.showHiLitedOnly(showOnlyHilit);
-    }
-
-    /**
-     * Get status of filtering for hilited rows.
-     * 
-     * @return <code>true</code> only hilited rows are shown,
-     *         <code>false</code> all rows are shown
-     * @see TableContentModel#showsHiLitedOnly()
-     */
-    public boolean showsHiLitedOnly() {
-        return m_tableView.showsHiLitedOnly();
     }
 
     /**
@@ -378,37 +357,42 @@ public class TableNodeView extends NodeView {
 
         @Override
         public void run() {
-            DataTable table = m_tableView.getContentModel().getDataTable();
-            boolean writeHilightedOnly = m_tableView.getContentModel()
-                    .showsHiLitedOnly();
-            HiLiteHandler hdl = m_tableView.getContentModel()
-                    .getHiLiteHandler();
-            Object mutex = writeHilightedOnly ? hdl : new Object();
+            TableContentModel model = m_tableView.getContentModel();
+            TableContentFilter filter = model.getTableContentFilter();
+            DataTable table = model.getDataTable();
+            HiLiteHandler hdl = model.getHiLiteHandler();
+            Object mutex = filter.performsFiltering() ? hdl : new Object();
             // if hilighted rows are written only, we need to sync with
             // the handler (prevent others to (un-)hilight rows in the meantime)
             synchronized (mutex) {
-                if (writeHilightedOnly) {
+                if (filter.performsFiltering()) {
                     DataTable hilightOnlyTable = new RowFilterTable(table,
-                            new HilightOnlyRowFilter(hdl));
+                            new RowHiliteFilter(filter, hdl));
                     table = hilightOnlyTable;
                 }
                 try {
                     FileWriterSettings settings = new FileWriterSettings();
                     settings.setWriteColumnHeader(true);
                     settings.setWriteRowID(true);
-                    settings.setColSeparator(";");
+                    settings.setColSeparator(",");
                     settings.setSeparatorReplacement("");
                     settings.setReplaceSeparatorInStrings(true);
                     settings.setMissValuePattern("");
                     CSVWriter writer = new CSVWriter(new FileWriter(m_file), 
                             settings);
+                    String message;
                     try {
                         writer.write(table, m_exec);
                         writer.close();
+                        message = "Done.";
                     } catch (CanceledExecutionException ce) {
                         writer.close();
                         m_file.delete();
+                        message = "Canceled.";
                     }
+                    JOptionPane.showMessageDialog(m_tableView,
+                            message, "Write CSV",
+                            JOptionPane.INFORMATION_MESSAGE);
                 } catch (IOException ioe) {
                     JOptionPane.showMessageDialog(m_tableView,
                             ioe.getMessage(), "Write error",
@@ -424,17 +408,20 @@ public class TableNodeView extends NodeView {
      * 
      * @author Bernd Wiswedel, University of Konstanz
      */
-    private static final class HilightOnlyRowFilter extends RowFilter {
+    private static final class RowHiliteFilter extends RowFilter {
 
         private final HiLiteHandler m_handler;
+        private final TableContentFilter m_filter;
 
         /**
          * Creates new instance given a hilight handler.
          * 
          * @param handler the handler to get the hilite info from
          */
-        public HilightOnlyRowFilter(final HiLiteHandler handler) {
+        public RowHiliteFilter(final TableContentFilter filter, 
+                final HiLiteHandler handler) {
             m_handler = handler;
+            m_filter = filter;
         }
 
         @Override
@@ -457,7 +444,7 @@ public class TableNodeView extends NodeView {
         @Override
         public boolean matches(final DataRow row, final int rowIndex)
                 throws EndOfTableException, IncludeFromNowOn {
-            return m_handler.isHiLit(row.getKey().getId());
+            return m_filter.matches(m_handler.isHiLit(row.getKey()));
         }
     }
 }

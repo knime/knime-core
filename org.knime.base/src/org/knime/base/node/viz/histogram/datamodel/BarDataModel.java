@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -351,53 +351,50 @@ implements Serializable {
             final SortedSet<Color> barElementColors, final double valRange,
             final AggregationMethod aggrMethod,
             final HistogramHiliteCalculator calculator) {
-            LOGGER.debug("Entering setStackedRectangles(bounds, "
-                    + "barElementColors, valRange, aggrMethod, minAggrVal) "
-                    + "of class BarDataModel.");
             //the user wants the elements on top of each other
             final int startX = (int)bounds.getX();
             final int startY = (int)bounds.getY();
             final int barHeight = (int)bounds.getHeight();
             final int barWidth = (int)bounds.getWidth();
             final double barAggrVal = getAggregationValue(aggrMethod);
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Bar values (x,y,height,width,aggrVal): "
-                        + startX + ", "
-                        + startY + ", "
-                        + barHeight + ", "
-                        + barWidth + ", "
-                        + barAggrVal);
-            }
+//            if (LOGGER.isDebugEnabled()) {
+//                LOGGER.debug("Bar values (x,y,height,width,aggrVal): "
+//                        + startX + ", "
+//                        + startY + ", "
+//                        + barHeight + ", "
+//                        + barWidth + ", "
+//                        + barAggrVal);
+//            }
             //we have to be care full with the value range in stacked layout
             //because of the mixture of positive and negatives
             double stackedValRange = valRange;
             if ((AggregationMethod.AVERAGE.equals(aggrMethod)
                     || AggregationMethod.SUM.equals(aggrMethod))) {
                 stackedValRange = 0;
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(
-                            "Calculating stacked value range.Starting with: "
-                            + stackedValRange);
-                }
+//                if (LOGGER.isDebugEnabled()) {
+//                    LOGGER.debug(
+//                            "Calculating stacked value range.Starting with: "
+//                            + stackedValRange);
+//                }
                 for (final BarElementDataModel element : getElements()) {
                     stackedValRange +=
                         Math.abs(element.getAggregationValue(aggrMethod));
                 }
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Calculating stacked bin height "
-                            + "using stackedValRange: " + stackedValRange);
-                }
+//                if (LOGGER.isDebugEnabled()) {
+//                    LOGGER.debug("Calculating stacked bin height "
+//                            + "using stackedValRange: " + stackedValRange);
+//                }
             }
             final double heightPerAbsVal = bounds.getHeight() / stackedValRange;
             int yCoord = startY;
             double elementHeightSum = 0;
             int elementCounter = 0;
             final int noOfElements = getNoOfElements();
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Stacked valRange: " + stackedValRange
-                        + " height per absVal: " + heightPerAbsVal
-                        + " noOfElements: " + noOfElements);
-            }
+//            if (LOGGER.isDebugEnabled()) {
+//                LOGGER.debug("Stacked valRange: " + stackedValRange
+//                        + " height per absVal: " + heightPerAbsVal
+//                        + " noOfElements: " + noOfElements);
+//            }
             for (final Color elementColor : barElementColors) {
                 final BarElementDataModel element =
                     getElement(elementColor);
@@ -441,15 +438,15 @@ implements Serializable {
                         }
                     }
                 }
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Element aggrVal: " + aggrVal
-                            + " element absVal: " + elementAbsVal
-                            + " xCoord: " + startX
-                            + " yCoord: " + yCoord
-                            + " elementWidth: " + barWidth
-                            + " rawElementHeight: " + rawElementHeight
-                            + " adjusted elementHeight: " + elementHeight);
-                }
+//                if (LOGGER.isDebugEnabled()) {
+//                    LOGGER.debug("Element aggrVal: " + aggrVal
+//                            + " element absVal: " + elementAbsVal
+//                            + " xCoord: " + startX
+//                            + " yCoord: " + yCoord
+//                            + " elementWidth: " + barWidth
+//                            + " rawElementHeight: " + rawElementHeight
+//                            + " adjusted elementHeight: " + elementHeight);
+//                }
 
                 final Rectangle elementRect =
                     new Rectangle(startX, yCoord, barWidth, elementHeight);
@@ -458,9 +455,6 @@ implements Serializable {
                 //the next element below the current one
                 yCoord += elementHeight;
             }
-            LOGGER.debug("Exiting setStackedRectangles(bounds, "
-                    + "barElementColors, valRange, aggrMethod, minAggrVal) "
-                    + "of class BarDataModel.");
         }
 
     /**

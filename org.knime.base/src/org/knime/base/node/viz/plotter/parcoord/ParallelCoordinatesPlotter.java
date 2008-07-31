@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -57,6 +57,7 @@ import org.knime.base.util.coordinate.NominalCoordinate;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.property.hilite.KeyEvent;
@@ -74,7 +75,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     
     private List<LineInfo> m_lines;
     
-    private Set<DataCell> m_selected;
+    private Set<RowKey> m_selected;
     
     private List<String>m_columnNames;
     
@@ -96,12 +97,12 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     /**
      * Registers listeners to the control elements of the 
      * {@link org.knime.base.node.viz.plotter.parcoord
-     * .ParallelCoordinatePlotterProperties}
+     * .ParallelCoordinatePlotterProperties}.
      */
     public ParallelCoordinatesPlotter() {
         super(new ParallelCoordinateDrawingPane(), 
                 new ParallelCoordinatePlotterProperties());
-        m_selected = new HashSet<DataCell>();
+        m_selected = new HashSet<RowKey>();
         addMouseListener(new TransformationMouseListener());
         // column selection
         if (getProperties() instanceof MultiColumnPlotterProperties) {
@@ -224,7 +225,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     @Override
     public synchronized void reset() {
         m_axes = null;
-        m_selected = new HashSet<DataCell>();
+        m_selected = new HashSet<RowKey>();
         m_columnNames = null;
         m_lines = null;
         ((ParallelCoordinateDrawingPane)getDrawingPane()).setAxes(null);
@@ -342,7 +343,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         for (LineInfo line : m_lines) {
             if (line.wasClicked(clicked, m_curve)) {
                 line.setSelected(true);
-                m_selected.add(line.getRowKey().getId());
+                m_selected.add(line.getRowKey());
             }
         }
         getDrawingPane().repaint();
@@ -361,7 +362,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         for (LineInfo line : m_lines) {
             if (line.isContainedIn(selectionRectangle)) {
                 line.setSelected(true);
-                m_selected.add(line.getRowKey().getId());
+                m_selected.add(line.getRowKey());
             }
         }
         getDrawingPane().repaint();
@@ -374,9 +375,9 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
      */
     @Override
     public void hiLite(final KeyEvent event) {
-        Set<DataCell>hilited = event.keys();
+        Set<RowKey>hilited = event.keys();
         for (LineInfo line : m_lines) {
-            if (hilited.contains(line.getRowKey().getId())) {
+            if (hilited.contains(line.getRowKey().getString())) {
                 line.setHilite(true);
             }
         }
@@ -388,9 +389,9 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
      */
     @Override
     public void unHiLite(final KeyEvent event) {
-        Set<DataCell>hilited = event.keys();
+        Set<RowKey>hilited = event.keys();
         for (LineInfo line : m_lines) {
-            if (hilited.contains(line.getRowKey().getId())) {
+            if (hilited.contains(line.getRowKey())) {
                 line.setHilite(false);
             }
         }
@@ -400,7 +401,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     /**
      * {@inheritDoc}
      */
-    public void unHiLiteAll() {
+    public void unHiLiteAll(final KeyEvent event) {
         for (LineInfo line : m_lines) {
             line.setHilite(false);
         }
@@ -455,8 +456,8 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     @Override
     public synchronized void updatePaintModel() {
         if (getDataProvider() != null 
-                && getDataProvider().getDataArray(0) != null) {
-            DataArray array = getDataProvider().getDataArray(0);
+                && getDataProvider().getDataArray(getDataArrayIdx()) != null) {
+            DataArray array = getDataProvider().getDataArray(getDataArrayIdx());
             Set<DataCell>columns = new LinkedHashSet<DataCell>();
             m_axes = new LinkedList<ParallelAxis>();
             if (m_columnNames == null) {
@@ -519,11 +520,11 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
      */
     private synchronized List<LineInfo> calculateLines() {
         if (getDataProvider() == null 
-                || getDataProvider().getDataArray(0) == null
+                || getDataProvider().getDataArray(getDataArrayIdx()) == null
                 || m_axes == null) {
             return new ArrayList<LineInfo>();
         }
-        DataArray array = getDataProvider().getDataArray(0);
+        DataArray array = getDataProvider().getDataArray(getDataArrayIdx());
 //        LOGGER.debug("calculate points: " + m_axes);
         List<LineInfo> lines = new ArrayList<LineInfo>(array.size());
         row: for (DataRow row : array) {
@@ -549,12 +550,14 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                 Point p = new Point(x, y);
                 points.add(p);
             }
-            boolean isHilite = delegateIsHiLit(row.getKey().getId());
+            boolean isHilite = delegateIsHiLit(row.getKey());
             if (!m_hide || (m_hide && isHilite)) {
                 LineInfo line = new LineInfo(points, domainValues,
-                        m_selected.contains(row.getKey().getId()), 
+                        m_selected.contains(row.getKey()), 
                         isHilite, array.getDataTableSpec().getRowColor(row),
-                        array.getDataTableSpec().getRowSize(row), row.getKey());
+                        array.getDataTableSpec().getRowSizeFactor(row), 
+                        row.getKey());
+                
                 line.setShape(array.getDataTableSpec().getRowShape(row));
                 lines.add(line);
             }

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,7 +25,7 @@ package org.knime.core.node.property.hilite;
 
 import java.util.Set;
 
-import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 
 
 /**
@@ -73,7 +73,7 @@ public interface HiLiteHandler {
     
     /**
      * Adds a new <code>HiLiteListener</code> to the list of registered
-     * listener objects that will then in turn recieve (un)hilite events.
+     * listener objects that will then in turn receive (un)hilite events.
      * 
      * @param listener the hilite listener to add
      */
@@ -98,53 +98,28 @@ public interface HiLiteHandler {
      * @return <code>true</code> if all IDs are hilit, <code>false</code>
      * otherwise
      */
-    boolean isHiLit(final DataCell... ids);
+    boolean isHiLit(final RowKey... ids);
 
     /**
      * Returns an unmodifiable set of hilit keys.
      * 
      * @return a set of hilit keys.
      */
-    Set<DataCell> getHiLitKeys();
-
-    /**
-     * Hilites the given items and fires an event to all registered listeners.
-     * 
-     * @param ids an array of row IDs to hilite
-     * @deprecated Use {@link #fireHiLiteEvent(DataCell...)} instead
-     */
-    void hiLite(final DataCell... ids);
+    Set<RowKey> getHiLitKeys();
 
     /**
      * Hilites the given items and fires an event to all registered listeners.
      * 
      * @param ids an array of row IDs to hilite
      */
-    void fireHiLiteEvent(final DataCell... ids);
-
-    /**
-     * Hilites the given keys and fires an event to all registered listeners.
-     * 
-     * @param ids the set of row keys to hilite
-     * @deprecated Use {@link #fireHiLiteEvent(Set)} instead
-     */
-    void hiLite(final Set<DataCell> ids);
+    void fireHiLiteEvent(final RowKey... ids);
 
     /**
      * Hilites the given keys and fires an event to all registered listeners.
      * 
      * @param ids the set of row keys to hilite
      */
-    void fireHiLiteEvent(final Set<DataCell> ids);
-
-    /**
-     * Unhilites the given items and fires the event to all registered
-     * listeners.
-     * 
-     * @param ids an array of row IDs to reset hilite status
-     * @deprecated Use {@link #fireUnHiLiteEvent(DataCell...)} instead
-     */
-    void unHiLite(final DataCell... ids);
+    void fireHiLiteEvent(final Set<RowKey> ids);
 
     /**
      * Unhilites the given items and fires the event to all registered
@@ -152,28 +127,14 @@ public interface HiLiteHandler {
      * 
      * @param ids an array of row IDs to reset hilite status
      */
-    void fireUnHiLiteEvent(final DataCell... ids);
-
-    /**
-     * Unhilites the given keys and fires an event to all registered listeners.
-     * 
-     * @param ids the set of row IDs to unhilite
-     * @deprecated Use {@link #fireUnHiLiteEvent(Set)} instead
-     */
-    void unHiLite(final Set<DataCell> ids);
+    void fireUnHiLiteEvent(final RowKey... ids);
 
     /**
      * Unhilites the given keys and fires an event to all registered listeners.
      * 
      * @param ids the set of row IDs to unhilite
      */
-    void fireUnHiLiteEvent(final Set<DataCell> ids);
-
-    /**
-     * Unhilites all hilit items and fires an event.
-     * @deprecated Use {@link #fireClearHiLiteEvent()} instead
-     */
-    void unHiLiteAll();
+    void fireUnHiLiteEvent(final Set<RowKey> ids);
 
     /**
      * Unhilites all hilit items and fires an event.

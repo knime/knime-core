@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -178,7 +178,7 @@ public class ExtractFromToNodeModel extends NodeModel {
 //        final int totalRowCount = in.getRowCount();
         try {
            for (DataRow r : in) {
-              TimestampCell tsc = (TimestampCell) r.getCell(colIndex);
+              TimestampValue tsc = (TimestampValue) r.getCell(colIndex);
             
                 java.util.Date d1 = tsc.getDate();
               if (d1.after(m_tscFrom.getDate())

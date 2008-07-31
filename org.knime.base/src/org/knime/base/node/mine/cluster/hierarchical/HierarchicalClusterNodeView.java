@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -34,8 +34,8 @@ import org.knime.base.node.util.DataArray;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.DataProvider;
 import org.knime.base.node.viz.plotter.basic.BasicDrawingPane;
-import org.knime.base.node.viz.plotter.dendrogram.DendrogramPlotter;
 import org.knime.base.node.viz.plotter.dendrogram.DendrogramNode;
+import org.knime.base.node.viz.plotter.dendrogram.DendrogramPlotter;
 import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotter;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
@@ -95,6 +95,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
         // no selection should be possible so remove the selection listener 
         m_distancePlotter.removeMouseListener(
                 AbstractPlotter.SelectionMouseListener.class);
+        
         
         m_properties.getDotSizeSpinner().addChangeListener(
                 new ChangeListener() {
@@ -165,10 +166,14 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
                                 .getColumnSpec(1).getDomain().getUpperBound())
                                 .getDoubleValue());
         ((BasicDrawingPane)m_distancePlotter.getDrawingPane()).clearPlot();
-        m_distancePlotter.addLine(distanceTable, 1, Color.BLACK, 
+        m_distancePlotter.addLine(distanceTable, 0, 1, Color.BLACK, 
                 new BasicStroke(m_thickness));
         
+//        m_distancePlotter.getXAxis().getCoordinate().setPolicy(
+//                DescendingNumericTickPolicyStrategy.getInstance());
+        
         m_distancePlotter.updatePaintModel();
+        
         m_dendroPlotter.updatePaintModel();
     }
 

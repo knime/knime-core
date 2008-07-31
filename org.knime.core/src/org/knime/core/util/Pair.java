@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -65,7 +65,7 @@ public final class Pair<T, M> {
     public boolean equals(final Object o) {
         if (!(o instanceof Pair)) { return false; }
         
-        Pair<?, ?> p = (Pair) o;
+        Pair<?, ?> p = (Pair<?, ?>) o;
         if (!m_first.equals(p.m_first)) { return false; }
         if (!m_second.equals(p.m_second)) { return false; }
         return true;

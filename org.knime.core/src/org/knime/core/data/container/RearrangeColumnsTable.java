@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -42,6 +42,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger.SpecAndFactoryObject;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -74,7 +75,8 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     /** If this table just filters columns from the reference table, we use
      * this dummy iterator to provide empty appended cells.
      */
-    private static final RowIterator EMPTY_ITERATOR = new RowIterator() {
+    private static final CloseableRowIterator EMPTY_ITERATOR = 
+        new CloseableRowIterator() {
         @Override
         public boolean hasNext() {
             return true;
@@ -82,6 +84,9 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         @Override
         public DataRow next() {
             return DUMMY_ROW;
+        }
+        @Override
+        public void close() {
         }
     };
 
@@ -119,9 +124,7 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
      * @param f The file to read from the newly appended columns.
      * @param settings The settings containing the information how to assemble
      *         the table.
-     * @param loadID The load ID to get the reference table from the global
-     *         table repository. This is a random number that is generated
-     *         when the workbench loading starts.
+     * @param tblRep The table repository (only available during start)
      * @param spec The data table spec of the resulting table. This argument
      * is <code>null</code> when the data to restore is written using 
      * KNIME 1.1.x or before.
@@ -130,14 +133,16 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
      * @throws IOException If reading the fails.
      * @throws InvalidSettingsException If the settings are invalid.
      */
-    public RearrangeColumnsTable(final File f, final NodeSettingsRO settings,
-            final int loadID, final DataTableSpec spec, final int tableID,
+    public RearrangeColumnsTable(final ReferencedFile f, 
+            final NodeSettingsRO settings, 
+            final Map<Integer, BufferedDataTable> tblRep, 
+            final DataTableSpec spec, final int tableID,
             final HashMap<Integer, ContainerTable> bufferRep) 
         throws IOException, InvalidSettingsException {
         NodeSettingsRO subSettings = 
             settings.getNodeSettings(CFG_INTERNAL_META);
         int refTableID = subSettings.getInt(CFG_REFERENCE_ID);
-        m_reference = BufferedDataTable.getDataTable(loadID, refTableID);
+        m_reference = BufferedDataTable.getDataTable(tblRep, refTableID);
         m_map = subSettings.getIntArray(CFG_MAP);
         m_isFromRefTable = subSettings.getBooleanArray(CFG_FLAGS);
         DataColumnSpec[] appendColSpecs;
@@ -157,10 +162,9 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
                         f, new NoKeyBufferCreator());
                 DataTableSpec appendSpec = m_appendTable.getDataTableSpec();
                 if (appendSpec.getNumColumns() != appendColCount) {
-                    throw new IOException("Inconsistency in data file " 
-                            + f.getAbsolutePath() + ", read " 
-                            + appendSpec.getNumColumns() + " columns, expected "
-                            + appendColCount);
+                    throw new IOException("Inconsistency in data file \"" 
+                            + f + "\", read " + appendSpec.getNumColumns() 
+                            + " columns, expected " + appendColCount);
                 }
                 for (int i = 0; i < appendSpec.getNumColumns(); i++) {
                     appendColSpecs[i] = appendSpec.getColumnSpec(i);
@@ -224,8 +228,8 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     /**
      * {@inheritDoc}
      */
-    public RowIterator iterator() {
-        RowIterator appendIt;
+    public CloseableRowIterator iterator() {
+        CloseableRowIterator appendIt;
         if (m_appendTable != null) {
             appendIt = m_appendTable.iterator();
         } else {
@@ -337,7 +341,7 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
             } finally {
                 container.close();
             }
-            appendTable = (ContainerTable)container.getBufferedTable();
+            appendTable = container.getBufferedTable();
             appendTableSpec = appendTable.getDataTableSpec();
         } else {
             appendTable = null;
@@ -400,6 +404,14 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     public void clear() {
         if (m_appendTable != null) {
             m_appendTable.clear();
+        }
+    }
+    
+    /** Internal use.
+     * {@inheritDoc} */
+    public void ensureOpen() {
+        if (m_appendTable != null) {
+            m_appendTable.ensureOpen();
         }
     }
 

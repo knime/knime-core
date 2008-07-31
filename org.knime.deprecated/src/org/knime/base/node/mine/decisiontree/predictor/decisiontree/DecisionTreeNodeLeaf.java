@@ -4,7 +4,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -33,15 +33,15 @@ import java.util.Set;
 
 import javax.swing.tree.TreeNode;
 
+import org.knime.base.data.util.DataCellStringMapper;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.w3c.dom.Node;
-
-import org.knime.base.data.util.DataCellStringMapper;
 
 /**
  * The Leaf of a decision tree. It stores class information and also some
@@ -50,7 +50,7 @@ import org.knime.base.data.util.DataCellStringMapper;
  * @author Michael Berthold, University of Konstanz
  */
 public class DecisionTreeNodeLeaf extends DecisionTreeNode {
-    private HashSet<DataCell> m_coveredPattern = new HashSet<DataCell>();
+    private HashSet<RowKey> m_coveredPattern = new HashSet<RowKey>();
 
     private HashMap<Color, Double> m_coveredColors 
        = new HashMap<Color, Double>();
@@ -110,12 +110,12 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
      * 
      * @param row input pattern
      * @param spec the corresponding table spec
-     * @throws Exception if something went wrong (unknown attriubte for example)
+     * @throws Exception if something went wrong (unknown attribute for example)
      */
     @Override
     public final void addCoveredPattern(final DataRow row,
             final DataTableSpec spec) throws Exception {
-        m_coveredPattern.add(row.getKey().getId());
+        m_coveredPattern.add(row.getKey());
         addCoveredColor(row, spec);
     }
 
@@ -145,7 +145,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
      *         leaf node
      */
     @Override
-    public Set<DataCell> coveredPattern() {
+    public Set<RowKey> coveredPattern() {
         return m_coveredPattern;
     }
 

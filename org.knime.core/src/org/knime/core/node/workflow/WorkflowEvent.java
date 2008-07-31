@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   19.04.2005 (georg): created
  *   12.01.2006 (mb): clean up for code review
@@ -34,200 +34,78 @@ import java.util.Date;
  * the type of the event (or whatever meaningless value was given to those
  * fields during construction of the event - meaning all values are always
  * specified but not all carry meaning).
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
-public abstract class WorkflowEvent {
-    /** Event: node added to workflow. */
-    public static class NodeAdded extends WorkflowEvent {
-        /**
-         * Creates a new "node added" event.
-         *  
-         * @param nodeID the ID for the affected node
-         * @param oldValue <code>null</code>
-         * @param newValue the newly created {@link NodeContainer}
-         */
-        public NodeAdded(final int nodeID, final Object oldValue,
-                final Object newValue) {
-            super(nodeID, oldValue, newValue);
-        }        
-    }
-    
-    /** Event: node removed from workflow. */
-    public static class NodeRemoved extends WorkflowEvent {
-        /**
-         * Creates a new "node removed" event.
-         *  
-         * @param nodeID the ID for the affected node
-         * @param oldValue value before the change (may be <code>null</code>)
-         * @param newValue value after the change (may be <code>null</code>)
-         */
-        public NodeRemoved(final int nodeID, final Object oldValue,
-                final Object newValue) {
-            super(nodeID, oldValue, newValue);
-        }        
-    }
-
-    /** Event: connection added to workflow. */
-    public static class ConnectionAdded extends WorkflowEvent {
-        /**
-         * Creates a new "connection added" event.
-         *  
-         * @param nodeID the ID for the affected node
-         * @param oldValue value before the change (may be <code>null</code>)
-         * @param newValue value after the change (may be <code>null</code>)
-         */
-        public ConnectionAdded(final int nodeID, final Object oldValue,
-                final Object newValue) {
-            super(nodeID, oldValue, newValue);
-        }        
-    }
-
-    /** Event: connection removed from workflow. */
-    public static class ConnectionRemoved extends WorkflowEvent {
-        /**
-         * Creates a new "connection removed" event.
-         *  
-         * @param nodeID the ID for the affected node
-         * @param oldValue value before the change (may be <code>null</code>)
-         * @param newValue value after the change (may be <code>null</code>)
-         */
-        public ConnectionRemoved(final int nodeID, final Object oldValue,
-                final Object newValue) {
-            super(nodeID, oldValue, newValue);
-        }        
-    }
-    
-    /** Event: node was reset. */
-    public static class NodeReset extends WorkflowEvent {
-        /**
-         * Creates a new "node reset" event.
-         *  
-         * @param nodeID the ID for the affected node
-         * @param oldValue value before the change (may be <code>null</code>)
-         * @param newValue value after the change (may be <code>null</code>)
-         */
-        public NodeReset(final int nodeID, final Object oldValue,
-                final Object newValue) {
-            super(nodeID, oldValue, newValue);
-        }        
-    }
-    
-    /** Event: node was reset. */
-    public static class NodeConfigured extends WorkflowEvent {
-        /**
-         * Creates a new "node configured" event.
-         *  
-         * @param nodeID the ID for the affected node
-         * @param oldValue value before the change (may be <code>null</code>)
-         * @param newValue value after the change (may be <code>null</code>)
-         */
-        public NodeConfigured(final int nodeID, final Object oldValue,
-                final Object newValue) {
-            super(nodeID, oldValue, newValue);
-        }        
-    }
-    
-    /** Event: extra info attached to node has changed. */
-    public static class NodeExtrainfoChanged extends WorkflowEvent {
-        /**
-         * Creates a new "node extra info changed" event.
-         *  
-         * @param nodeID the ID for the affected node
-         * @param oldValue value before the change (may be <code>null</code>)
-         * @param newValue value after the change (may be <code>null</code>)
-         */
-        public NodeExtrainfoChanged(final int nodeID, final Object oldValue,
-                final Object newValue) {
-            super(nodeID, oldValue, newValue);
-        }        
-    }
-    
-    /** Event: extra info attached to connection has changed. */
-    public static class ConnectionExtrainfoChanged extends WorkflowEvent {
-        /**
-         * Creates a new "connection extra info changed" event.
-         *  
-         * @param nodeID the ID for the affected node
-         * @param oldValue value before the change (may be <code>null</code>)
-         * @param newValue value after the change (may be <code>null</code>)
-         */
-        public ConnectionExtrainfoChanged(final int nodeID,
-                final Object oldValue, final Object newValue) {
-            super(nodeID, oldValue, newValue);
-        }        
-    }
-
-    /** Event: node is being executed. */
-    public static class NodeStarted extends WorkflowEvent {
-        /**
-         * Creates a new "node started execution" event.
-         * 
-         * @param nodeID the ID for the affected node
-         * @param oldValue value before the change (may be <code>null</code>)
-         * @param newValue value after the change (may be <code>null</code>) 
-         */
-        public NodeStarted(final int nodeID,
-                final Object oldValue, final Object newValue) {
-            super(nodeID, oldValue, newValue);
-        }        
-    }
+public class WorkflowEvent {
 
 
-    /** Event: node execution is finished. */
-    public static class NodeFinished extends WorkflowEvent {
-        /**
-         * Creates a new "node finished execution" event.
-         * 
-         * @param nodeID the ID for the affected node
-         * @param oldValue value before the change (may be <code>null</code>)
-         * @param newValue value after the change (may be <code>null</code>) 
-         */
-        public NodeFinished(final int nodeID,
-                final Object oldValue, final Object newValue) {
-            super(nodeID, oldValue, newValue);
-        }        
-    }
-    
-    /** Event: node is waiting for execution. */
-    public static class NodeWaiting extends WorkflowEvent {
-        /**
-         * Creates a new "node waiting for execution" event.
-         * 
-         * @param nodeID the ID for the affected node
-         * @param oldValue value before the change (may be <code>null</code>)
-         * @param newValue value after the change (may be <code>null</code>) 
-         */
-        public NodeWaiting(final int nodeID, final Object oldValue, 
-                final Object newValue) {
-            super(nodeID, oldValue, newValue);
-        }
+    /**
+     * Enumeration of all workflow events that are interesting for the GUI.
+     *
+     * @author Fabian Dill, University of Konstanz
+     */
+    public enum Type {
+        /** Event: connection added to workflow. */
+     CONNECTION_ADDED,
+     /** Event: UI info attached to connection has changed. */
+     CONNECTION_UI_CHANGED,
+     /** Event: connection removed from workflow. */
+     CONNECTION_REMOVED,
+     /** Event: node added to workflow. */
+     NODE_ADDED,
+     /** Event: node was configured. */
+     NODE_CONFIGURED,
+     /** Event: UI info attached to node has changed. */
+     NODE_UI_CHANGED,
+     /** Event: node execution is finished. */
+     NODE_FINISHED,
+     /** Event: node removed from workflow. */
+     NODE_REMOVED,
+     /** Event: node was reset. */
+     NODE_RESET,
+     /** Event: node is being executed. */
+     NODE_STARTED,
+     /** Event: node is waiting for execution. */
+     NODE_WAITING
     }
 
-    private int m_id;
-    private long m_timestamp;
-    private Object m_oldValue;
-    private Object m_newValue;
+    private final NodeID m_id;
+    private final long m_timestamp;
+    private final Object m_oldValue;
+    private final Object m_newValue;
+    private final Type m_type;
+
 
     /**
      * Creates a new workflow event.
-     * 
+     *
+     * @param type the type of the event
      * @param nodeID The ID for the affected node
      * @param oldValue value before the change (may be <code>null</code>)
      * @param newValue value after the change (may be <code>null</code>)
      */
-    public WorkflowEvent(final int nodeID,
+    public WorkflowEvent(final Type type, final NodeID nodeID,
             final Object oldValue, final Object newValue) {
         m_id = nodeID;
         m_oldValue = oldValue;
         m_newValue = newValue;
+        m_type = type;
         m_timestamp = System.currentTimeMillis();
+    }
+
+    /**
+     *
+     * @return type of event
+     */
+    public Type getType() {
+        return m_type;
     }
 
     /**
      * @return Returns the node ID of the affected node.
      */
-    public int getID() {
+    public NodeID getID() {
         return m_id;
     }
 
@@ -247,8 +125,8 @@ public abstract class WorkflowEvent {
 
     /**
      * Gives a nicer representation of this event. For debugging purposes only.
-     * 
-     * @see java.lang.Object#toString()
+     *
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

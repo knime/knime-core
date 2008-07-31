@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -211,31 +211,34 @@ public final class DataColumnSpecCreator {
             setDomain(new DataColumnDomain(newLower, newUpper, newValues));
         }
 
+        // check for redundant color handler
         ColorHandler colorHandler2 = cspec2.getColorHandler();
         if ((m_colorHandler != null && !m_colorHandler.equals(colorHandler2))
                 || (m_colorHandler == null && colorHandler2 != null)) {
-                throw new IllegalArgumentException("Will not merge. "
-                        + "Different color handlers for column: " + m_name);
+            LOGGER.warn("Column has already a color handler attached, " 
+                    + "ignoring new handler.");
         }
-        
+
+        // check for redundant shape handler
         ShapeHandler shapeHandler2 = cspec2.getShapeHandler();
         if ((m_shapeHandler != null && !m_shapeHandler.equals(shapeHandler2))
                 || (m_shapeHandler == null && shapeHandler2 != null)) {
-            throw new IllegalArgumentException("Will not merge. "
-                    + "Different shape handlers for column: " + m_name);
+            LOGGER.warn("Column has already a color handler attached, " 
+                    + "ignoring new handler.");
         }
 
+        // check for redundant size handler
         SizeHandler sizeHandler2 = cspec2.getSizeHandler();
         if ((m_sizeHandler != null && !m_sizeHandler.equals(sizeHandler2))
                 || (m_sizeHandler == null && sizeHandler2 != null)) {
-            throw new IllegalArgumentException("Will not merge. "
-                    + "Different size handlers for column: " + m_name);
+            LOGGER.warn("Column has already a color handler attached, " 
+                    + "ignoring new handler.");
         }
         
         // Properties
         DataColumnProperties prop2 = cspec2.getProperties();
         Map<String, String> mergedProps = new HashMap<String, String>();
-        Enumeration e = m_properties.properties();
+        Enumeration<String> e = m_properties.properties();
         while (e.hasMoreElements()) {
             String key = (String)e.nextElement();
             String value = m_properties.getProperty(key);

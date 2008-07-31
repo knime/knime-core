@@ -4,7 +4,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -40,6 +40,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
@@ -346,7 +347,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * @return set of data cells which are the row keys that are covered by all
      *         nodes of this branch
      */
-    public abstract Set<DataCell> coveredPattern();
+    public abstract Set<RowKey> coveredPattern();
 
     /**
      * @return list of colors and coverage counts covered by this node

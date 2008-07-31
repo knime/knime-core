@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,7 +24,6 @@ package org.knime.base.node.preproc.append.row;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
@@ -32,13 +31,14 @@ import org.knime.core.node.NodeView;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class AppendedRowsNodeFactory extends NodeFactory {
+public class AppendedRowsNodeFactory 
+        extends NodeFactory<AppendedRowsNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public AppendedRowsNodeModel createNodeModel() {
         return new AppendedRowsNodeModel();
     }
 
@@ -54,8 +54,8 @@ public class AppendedRowsNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public NodeView<AppendedRowsNodeModel> createNodeView(final int viewIndex,
+            final AppendedRowsNodeModel nodeModel) {
         throw new IndexOutOfBoundsException();
     }
 

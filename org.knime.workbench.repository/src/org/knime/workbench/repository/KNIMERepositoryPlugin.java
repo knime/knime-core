@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -21,15 +21,23 @@
  */
 package org.knime.workbench.repository;
 
+import java.io.File;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.workbench.core.WorkbenchErrorLogger;
+import org.knime.workbench.preferences.HeadlessPreferencesConstants;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -43,6 +51,9 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
     public static final String PLUGIN_ID = "org.knime.workbench."
             + "repository";
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            KNIMERepositoryPlugin.class);
+    
     // The shared instance.
     private static KNIMERepositoryPlugin plugin;
 
@@ -71,55 +82,81 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
-
-        // // use shell of the active workbench
-        // Shell parent = Display.getDefault().getActiveShell();
-        //
-        // final Shell splashWin = new Shell(parent, SWT.NO_TRIM
-        // | SWT.APPLICATION_MODAL);
-        // splashWin.setLayout(new FillLayout());
-        // Composite comp = new Composite(splashWin, SWT.NONE);
-        // comp.setLayout(new GridLayout());
-        // Label label = new Label(comp, SWT.NONE);
-        //
-        // // create splash image
-        // m_splashImage = AbstractUIPlugin.imageDescriptorFromPlugin(PLUGIN_ID,
-        // "icons/splash.bmp").createImage();
-        //
-        // label.setImage(m_splashImage);
-        // final ProgressBar progress = new ProgressBar(comp,
-        // SWT.INDETERMINATE);
-        // progress.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        // progress.setToolTipText("loading nodes....");
-        //
-        // label.pack();
-        // progress.pack();
-        //
-        // comp.pack();
-        // comp.layout(true);
-        // splashWin.pack();
-        // splashWin.layout(true);
-        //
-        // // center the splash on the current monitor
-        // Rectangle r = splashWin.getMonitor().getBounds();
-        // Rectangle r2 = splashWin.getBounds();
-        // splashWin.setBounds(r.width / 2 - r2.width / 2, r.height / 2
-        // - r2.height / 2, r2.width, r2.height);
-        //
-        // // open splash window
-        // splashWin.open();
-
         // Do the actual work: load the repository
         try {
+            // get the preference store 
+            // with the preferences for nr threads and tempDir 
+            IPreferenceStore pStore =
+                KNIMERepositoryPlugin.getDefault().getPreferenceStore();
+            int maxThreads = pStore.getInt(
+                    HeadlessPreferencesConstants.P_MAXIMUM_THREADS);
+            if (maxThreads <= 0) {
+                LOGGER.warn("Can set " + maxThreads
+                        + " as number of threads to use");
+            } else {
+                KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(maxThreads);
+                LOGGER.debug("Setting KNIME max thread count to " + maxThreads);
+            }
+            String tmpDir = pStore.getString(
+                    HeadlessPreferencesConstants.P_TEMP_DIR);
+            // check for existence and if writable
+            File tmpDirFile = new File(tmpDir);
+            if (!(tmpDirFile.isDirectory() && tmpDirFile.canWrite())) {
+                LOGGER.error("Can't set temp directory to \"" + tmpDir + "\", "
+                        + "not a directory or not writable");
+            } else {
+                System.setProperty("java.io.tmpdir", tmpDir);
+                LOGGER.debug("Setting temp dir environment variable "
+                        + "(java.io.tmpdir) to \"" + tmpDir + "\"");
+            }
+            
+            // set log file level to stored
+            String logLevelFile =
+                pStore.getString(HeadlessPreferencesConstants
+                        .P_LOGLEVEL_LOG_FILE);
+            NodeLogger.setLevel(LEVEL.valueOf(logLevelFile));
+            
+            pStore.addPropertyChangeListener(new IPropertyChangeListener() {
+
+                @Override
+                public void propertyChange(final PropertyChangeEvent event) {
+                    if (event.getProperty().equals(
+                            HeadlessPreferencesConstants.P_MAXIMUM_THREADS)) {
+                        int count;
+                        try {
+                            count = (Integer)event.getNewValue();
+                            KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(
+                                    count);
+                        } catch (Exception e) {
+                            LOGGER.warn("Unable to get maximum thread count "
+                                    + " from preference page.", e);
+                        }
+                    } else if (event.getProperty().equals(
+                            HeadlessPreferencesConstants.P_TEMP_DIR)) {
+                        System.setProperty("java.io.tmpdir", (String)event
+                                .getNewValue());
+                    } else if (event.getProperty().equals(
+                            HeadlessPreferencesConstants.P_LOGLEVEL_LOG_FILE)) {
+                        String newName = event.getNewValue().toString();
+                        LEVEL level = LEVEL.WARN;
+                        try {
+                            level = LEVEL.valueOf(newName);
+                        } catch (NullPointerException ne) {
+                            LOGGER.warn(
+                                    "Null is an invalid log level, using WARN");
+                        } catch (IllegalArgumentException iae) {
+                            LOGGER.warn("Invalid log level " + newName
+                                    + ", using WARN");
+                        }
+                        NodeLogger.setLevelIntern(level);
+                    } 
+                }
+            });
             RepositoryManager.INSTANCE.create();
         } catch (Throwable e) {
             WorkbenchErrorLogger.error("FATAL: error initializing KNIME"
                     + " repository - check plugin.xml" + " and classpath", e);
-        } finally {
-            // splashWin.close();
-            // splashWin.dispose();
-        }
-
+        } 
     }
 
     /**

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   08.12.2005 (ohl): created
  */
@@ -49,7 +49,7 @@ import org.knime.base.node.io.filetokenizer.Quote;
 
 /**
  * Dialog for the expert settings of the file reader dialog.
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class QuotePanel extends JPanel {
@@ -90,7 +90,7 @@ public class QuotePanel extends JPanel {
 
     /**
      * This is the default constructor.
-     * 
+     *
      * @param settings an object containing the already defined quotes
      */
     QuotePanel(final FileReaderNodeSettings settings) {
@@ -152,7 +152,7 @@ public class QuotePanel extends JPanel {
 
     /**
      * This method initializes currQuotes.
-     * 
+     *
      * @return javax.swing.JList
      */
     private JScrollPane getCurrQuotes() {
@@ -167,7 +167,7 @@ public class QuotePanel extends JPanel {
 
     /**
      * This method initializes qCtrlPanel.
-     * 
+     *
      * @return javax.swing.JPanel
      */
     private JPanel getQCtrlPanel() {
@@ -191,7 +191,7 @@ public class QuotePanel extends JPanel {
 
     /**
      * This method initializes qEditPanel.
-     * 
+     *
      * @return javax.swing.JPanel
      */
     private JPanel getQEditPanel() {
@@ -223,7 +223,7 @@ public class QuotePanel extends JPanel {
             m_qErrorLabel = new JLabel("");
             m_qErrorLabel.setForeground(Color.RED);
             JScrollPane scpn = new JScrollPane(m_qErrorLabel);
-            scpn.setViewportBorder(null);
+            scpn.setBorder(BorderFactory.createEmptyBorder());
             scpn.setPreferredSize(new Dimension(450, 50));
             m_qErrorPanel.add(scpn);
             m_qErrorPanel.add(Box.createHorizontalGlue());
@@ -233,7 +233,7 @@ public class QuotePanel extends JPanel {
 
     /**
      * Sets the passed message in the error label. It will be displayed in red.
-     * 
+     *
      * @param errMsg the new error message to display
      */
     private void setErrorText(final String errMsg) {
@@ -249,7 +249,7 @@ public class QuotePanel extends JPanel {
 
     /**
      * This method initializes qEditField.
-     * 
+     *
      * @return javax.swing.JTextField
      */
     private JTextField getQEditField() {
@@ -279,7 +279,7 @@ public class QuotePanel extends JPanel {
 
     /**
      * This method initializes addButton.
-     * 
+     *
      * @return javax.swing.JButton
      */
     private JButton getAddButton() {
@@ -297,7 +297,7 @@ public class QuotePanel extends JPanel {
 
     /**
      * This method initializes removeButton.
-     * 
+     *
      * @return javax.swing.JButton
      */
     private JButton getRemoveButton() {
@@ -351,7 +351,7 @@ public class QuotePanel extends JPanel {
 
         // display the new quotes list
         loadSettings(m_frSettings);
-        
+
         // put the deleted quote into the editfield
         m_qEscBox.setSelected(getEscCharacter(selQuote) != -1);
         getQEditField().setText(getQuotePattern(selQuote));
@@ -361,7 +361,7 @@ public class QuotePanel extends JPanel {
      * Currently, defined quotes are displayed surrounded by spaces, and the esc
      * character added in parantheses. (For example: double quotes will be
      * displayed like ' " (esc:'\')' (without the surounding ticks)).
-     * 
+     *
      * @param listEntry a String from the list model of the current quote list.
      * @return the quote characters contained in the passed string
      * @see #getListEntry(Quote)
@@ -383,7 +383,7 @@ public class QuotePanel extends JPanel {
      * Creates the string to display in the JList for current quotes. Must work
      * together with the above method that extracts the quote pattern from the
      * string.
-     * 
+     *
      * @param quote the quote to display in the JList.
      * @return a string to display in a JList for this quote.
      * @see #getQuotePattern(String)
@@ -402,7 +402,7 @@ public class QuotePanel extends JPanel {
 
     /**
      * This method initializes qEscBox.
-     * 
+     *
      * @return javax.swing.JCheckBox
      */
     private JCheckBox getQEscBox() {
@@ -415,7 +415,7 @@ public class QuotePanel extends JPanel {
 
     /**
      * This method initializes qEscPanel.
-     * 
+     *
      * @return javax.swing.JPanel
      */
     private JPanel getQEscPanel() {
@@ -428,7 +428,7 @@ public class QuotePanel extends JPanel {
 
     /**
      * This method initializes qListPanel.
-     * 
+     *
      * @return javax.swing.JPanel
      */
     private JPanel getQListPanel() {
@@ -446,7 +446,7 @@ public class QuotePanel extends JPanel {
 
     /**
      * This method initializes qEditLabelPanel.
-     * 
+     *
      * @return javax.swing.JPanel
      */
     private JPanel getQEditLabelPanel() {
@@ -461,7 +461,7 @@ public class QuotePanel extends JPanel {
 
     /**
      * Checks the current values in the panel.
-     * 
+     *
      * @return null, if settings are okay and can be applied. An error message
      *         if not.
      */
@@ -473,7 +473,7 @@ public class QuotePanel extends JPanel {
     /**
      * Deletes all quotes defined in the passed object, reads the currently
      * listed quotes from the JList and adds them to the settings object.
-     * 
+     *
      * @param settings the settings object to replace the quotes in with the
      *            quotes currently defined in the panel
      * @return true if the new settings are different from the one passed in.
@@ -482,7 +482,7 @@ public class QuotePanel extends JPanel {
 
         // save'm to decide whether the new settings are different
         Vector<Quote> oldQuotes = settings.getAllQuotes();
-        
+
         settings.removeAllQuotes();
         for (int i = 0; i < m_currQuotes.getModel().getSize(); i++) {
             String lEntry = (String)m_currQuotes.getModel().getElementAt(i);
@@ -496,7 +496,7 @@ public class QuotePanel extends JPanel {
         }
         // fix the settings.
         settings.setQuoteUserSet(true);
-        
+
         // decide whether we need to re-analyze the file (whether we have
         // new quote settings)
         Vector<Quote> newQuotes = settings.getAllQuotes();
@@ -510,14 +510,14 @@ public class QuotePanel extends JPanel {
             }
         }
         return false;
-        
-        
+
+
     }
 
     /**
      * Transfers the values from the specified object into the components of the
      * panel.
-     * 
+     *
      * @param settings the object containing the settings to display
      */
     private void loadSettings(final FileReaderNodeSettings settings) {

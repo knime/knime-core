@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -144,7 +144,7 @@ public abstract class InterruptibleNodeView extends NodeView implements
      * are processed here. Basically these events are "run", "break" and
      * "finish".
      * 
-     * @see java.awt.event.ActionListener#actionPerformed(ActionEvent)
+     * {@inheritDoc}
      */
     public void actionPerformed(final ActionEvent e) {
         if (e.getActionCommand().equals(InterruptControlPanel.RUN)) {
@@ -251,7 +251,7 @@ public abstract class InterruptibleNodeView extends NodeView implements
      * visualization of the NodeModel. Therefore this method simply invokes the
      * <code>NodeView.modelChanged()</code> method.
      * 
-     * @see org.knime.core.node.NodeView#updateModel(java.lang.Object)
+     * {@inheritDoc}
      */
     @Override
     public void updateModel(final Object model) {

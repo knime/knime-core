@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -62,7 +62,7 @@ public final class ShapeFactory {
     /** Name of and key for the asterisk. */
     public static final String ASTERISK = "Asterisk";
     /** Name of and key for the "X". */
-    public static final String X_SHAPE = "X Shape";
+    public static final String X_SHAPE = "X-Shape";
     /** Name of and key for the horizontal line. */
     public static final String HORIZONTAL_LINE = "Horizontal Line";
     /** Name of and key for the vertical line. */
@@ -228,7 +228,11 @@ public final class ShapeFactory {
             } else {
                 g.setColor(color);
             }
-            paintShape(g, x, y, size, selected, hilited);
+            if (size == 1) {
+                g.fillRect(x - 1, y - 1, 1, 1);
+            } else {
+                paintShape(g, x, y, size, selected, hilited);
+            }
             if (hilited && !faded || selected) {
                 paintBorder(g, x, y, size, hilited, selected);
             }

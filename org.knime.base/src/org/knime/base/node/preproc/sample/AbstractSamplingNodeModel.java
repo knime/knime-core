@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -29,8 +29,9 @@ import java.util.Locale;
 import java.util.Random;
 
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
-import org.knime.core.data.DataTable;
+import org.knime.base.node.preproc.sample.SamplingNodeSettings.SamplingMethods;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -75,29 +76,26 @@ public abstract class AbstractSamplingNodeModel extends NodeModel {
         SamplingNodeSettings temp = new SamplingNodeSettings();
         temp.loadSettingsFrom(settings, false);
 
-        if (temp.method() == SamplingNodeSettings.Methods.Relative) {
+        if (temp.countMethod() == SamplingNodeSettings.CountMethods.Relative) {
             if (temp.fraction() <= 0.0 || temp.fraction() > 1.0) {
                 NumberFormat f = NumberFormat.getPercentInstance(Locale.US);
                 String p = f.format(100.0 * temp.fraction());
                 throw new InvalidSettingsException("Invalid percentage: " + p);
             }
-        } else if (temp.method() == SamplingNodeSettings.Methods.Absolute) {
+        } else if (temp.countMethod() == SamplingNodeSettings.CountMethods.Absolute) {
             if (temp.count() <= 0) {
                 throw new InvalidSettingsException("Invalid count: "
                         + temp.count());
             }
         } else {
             throw new InvalidSettingsException("Unknown method: "
-                    + temp.method());
+                    + temp.countMethod());
         }
 
-        if (temp.stratifiedSampling() && (temp.classColumn() == null)) {
+        if (temp.samplingMethod().equals(SamplingMethods.Stratified)
+                && (temp.classColumn() == null)) {
             throw new InvalidSettingsException(
                     "No class column for stratified sampling selected");
-        }
-        if (temp.stratifiedSampling() && !temp.random()) {
-            throw new InvalidSettingsException(
-                    "Stratified sampling only works with random row selection");
         }
     }
 
@@ -145,11 +143,13 @@ public abstract class AbstractSamplingNodeModel extends NodeModel {
      * @throws CanceledExecutionException if exec request canceling
      * @throws InvalidSettingsException if current settings are invalid
      */
-    protected RowFilter getSamplingRowFilter(final DataTable in,
+    protected RowFilter getSamplingRowFilter(final BufferedDataTable in,
             final ExecutionMonitor exec) throws CanceledExecutionException,
             InvalidSettingsException {
         Random rand;
-        if (m_settings.random()) {
+        if (m_settings.samplingMethod().equals(SamplingMethods.Random)
+                || m_settings.samplingMethod().equals(
+                        SamplingMethods.Stratified)) {
             rand =
                     m_settings.seed() != null ? new Random(m_settings.seed())
                             : new Random();
@@ -157,40 +157,26 @@ public abstract class AbstractSamplingNodeModel extends NodeModel {
             rand = null;
         }
 
-        RowFilter rowFilter;
-        if (m_settings.method() == SamplingNodeSettings.Methods.Absolute) {
-            if (rand != null) {
-                if (m_settings.stratifiedSampling()) {
-                    rowFilter = new StratifiedSamplingRowFilter(in,
-                            m_settings.classColumn(), m_settings.count(),
-                            rand, exec);
-                } else {
-                    rowFilter =
-                            Sampler.createSampleFilter(in, m_settings.count(),
-                                    rand, exec);
-                }
-            } else {
-                rowFilter = Sampler.createRangeFilter(m_settings.count());
-            }
-        } else if (m_settings.method() == SamplingNodeSettings.Methods.Relative) {
-            if (rand != null) {
-                if (m_settings.stratifiedSampling()) {
-                    rowFilter = new StratifiedSamplingRowFilter(in,
-                            m_settings.classColumn(), m_settings.fraction(),
-                            rand, exec);
-                } else {
-                    rowFilter =
-                            Sampler.createSampleFilter(in, m_settings
-                                    .fraction(), rand, exec);
-                }
-            } else {
-                rowFilter =
-                        Sampler.createRangeFilter(in, m_settings.fraction(),
-                                exec);
-            }
+        int rowCount;
+        if (m_settings.countMethod().equals(
+                SamplingNodeSettings.CountMethods.Relative)) {
+            rowCount = (int)(m_settings.fraction() * in.getRowCount());
         } else {
-            throw new InvalidSettingsException("Unknown method: "
-                    + m_settings.method());
+            rowCount = m_settings.count();
+        }
+
+        RowFilter rowFilter;
+        if (m_settings.samplingMethod().equals(SamplingMethods.Random)) {
+            rowFilter = Sampler.createSampleFilter(in, rowCount, rand, exec);
+        } else if (m_settings.samplingMethod().equals(
+                SamplingMethods.Stratified)) {
+            rowFilter =
+                    new StratifiedSamplingRowFilter(in, m_settings
+                            .classColumn(), rowCount, rand, exec);
+        } else if (m_settings.samplingMethod().equals(SamplingMethods.Linear)) {
+            rowFilter = new LinearSamplingRowFilter(in.getRowCount(), rowCount);
+        } else {
+            rowFilter = Sampler.createRangeFilter(rowCount);
         }
         return rowFilter;
     }
@@ -201,14 +187,13 @@ public abstract class AbstractSamplingNodeModel extends NodeModel {
      * @return <code>true</code> if the node is configured
      *
      * @deprecated use {@link #checkSettings(DataTableSpec)} instead because
-     * this also checks for the class column if stratified sampling has been
-     * selected
+     *             this also checks for the class column if stratified sampling
+     *             has been selected
      */
     @Deprecated
     protected boolean hasBeenConfigured() {
-        return m_settings.method() != null;
+        return m_settings.countMethod() != null;
     }
-
 
     /**
      * Checks if the node settings are valid, i.e. a method has been set and the
@@ -218,12 +203,12 @@ public abstract class AbstractSamplingNodeModel extends NodeModel {
      * @throws InvalidSettingsException if the settings are invalid
      */
     protected void checkSettings(final DataTableSpec inSpec)
-        throws InvalidSettingsException {
-        if (m_settings.method() == null) {
+            throws InvalidSettingsException {
+        if (m_settings.countMethod() == null) {
             throw new InvalidSettingsException("No sampling method selected");
         }
-        if (m_settings.stratifiedSampling() && !inSpec
-                        .containsName(m_settings.classColumn())) {
+        if (m_settings.samplingMethod().equals(SamplingMethods.Stratified)
+                && !inSpec.containsName(m_settings.classColumn())) {
             throw new InvalidSettingsException("Column '"
                     + m_settings.classColumn() + "' for stratified sampling "
                     + "does not exist");

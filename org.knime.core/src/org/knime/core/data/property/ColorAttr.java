@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -231,7 +231,7 @@ public final class ColorAttr implements Serializable {
      * @see Color#equals(java.lang.Object)
      */
     public boolean equals(final ColorAttr ca) {
-        return m_attrColor.equals(ca.getColor());
+        return ca != null && m_attrColor.equals(ca.getColor());
     }
     
     /**

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -146,21 +146,21 @@ public class TimePlotNodeModel extends DefaultVisualizationNodeModel implements
         List<Integer>excludedCols = new ArrayList<Integer>();
         int currColIdx = 0;
         for (DataColumnSpec colSpec : inSpecs[0]) {
-            // nominal value
-            if (!colSpec.getType().isCompatible(NominalValue.class) 
+          // nominal value
+          if (!colSpec.getType().isCompatible(NominalValue.class) 
                     && !colSpec.getType().isCompatible(DoubleValue.class)
                     && !colSpec.getType().isCompatible(TimestampValue.class)) {
                     excludedCols.add(currColIdx);
-            }
-            if (colSpec.getType().isCompatible(NominalValue.class)) {
-                if (colSpec.getDomain().hasValues() 
-                        && colSpec.getDomain().getValues().size() > 60) {
-                    excludedCols.add(currColIdx);
-                } else if (!colSpec.getDomain().hasValues()) {
-                    excludedCols.add(currColIdx);
-                }
-            }
-            currColIdx++;
+          }
+          if (colSpec.getType().isCompatible(NominalValue.class)) {
+              if (colSpec.getDomain().hasValues() 
+                      && colSpec.getDomain().getValues().size() > 60) {
+                  excludedCols.add(currColIdx);
+              } else if (!colSpec.getDomain().hasValues()) {
+                  excludedCols.add(currColIdx);
+              }
+          }
+          currColIdx++;
         }
         m_excludedColumns = new int[excludedCols.size()];
         for (int i = 0; i < excludedCols.size(); i++) {
@@ -168,7 +168,7 @@ public class TimePlotNodeModel extends DefaultVisualizationNodeModel implements
         }
         if (excludedCols.size() > 0) {
             setWarningMessage("Some columns are ignored! Not compatible " 
-                    + "with DoubleValue or NominalValue or no or too many" 
+                    + "with DoubleValue or NominalValue or too many" 
                     + " possible values");   
         }
         
@@ -181,7 +181,7 @@ public class TimePlotNodeModel extends DefaultVisualizationNodeModel implements
                 if (cs.getType().isCompatible(TimestampValue.class)) {
                     if (colIndex != -1) {
                         throw new InvalidSettingsException(
-                                "1. No column selected.");
+                                "No time stamp column available.");
                     }
                     colIndex = i;
                  }
@@ -189,7 +189,8 @@ public class TimePlotNodeModel extends DefaultVisualizationNodeModel implements
               }
 
               if (colIndex == -1) {
-                  throw new InvalidSettingsException("2. No column selected.");
+                  throw new InvalidSettingsException("Could not find column" +
+                  		" holding time stamp values.");
               }
               m_columnName.setStringValue(inSpecs[0].getColumnSpec(colIndex)
                         .getName());
@@ -209,11 +210,11 @@ public class TimePlotNodeModel extends DefaultVisualizationNodeModel implements
                             + "\" does not contain time stamp values: "
                             + colSpec.getType().toString());
              }
-             m_xColIndex = colIndex;
-           }
+         }
        } catch (Exception e) {
                 throw new InvalidSettingsException("Invalid Settings."); 
        }
+       m_xColIndex = inSpecs[0].findColumnIndex(m_columnName.getStringValue());
        return new DataTableSpec[0];
     }
     

@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   03.12.2004 (ohl): created
  */
@@ -28,6 +28,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
@@ -36,28 +38,19 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.RowIterator;
 import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.xml.sax.SAXException;
 
 /**
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class FileReaderNodeSettings extends FileReaderSettings {
-
-    /** The node logger fot this class. */
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(FileReaderNodeSettings.class);
 
     // a vector storing properties for each column. The size might not be
     // related to the actual number of columns.
@@ -72,6 +65,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
     private static final String CFGKEY_EOLDELIMUSERVAL = "delimsAtEOLuserVal";
 
+    private static final String CFG_KEY_PRESERVE = "PreserveSettings";
+
     // flags indicating if the values were actually set or are still at
     // constructor's default. Won't be stored into config.
     private boolean m_hasColHeadersIsSet;
@@ -81,6 +76,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     private boolean m_ignoreEmptyLinesIsSet;
 
     private boolean m_ignoreDelimsAtEndOfRowIsSet;
+
+    private boolean m_decimalSeparatorIsSet;
 
     private boolean m_delimsAtEOLUserValue;
 
@@ -94,12 +91,14 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
     private boolean m_analyzedAllRows;
 
+    private boolean m_preserveSettings;
+
     /**
      * Creates a new settings object for the file reader note and initializes it
      * from the config object passed. If <code>null</code> is passed default
      * settings will be applied where applicable. The default setting are not
      * valid in the sense that they can't be used without modification.
-     * 
+     *
      * @param cfg a config object containing all settings or <code>null</code>
      *            to create default settings
      * @throws InvalidSettingsException if the settings in the config object are
@@ -114,6 +113,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
         if (cfg != null) {
             m_numOfColumns = cfg.getInt(CFGKEY_NUMOFCOLS);
+            m_preserveSettings = cfg.getBoolean(CFG_KEY_PRESERVE, false);
             readColumnPropsFromConfig(cfg.getNodeSettings(CFGKEY_COLPROPS));
             m_delimsAtEOLUserValue =
                     cfg.getBoolean(CFGKEY_EOLDELIMUSERVAL,
@@ -137,7 +137,42 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         m_whiteIsSet = true;
         m_ignoreEmptyLinesIsSet = true;
         m_ignoreDelimsAtEndOfRowIsSet = true;
+        m_decimalSeparatorIsSet = true;
         m_analyzedAllRows = false;
+    }
+
+    /**
+     * Creates a new settings object with the exact same settings as the object
+     * passed in.
+     *
+     * @param clonee the settings object to copy the settings values from.
+     */
+    FileReaderNodeSettings(final FileReaderNodeSettings clonee) {
+       super(clonee);
+
+       m_columnProperties =
+           new Vector<ColProperty>(clonee.m_columnProperties.size());
+       m_columnProperties.setSize(clonee.m_columnProperties.size());
+       for (int i = 0; i < m_columnProperties.size(); i++) {
+           m_columnProperties.set(i,
+                   (ColProperty)clonee.m_columnProperties.get(i).clone());
+       }
+
+       m_numOfColumns = clonee.m_numOfColumns;
+
+       m_hasColHeadersIsSet = clonee.m_hasColHeadersIsSet;
+       m_hasRowHeadersIsSet = clonee.m_hasRowHeadersIsSet;
+       m_ignoreEmptyLinesIsSet = clonee.m_ignoreEmptyLinesIsSet;
+       m_ignoreDelimsAtEndOfRowIsSet = clonee.m_ignoreDelimsAtEndOfRowIsSet;
+       m_decimalSeparatorIsSet = clonee.m_decimalSeparatorIsSet;
+       m_delimsAtEOLUserValue = clonee.m_delimsAtEOLUserValue;
+       m_commentIsSet = clonee.m_commentIsSet;
+       m_quoteIsSet = clonee.m_quoteIsSet;
+       m_delimIsSet = clonee.m_delimIsSet;
+       m_whiteIsSet = clonee.m_whiteIsSet;
+       m_analyzedAllRows = clonee.m_analyzedAllRows;
+       m_preserveSettings = clonee.m_preserveSettings;
+
     }
 
     /**
@@ -152,19 +187,21 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         m_hasRowHeadersIsSet = false;
         m_ignoreEmptyLinesIsSet = false;
         m_ignoreDelimsAtEndOfRowIsSet = false;
+        m_decimalSeparatorIsSet = false;
         m_delimsAtEOLUserValue = false;
         m_commentIsSet = false;
         m_quoteIsSet = false;
         m_delimIsSet = false;
         m_whiteIsSet = false;
         m_analyzedAllRows = false;
+        m_preserveSettings = false;
 
     }
 
     /**
      * Writes all settings into the passed configuration object. Except for the
      * analyzedAllRows flag.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -172,6 +209,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         super.saveToConfiguration(cfg);
         cfg.addBoolean(CFGKEY_EOLDELIMUSERVAL, m_delimsAtEOLUserValue);
         cfg.addInt(CFGKEY_NUMOFCOLS, m_numOfColumns);
+        cfg.addBoolean(CFG_KEY_PRESERVE, m_preserveSettings);
         saveColumnPropsToConfig(cfg.addNodeSettings(CFGKEY_COLPROPS));
     }
 
@@ -239,7 +277,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
     /**
      * Stores a copy of the vector of properties in the structure.
-     * 
+     *
      * @param colProps the column properties to store
      */
     public void setColumnProperties(
@@ -268,7 +306,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Overriding super method because we store these missing values now in the
      * column properties.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -283,11 +321,11 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Overriding super method because we store these missing values now in the
      * column properties.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
-    public void setMissingValueForColumn(final int colIdx, 
+    public void setMissingValueForColumn(final int colIdx,
             final String pattern) {
         if ((m_columnProperties == null)
                 || (colIdx >= m_columnProperties.size())) {
@@ -300,7 +338,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Stores the number of columns set by the user. (Must not be the same as
      * the number of column properties stored in this object).
-     * 
+     *
      * @param numOfCols the number of columns to store
      */
     public void setNumberOfColumns(final int numOfCols) {
@@ -319,10 +357,10 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * Derives a DataTableSpec from the current settings. The spec will not
      * contain any domain information. It will contain only the columns to
      * include in the table (excl. the columns to skip).
-     * 
+     *
      * @return a DataTableSpec corresponding to the current settings or
      *         <code>null</code> if the current settings are invalid
-     * 
+     *
      */
     public DataTableSpec createDataTableSpec() {
 
@@ -360,7 +398,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         }
         return result;
     }
-    
+
     /**
      * Sets default settings in this object. See the submethods for details, but
      * basically its: zero number of columns, no column names and types, file
@@ -399,11 +437,11 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * The settings are not checked. They could be incomplete or invalid. It
      * also reads possible values from the data file - but only if the settings
      * are useable and the table contains a string column.
-     * 
+     *
      * @param xmlLocation location of the xml file to read. Must be a valid URL.
      * @return a new settings object containing the settings read fromt the
      *         specified XML file.
-     * 
+     *
      * @throws IllegalStateException if something goes wrong
      */
     public static FileReaderNodeSettings readSettingsFromXMLFile(
@@ -533,143 +571,9 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * Reads the column headers from the file setting the column name in the
-     * colProperty objects - if the useFileHeader flag is set in there. All
-     * settings must be set properly to enable file reading. Column names will
-     * be made unique by adding an increasing index to duplicate names.
-     * 
-     * @throws IOException if there was an error reading the data file
-     */
-    public void readColumnHeadersFromFile() throws IOException {
-        /*
-         * this is how we do this: We create a filetable with numOfCols columns
-         * and StringCells only. Then we read just one line, and set the strings
-         * read as column names.
-         */
-
-        if (getDataFileLocation() == null) {
-            throw new IllegalStateException("All settings must be properly set"
-                    + " before calling 'readColumnHeadersFromFile!");
-        }
-        if (!getFileHasColumnHeaders()) {
-            throw new IllegalStateException("Why would you want to read "
-                    + "col headers from file if there aren't any?");
-        }
-
-        // temporarily turn off this switch so the file reader doesn't skip
-        // the column headers.
-        setFileHasColumnHeaders(false);
-
-        int numOfCols = getNumberOfColumns();
-
-        // create a fake table spec that we can pass to the reader.
-        DataColumnSpec[] colSpec = new DataColumnSpec[numOfCols];
-        for (int i = 0; i < numOfCols; i++) {
-            DataColumnSpecCreator dcsc =
-                    new DataColumnSpecCreator("col" + i, StringCell.TYPE);
-            colSpec[i] = dcsc.createSpec();
-        }
-        DataTableSpec dts = new DataTableSpec(colSpec);
-
-        DataTable dt = new FileTable(dts, this, null);
-        RowIterator rowIter = dt.iterator();
-        if (rowIter == null) {
-            throw new IOException("Couldn't read from col headers from "
-                    + "specified source ('" + getDataFileLocation() + "').");
-        }
-        // get the first row
-        DataRow row = dt.iterator().next();
-        if (row.getNumCells() != numOfCols) {
-            // didn't get enough column headers - that's bad
-            LOGGER.warn("Found " + row.getNumCells()
-                    + " column headers in the file, expecting " + numOfCols
-                    + ".");
-        }
-        int col = 0;
-        if ((row.getNumCells() == numOfCols - 1) && getFileHasRowHeaders()) {
-            // at least we get enough if we use the row header ID of this row
-            LOGGER.warn("Using the \"corner value\" as" + " column name.");
-            ColProperty cProp = getColumnProperties().get(0);
-            if (!cProp.getUserSettings()) {
-                cProp.changeColumnName(row.getKey().getId().toString());
-            }
-            col = 1; // col header '0' is done.
-        }
-
-        for (int cell = 0; cell < row.getNumCells(); cell++) {
-            if (col >= numOfCols) {
-                break;
-            }
-            // replace the columnspec in the cols props
-            ColProperty cProp = getColumnProperties().get(col);
-            if (!cProp.getUserSettings()) {
-                String uniqueName =
-                        uniquifyColName(col, row.getCell(cell).toString());
-                cProp.changeColumnName(uniqueName);
-            }
-            col++;
-        }
-
-        while (col < numOfCols) {
-            // found less col names than columns. Create some.
-            ColProperty cProp = getColumnProperties().get(col);
-            if (!cProp.getUserSettings()) {
-                String uniqueName = uniquifyColName(col, "Col" + col);
-                cProp.changeColumnName(uniqueName);
-            }
-            col++;
-        }
-
-        setFileHasColumnHeaders(true);
-
-    }
-
-    /**
-     * Generates a unique column name based on the specified preliminary name
-     * and unique to all columns with indecies less than the specified one.
-     * 
-     * @param colIdx the index of the column up to which we should look at and
-     *            make the name unique. (That is we ignore all existing col
-     *            names of cols wihth higher index.)
-     * @param prelimName the preliminary name for the column with index colIdx.
-     *            The method will add a number in parantheses to make it unique.
-     * @return a column name prefixed by the specified prelimName, that is
-     *         unique with respect to all colums with idx less than the
-     *         specified colIdx
-     */
-    String uniquifyColName(final int colIdx, final String prelimName) {
-
-        String uniqueName = prelimName;
-        int cnt = 2;
-
-        boolean unique = false;
-        while (!unique) {
-            unique = true;
-            // run through all columns (up to colIdx) and compare the name.
-            // Do that with each newly generated name completely
-            for (int c = 0; 
-                 (c < colIdx) && (c < m_columnProperties.size()); 
-                 c++) {
-                ColProperty colProp = m_columnProperties.get(c);
-                if ((colProp != null) && (colProp.getColumnSpec() != null)) {
-                    String colName = colProp.getColumnSpec().getName();
-                    if (colName.equals(uniqueName)) {
-                        unique = false;
-                        uniqueName = prelimName + "(" + cnt + ")";
-                        cnt++;
-                        break; // start all over again
-                    }
-                }
-            }
-        }
-
-        return uniqueName;
-    }
-
-    /**
      * Set true to indicate that the flag is actually set and is not still the
      * default value.
-     * 
+     *
      * @param s the new value of the flag
      */
     public void setIgnoreEmptyLinesUserSet(final boolean s) {
@@ -687,7 +591,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Set <code>true</code> to indicate that the flag is actually set and is
      * not still the default value.
-     * 
+     *
      * @param s the new value of the flag
      */
     public void setFileHasRowHeadersUserSet(final boolean s) {
@@ -705,7 +609,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Set <code>true</code> to indicate that the flag is actually set and is
      * not still the default value.
-     * 
+     *
      * @param s the new value of the flag
      */
     public void setFileHasColumnHeadersUserSet(final boolean s) {
@@ -723,7 +627,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Set <code>true</code> to indicate that the flag is actually set and is
      * not still the default value.
-     * 
+     *
      * @param s the new value of the flag
      */
     public void setCommentUserSet(final boolean s) {
@@ -741,7 +645,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Set <code>true</code> to indicate that the flag is actually set and is
      * not still the default value.
-     * 
+     *
      * @param s the new value of the flag
      */
     public void setDelimiterUserSet(final boolean s) {
@@ -759,7 +663,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Set <code>true</code> to indicate that the flag is actually set and is
      * not still the default value.
-     * 
+     *
      * @param s the new value of the flag
      */
     public void setQuoteUserSet(final boolean s) {
@@ -777,7 +681,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Set <code>true</code> to indicate that the flag is actually set and is
      * not still the default value.
-     * 
+     *
      * @param s the new value of the flag
      */
     public void setWhiteSpaceUserSet(final boolean s) {
@@ -794,7 +698,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
     /**
      * Sets the "is user set" flag and stores the user value.
-     * 
+     *
      * @param ignoreEm if <code>true</code> extra delims at the end of the row
      *            (in case of a tab or space delim) will be ignored.
      */
@@ -809,6 +713,28 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      */
     public boolean ignoreDelimsAtEORUserSet() {
         return m_ignoreDelimsAtEndOfRowIsSet;
+    }
+
+    /**
+     * Tells whether the decimal separator is set by the user or guessed by the
+     * analyzer (or still at its default).
+     *
+     * @return true, if the user explicitly set the decimal separator, false, if
+     *         the separators are still at their default, or the analyser
+     *         guessed it.
+     */
+    public boolean decimalSeparatorUserSet() {
+        return m_decimalSeparatorIsSet;
+    }
+
+    /**
+     * Sets a new value to the flag that indicates that the decimal value is
+     * explictly set by the user.
+     *
+     * @param value the new value of the flag.
+     */
+    public void setDecimalSeparatorUserSet(final boolean value) {
+        m_decimalSeparatorIsSet = value;
     }
 
     /**
@@ -831,7 +757,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * {@link FileAnalyzer} looked at all rows when it extracts the default
      * settings. The value of the flag is not stored when the settings are saved
      * into a config, and is not recovered from a config object.
-     * 
+     *
      * @param val the new value of the flag
      */
     void setAnalyzeUsedAllRows(final boolean val) {
@@ -850,7 +776,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * Method to check consistency and completeness of the current settings. It
      * will return a {@link SettingsStatus} object which contains info, warning
      * and error messages, if something is fishy with the settings.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -867,7 +793,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Call this from derived classes to add the status of all super classes.
      * For parameters:
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -893,62 +819,48 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
         int propsToCheck = m_numOfColumns;
         if (m_columnProperties.size() < m_numOfColumns) {
-            status
-                    .addError("Missing column properties for columns "
-                            + (m_columnProperties.size() + 1) + " to "
-                            + m_numOfColumns);
+            status.addError("Missing column properties for columns "
+                    + m_columnProperties.size() + " to " + m_numOfColumns);
             propsToCheck = m_columnProperties.size();
         }
+
+        // map for faster uniqueness checking
+        Map<String, Integer> colNames = new HashMap<String, Integer>();
+
         for (int c = 0; c < propsToCheck; c++) {
             // check if we got a column property object for each column
             ColProperty cProp = m_columnProperties.get(c);
             if (cProp == null) {
                 status.addError("No column properties specified for column"
-                        + " no. " + (c + 1));
+                        + " with index " + c);
                 // that's all we can do with a null col prop...
                 continue;
             }
             // check column spec, i.e. name, type and possible values
             if (cProp.getColumnSpec() == null) {
-                status.addError("Column name and type not specified for "
-                        + " column no. " + (c + 1));
+                status.addError("Column name and type not specified for column"
+                        + c);
                 continue;
             }
             // check the name
             String cName = cProp.getColumnSpec().getName();
             if (cName == null) {
-                status.addError("No column name specified for column no. "
-                        + (c + 1));
+                status.addError("No column name specified for column " + c);
             }
             // and type
             DataType cType = cProp.getColumnSpec().getType();
             if (cType == null) {
-                status.addError("No column type specified for column no. "
-                        + (c + 1));
-            } else {
-                if (!DataType.class.isAssignableFrom(cType.getClass())) {
-                    status.addError("Column type of column no. " + (c + 1)
-                            + " is not derived from type DataType");
-                    cType = null; // set it null here because its useless anyway
-                }
+                status.addError("No column type specified for column " + c);
             }
             // check uniqueness of column name
             if ((cName != null) && !cProp.getSkipThisColumn()) {
-                for (int compC = c + 1; compC < propsToCheck; compC++) {
-                    ColProperty compProp = m_columnProperties.get(compC);
-                    if ((compProp != null) && !compProp.getSkipThisColumn()) {
-                        DataColumnSpec compSpec = compProp.getColumnSpec();
-                        if ((compSpec != null) 
-                                && (compSpec.getName() != null)) {
-                            if (cName.equals(compSpec.getName())) {
-                                status.addError("Column no. " + (c + 1)
-                                        + " and no. " + (compC + 1)
-                                        + " have the same name ('" + cName
-                                        + "')");
-                            }
-                        }
-                    }
-                } // for all colProps after colProp(c)
+                Integer prevCol = colNames.put(cName, c);
+                if (prevCol != null) {
+                    status.addError("Columns with index " + c
+                            + " and " + prevCol
+                            + " have the same name ('" + cName
+                            + "')");
+                }
             } // if (cName != null)
 
             // check a possible values - if any
@@ -958,14 +870,14 @@ public class FileReaderNodeSettings extends FileReaderSettings {
                 // possible values must not be null
                 for (DataCell val : possVals) {
                     if (val == null) {
-                        status.addError("Invalid possible value for column"
-                                + " no." + (c + 1) + "(<null>).");
+                        status.addError("Invalid possible value for column "
+                                + c + " (<null>).");
                     } else {
                         if (cType != null) {
                             if (!cType.isASuperTypeOf(val.getType())) {
                                 status.addError("Incompatible possible "
-                                        + "value specified for column no. "
-                                        + (c + 1));
+                                        + "value specified for column "
+                                        + c);
                             }
                         }
                     }
@@ -992,5 +904,26 @@ public class FileReaderNodeSettings extends FileReaderSettings {
             res.append(m_columnProperties.get(c).toString());
         }
         return res.toString();
+    }
+
+    /**
+     * Checks the flag that indicates if settings will be reset at location
+     * change.
+     *
+     * @return true if settings are not reset on file location change.
+     */
+    boolean getPreserveSettings() {
+        return m_preserveSettings;
+    }
+
+    /**
+     * Sets the flag that determines if settings are reset if a new data
+     * location is entered in the dialog.
+     *
+     * @param preserveSettings set true to reset all dialog settings if the data
+     *            location changes, or false to preserve the current settings.
+     */
+    void setPreserveSettings(final boolean preserveSettings) {
+        m_preserveSettings = preserveSettings;
     }
 }

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -54,7 +54,7 @@ public class ScatterPlotterAppearanceTab extends PropertiesTab {
     
     private final JSlider m_jitterSlider;
     
-    private static final int MIN_DOT_SIZE = 2;
+    private static final int MIN_DOT_SIZE = 1;
     private static final int MAX_DOT_SIZE = 150;
     
     

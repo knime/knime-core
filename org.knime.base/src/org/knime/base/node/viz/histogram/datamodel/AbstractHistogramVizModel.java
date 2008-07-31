@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,6 +25,23 @@
 
 package org.knime.base.node.viz.histogram.datamodel;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.NodeLogger;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.aggregation.AggregationValModel;
+import org.knime.base.node.viz.aggregation.AggregationValSubModel;
+import org.knime.base.node.viz.aggregation.HiliteShapeCalculator;
+import org.knime.base.node.viz.aggregation.util.GUIUtils;
+import org.knime.base.node.viz.aggregation.util.LabelDisplayPolicy;
+import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.util.BinningUtil;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Point;
@@ -36,21 +53,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.aggregation.AggregationValModel;
-import org.knime.base.node.viz.aggregation.AggregationValSubModel;
-import org.knime.base.node.viz.aggregation.HiliteShapeCalculator;
-import org.knime.base.node.viz.aggregation.util.GUIUtils;
-import org.knime.base.node.viz.aggregation.util.LabelDisplayPolicy;
-import org.knime.base.node.viz.histogram.HistogramLayout;
-import org.knime.base.node.viz.histogram.util.BinningUtil;
-import org.knime.base.node.viz.histogram.util.ColorColumn;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnDomain;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.def.StringCell;
-import org.knime.core.node.NodeLogger;
 
 /**
  * This is the basic visualization model for a histogram. It handles bin
@@ -145,7 +147,7 @@ public abstract class AbstractHistogramVizModel {
         public Rectangle2D calculateHiliteShape(final AggregationValModel
                 <AggregationValSubModel<Rectangle2D, Rectangle2D>,
                 Rectangle2D, Rectangle2D> model) {
-            if (isFixed()) {
+            if (!supportsHiliting()) {
                 return null;
             }
             final Rectangle2D barRectangle = model.getShape();
@@ -191,7 +193,7 @@ public abstract class AbstractHistogramVizModel {
          */
         public Rectangle2D calculateHiliteShape(
                 final AggregationValSubModel<Rectangle2D, Rectangle2D> model) {
-            if (isFixed()) {
+            if (!supportsHiliting()) {
                 return null;
             }
             final int noOfHilitedKeys = model.getHiliteRowCount();
@@ -621,10 +623,10 @@ public abstract class AbstractHistogramVizModel {
     }
 
     /**
-     * @return <code>true</code> if the bins are fixed otherwise
+     * @return <code>true</code> if the bins support hiliting otherwise
      * <code>false</code>
      */
-    public abstract boolean isFixed();
+    public abstract boolean supportsHiliting();
 
     /**
      * @return the maximum aggregation value
@@ -897,12 +899,36 @@ public abstract class AbstractHistogramVizModel {
     /**
      * @return all keys of hilited rows
      */
-    public abstract Set<DataCell> getHilitedKeys();
+    public abstract Set<RowKey> getHilitedKeys();
 
     /**
      * @return all keys of the selected elements
      */
-    public abstract Set<DataCell> getSelectedKeys();
+    public abstract Set<RowKey> getSelectedKeys();
+
+    /**
+     * @param p the point to select
+     * @return the {@link BinDataModel} that contains the point or
+     * <code>null</code>
+     */
+    public BarDataModel getSelectedElement(final Point p) {
+        if (p == null) {
+            return null;
+        }
+        for (final BinDataModel bin : getBins()) {
+            final Rectangle2D rect = bin.getBinRectangle();
+            if (rect != null && rect.contains(p)) {
+                final Collection<BarDataModel> bars = bin.getBars();
+                for (final BarDataModel bar : bars) {
+                    final Rectangle2D shape = bar.getShape();
+                    if (shape != null && shape.contains(p)) {
+                        return bar;
+                    }
+                }
+            }
+        }
+        return null;
+    }
 
     /**
      * Selects the element which contains the given point.
@@ -941,7 +967,7 @@ public abstract class AbstractHistogramVizModel {
      * @param hilite if the given keys should be hilited <code>true</code>
      * or unhilited <code>false</code>
      */
-    public abstract void updateHiliteInfo(final Set<DataCell> hilited,
+    public abstract void updateHiliteInfo(final Set<RowKey> hilited,
             final boolean hilite);
 
     /**
@@ -961,6 +987,9 @@ public abstract class AbstractHistogramVizModel {
         final StringBuilder aggrHeadBuf = new StringBuilder();
         aggrHeadBuf.append("<th>");
         aggrHeadBuf.append(AggregationMethod.COUNT);
+        aggrHeadBuf.append("</th>");
+        aggrHeadBuf.append("<th>");
+        aggrHeadBuf.append(AggregationMethod.VALUE_COUNT);
         aggrHeadBuf.append("</th>");
         aggrHeadBuf.append("<th>");
         aggrHeadBuf.append(AggregationMethod.SUM);

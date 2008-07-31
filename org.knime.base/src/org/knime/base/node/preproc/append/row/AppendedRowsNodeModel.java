@@ -65,9 +65,9 @@ public class AppendedRowsNodeModel extends NodeModel {
     /** NodeSettings key: Use only the intersection of columns. */
     static final String CFG_INTERSECT_COLUMNS = "intersection_of_columns";
 
-    private boolean m_isAppendSuffix = false;
+    private boolean m_isAppendSuffix = true;
 
-    private String m_suffix = null;
+    private String m_suffix = "_dup";
 
     private boolean m_isIntersection;
 
@@ -221,7 +221,7 @@ public class AppendedRowsNodeModel extends NodeModel {
     @Override
     protected void reset() {
         m_manager.removeAllHiLiteHandlers();
-        for (int i = 0; i < getNrDataIns(); i++) {
+        for (int i = 0; i < getNrInPorts(); i++) {
             HiLiteHandler hdl = getInHiLiteHandler(i);
             m_manager.addHiLiteHandler(hdl);
         }

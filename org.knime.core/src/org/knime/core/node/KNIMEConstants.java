@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -41,13 +41,13 @@ import org.knime.core.util.ThreadPool;
  */
 public final class KNIMEConstants {
     /** KNIME's major release number. */
-    public static final int MAJOR = 1;
+    public static final int MAJOR = 2;
     /** KNIME's minor release number. */
-    public static final int MINOR = 3;
+    public static final int MINOR = 0;
     /** KNIME's revision number. */
-    public static final int REV = 5;
+    public static final int REV = 0;
     /** KNIME's build id. */
-    public static final String BUILD = ".1";
+    public static final String BUILD = ".0016392";
     
     // IMPORTANT: Remember to also update the NodeLogger welcome screen with
     // the current version and the prerequisites
@@ -56,7 +56,7 @@ public final class KNIMEConstants {
         + BUILD;
 
     /** The build date, is set automatically by the build scripts. */
-    public static final String BUILD_DATE = "June 03, 2008";
+    public static final String BUILD_DATE = "June 20, 2008";
     
     /**
      * The name of the system property whose value is - if set - used as knime
@@ -82,7 +82,7 @@ public final class KNIMEConstants {
                 "***  Welcome to KNIME v" + VERSION
                         + " - the Konstanz Information Miner  ***";
         String line2 =
-                "Copyright, 2003 - 2007, Uni Konstanz and "
+                "Copyright, 2003 - 2008, Uni Konstanz and "
                         + "KNIME GmbH, Germany";
         line2 =
                 "***"

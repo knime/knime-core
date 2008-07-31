@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -126,8 +126,8 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
 
     private boolean m_cacheDistances;
     
-    private final SettingsModelFilterString m_selectedColumns = new SettingsModelFilterString(
-            SELECTED_COLUMNS_KEY);
+    private final SettingsModelFilterString m_selectedColumns = 
+        new SettingsModelFilterString(SELECTED_COLUMNS_KEY);
     
     private int[] m_selectedColIndices;
     
@@ -278,7 +278,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
             // store the distance per each fusion step
             fusionCont.addRowToTable(new DefaultRow(
             // row key
-                    new IntCell(clusters.size()),
+                    Integer.toString(clusters.size()),
                     // x-axis scatter plotter
                     new IntCell(clusters.size()),
                     // y-axis scatter plotter
@@ -301,11 +301,10 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
         if (outputData == null) {
             outputData = createResultTable(inputData, clusters, exec);
         } 
-            m_dataArray =
-                    new DefaultDataArray(outputData, 1, inputData.getRowCount());
-            m_fusionTable =
-                    new DefaultDataArray(fusionCont.getTable(), 1,
-                            iterationStep);
+        m_dataArray = new DefaultDataArray(
+                outputData, 1, inputData.getRowCount());
+        m_fusionTable = new DefaultDataArray(
+                fusionCont.getTable(), 1, iterationStep);
 
         return new BufferedDataTable[]{exec.createBufferedDataTable(outputData,
                 exec)};
@@ -532,10 +531,26 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
                     + Linkage.COMPLETE);
         }
 
-        if (m_selectedColumns.getIncludeList().size() <= 0) {
-            throw new InvalidSettingsException("No column for clustering included");
+        if ((m_selectedColumns.getExcludeList().size() == 0)
+                && (m_selectedColumns.getIncludeList().size() == 0)) {
+            // use all numeric columns by default
+            m_selectedColumns.setExcludeList(new String[0]);
+            ArrayList<String> al = new ArrayList<String>();
+            for (DataColumnSpec cs : inSpecs[0]) {
+                if (cs.getType().isCompatible(DoubleValue.class)) {
+                    al.add(cs.getName());
+                }
+            }
+            if (al.size() == 0) {
+                throw new InvalidSettingsException("No numeric columns in input"
+                        + " table");
+            }
+            m_selectedColumns.setIncludeList(al);
+        } else if (m_selectedColumns.getIncludeList().size() <= 0) {
+            throw new InvalidSettingsException(
+                    "No column for clustering included");
         }
-        
+
         for (String col : m_selectedColumns.getIncludeList()) {
             DataColumnSpec colSpec = inSpecs[0].getColumnSpec(col);
             if (colSpec == null) {
@@ -563,9 +578,15 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
                         .getString(DISTFUNCTION_KEY));
         m_linkageType = Linkage.valueOf(settings.getString(LINKAGETYPE_KEY));
         m_cacheDistances = settings.getBoolean(USE_CACHE_KEY, false);
-        m_selectedColumns.loadSettingsFrom(settings);
-        if (m_selectedColumns.getIncludeList().size() <= 0) {
-            setWarningMessage("No column included!");
+        try {
+            m_selectedColumns.loadSettingsFrom(settings);
+            if (m_selectedColumns.getIncludeList().size() <= 0) {
+                setWarningMessage("No column included!");
+            }
+        } catch (InvalidSettingsException ex) {
+            // handle pre-1.3 settings
+            m_selectedColumns.setExcludeList(new String[0]);
+            m_selectedColumns.setIncludeList(new String[0]);
         }
     }
 

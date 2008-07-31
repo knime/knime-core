@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -26,6 +26,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.knime.core.internal.SerializerMethodLoader.Serializer;
+
 /**
  * Interface for classes that can read or write specific 
  * {@link org.knime.core.data.DataCell}
@@ -41,7 +43,7 @@ import java.io.IOException;
  * or written
  * @author Bernd Wiswedel, University of Konstanz
  */
-public interface DataCellSerializer<T extends DataCell> {
+public interface DataCellSerializer<T extends DataCell> extends Serializer<T> {
 
     /**
      * Saves the <code>cell</code> to the <code>output</code> stream.

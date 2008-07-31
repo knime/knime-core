@@ -47,6 +47,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValueComparator;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataContainer;
@@ -123,8 +124,8 @@ public class ValueCounterNodeModel extends NodeModel {
                         m_settings.columnName());
         final double max = inData[0].getRowCount();
         int rowCount = 0;
-        Map<DataCell, Set<DataCell>> hlMap =
-                new HashMap<DataCell, Set<DataCell>>();
+        Map<DataCell, Set<RowKey>> hlMap =
+                new HashMap<DataCell, Set<RowKey>>();
         Map<DataCell, MutableInteger> countMap =
             new HashMap<DataCell, MutableInteger>();
 
@@ -142,12 +143,12 @@ public class ValueCounterNodeModel extends NodeModel {
             count.inc();
 
             if (m_settings.hiliting()) {
-                Set<DataCell> s = hlMap.get(cell);
+                Set<RowKey> s = hlMap.get(cell);
                 if (s == null) {
-                    s = new HashSet<DataCell>();
+                    s = new HashSet<RowKey>();
                     hlMap.put(cell, s);
                 }
-                s.add(row.getKey().getId());
+                s.add(row.getKey());
             }
         }
 
@@ -169,21 +170,22 @@ public class ValueCounterNodeModel extends NodeModel {
 
         BufferedDataContainer cont = exec.createDataContainer(TABLE_SPEC);
         for (Map.Entry<DataCell, MutableInteger> entry : sorted) {
-            cont.addRowToTable(new DefaultRow(entry.getKey(),
+            RowKey newKey = new RowKey(entry.getKey().toString());
+            cont.addRowToTable(new DefaultRow(newKey,
                     new int[]{entry.getValue().intValue()}));
         }
         cont.close();
 
         if (m_settings.hiliting()) {
-            Map<DataCell, Set<DataCell>> temp = 
-                new HashMap<DataCell, Set<DataCell>>();
-            for (Map.Entry<DataCell, Set<DataCell>> entry : hlMap.entrySet()) {
-                temp.put(entry.getKey(), entry.getValue());
+            Map<RowKey, Set<RowKey>> temp = new HashMap<RowKey, Set<RowKey>>();
+            for (Map.Entry<DataCell, Set<RowKey>> entry : hlMap.entrySet()) {
+                RowKey newKey = new RowKey(entry.getKey().toString());
+                temp.put(newKey, entry.getValue());
             }
             m_translator.setMapper(new DefaultHiLiteMapper(temp));
         } else {
             m_translator.setMapper(new DefaultHiLiteMapper(
-                    new HashMap<DataCell, Set<DataCell>>()));
+                    new HashMap<RowKey, Set<RowKey>>()));
         }
         return new BufferedDataTable[]{cont.getTable()};
     }

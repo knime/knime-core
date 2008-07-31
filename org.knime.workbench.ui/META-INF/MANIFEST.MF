@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Workbench UI
 Bundle-SymbolicName: org.knime.workbench.ui;singleton:=true
-Bundle-Version: 1.3.5.1
+Bundle-Version: 2.0.0.0016392
 Bundle-ClassPath: workbench-ui.jar
 Bundle-Activator: org.knime.workbench.ui.KNIMEUIPlugin
 Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
@@ -11,7 +11,8 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.resources,
  org.eclipse.ui.ide,
  org.knime.workbench.core,
- org.knime.workbench.repository
+ org.knime.workbench.repository,
+ org.eclipse.ui.console
 Eclipse-AutoStart: true
 Provide-Package: org.knime.workbench.ui,
  org.knime.workbench.ui.preferences,
@@ -22,6 +23,7 @@ Bundle-ManifestVersion: 2
 Export-Package: com.swtdesigner,
  org.knime.workbench.ui,
  org.knime.workbench.ui.builder,
+ org.knime.workbench.ui.metanodes,
  org.knime.workbench.ui.nature,
  org.knime.workbench.ui.perspective,
  org.knime.workbench.ui.preferences,

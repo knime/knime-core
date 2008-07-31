@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -78,6 +78,7 @@ public class FixedPieDataModel extends PieDataModel {
     private static final String CFG_MISSING_SECTION = "missingSection";
     private static final String CFG_HILITING = "hiliting";
     private static final String CFG_DETAILS = "details";
+    private static final String CFG_IS_COLOR_COLUMN = "isColorColumn";
 
 
     private final String m_pieCol;
@@ -91,6 +92,8 @@ public class FixedPieDataModel extends PieDataModel {
     private final PieSectionDataModel m_missingSection;
 
     private boolean m_sectionsInitialized = false;
+
+    private final boolean m_isColorColumn;
 
 
     /**Constructor for class PieDataModel.
@@ -113,6 +116,7 @@ public class FixedPieDataModel extends PieDataModel {
         }
         m_pieCol = pieColSpec.getName();
         m_numericPieCol = pieColSpec.getType().isCompatible(DoubleValue.class);
+        m_isColorColumn = pieColSpec.getColorHandler() != null;
         m_missingSection = createDefaultMissingSection(false);
         m_sections = new ArrayList<PieSectionDataModel>();
     }
@@ -125,12 +129,15 @@ public class FixedPieDataModel extends PieDataModel {
      * @param missingSection the missing section
      * @param supportHiliting if hiliting is supported
      * @param containsColorHandler <code>true</code> if a color handler is set
+     * @param isColorColumn <code>true</code> if the aggregation column is
+     * also the one with the color handler
      */
     protected FixedPieDataModel(final String pieCol,
             final boolean numericPieCol, final String aggrCol,
             final List<PieSectionDataModel> sections,
             final PieSectionDataModel missingSection,
-            final boolean supportHiliting, final boolean containsColorHandler) {
+            final boolean supportHiliting, final boolean containsColorHandler,
+            final boolean isColorColumn) {
         super(supportHiliting, containsColorHandler);
         if (pieCol == null) {
             throw new NullPointerException("pieCol must not be null");
@@ -138,6 +145,7 @@ public class FixedPieDataModel extends PieDataModel {
         m_pieCol = pieCol;
         m_numericPieCol = numericPieCol;
         m_aggrCol = aggrCol;
+        m_isColorColumn =  isColorColumn;
         if (sections == null) {
             throw new NullPointerException("sections must not be null");
         }
@@ -150,9 +158,13 @@ public class FixedPieDataModel extends PieDataModel {
     }
 
     /**
-     * {@inheritDoc}
+     * @param row the row to add
+     * @param rowColor the color of the roe
+     * @param pieCell the cell with the pie value
+     * @param aggrCell the cell with the aggregation value
+     * @throws TooManySectionsException if more sections are created than
+     * supported
      */
-    @Override
     public void addDataRow(final DataRow row, final Color rowColor,
             final DataCell pieCell, final DataCell aggrCell)
     throws TooManySectionsException {
@@ -181,7 +193,7 @@ public class FixedPieDataModel extends PieDataModel {
             }
             m_sectionsInitialized = false;
         }
-        section.addDataRow(rowColor, row.getKey().getId(), aggrCell);
+        section.addDataRow(rowColor, row.getKey(), aggrCell);
     }
 
     /**
@@ -218,7 +230,11 @@ public class FixedPieDataModel extends PieDataModel {
     private List<PieSectionDataModel> getSections()  {
         if (!m_sectionsInitialized) {
             PieDataModel.sortSections(m_sections, m_numericPieCol, true);
-            PieDataModel.setSectionColor(m_sections);
+            //set the section color only if the colorized column is selected
+            //as aggregation column
+            if (m_isColorColumn) {
+                PieDataModel.setSectionColor(m_sections);
+            }
             m_sectionsInitialized = true;
         }
         return m_sections;
@@ -311,6 +327,7 @@ public class FixedPieDataModel extends PieDataModel {
         config.addString(CFG_AGGR_COL, m_aggrCol);
         config.addBoolean(CFG_HILITING, supportsHiliting());
         config.addBoolean(CFG_DETAILS, detailsAvailable());
+        config.addBoolean(CFG_IS_COLOR_COLUMN, m_isColorColumn);
         if (exec != null) {
             exec.setProgress(0.3, "Start saving sections...");
             exec.checkCanceled();
@@ -387,6 +404,17 @@ public class FixedPieDataModel extends PieDataModel {
         final PieSectionDataModel missingSection =
             PieSectionDataModel.loadFromFile(missingConf, exec);
 
+        final boolean isColorColumn;
+        if (config.containsKey(CFG_IS_COLOR_COLUMN)) {
+            isColorColumn = config.getBoolean(CFG_IS_COLOR_COLUMN);
+        } else {
+            isColorColumn = false;
+            //reset the color of all elements
+            for (final PieSectionDataModel section : sections) {
+                section.setColor(Color.BLACK);
+            }
+        }
+
         if (exec != null) {
             exec.setProgress(1.0, "Pie data model loaded ");
         }
@@ -394,6 +422,7 @@ public class FixedPieDataModel extends PieDataModel {
         inData.close();
         is.close();
         return new FixedPieDataModel(pieCol, numericPieCol, aggrCol, sections,
-                missingSection, supportHiliting, detailsAvailable);
+                missingSection, supportHiliting, detailsAvailable,
+                isColorColumn);
     }
 }

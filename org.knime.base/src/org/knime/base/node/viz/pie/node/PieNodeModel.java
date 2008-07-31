@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,6 +25,35 @@
 
 package org.knime.base.node.viz.pie.node;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.PortObject;
+import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.PortType;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.util.ColumnFilter;
+import org.knime.core.node.util.DataValueColumnFilter;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.pie.datamodel.PieVizModel;
+import org.knime.base.node.viz.pie.util.PieColumnFilter;
+import org.knime.base.node.viz.pie.util.TooManySectionsException;
+
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
@@ -32,37 +61,13 @@ import java.io.IOException;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.pie.datamodel.PieVizModel;
-import org.knime.base.node.viz.pie.util.PieColumnFilter;
-import org.knime.base.node.viz.pie.util.TooManySectionsException;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.RowIterator;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.util.ColumnFilter;
-import org.knime.core.node.util.DataValueColumnFilter;
-
 /**
  * The abstract pie chart implementation of the{@link NodeModel} class.
  * @author Tobias Koetter, University of Konstanz
  * @param <D> the {@link PieVizModel} implementation
  */
-public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
+public abstract class PieNodeModel<D extends PieVizModel>
+extends GenericNodeModel {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(PieNodeModel.class);
@@ -110,7 +115,7 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
     /**Constructor for class PieNodeModel.
      */
     public PieNodeModel() {
-        super(1, 0);
+        super(new PortType[]{BufferedDataTable.TYPE}, new PortType[0]);
         m_noOfRows = new SettingsModelIntegerBounded(CFGKEY_NO_OF_ROWS,
                         DEFAULT_NO_OF_ROWS, 0, Integer.MAX_VALUE);
         m_allRows = new SettingsModelBoolean(CFGKEY_ALL_ROWS, false);
@@ -207,9 +212,9 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected DataTableSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        final DataTableSpec spec = inSpecs[0];
+        final DataTableSpec spec = (DataTableSpec)inSpecs[0];
         if (spec == null) {
             throw new IllegalArgumentException(
                     "Table specification must not be null");
@@ -240,9 +245,9 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected BufferedDataTable[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        final BufferedDataTable dataTable = inData[0];
+        final BufferedDataTable dataTable = (BufferedDataTable)inData[0];
         if (dataTable == null) {
             throw new IllegalArgumentException("No data found");
         }
@@ -262,16 +267,14 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
             throw new IllegalArgumentException(
                     "No column spec found for pie column");
         }
-        final int pieColIdx = spec.findColumnIndex(pieCol.getName());
+
         final String aggrColName = m_aggrColumn.getStringValue();
         final DataColumnSpec aggrCol;
-        final int aggrColIdx;
+
         if (aggrColName == null) {
             aggrCol = null;
-            aggrColIdx = -1;
         } else {
             aggrCol = spec.getColumnSpec(aggrColName);
-            aggrColIdx = spec.findColumnIndex(aggrCol.getName());
         }
         int selectedNoOfRows;
         if (m_allRows.getBooleanValue()) {
@@ -289,28 +292,8 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
         } else if (selectedNoOfRows > maxNoOfRows) {
             selectedNoOfRows = maxNoOfRows;
         }
-        final DataTableSpec tableSpec = dataTable.getDataTableSpec();
-        createModel(pieCol, aggrCol, tableSpec,
-                selectedNoOfRows, containsColorHandler(tableSpec));
-        final double progressPerRow = 1.0 / selectedNoOfRows;
-        double progress = 0.0;
-        final RowIterator rowIterator = dataTable.iterator();
-        for (int rowCounter = 0; rowCounter < selectedNoOfRows
-                && rowIterator.hasNext(); rowCounter++) {
-            final DataRow row = rowIterator.next();
-            final Color rowColor = spec.getRowColor(row).getColor(false, false);
-            final DataCell pieCell = row.getCell(pieColIdx);
-            final DataCell aggrCell;
-            if (aggrColIdx >= 0) {
-                aggrCell = row.getCell(aggrColIdx);
-            } else {
-                aggrCell = null;
-            }
-            addDataRow(row, rowColor, pieCell, aggrCell);
-            progress += progressPerRow;
-            exec.setProgress(progress, "Adding data rows to pie chart...");
-            exec.checkCanceled();
-        }
+        createModel(exec, pieCol, aggrCol, dataTable,
+                selectedNoOfRows, containsColorHandler(dataTable));
         exec.setMessage("Vaidating model");
         final long startTime = System.currentTimeMillis();
         //validate the data model by trying to get the viz model
@@ -327,22 +310,30 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
     /**
      * Called prior the {@link #addDataRow(DataRow, Color, DataCell, DataCell)}
      * method to allow the implementing class the specific model creation.
+     * @param exec the {@link ExecutionMonitor}
      * @param pieColSpec the {@link DataColumnSpec} of the selected pie column
      * @param aggrColSpec the {@link DataColumnSpec} of the selected
      * aggregation column
-     * @param spec the {@link DataTableSpec}
+     * @param dataTable the {@link DataTableSpec}
      * @param noOfRows the expected number of rows
      * @param containsColorHandler <code>true</code> if a color handler is set
+     * @throws CanceledExecutionException if the progress was canceled
+     * @throws TooManySectionsException if more sections are created than
+     * supported
      */
-    protected abstract void createModel(final DataColumnSpec pieColSpec,
+    protected abstract void createModel(ExecutionContext exec,
+            final DataColumnSpec pieColSpec,
             final DataColumnSpec aggrColSpec,
-            DataTableSpec spec, final int noOfRows,
-            final boolean containsColorHandler);
+            BufferedDataTable dataTable, final int noOfRows,
+            final boolean containsColorHandler)
+    throws CanceledExecutionException, TooManySectionsException;
 
-    private static boolean containsColorHandler(final DataTableSpec spec) {
-        if (spec == null) {
+    private static boolean containsColorHandler(
+            final BufferedDataTable dataTable) {
+        if (dataTable == null) {
             return false;
         }
+        final DataTableSpec spec = dataTable.getDataTableSpec();
         for (final DataColumnSpec colSpec : spec) {
             if (colSpec.getColorHandler() != null) {
                 return true;
@@ -350,19 +341,6 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
         }
         return false;
     }
-
-    /**
-     * Adds the given row values to the concrete pie implementation.
-     * @param row the row to add
-     * @param rowColor the color of this row
-     * @param pieCell the pie value
-     * @param aggrCell the optional aggregation value
-     * @throws TooManySectionsException if more sections are created than
-     * supported
-     */
-    protected abstract void addDataRow(final DataRow row, final Color rowColor,
-            final DataCell pieCell, final DataCell aggrCell)
-    throws TooManySectionsException;
 
     /**
      * @return the {@link PieVizModel}. Could be null.
@@ -481,8 +459,8 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
             throw e;
         } catch (final Exception e) {
             LOGGER.warn("Error while saving saving internals: "
-                    + e.getMessage(), e);
-            throw new IOException(e.getMessage());
+                    + e.getMessage());
+            throw new IOException(e);
         }
     }
 

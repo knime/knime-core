@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -27,8 +27,6 @@ package org.knime.core.data;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,6 +43,7 @@ import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 import org.knime.core.data.renderer.SetOfRendererFamilies;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
+import org.knime.core.internal.SerializerMethodLoader;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
@@ -294,71 +293,17 @@ public final class DataType {
     @SuppressWarnings("unchecked") // access to CLASS_TO_SERIALIZER_MAP
     public static <T extends DataCell> 
         DataCellSerializer<T> getCellSerializer(final Class<T> cl) {
-        if (cl == null) {
-            throw new NullPointerException("Class argument must not be null.");
-        }
         if (CLASS_TO_SERIALIZER_MAP.containsKey(cl)) {
             return CLASS_TO_SERIALIZER_MAP.get(cl);
         }
         DataCellSerializer<T> result = null;
-        Exception exception = null;
         try {
-            Method method = cl.getMethod("getCellSerializer");
-            Class rType = method.getReturnType();
-            /* The following test realizes
-             * DataCellSerializer<T>.class.isAssignableFrom(rType).
-             * Unfortunately one can't check the generic(!) return type as
-             * above since the type information is lost at compile time.
-             * We have to make sure here that the runtime class of the return
-             * value matches the class information of the DataCell class as
-             * DataCells may potentially be overwritten and we do not accept
-             * the implementation of the superclass as we lose information
-             * of the more specialized class when we use the superclass' 
-             * serializer.
-             */ 
-            boolean isAssignable =
-                DataCellSerializer.class.isAssignableFrom(rType);
-            boolean hasRType = false;
-            if (isAssignable) {
-                Type genType = method.getGenericReturnType();
-                hasRType = isCellSerializer(rType, cl) 
-                    || isCellSerializer(genType, cl);
-                if (!hasRType) {
-                    Type[] ins = rType.getGenericInterfaces();
-                    for (int i = 0; (i < ins.length) && !hasRType; i++) {
-                        hasRType = isCellSerializer(ins[i], cl);
-                    }
-                }
-            }
-            if (!hasRType) {
-                LOGGER.coding("Class \"" + cl.getSimpleName() + "\" defines " 
-                        + "method \"getCellSerializer\" but the method has " 
-                        + "the wrong return type (\"" 
-                        + method.getGenericReturnType() + "\", expected \"" 
-                        + DataCellSerializer.class.getName() + "<" 
-                        + cl.getName() + ">\"); using serialization instead.");
-            } else {
-                Object typeObject = method.invoke(null);
-                result = (DataCellSerializer<T>)typeObject;
-            }
+            result = SerializerMethodLoader.getSerializer(
+                    cl, DataCellSerializer.class, "getCellSerializer", false);
         } catch (NoSuchMethodException nsme) {
             LOGGER.debug("Class \"" + cl.getSimpleName()
                     + "\" does not define method \"getCellSerializer\", using " 
                     + "ordinary (but slow) java serialization.");
-        } catch (InvocationTargetException ite) {
-            exception = ite;
-        } catch (NullPointerException npe) {
-            exception = npe;
-        } catch (IllegalAccessException iae) {
-            exception = iae;
-        } catch (ClassCastException cce) {
-            exception = cce;
-        }
-        if (exception != null) {
-            LOGGER.coding("Class \"" + cl.getSimpleName()
-                    + "\" defines method \"getCellSerializer\" but there was a "
-                    + "problem invoking it", exception);
-            result = null;
         }
         CLASS_TO_SERIALIZER_MAP.put(cl, result);
         return result;
@@ -381,8 +326,9 @@ public final class DataType {
      * 
      * <p>
      * If both types have no common data values, the resulting 
-     * <code>DataType</code> has no preferred value class, an empty list 
-     * of compatible value classes, and the cell class is <code>null</code>.   
+     * <code>DataType</code> has no preferred value class; its list of 
+     * compatible value classes will only contain (the class representation of)
+     * {@link DataValue}, and the cell class is <code>null</code>.   
      * 
      * @param type1 type 1
      * @param type2 type 2
@@ -587,27 +533,6 @@ public final class DataType {
             VALUE_CLASS_TO_UTILITY.put(value, result);
         }
         return result;
-    }
-    
-    /**
-     * Helper method that checks if the passed Type is a parameterized
-     * type (like <code>DataCellSerializer&lt;someType&gt;</code> and that it 
-     * is assignable from the given {@link org.knime.core.data.DataCell} class. 
-     * This method is used to check if the return class of 
-     * <code>getCellSerializer()</code> in a 
-     * {@link org.knime.core.data.DataCell} has the correct signature.
-     */
-    private static boolean isCellSerializer(
-            final Type c, final Class<? extends DataCell> cellClass) {
-        boolean b = c instanceof ParameterizedType;
-        if (b) {
-            ParameterizedType parType = (ParameterizedType)c;
-            Type[] args = parType.getActualTypeArguments();
-            b = b && (args.length >= 1);
-            b = b && (args[0] instanceof Class);
-            b = b && cellClass.isAssignableFrom((Class)args[0]);
-        }
-        return b;
     }
     
     /**
@@ -919,8 +844,7 @@ public final class DataType {
     /**
      * The hash code is based on the preferred value flag and the hash codes of 
      * all {@link DataValue} classes.
-     * 
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
@@ -1019,8 +943,7 @@ public final class DataType {
      * Returns the simple name of the {@link DataCell} class (if any) or 
      * <i>Non-Native</i> the <code>toString()</code> results of all compatible 
      * values classes.
-     * 
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

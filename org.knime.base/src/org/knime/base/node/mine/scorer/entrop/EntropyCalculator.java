@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -48,6 +48,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
@@ -84,7 +85,7 @@ public final class EntropyCalculator {
 
     private final DataTable m_scoreTable;
 
-    private final Map<DataCell, Set<DataCell>> m_clusteringMap;
+    private final Map<RowKey, Set<RowKey>> m_clusteringMap;
 
     /**
      * Creates new instance.
@@ -117,21 +118,21 @@ public final class EntropyCalculator {
      * @param clusteringMap the clustering to score, cluster name -&gt; cluster
      *            members in a set (may not necessarily be unique)
      */
-    public EntropyCalculator(final Map<DataCell, DataCell> referenceMap,
-            final Map<DataCell, Set<DataCell>> clusteringMap) {
+    public EntropyCalculator(final Map<RowKey, RowKey> referenceMap,
+            final Map<RowKey, Set<RowKey>> clusteringMap) {
         m_clusteringMap = clusteringMap;
         m_entropy = getEntropy(referenceMap, m_clusteringMap);
         m_quality = getQuality(referenceMap, m_clusteringMap);
         // count objects as found in clusters
         int patInCluster = 0;
-        for (Set<DataCell> s : m_clusteringMap.values()) {
+        for (Set<RowKey> s : m_clusteringMap.values()) {
             patInCluster += s.size();
         }
         m_patternsInClusters = patInCluster;
         m_nrClusters = m_clusteringMap.size();
 
         m_patternsInReference = referenceMap.size();
-        HashSet<DataCell> referenceCluster = new HashSet<DataCell>(referenceMap
+        HashSet<RowKey> referenceCluster = new HashSet<RowKey>(referenceMap
                 .values());
         m_nrReference = referenceCluster.size();
         m_scoreTable = createScoreTable(referenceMap, m_clusteringMap);
@@ -142,7 +143,7 @@ public final class EntropyCalculator {
             final int patternsInClusters, final int nrClusters,
             final int patternsInReference, final int nrReference,
             final DataTable scoreTable,
-            final Map<DataCell, Set<DataCell>> clusteringMap) {
+            final Map<RowKey, Set<RowKey>> clusteringMap) {
         m_entropy = entropy;
         m_quality = quality;
         m_patternsInClusters = patternsInClusters;
@@ -201,6 +202,11 @@ public final class EntropyCalculator {
     public DataTable getScoreTable() {
         return m_scoreTable;
     }
+    
+    /** @return Table spec to {@link #getScoreTable()}. */
+    public static DataTableSpec getScoreTableSpec() {
+        return new DataTableSpec("Entropy Scores", NAMES, TYPES);
+    }
 
     /**
      * Map of Cluster name -&gt; cluster members (in a set) as given in the
@@ -208,7 +214,7 @@ public final class EntropyCalculator {
      * 
      * @return the clusteringMap
      */
-    public Map<DataCell, Set<DataCell>> getClusteringMap() {
+    public Map<RowKey, Set<RowKey>> getClusteringMap() {
         return m_clusteringMap;
     }
 
@@ -255,16 +261,16 @@ public final class EntropyCalculator {
         config.addInt(CFG_NR_CLUSTER, m_nrClusters);
         config.addInt(CFG_NR_REFERENCES, m_nrReference);
         NodeSettingsWO subConfig = config.addNodeSettings(CFG_CLUSTERING_MAP);
-        for (Map.Entry<DataCell, Set<DataCell>> entry : m_clusteringMap
+        for (Map.Entry<RowKey, Set<RowKey>> entry : m_clusteringMap
                 .entrySet()) {
             exec.checkCanceled();
-            DataCell key = entry.getKey();
-            Set<DataCell> values = entry.getValue();
+            RowKey key = entry.getKey();
+            Set<RowKey> values = entry.getValue();
             NodeSettingsWO keySettings = subConfig.addNodeSettings(key
                     .toString());
-            keySettings.addDataCell(key.toString(), key);
-            keySettings.addDataCellArray(CFG_MAPPED_KEYS, values
-                    .toArray(new DataCell[values.size()]));
+            keySettings.addRowKey(key.toString(), key);
+            keySettings.addRowKeyArray(CFG_MAPPED_KEYS, values
+                    .toArray(new RowKey[values.size()]));
         }
         config.saveToXML(new BufferedOutputStream(new GZIPOutputStream(
                 new FileOutputStream(settingsFile))));
@@ -299,16 +305,29 @@ public final class EntropyCalculator {
         int nrClusters = config.getInt(CFG_NR_CLUSTER);
         int nrReferences = config.getInt(CFG_NR_REFERENCES);
         NodeSettingsRO subConfig = config.getNodeSettings(CFG_CLUSTERING_MAP);
-        LinkedHashMap<DataCell, Set<DataCell>> map 
-            = new LinkedHashMap<DataCell, Set<DataCell>>();
+        LinkedHashMap<RowKey, Set<RowKey>> map 
+            = new LinkedHashMap<RowKey, Set<RowKey>>();
         for (String key : subConfig.keySet()) {
             exec.checkCanceled();
             NodeSettingsRO keySettings = subConfig.getNodeSettings(key);
-            DataCell cellKey = keySettings.getDataCell(key);
-            DataCell[] mappedKeys = keySettings
+            Set<RowKey> rowKeys;
+            RowKey keyCell;
+            try {
+                keyCell = new RowKey(keySettings.getDataCell(key).toString());
+                // load settings before 2.0
+                DataCell[] mappedKeys = keySettings
                     .getDataCellArray(CFG_MAPPED_KEYS);
-            map.put(cellKey, new LinkedHashSet<DataCell>(Arrays
-                    .asList(mappedKeys)));
+                rowKeys = new LinkedHashSet<RowKey>();
+                for (DataCell dc : mappedKeys) {
+                    rowKeys.add(new RowKey(dc.toString()));
+                }
+            } catch (InvalidSettingsException ise) {
+                keyCell = keySettings.getRowKey(key);
+                RowKey[] mappedKeys = keySettings
+                    .getRowKeyArray(CFG_MAPPED_KEYS);
+                rowKeys = new LinkedHashSet<RowKey>(Arrays.asList(mappedKeys));
+            }
+            map.put(keyCell, rowKeys);
         }
         return new EntropyCalculator(entropy, quality, patternsInCluster,
                 nrClusters, patternsInReference, nrReferences, scorerTable, 
@@ -322,21 +341,21 @@ public final class EntropyCalculator {
             DoubleCell.TYPE, DoubleCell.TYPE};
 
     private static DataTable createScoreTable(
-            final Map<DataCell, DataCell> referenceMap,
-            final Map<DataCell, Set<DataCell>> clusteringMap) {
+            final Map<RowKey, RowKey> referenceMap,
+            final Map<RowKey, Set<RowKey>> clusteringMap) {
         ArrayList<DefaultRow> sortedRows = new ArrayList<DefaultRow>();
         // number of different clusters in reference clustering, used for
         // normalization
-        int clusterCardinalityInReference = (new HashSet<DataCell>(referenceMap
+        int clusterCardinalityInReference = (new HashSet<RowKey>(referenceMap
                 .values())).size();
         double normalization = Math.log(clusterCardinalityInReference)
                 / Math.log(2.0);
-        for (Map.Entry<DataCell, Set<DataCell>> e : clusteringMap.entrySet()) {
+        for (Map.Entry<RowKey, Set<RowKey>> e : clusteringMap.entrySet()) {
             DataCell size = new IntCell(e.getValue().size());
             double entropy = entropy(referenceMap, e.getValue());
             DataCell entropyCell = new DoubleCell(entropy);
             DataCell normEntropy = new DoubleCell(entropy / normalization);
-            DataCell clusterID = e.getKey();
+            RowKey clusterID = e.getKey();
             DefaultRow row = new DefaultRow(clusterID, size, entropyCell,
                     normEntropy);
             sortedRows.add(row);
@@ -349,8 +368,7 @@ public final class EntropyCalculator {
             }
         });
         DataRow[] rows = sortedRows.toArray(new DataRow[0]);
-        DataTableSpec tableSpec = 
-            new DataTableSpec("Entropy Scores", NAMES, TYPES);
+        DataTableSpec tableSpec = getScoreTableSpec();
         DataContainer container = new DataContainer(tableSpec);
         for (DataRow r : rows) {
             container.addRowToTable(r);
@@ -359,11 +377,11 @@ public final class EntropyCalculator {
         return container.getTable();
     }
 
-    private static HashMap<DataCell, Set<DataCell>> getClusterMap(
+    private static HashMap<RowKey, Set<RowKey>> getClusterMap(
             final DataTable table, final int colIndex, 
             final ExecutionMonitor ex) throws CanceledExecutionException {
-        HashMap<DataCell, Set<DataCell>> result 
-            = new LinkedHashMap<DataCell, Set<DataCell>>();
+        HashMap<RowKey, Set<RowKey>> result 
+            = new LinkedHashMap<RowKey, Set<RowKey>>();
         int rowCount = -1;
         if (table instanceof BufferedDataTable) {
             rowCount = ((BufferedDataTable)table).getRowCount();
@@ -379,23 +397,23 @@ public final class EntropyCalculator {
                 ex.setMessage(m);
             }
             ex.checkCanceled();
-            DataCell id = row.getKey().getId();
-            DataCell clusterMember = row.getCell(colIndex);
-            Set<DataCell> members = result.get(clusterMember);
+            RowKey id = row.getKey();
+            RowKey clusterMember = new RowKey(row.getCell(colIndex).toString());
+            Set<RowKey> members = result.get(clusterMember);
             if (members == null) {
-                members = new HashSet<DataCell>();
+                members = new HashSet<RowKey>();
                 result.put(clusterMember, members);
             }
             members.add(id);
         }
         return result;
     }
-
-    private static HashMap<DataCell, DataCell> getMap(final DataTable table,
+    
+    private static HashMap<RowKey, RowKey> getMap(final DataTable table,
             final int colIndex, final ExecutionMonitor ex)
             throws CanceledExecutionException {
-        HashMap<DataCell, DataCell> result 
-            = new LinkedHashMap<DataCell, DataCell>();
+        HashMap<RowKey, RowKey> result 
+            = new LinkedHashMap<RowKey, RowKey>();
         int rowCount = -1;
         if (table instanceof BufferedDataTable) {
             rowCount = ((BufferedDataTable)table).getRowCount();
@@ -411,8 +429,8 @@ public final class EntropyCalculator {
                 ex.setMessage(m);
             }
             ex.checkCanceled();
-            DataCell id = row.getKey().getId();
-            DataCell clusterMember = row.getCell(colIndex);
+            RowKey id = row.getKey();
+            RowKey clusterMember = new RowKey(row.getCell(colIndex).toString());
             result.put(id, clusterMember);
         }
         return result;
@@ -438,20 +456,20 @@ public final class EntropyCalculator {
      *            patterns as value
      * @return quality value in [0,1]
      */
-    public static double getQuality(final Map<DataCell, DataCell> reference,
-            final Map<DataCell, Set<DataCell>> clusterMap) {
+    public static double getQuality(final Map<RowKey, RowKey> reference,
+            final Map<RowKey, Set<RowKey>> clusterMap) {
         // optimistic guess (we don't have counterexamples!)
         if (clusterMap.isEmpty()) {
             return 1.0;
         }
         // get the number of different clusters in the reference set
         int refClusterCount = 
-            new HashSet<DataCell>(reference.values()).size();
+            new HashSet<RowKey>(reference.values()).size();
         // normalizing value (such that the maximum value for the entropy is 1
         double normalizer = Math.log(refClusterCount) / Math.log(2.0);
         double quality = 0.0;
         int patCount = 0;
-        for (Set<DataCell> pats : clusterMap.values()) {
+        for (Set<RowKey> pats : clusterMap.values()) {
             int size = pats.size();
             patCount += size;
             double entropy = entropy(reference, pats);
@@ -477,15 +495,15 @@ public final class EntropyCalculator {
      * @param clusterMap the clustering to judge
      * @return entropy value
      */
-    public static double getEntropy(final Map<DataCell, DataCell> reference,
-            final Map<DataCell, Set<DataCell>> clusterMap) {
+    public static double getEntropy(final Map<RowKey, RowKey> reference,
+            final Map<RowKey, Set<RowKey>> clusterMap) {
         // optimistic guess (we don't have counterexamples!)
         if (clusterMap.isEmpty()) {
             return 0.0;
         }
         double entropy = 0.0;
         int patCount = 0;
-        for (Set<DataCell> pats : clusterMap.values()) {
+        for (Set<RowKey> pats : clusterMap.values()) {
             int size = pats.size();
             patCount += size;
             double e = entropy(reference, pats);
@@ -503,13 +521,13 @@ public final class EntropyCalculator {
      * @return the (not-normalized) entropy of <code>pats</code> wrt.
      *         <code>ref</code>
      */
-    public static double entropy(final Map<DataCell, DataCell> ref,
-            final Set<DataCell> pats) {
+    public static double entropy(final Map<RowKey, RowKey> ref,
+            final Set<RowKey> pats) {
         // that will map the "original" cluster ID to a counter.
-        HashMap<DataCell, MutableInteger> refClusID2Count 
-            = new HashMap<DataCell, MutableInteger>();
-        for (DataCell pat : pats) {
-            DataCell origCluster = ref.get(pat);
+        HashMap<RowKey, MutableInteger> refClusID2Count 
+            = new HashMap<RowKey, MutableInteger>();
+        for (RowKey pat : pats) {
+            RowKey origCluster = ref.get(pat);
             MutableInteger countForClus = refClusID2Count.get(origCluster);
             // if we haven't had cluster id before ...
             if (countForClus == null) {

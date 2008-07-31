@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -156,7 +156,6 @@ public interface DataValue {
             ImageIcon icon;
             try {
                 ClassLoader loader = className.getClassLoader(); 
-                    DataValue.class.getClassLoader();
                 String packagePath = 
                     className.getPackage().getName().replace('.', '/');
                 String correctedPath = path;

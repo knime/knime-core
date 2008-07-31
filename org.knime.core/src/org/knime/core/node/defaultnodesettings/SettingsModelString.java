@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   18.10.2006 (ohl): created
  */
@@ -31,7 +31,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 
 /**
- * 
+ *
  * @author ohl, University of Konstanz
  */
 public class SettingsModelString extends SettingsModel {
@@ -42,7 +42,7 @@ public class SettingsModelString extends SettingsModel {
 
     /**
      * Creates a new object holding a string value.
-     * 
+     *
      * @param configName the identifier the value is stored with in the
      *            {@link org.knime.core.node.NodeSettings} object
      * @param defaultValue the initial value
@@ -91,7 +91,7 @@ public class SettingsModelString extends SettingsModel {
         try {
             // use the current value, if no value is stored in the settings
             setStringValue(settings.getString(m_configName, m_value));
-        } catch (IllegalArgumentException iae) {
+        } catch (final IllegalArgumentException iae) {
             // if the argument is not accepted: keep the old value.
         }
     }
@@ -107,19 +107,17 @@ public class SettingsModelString extends SettingsModel {
 
     /**
      * set the value stored to the new value.
-     * 
+     *
      * @param newValue the new value to store.
      */
     public void setStringValue(final String newValue) {
         boolean sameValue;
-        
+
         if (newValue == null) {
             sameValue = (m_value == null);
         } else {
             sameValue = newValue.equals(m_value);
         }
-        String tmp = m_value;
-        assert tmp == tmp;
         m_value = newValue;
 
         if (!sameValue) {
@@ -152,7 +150,7 @@ public class SettingsModelString extends SettingsModel {
         try {
             // no default value, throw an exception instead
             setStringValue(settings.getString(m_configName));
-        } catch (IllegalArgumentException iae) {
+        } catch (final IllegalArgumentException iae) {
             throw new InvalidSettingsException(iae.getMessage());
         }
     }

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -27,6 +27,7 @@ import java.util.NoSuchElementException;
 
 import org.knime.base.node.io.filetokenizer.FileTokenizer;
 import org.knime.base.node.io.filetokenizer.FileTokenizerException;
+import org.knime.base.node.util.BufferedFileReader;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -34,9 +35,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.util.MutableInteger;
 
@@ -82,17 +80,15 @@ class FileRowIterator extends RowIterator {
     // if that is true we don't return any more rows.
     private boolean m_exceptionThrown;
 
-    // if true we need to replace the char in the double tokens with a '.'
-    private boolean m_customDecimalSeparator;
-
-    private char m_decSeparator;
-
     // the maximum number of rows this iterator will produce
     private final long m_maxNumOfRows;
 
     private boolean m_fileWasNotCompletelyRead;
 
     private final boolean[] m_skipColumns;
+
+    // factory used to create the cells from the string data read in
+    private final DataCellFactory m_cellFactory;
 
     /* the execution context the progress is reported to */
     private ExecutionContext m_exec;
@@ -147,8 +143,10 @@ class FileRowIterator extends RowIterator {
         // set the tokenizer related settings in the tokenizer
         m_tokenizer.setSettings(frSettings);
 
-        m_decSeparator = frSettings.getDecimalSeparator();
-        m_customDecimalSeparator = m_decSeparator != '.';
+        // cell factory used to create the cells of each row
+        m_cellFactory = new DataCellFactory();
+        m_cellFactory.setDecimalSeparator(frSettings.getDecimalSeparator());
+        m_cellFactory.setThousandsSeparator(frSettings.getThousandsSeparator());
 
         m_rowNumber = 1;
         if (m_frSettings.getMaximumNumberOfRowsToRead() < 0) {
@@ -194,6 +192,29 @@ class FileRowIterator extends RowIterator {
 
     } // FileRowIterator(FileTableSpec)
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void finalize() throws Throwable {
+        m_source.close();
+        super.finalize();
+    }
+
+    /**
+     * Call this before releasing the last reference to this iterator. It closes
+     * the underlying source. Especially if the iterator didn't run to the end
+     * of the table, it is required to call this method. Otherwise the file
+     * handle is not released until the garbage collector cleans up. A call to
+     * {@link #next()} after disposing of the iterator has undefined behavior.
+     */
+    public void dispose() {
+        try {
+            m_source.close();
+        } catch (IOException ioe) {
+            // then don't close it
+        }
+    }
 
     /**
      * {@inheritDoc}
@@ -241,6 +262,9 @@ class FileRowIterator extends RowIterator {
             result = false;
         }
 
+        if (!result) {
+            m_tokenizer.closeSourceStream();
+        }
         return result;
     }
 
@@ -256,7 +280,7 @@ class FileRowIterator extends RowIterator {
 
         String token = null;
         boolean isMissingCell;
-        DataCell rowHeader;
+        String rowHeader;
         DataCell[] row = new DataCell[rowLength];
 
         // before anything else: check if there is more in the stream
@@ -268,7 +292,6 @@ class FileRowIterator extends RowIterator {
                             + m_frSettings.getDataFileLocation().toString()
                             + "'.");
         }
-
         // counts the columns (tokens) read from the file
         int readCols = 0;
         // counts the number of columns we've created (excl. skipped columns)
@@ -282,12 +305,10 @@ class FileRowIterator extends RowIterator {
             throw prepareForException(fte.getMessage() + " (line: "
                     + m_tokenizer.getLineNumber() + " source: '"
                     + m_frSettings.getDataFileLocation() + "')", m_tokenizer
-                    .getLineNumber(), new StringCell("ERR"), row);
+                    .getLineNumber(), "ERR", row);
         }
-
         // we made sure before that there is at least one token in the stream
         assert rowHeader != null;
-
         // Now, read the columns until we have enough or see a row delimiter
         while (readCols < colsToRead) {
 
@@ -306,7 +327,6 @@ class FileRowIterator extends RowIterator {
                 // we need the row delim in the file, for after the loop
                 break;
             }
-
             // check if we have a missing cell (i.e. nothing between two
             // column delimiters).
             if (token.equals("") && (!m_tokenizer.lastTokenWasQuoted())) {
@@ -318,18 +338,16 @@ class FileRowIterator extends RowIterator {
             } else {
                 isMissingCell = false;
             }
-
             if (!m_skipColumns[readCols]) {
-            DataColumnSpec cSpec = m_tableSpec.getColumnSpec(createdCols);
+                DataColumnSpec cSpec = m_tableSpec.getColumnSpec(createdCols);
                 // now get that new cell
                 // (it throws an exception at us if it couldn't)
-                row[createdCols] = createNewDataCellOfType(cSpec.getType(),
-                        token, isMissingCell, rowHeader, row);
+                row[createdCols] =
+                        createNewDataCellOfType(cSpec.getType(), token,
+                                isMissingCell, rowHeader, row);
                 createdCols++;
             }
-
             readCols++;
-
         } // end of while(readCols < colsToRead)
 
         int lineNr = m_tokenizer.getLineNumber();
@@ -402,7 +420,6 @@ class FileRowIterator extends RowIterator {
             m_exec.setProgress(readBytes / m_source.getFileSize());
             m_lastReport++;
         }
-
         return new DefaultRow(rowHeader, row);
     } // next()
 
@@ -428,104 +445,39 @@ class FileRowIterator extends RowIterator {
      */
     private DataCell createNewDataCellOfType(final DataType type,
             final String data, final boolean createMissingCell,
-            final DataCell rowHeader, final DataCell[] row) {
+            final String rowHeader, final DataCell[] row) {
 
         if (createMissingCell) {
             return DataType.getMissingCell();
         }
-        if (type.equals(StringCell.TYPE)) {
-            return new StringCell(data);
-        } else if (type.equals(IntCell.TYPE)) {
-            try {
-                // trim numbers, and accept empty as missing value
-                String trimmed = data.trim();
-                if (trimmed.length() == 0) {
-                    return DataType.getMissingCell();
-                }
-                int val = Integer.parseInt(trimmed);
-                return new IntCell(val);
-            } catch (NumberFormatException nfe) {
-                int col = 0;
-                while (col < row.length && row[col] != null) {
-                    col++;
-                }
-                throw prepareForException("Wrong data format. In line "
-                        + m_tokenizer.getLineNumber() + " (" + rowHeader
-                        + ") read '" + data + "' for an integer (in column #"
-                        + col + " '" + m_tableSpec.getColumnSpec(col).getName()
-                        + "').", m_tokenizer.getLineNumber(), rowHeader,
-                        row);
-            }
-        } else if (type.equals(DoubleCell.TYPE)) {
-            String dblData = data;
-            if (m_customDecimalSeparator) {
-                // we must reject tokens with a '.'.
-                if (data.indexOf('.') >= 0) {
-                    int col = 0;
-                    while (col < row.length && row[col] != null) {
-                        col++;
-                    }
-                    throw prepareForException("Wrong data format. In line "
-                            + m_tokenizer.getLineNumber() + " (" + rowHeader
-                            + ") read '" + data
-                            + "' for a floating point (in column #" + col
-                            + " '" + m_tableSpec.getColumnSpec(col).getName()
-                            + "').",
-                            m_tokenizer.getLineNumber(), rowHeader, row);
-                }
-                dblData = data.replace(m_decSeparator, '.');
-            }
-            try {
-                // trim numbers, and accept empty as missing value
-                dblData = dblData.trim();
-                if (dblData.length() == 0) {
-                    return DataType.getMissingCell();
-                }
-                double val = Double.parseDouble(dblData);
-                return new DoubleCell(val);
-            } catch (NumberFormatException nfe) {
-                int col = 0;
-                while (col < row.length && row[col] != null) {
-                    col++;
-                }
-                throw prepareForException("Wrong data format. In line "
-                        + m_tokenizer.getLineNumber() + " (" + rowHeader
-                        + ") read '" + data
-                        + "' for a floating point (in column #" + col
-                        + " '" + m_tableSpec.getColumnSpec(col).getName()
-                        + "').",
-                        m_tokenizer.getLineNumber(), rowHeader, row);
-            }
-        } else if (type.equals(SmilesTypeHelper.INSTANCE.getSmilesType())) {
-            try {
 
-                return SmilesTypeHelper.INSTANCE.newInstance(data);
+        DataCell result = m_cellFactory.createDataCellOfType(type, data);
 
-            } catch (Throwable t) {
-                int col = 0;
-                while (col < row.length && row[col] != null) {
-                    col++;
-                }
-                String msg = "Error during SMILES cell creation: ";
-                if (t.getMessage() != null) {
-                    msg += t.getMessage();
-                } else {
-                    msg += "<no details available>";
-                }
-                msg +=
-                        " (line: " + m_tokenizer.getLineNumber() + "("
-                                + rowHeader + "), column #" + col
-                                + " '"
-                                + m_tableSpec.getColumnSpec(col).getName()
-                                + "').";
-                throw prepareForException(msg, m_tokenizer.getLineNumber(),
-                        rowHeader, row);
-            }
-        } else {
-            throw prepareForException("Cannot create DataCell of type "
-                    + type.toString() + ". Looks like an internal error.",
-                    m_tokenizer.getLineNumber(), rowHeader, row);
+        if (result != null) {
+
+            return result;
+
         }
+
+        // something went wrong during cell creation.
+
+        // figure out which column we were trying to read
+        int errCol = 0;
+        while (errCol < row.length && row[errCol] != null) {
+            errCol++;
+        }
+        // create an error message
+        String errorMsg = m_cellFactory.getErrorMessage();
+        errorMsg +=
+                " In line " + m_tokenizer.getLineNumber() + " (" + rowHeader
+                        + ") at column #" + errCol + " ('"
+                        + m_tableSpec.getColumnSpec(errCol).getName() + "').";
+
+        // create a data row showing where things went
+        // wrong, and close the stream
+        throw prepareForException(errorMsg, m_tokenizer.getLineNumber(),
+                rowHeader, row);
+
     } // createNewDataCellOfType(Class,String,boolean)
 
     /*
@@ -539,7 +491,7 @@ class FileRowIterator extends RowIterator {
      * <missing>+RowNo". Returns null if EOF was reached before a row header (or
      * a delimiter) was read.
      */
-    private StringCell createRowHeader(final int rowNumber) {
+    private String createRowHeader(final int rowNumber) {
 
         // the constructor sets m_rowHeaderPrefix if the file doesn't have one
         assert (m_frSettings.getFileHasRowHeaders()
@@ -578,11 +530,11 @@ class FileRowIterator extends RowIterator {
                 newRowHeader = uniquifyRowHeader(newRowHeader);
             }
 
-            return new StringCell(newRowHeader);
+            return newRowHeader;
 
         } else {
 
-            return new StringCell(m_rowHeaderPrefix + rowNumber);
+            return m_rowHeaderPrefix + rowNumber;
 
         }
     }
@@ -638,7 +590,7 @@ class FileRowIterator extends RowIterator {
      * closes the input stream. !!!!!!!!!!
      */
     private FileReaderException prepareForException(final String msg,
-            final int lineNumber, final DataCell rowHeader,
+            final int lineNumber, final String rowHeader,
             final DataCell[] cellsRead) {
 
         /*
@@ -658,8 +610,7 @@ class FileRowIterator extends RowIterator {
             }
         }
 
-        DataCell errRowHeader =
-                new StringCell("ERROR_ROW (" + rowHeader.toString() + ")");
+        String errRowHeader = "ERROR_ROW (" + rowHeader.toString() + ")";
 
         DataRow errRow = new DefaultRow(errRowHeader, errCells);
 
@@ -688,7 +639,7 @@ class FileRowIterator extends RowIterator {
      * source, the result is always false.
      *
      * @return true, if the source was read til the end and it is a ZIP archive
-     * with more than one entry
+     *         with more than one entry
      */
     public boolean zippedSourceHasMoreEntries() {
         return m_source.hasMoreZipEntries();

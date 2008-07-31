@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -213,7 +213,7 @@ public class SampleDataNodeModel extends NodeModel {
                 }
             }
             colNames[i] = new StringCell("Cluster_" + i);
-            centerRows[i] = new DefaultRow(colNames[i], cells);
+            centerRows[i] = new DefaultRow(colNames[i].toString(), cells);
         }
         if (noiseFrac > 0.0) {
             colNames[overallClusterCount] = new StringCell("Noise");
@@ -282,12 +282,11 @@ public class SampleDataNodeModel extends NodeModel {
     private static DataRow createRow(final String key, final double[] d,
             final DataCell cl) {
         DataCell[] cells = new DataCell[d.length + 1];
-        DataCell rkey = new StringCell(key);
         for (int i = 0; i < d.length; i++) {
             cells[i] = new DoubleCell(d[i]);
         }
         cells[d.length] = cl;
-        return new DefaultRow(rkey, cells);
+        return new DefaultRow(key, cells);
     }
 
     /**
@@ -325,7 +324,7 @@ public class SampleDataNodeModel extends NodeModel {
         for (int u = 0; u < m_clusterCount.length; u++) {
             int dimCountInUniverse = m_uniSize[u];
             Hashtable<String, String> annot = new Hashtable<String, String>();
-            annot.put("universe.name", "Universe_" + u);
+            annot.put("universe_name", "Universe_" + u);
             for (int i = 0; i < dimCountInUniverse; i++) {
                 String n = "Universe_" + u + "_" + i;
                 DataType t = DoubleCell.TYPE;
@@ -336,10 +335,7 @@ public class SampleDataNodeModel extends NodeModel {
         }
         String n = "Cluster Membership";
         DataType t = StringCell.TYPE;
-        Hashtable<String, String> annot = new Hashtable<String, String>();
-        annot.put("universe.contains_class_label", "true");
         DataColumnSpecCreator creator = new DataColumnSpecCreator(n, t);
-        creator.setProperties(new DataColumnProperties(annot));
         colSpecs[currentDim] = creator.createSpec();
 
         DataColumnSpec[] centerColSpec = 

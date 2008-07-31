@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,7 +24,6 @@
  */
 package org.knime.base.node.io.csvwriter;
 
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -39,11 +38,10 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.plaf.basic.BasicComboBoxRenderer;
 
+import org.knime.core.node.util.ConvenientComboBoxRenderer;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.SimpleFileFilter;
 
@@ -71,7 +69,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
         m_textBox.setEditable(true);
         m_textBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
         m_textBox.setPreferredSize(new Dimension(300, 25));
-        m_textBox.setRenderer(new MyComboBoxRenderer());
+        m_textBox.setRenderer(new ConvenientComboBoxRenderer());
         m_chooseButton = new JButton("Browse...");
         m_chooseButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
@@ -205,20 +203,4 @@ public final class CSVFilesHistoryPanel extends JPanel {
         return f;
     }
 
-    /** renderer that also supports to show customized tooltip. */
-    private static class MyComboBoxRenderer extends BasicComboBoxRenderer {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Component getListCellRendererComponent(final JList list,
-                final Object value, final int index, final boolean isSelected,
-                final boolean cellHasFocus) {
-            if (index > -1) {
-                list.setToolTipText(value.toString());
-            }
-            return super.getListCellRendererComponent(list, value, index,
-                    isSelected, cellHasFocus);
-        }
-    }
 }

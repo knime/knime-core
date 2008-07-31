@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -30,6 +30,7 @@ import org.knime.base.node.mine.bfn.Distance;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
@@ -64,7 +65,7 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      * @param thetaMinus Theta minus.
      * @param distance Distance measurement.
      */
-    protected RadialBasisFunctionPredictorRow(final DataCell key, 
+    protected RadialBasisFunctionPredictorRow(final RowKey key, 
             final DataRow center, final DataCell classLabel, 
             final double thetaMinus, final int distance) {
         super(key, classLabel, thetaMinus);
@@ -99,6 +100,41 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
             m_stdDev = Double.MAX_VALUE;
         }
     }
+    
+    /**
+     * Computes the overlapping based on the standard deviation of both radial
+     * basisfunctions.
+     * 
+     * @param symmetric if the result is proportional to both basis functions,
+     *            and thus symmetric, or if it is proportional to the area of 
+     *            the basis function on which the function is called.
+     * @param bf the other radial basisfunction to compute the overlap with
+     * @return <code>true</code> if both radial basisfunctions overlap
+     */
+    @Override
+    public double overlap(final BasisFunctionPredictorRow bf,
+            final boolean symmetric) {
+        RadialBasisFunctionPredictorRow rbf = 
+            (RadialBasisFunctionPredictorRow) bf;
+        assert (m_center.length == rbf.m_center.length);
+        double overlap = 1.0;
+        for (int i = 0; i < m_center.length; i++) {
+            if (Double.isNaN(m_center[i]) || Double.isNaN(rbf.m_center[i])) {
+                continue;
+            }
+            double a = m_center[i];
+            double b = rbf.m_center[i];
+            double overlapping = overlapping(a - getStdDev(), a
+                    + getStdDev(), b - rbf.getStdDev(), b
+                    + rbf.getStdDev(), symmetric);
+            if (overlapping == 0.0) {
+                return 0.0;
+            } else {
+                overlap *= overlapping;
+            }
+        }
+        return overlap;
+    }
 
     /**
      * @return <code>true</code> If not yet shrunken.
@@ -112,6 +148,16 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      */
     final double getStdDev() {
         return m_stdDev;
+    }
+    
+    /**
+     * Returns the standard deviation of this radial basisfunction.
+     * 
+     * @return the standard deviation
+     */
+    @Override
+    public double computeSpread() {
+        return getStdDev();
     }
 
     /**

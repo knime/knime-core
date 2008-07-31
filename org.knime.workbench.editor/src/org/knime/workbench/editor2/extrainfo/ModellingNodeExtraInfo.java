@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   30.05.2005 (Florian Georg): created
  */
@@ -27,23 +27,23 @@ package org.knime.workbench.editor2.extrainfo;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.NodeExtraInfo;
+import org.knime.core.node.workflow.UIInformation;
 
 /**
  * Special <code>NodeExtraInfo</code> object used by the workflow editor.
  * Basically this stores the visual bounds of the node in the workflow editor
  * pane. Note: To be independent of draw2d/GEF this doesn't use the "natural"
  * <code>Rectangle</code> object, but simply stores an <code>int[]</code>.
- * 
+ *
  * TODO This needs to be in "core", as by now the WFM tries to make instances of
  * this class while <code>load()</code>ing.
- * 
- * 
+ *
+ *
  * see org.eclipse.draw2d.geometry.Rectangle
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
-public class ModellingNodeExtraInfo implements NodeExtraInfo {
+public class ModellingNodeExtraInfo implements UIInformation {
     /** Version id of this extra info implementation. */
     public static final String VERSION = "1.0";
 
@@ -72,7 +72,7 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
 
     /**
      * Constructs a <code>ModellingConnectionExtraInfo</code>.
-     * 
+     *
      */
     public ModellingNodeExtraInfo() {
     }
@@ -87,7 +87,8 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
     /**
      * {@inheritDoc}
      */
-    public void load(final NodeSettingsRO conf) throws InvalidSettingsException {
+    public void load(final NodeSettingsRO conf) 
+        throws InvalidSettingsException {
         m_bounds = conf.getIntArray(KEY_BOUNDS);
     }
 
@@ -103,12 +104,12 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
 
     /**
      * Sets the location. *
-     * 
+     *
      * @param x x-ccordinate
      * @param y y-coordinate
      * @param w width
      * @param h height
-     * 
+     *
      */
     public void setNodeLocation(final int x, final int y, final int w,
             final int h) {
@@ -135,7 +136,7 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
     /**
      * Changes the position by setting the bounds left top corner according to
      * the given moving distance.
-     * 
+     *
      * @param moveDist the distance to change the left top corner
      */
     public void changePosition(final int[] moveDist) {
@@ -149,9 +150,18 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
      * {@inheritDoc}
      */
     @Override
-    public Object clone() throws CloneNotSupportedException {
+    public ModellingNodeExtraInfo clone() {
         ModellingNodeExtraInfo newObject = new ModellingNodeExtraInfo();
         newObject.m_bounds = this.m_bounds.clone();
         return newObject;
+    }
+    
+    @Override
+    public String toString() {
+        if (m_bounds == null) {
+            return "not set";
+        }
+        return "x " + m_bounds[0] + " y " + m_bounds[1] 
+                    + " width " + m_bounds[2] + " height "  + m_bounds[3]; 
     }
 }

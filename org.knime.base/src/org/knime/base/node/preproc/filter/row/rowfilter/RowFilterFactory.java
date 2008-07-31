@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   01.07.2005 (ohl): created
  */
@@ -33,7 +33,7 @@ import org.knime.core.node.NodeSettingsWO;
  * {@link org.knime.core.node.NodeSettings}. Each row filter must be
  * registered here (i.e. code must be added). Scan the file for "CHANGE HERE".
  * RowFilter must provide the default constructor.
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public final class RowFilterFactory {
@@ -52,6 +52,12 @@ public final class RowFilterFactory {
     private static final String ROWFILTER_ROWNO = "RowNumber_RowFilter";
 
     private static final String ROWFILTER_COLVAL = "ColVal_RowFilter";
+
+    private static final String ROWFILTER_MISSVAL = "MissingVal_RowFilter";
+
+    private static final String ROWFILTER_RANGE = "RangeVal_RowFilter";
+
+    private static final String ROWFILTER_STRINGCMP = "StringComp_RowFilter";
 
     private static final String ROWFILTER_TRUE = "Tauto_RowFilter";
 
@@ -105,7 +111,13 @@ public final class RowFilterFactory {
             cfg.addString(ROWFILTER_TYPEID, ROWFILTER_FALSE);
         } else if (filter instanceof NegRowFilter) {
             cfg.addString(ROWFILTER_TYPEID, ROWFILTER_INV);
-        } else if (filter instanceof ColValRowFilter) {
+        } else if (filter instanceof MissingValueRowFilter) {
+            cfg.addString(ROWFILTER_TYPEID, ROWFILTER_MISSVAL);
+        } else if (filter instanceof RangeRowFilter) {
+            cfg.addString(ROWFILTER_TYPEID, ROWFILTER_RANGE);
+        } else if (filter instanceof StringCompareRowFilter) {
+            cfg.addString(ROWFILTER_TYPEID, ROWFILTER_STRINGCMP);
+        } else if (filter instanceof ColValFilterOldObsolete) {
             cfg.addString(ROWFILTER_TYPEID, ROWFILTER_COLVAL);
         } else {
             assert false : "The row filter type must be "
@@ -161,6 +173,12 @@ public final class RowFilterFactory {
             newFilter = new RowIDRowFilter();
         } else if (typeID.equals(ROWFILTER_ROWNO)) {
             newFilter = new RowNoRowFilter();
+        } else if (typeID.equals(ROWFILTER_MISSVAL)) {
+            newFilter = new MissingValueRowFilter();
+        } else if (typeID.equals(ROWFILTER_RANGE)) {
+            newFilter = new RangeRowFilter();
+        } else if (typeID.equals(ROWFILTER_STRINGCMP)) {
+            newFilter = new StringCompareRowFilter();
         } else if (typeID.equals(ROWFILTER_TRUE)) {
             newFilter = new TrueRowFilter();
         } else if (typeID.equals(ROWFILTER_FALSE)) {
@@ -168,7 +186,7 @@ public final class RowFilterFactory {
         } else if (typeID.equals(ROWFILTER_INV)) {
             newFilter = new NegRowFilter();
         } else if (typeID.equals(ROWFILTER_COLVAL)) {
-            newFilter = new ColValRowFilter();
+            newFilter = new ColValFilterOldObsolete();
         } else {
             throw new InvalidSettingsException("Invalid row filter type in"
                     + " config object");

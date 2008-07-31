@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.RowKey;
 
 
 /**
@@ -36,7 +37,7 @@ import org.knime.core.data.DataRow;
  */
 public class DefaultAppendedCellFactory implements AppendedCellFactory {
 
-    private final Map<DataCell, DataCell> m_map;
+    private final Map<RowKey, DataCell> m_map;
 
     /**
      * Creates new factory. The mapping is based on the argument. It has to map
@@ -50,7 +51,7 @@ public class DefaultAppendedCellFactory implements AppendedCellFactory {
      * @param map mapping {@link DataCell} --&gt; {@link DataCell}
      * @throws NullPointerException if the map is <code>null</code>
      */
-    public DefaultAppendedCellFactory(final Map<DataCell, DataCell> map) {
+    public DefaultAppendedCellFactory(final Map<RowKey, DataCell> map) {
         if (map == null) {
             throw new NullPointerException();
         }
@@ -68,7 +69,7 @@ public class DefaultAppendedCellFactory implements AppendedCellFactory {
      * @see AppendedCellFactory#getAppendedCell(DataRow)
      */
     public DataCell[] getAppendedCell(final DataRow row) {
-        DataCell key = row.getKey().getId();
+        RowKey key = row.getKey();
         DataCell val = m_map.get(key);
         return new DataCell[]{val};
     }

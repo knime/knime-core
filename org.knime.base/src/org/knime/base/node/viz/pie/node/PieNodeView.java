@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,13 +24,12 @@
  */
 package org.knime.base.node.viz.pie.node;
 
+import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.property.hilite.HiLiteHandler;
+
 import org.knime.base.node.viz.pie.datamodel.PieVizModel;
 import org.knime.base.node.viz.pie.impl.PiePlotter;
 import org.knime.base.node.viz.pie.impl.PieProperties;
-import org.knime.base.node.viz.pie.node.fixed.FixedPieNodeModel;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
-import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * The abstract node view which contains the pie chart panel.
@@ -38,12 +37,11 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * @author Tobias Koetter, University of Konstanz
  * @param <P> the {@link PieProperties} implementation
  * @param <D> the {@link PieVizModel}implementation
+ * @param <T> the {@lin PieNodeModel} implementation
  *
  */
 public abstract class PieNodeView<P extends PieProperties<D>,
-D extends PieVizModel> extends NodeView {
-
-    private final PieNodeModel<D> m_nodeModel;
+D extends PieVizModel, T extends PieNodeModel<D>> extends GenericNodeView<T> {
 
     private PiePlotter<P, D> m_plotter;
 
@@ -53,21 +51,9 @@ D extends PieVizModel> extends NodeView {
      * @param nodeModel the corresponding node model
      */
     @SuppressWarnings("unchecked")
-    protected PieNodeView(final NodeModel nodeModel) {
+    protected PieNodeView(final T nodeModel) {
         super(nodeModel);
-        if (!(nodeModel instanceof PieNodeModel)) {
-            throw new ClassCastException(NodeModel.class.getName()
-                    + " not an instance of "
-                    + FixedPieNodeModel.class.getName());
-        }
-        m_nodeModel = (PieNodeModel<D>)nodeModel;
-    }
 
-    /**
-     * Clears the plot and unregisters from any hilite handler.
-     */
-    public void reset() {
-        m_nodeModel.reset();
     }
 
     /**
@@ -76,26 +62,27 @@ D extends PieVizModel> extends NodeView {
      */
     @Override
     public void modelChanged() {
-        if (m_nodeModel == null) {
+        final T model = getNodeModel();
+        if (model == null) {
             return;
         }
         if (m_plotter != null) {
             m_plotter.reset();
         }
-        final D vizModel = m_nodeModel.getVizModel();
+        final D vizModel = model.getVizModel();
         if (vizModel == null) {
             setComponent(null);
             return;
         }
         if (m_plotter == null) {
-            m_plotter = getPlotter(vizModel, m_nodeModel.getInHiLiteHandler(0));
+            m_plotter = getPlotter(vizModel, model.getInHiLiteHandler(0));
             if (vizModel.supportsHiliting()) {
                 // add the hilite menu to the menu bar of the node view
                 getJMenuBar().add(m_plotter.getHiLiteMenu());
             }
             setComponent(m_plotter);
         }
-        m_plotter.setHiLiteHandler(m_nodeModel.getInHiLiteHandler(0));
+        m_plotter.setHiLiteHandler(model.getInHiLiteHandler(0));
         m_plotter.setVizModel(vizModel);
         m_plotter.updatePaintModel();
         if (getComponent() == null) {

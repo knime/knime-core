@@ -1,8 +1,9 @@
-/* ------------------------------------------------------------------
+/*
+ * ------------------------------------------------------------------ *
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -27,7 +28,7 @@ import java.util.Timer;
 
 /**
  * This final singleton class is a global timer available for all classes inside
- * KNIME. This timer is especially useful, for nodes that execute external code
+ * KNIME. This timer is especially useful for nodes that execute external code
  * which is not aware of execution canceling and such stuff.
  * 
  * <b>Users of this timer must make sure, that the scheduled tasks are

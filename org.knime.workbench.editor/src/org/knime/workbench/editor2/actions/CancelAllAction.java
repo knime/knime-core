@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   25.05.2005 (Florian Georg): created
  */
@@ -29,14 +29,14 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
-
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
  * Action to cancel all nodes that are running.
- * 
+ *
  * @author Christoph sieb, University of Konstanz
  */
 public class CancelAllAction extends AbstractNodeAction {
@@ -47,7 +47,7 @@ public class CancelAllAction extends AbstractNodeAction {
     public static final String ID = "knime.action.cancelall";
 
     /**
-     * 
+     *
      * @param editor The workflow editor
      */
     public CancelAllAction(final WorkflowEditor editor) {
@@ -77,8 +77,8 @@ public class CancelAllAction extends AbstractNodeAction {
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor("icons/cancelAll.GIF");
     }
-    
-    
+
+
 
     /**
      * {@inheritDoc}
@@ -106,15 +106,24 @@ public class CancelAllAction extends AbstractNodeAction {
         if (getManager() == null) {
             return false;
         }
-        return getManager().executionInProgress();
+        NodeContainerEditPart[] parts = getAllNodeParts();
+        boolean atLeastOneCancelable = false;
+        for (NodeContainerEditPart p : parts) {
+            NodeContainer nc = p.getNodeContainer();
+            if (nc.getState().equals(NodeContainer.State.EXECUTING)
+                    || nc.getState().equals(NodeContainer.State.QUEUED)
+                    || nc.getState().equals(
+                            NodeContainer.State.MARKEDFOREXEC)) {
+                atLeastOneCancelable = true;
+            }
+        }
+        return atLeastOneCancelable;
     }
 
     /**
      * This cancels all running jobs.
-     * 
-     * @see org.knime.workbench.editor2.actions.AbstractNodeAction
-     *      #runOnNodes(org.knime.workbench.editor2.
-     *      editparts.NodeContainerEditPart[])
+     *
+     * {@inheritDoc}
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
@@ -127,7 +136,9 @@ public class CancelAllAction extends AbstractNodeAction {
         }
 
         LOGGER.debug("(Cancel all)  cancel all running jobs.");
-        getManager().cancelExecution();
+        for (NodeContainerEditPart part : nodeParts) {
+            getManager().cancelExecution(part.getNodeContainer());
+        }
 
         try {
             // Give focus to the editor again. Otherwise the actions (selection)

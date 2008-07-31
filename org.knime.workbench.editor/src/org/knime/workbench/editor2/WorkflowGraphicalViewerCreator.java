@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   25.05.2005 (Florian Georg): created
  */
@@ -30,7 +30,6 @@ import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
 import org.eclipse.gef.ui.actions.ActionRegistry;
 import org.eclipse.gef.ui.parts.GraphicalViewerKeyHandler;
 import org.eclipse.gef.ui.parts.ScrollingGraphicalViewer;
-import org.eclipse.jface.util.TransferDropTargetListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IEditorSite;
 
@@ -40,8 +39,8 @@ import org.eclipse.ui.IEditorSite;
  * <code>NodeTemplateDropTargetListener</code> that is responsible for
  * dropping <code>NodeTemplates</code> into the viewer. (which get converted
  * into <code>NodeContainer</code> objects.)
- * 
- * 
+ *
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class WorkflowGraphicalViewerCreator {
@@ -49,10 +48,10 @@ public class WorkflowGraphicalViewerCreator {
     private GraphicalViewer m_viewer;
 
     /** the editor's action registry. */
-    private ActionRegistry m_actionRegistry;
+    private final ActionRegistry m_actionRegistry;
 
     /**
-     * 
+     *
      * @param editorSite Current editor site
      * @param actionRegistry The action registry to use
      */
@@ -67,7 +66,7 @@ public class WorkflowGraphicalViewerCreator {
     /**
      * Creates a new <code>Viewer</code>, configures, registers and
      * initializes it.
-     * 
+     *
      * @param parent the parent composite
      */
     public void createGraphicalViewer(final Composite parent) {
@@ -77,7 +76,7 @@ public class WorkflowGraphicalViewerCreator {
     /**
      * Creates the viewer control, and connect it to a root edit part
      * Additionally the viewer gets the edit part factory and a drop-listener.
-     * 
+     *
      * @param parent Parent composite
      * @return The viewer
      */
@@ -85,7 +84,7 @@ public class WorkflowGraphicalViewerCreator {
 
         // StatusLineValidationMessageHandler validationMessageHandler = new
         // StatusLineValidationMessageHandler(editorSite);
-        GraphicalViewer viewer = new ScrollingGraphicalViewer();
+        ScrollingGraphicalViewer viewer = new ScrollingGraphicalViewer();
         viewer.createControl(parent);
 
         // configure the m_viewer
@@ -95,24 +94,19 @@ public class WorkflowGraphicalViewerCreator {
         viewer.setKeyHandler(new GraphicalViewerKeyHandler(viewer));
 
         // Add a drop listener
-        // This is a bit tricky and needs an explicit cast, as the
-        // deprecated method signature uses a class with the same name
-        // (...gef.dnd.TransferDropTargetListener)
-        // However, both classes not only are named the same, they
-        // actually both implement the same super-interface
-        // - strange stuff %-)
-        NodeTemplateDropTargetListener listener = null;
-        listener = new NodeTemplateDropTargetListener(viewer);
-        viewer.addDropTargetListener((TransferDropTargetListener)listener);
-
+        NodeTemplateDropTargetListener2 listener
+            = new NodeTemplateDropTargetListener2(viewer);
+        viewer.addDropTargetListener(listener);
         // configure context menu
         viewer.setContextMenu(new WorkflowContextMenuProvider(m_actionRegistry,
                 viewer));
 
         // set the factory that is able to create the edit parts to be
         // used in the viewer
-        viewer.setEditPartFactory(NewWorkflowEditPartFactory.INSTANCE);
+        viewer.setEditPartFactory(new WorkflowEditPartFactory());
 
+
+        
         return viewer;
     }
 

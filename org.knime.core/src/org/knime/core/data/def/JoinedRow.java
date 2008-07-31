@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -50,8 +50,8 @@ public class JoinedRow implements DataRow {
      * @throws IllegalArgumentException If row key's ids aren't equal.
      */
     public JoinedRow(final DataRow left, final DataRow right) {
-        DataCell lId = left.getKey().getId();
-        DataCell rId = right.getKey().getId();
+        RowKey lId = left.getKey();
+        RowKey rId = right.getKey();
         if (!lId.equals(rId)) {
             throw new IllegalArgumentException("Key of rows do not match: \""
                     + lId + "\" vs. \"" + rId + "\"");
@@ -70,7 +70,7 @@ public class JoinedRow implements DataRow {
     /**
      * Returns the key from the left row that was passed in the constructor.
      * 
-     * @see org.knime.core.data.DataRow#getKey()
+     * {@inheritDoc}
      */
     public RowKey getKey() {
         return m_left.getKey();

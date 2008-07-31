@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -42,6 +42,7 @@ import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.CanceledExecutionException;
@@ -128,7 +129,7 @@ public class BinDataModel implements Serializable {
      * @param aggrVals the aggregation value in the same order like the
      * columns
      */
-    public void addDataRow(final DataCell id, final Color rowColor,
+    public void addDataRow(final RowKey id, final Color rowColor,
             final Collection<ColorColumn> aggrCols,
             final DataCell... aggrVals) {
     //        final DataCell[] aggrVals = row.getAggrVals();

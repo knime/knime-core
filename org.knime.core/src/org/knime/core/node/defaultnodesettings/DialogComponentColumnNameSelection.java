@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   21.09.2005 (mb): created
  *   2006-05-26 (tm): reviewed
@@ -46,8 +46,12 @@ import org.knime.core.node.util.DataValueColumnFilter;
  * Provides a standard component for a dialog that allows to select a column in
  * a given {@link org.knime.core.data.DataTableSpec}. Provides label and list
  * (possibly filtered by a given {@link org.knime.core.data.DataCell} type) as
- * well as functionality to load/store into config object.
- * 
+ * well as functionality to load/store into a settings model.
+ * The column name selection list will provide a RowID option if the provided
+ * settings model object is an instance of {@link SettingsModelColumnName} which
+ * provides the additional method <code>useRowID</code> to check if the
+ * RowID was selected.
+ *
  * @author M. Berthold, University of Konstanz
  */
 public class DialogComponentColumnNameSelection extends DialogComponent {
@@ -60,19 +64,21 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
     private final int m_specIndex;
 
     private final ColumnFilter m_columnFilter;
-    
+
     private final boolean m_isRequired;
 
     /**
      * Constructor that puts label and combobox into the panel. The dialog will
      * not open until the incoming table spec contains a column compatible to
      * one of the specified {@link DataValue} classes.
-     * 
-     * @param model the model holding the value of this component
+     *
+     * @param model the model holding the value of this component. If the model
+     * is an instance of {@link SettingsModelColumnName} a RowID option is
+     * added to the select list.
      * @param label label for dialog in front of checkbox
      * @param specIndex index of (input) port listing available columns
      * @param columnFilter {@link ColumnFilter}. The combo box
-     *            will allow to select only columns compatible with the 
+     *            will allow to select only columns compatible with the
      *            column filter. All other columns will be ignored.
      */
     public DialogComponentColumnNameSelection(final SettingsModelString model,
@@ -80,13 +86,15 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
             final ColumnFilter columnFilter) {
         this(model, label, specIndex, true, columnFilter);
     }
-    
+
     /**
      * Constructor that puts label and combobox into the panel. The dialog will
      * not open until the incoming table spec contains a column compatible to
      * one of the specified {@link DataValue} classes.
-     * 
-     * @param model the model holding the value of this component
+     *
+     * @param model the model holding the value of this component. If the model
+     * is an instance of {@link SettingsModelColumnName} a RowID option is
+     * added to the select list.
      * @param label label for dialog in front of checkbox
      * @param specIndex index of (input) port listing available columns
      * @param classFilter which classes are available for selection
@@ -99,8 +107,10 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
 
     /**
      * Constructor that puts label and combobox into the panel.
-     * 
-     * @param model the model holding the value of this component
+     *
+     * @param model the model holding the value of this component. If the model
+     * is an instance of {@link SettingsModelColumnName} a RowID option is
+     * added to the select list.
      * @param label label for dialog in front of checkbox
      * @param specIndex index of (input) port listing available columns
      * @param isRequired true, if the component should throw an exception in
@@ -110,14 +120,16 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
     public DialogComponentColumnNameSelection(final SettingsModelString model,
             final String label, final int specIndex, final boolean isRequired,
             final Class<? extends DataValue>... classFilter) {
-        this(model, label, specIndex, isRequired, 
+        this(model, label, specIndex, isRequired,
                 new DataValueColumnFilter(classFilter));
     }
 
     /**
      * Constructor that puts label and combobox into the panel.
-     * 
-     * @param model the model holding the value of this component
+     *
+     * @param model the model holding the value of this component. If the model
+     * is an instance of {@link SettingsModelColumnName} a RowID option is
+     * added to the select list.
      * @param label label for dialog in front of checkbox
      * @param specIndex index of (input) port listing available columns
      * @param isRequired true, if the component should throw an exception in
@@ -133,17 +145,19 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
         this(model, label, specIndex, isRequired, addNoneCol,
                 new DataValueColumnFilter(classFilter));
     }
-    
+
     /**
      * Constructor that puts label and combobox into the panel.
-     * 
-     * @param model the model holding the value of this component
+     *
+     * @param model the model holding the value of this component. If the model
+     * is an instance of {@link SettingsModelColumnName} a RowID option is
+     * added to the select list.
      * @param label label for dialog in front of checkbox
      * @param specIndex index of (input) port listing available columns
      * @param isRequired true, if the component should throw an exception in
      *            case of no available compatible column, false otherwise.
      * @param columnFilter {@link ColumnFilter}. The combo box
-     *            will allow to select only columns compatible with the 
+     *            will allow to select only columns compatible with the
      *            column filter. All other columns will be ignored.
      */
     public DialogComponentColumnNameSelection(final SettingsModelString model,
@@ -151,11 +165,13 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
             final ColumnFilter columnFilter) {
         this(model, label, specIndex, isRequired, false, columnFilter);
     }
-    
+
     /**
      * Constructor that puts label and combobox into the panel.
-     * 
-     * @param model the model holding the value of this component
+     *
+     * @param model the model holding the value of this component. If the model
+     * is an instance of {@link SettingsModelColumnName} a RowID option is
+     * added to the select list.
      * @param label label for dialog in front of checkbox
      * @param specIndex index of (input) port listing available columns
      * @param isRequired true, if the component should throw an exception in
@@ -163,7 +179,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
      * @param addNoneCol true, if a none option should be added to the column
      * list
      * @param columnFilter {@link ColumnFilter}. The combo box
-     *            will allow to select only columns compatible with the 
+     *            will allow to select only columns compatible with the
      *            column filter. All other columns will be ignored.
      */
     public DialogComponentColumnNameSelection(final SettingsModelString model,
@@ -174,8 +190,9 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
         getComponentPanel().add(m_label);
         m_isRequired = isRequired;
         m_columnFilter = columnFilter;
-        m_chooser = 
-            new ColumnSelectionPanel((Border)null, m_columnFilter, addNoneCol);
+        final boolean addRowID = (model instanceof SettingsModelColumnName);
+        m_chooser = new ColumnSelectionPanel((Border)null, m_columnFilter,
+                addNoneCol, addRowID);
         m_chooser.setRequired(m_isRequired);
         getComponentPanel().add(m_chooser);
         m_specIndex = specIndex;
@@ -198,28 +215,37 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
             public void stateChanged(final ChangeEvent e) {
                 // if only the value in the model changes we only set the
                 // selected column in the component.
-                m_chooser.setSelectedColumn(((SettingsModelString)getModel())
-                        .getStringValue());
+                if ((getModel() instanceof SettingsModelColumnName)
+                        && ((SettingsModelColumnName)getModel()).useRowID()) {
+                    m_chooser.setRowIDSelected();
+                } else {
+                    m_chooser.setSelectedColumn(
+                            ((SettingsModelString)getModel()).getStringValue());
+                }
 //              update the enable status
                 setEnabledComponents(getModel().isEnabled());
             }
         });
     }
-    
-    /** Returns the {@link DataColumnSpec} of the currently selected item. 
-     * This method delegates to 
+
+    /** Returns the {@link DataColumnSpec} of the currently selected item.
+     * This method delegates to
      *{@link ColumnSelectionPanel#getSelectedColumnAsSpec()}.
      * @return The currently selected item as {@link DataColumnSpec} or null
-     * if none is selected (the list is empty).
+     * if none is selected (the list is empty) or the RowID should be used
+     * (check return value of the useRowID method).
+     * @see #useRowID
      */
     public final DataColumnSpec getSelectedAsSpec() {
         return m_chooser.getSelectedColumnAsSpec();
     }
-    
+
     /** Returns the name of the currently selected item. This method delegates
      * to {@link ColumnSelectionPanel#getSelectedColumn()}.
-     * @return The name of the currently selected item or null if none is 
-     * selected (the list is empty).
+     * @return The name of the currently selected item or null if none is
+     * selected (the list is empty) or the RowID should be used
+     * (check return value of the useRowID method).
+     * @see #useRowID
      */
     public final String getSelected() {
         return m_chooser.getSelectedColumn();
@@ -236,7 +262,11 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
         }
         try {
             m_chooser.update(getLastTableSpec(m_specIndex), classCol);
-        } catch (NotConfigurableException e1) {
+            if (getModel() instanceof SettingsModelColumnName
+                    && ((SettingsModelColumnName)getModel()).useRowID()) {
+                m_chooser.setRowIDSelected();
+            }
+        } catch (final NotConfigurableException e1) {
             // we check the correctness of the table spec before, so
             // this exception shouldn't fly.
             assert false;
@@ -250,8 +280,13 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
      * Transfers the selected value from the component into the settings model.
      */
     private void updateModel() {
-        ((SettingsModelString)getModel()).setStringValue(m_chooser
+        if (getModel() instanceof SettingsModelColumnName) {
+            ((SettingsModelColumnName)getModel()).setSelection(
+                    m_chooser.getSelectedColumn(), m_chooser.rowIDSelected());
+        } else {
+	        ((SettingsModelString)getModel()).setStringValue(m_chooser
                 .getSelectedColumn());
+    	}
     }
 
     /**
@@ -267,12 +302,12 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
          * avoid loading if no column is selectable, so that the update with a
          * new value (following this method call) will not fail.
          */
-        if ((specs == null) || (specs.length < m_specIndex)) {
+        if ((specs == null) || (specs.length <= m_specIndex)) {
             throw new NotConfigurableException("Need input table spec to "
                     + "configure dialog. Configure or execute predecessor "
                     + "nodes.");
         }
-        DataTableSpec spec = specs[m_specIndex];
+        final DataTableSpec spec = specs[m_specIndex];
         if (spec == null) {
             throw new NotConfigurableException("Need input table spec to "
                     + "configure dialog. Configure or execute predecessor "
@@ -284,7 +319,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
             return;
         }
         // now check if at least one column is compatible to the column filter
-        for (DataColumnSpec col : spec) {
+        for (final DataColumnSpec col : spec) {
             if (m_columnFilter.includeColumn(col)) {
                 // we found one column we are compatible to - cool!
                 return;

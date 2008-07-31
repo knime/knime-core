@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -28,8 +28,6 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.knime.core.util.KnimeEncryption;
-import org.knime.workbench.editor2.EclipseEncryptionKeySupplier;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -65,13 +63,6 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
-
-        // create a knime encryption supplier that reads in an encryption key
-        // from the user via a dialog
-        KnimeEncryption
-                .setEncryptionKeySupplier(new EclipseEncryptionKeySupplier());
-        
-        
     }
 
     /**
@@ -122,9 +113,8 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
     public ResourceBundle getResourceBundle() {
         try {
             if (m_resourceBundle == null) {
-                m_resourceBundle =
-                        ResourceBundle
-                                .getBundle("org.knime.workbench.editor.Resources");
+                m_resourceBundle = ResourceBundle.getBundle(
+                        "org.knime.workbench.editor.Resources");
             }
         } catch (MissingResourceException x) {
             m_resourceBundle = null;

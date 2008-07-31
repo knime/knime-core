@@ -4,7 +4,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -37,6 +37,7 @@ import org.knime.base.data.util.DataCellStringMapper;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
@@ -56,7 +57,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
 
     private static final String CONFIG_KEY_PATTERN = "pattern";
 
-    private HashSet<DataCell> m_coveredPattern = new HashSet<DataCell>();
+    private HashSet<RowKey> m_coveredPattern = new HashSet<RowKey>();
     
     private boolean m_pureEnough = false;
 
@@ -136,7 +137,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     @Override
     public final void addCoveredPattern(final DataRow row,
             final DataTableSpec spec, final double weight) throws Exception {
-        m_coveredPattern.add(row.getKey().getId());
+        m_coveredPattern.add(row.getKey());
         addCoveredColor(row, spec, weight);
     }
 
@@ -161,7 +162,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
      *         leaf node
      */
     @Override
-    public Set<DataCell> coveredPattern() {
+    public Set<RowKey> coveredPattern() {
         return m_coveredPattern;
     }
 
@@ -184,9 +185,9 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
         if (saveKeysAndPatterns) {
             Config patternsConfig = pConf.addConfig(CONFIG_KEY_PATTERNS);
             int counter = 0;
-            for (DataCell entry : m_coveredPattern) {
-                patternsConfig.addDataCell(CONFIG_KEY_PATTERN + "_" + counter,
-                        entry);
+            for (RowKey entry : m_coveredPattern) {
+                patternsConfig.addString(CONFIG_KEY_PATTERN + "_" + counter,
+                        entry.getString());
                 counter++;
             }
         }
@@ -204,7 +205,13 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
             Config patternsConfig = pConf.getConfig(CONFIG_KEY_PATTERNS);
             m_coveredPattern.clear();
             for (String key : patternsConfig) {
-                DataCell keyCell = patternsConfig.getDataCell(key);
+                RowKey keyCell;
+                try {
+                    keyCell = new RowKey(
+                            patternsConfig.getDataCell(key).toString());
+                } catch (InvalidSettingsException ise) {
+                    keyCell = new RowKey(patternsConfig.getString(key));
+                }
                 m_coveredPattern.add(keyCell);
             }
         }

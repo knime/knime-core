@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -31,6 +31,7 @@ import javax.swing.tree.TreeNode;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 
 
@@ -140,6 +141,27 @@ public interface ConfigRO extends TreeNode, Iterable<String> {
      * @throws InvalidSettingsException If the key is not available.
      */
     public DataCell getDataCell(final String key)
+            throws InvalidSettingsException;
+    
+    /**
+     * Return <code>RowKey</code> for key.
+     * 
+     * @param key the identifier used to store the <code>RowKey</code> before
+     * @return the store <code>RowKey</code>
+     * @throws InvalidSettingsException if the key is not available
+     */
+    public RowKey getRowKey(final String key)
+            throws InvalidSettingsException;
+    
+    /**
+     * Return <code>RowKey</code> array for the given key.
+     * 
+     * @param key the identifier used to store the <code>RowKey</code> array
+     *        before
+     * @return the store <code>RowKey</code> array
+     * @throws InvalidSettingsException if the key is not available
+     */
+    public RowKey[] getRowKeyArray(final String key)
             throws InvalidSettingsException;
 
     /**
@@ -450,6 +472,26 @@ public interface ConfigRO extends TreeNode, Iterable<String> {
      * @return A DataCell object.
      */
     public DataCell getDataCell(final String key, final DataCell def);
+    
+    /**
+     * Return a <code>RowKey</code> which can be null, or the default value if 
+     * the key is not available.
+     * 
+     * @param key identifier used to store the <code>RowKey</code> before
+     * @param def default value, returned if the key is not available
+     * @return the stored <code>RowKey</code>
+     */
+    public RowKey getRowKey(final String key, final RowKey def);
+    
+    /**
+     * Return a <code>RowKey</code> array which can be null, or the default 
+     * value if the key is not available.
+     * 
+     * @param key identifier used to store the <code>RowKey</code> array before
+     * @param def default value, returned if the key is not available
+     * @return the stored <code>RowKey</code> array
+     */
+    public RowKey[] getRowKeyArray(final String key, final RowKey... def);
 
     /**
      * Return a DataType elements or null for key, or the default value if not

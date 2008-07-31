@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,11 +24,8 @@
  */
 package org.knime.core.data.property;
 
-import java.util.Arrays;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
@@ -60,8 +57,17 @@ public final class SizeHandler implements PropertyHandler {
         m_model = model;
     }
     
-    /** The default size in case no SizeHandler exists. */
+    
+    /** The default size in case no SizeHandler exists. 
+     * @deprecated use {@link #DEFAULT_SIZE_FACTOR} instead
+     */
+    @Deprecated
     public static final double DEFAULT_SIZE = 0.0;
+    
+    /** The default size factor in case no SizeHandler exist, which is one, that
+     * is no scaling is done. 
+     */
+    public static final double DEFAULT_SIZE_FACTOR = 1.0;
     
     /**
      * Return size (in [0,1], that is percent, as specified by the content
@@ -69,13 +75,24 @@ public final class SizeHandler implements PropertyHandler {
      * 
      * @param dc Value to be used to compute size.
      * @return percentage value to base actual size on. -1 if value is illegal.
+     * @deprecated use {@link #getSizeFactor(DataCell)} instead
      */
+    @Deprecated
     public double getSize(final DataCell dc) {
         return m_model.getSize(dc);
     }
     
+    /**
+     * Returns the size as a scaling factor (in [1, )).
+     * @param dc value to use to compute size for
+     * @return a double value > 1
+     */
+    public double getSizeFactor(final DataCell dc) {
+        return m_model.getSizeFactor(dc);
+    }
+    
     private static final String CFG_SIZE_MODEL_CLASS = "size_model_class";
-    private static final String CFG_SIZE_MODEL        = "size_model";
+    private static final String CFG_SIZE_MODEL       = "size_model";
     
     /**
      * Save the <code>SizeModel</code> class and settings to the given 
@@ -83,9 +100,7 @@ public final class SizeHandler implements PropertyHandler {
      * @param config To write size settings into.
      * @throws NullPointerException If the <i>config</i> is <code>null</code>.
      */
-    public void save(final Config config) {
-        assert config.keySet().isEmpty() : "Subconfig must be empty: " 
-            +  Arrays.toString(config.keySet().toArray());
+    public void save(final ConfigWO config) {
         config.addString(CFG_SIZE_MODEL_CLASS, m_model.getClass().getName());
         m_model.save(config.addConfig(CFG_SIZE_MODEL));
     }
@@ -123,6 +138,28 @@ public final class SizeHandler implements PropertyHandler {
     }
     
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || !(obj instanceof SizeHandler)) {
+            return false;
+        }
+        return m_model.equals(((SizeHandler)obj).m_model);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_model.hashCode();
+    }
+    
+    /**
      * Internal <code>SizeModel</code> used to request sizes by 
      * <code>DataCell</code> attribute value.
      */
@@ -132,8 +169,18 @@ public final class SizeHandler implements PropertyHandler {
          * within 0 and 1, or -1 if no color setting available.
          * @param dc The attribute value to get size for.
          * @return A <code>double</code> between 0 and 1.
+         * @deprecated use {@link #getSizeFactor(DataCell)} instead.
          */
+        @Deprecated
         double getSize(DataCell dc);
+        
+        /**
+         * 
+         * @param dc the attribute value to get the size factor for 
+         * @return a double indicating the maginfication relative to the 
+         *  normal size used
+         */
+        double getSizeFactor(DataCell dc);
         /**
          * Save size settings to.
          * @param config This object.

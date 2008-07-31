@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -104,8 +104,8 @@ public final class PieColumnFilter implements ColumnFilter {
 //                      || domain.getUpperBound() == null) {
 //                  return false;
 //              }
-//            final int lower = ((IntCell)domain.getLowerBound()).getIntValue();
-//            final int upper = ((IntCell)domain.getUpperBound()).getIntValue();
+//           final int lower = ((IntValue)domain.getLowerBound()).getIntValue();
+//           final int upper = ((IntValue)domain.getUpperBound()).getIntValue();
 //              return (upper - lower < MAX_NO_OF_SECTIONS);
 //          }
         return true;

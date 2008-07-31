@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   18.10.2006 (sieb): created
  */
@@ -26,6 +26,7 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -33,7 +34,7 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
  * Action to cancel a node.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class CancelAction extends AbstractNodeAction {
@@ -45,7 +46,7 @@ public class CancelAction extends AbstractNodeAction {
     public static final String ID = "knime.action.cancel";
 
     /**
-     * 
+     *
      * @param editor The workflow editor
      */
     public CancelAction(final WorkflowEditor editor) {
@@ -75,8 +76,8 @@ public class CancelAction extends AbstractNodeAction {
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor("icons/cancel.GIF");
     }
-    
-    
+
+
 
     /**
      * {@inheritDoc}
@@ -107,10 +108,11 @@ public class CancelAction extends AbstractNodeAction {
         // selection
         boolean atLeastOneNodeIsCancelable = false;
         for (int i = 0; i < parts.length; i++) {
-            atLeastOneNodeIsCancelable |= getManager().isQueued(
-                    parts[i].getNodeContainer());
+            atLeastOneNodeIsCancelable |=
+                    parts[i].getNodeContainer().getState().equals(
+                            NodeContainer.State.QUEUED);
             atLeastOneNodeIsCancelable |= parts[i].getNodeContainer()
-                    .isExecuting();
+            .getState().equals(NodeContainer.State.EXECUTING);
         }
         return atLeastOneNodeIsCancelable;
 
@@ -119,7 +121,7 @@ public class CancelAction extends AbstractNodeAction {
     /**
      * This cancels all the selected nodes. Note that this is all controlled by
      * the WorkflowManager object of the currently open editor.
-     * 
+     *
      * @see org.knime.workbench.editor2.actions.AbstractNodeAction
      *      #runOnNodes(org.knime.workbench.editor2.
      *      editparts.NodeContainerEditPart[])

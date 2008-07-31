@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.meta.xvalidation;
 
@@ -28,7 +28,7 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Simple class for managing the cross validation settings.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class XValidateSettings {
@@ -36,53 +36,42 @@ public class XValidateSettings {
 
     private boolean m_randomSampling = true;
 
-    private String m_classColumnName;
-
     private boolean m_leaveOneOut = false;
-    
-    
+
+    /**
+     * Returns if leave-one-out cross validation should be performed.
+     *
+     * @return <code>true</code> if leave-one-out should be done,
+     *         <code>false</code> otherwise
+     */
     public boolean leaveOneOut() {
         return m_leaveOneOut;
     }
-    
-    
-    public void leaveOneOut(final boolean b) {
-        m_leaveOneOut = b;
-    }
-    
-    /**
-     * Returns the name of the class column.
-     * 
-     * @return the class column name
-     */
-    public String classColumnName() {
-        return m_classColumnName;
-    }
 
     /**
-     * Sets the name of the class column.
-     * 
-     * @param classColumnName the name
+     * Sets if leave-one-out cross validation should be performed.
+     *
+     * @param b <code>true</code> if leave-one-out should be done,
+     *         <code>false</code> otherwise
      */
-    public void classColumnName(final String classColumnName) {
-        m_classColumnName = classColumnName;
+    public void leaveOneOut(final boolean b) {
+        m_leaveOneOut = b;
     }
 
     /**
      * Writes the settings into the node settings object.
-     * 
+     *
      * @param settings a node settings object
      */
     public void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addShort("validations", m_validations);
         settings.addBoolean("randomSampling", m_randomSampling);
         settings.addBoolean("leaveOneOut", m_leaveOneOut);
-        settings.addString("classColumnName", m_classColumnName);
     }
 
     /**
      * Loads the settings from the node settings object.
-     * 
+     *
      * @param settings a node settings object
      * @throws InvalidSettingsException if some settings are missing
      */
@@ -91,12 +80,11 @@ public class XValidateSettings {
         m_validations = settings.getShort("validations");
         m_randomSampling = settings.getBoolean("randomSampling");
         m_leaveOneOut = settings.getBoolean("leaveOneOut");
-        m_classColumnName = settings.getString("classColumnName");
     }
 
     /**
      * Returns if the rows of the input table should be sampled randomly.
-     * 
+     *
      * @return <code>true</code> if the should be sampled randomly,
      *         <code>false</code> otherwise
      */
@@ -106,7 +94,7 @@ public class XValidateSettings {
 
     /**
      * Sets if the rows of the input table should be sampled randomly.
-     * 
+     *
      * @param randomSampling <code>true</code> if the should be sampled
      *            randomly, <code>false</code> otherwise
      */
@@ -116,7 +104,7 @@ public class XValidateSettings {
 
     /**
      * Returns the number of validation runs that should be performed.
-     * 
+     *
      * @return the number of validation runs
      */
     public short validations() {
@@ -125,7 +113,7 @@ public class XValidateSettings {
 
     /**
      * Sets the number of validation runs that should be performed.
-     * 
+     *
      * @param validations the number of validation runs
      */
     public void validations(final short validations) {

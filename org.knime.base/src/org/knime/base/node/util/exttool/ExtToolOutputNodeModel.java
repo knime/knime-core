@@ -1,8 +1,9 @@
-/* ------------------------------------------------------------------
+/*
+ * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -37,7 +38,9 @@ import java.util.Observer;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.PortType;
 
 /**
  * Implements a {@link NodeModel} for nodes that launch external commands. It
@@ -55,7 +58,7 @@ import org.knime.core.node.NodeModel;
  *
  * @author Kilian Thiel, University of Konstanz
  */
-public abstract class ExtToolOutputNodeModel extends NodeModel implements
+public abstract class ExtToolOutputNodeModel extends GenericNodeModel implements
         Observer {
 
     // StdOut, StdErr Buffers
@@ -68,26 +71,14 @@ public abstract class ExtToolOutputNodeModel extends NodeModel implements
     private LinkedList<String> m_failedExtErrout;
 
     /**
-     * Constructor for a node model with data ports only.
-     *
-     * @param nrDataIns The number of input data tables.
-     * @param nrDataOuts The number of output data tables.
-     */
-    public ExtToolOutputNodeModel(final int nrDataIns, final int nrDataOuts) {
-        this(nrDataIns, nrDataOuts, 0, 0);
-    }
-
-    /**
      * Constructor for a node with data and model ports.
      *
-     * @param nrDataIns The number of input data tables.
-     * @param nrDataOuts The number of output data tables.
-     * @param nrModelIns The number of input predictor parameters.
-     * @param nrModelOuts The number of output predictor parameters.
+     * @param inPortTypes types of the input ports
+     * @param outPortTypes types of the output ports
      */
-    public ExtToolOutputNodeModel(final int nrDataIns, final int nrDataOuts,
-            final int nrModelIns, final int nrModelOuts) {
-        super(nrDataIns, nrDataOuts, nrModelIns, nrModelOuts);
+    public ExtToolOutputNodeModel(final PortType[] inPortTypes,
+            final PortType[] outPortTypes) {
+        super(inPortTypes, outPortTypes);
 
         m_extOutput = new LinkedList<String>();
         m_extErrout = new LinkedList<String>();

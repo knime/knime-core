@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,22 +24,22 @@
  */
 package org.knime.base.node.mine.regression.linear.predict;
 
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * Factory for linear regression predictor node.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class LinRegPredictorNodeFactory extends NodeFactory {
+public class LinRegPredictorNodeFactory 
+    extends GenericNodeFactory<LinRegPredictorNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public LinRegPredictorNodeModel createNodeModel() {
         return new LinRegPredictorNodeModel();
     }
 
@@ -55,7 +55,8 @@ public class LinRegPredictorNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int index, final NodeModel m) {
+    public GenericNodeView<LinRegPredictorNodeModel> 
+        createNodeView(final int index, final LinRegPredictorNodeModel m) {
         throw new IndexOutOfBoundsException();
     }
 

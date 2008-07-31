@@ -50,7 +50,7 @@
             default="true"
             extensions="knime"
             filenames="knime"
-            icon="icons/editor.png"
+            icon="icons/knime.png"
             id="org.knime.workbench.editor.WorkflowEditor"
             name="KNIME Workflow Editor"/>
       <editor
@@ -161,6 +161,27 @@
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Reset selected nodes"/>
+         <action
+               class="org.knime.workbench.editor2.actions.AddMetaNodeAction"
+               disabledIcon="icons/meta/meta.png"
+               icon="icons/meta/meta.png"
+               id="org.knime.workbench.editor.meta"
+               label="Add Meta Node"
+               menubarPath="org.knime.workbench.editor.menu/group1"
+               style="push"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
+               tooltip="Opens the Add Meta Node Dialog">
+         </action>
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.DefaultOpenViewEditorAction"
+               disabledIcon="icons/openView_disabled.gif"
+               icon="icons/openView.gif"
+               id="org.knime.workbench.editor.actions.defaultOpen"
+               label="Default Open View"
+               menubarPath="org.knime.workbench.editor.menu/group1"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
+               tooltip="Opens the first view of the selected node(s)">
+         </action>
          
                
       </editorContribution>
@@ -291,5 +312,5 @@
 			<instanceof value="org.eclipse.core.resources.IResource"/>
       </enablement>
    </extension>
-
+    
 </plugin>

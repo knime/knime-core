@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -66,8 +66,7 @@ final class BlockableOutputStream extends OutputStream {
     /**
      * Parses the byte[] argument, escapes the bytes if necessary and delegates
      * escaped byte array to underlying stream.
-     * 
-     * @see java.io.OutputStream#write(byte[], int, int)
+     * {@inheritDoc}
      */
     @Override
     public synchronized void write(final byte[] b, final int off, final int len)
@@ -99,8 +98,7 @@ final class BlockableOutputStream extends OutputStream {
 
     /**
      * Calls {@link #write(byte[], int, int)}.
-     * 
-     * @see java.io.OutputStream#write(byte[])
+     * {@inheritDoc} 
      */
     @Override
     public void write(final byte[] b) throws IOException {
@@ -116,8 +114,7 @@ final class BlockableOutputStream extends OutputStream {
     /**
      * Checks if the byte to be written needs to be escaped and does so if
      * necessary.
-     * 
-     * @see java.io.OutputStream#write(int)
+     * {@inheritDoc} 
      */
     @Override
     public synchronized void write(final int b) throws IOException {
@@ -140,8 +137,7 @@ final class BlockableOutputStream extends OutputStream {
 
     /**
      * Delegates to output stream.
-     * 
-     * @see java.io.Closeable#close()
+     * {@inheritDoc} 
      */
     @Override
     public void close() throws IOException {
@@ -150,8 +146,7 @@ final class BlockableOutputStream extends OutputStream {
 
     /**
      * Delegates to output stream.
-     * 
-     * @see java.io.Flushable#flush()
+     * {@inheritDoc} 
      */
     @Override
     public void flush() throws IOException {

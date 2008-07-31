@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -36,7 +36,7 @@ import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
-import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -117,7 +117,7 @@ public class InteractiveBinDataModel extends BinDataModel {
      * @param calculator the hilite shape calculator
      * @return if the hilite keys have changed
      */
-    protected boolean setHilitedKeys(final Set<DataCell> hilited,
+    protected boolean setHilitedKeys(final Set<RowKey> hilited,
             final HistogramHiliteCalculator calculator) {
         boolean changed = false;
         for (final BarDataModel bar : getBars()) {
@@ -134,7 +134,7 @@ public class InteractiveBinDataModel extends BinDataModel {
      * @param calculator the hilite shape calculator
      * @return if the hilite keys have changed
      */
-    protected boolean removeHilitedKeys(final Set<DataCell> hilited,
+    protected boolean removeHilitedKeys(final Set<RowKey> hilited,
             final HistogramHiliteCalculator calculator) {
         boolean changed = false;
         for (final BarDataModel bar : getBars()) {

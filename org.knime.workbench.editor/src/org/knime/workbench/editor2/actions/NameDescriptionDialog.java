@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,11 +18,12 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   08.05.2006 (sieb): created
  */
 package org.knime.workbench.editor2.actions;
+
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
@@ -35,18 +36,17 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * JFace implementation of a dialog asking for a node name and its description.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class NameDescriptionDialog extends Dialog {
-    private String m_initName;
+    private final String m_initName;
 
-    private String m_initDescription;
+    private final String m_initDescription;
 
     private Text m_nameField;
 
@@ -56,33 +56,37 @@ public class NameDescriptionDialog extends Dialog {
 
     private String m_description;
 
+    private final String m_title;
+
+
     /**
      * Creates a dialog to ask for the user specified node name and the
      * description.
-     * 
+     *
      * @param parent the parent shell for this dialog
      * @param nameInit the initial name for the node
      * @param descriptionInit the initial description
+     * @param dialogTitle title for the dialog (node name, id, custom name)
      */
     public NameDescriptionDialog(final Shell parent, final String nameInit,
-            final String descriptionInit) {
+            final String descriptionInit, final String dialogTitle) {
         super(parent);
-        this.setShellStyle(SWT.APPLICATION_MODAL);
+//        this.setShellStyle(SWT.APPLICATION_MODAL);
 
         m_initName = nameInit;
         m_initDescription = descriptionInit;
+        m_title = dialogTitle;
     }
 
     /**
      * Creates the widgets of this dialog.
-     * 
-     * @see org.eclipse.jface.window.Window
-     *      #configureShell(org.eclipse.swt.widgets.Shell)
+     *
+     * {@inheritDoc}
      */
     @Override
     protected void configureShell(final Shell newShell) {
-
         super.configureShell(newShell);
+        newShell.setText(m_title);
         Image img = KNIMEUIPlugin.getDefault().getImageRegistry().get("knime");
         newShell.setImage(img);
 
@@ -129,7 +133,7 @@ public class NameDescriptionDialog extends Dialog {
 
     /**
      * Linux (GTK) hack: must explicitly invoke <code>getInitialSize()</code>.
-     * 
+     *
      * @see org.eclipse.jface.window.Window#create()
      */
     @Override
@@ -145,7 +149,7 @@ public class NameDescriptionDialog extends Dialog {
      * Invoked by the super class if ok is pressed. Copies the text field
      * content to member variables, so that they can be accessed afterwards.
      * (Neccessary as the widgets will be disposed)
-     * 
+     *
      * @see org.eclipse.jface.dialogs.Dialog#okPressed()
      */
     @Override

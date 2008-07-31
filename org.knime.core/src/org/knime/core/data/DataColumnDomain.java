@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -17,8 +17,8 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * --------------------------------------------------------------------- *
- * 
+ * ---------------------------------------------------------------------
+ *
  * History
  *   25.10.2006 (tg): cleanup
  *   02.11.2006 (tm, cs): reviewed
@@ -38,7 +38,7 @@ import org.knime.core.node.config.ConfigWO;
  * available. This object can only be created by a
  * {@link DataColumnDomainCreator} within this package. The
  * <code>DataColumnDomain</code> is read-only.
- * 
+ *
  * <p>
  * Note: It is assumed that the domain - if available - contains reliable data.
  * It is crucial that the creator of a column domain ensures that no value in
@@ -46,14 +46,14 @@ import org.knime.core.node.config.ConfigWO;
  * that column than the values listed in the set returned by
  * {@link #getValues()}. If you are not sure about the data to come in your
  * column, don't provide domain infos (<code>null</code>).<br>
- * Also noteworthy: domain information describes the source of the data (the 
- * domain), not the data itself. I.e. the created domain object could contain 
- * more possible values than actually appear in the data table, or a range 
- * bigger than needed for the data in that particular data table. But it must 
+ * Also noteworthy: domain information describes the source of the data (the
+ * domain), not the data itself. I.e. the created domain object could contain
+ * more possible values than actually appear in the data table, or a range
+ * bigger than needed for the data in that particular data table. But it must
  * always include all values appearing in the table.
- *    
+ *
  * @see DataColumnDomainCreator
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class DataColumnDomain {
@@ -80,7 +80,7 @@ public final class DataColumnDomain {
      * Create new column domain with lower and upper bounds, and set of possible
      * values. All arguments can be <code>null</code> in case none of these
      * properties are available.
-     * 
+     *
      * @param lower the lower bound value or <code>null</code>
      * @param upper the upper bound value or <code>null</code>
      * @param values a set of nominal values or <code>null</code>
@@ -98,15 +98,15 @@ public final class DataColumnDomain {
      * double values, for example) and that the {@link DataCell}s in the
      * returned set do not have to be of the same type (but the column type
      * should be compatible to all of their values).
-     * 
+     *
      * <p>
      * If the returned set is not <code>null</code>, the corresponding column
      * does not contain any value other than the ones contained in the set. The
      * set can contain a superset of the values in the table though.
-     * 
+     *
      * @return a {@link Set} of possible {@link DataCell} values or
      *         <code>null</code>
-     * 
+     *
      * @see #hasValues()
      */
     public Set<DataCell> getValues() {
@@ -115,10 +115,10 @@ public final class DataColumnDomain {
 
     /**
      * Returns <code>true</code> if the values are not <code>null</code>.
-     * 
+     *
      * @return <code>true</code>, if this column has possible values defined (
      *         i.e. the {@link #getValues()} method returns a non-null set)
-     * 
+     *
      * @see #getValues()
      */
     public boolean hasValues() {
@@ -130,14 +130,14 @@ public final class DataColumnDomain {
      * that this value does not necessarily need to actually occur in the
      * corresponding {@link DataTable} but it is describing the range of the
      * domain of this attribute.
-     * 
+     *
      * <p>
      * Usually this value is compatible with type {@link DoubleValue}
      * corresponding to an numeric left interval border.
-     * 
+     *
      * @return a {@link DataCell} with the lowest possible value or
      *         <code>null</code>
-     * 
+     *
      * @see #hasLowerBound()
      */
     public DataCell getLowerBound() {
@@ -146,9 +146,9 @@ public final class DataColumnDomain {
 
     /**
      * Returns <code>true</code>, if a lower bound is defined.
-     * 
+     *
      * @return <code>true</code>, if the lower bound value has been defined
-     * 
+     *
      * @see #getLowerBound()
      */
     public boolean hasLowerBound() {
@@ -160,14 +160,14 @@ public final class DataColumnDomain {
      * that this value does not necessarily need to actually occur in the
      * corresponding {@link DataTable} but it describes the range of the domain
      * of this attribute.
-     * 
+     *
      * <p>
      * Usually this value is compatible with type {@link DoubleValue}
      * corresponding to an numeric right interval border.
-     * 
+     *
      * @return a {@link DataCell} with the largest possible value or
      *         <code>null</code>
-     * 
+     *
      * @see #hasUpperBound()
      */
     public DataCell getUpperBound() {
@@ -176,9 +176,9 @@ public final class DataColumnDomain {
 
     /**
      * Returns <code>true</code>, if an upper bound is defined.
-     * 
+     *
      * @return <code>true</code>, if the upper bound value has been defined
-     * 
+     *
      * @see #getUpperBound()
      */
     public boolean hasUpperBound() {
@@ -187,7 +187,7 @@ public final class DataColumnDomain {
 
     /**
      * Returns <code>true</code> if both, lower and upper bound, are defined.
-     * 
+     *
      * @return <code>true</code>, if lower and upper bound are defined
      */
     public boolean hasBounds() {
@@ -197,11 +197,11 @@ public final class DataColumnDomain {
     /**
      * Compares this domain with the other one by the possible values and lower
      * and upper bounds and returns <code>true</code> if both are the same.
-     * 
+     *
      * @param obj The other domain to compare with.
      * @return <code>true</code> if all possible values, and lower and upper
      *         bounds are the same
-     * 
+     *
      * @see Set#equals(Object)
      * @see DataCell#equals(Object)
      */
@@ -259,7 +259,7 @@ public final class DataColumnDomain {
     /**
      * Returns the hash code of this domain, based on the hash codes of the
      * lower, upper bound, and each possible value - if available.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -282,7 +282,7 @@ public final class DataColumnDomain {
     /**
      * Returns string representation of this domain including lower and upper
      * bounds, and possible values.
-     * 
+     *
      * @return Summary as String.
      * @see java.lang.Object#toString()
      */
@@ -299,7 +299,7 @@ public final class DataColumnDomain {
     /**
      * Save this domain to the given {@link ConfigWO} including lower and upper
      * bound, and possible values or null - if not available.
-     * 
+     *
      * @param config the {@link ConfigWO} to write into
      */
     public void save(final ConfigWO config) {
@@ -318,7 +318,7 @@ public final class DataColumnDomain {
     /**
      * Reads lower and upper bounds as well as the possible values - if
      * available - from {@link ConfigRO}.
-     * 
+     *
      * @param config to read entries from
      * @return a new domain object with the read properties
      */

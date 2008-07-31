@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Predictor" icon="./rbfprediction_small.ico">
 	<name>PNN Predictor</name>
 	
@@ -38,7 +38,7 @@
     	<dataOut index="0" name="Predicted Data">
     		Predicted data with one additional classification column.
     	</dataOut>
-		<modelIn index="0" name="PNN Model" type="PNNModel">
+		<modelIn index="0" name="PNN Model">
 			PNN Model to which test data is applied.
 		</modelIn>
 	</ports>

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   04.07.2005 (ohl): created
  */
@@ -35,7 +35,7 @@ import org.knime.core.node.NodeSettingsWO;
  * {@link EndOfTableException} if
  * the row number is beyond the include range. An EOT constant is available to
  * use for the range-end-parameter.
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class RowNoRowFilter extends RowFilter {
@@ -61,9 +61,9 @@ public class RowNoRowFilter extends RowFilter {
     /**
      * Creates a new row filter filtering out all rows (not) included in the
      * specified range. The range includes the specified row numbers. With the
-     * include flag specifiy if rows should be forwarded that are inside or
+     * include flag specify if rows should be forwarded that are inside or
      * outside the range.
-     * 
+     *
      * @param rangeStart the row index of the first row to (not) match. Must be
      *            a number greater than or equal to zero.
      * @param rangeEnd the row number of the last row to (not) match. Must be a

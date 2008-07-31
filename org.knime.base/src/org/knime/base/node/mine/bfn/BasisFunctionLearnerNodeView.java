@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -27,18 +27,23 @@ package org.knime.base.node.mine.bfn;
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeView;
 
 
 /**
  * View to display basisfunction rule models.
  * 
  * @author Thomas Gabriel, University of Konstanz
+ * @param <T> the type of <code>BasisFunctionLearnerNodeModel</code>
+ * 
  */
-public class BasisFunctionLearnerNodeView extends NodeView {
+public class BasisFunctionLearnerNodeView
+    <T extends BasisFunctionLearnerNodeModel> 
+        extends GenericNodeView<T> {
+    
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(BasisFunctionLearnerNodeView.class);
 
@@ -50,8 +55,7 @@ public class BasisFunctionLearnerNodeView extends NodeView {
      * 
      * @param model the bf model
      */
-    public BasisFunctionLearnerNodeView(
-            final BasisFunctionLearnerNodeModel model) {
+    public BasisFunctionLearnerNodeView(final T model) {
         super(model);
         m_content = new JEditorPane("text/html", "");
         m_content.setEditable(false);
@@ -62,12 +66,11 @@ public class BasisFunctionLearnerNodeView extends NodeView {
     /**
      * Called when the model changed.
      * 
-     * @see org.knime.core.node.NodeView#modelChanged()
+     * {@inheritDoc}
      */
     @Override
     public void modelChanged() {
-        BasisFunctionLearnerNodeModel model = 
-            (BasisFunctionLearnerNodeModel)super.getNodeModel();
+        BasisFunctionLearnerNodeModel model = getNodeModel();
         ModelContentRO pp = model.getModelInfo();
         if (pp == null) {
             m_content.setText("");

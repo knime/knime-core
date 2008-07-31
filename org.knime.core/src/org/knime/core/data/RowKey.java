@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -30,67 +30,42 @@ package org.knime.core.data;
 
 import java.io.Serializable;
 
-import org.knime.core.data.def.StringCell;
-
 /**
- * Key for a specific row which holds an identifier of type {@link DataCell}.
+ * Key for a specific row which holds an identifier of type {@link String}.
  * 
  * @see DataRow
- * 
  * @author Michael Berthold, University of Konstanz
  */
 public final class RowKey implements Serializable {
 
     /** Private member holding non-null row id. */
-    private final DataCell m_id;
-
-    /**
-     * Creates a row key based on a {@link DataCell}.
-     * 
-     * @param id identifier for a {@link DataRow}
-     * @throws NullPointerException if argument is <code>null</code>
-     */
-    public RowKey(final DataCell id) {
-        if (id == null) {
-            throw new NullPointerException("Can't create RowKey with null id.");
-        }
-        m_id = id;
-    }
+    private final String m_id;
     
     /**
      * Creates a row key based on a {@link String}. 
      * 
-     * @param id identifier for a {@link DataRow}
+     * @param id identifier for this key
      * @throws NullPointerException if argument is <code>null</code>
      */
     public RowKey(final String id) {
-        this(new StringCell(id));
+        if (id == null) {
+            throw new NullPointerException("Argument must not be null.");
+        }
+        m_id = id;
     }
-
-    /**
-     * Returns the row key as {@link DataCell}.
-     * 
-     * @return an non-null, ID for a row
-     */
-    public DataCell getId() {
+    
+    /** @return Underlying string of this row key. */
+    public String getString() {
         return m_id;
     }
 
-    /**
-     * Returns the string representation of this row id.
-     * 
-     * @see DataCell#toString()
-     */
+    /** {@inheritDoc} */
     @Override
     public String toString() {
-        return m_id.toString();
+        return getString();
     }
 
-    /**
-     * Compares two row keys by their {@link DataCell}.
-     * 
-     * @see DataCell#equals(Object)
-     */
+    /** {@inheritDoc} */
     @Override
     public boolean equals(final Object obj) {
         if (obj == this) {
@@ -108,6 +83,40 @@ public final class RowKey implements Serializable {
     @Override
     public int hashCode() {
         return m_id.hashCode();
+    }
+    
+    /**
+     * Converts the given array of <code>RowKey</code>s to an array of
+     * <code>String</code> elements by calling {@link RowKey#getString()}.
+     * @param rowKeys an array of <code>RowKey</code> elements which can be null
+     * @return an array of String elements
+     */
+    public static String[] toString(final RowKey... rowKeys) {
+        if (rowKeys == null) {
+            return (String[]) null;
+        }
+        String[] strs = new String[rowKeys.length];
+        for (int i = 0; i < strs.length; i++) {
+            strs[i] = rowKeys[i].getString();
+        }
+        return strs;
+    }
+    
+    /**
+     * Converts the given array of <code>String</code>s to an array of
+     * <code>RowKey</code> elements by calling {@link #RowKey(String)}.
+     * @param strs an array of <code>String</code> elements which can be null
+     * @return an array of <code>RowKey</code> elements
+     */
+    public static RowKey[] toString(final String... strs) {
+        if (strs == null) {
+            return (RowKey[]) null;
+        }
+        RowKey[] rowKeys = new RowKey[strs.length];
+        for (int i = 0; i < rowKeys.length; i++) {
+            rowKeys[i] = new RowKey(strs[i]);
+        }
+        return rowKeys;
     }
     
 }

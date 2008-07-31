@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.preproc.join;
 
@@ -57,7 +57,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 /**
  * Joins two tables such that the first table appears on the left side of the
  * new table an the second one on the right side.
- * 
+ *
  * @see JoinedTable
  * @author Bernd Wiswedel, University of Konstanz
  */
@@ -95,7 +95,7 @@ public class JoinerNodeModel extends NodeModel {
     /**
      * Sets the In<code>HiLiteHandler</code> and registers them at the
      * <code>HiLiteManager</code>.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -115,7 +115,7 @@ public class JoinerNodeModel extends NodeModel {
     private double m_max;
 
     /**
-     * Hard reference to the first element in the current chunk, used to 
+     * Hard reference to the first element in the current chunk, used to
      * disallow garbage collection.
      */
     private Helper m_firstMapHelper;
@@ -145,8 +145,8 @@ public class JoinerNodeModel extends NodeModel {
             for (DataColumnSpec c : rightTableSpec) {
                 rightHash.add(c.getName());
             }
-            rightHash.removeAll(leftHash);            
-            String[] survivors = 
+            rightHash.removeAll(leftHash);
+            String[] survivors =
                 rightHash.toArray(new String[rightHash.size()]);
             if (survivors.length < rightTableSpec.getNumColumns()) {
                 rightTable = new FilterColumnTable(rightTable, survivors);
@@ -154,7 +154,7 @@ public class JoinerNodeModel extends NodeModel {
         }
 
         final BitSet rightRows = new BitSet(inData[1].getRowCount());
-        final LinkedHashMap<RowKey, SoftReference<Helper>> map = 
+        final LinkedHashMap<RowKey, SoftReference<Helper>> map =
             new LinkedHashMap<RowKey, SoftReference<Helper>>(1024);
         m_leftRows = 0;
         m_outputRows = 0;
@@ -195,7 +195,7 @@ public class JoinerNodeModel extends NodeModel {
                         h.m_rightIndex = m_rightIt.getIndex();
                         if (h.m_leftIndex == m_leftRows) {
                             // m_firstMapHelper = h;
-                            assert h.m_predecessor == null 
+                            assert h.m_predecessor == null
                                 || !map.containsKey(
                                         h.m_predecessor.m_leftRow.getKey());
                             h.m_predecessor = null;
@@ -211,7 +211,7 @@ public class JoinerNodeModel extends NodeModel {
                         }
                     }
                 }
-                
+
             }
 
             processRemainingLeftRowsInMap(dc, rightTable, map, rightRows);
@@ -248,7 +248,7 @@ public class JoinerNodeModel extends NodeModel {
             m_exec.checkCanceled();
             if (!rightRows.get(m_rightIt.getIndex())) {
                 dc.addRowToTable(new JoinedRow(new DefaultRow(
-                        rightRow.getKey(), 
+                        rightRow.getKey(),
                         JoinedTable.createMissingCells(
                                 leftTable.getDataTableSpec())), rightRow));
                 rightRows.set(m_rightIt.getIndex());
@@ -284,8 +284,8 @@ public class JoinerNodeModel extends NodeModel {
     }
 
     private void processRemainingLeftRowsInMap(final DataContainer dc,
-            final DataTable rightTable, 
-            final Map<RowKey, SoftReference<Helper>> map, 
+            final DataTable rightTable,
+            final Map<RowKey, SoftReference<Helper>> map,
             final BitSet rightRows) {
         // all rows from the right table have been written
 
@@ -405,7 +405,7 @@ public class JoinerNodeModel extends NodeModel {
     /**
      * Removes all registered <code>HiLiteHandlers</code> and adds only the
      * ones at the connected inports.
-     * 
+     *
      * @see org.knime.core.node.NodeModel#reset()
      */
     @Override
@@ -414,9 +414,9 @@ public class JoinerNodeModel extends NodeModel {
         m_rightIt = null;
         m_exec = null;
         m_firstMapHelper = null;
-        
+
         m_hiliteHandler.removeAllHiLiteHandlers();
-        for (int i = 0; i < getNrDataIns(); i++) {
+        for (int i = 0; i < getNrInPorts(); i++) {
             HiLiteHandler hdl = getInHiLiteHandler(i);
             m_hiliteHandler.addHiLiteHandler(hdl);
         }
@@ -494,7 +494,7 @@ public class JoinerNodeModel extends NodeModel {
         private int m_index = -1;
 
         private final RowIterator m_it;
-        
+
         /**
          * Create new counting row iterator.
          * @param it Iterator to count rows.
@@ -530,7 +530,7 @@ public class JoinerNodeModel extends NodeModel {
     }
 
     private static final class Helper {
-        
+
         private final int m_leftIndex;
 
         private Helper m_predecessor;
@@ -541,7 +541,7 @@ public class JoinerNodeModel extends NodeModel {
 
         private int m_rightIndex;
 
-        private Helper(final int leftIndex, final Helper predecessor, 
+        private Helper(final int leftIndex, final Helper predecessor,
                 final DataRow leftRow) {
             this.m_leftIndex = leftIndex;
             this.m_predecessor = predecessor;

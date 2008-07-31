@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -163,6 +163,11 @@ public class PredictorWriterNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         String newFileName = checkFileAccess(m_fileName.getStringValue());
+        if (new File(newFileName).exists()) {
+            // here it exists and we can write it: warn user!
+            setWarningMessage("Selected output file \"" + newFileName + "\"" 
+                    + " exists and will be overwritten!");
+        }
         m_fileName.setStringValue(newFileName);
         return new DataTableSpec[0];
     }
@@ -191,9 +196,6 @@ public class PredictorWriterNodeModel extends NodeModel {
                     + "\" is a directory.");
         }
         if (file.exists()) {
-            // here it exists and we can write it: warn user!
-            setWarningMessage("Selected output file exists and will be "
-                    + "overwritten!");
             if (!file.canWrite()) {
                 throw new InvalidSettingsException("Cannot write to file \""
                     + file.getAbsolutePath() + "\".");

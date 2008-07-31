@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -33,7 +33,7 @@ import java.util.List;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class Root extends AbstractContainerObject {
+public class Root extends AbstractContainerObject implements Cloneable {
     
     /**
      * Constructor for a root.
@@ -113,5 +113,15 @@ public class Root extends AbstractContainerObject {
         appendProblemCategories(problemCategories);
         
         return problemCategories;
+    }
+    
+    public Root clone() {
+        Root clone = new Root();
+        for (IRepositoryObject o : getChildren()) {
+            clone.addChild((AbstractRepositoryObject)o);
+        }
+        clone.appendProblemCategories(getProblemCategories());
+        clone.setSortChildren(sortChildren());
+        return clone;
     }
 }

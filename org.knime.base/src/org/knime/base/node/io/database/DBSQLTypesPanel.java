@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -43,7 +43,7 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBSQLTypesPanel extends JPanel {
+final class DBSQLTypesPanel extends JPanel {
     
     /** Keep column name from spec to text field which contains the SQL type. */
     private final Map<String, JTextField> m_map;
@@ -51,7 +51,7 @@ public class DBSQLTypesPanel extends JPanel {
     /**
      * Creates new empty panel.
      */
-    public DBSQLTypesPanel() {
+    DBSQLTypesPanel() {
         super(new GridLayout(0, 1));
         m_map = new LinkedHashMap<String, JTextField>();
     }
@@ -63,7 +63,7 @@ public class DBSQLTypesPanel extends JPanel {
      * @param settings Settings object to read specified SQL-types from.
      * @param specs The data spec to retrive all column names and types.
      */
-    public void loadSettingsFrom(final NodeSettingsRO settings,
+    void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) {
         m_map.clear();
         super.removeAll();
@@ -103,7 +103,7 @@ public class DBSQLTypesPanel extends JPanel {
      * Saves SQL types by column name. 
      * @param settings Save column to SQL mapping to.
      */
-    public void saveSettingsTo(final NodeSettingsWO settings) {
+    void saveSettingsTo(final NodeSettingsWO settings) {
         for (Map.Entry<String, JTextField> e : m_map.entrySet()) {
             String type = e.getValue().getText().trim();
             settings.addString(e.getKey(), type);

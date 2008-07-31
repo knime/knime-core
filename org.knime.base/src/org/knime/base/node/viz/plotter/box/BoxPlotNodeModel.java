@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -50,7 +50,6 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -176,7 +175,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
             = new LinkedHashMap<String, Map<Double, Set<RowKey>>>();
         int colIdx = 0;
         List<DataColumnSpec> outputColSpecs = new ArrayList<DataColumnSpec>();
-        double subProgress = 1.0 / getNumNumericColumns(
+        double subProgress = 1.0 / (double)getNumNumericColumns(
                 table.getDataTableSpec());
         for (DataColumnSpec colSpec : table.getDataTableSpec()) {
             ExecutionContext colExec = exec.createSubExecutionContext(
@@ -319,14 +318,14 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
             final List<DataColumnSpec> outputColSpecs) {
         DataTableSpec outSpec = createOutputSpec(outputColSpecs);
         DataContainer container = exec.createDataContainer(outSpec);
-        DataCell[] rowKeys = new DataCell[SIZE];
-        rowKeys[MIN] = new StringCell("Minimum");
-        rowKeys[LOWER_WHISKER] = new StringCell("Smallest");
-        rowKeys[LOWER_QUARTILE] = new StringCell("Lower Quartile");
-        rowKeys[MEDIAN] = new StringCell("Median");
-        rowKeys[UPPER_QUARTILE] = new StringCell("Upper Quartile");
-        rowKeys[UPPER_WHISKER] = new StringCell("Largest");
-        rowKeys[MAX] = new StringCell("Maximum");
+        String[] rowKeys = new String[SIZE];
+        rowKeys[MIN] = "Minimum";
+        rowKeys[LOWER_WHISKER] = "Smallest";
+        rowKeys[LOWER_QUARTILE] = "Lower Quartile";
+        rowKeys[MEDIAN] = "Median";
+        rowKeys[UPPER_QUARTILE] = "Upper Quartile";
+        rowKeys[UPPER_WHISKER] = "Largest";
+        rowKeys[MAX] = "Maximum";
         for (int i = 0; i < SIZE; i++) {
             DataCell[] cells = new DataCell[outputColSpecs.size()];
             for (int j = 0; j < cells.length; j++) {
@@ -530,8 +529,21 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
         }
         double[] mild = columnSubConfig.getDoubleArray(CFG_MILD 
                 + spec.getName());
-        DataCell[] mildKeys = columnSubConfig.getDataCellArray(
-                CFG_MILD + CFG_ROW + spec.getName());
+        String[] mildKeys;
+        try {
+            // since this is the old loading method it is more probable that we
+            // find DataCells, so we start by trying to get them
+            DataCell[] mildKeysOld = columnSubConfig.getDataCellArray(
+                    CFG_MILD + CFG_ROW + spec.getName());
+            mildKeys = new String[mildKeysOld.length];
+            for (int i = 0; i < mildKeysOld.length; i++) {
+                mildKeys[i] = mildKeysOld[i].toString();
+            }
+        } catch (InvalidSettingsException ise) { 
+            // unlikely (impossible?) case that we have strings
+            mildKeys = columnSubConfig.getStringArray(
+                    CFG_MILD + CFG_ROW + spec.getName());
+        }
         Map<Double, Set<RowKey>> mildOutliers 
             = new LinkedHashMap<Double, Set<RowKey>>();
         for (int j = 0; j < mild.length; j++) {
@@ -545,8 +557,21 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
             = new LinkedHashMap<Double, Set<RowKey>>();
         double[] extreme = columnSubConfig.getDoubleArray(CFG_EXTREME 
                 + spec.getName());
-        DataCell[] extremeKeys = columnSubConfig.getDataCellArray(
-                CFG_EXTREME + CFG_ROW + spec.getName());
+        String[] extremeKeys;
+        // since this is the old loading method it is more probable that we
+        // find DataCells, so we start by trying to get them
+        try {            
+            DataCell[] extremeKeysOld = columnSubConfig.getDataCellArray(
+                    CFG_EXTREME + CFG_ROW + spec.getName());
+            extremeKeys = new String[extremeKeysOld.length];
+            for (int i = 0; i < extremeKeysOld.length; i++) {
+                extremeKeys[i] = extremeKeysOld[i].toString();
+            }
+        } catch (InvalidSettingsException ise) {
+            // unlikely (impossible) case that we have strings
+            extremeKeys = columnSubConfig.getStringArray(
+                    CFG_EXTREME + CFG_ROW + spec.getName());            
+        }
         for (int j = 0; j < extreme.length; j++) {
             Set<RowKey>keys = new HashSet<RowKey>();
             keys.add(new RowKey(extremeKeys[j]));
@@ -564,8 +589,22 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
         Map<Double, Set<RowKey>> mildOutliers 
             = new LinkedHashMap<Double, Set<RowKey>>();
         for (int j = 0; j < mild.length; j++) {
-            DataCell[] mildKeys = mildOutlierSubConfig.getDataCellArray(
-                    CFG_MILD + CFG_ROW + spec.getName() + j);
+            // this is for backward compatibility
+            // good old times where RowID was a DataCell
+            String[] mildKeys;
+            try {
+                mildKeys = mildOutlierSubConfig.getStringArray(
+                        CFG_MILD + CFG_ROW + spec.getName() + j);
+            } catch (InvalidSettingsException e) {
+                // ok, try to load old data cells
+                // if this is also not found the ISE is ok
+                DataCell[] mildKeysOld = mildOutlierSubConfig.getDataCellArray(
+                        CFG_MILD + CFG_ROW + spec.getName() + j);
+                mildKeys = new String[mildKeysOld.length];
+                for (int i = 0; i < mildKeysOld.length; i++) {
+                    mildKeys[i] = mildKeysOld[i].toString();
+                }
+            }            
             Set<RowKey> keys = new HashSet<RowKey>();
             for (int rk = 0; rk < mildKeys.length; rk++) {
                 keys.add(new RowKey(mildKeys[rk]));    
@@ -581,8 +620,22 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
         Config extrOutlierSubConfig = columnSubConfig.getConfig(
                 CFG_EXTREME + CFG_ROW + spec.getName());
         for (int j = 0; j < extreme.length; j++) {
-            DataCell[] extremeKeys = extrOutlierSubConfig.getDataCellArray(
-                    CFG_EXTREME + CFG_ROW + spec.getName() + j);
+            // this is for backward compatibility
+            // good old times where RowID was a DataCell
+            String[] extremeKeys;
+            try {
+                extremeKeys = extrOutlierSubConfig.getStringArray(
+                        CFG_EXTREME + CFG_ROW + spec.getName() + j);
+            } catch (InvalidSettingsException ise) {
+                // ok, old data cells
+                DataCell[] extremeKeysOld = extrOutlierSubConfig
+                    .getDataCellArray(
+                        CFG_EXTREME + CFG_ROW + spec.getName() + j);
+                extremeKeys = new String[extremeKeysOld.length];
+                for (int i = 0; i < extremeKeysOld.length; i++) {
+                    extremeKeys[i] = extremeKeysOld[i].toString(); 
+                }
+            }
             Set<RowKey>keys = new HashSet<RowKey>();
             for (int rk = 0; rk < extremeKeys.length; rk++) {
                 keys.add(new RowKey(extremeKeys[rk]));
@@ -621,13 +674,14 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
             for (Map.Entry<Double, Set<RowKey>> mildEntry : mildOutliers
                     .entrySet()) {
                 mild[j] = mildEntry.getKey();
-                DataCell[] keys = new DataCell[mildEntry.getValue().size()];
+                // save method -> savely store string from now on
+                String[] keys = new String[mildEntry.getValue().size()];
                 int rk = 0;
                 for (RowKey key : mildEntry.getValue()) {
-                    keys[rk] = key.getId();
+                    keys[rk] = key.getString();
                     rk++;
                 }
-                mildKeysSubConfig.addDataCellArray(CFG_MILD + CFG_ROW 
+                mildKeysSubConfig.addStringArray(CFG_MILD + CFG_ROW 
                     + cfgName + j, keys);
                 j++;
             }
@@ -642,13 +696,14 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
             for (Map.Entry<Double, Set<RowKey>> extrEntry : extremeOutliers
                     .entrySet()) {
                 extreme[ext] = extrEntry.getKey();
-                DataCell[] keys = new DataCell[extrEntry.getValue().size()];
+                // save method -> save store strings from now on
+                String[] keys = new String[extrEntry.getValue().size()];
                 int rk = 0;
                 for (RowKey key : extrEntry.getValue()) {
-                    keys[rk] = key.getId();
+                    keys[rk] = key.getString();
                     rk++;
                 }
-                extKeysSubConfig.addDataCellArray(
+                extKeysSubConfig.addStringArray(
                         CFG_EXTREME + CFG_ROW + cfgName + ext, keys);
                 ext++;
             }

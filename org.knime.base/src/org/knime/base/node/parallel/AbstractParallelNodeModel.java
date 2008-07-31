@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -69,32 +69,6 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
     /**
      * Creates a new AbstractParallelNodeModel.
      * 
-     * @param nrDataIns the number of {@link DataTable}s expected as inputs
-     * @param nrDataOuts the number of {@link DataTable}s expected at the
-     *            output
-     * @param nrPredParamsIns the number of
-     *            {@link org.knime.core.node.ModelContent} elements available as
-     *            inputs
-     * @param nrPredParamsOuts the number of
-     *            {@link org.knime.core.node.ModelContent} objects available at
-     *            the output
-     * @param chunkSize the default number of rows in the DataTables that are
-     *            passed to {@link #executeByChunk( BufferedDataTable,
-     *            BufferedDataTable[], RowAppender[], ExecutionMonitor)}
-     * @param workers a thread pool where threads for processing the chunks are
-     *            taken from
-     */
-    public AbstractParallelNodeModel(final int nrDataIns, final int nrDataOuts,
-            final int nrPredParamsIns, final int nrPredParamsOuts,
-            final int chunkSize, final ThreadPool workers) {
-        super(nrDataIns, nrDataOuts, nrPredParamsIns, nrPredParamsOuts);
-        m_chunkSize = chunkSize;
-        m_workers = workers;
-    }
-
-    /**
-     * Creates a new AbstractParallelNodeModel.
-     * 
      * @param nrDataIns The number of {@link DataTable} elements expected as
      *            inputs.
      * @param nrDataOuts The number of {@link DataTable} objects expected at the
@@ -146,7 +120,7 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
             throw new NullPointerException("Implementation Error: The "
                     + "array of generated output table specs can't be null.");
         }
-        if (outSpecs.length != getNrDataOuts()) {
+        if (outSpecs.length != getNrOutPorts()) {
             throw new IllegalStateException("Implementation Error: Number of"
                     + " provided DataTableSpecs doesn't match number of output"
                     + " ports");
@@ -256,7 +230,7 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
 
             final DataContainer[] temp = results.get();
 
-            if ((temp == null) || (temp.length != getNrDataOuts())) {
+            if ((temp == null) || (temp.length != getNrOutPorts())) {
                 throw new IllegalStateException("Invalid result. Execution "
                         + " failed, reason: data is null or number "
                         + "of outputs wrong.");

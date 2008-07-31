@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -21,7 +21,6 @@
  */
 package org.knime.base.node.mine.bfn;
 
-import org.knime.base.node.viz.parcoord.DegreeOfAffinity;
 import org.knime.core.data.DataRow;
 
 /**
@@ -40,8 +39,8 @@ public class BasisFunctionSymmetricRowOverlap implements DegreeOfAffinity {
      * 
      */
     public double getAffinityDegree(final DataRow row1, final DataRow row2) {
-        BasisFunctionLearnerRow bf1 = (BasisFunctionLearnerRow)row1;
-        BasisFunctionLearnerRow bf2 = (BasisFunctionLearnerRow)row2;
+        BasisFunctionPredictorRow bf1 = (BasisFunctionPredictorRow)row1;
+        BasisFunctionPredictorRow bf2 = (BasisFunctionPredictorRow)row2;
         return bf1.overlap(bf2, true);
     }
 

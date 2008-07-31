@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,12 +24,9 @@
  */
 package org.knime.core.data.property;
 
-import java.util.Arrays;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.property.ShapeFactory.Shape;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
@@ -80,9 +77,7 @@ public final class ShapeHandler implements PropertyHandler {
      * @param config To write <code>ShapeModel</code> into.
      * @throws NullPointerException If the <i>config</i> is <code>null</code>.
      */
-    public void save(final Config config) {
-        assert config.keySet().isEmpty() : "Subconfig must be empty: " 
-            +  Arrays.toString(config.keySet().toArray());
+    public void save(final ConfigWO config) {
         config.addString(CFG_SHAPE_MODEL_CLASS, m_model.getClass().getName());
         m_model.save(config.addConfig(CFG_SHAPE_MODEL));
     }
@@ -120,14 +115,36 @@ public final class ShapeHandler implements PropertyHandler {
     }
     
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || !(obj instanceof ShapeHandler)) {
+            return false;
+        }
+        return m_model.equals(((ShapeHandler)obj).m_model);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_model.hashCode();
+    }
+    
+    /**
      * Internal <code>ShapeModel</code> used to request <code>Shape</code> 
-     * objects by <code>DataCell</code> attribut value.
+     * objects by <code>DataCell</code> attribute value.
      */
     interface ShapeModel {
         /**
          * Returns a <code>Shape</code> object for a given 
          * <code>DataCell</code>.
-         * @param dc The attribut value to get size for.
+         * @param dc The attribute value to get size for.
          * @return A <code>double</code> between 0 and 1.
          */
         Shape getShape(DataCell dc);

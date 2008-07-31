@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -39,10 +39,13 @@ import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.NominalValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -104,6 +107,84 @@ public abstract class BasicPlotter extends AbstractPlotter {
         ((BasicDrawingPane)getDrawingPane()).clearPlot();
     }
 
+    /**
+     * Plots the column in the table specified by the column index as a 
+     * line plot.
+     * 
+     * @param table the table containing the data to be plotted.
+     * @param xIdx - the x column index specifying the data to be plotted.
+     * @param yIdx - the x column index specifying the data to be plotted.
+     * @param color the color of the line (may be null)
+     * @param stroke the stroke of the line (may be null)
+     */
+    public void addLine(final DataArray table, final int xIdx, final int yIdx,
+            final Color color, final Stroke stroke) {
+        if (!(getDrawingPane() instanceof BasicDrawingPane)) {
+            return;
+        }
+        if (!table.getDataTableSpec().getColumnSpec(yIdx).getType()
+                .isCompatible(DoubleValue.class)) {
+            return;
+        }
+//        if (!checkCompatibleAxis()) {
+//            return;
+//        }
+        // x axis
+        DataColumnSpec xColSpec = table.getDataTableSpec().getColumnSpec(xIdx); 
+        if (xColSpec.getType().isCompatible(
+                NominalValue.class)) {
+        Set<DataCell> rowKeys = new LinkedHashSet<DataCell>();
+        for (int i = 0; i < table.size(); i++) {
+            rowKeys.add(new StringCell(table.getRow(i).getKey().getString()));
+        }
+            createNominalXCoordinate(rowKeys);
+        } else if (xColSpec.getType().isCompatible(DoubleValue.class)) {
+            double newXMin = ((DoubleValue)xColSpec.getDomain().getLowerBound())
+                .getDoubleValue();
+            double newXMax = ((DoubleValue)xColSpec.getDomain().getUpperBound())
+                .getDoubleValue();
+            createXCoordinate(newXMin, newXMax);
+        } else {
+            return;
+        }
+
+        double newYMin = ((DoubleValue)table.getDataTableSpec().getColumnSpec(
+                yIdx).getDomain().getLowerBound()).getDoubleValue();
+        double newYMax = ((DoubleValue)table.getDataTableSpec().getColumnSpec(
+                yIdx).getDomain().getUpperBound()).getDoubleValue(); 
+        createYCoordinate(newYMin, newYMax);
+
+        BasicLine line = new BasicLine();
+        if (color != null) {
+            line.setColor(color);
+        }
+        if (stroke != null) {
+            line.setStroke(stroke);
+        }
+//        int x = 0;
+        for (DataRow row : table) {
+            DataCell value = row.getCell(yIdx);
+            if (!value.isMissing()) {
+                int mappedX = getMappedXValue(row.getCell(xIdx));
+                int mappedY = getMappedYValue(value);
+                DataCellPoint domainPoint = new DataCellPoint(
+                        row.getCell(xIdx), value);
+                line.addDomainValue(domainPoint);
+                Point p = new Point(mappedX, mappedY);
+                line.addPoint(p);
+            } else {
+//              if value.isMissing() -> create newLine
+                ((BasicDrawingPane)getDrawingPane()).addDrawingElement(line);
+                line = new BasicLine();
+                line.setColor(color);
+                line.setStroke(stroke);
+            } 
+//            x++;
+        }
+        ((BasicDrawingPane)getDrawingPane()).addDrawingElement(line);
+        fitToScreen();
+    }    
+    
 
     /**
      * Plots the column in the table specified by the column index as a 
@@ -113,7 +194,10 @@ public abstract class BasicPlotter extends AbstractPlotter {
      * @param colIdx - the column index specifying the data to be plotted.
      * @param color the color of the line (may be null)
      * @param stroke the stroke of the line (may be null)
+     * @deprecated use {@link #addLine(DataArray, int, int, Color, Stroke)} 
+     *  instead
      */
+    @Deprecated
     public void addLine(final DataArray table, final int colIdx,
             final Color color, final Stroke stroke) {
         if (!(getDrawingPane() instanceof BasicDrawingPane)) {
@@ -129,7 +213,7 @@ public abstract class BasicPlotter extends AbstractPlotter {
         // x axis
         Set<DataCell> rowKeys = new LinkedHashSet<DataCell>();
         for (int i = 0; i < table.size(); i++) {
-            rowKeys.add(table.getRow(i).getKey().getId());
+            rowKeys.add(new StringCell(table.getRow(i).getKey().getString()));
         }
         createNominalXCoordinate(rowKeys);
 
@@ -153,7 +237,7 @@ public abstract class BasicPlotter extends AbstractPlotter {
                 int mappedX = getMappedXValue(new IntCell(x));
                 int mappedY = getMappedYValue(value);
                 DataCellPoint domainPoint = new DataCellPoint(
-                        row.getKey().getId(), value);
+                       new StringCell(row.getKey().getString()), value);
                 line.addDomainValue(domainPoint);
                 Point p = new Point(mappedX, mappedY);
                 line.addPoint(p);
@@ -212,10 +296,10 @@ public abstract class BasicPlotter extends AbstractPlotter {
             double value = y[i];
             double mappedValue = getYAxis().getCoordinate()
                 .calculateMappedValue(new DoubleCell(value), 
-                        getDrawingPaneDimension().height, true);
+                        getDrawingPaneDimension().height);
             int mappedX = (int)getXAxis().getCoordinate()
                 .calculateMappedValue(new IntCell(xCoords[i]), 
-                        getDrawingPaneDimension().width, true);
+                        getDrawingPaneDimension().width);
             Point p = new Point(mappedX, (int)getScreenYCoordinate(
                     mappedValue));
             line.addPoint(p);
@@ -272,10 +356,9 @@ public abstract class BasicPlotter extends AbstractPlotter {
         for (int i = 0; i < y.length; i++) {
         double value = y[i];
         double mappedValue = getYAxis().getCoordinate().calculateMappedValue(
-                new DoubleCell(value), getDrawingPaneDimension().height,
-                true);
+                new DoubleCell(value), getDrawingPaneDimension().height);
         int mappedX = (int)getXAxis().getCoordinate().calculateMappedValue(
-                new DoubleCell(x[i]), getDrawingPaneDimension().width, true);
+                new DoubleCell(x[i]), getDrawingPaneDimension().width);
         Point p = new Point(mappedX, (int)getScreenYCoordinate(mappedValue));
         line.addPoint(p);
         line.addDomainValue(new DataCellPoint(new DoubleCell(x[i]), 
@@ -309,16 +392,14 @@ public abstract class BasicPlotter extends AbstractPlotter {
         createXCoordinate(x, x + width);
         createYCoordinate(y, y + height);
         int mappedX = (int)getXAxis().getCoordinate().calculateMappedValue(
-                new DoubleCell(x), getDrawingPaneDimension().width, true);
+                new DoubleCell(x), getDrawingPaneDimension().width);
         int mappedX2 = (int)getXAxis().getCoordinate().calculateMappedValue(
-                new DoubleCell(x + width), getDrawingPaneDimension().width, 
-                true);
+                new DoubleCell(x + width), getDrawingPaneDimension().width);
         
         int mappedY = (int) getYAxis().getCoordinate().calculateMappedValue(
-                new DoubleCell(y), getDrawingPaneDimension().height, true);
+                new DoubleCell(y), getDrawingPaneDimension().height);
         int mappedY2 = (int) getYAxis().getCoordinate().calculateMappedValue(
-                new DoubleCell(y + height), getDrawingPaneDimension().height, 
-                true);
+                new DoubleCell(y + height), getDrawingPaneDimension().height);
         BasicEllipse ellipse = new BasicEllipse(filled);
         ellipse.setPoints(
                 new Point(mappedX, mappedY), 
@@ -358,16 +439,14 @@ public abstract class BasicPlotter extends AbstractPlotter {
         createXCoordinate(x, x + width);
         createYCoordinate(y, y + height);
         int mappedX1 = (int) getXAxis().getCoordinate().calculateMappedValue(
-                new DoubleCell(x), getDrawingPaneDimension().width, true);
+                new DoubleCell(x), getDrawingPaneDimension().width);
         int mappedX2 = (int)getXAxis().getCoordinate().calculateMappedValue(
-                new DoubleCell(x + width), getDrawingPaneDimension().width, 
-                true);
+                new DoubleCell(x + width), getDrawingPaneDimension().width);
         
         int mappedY1 = (int) getYAxis().getCoordinate().calculateMappedValue(
-                new DoubleCell(y), getDrawingPaneDimension().height, true);
+                new DoubleCell(y), getDrawingPaneDimension().height);
         int mappedY2 = (int) getYAxis().getCoordinate().calculateMappedValue(
-                new DoubleCell(y + height), getDrawingPaneDimension().height, 
-                true);
+                new DoubleCell(y + height), getDrawingPaneDimension().height);
         BasicRectangle rectangle = new BasicRectangle(filled);
         rectangle.setPoints(
                 new Point(mappedX1, (int)getScreenYCoordinate(mappedY1)), 
@@ -450,9 +529,9 @@ public abstract class BasicPlotter extends AbstractPlotter {
         List<Point> newPoints = new LinkedList<Point>();
         for (DataCellPoint p : element.getDomainValues()) {
             double mappedX = getXAxis().getCoordinate().calculateMappedValue(
-                    p.getX(), getDrawingPaneDimension().width, true);
+                    p.getX(), getDrawingPaneDimension().width);
             double mappedY = getYAxis().getCoordinate().calculateMappedValue(
-                   p.getY(), getDrawingPaneDimension().height, true);
+                   p.getY(), getDrawingPaneDimension().height);
             newPoints.add(new Point((int)mappedX, 
                     (int)getScreenYCoordinate(mappedY)));
         }
@@ -494,14 +573,12 @@ public abstract class BasicPlotter extends AbstractPlotter {
                         int x = (int)getXAxis().getCoordinate()
                                 .calculateMappedValue(p.getX(),
                                         getDrawingPaneDimension().width
-                                        - (2 * getXAxis().getTickOffset()), 
-                                        true);
+                                        - (2 * getXAxis().getTickOffset()));
                         x +=  getXAxis().getTickOffset();
                         int y = (int)getYAxis().getCoordinate()
                                 .calculateMappedValue(p.getY(),
                                         getDrawingPaneDimension().height
-                                        - (2 * getYAxis().getTickOffset()), 
-                                        true);
+                                        - (2 * getYAxis().getTickOffset()));
                         y += getYAxis().getTickOffset();
                         newPoint = new Point(x,
                                 (int)getScreenYCoordinate(y));

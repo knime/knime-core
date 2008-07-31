@@ -1,8 +1,9 @@
-/* ------------------------------------------------------------------
+/*
+ * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -23,10 +24,10 @@
  */
 package org.knime.base.node.viz.condbox;
 
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * This class creates a ConditionalBoxPlotNode.
@@ -34,7 +35,8 @@ import org.knime.core.node.NodeView;
  * @author Stephan Sellien, University of Konstanz
  * 
  */
-public class ConditionalBoxPlotNodeFactory extends NodeFactory {
+public class ConditionalBoxPlotNodeFactory 
+    extends GenericNodeFactory<NodeModel> {
     /**
      * {@inheritDoc}
      */
@@ -55,7 +57,7 @@ public class ConditionalBoxPlotNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
+    public GenericNodeView<NodeModel> createNodeView(final int viewIndex,
             final NodeModel nodeModel) {
         return new ConditionalBoxPlotNodeView(
                 (ConditionalBoxPlotNodeModel)nodeModel);
@@ -76,4 +78,5 @@ public class ConditionalBoxPlotNodeFactory extends NodeFactory {
     protected boolean hasDialog() {
         return true;
     }
+
 }

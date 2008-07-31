@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -27,6 +27,7 @@ package org.knime.workbench.ui.preferences;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 
+import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
@@ -49,19 +50,14 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
                 PreferenceConstants.P_CHOICE_VIEWMODE_JFRAME);
 
         store.setDefault(PreferenceConstants.P_LOGLEVEL_CONSOLE,
-                PreferenceConstants.P_LOGLEVEL_WARN);
-
-        store.setDefault(PreferenceConstants.P_LOGLEVEL_LOG_FILE,
-                PreferenceConstants.P_LOGLEVEL_DEBUG);
-
-        store.setDefault(PreferenceConstants.P_MAXIMUM_THREADS, 2 * Runtime
-                .getRuntime().availableProcessors());
-
-        store.setDefault(PreferenceConstants.P_TEMP_DIR, System
-                .getProperty("java.io.tmpdir"));
+                LEVEL.WARN.name());
         
         store.setDefault(PreferenceConstants.P_CONFIRM_RESET, true);
         
         store.setDefault(PreferenceConstants.P_CONFIRM_DELETE, true);
+        
+        store.setDefault(PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE, 10);
+        
+        store.setDefault(PreferenceConstants.P_FAV_LAST_USED_SIZE, 10);
     }
 }

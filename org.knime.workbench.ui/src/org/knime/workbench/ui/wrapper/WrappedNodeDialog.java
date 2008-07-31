@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,11 +24,6 @@
  */
 package org.knime.workbench.ui.wrapper;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
 import javax.swing.JPanel;
 
 import org.eclipse.jface.dialogs.Dialog;
@@ -36,6 +31,8 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusAdapter;
+import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
@@ -47,17 +44,16 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
+import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.WorkflowInExecutionException;
-
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
@@ -74,10 +70,13 @@ public class WrappedNodeDialog extends Dialog {
 
     private Panel2CompositeWrapper m_wrapper;
 
-    private final NodeDialogPane m_dialogPane;
+    private final GenericNodeDialogPane m_dialogPane;
 
     private Menu m_menuBar;
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            WrappedNodeDialog.class); 
+    
     /**
      * Creates the (application modal) dialog for a given node.
      * 
@@ -96,14 +95,13 @@ public class WrappedNodeDialog extends Dialog {
         super(parentShell);
         this.setShellStyle(SWT.APPLICATION_MODAL | SWT.SHELL_TRIM);
         m_nodeContainer = nodeContainer;
-        m_dialogPane = m_nodeContainer.getDialogPane();
+        m_dialogPane = m_nodeContainer.getDialogPaneWithSettings();
     }
 
     /**
      * Configure shell, create top level menu.
      * 
-     * @see org.eclipse.jface.window.Window
-     *      #configureShell(org.eclipse.swt.widgets.Shell)
+     * {@inheritDoc}
      */
     @Override
     protected void configureShell(final Shell newShell) {
@@ -118,8 +116,8 @@ public class WrappedNodeDialog extends Dialog {
         rootItem.setAccelerator(SWT.CTRL | 'F');
         rootItem.setMenu(menu);
 
-        final FileDialog openDialog = new FileDialog(newShell, SWT.OPEN);
-        final FileDialog saveDialog = new FileDialog(newShell, SWT.SAVE);
+//        final FileDialog openDialog = new FileDialog(newShell, SWT.OPEN);
+//        final FileDialog saveDialog = new FileDialog(newShell, SWT.SAVE);
 
         MenuItem itemLoad = new MenuItem(menu, SWT.PUSH);
         itemLoad.setText("Load Settings");
@@ -127,6 +125,8 @@ public class WrappedNodeDialog extends Dialog {
         itemLoad.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
+                // TODO: functionality disabled (dialog menu item)
+                /*
                 String file = openDialog.open();
                 if (file != null) {
                     try {
@@ -139,6 +139,7 @@ public class WrappedNodeDialog extends Dialog {
                         showErrorMessage(ex.getMessage());
                     }
                 }
+                */
             }
         });
         MenuItem itemSave = new MenuItem(menu, SWT.PUSH);
@@ -147,6 +148,8 @@ public class WrappedNodeDialog extends Dialog {
         itemSave.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
+                // TODO : functionality disabled (dialog menu item)
+                /*
                 String file = saveDialog.open();
                 if (file != null) {
                     try {
@@ -161,6 +164,7 @@ public class WrappedNodeDialog extends Dialog {
                         showErrorMessage(ioe.getMessage());
                     }
                 }
+                */
             }
         });
 
@@ -191,6 +195,26 @@ public class WrappedNodeDialog extends Dialog {
         JPanel p = m_dialogPane.getPanel();
         m_wrapper = new Panel2CompositeWrapper(m_container, p, SWT.EMBEDDED);
         m_wrapper.setLayoutData(new GridData(GridData.FILL_BOTH));
+        
+        
+        m_wrapper.addFocusListener(new FocusAdapter() {
+           
+            /**
+             * 
+             * @param e focus event passed to the underlying AWT component
+             */
+            @Override
+            public void focusGained(final FocusEvent e) {
+                ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+
+                    public void run() {
+                        m_wrapper.getAwtPanel().requestFocus();
+                    }
+                    
+                });
+            } 
+        });
+        
         
         return area;
     }
@@ -257,38 +281,67 @@ public class WrappedNodeDialog extends Dialog {
     }
 
     private boolean doApply(final SelectionEvent e) {
-        boolean result = false;
         // event.doit = false cancels the SWT selection event, so that the
         // dialog is not closed on errors.
         try {
             // if the settings are equal and the node is executed
             // to the previous settings inform the user but do nothing
             // (no reset)
-            if (m_dialogPane.isModelAndDialogSettingsEqual()
-                    && m_nodeContainer.isExecuted()) {
-                informNothingChanged();
-                result = true;
-            } else if (confirmApply()) {
-                m_nodeContainer.applyDialogSettings();
-                e.doit = true;
-                result = true;
+            if (m_nodeContainer.getState().equals(
+                    NodeContainer.State.EXECUTED)) {
+                if (m_nodeContainer.areDialogAndNodeSettingsEqual()) {
+                    // settings not changed
+                    informNothingChanged();
+                    e.doit = true;
+                    return true;
+                } else {
+                    // settings have changed
+                    if (m_nodeContainer.areDialogSettingsValid()) {
+                        // valid settings
+                        if (confirmApply()) {
+                            // apply settings
+                            m_nodeContainer.applySettingsFromDialog();
+                            e.doit = true;
+                            return true;
+                        } else {
+                            // user canceled reset and apply
+                            // let the dialog open
+                            e.doit = false;
+                            return false;
+                        }
+                    } else {
+                        // invalid settings
+                        // apply settings to get the exception
+                        m_nodeContainer.applySettingsFromDialog();
+                        // we should never go here
+                        // (since we should have invalid settings)
+                        throw new IllegalStateException(
+                                "Settings are not valid but apply "
+                                        + "settings throws no exception");
+                    }
+                }
             } else {
-                e.doit = false;
+                // not executed
+                m_nodeContainer.applySettingsFromDialog();
+                e.doit = true;
+                return true;
             }
         } catch (InvalidSettingsException ise) {
-            e.doit = false;
+            LOGGER.warn("failed to configure: " + ise.getMessage(),  ise);
             showErrorMessage("Invalid Settings\n" + ise.getMessage());
-        } catch (WorkflowInExecutionException ex) {
-            e.doit = false;
+
+        } catch (IllegalStateException ex) {
+            LOGGER.error("failed to configure: " + ex.getMessage(), ex);
             showErrorMessage("You cannot apply node settings if the workflow"
                     + " is executing. Please stop execution or wait until all"
                     + " nodes have been finished.");            
-        } catch (Exception exc) {
-            e.doit = false;
-            showErrorMessage(exc.getClass().getSimpleName() + ": "
-                    + exc.getMessage());
+        } catch (Throwable t) {
+            LOGGER.error("failed to configure: " + t.getMessage(), t);
+            showErrorMessage(t.getClass().getSimpleName() + ": "
+                    + t.getMessage());
         }
-        return result;
+        e.doit = false;
+        return false;
     }
 
     /**
@@ -311,13 +364,7 @@ public class WrappedNodeDialog extends Dialog {
     protected boolean confirmApply() {
 
         // no confirm dialog necessary, if the node was not executed before
-        if (!m_nodeContainer.isExecuted()) {
-            return true;
-        }
-        // If the settings are invalid, we don't want to show our dialog here.
-        try {
-            m_dialogPane.validateSettings();
-        } catch (InvalidSettingsException e) {
+        if (!m_nodeContainer.getState().equals(NodeContainer.State.EXECUTED)) {
             return true;
         }
 
@@ -350,18 +397,6 @@ public class WrappedNodeDialog extends Dialog {
      * therefore the settings are not reset (node stays executed). 
      */
     protected void informNothingChanged() {
-
-        // no dialog necessary, if the node was not executed before
-        if (!m_nodeContainer.isExecuted()) {
-            return;
-        }
-        // If the settings are invalid, we don't want to show our dialog here.
-        try {
-            m_dialogPane.validateSettings();
-        } catch (InvalidSettingsException e) {
-            return;
-        }
-
         MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
                 SWT.ICON_INFORMATION | SWT.OK);
         mb.setText("Settings were not changed.");
@@ -388,7 +423,7 @@ public class WrappedNodeDialog extends Dialog {
      * ("NodeDialogPane") sometimes just won't return any useful preferred sizes
      * this is kinda tricky workaround :-(
      * 
-     * @see org.eclipse.jface.window.Window#getInitialSize()
+     * {@inheritDoc}
      */
     @Override
     protected Point getInitialSize() {

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,7 +24,11 @@
  */
 package org.knime.workbench.ui.navigator;
 
-import org.eclipse.core.resources.IResource;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.DecoratingLabelProvider;
@@ -46,6 +50,11 @@ import org.eclipse.ui.internal.util.SWTResourceUtil;
 import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.eclipse.ui.model.IWorkbenchAdapter2;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.WorkflowEvent;
+import org.knime.core.node.workflow.WorkflowListener;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
@@ -57,6 +66,28 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
 public class KnimeResourceLableProvider extends LabelProvider implements
         IColorProvider, IFontProvider {
 
+    private static final Image PROJECT = KNIMEUIPlugin.getDefault().getImage(
+            KNIMEUIPlugin.PLUGIN_ID, "icons/project_basic.png");
+    
+    private static final Image EXECUTING = KNIMEUIPlugin.getDefault()
+        .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_executing.png");
+    private static final Image EXECUTED = KNIMEUIPlugin.getDefault()
+        .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_executed.png");
+    private static final Image CONFIGURED = KNIMEUIPlugin.getDefault()
+        .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_configured.png");
+    private static final Image CLOSED = KNIMEUIPlugin.getDefault()
+        .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_closed2.png");
+    
+    private static final Image NODE = KNIMEUIPlugin.getDefault().getImage(
+            KNIMEUIPlugin.PLUGIN_ID, "icons/node.png"); 
+    
+    private static final Map<String, NodeContainer>PROJECTS 
+        = new HashMap<String, NodeContainer>();
+    
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            KnimeResourceLableProvider.class);
+    
+    
     /**
      * Returns a workbench label provider that is hooked up to the decorator
      * mechanism.
@@ -92,6 +123,44 @@ public class KnimeResourceLableProvider extends LabelProvider implements
     public KnimeResourceLableProvider() {
         PlatformUI.getWorkbench().getEditorRegistry().addPropertyListener(
                 m_editorRegistryListener);
+        queryProjects();
+        WorkflowManager.ROOT.addListener(new WorkflowListener() {
+
+            public void workflowChanged(final WorkflowEvent event) {
+                switch (event.getType()) {
+                case NODE_ADDED:
+                    NodeContainer nc = ((NodeContainer)event.getNewValue());
+                    LOGGER.debug("Node Added: " + nc.getName());
+                    if (!nc.getName().equals(WorkflowManager.ROOT.getName())) {
+                        PROJECTS.put(nc.getName(), nc);
+                    }
+                    break;
+                case NODE_REMOVED:
+                    NodeContainer removed = (NodeContainer)event.getOldValue(); 
+                    LOGGER.debug("removing: " + removed.getName());
+                    PROJECTS.remove(removed.getName());
+                    break;
+                default: // no interest in other events here
+                }
+            }
+            
+        });
+    }
+    
+    private void queryProjects() {
+        for (NodeContainer nc : WorkflowManager.ROOT
+                .getNodeContainerBreadthFirstSearch()) {
+            // TODO: bad hack to determine projects...
+            if (nc.getID().toString().lastIndexOf(":") < 2) {
+                // name is not set -> ignore it 
+                if (!nc.getName().equals(WorkflowManager.ROOT.getName())) {
+                    PROJECTS.put(nc.getName(), nc);
+                }
+            } else {
+                // if we have really a breadth first search then we are finished
+                break;
+            }
+        }
     }
 
     /**
@@ -132,6 +201,12 @@ public class KnimeResourceLableProvider extends LabelProvider implements
     public void dispose() {
         PlatformUI.getWorkbench().getEditorRegistry().removePropertyListener(
                 m_editorRegistryListener);
+        EXECUTED.dispose();
+        EXECUTING.dispose();
+        CONFIGURED.dispose();
+        NODE.dispose();
+        CLOSED.dispose();
+        PROJECTS.clear();
         super.dispose();
     }
 
@@ -170,33 +245,29 @@ public class KnimeResourceLableProvider extends LabelProvider implements
      */
     @Override
     public final Image getImage(final Object element) {
-
-        if (element instanceof IResource) {
-            if (((IResource)element).getType() == IResource.PROJECT) {
-                return KNIMEUIPlugin.getDefault().getImage(
-                        KNIMEUIPlugin.PLUGIN_ID, "icons/knimeProject.png");
+        Image img = PROJECT;
+        if (element instanceof IProject) {
+            IProject project = (IProject)element;
+            NodeContainer projectNode = PROJECTS.get(project.getName());
+            if (projectNode == null) {
+                return CLOSED;
             }
+            if (projectNode.getState().equals(NodeContainer.State.EXECUTED)) {
+                img = EXECUTED;
+            } else if (projectNode.getState().equals(
+                    NodeContainer.State.EXECUTING)) {
+                img = EXECUTING;                        
+            } else if (projectNode.getState().equals(
+                    NodeContainer.State.CONFIGURED)
+                    || projectNode.getState().equals(
+                            NodeContainer.State.IDLE)) {
+                img = CONFIGURED;
+            }
+        } else if (element instanceof IFolder) {
+            // then its a node
+            img = NODE;
         }
-
-        // obtain the base image by querying the element
-        IWorkbenchAdapter adapter = getAdapter(element);
-        if (adapter == null) {
-            return null;
-        }
-        ImageDescriptor descriptor = adapter.getImageDescriptor(element);
-        if (descriptor == null) {
-            return null;
-        }
-
-        // add any annotations to the image descriptor
-        descriptor = decorateImage(descriptor, element);
-
-        Image image = (Image)SWTResourceUtil.getImageTable().get(descriptor);
-        if (image == null) {
-            image = descriptor.createImage();
-            SWTResourceUtil.getImageTable().put(descriptor, image);
-        }
-        return image;
+        return img;
     }
 
     /**

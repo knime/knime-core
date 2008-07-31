@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -66,37 +66,9 @@ public class ConvenientComboBoxRenderer extends BasicComboBoxRenderer {
         FontMetrics fm = getFontMetrics(getFont());
         String clipped = s;
         while (clipped.length() > 5 && fm.stringWidth(clipped) > width) {
-            clipped = format(s, clipped.length() - 3);
+            clipped = StringFormat.formatPath(s, clipped.length() - 3);
         }
         return clipped;
     }
 
-    /*
-     * builds strings with the following pattern: if size is smaller than
-     * 30, return the last 30 chars in the string; if the size is larger
-     * than 30: return the first 12 chars + ... + chars from the end. Size
-     * more than 55: the first 28 + ... + rest from the end.
-     */
-    private String format(final String str, final int size) {
-        String result;
-        if (str.length() <= size) {
-            // short enough - return it unchanged
-            return str;
-        }
-        if (size <= 30) {
-            result = "..."
-                    + str.substring(str.length() - size + 3, str.length());
-        } else if (size <= 55) {
-            result = str.substring(0, 12)
-                    + "..."
-                    + str.subSequence(str.length() - size + 15, str
-                            .length());
-        } else {
-            result = str.substring(0, 28)
-                    + "..."
-                    + str.subSequence(str.length() - size + 31, str
-                            .length());
-        }
-        return result;
-    }
 }

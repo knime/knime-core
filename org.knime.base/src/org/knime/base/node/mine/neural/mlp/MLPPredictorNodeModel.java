@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   28.10.2005 (cebron): created
  */
@@ -26,12 +26,16 @@ package org.knime.base.node.mine.neural.mlp;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Set;
 
 import org.knime.base.data.neural.Layer;
 import org.knime.base.data.neural.MultiLayerPerceptron;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataColumnDomainCreator;
+import org.knime.core.data.DataColumnProperties;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -43,6 +47,8 @@ import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.renderer.DataValueRenderer;
+import org.knime.core.data.renderer.DoubleBarRenderer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -57,7 +63,7 @@ import org.knime.core.node.NodeSettingsWO;
  * The Neural Net Predictor takes as input a
  * {@link org.knime.core.data.DataTable} with the data that has to be
  * classified and the trained Neural Network.
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
  */
 public class MLPPredictorNodeModel extends NodeModel {
@@ -81,7 +87,7 @@ public class MLPPredictorNodeModel extends NodeModel {
     /**
      * The MLPPredictorNodeModel takes as input a model and the test data. The
      * output is the classified test data.
-     * 
+     *
      */
     public MLPPredictorNodeModel() {
         super(1, 1, 1, 0);
@@ -91,7 +97,7 @@ public class MLPPredictorNodeModel extends NodeModel {
      * The additional columns are created based on the model which is loaded in
      * the execute-method. Therefore, new DataTableSpecs are not available until
      * execute has been called.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -123,7 +129,7 @@ public class MLPPredictorNodeModel extends NodeModel {
             if (m_mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
 
                 mymlp = new MLPClassificationFactory(true, m_columns);
-            } else if (m_mlp.getMode() 
+            } else if (m_mlp.getMode()
                     == MultiLayerPerceptron.CLASSIFICATION_MODE) {
                 /*
                  * Classification
@@ -155,7 +161,7 @@ public class MLPPredictorNodeModel extends NodeModel {
         if (m_mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
 
             mymlp = new MLPClassificationFactory(true, m_columns);
-        } else if (m_mlp.getMode() 
+        } else if (m_mlp.getMode()
                 == MultiLayerPerceptron.CLASSIFICATION_MODE) {
             /*
              * Classification
@@ -179,6 +185,7 @@ public class MLPPredictorNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        // does nothing.
     }
 
     /**
@@ -194,6 +201,7 @@ public class MLPPredictorNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+     // does nothing.
     }
 
     /**
@@ -202,11 +210,12 @@ public class MLPPredictorNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+     // does nothing.
     }
 
     /**
      * Loads a MLP from a ModelContent object.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -220,7 +229,7 @@ public class MLPPredictorNodeModel extends NodeModel {
     /**
      * This class generates the appended column with the classification from the
      * WekaNodeModel.
-     * 
+     *
      * @author Nicolas Cebron, University of Konstanz
      */
     private class MLPClassificationFactory implements CellFactory {
@@ -238,7 +247,7 @@ public class MLPPredictorNodeModel extends NodeModel {
         /**
          * A new AppendedColumnFactory that uses a MultiLayerPerceptron to
          * classify new instaces.
-         * 
+         *
          * @param regression indicates whether a regression should take place.
          * @param columns to work on.
          */
@@ -311,12 +320,25 @@ public class MLPPredictorNodeModel extends NodeModel {
                 allappSpec[0] = appendSpec;
                 Layer outputlayer = m_mlp.getLayer(m_mlp.getNrLayers() - 1);
                 int index = 1;
+                DataColumnDomainCreator domaincreator =
+                        new DataColumnDomainCreator();
+                domaincreator.setLowerBound(new DoubleCell(0));
+                domaincreator.setUpperBound(new DoubleCell(1));
+                DataColumnDomain domain = domaincreator.createDomain();
                 for (int i = 0; i < m_nrPossValues; i++) {
-                    name = outputlayer.getPerceptron(i).getClassValue()
+                    name =
+                            outputlayer.getPerceptron(i).getClassValue()
                                     + " (Neuron " + i + ")";
                     type = DoubleCell.TYPE;
-                    allappSpec[index] =
-                            new DataColumnSpecCreator(name, type).createSpec();
+                    DataColumnSpecCreator colspeccreator =
+                            new DataColumnSpecCreator(name, type);
+                    colspeccreator
+                            .setProperties(new DataColumnProperties(
+                                    Collections.singletonMap(
+                                 DataValueRenderer.PROPERTY_PREFERRED_RENDERER,
+                                 DoubleBarRenderer.DESCRIPTION)));
+                    colspeccreator.setDomain(domain);
+                    allappSpec[index] = colspeccreator.createSpec();
                     index++;
                 }
             }

@@ -1,11 +1,12 @@
-/* ------------------------------------------------------------------
+/*
+ * ------------------------------------------------------------------ *
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
- * University of Konstanz, Germany.
- * Chair for Bioinformatics and Information Mining
- * Prof. Dr. Michael R. Berthold
+ * Copyright, 2003 - 2008
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
  *
  * You may not modify, publish, transmit, transfer or sell, reproduce,
  * create derivative works from, distribute, perform, display, or in
@@ -26,7 +27,7 @@ package org.knime.base.node.mine.regression.linear.view;
 import java.util.Arrays;
 import java.util.List;
 
-import org.knime.base.node.mine.regression.linear.LinearRegressionParams;
+import org.knime.base.node.mine.regression.linear.LinearRegressionPortObject;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotter;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
 import org.knime.base.util.coordinate.NumericCoordinate;
@@ -64,7 +65,7 @@ public class LinRegLinePlotter extends ScatterPlotter {
                 || getDataProvider().getDataArray(0) == null) {
             return;
         }
-        LinearRegressionParams params =
+        LinearRegressionPortObject params =
                 ((LinRegDataProvider)getDataProvider()).getParams();
         if (params == null) {
             return;
@@ -123,7 +124,7 @@ public class LinRegLinePlotter extends ScatterPlotter {
                 || getDataProvider().getDataArray(0) == null) {
             return;
         }
-        LinearRegressionParams params =
+        LinearRegressionPortObject params =
                 ((LinRegDataProvider)getDataProvider()).getParams();
         if (params == null) {
             return;

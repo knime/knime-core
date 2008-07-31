@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -85,7 +85,7 @@ public class RowFilterRefNodeModel extends NodeModel {
             keySet.add(row.getKey());
         }
         BufferedDataContainer buf =
-            exec.createDataContainer(inData[0].getDataTableSpec());
+            exec.createDataContainer(inData[0].getSpec());
         boolean exclude = m_inexcludeRows.getStringValue().equals(
                 RowFilterRefNodeDialogPane.EXCLUDE);
 

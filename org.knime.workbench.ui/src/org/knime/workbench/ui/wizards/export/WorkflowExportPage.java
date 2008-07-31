@@ -1,9 +1,9 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   02.07.2006 (sieb): created
  */
@@ -45,12 +45,12 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
 
 
 /**
  * Page to enter the settings for the export of a workflow project.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class WorkflowExportPage extends WizardPage {
@@ -64,11 +64,11 @@ public class WorkflowExportPage extends WizardPage {
 
     private Button m_excludeData;
 
-    private ISelection m_selection;
+    private final ISelection m_selection;
 
     /**
      * Constructor for NewWorkflowPage.
-     * 
+     *
      * @param selection The initial selection
      */
     public WorkflowExportPage(final ISelection selection) {
@@ -254,7 +254,7 @@ public class WorkflowExportPage extends WizardPage {
             return;
         }
 
-        if (container.findMember(WorkflowManager.WORKFLOW_FILE) == null) {
+        if (container.findMember(WorkflowPersistor.WORKFLOW_FILE) == null) {
 
             updateStatus("Project does not contain a workflow file.");
             return;
