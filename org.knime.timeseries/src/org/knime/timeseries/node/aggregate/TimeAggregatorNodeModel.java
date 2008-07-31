@@ -24,7 +24,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.timeseries.node.diff.Granularity;
-import org.knime.timeseries.node.diff.TimeDifferenceNodeModel;
 import org.knime.timeseries.types.TimestampValue;
 
 /**
