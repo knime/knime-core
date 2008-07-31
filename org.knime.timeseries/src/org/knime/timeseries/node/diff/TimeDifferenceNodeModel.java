@@ -35,54 +35,7 @@ import org.knime.timeseries.types.TimestampValue;
  * @author KNIME GmbH
  */
 public class TimeDifferenceNodeModel extends NodeModel {
-	
-	/**
-	 * Granularities for time, with a factory to divide milliseconds. 
-	 * 
-	 *
-	 */
-	public enum GRANULARITY {
-		/** Minute. */
-		MINUTE (1000 * 60),
-		/** Hour. */
-		HOUR (1000 * 60 * 60),
-		/** Day. */
-		DAY (1000 * 60 * 60 * 24),
-		/** Week. */
-		WEEK(1000 * 60 * 60 * 24 * 7),
-		/** Month. */
-		MONTH(1000 * 60 * 60 * 24 * 3 * 30),
-		/** Quarter (=three months). */
-		QUARTER (1000 * 60 * 60 * 24 * 3 * 90),
-		/** Year. */
-		YEAR(1000 * 60 * 60 * 24 * 3 * 365);
-		
-		GRANULARITY(final double factor) {
-			m_factor = factor;
-		}
-		
-		private final double m_factor;
-		
-		private static List<String>m_valuesAsString;
-		
-		public double getFactor() {
-			return m_factor;
-		}
-		
-		/**
-		 * 
-		 * @return the values of the enumeration as a list of strings
-		 */
-		public static List<String> asStringList(){
-			if (m_valuesAsString == null) {
-				m_valuesAsString = new ArrayList<String>();
-				for (GRANULARITY g : values()) {
-					m_valuesAsString.add(g.name());
-				}				
-			}
-			return Collections.unmodifiableList(m_valuesAsString);
-		}
-	}
+
 	// first date column
 	private final SettingsModelString m_col1 = TimeDifferenceNodeDialog
 		.createColmn1Model();
@@ -117,7 +70,7 @@ public class TimeDifferenceNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
     	// get the selected granularity level
-    	final GRANULARITY g = GRANULARITY.valueOf(
+    	final Granularity g = Granularity.valueOf(
     			m_granularity.getStringValue());
     	// create rearranger
     	ColumnRearranger rearranger = new ColumnRearranger(

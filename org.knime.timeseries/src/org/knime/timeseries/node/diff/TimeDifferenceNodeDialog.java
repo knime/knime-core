@@ -45,7 +45,7 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
     	addDialogComponent(new DialogComponentStringSelection(
     			createGranularityModel(), 
     			"Select granularity of time difference", 
-    			TimeDifferenceNodeModel.GRANULARITY.asStringList()));
+                Granularity.asStringList()));
     	// fraction digits for rounding
     	addDialogComponent(new DialogComponentNumber(
     			createRoundingModel(), "Rounding mode", 1));
@@ -72,7 +72,7 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
     
     static SettingsModelString createGranularityModel() {
     	return new SettingsModelString(CFG_GRANULARITY, 
-    			TimeDifferenceNodeModel.GRANULARITY.DAY.name());
+                Granularity.DAY.name());
     }
     
     static SettingsModelInteger createRoundingModel() {

@@ -23,6 +23,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.timeseries.node.diff.Granularity;
 import org.knime.timeseries.node.diff.TimeDifferenceNodeModel;
 import org.knime.timeseries.types.TimestampValue;
 
@@ -79,26 +80,20 @@ public class TimeAggregatorNodeModel extends NodeModel {
 				Calendar c = Calendar.getInstance();
 				c.setTime(d);
 				// get the selected granularity level
-				TimeDifferenceNodeModel.GRANULARITY level = 
-					TimeDifferenceNodeModel.GRANULARITY.valueOf(m_level
-					.getStringValue());
+                Granularity level = Granularity.valueOf(
+                        m_level.getStringValue());
 				// depending on the selected granularity level
 				// return different values = use different methods
-				if (level.equals(
-						TimeDifferenceNodeModel.GRANULARITY.YEAR)) {
+				if (level.equals(Granularity.YEAR)) {
 					return new StringCell(getYear(row, c));
-				} else if (level.equals(
-						TimeDifferenceNodeModel.GRANULARITY.QUARTER)) {
+				} else if (level.equals(Granularity.QUARTER)) {
 					String s = getQuarter(row, c);
 					return new StringCell(s);
-				} else if (level.equals(
-						TimeDifferenceNodeModel.GRANULARITY.MONTH)) {
+				} else if (level.equals(Granularity.MONTH)) {
 					return new StringCell(getMonth(row, c));
-				} else if (level.equals(
-						TimeDifferenceNodeModel.GRANULARITY.WEEK)) {
+				} else if (level.equals(Granularity.WEEK)) {
 					return new StringCell(getWeek(row, c));
-				} else if (level.equals(
-						TimeDifferenceNodeModel.GRANULARITY.DAY)) {
+				} else if (level.equals(Granularity.DAY)) {
 					return new StringCell(getDay(row, c));
 				} else {
 					return DataType.getMissingCell();
