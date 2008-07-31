@@ -1,4 +1,4 @@
-package org.knime.timeseries.aggregate;
+package org.knime.timeseries.node.aggregate;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,7 +23,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.timeseries.diff.TimeDifferenceNodeModel;
+import org.knime.timeseries.node.diff.TimeDifferenceNodeModel;
 import org.knime.timeseries.types.TimestampValue;
 
 /**

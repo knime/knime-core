@@ -1,4 +1,4 @@
-package org.knime.timeseries.aggregate;
+package org.knime.timeseries.node.aggregate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +8,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelectio
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.timeseries.diff.TimeDifferenceNodeModel;
+import org.knime.timeseries.node.diff.TimeDifferenceNodeModel;
 import org.knime.timeseries.types.TimestampValue;
 
 /**

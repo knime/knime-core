@@ -1,4 +1,4 @@
-package org.knime.timeseries.aggregate;
+package org.knime.timeseries.node.diff;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
@@ -6,19 +6,19 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * <code>NodeFactory</code> for the "TimeAggregator" Node.
- * Appends a time column with the time in another column to a higher aggregation level (e.g. month to quarter)
+ * <code>NodeFactory</code> for the "TimeDifference" Node.
+ * Appends the difference between two dates.
  *
  * @author KNIME GmbH
  */
-public class TimeAggregatorNodeFactory extends NodeFactory {
+public class TimeDifferenceNodeFactory extends NodeFactory {
 
     /**
      * {@inheritDoc}
      */
     @Override
     public NodeModel createNodeModel() {
-        return new TimeAggregatorNodeModel();
+        return new TimeDifferenceNodeModel();
     }
 
     /**
@@ -35,8 +35,8 @@ public class TimeAggregatorNodeFactory extends NodeFactory {
     @Override
     public NodeView createNodeView(final int viewIndex,
             final NodeModel nodeModel) {
-        throw new IllegalArgumentException(
-        		"Time Aggregator node has no view");
+    	throw new IllegalArgumentException(
+    			"TimeDifference node has no view!");
     }
 
     /**
@@ -52,7 +52,7 @@ public class TimeAggregatorNodeFactory extends NodeFactory {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new TimeAggregatorNodeDialog();
+        return new TimeDifferenceNodeDialog();
     }
 
 }

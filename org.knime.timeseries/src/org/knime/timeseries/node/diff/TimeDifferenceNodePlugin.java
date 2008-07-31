@@ -2,7 +2,7 @@
  * $Revision$ $Date$ $Author$
  *
  */
-package org.knime.timeseries.aggregate;
+package org.knime.timeseries.node.diff;
 
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
@@ -16,18 +16,18 @@ import org.osgi.framework.BundleContext;
  *
  * @author KNIME GmbH
  */
-public class TimeAggregatorNodePlugin extends Plugin {
+public class TimeDifferenceNodePlugin extends Plugin {
 
     /** Make sure that this *always* matches the ID in plugin.xml. */
-    public static final String PLUGIN_ID = "org.knime.timeseries.aggregate";
+    public static final String PLUGIN_ID = "org.knime.timeseries.node.diff";
 
     // The shared instance.
-    private static TimeAggregatorNodePlugin plugin;
+    private static TimeDifferenceNodePlugin plugin;
 
     /**
      * The constructor.
      */
-    public TimeAggregatorNodePlugin() {
+    public TimeDifferenceNodePlugin() {
         super();
         plugin = this;
     }
@@ -61,7 +61,7 @@ public class TimeAggregatorNodePlugin extends Plugin {
      * 
      * @return Singleton instance of the Plugin
      */
-    public static TimeAggregatorNodePlugin getDefault() {
+    public static TimeDifferenceNodePlugin getDefault() {
         return plugin;
     }
 

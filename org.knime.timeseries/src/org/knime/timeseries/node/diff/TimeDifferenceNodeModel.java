@@ -1,4 +1,4 @@
-package org.knime.timeseries.diff;
+package org.knime.timeseries.node.diff;
 
 import java.io.File;
 import java.io.IOException;

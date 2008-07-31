@@ -12,7 +12,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.knime.base
 Eclipse-LazyStart: false
 Bundle-ClassPath: knime-timeseries.jar
-Export-Package: org.knime.timeseries.aggregate,
- org.knime.timeseries.diff,
+Export-Package: org.knime.timeseries.node.aggregate,
+ org.knime.timeseries.node.diff,
  org.knime.timeseries.types
 

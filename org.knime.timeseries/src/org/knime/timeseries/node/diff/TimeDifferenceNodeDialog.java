@@ -1,4 +1,4 @@
-package org.knime.timeseries.diff;
+package org.knime.timeseries.node.diff;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
