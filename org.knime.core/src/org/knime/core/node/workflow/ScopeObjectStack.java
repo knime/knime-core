@@ -233,8 +233,7 @@ public final class ScopeObjectStack {
      * @see java.util.Stack#push(java.lang.Object)
      */
     public void push(final ScopeObject item) {
-        if ((item.getOwner() != null)
-                && (item.getOwner() != m_nodeID)) {
+        if ((item.getOwner() != null) && (!item.getOwner().equals(m_nodeID))) {
             throw new IllegalArgumentException(
                     "Can't put a ScopeContext item onto stack, which already "
                     + "has a different owner.");
