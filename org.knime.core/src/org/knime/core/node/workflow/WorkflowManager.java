@@ -35,6 +35,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -2411,12 +2412,21 @@ public final class WorkflowManager extends NodeContainer {
      * @param evt event
      */
     private final void notifyWorkflowListeners(final WorkflowEvent evt) {
+        if (m_wfmListeners.isEmpty()) {
+            return;
+        }
+        // the iterator is based on the current(!) set of listeners
+        // (problem was: during load the addNodeContainer method fired an event
+        // by using this method - the event got delivered at a point where
+        // the workflow editor was registered and marked the flow as being dirty
+        // although it was freshly loaded)
+        final Iterator<WorkflowListener> it = m_wfmListeners.iterator(); 
         WORKFLOW_NOTIFIER.execute(new Runnable() {
             /** {@inheritDoc} */
             @Override
             public void run() {
-                for (WorkflowListener listener : m_wfmListeners) {
-                    listener.workflowChanged(evt);
+                while (it.hasNext()) {
+                    it.next().workflowChanged(evt);
                 }
             }
         });
