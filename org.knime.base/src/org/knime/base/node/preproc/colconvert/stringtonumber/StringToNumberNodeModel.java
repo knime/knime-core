@@ -1,4 +1,4 @@
-/* 
+/*
  * --------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------
- * 
+ *
  * History
  *   03.07.2007 (cebron): created
  */
@@ -54,7 +54,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 
 /**
  * The NodeModel for the String to Number Node that converts strings to numbers.
- * 
+ *
  * @author cebron, University of Konstanz
  */
 public class StringToNumberNodeModel extends NodeModel {
@@ -290,7 +290,7 @@ public class StringToNumberNodeModel extends NodeModel {
 
     /**
      * The CellFactory to produce the new converted cells.
-     * 
+     *
      * @author cebron, University of Konstanz
      */
     private class ConverterFactory implements CellFactory {
@@ -314,7 +314,7 @@ public class StringToNumberNodeModel extends NodeModel {
         private int m_parseErrorCount;
 
         /**
-         * 
+         *
          * @param colindices the column indices to use.
          * @param spec the original DataTableSpec.
          */
@@ -339,18 +339,26 @@ public class StringToNumberNodeModel extends NodeModel {
                         continue;
                     }
                     try {
-                        // remove thousands separator
-                        String corrected =
-                                s.replaceAll(Pattern.quote(m_thousandsSep), "");
+                        String corrected = s;
+                        if (m_thousandsSep != null
+                                && m_thousandsSep.length() > 0) {
+                            // remove thousands separator
+                            corrected = s.replaceAll(
+                                    Pattern.quote(m_thousandsSep),
+                                    "");
+                        }
                         if (!".".equals(m_decimalSep)) {
                             if (corrected.contains(".")) {
                                 throw new NumberFormatException(
                                         "Invalid floating point number");
                             }
-                            // replace custom separator with standard
-                            corrected =
-                                    corrected.replaceAll(Pattern
-                                            .quote(m_decimalSep), ".");
+                            if (m_decimalSep != null
+                                    && m_decimalSep.length() > 0) {
+                                // replace custom separator with standard
+                                corrected =
+                                        corrected.replaceAll(Pattern
+                                                .quote(m_decimalSep), ".");
+                            }
                         }
                         double d = Double.parseDouble(corrected);
                         newcells[i] = new DoubleCell(d);
@@ -402,7 +410,7 @@ public class StringToNumberNodeModel extends NodeModel {
         /**
          * Error messages that occur during execution , i.e.
          * NumberFormatException.
-         * 
+         *
          * @return error message
          */
         public String getErrorMessage() {
