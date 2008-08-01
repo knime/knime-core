@@ -2825,6 +2825,8 @@ public final class WorkflowManager extends NodeContainer {
             }
             workflowDirRef.lock();
             try {
+                final boolean isWorkingDirectory = 
+                    workflowDirRef.equals(getNodeContainerDirectory());
                 WorkflowPersistorVersion200 persistor =
                     new WorkflowPersistorVersion200(null);
                 if (m_loadVersion != null
@@ -2834,8 +2836,17 @@ public final class WorkflowManager extends NodeContainer {
                             + "current version " + persistor.getSaveVersion()
                             + ". This may take some time.");
                     setDirtyAll();
+                    if (isWorkingDirectory) {
+                        for (NodeContainer nc : m_nodes.values()) {
+                            ReferencedFile ncDir = 
+                                nc.getNodeContainerDirectory();
+                            if (ncDir != null && ncDir.getFile().exists()) {
+                                FileUtil.deleteRecursively(ncDir.getFile());
+                            }
+                        }
+                    }
                 }
-                if (workflowDirRef.equals(getNodeContainerDirectory())) {
+                if (isWorkingDirectory) {
                     for (ReferencedFile deletedNodeDir
                             : m_deletedNodesFileLocations) {
                         File f = deletedNodeDir.getFile();
@@ -2845,8 +2856,6 @@ public final class WorkflowManager extends NodeContainer {
                         }
                     }
                     m_loadVersion = persistor.getSaveVersion();
-                } else { // new location, must not clear deleted nodes dirs
-                    FileUtil.deleteRecursively(workflowDirRef.getFile());
                 }
                 new WorkflowPersistorVersion200(null).save(
                         this, workflowDirRef, exec, isSaveData);
