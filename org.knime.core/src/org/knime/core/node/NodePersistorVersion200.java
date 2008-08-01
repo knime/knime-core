@@ -176,11 +176,9 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                             + specDir.getAbsolutePath());
                 }
                 settings.addString("port_spec_location", specDirName);
-                if (spec != null) {
-                    PortObjectSpecSerializer serializer =
-                            getPortObjectSpecSerializer(spec.getClass());
-                    serializer.savePortObjectSpec(spec, specDir);
-                }
+                PortObjectSpecSerializer serializer =
+                        getPortObjectSpecSerializer(spec.getClass());
+                serializer.savePortObjectSpec(spec, specDir);
             }
             if (isSaveObject) {
                 String objectDirName = null;
