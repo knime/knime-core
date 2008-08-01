@@ -650,8 +650,17 @@ public final class WorkflowManager extends NodeContainer {
         PortType destType = (destNode != null
             ? destNode.getInPort(destPort).getPortType()
             : this.getOutPort(destPort).getPortType());
-        return destType.getPortObjectClass().isAssignableFrom(
-                sourceType.getPortObjectClass());
+        /* ports can be connected in two cases: 
+         * - the destination type is a super type or the same type 
+         *   of the source port (usual case) or 
+         * - if the source port is a super type of the destination port, 
+         *   for instance a reader node that reads a general PMML objects,
+         *   validity is checked using the runtime class of the actual 
+         *   port object then */ 
+        Class<? extends PortObject> sourceCl = sourceType.getPortObjectClass();
+        Class<? extends PortObject> destCl = destType.getPortObjectClass();
+        return destCl.isAssignableFrom(sourceCl) 
+            || sourceCl.isAssignableFrom(destCl);
     }
 
     /** Check if a connection can safely be removed.
