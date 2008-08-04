@@ -37,7 +37,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.workflow.LoopStartNode;
-import org.knime.core.node.workflow.ScopeVariable;
 
 /**
  * 
@@ -64,21 +63,19 @@ public class LoopingFileReaderNodeModel extends FileReaderNodeModel implements
             throws InvalidSettingsException {
         // we need to put the counts on the stack for the loop's tail to see:
         assert m_currentIteration == 0;
-        pushScopeVariable(new ScopeVariable("currentIteration",
-                m_currentIteration));
-        pushScopeVariable(new ScopeVariable("maxIterations",
-                m_fileArray.length + 1));
+        pushScopeVariableInt("currentIteration", m_currentIteration);
+        pushScopeVariableInt("maxIterations", m_fileArray.length + 1);
         // we push the filename on the stack if a variable name is provided
         if (!m_stackVarName.getStringValue().isEmpty()) {
             if (m_currentIteration <= 1) {
                 // first file read is the one from the dialog URL
-                pushScopeVariable(new ScopeVariable(m_stackVarName
-                        .getStringValue(), getFileReaderSettings()
-                        .getDataFileLocation().getFile()));
+                pushScopeVariableString(m_stackVarName.getStringValue(), 
+                        getFileReaderSettings()
+                        .getDataFileLocation().getFile());
             } else {
                 // push the filename of the next file on the stack
-                pushScopeVariable(new ScopeVariable(m_stackVarName
-                       .getStringValue(), m_fileArray[m_currentIteration - 2]));
+                pushScopeVariableString(m_stackVarName
+                       .getStringValue(), m_fileArray[m_currentIteration - 2]);
             }
         }
         return super.configure(inSpecs);
@@ -115,10 +112,8 @@ public class LoopingFileReaderNodeModel extends FileReaderNodeModel implements
             }
         }
         // push current numbers on stack
-        pushScopeVariable(new ScopeVariable("currentIteration",
-                m_currentIteration));
-        pushScopeVariable(new ScopeVariable("maxIterations",
-                m_fileArray.length + 1));
+        pushScopeVariableInt("currentIteration", m_currentIteration);
+        pushScopeVariableInt("maxIterations", m_fileArray.length + 1);
         // next time we are in the next iteration (configure will return the
         // new index)
         m_currentIteration++;

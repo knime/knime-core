@@ -30,7 +30,10 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Vector;
+
+import org.knime.core.node.workflow.ScopeVariable.Type;
 
 
 /**
@@ -148,20 +151,46 @@ public final class ScopeObjectStack {
         return null;
     }
 
-    /** Get the variable with the given name or null if no such variable
-     * is on the stack.
-     * @param name To peek
-     * @return the variable or null
-     */ 
-    public ScopeVariable peekVariable(final String name) {
+    /**
+     * Removes all elements from the stack whose class is not of the given type.
+     * It also removes the top-most element complying with the given class.
+     * If no such element exists, the stack will be empty after this method is
+     * called.
+     * @param <T> The desired scope context type.
+     * @param type The class of that type.
+     * @return The first (top-most) element on the stack of class
+     * <code>type</code> or <code>null</code> if no such element is available.
+     * @see java.util.Stack#pop()
+     */
+    public <T extends ScopeObject> T pop(final Class<T> type) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {
-            ScopeObject e = m_stack.get(i);
-            if (e instanceof ScopeVariable
-                    && ((ScopeVariable)e).getName().equals(name)) {
-                return (ScopeVariable)e;
+            ScopeObject e = m_stack.remove(i);
+            if (type.isInstance(e)) {
+                return type.cast(e);
             }
         }
         return null;
+    }
+
+    /** Get the variable with the given name or null if no such variable
+     * is on the stack.
+     * @param name To peek
+     * @param type The type of the variable to seek.
+     * @return the variable or null
+     */ 
+    public ScopeVariable peekScopeVariable(final String name, final Type type) {
+        for (int i = m_stack.size() - 1; i >= 0; i--) {
+            ScopeObject e = m_stack.get(i);
+            if (!(e instanceof ScopeVariable)) {
+                continue;
+            }
+            ScopeVariable v = (ScopeVariable)e;
+            if (v.getName().equals(name) && v.getType().equals(type)) {
+                return v;
+            }
+        }
+        throw new NoSuchElementException("No such variable \"" + name + "\" of"
+                + " type " + type);
     }
     
     /** Get all (visible!) variables on the stack in a non-modifiable map.
@@ -204,28 +233,6 @@ public final class ScopeObjectStack {
         return result;
     }
     
-
-    /**
-     * Removes all elements from the stack whose class is not of the given type.
-     * It also removes the top-most element complying with the given class.
-     * If no such element exists, the stack will be empty after this method is
-     * called.
-     * @param <T> The desired scope context type.
-     * @param type The class of that type.
-     * @return The first (top-most) element on the stack of class
-     * <code>type</code> or <code>null</code> if no such element is available.
-     * @see java.util.Stack#pop()
-     */
-    public <T extends ScopeObject> T pop(final Class<T> type) {
-        for (int i = m_stack.size() - 1; i >= 0; i--) {
-            ScopeObject e = m_stack.remove(i);
-            if (type.isInstance(e)) {
-                return type.cast(e);
-            }
-        }
-        return null;
-    }
-
 
     /**
      * @param item ScopeContext to be put onto stack.

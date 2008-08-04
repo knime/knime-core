@@ -37,7 +37,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.LoopStartNode;
-import org.knime.core.node.workflow.ScopeVariable;
 
 /**
  * This model is the head node of a for loop.
@@ -67,9 +66,8 @@ public class ForLoopHeadNodeModel extends NodeModel implements LoopStartNode {
             throw new InvalidSettingsException("Cannot loop fewer than once");
         }
         assert m_iteration == 0;
-        pushScopeVariable(new ScopeVariable("currentIteration", m_iteration));
-        pushScopeVariable(new ScopeVariable("maxIterations",
-                m_settings.loops()));
+        pushScopeVariableInt("currentIteration", m_iteration);
+        pushScopeVariableInt("maxIterations", m_settings.loops());
         return inSpecs;
     }
 
@@ -94,9 +92,8 @@ public class ForLoopHeadNodeModel extends NodeModel implements LoopStartNode {
             }
         }
         // we need to put the counts on the stack for the loop's tail to see:
-        pushScopeVariable(new ScopeVariable("currentIteration", m_iteration));
-        pushScopeVariable(new ScopeVariable("maxIterations",
-                m_settings.loops()));
+        pushScopeVariableInt("currentIteration", m_iteration);
+        pushScopeVariableInt("maxIterations", m_settings.loops());
         // increment counter for next iteration
         m_iteration++;
         return inData;

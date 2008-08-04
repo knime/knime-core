@@ -27,6 +27,7 @@ package org.knime.base.node.meta.xvalidation;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -51,7 +52,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.LoopEndNode;
-import org.knime.core.node.workflow.ScopeVariable;
 
 /**
  * This models aggregates the result from each of the cross validation loops. It
@@ -160,12 +160,19 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
             final ExecutionContext exec) throws Exception {
         // retrieve variables from the stack which the head of this
         // loop hopefully put there:
-        ScopeVariable countVar = peekScopeVariable("currentIteration");
-        int count = countVar.getIntValue();
-        ScopeVariable maxCountVar = peekScopeVariable("maxIterations");
-        int maxCount = maxCountVar.getIntValue();
-
-        if (count == 1) {
+        int count;
+        int maxCount;
+        try {
+            count = peekScopeVariableInt("currentIteration");
+            maxCount = peekScopeVariableInt("maxIterations");
+        } catch (NoSuchElementException e) {
+            throw new Exception("No matching Loop Start node!", e);
+        }
+        if (count < 0 || count >= maxCount) {
+            throw new Exception("Conflicting loop variables, count is " 
+                    + count + " and max count is " + maxCount);
+        }
+        if (count == 0) {
             m_predictionTable =
                     exec.createDataContainer(inData[0].getDataTableSpec());
         }
@@ -184,7 +191,7 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
                 .isCompatible(DoubleValue.class);
 
         ExecutionMonitor subExec =
-            exec.createSubProgress(count == maxCount ? 0.9 : 1);
+            exec.createSubProgress(count == maxCount - 1 ? 0.9 : 1);
         if (numericMode) {
             double errorSum = 0;
             int r = 0;
@@ -240,7 +247,7 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
 
 
 
-        if (count < maxCount) {
+        if (count < maxCount - 1) {
             continueLoop();
             return new BufferedDataTable[2];
         } else {

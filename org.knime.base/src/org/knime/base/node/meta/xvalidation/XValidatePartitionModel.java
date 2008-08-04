@@ -37,7 +37,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.LoopStartNode;
-import org.knime.core.node.workflow.ScopeVariable;
 
 /**
  * This is the cross validation partitioning node model that divides the input
@@ -147,11 +146,10 @@ implements LoopStartNode {
         test.close();
         train.close();
 
-        m_currIteration++;
         // we need to put the counts on the stack for the loop's tail to see:
-        pushScopeVariable(new ScopeVariable("currentIteration", m_currIteration));
-        pushScopeVariable(new ScopeVariable("maxIterations",
-                m_nrIterations));
+        pushScopeVariableInt("currentIteration", m_currIteration);
+        pushScopeVariableInt("maxIterations", m_nrIterations);
+        m_currIteration++;
 
         return new BufferedDataTable[]{train.getTable(), test.getTable()};
     }

@@ -45,7 +45,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.LoopStartNode;
-import org.knime.core.node.workflow.ScopeVariable;
 
 /**
  * 
@@ -87,29 +86,28 @@ public class IterateVariablesLoopHeadNodeModel extends NodeModel implements
                 ? null : m_currentVariables.getCell(i);
             if (type.isCompatible(IntValue.class)) {
                 if (cell == null) {
-                    pushScopeVariable(new ScopeVariable(name, 0));
+                    pushScopeVariableInt(name, 0);
                 } else if (!cell.isMissing()) {
-                    pushScopeVariable(new ScopeVariable(
-                            name, ((IntValue)cell).getIntValue()));
+                    pushScopeVariableInt(name, ((IntValue)cell).getIntValue());
                 }
             } else if (type.isCompatible(DoubleValue.class)) {
                 if (cell == null) {
-                    pushScopeVariable(new ScopeVariable(name, 0.0));
+                    pushScopeVariableDouble(name, 0.0);
                 } else if (!cell.isMissing()) {
-                    pushScopeVariable(new ScopeVariable(
-                            name, ((DoubleValue)cell).getDoubleValue()));
+                    pushScopeVariableDouble(
+                            name, ((DoubleValue)cell).getDoubleValue());
                 }
             } else if (type.isCompatible(StringValue.class)) {
                 if (cell == null) {
-                    pushScopeVariable(new ScopeVariable(name, ""));
+                    pushScopeVariableString(name, "");
                 } else if (!cell.isMissing()) {
-                    pushScopeVariable(new ScopeVariable(
-                            name, ((StringValue)cell).getStringValue()));
+                    pushScopeVariableString(
+                            name, ((StringValue)cell).getStringValue());
                 }
             }
         }
-        pushScopeVariable(new ScopeVariable("currentIteration", m_iteration));
-        pushScopeVariable(new ScopeVariable("maxIterations", m_maxIterations));
+        pushScopeVariableInt("currentIteration", m_iteration);
+        pushScopeVariableInt("maxIterations", m_maxIterations);
     }
     
     /** {@inheritDoc} */

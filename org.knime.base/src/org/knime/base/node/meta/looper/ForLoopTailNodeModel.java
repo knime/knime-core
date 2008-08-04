@@ -26,6 +26,7 @@ package org.knime.base.node.meta.looper;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.NoSuchElementException;
 
 import org.knime.base.data.append.column.AppendedColumnRow;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -44,7 +45,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.LoopEndNode;
-import org.knime.core.node.workflow.ScopeVariable;
 
 /**
  * This model is the tail node of a for loop.
@@ -88,17 +88,18 @@ public class ForLoopTailNodeModel extends NodeModel implements LoopEndNode {
 
         // retrieve variables from the stack which the head of this
         // loop hopefully put there:
-        ScopeVariable countVar = peekScopeVariable("currentIteration");
-        if (countVar == null) {
-            throw new Exception("No matching Loop Start node!");
+        int count;
+        int maxCount;
+        try {
+            count = peekScopeVariableInt("currentIteration");
+            maxCount = peekScopeVariableInt("maxIterations");
+        } catch (NoSuchElementException e) {
+            throw new Exception("No matching Loop Start node!", e);
         }
-        int count = countVar.getIntValue();
-        ScopeVariable maxCountVar = peekScopeVariable("maxIterations");
-        if (maxCountVar == null) {
-            throw new Exception("No matching Loop Start node!");
+        if (count < 0 || count >= maxCount) {
+            throw new Exception("Conflicting loop variables, count is " 
+                    + count + " and max count is " + maxCount);
         }
-        int maxCount = maxCountVar.getIntValue();
-
         if (count == 0) {
             // first time we are getting to this: open container
             m_resultContainer =

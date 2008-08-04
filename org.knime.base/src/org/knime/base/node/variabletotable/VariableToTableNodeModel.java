@@ -26,7 +26,9 @@ package org.knime.base.node.variabletotable;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -72,25 +74,39 @@ public class VariableToTableNodeModel extends NodeModel {
         List<Pair<String, ScopeVariable.Type>> vars = 
             m_settings.getVariablesOfInterest();
         DataCell[] specs = new DataCell[vars.size()];
+        List<String> lostVariables = new ArrayList<String>();
         for (int i = 0; i < vars.size(); i++) {
             Pair<String, ScopeVariable.Type> c = vars.get(i);
-            ScopeVariable var = peekScopeVariable(c.getFirst());
-            if (var == null || !var.getType().equals(c.getSecond())) {
-                specs[i] = DataType.getMissingCell();
-            } else {
-                switch (c.getSecond()) {
-                case DOUBLE:
-                    specs[i] = new DoubleCell(var.getDoubleValue());
-                    break;
-                case INTEGER:
-                    specs[i] = new IntCell(var.getIntValue());
-                    break;
-                case STRING:
-                    String sValue = var.getStringValue();
-                    specs[i] = new StringCell(sValue == null ? "" : sValue);
-                    break;
+            String name = c.getFirst();
+            DataCell cell = DataType.getMissingCell(); // fallback
+            switch (c.getSecond()) {
+            case DOUBLE:
+                try {
+                    double dValue = peekScopeVariableDouble(c.getFirst());
+                    cell = new DoubleCell(dValue);
+                } catch (NoSuchElementException e) {
+                    lostVariables.add(name + " (Double)");
                 }
+                break;
+            case INTEGER:
+                try {
+                    int iValue = peekScopeVariableInt(c.getFirst());
+                    cell = new IntCell(iValue);
+                } catch (NoSuchElementException e) {
+                    lostVariables.add(name + " (Integer)");
+                }
+                break;
+            case STRING:
+                try {
+                    String sValue = peekScopeVariableString(c.getFirst());
+                    sValue = sValue == null ? "" : sValue;
+                    cell = new StringCell(sValue);
+                } catch (NoSuchElementException e) {
+                    lostVariables.add(name + " (String)");
+                }
+                break;
             }
+            specs[i] = cell;
         }
         cont.addRowToTable(new DefaultRow("values", specs));
         cont.close();

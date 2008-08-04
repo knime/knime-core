@@ -26,6 +26,7 @@ package org.knime.core.node.workflow;
 
 
 
+
 /**
  * ScopeContext interface holding local variables of basic type.
  * 
@@ -40,22 +41,27 @@ public final class ScopeVariable extends ScopeObject {
     private String m_valueS = null;
     private double m_valueD = Double.NaN;
     private int m_valueI = 0;
+
+    private ScopeVariable(final String name, final Type type) {
+        if (name == null || type == null) {
+            throw new NullPointerException("Argument must not be null");
+        }
+        m_name = name;
+        m_type = type;
+    }
     
     public ScopeVariable(final String name, final String valueS) {
-        m_type = Type.STRING;
-        m_name = name;
+        this(name, Type.STRING);
         m_valueS = valueS;
     }
 
     public ScopeVariable(final String name, final double valueD) {
-        m_type = Type.DOUBLE;
-        m_name = name;
+        this(name, Type.DOUBLE);
         m_valueD = valueD;
     }
 
     public ScopeVariable(final String name, final int valueI) {
-        m_type = Type.INTEGER;
-        m_name = name;
+        this(name, Type.INTEGER);
         m_valueI = valueI;
     }
     
@@ -100,6 +106,25 @@ public final class ScopeVariable extends ScopeObject {
         default: throw new InternalError("m_type must not be null");
         }
         return "SV: \"" + m_name + "\" (" + m_type + ": " + value + ")"; 
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof ScopeVariable)) {
+            return false;
+        }
+        ScopeVariable v = (ScopeVariable)obj;
+        return v.getType().equals(getType()) && v.getName().equals(getName());
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        return getType().hashCode() ^ getName().hashCode();
     }
     
 }

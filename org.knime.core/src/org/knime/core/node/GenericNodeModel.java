@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.NoSuchElementException;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -872,32 +873,81 @@ public abstract class GenericNodeModel {
         }
     }
     
-    //////////////////////////////////////////////
-    // ScopeContext functionality
-    // TODO not drunk - unfortunately - fix later.
-    //////////////////////////////////////////////
-
     /** Holds the ScopeContext Stack of this node. */
     private ScopeObjectStack m_scopeContextStackContainer;
 
-    /** Return top element ScopeConcept from stack but leave it on there.
+    /** Get the value of the String variable with the given name leaving the
+     * variable stack unmodified. 
+     * @param name Name of the variable
+     * @return The value of the string variable
+     * @throws NullPointerException If the argument is null
+     * @throws NoSuchElementException If no such variable with the correct
+     * type is available.
      */
-    protected final ScopeVariable peekScopeVariable(final String name) {
-        return m_scopeContextStackContainer.peekVariable(name);
+    protected final String peekScopeVariableString(final String name) {
+        return m_scopeContextStackContainer.peekScopeVariable(
+                name, ScopeVariable.Type.STRING).getStringValue();
     }
     
-    /** Return top element ScopeConcept from stack and remove it.
+    /** Put a new variable of type double onto the stack. If such variable
+     * already exists, its value will be (virtually) overwritten.
+     * @param name The name of the variable.
+     * @param value The assignment value for the variable
+     * @throws NullPointerException If the name argument is null.
      */
-    protected final ScopeVariable popScopeVariable() {
-        return m_scopeContextStackContainer.pop(ScopeVariable.class);
+    protected final void pushScopeVariableDouble(
+            final String name, final double value) {
+        m_scopeContextStackContainer.push(new ScopeVariable(name, value));
     }
-
-    /** push a new ScopeVariable on the stack.
+    
+    /** Get the value of the double variable with the given name leaving the
+     * variable stack unmodified. 
+     * @param name Name of the variable
+     * @return The assignment value of the variable
+     * @throws NullPointerException If the argument is null
+     * @throws NoSuchElementException If no such variable with the correct
+     * type is available.
      */
-    protected final void pushScopeVariable(final ScopeVariable sv) {
-        m_scopeContextStackContainer.push(sv);
+    protected final double peekScopeVariableDouble(final String name) {
+        return m_scopeContextStackContainer.peekScopeVariable(
+                name, ScopeVariable.Type.DOUBLE).getDoubleValue();
     }
-
+    
+    /** Put a new variable of type integer onto the stack. If such variable
+     * already exists, its value will be (virtually) overwritten.
+     * @param name The name of the variable.
+     * @param value The assignment value for the variable
+     * @throws NullPointerException If the name argument is null.
+     */
+    protected final void pushScopeVariableInt(
+            final String name, final int value) {
+        m_scopeContextStackContainer.push(new ScopeVariable(name, value));
+    }
+    
+    /** Get the value of the integer variable with the given name leaving the
+     * variable stack unmodified. 
+     * @param name Name of the variable
+     * @return The value of the integer variable
+     * @throws NullPointerException If the argument is null
+     * @throws NoSuchElementException If no such variable with the correct
+     * type is available.
+     */
+    protected final int peekScopeVariableInt(final String name) {
+        return m_scopeContextStackContainer.peekScopeVariable(
+                name, ScopeVariable.Type.INTEGER).getIntValue();
+    }
+    
+    /** Put a new variable of type String onto the stack. If such variable
+     * already exists, its value will be (virtually) overwritten.
+     * @param name The name of the variable.
+     * @param value The assignment value for the variable
+     * @throws NullPointerException If the name argument is null.
+     */
+    protected final void pushScopeVariableString(
+            final String name, final String value) {
+        m_scopeContextStackContainer.push(new ScopeVariable(name, value));
+    }
+    
     /** Informs WorkflowManager after execute to continue the loop.
      * Call by the tail of the loop! This will result in both
      * this Node as well as the creator of the ScopeContext to be
