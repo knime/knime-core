@@ -158,8 +158,7 @@ public class Expression implements Serializable {
         Class<?> compiled;
         try {
             URL[] urls = new URL[]{m_classFile.getParentFile().toURI().toURL()};
-            ClassLoader parent = getClass().getClassLoader();
-            ClassLoader load = URLClassLoader.newInstance(urls, parent);
+            ClassLoader load = URLClassLoader.newInstance(urls);
             compiled = load.loadClass(javaClassName);
         } catch (MalformedURLException mue) {
             CompilationFailedException c = new CompilationFailedException(
@@ -195,8 +194,8 @@ public class Expression implements Serializable {
      */
     public ExpressionInstance getInstance() throws InstantiationException {
         try {
-            return new ExpressionInstance(m_compiled.newInstance(),
-                    m_properties);
+            return new ExpressionInstance(
+                    m_compiled.newInstance(), m_properties);
         } catch (IllegalAccessException iae) {
             LOGGER.error("Unexpected IllegalAccessException occured", iae);
             throw new InternalError();
