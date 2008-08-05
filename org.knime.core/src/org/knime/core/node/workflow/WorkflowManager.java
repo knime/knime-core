@@ -512,6 +512,18 @@ public final class WorkflowManager extends NodeContainer {
                 canAddConnection(source, sourcePort, dest, destPort);
                 throw new IllegalArgumentException("Can not add connection!");
             }
+            // check for existence of a connection to the destNode/Port
+            Set<ConnectionContainer> scc = m_connectionsByDest.get(dest);
+            ConnectionContainer removeCCfirst = null;
+            for (ConnectionContainer cc : scc) {
+                if (cc.getDestPort() == destPort) {
+                    removeCCfirst = cc;
+                }
+            }
+            if (removeCCfirst != null) {
+                removeConnection(removeCCfirst);
+            }
+            // cleaned up - now add new connection
             sourceNC = m_nodes.get(source);
             destNC = m_nodes.get(dest);
             // determine type of new connection:
