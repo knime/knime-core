@@ -636,13 +636,6 @@ public final class WorkflowManager extends NodeContainer {
                 return false;  // WFM outport index exists
             }
         }
-        // check for existence of a connection to the destNode/Port
-        Set<ConnectionContainer> scc = m_connectionsByDest.get(dest);
-        for (ConnectionContainer cc : scc) {
-            if (cc.getDestPort() == destPort) {
-                return false;
-            }
-        }
         // check type compatibility
         PortType sourceType = (sourceNode != null
             ? sourceNode.getOutPort(sourcePort).getPortType()
@@ -659,8 +652,17 @@ public final class WorkflowManager extends NodeContainer {
          *   port object then */ 
         Class<? extends PortObject> sourceCl = sourceType.getPortObjectClass();
         Class<? extends PortObject> destCl = destType.getPortObjectClass();
-        return destCl.isAssignableFrom(sourceCl) 
-            || sourceCl.isAssignableFrom(destCl);
+        if (!destCl.isAssignableFrom(sourceCl) 
+            && !sourceCl.isAssignableFrom(destCl)) {
+            return false;
+        }
+        // and finally check if we are threatening to close a loop
+        ArrayList<NodeID> sNodes = getBreathFirstListOfNodeAndSuccessors(dest);
+        if (sNodes.contains(source)) {
+            return false;
+        }
+        // no reason to say no found - return true.
+        return true;
     }
 
     /** Check if a connection can safely be removed.

@@ -200,19 +200,7 @@ public class CreateConnectionCommand extends Command {
                     m_sourceNode.getNodeContainer().getID(), 
                     m_sourcePortID, m_targetNode.getNodeContainer()
                     .getID(), m_targetPortID);
-            boolean canRemove = false;
-            if (!canAdd) {
-                if (m_targetPortID >= 0) {
-                    ConnectionContainer cc = m_manager.getIncomingConnectionFor(
-                            m_targetNode.getNodeContainer().getID(),
-                            m_targetPortID);
-                    if (cc != null) {
-                        canRemove = m_manager.canRemoveConnection(cc);
-                    }
-                }
-            }
-            return canAdd || canRemove; 
-                    
+            return canAdd;
         } catch (Throwable t) {
             LOGGER.error("can create connection? ", t);
         }
