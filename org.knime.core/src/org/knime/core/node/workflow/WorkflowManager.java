@@ -668,10 +668,13 @@ public final class WorkflowManager extends NodeContainer {
             && !sourceCl.isAssignableFrom(destCl)) {
             return false;
         }
-        // and finally check if we are threatening to close a loop
-        ArrayList<NodeID> sNodes = getBreathFirstListOfNodeAndSuccessors(dest);
-        if (sNodes.contains(source)) {
-            return false;
+        // and finally check if we are threatening to close a loop (if we
+        // are not trying to leave this metanode, of course).
+        if (!dest.equals(this.getID())) {
+            ArrayList<NodeID> sNodes = getBreathFirstListOfNodeAndSuccessors(dest);
+            if (sNodes.contains(source)) {
+                return false;
+            }
         }
         // no reason to say no found - return true.
         return true;
@@ -1639,35 +1642,51 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     /**
-     * Reset successors of all nodes. Do not reset node itself since it
+     * Reset successors of a node. Do not reset node itself since it
      * may be a metanode from within we started this.
      *
      * @param id of node
      */
     private void resetSuccessors(final NodeID id) {
+        resetSuccessors(id, -1);
+    }
+
+    /*
+     * Reset successors of a node connected to a specific port. If id == -1
+     * reset successors connected to all nodes.
+     */
+    private void resetSuccessors(final NodeID id, final int portID) {
         assert Thread.holdsLock(m_workflowMutex);
         Set<ConnectionContainer> succs = m_connectionsBySource.get(id);
         for (ConnectionContainer conn : succs) {
             NodeID currID = conn.getDest();
-            if (!conn.getType().isLeavingWorkflow()) {
-                assert m_nodes.get(currID) != null;
-                // normal connection to another node within this workflow
-                // first check if it is already reset
-                NodeContainer nc = m_nodes.get(currID);
-                assert nc != null;
-                if (nc.isResetableAsNodeContainer()) {
-                    // first reset successors of successor
-                    this.resetSuccessors(currID);
-                    // ..then immediate successor itself
-                    invokeResetOnNode(currID);
+            if ((conn.getSourcePort() == portID)
+                || (portID == -1)) {
+                // only reset successors if they are connected to the
+                // correct port or we don't care (id==-1)
+                if (!conn.getType().isLeavingWorkflow()) {
+                    assert m_nodes.get(currID) != null;
+                    // normal connection to another node within this workflow
+                    // first check if it is already reset
+                    NodeContainer nc = m_nodes.get(currID);
+                    assert nc != null;
+                    if (nc.isResetableAsNodeContainer()) {
+                        // first reset successors of successor
+                        for (int i = 0; i < nc.getNrOutPorts(); i++) {
+                            this.resetSuccessors(currID, i);
+                        }
+                        // ..then immediate successor itself
+                        invokeResetOnNode(currID);
+                    }
+                } else {
+                    assert m_nodes.get(currID) == null;
+                    assert this.getID().equals(currID);
+                    // connection goes to a meta outport!
+                    // Only reset nodes which are connected to the currently
+                    // interesting port.
+                    int outGoingPortID = conn.getDestPort();
+                    getParent().resetSuccessors(this.getID(), outGoingPortID);
                 }
-            } else {
-                assert m_nodes.get(currID) == null;
-                assert this.getID().equals(currID);
-                // connection goes to a meta outport!
-                // Note: this also resets node which are connected to OTHER
-                // outports of this metanode!
-                getParent().resetSuccessors(this.getID());
             }
         }
     }
