@@ -670,8 +670,10 @@ public final class WorkflowManager extends NodeContainer {
         }
         // and finally check if we are threatening to close a loop (if we
         // are not trying to leave this metanode, of course).
-        if (!dest.equals(this.getID())) {
-            ArrayList<NodeID> sNodes = getBreathFirstListOfNodeAndSuccessors(dest);
+        if (!dest.equals(this.getID())
+                && !source.equals(this.getID())) {
+            ArrayList<NodeID> sNodes
+                     = getBreathFirstListOfNodeAndSuccessors(dest);
             if (sNodes.contains(source)) {
                 return false;
             }
@@ -2115,6 +2117,21 @@ public final class WorkflowManager extends NodeContainer {
         return m_connectionsByDest.get(id).size() == nc.getNrInPorts();
     }
 
+    /*
+     * Configure successors of a metanode connected to a specific port
+     * (avoids duplicate configure calls)
+     */
+    private void configureWorkFlowPortSuccessors(final NodeID id,
+            final int port) {
+        assert m_nodes.get(id) instanceof WorkflowManager;
+        for (ConnectionContainer cc : m_connectionsBySource.get(id)) {
+            if (cc.getSourcePort() == port) {
+                NodeID succNode = cc.getDest();
+                configureNodeAndSuccessors(succNode, true, true);
+            }
+        }
+    }
+
     /**
      * Configure node and, if this node's output specs have changed
      * also configure it's successors.
@@ -2259,8 +2276,24 @@ public final class WorkflowManager extends NodeContainer {
         // make sure internal status changes are properly reflected
         checkForNodeStateChanges(true);
         // configure this WFM in its parent only if desired (and part of list)
+        // but make sure we only configure nodes actually connected to ports
+        // which are connected to nodes which we did configure!
         if (wfmIsPartOfList && configureWFMsuccessors) {
-            getParent().configureNodeAndSuccessors(this.getID(), false, configureWFMsuccessors);
+            for (int i = 0; i < getNrWorkflowOutgoingPorts(); i++) {
+                boolean portNeedsConfiguration = false;
+                for (ConnectionContainer cc : m_connectionsByDest.get(
+                        this.getID())) {
+                    assert cc.getType().isLeavingWorkflow();
+                    if ((cc.getDestPort() == i)
+                        && (freshlyConfiguredNodes.contains(cc.getSource()))) {
+                        portNeedsConfiguration = true;
+                    }
+                }
+                if (portNeedsConfiguration) {
+                    getParent().configureWorkFlowPortSuccessors(this.getID(),
+                            i);
+                }
+            }
         }
     }
 
