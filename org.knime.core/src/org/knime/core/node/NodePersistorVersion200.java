@@ -89,7 +89,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         ExecutionMonitor internalMon = execMon.createSilentSubProgress(0.2);
         ExecutionMonitor portMon = execMon.createSilentSubProgress(0.7);
         execMon.setMessage("Internals");
-        if (!node.isAutoExecutable() && isSaveData) {
+        if (isSaveData) {
             saveNodeInternDirectory(node, nodeInternDir, settings, internalMon);
         }
         execMon.setMessage("Ports");
@@ -103,7 +103,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             final NodeSettingsWO settings, final ExecutionMonitor exec,
             final boolean saveData) throws IOException,
             CanceledExecutionException {
-        if (node.getNrOutPorts() == 0 || node.isAutoExecutable()) {
+        if (node.getNrOutPorts() == 0) {
             return;
         }
         final int portCount = node.getNrOutPorts();
@@ -293,7 +293,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             final Map<Integer, BufferedDataTable> loadTblRep, final HashMap<Integer, ContainerTable> tblRep)
             throws IOException, InvalidSettingsException,
             CanceledExecutionException {
-        if (node.getNrOutPorts() == 0 || node.isAutoExecutable()) {
+        if (node.getNrOutPorts() == 0) {
             return;
         }
         final int portCount = node.getNrOutPorts();

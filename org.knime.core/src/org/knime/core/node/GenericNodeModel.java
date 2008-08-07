@@ -81,12 +81,6 @@ public abstract class GenericNodeModel {
     private boolean m_hasContent;
 
     /**
-     * Flag to indicate that the node should be immediately executed when all
-     * predecessors are green, interesting for instance in the table view.
-     */
-    private boolean m_isAutoExecutable;
-
-    /**
      * Optional warning message to be set during / after execution. Enables
      * higher levels to display the given message.
      */
@@ -690,41 +684,6 @@ public abstract class GenericNodeModel {
                 }
             }
         }
-    }
-
-    /**
-     * Is this method "autoexecutable", i.e. should this node be immediately
-     * being executed if all predecessors are executed (without any user
-     * interaction). By default this value will be <code>false</code>. Change
-     * it in the set method if your node is a simple view that doesn't require
-     * expensive computation in the execute method.
-     *
-     * @return The autoexecutable flag, by default <code>false</code>.
-     */
-    protected boolean isAutoExecutable() {
-        return m_isAutoExecutable;
-    }
-
-    /**
-     * Set if the node should execute immediately after all predecessors are
-     * executed. Some view implementations, such as a plain table view, do not
-     * require much computation during the execute, hence, can be conveniently
-     * executed right after all predecessors are executed. Set this flag here to
-     * indicate that your derived node is of that kind. This method should be
-     * called in the constructor of the derived node model.<br>
-     * There is one side effect to this flag, if it is set true, the node will
-     * not be able to save its internals (saveInternals is not called, even if
-     * the node was executed). Also loadInternals will not be called, the node
-     * will be executed instead.
-     *
-     * @param isAutoExecutable <code>true</code> if the node should be
-     *            immediately executed when possible, <code>false</code>
-     *            otherwise.
-     * @see #loadInternals(File, ExecutionMonitor)
-     * @see #saveInternals(File, ExecutionMonitor)
-     */
-    protected final void setAutoExecutable(final boolean isAutoExecutable) {
-        m_isAutoExecutable = isAutoExecutable;
     }
 
     /**

@@ -254,13 +254,8 @@ public final class Node implements NodeModelWarningListener {
     LoadResult load(final NodePersistor loader, final ExecutionMonitor exec)
             throws CanceledExecutionException {
         LoadResult result = new LoadResult();
-        if (m_model.isAutoExecutable()) {
-            // will be executed by workflow manager
-            m_model.setHasContent(false);
-        } else {
-            boolean hasContent = loader.hasContent();
-            m_model.setHasContent(hasContent);
-        }
+        boolean hasContent = loader.hasContent();
+        m_model.setHasContent(hasContent);
         NodeMessage nodeMessage = loader.getNodeMessage();
         try {
             // this also validates the settings
@@ -308,7 +303,7 @@ public final class Node implements NodeModelWarningListener {
             }
         }
         ReferencedFile internDirRef = loader.getNodeInternDirectory();
-        if (internDirRef != null && !isAutoExecutable()) {
+        if (internDirRef != null) {
             internDirRef.lock();
             try {
                 exec.setMessage("Loading internals");
@@ -558,16 +553,6 @@ public final class Node implements NodeModelWarningListener {
      */
     final MemoryPolicy getOutDataMemoryPolicy() {
         return m_outDataPortsMemoryPolicy;
-    }
-
-    /**
-     * Delegate method to the model's <code>isAutoExecutable()</code> method.
-     *
-     * @return If the the underlying node model should be immediately executed
-     *         when possible.
-     */
-    public boolean isAutoExecutable() {
-        return m_model.isAutoExecutable();
     }
 
     /**

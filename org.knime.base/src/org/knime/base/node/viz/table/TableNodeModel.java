@@ -27,6 +27,7 @@ import java.io.IOException;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.BufferedDataTableHolder;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -47,7 +48,9 @@ import org.knime.core.node.tableview.TableContentModel;
  * @author Bernd Wiswedel, University of Konstanz
  * @see org.knime.core.node.tableview.TableContentModel
  */
-public class TableNodeModel extends NodeModel {
+public class TableNodeModel extends NodeModel
+    implements BufferedDataTableHolder
+{
 
     /** Index of the input port (only one anyway). */
     protected static final int INPORT = 0;
@@ -66,7 +69,6 @@ public class TableNodeModel extends NodeModel {
         super(1, 0);
         // models have empty content
         m_contModel = new TableContentModel();
-        super.setAutoExecutable(true);
     }
 
     /**
@@ -122,6 +124,30 @@ public class TableNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws IOException {
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public BufferedDataTable[] getInternalTables() {
+        assert m_contModel.getDataTable() instanceof BufferedDataTable;
+        return new BufferedDataTable[] {
+                (BufferedDataTable)(m_contModel.getDataTable())
+        };
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setInternalTables(final BufferedDataTable[] tables) {
+        if (tables.length != 1) {
+            throw new IllegalArgumentException();
+        }
+        m_contModel.setDataTable(tables[0]);
+        HiLiteHandler inProp = getInHiLiteHandler(INPORT);
+        m_contModel.setHiLiteHandler(inProp);
+    }
+    
     /**
      * {@inheritDoc}
      */
