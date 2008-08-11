@@ -150,7 +150,7 @@ public final class Combinations {
      * @return a valid combination
      */
     public int[] unrank(final long k) {
-        return complement(vns_inv(m_nrOfCombinations - k + 1));
+        return complement(vns_inv(m_nrOfCombinations - k - 1));
     }
 
     /**
