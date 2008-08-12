@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   16.01.2007 (ohl): created
  */
@@ -41,7 +41,7 @@ import org.knime.core.node.KNIMEConstants;
  * with the output of failing tests and a summary file and stuff. Each file
  * contains the email address of the failing regression test owner in the first
  * line.
- * 
+ *
  * @author ohl, University of Konstanz
  */
 public class AnalyzeLogFile {
@@ -83,7 +83,7 @@ public class AnalyzeLogFile {
 
     /**
      * Constructor.
-     * 
+     *
      * @param logFile the log file to analyze.
      * @param outputDir a directory in which a dir will be created containing
      *            the results. If null, the java default temp dir will be used.
@@ -246,7 +246,7 @@ public class AnalyzeLogFile {
      * workbench initialization). It adds a pseudo failing test to the summary
      * file if it detects an exception in the log file, and keeps the header of
      * the log file as partial log.
-     * 
+     *
      * @param logFile the log file to analyze.
      * @throws IOException if the log file is not accessible
      */
@@ -259,7 +259,7 @@ public class AnalyzeLogFile {
         File testFile =
                 new File(m_tmpDir, testName + "_" + m_startTime + ".txt");
         FileWriter testFileWriter = new FileWriter(testFile);
-        testFileWriter.write("TestOwners=" + ownerAddress);
+        testFileWriter.write(ownerAddress + CRLF);
 
         String line = null;
         boolean workbenchInitFailed = false;
@@ -462,7 +462,7 @@ public class AnalyzeLogFile {
     /**
      * @param args
      */
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
 
         try {
             File logFileName =
