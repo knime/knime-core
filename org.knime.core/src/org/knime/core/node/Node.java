@@ -27,6 +27,7 @@ package org.knime.core.node;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -127,6 +128,10 @@ public final class Node implements NodeModelWarningListener {
         PortType type;
     }
     private final Input[] m_inputs;
+    
+    /** The array of BDTs, that has been given by the interface 
+     * {@link BufferedDataTableHolder}. In most cases this is null. */
+    private BufferedDataTable[] m_internalHeldTables;
 
     /**
      * The memory policy for the data outports, i.e. keep in memory or hold on
@@ -352,6 +357,14 @@ public final class Node implements NodeModelWarningListener {
                 m_outputs[i].hiliteHdl = m_model.getOutHiLiteHandler(i);
             }
         }
+        if (m_model instanceof BufferedDataTableHolder) {
+            m_internalHeldTables = loader.getInternalHeldTables();
+            if (m_internalHeldTables != null) {
+                BufferedDataTable[] copy = Arrays.copyOf(
+                        m_internalHeldTables, m_internalHeldTables.length);
+                ((BufferedDataTableHolder)m_model).setInternalTables(copy);
+            }
+        }
         exec.setProgress(1.0);
         if (nodeMessage != null) {
             notifyMessageListeners(nodeMessage);
@@ -483,7 +496,7 @@ public final class Node implements NodeModelWarningListener {
     public int getNrOutPorts() {
         return m_model.getNrOutPorts();
     }
-
+    
     /**
      * Return name of input connector.
      *
@@ -538,6 +551,15 @@ public final class Node implements NodeModelWarningListener {
 
     public HiLiteHandler getOutputHiLiteHandler(final int index) {
         return m_outputs[index].hiliteHdl;
+    }
+    
+    /** Get the current set of tables internally held by a NodeModel that
+     * implements {@link BufferedDataTableHolder}. It may be null or contain
+     * null elements. This array is modified upon load, execute and reset.
+     * @return that array.
+     */
+    public BufferedDataTable[] getInternalHeldTables() {
+        return m_internalHeldTables;
     }
 
     public void setInHiLiteHandler(final int index, final HiLiteHandler hdl) {
@@ -703,6 +725,32 @@ public final class Node implements NodeModelWarningListener {
             }
             m_outputs[p].hiliteHdl = m_model.getOutHiLiteHandler(p);
         }
+        
+        if (m_model instanceof BufferedDataTableHolder) {
+            // copy the table array to prevent later modification by the user
+            BufferedDataTable[] internalTbls = 
+                ((BufferedDataTableHolder)m_model).getInternalTables();
+            if (internalTbls != null) {
+                m_internalHeldTables = 
+                    new BufferedDataTable[internalTbls.length];
+                for (int i = 0; i < internalTbls.length; i++) {
+                    BufferedDataTable t = internalTbls[i];
+                    if (t != null) {
+                        // if table is one of the input tables, wrap it in
+                        // WrappedTable (otherwise table get's copied)
+                        for (int in = 0; in < inData.length; in++) {
+                            if (t == inData[in]) {
+                                t = exec.createWrappedTable(t);
+                                break;
+                            }
+                        }
+                    }
+                    m_internalHeldTables[i] = t;
+                }
+            } else {
+                m_internalHeldTables = null;
+            }
+        }
         String elapsed = StringFormat.formatElapsedTime(
                 System.currentTimeMillis() - time);
         m_logger.info("End execute (" + elapsed + ")");
@@ -819,14 +867,19 @@ public final class Node implements NodeModelWarningListener {
         for (int i = 0; i < m_outputs.length; i++) {
             PortObject portObject = m_outputs[i].object;
             if (portObject instanceof BufferedDataTable) {
-                BufferedDataTable t = (BufferedDataTable)portObject;
-                if (t != null) {
-                    t.clear(this);
-                }
+                ((BufferedDataTable)portObject).clear(this);
             }
             m_outputs[i].spec = null;
             m_outputs[i].object = null;
         }
+        if (m_internalHeldTables != null) {
+            for (BufferedDataTable t : m_internalHeldTables) {
+                if (t != null) {
+                    t.clear(this);
+                }
+            }
+        }
+        m_internalHeldTables = null;
     }
 
     /**
@@ -840,10 +893,9 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
-     * Enumerates the output tables and puts them into the global worflow
-     * repository of tables. This method is basically delegates from the
-     * NodeContainer class to access a package-scope method in
-     * BufferedDataTable.
+     * Enumerates the output tables and puts them into the global workflow
+     * repository of tables. This method delegates from the NodeContainer class 
+     * to access a package-scope method in BufferedDataTable.
      *
      * @param rep The global repository.
      */
@@ -853,6 +905,16 @@ public final class Node implements NodeModelWarningListener {
             PortObject portObject = m_outputs[i].object;
             if (portObject instanceof BufferedDataTable) {
                 BufferedDataTable t = (BufferedDataTable)portObject;
+                t.putIntoTableRepository(rep);
+            }
+        }
+        if (m_internalHeldTables != null) {
+            // note: theoretically we don't need to put those into table rep 
+            // as they are either also part of m_outputs or not 
+            // available to downstream nodes. We do it anyway as we want to 
+            // treat both m_outputs and the internal tables as similar as 
+            // possible (particular during load)
+            for (BufferedDataTable t : m_internalHeldTables) {
                 if (t != null) {
                     t.putIntoTableRepository(rep);
                 }

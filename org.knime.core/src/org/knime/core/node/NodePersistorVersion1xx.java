@@ -65,6 +65,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
     private PortObject[] m_portObjects;
 
     private PortObjectSpec[] m_portObjectSpecs;
+    
+    private BufferedDataTable[] m_internalHeldTables;
 
     private boolean m_needsResetAfterLoad;
     
@@ -92,7 +94,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
     protected boolean shouldLoadAsNotExecuted(final Node node) {
         String facName = node.getFactory().getClass().getSimpleName();
         if (facName.equals("InteractivePieNodeFactory")
-                || facName.equals("HistogramNodeFactory")) {
+                || facName.equals("HistogramNodeFactory")
+                || facName.equals("TableNodeFactory")) {
             return true;
         }
         return false;
@@ -156,6 +159,14 @@ public class NodePersistorVersion1xx implements NodePersistor {
             }
             execPort.setProgress(1.0);
         }
+    }
+    
+    protected void loadInternalHeldTables(final Node node, 
+            final ExecutionMonitor execMon, 
+            final NodeSettingsRO settings, 
+            final Map<Integer, BufferedDataTable> loadTblRep, 
+            final HashMap<Integer, ContainerTable> tblRep)
+    throws IOException, InvalidSettingsException, CanceledExecutionException {
     }
     
     private BufferedDataTable loadBufferedDataTable(final Node node,
@@ -343,7 +354,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
         LoadResult result = new LoadResult();
         ExecutionMonitor settingsExec = exec.createSilentSubProgress(0.1);
         ExecutionMonitor loadExec = exec.createSilentSubProgress(0.7);
-        ExecutionMonitor createExec = exec.createSilentSubProgress(0.2);
+        ExecutionMonitor loadIntTblsExec = exec.createSilentSubProgress(0.1);
+        ExecutionMonitor createExec = exec.createSilentSubProgress(0.1);
         exec.setMessage("settings");
         m_portObjects = new PortObject[node.getNrOutPorts()];
         m_portObjectSpecs = new PortObjectSpec[node.getNrOutPorts()];
@@ -437,6 +449,22 @@ public class NodePersistorVersion1xx implements NodePersistor {
             setNeedsResetAfterLoad();
         }
         loadExec.setProgress(1.0);
+        try {
+            loadInternalHeldTables(
+                    node, loadIntTblsExec, settings, loadTblRep, tblRep);
+        } catch (Exception e) {
+            if (!(e instanceof InvalidSettingsException)
+                    && !(e instanceof IOException)) {
+                LOGGER.error("Unexpected \"" + e.getClass().getSimpleName() 
+                        + "\" encountered");
+            }
+            String err = "Unable to load internally held tables for node \"" 
+                + node.getName() + "\": " + e.getMessage();
+            result.addError(err);
+            LOGGER.warn(err, e);
+            setNeedsResetAfterLoad();
+        }
+        loadIntTblsExec.setProgress(1.0);
         exec.setMessage("creating instance");
         if (result.hasErrors()) {
             m_nodeMessage = new NodeMessage(Type.ERROR, result.getErrors());
@@ -494,6 +522,20 @@ public class NodePersistorVersion1xx implements NodePersistor {
     public void setPortObjectSpec(
             final int idx, final PortObjectSpec portObjectSpec) {
         m_portObjectSpecs[idx] = portObjectSpec;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public BufferedDataTable[] getInternalHeldTables() {
+        return m_internalHeldTables;
+    }
+    
+    /**
+     * @param internalHeldTables the internalHeldTables to set
+     */
+    public void setInternalHeldTables(
+            final BufferedDataTable[] internalHeldTables) {
+        m_internalHeldTables = internalHeldTables;
     }
     
     /** {@inheritDoc} */

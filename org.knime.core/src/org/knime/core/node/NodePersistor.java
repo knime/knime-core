@@ -97,6 +97,7 @@ public interface NodePersistor {
     NodeSettingsRO getSettings();
     PortObjectSpec getPortObjectSpec(final int outportIndex);
     PortObject getPortObject(final int outportIndex);
+    BufferedDataTable[] getInternalHeldTables();
     // TODO should use template instead of final object creation, goes
     // along with changes in Node class
     NodeMessage getNodeMessage();
