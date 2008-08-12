@@ -370,6 +370,20 @@ public abstract class GenericNodeModel {
             throw new CanceledExecutionException(
                     "Result discarded due to user cancel");
         }
+        
+        /* Cleanup operation for nodes that just pass on their input 
+         * data table. We need to wrap those here so that the framework 
+         * explicitly references them (instead of copying) */
+        for (int i = 0; i < outData.length; i++) {
+            if (outData[i] instanceof BufferedDataTable) {
+                for (int j = 0; j < data.length; j++) {
+                    if (outData[i] == data[j]) {
+                        outData[i] = exec.createWrappedTable(
+                                (BufferedDataTable)data[j]);
+                    }
+                }
+            }
+        }
 
         // TODO: check outgoing types! (inNode!)
 
@@ -390,8 +404,7 @@ public abstract class GenericNodeModel {
         for (int i = 0; i < outData.length; i++) {
             // do not check for null output tables if this is the end node
             // of a loop and another loop iteration is requested
-            if ((getLoopStatus() == null)
-                    && (outData[i] == null)) {
+            if ((getLoopStatus() == null) && (outData[i] == null)) {
                 m_logger.error("Execution failed: Incorrect implementation;"
                         + " the execute method in "
                         + this.getClass().getSimpleName()

@@ -43,6 +43,7 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.JoinedTable;
 import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
+import org.knime.core.data.container.WrappedTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
@@ -73,7 +74,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
     public static final PortType TYPE = new PortType(BufferedDataTable.class);
     
     /** internal ID for any generated table. */
-    private static final AtomicInteger lastID = new AtomicInteger(0);
+    private static final AtomicInteger LAST_ID = new AtomicInteger(0);
 
     /**
      * Method that is used internally while the workflow is being loaded. Not 
@@ -96,7 +97,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
         }
         // update the lastID counter!
         assert result.m_tableID == tableID;
-        lastID.set(Math.max(tableID, lastID.get()));
+        LAST_ID.set(Math.max(tableID, LAST_ID.get()));
         return result;
     }
     
@@ -116,7 +117,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * @return Table identifier.
      */
     static int generateNewID() {
-        return lastID.incrementAndGet();
+        return LAST_ID.incrementAndGet();
     }
     
     /** Throws <code>IllegalStateException</code> as this method is not
@@ -147,7 +148,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * @param table The reference.
      */ 
     BufferedDataTable(final RearrangeColumnsTable table) {
-        this((KnowsRowCountTable)table, table.getAppendTable() != null 
+        this(table, table.getAppendTable() != null 
                 ? table.getAppendTable().getBufferID() : generateNewID());
     }
     
@@ -156,7 +157,14 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * @param table The reference.
      */ 
     BufferedDataTable(final TableSpecReplacerTable table) {
-        this((KnowsRowCountTable)table, generateNewID());
+        this(table, generateNewID());
+    }
+    
+    /** Creates a new buffered data table based on a wrapped table. 
+     * @param table The reference.
+     */ 
+    BufferedDataTable(final WrappedTable table) {
+        this(table, generateNewID());
     }
     
     /** Creates a new buffered data table based on a concatenation of
@@ -164,7 +172,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * @param table The reference.
      */ 
     BufferedDataTable(final ConcatenateTable table) {
-        this((KnowsRowCountTable)table, generateNewID());
+        this(table, generateNewID());
     }
     
     /** Creates a new buffered data table based on a join of 
@@ -172,12 +180,12 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * @param table The reference.
      */ 
     BufferedDataTable(final JoinedTable table) {
-        this((KnowsRowCountTable)table, generateNewID());
+        this(table, generateNewID());
     }
     
     private BufferedDataTable(final KnowsRowCountTable table, final int id) {
         m_delegate = table;
-        assert id <= lastID.get() : "Table identifiers not unique";
+        assert id <= LAST_ID.get() : "Table identifiers not unique";
         m_tableID = id;
     }
     
@@ -239,6 +247,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
     private static final String TABLE_TYPE_REARRANGE_COLUMN = 
         "rearrange_columns_table";
     private static final String TABLE_TYPE_NEW_SPEC = "new_spec_table";
+    private static final String TABLE_TYPE_WRAPPED = "wrapped_table";
     private static final String TABLE_TYPE_CONCATENATE = "concatenate_table";
     private static final String TABLE_TYPE_JOINED = "joined_table";
     private static final String TABLE_SUB_DIR = "reference";
@@ -267,6 +276,8 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REARRANGE_COLUMN);
             } else if (m_delegate instanceof TableSpecReplacerTable) {
                 s.addString(CFG_TABLE_TYPE, TABLE_TYPE_NEW_SPEC);
+            } else if (m_delegate instanceof WrappedTable) {
+                s.addString(CFG_TABLE_TYPE, TABLE_TYPE_WRAPPED);
             } else if (m_delegate instanceof JoinedTable) {
                 s.addString(CFG_TABLE_TYPE, TABLE_TYPE_JOINED);
             } else {
@@ -387,7 +398,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
             isVersion11x = true;
         }
         int id = s.getInt(CFG_TABLE_ID);
-        lastID.set(Math.max(lastID.get(), id + 1));
+        LAST_ID.set(Math.max(LAST_ID.get(), id + 1));
         String fileName = s.getString(CFG_TABLE_FILE_NAME);
         ReferencedFile fileRef;
         if (fileName != null) {
@@ -418,6 +429,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
             t = new BufferedDataTable(fromContainer, id);
         } else if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)
                 || (tableType.equals(TABLE_TYPE_NEW_SPEC))
+                || (tableType.equals(TABLE_TYPE_WRAPPED))
                 || (tableType.equals(TABLE_TYPE_JOINED))
                 || (tableType.equals(TABLE_TYPE_CONCATENATE))) {
             String[] referenceDirs;
@@ -449,6 +461,9 @@ public final class BufferedDataTable implements DataTable, PortObject {
             } else if (tableType.equals(TABLE_TYPE_CONCATENATE)) {
                 ConcatenateTable ct = ConcatenateTable.load(s, spec, tblRep);
                 t = new BufferedDataTable(ct);
+            } else if (tableType.equals(TABLE_TYPE_WRAPPED)) {
+                WrappedTable wt = WrappedTable.load(s, tblRep);
+                t = new BufferedDataTable(wt);
             } else {
                 TableSpecReplacerTable replTable;
                 if (isVersion11x) {

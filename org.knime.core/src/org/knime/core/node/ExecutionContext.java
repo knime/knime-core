@@ -34,6 +34,7 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.JoinedTable;
 import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
+import org.knime.core.data.container.WrappedTable;
 
 /**
  * An <code>ExecutionContext</code> provides storage capacities during a
@@ -93,6 +94,7 @@ public class ExecutionContext extends ExecutionMonitor {
      *             This constructor potentially does not support serialization
      *             of blobs.
      */
+    @Deprecated
     public ExecutionContext(
             final NodeProgressMonitor progMon, final Node node) {
         this(progMon, node, new HashMap<Integer, ContainerTable>());
@@ -281,6 +283,23 @@ public class ExecutionContext extends ExecutionMonitor {
     public BufferedDataTable createSpecReplacerTable(
             final BufferedDataTable in, final DataTableSpec newSpec) {
         TableSpecReplacerTable t = new TableSpecReplacerTable(in, newSpec);
+        BufferedDataTable out = new BufferedDataTable(t);
+        out.setOwnerRecursively(m_node);
+        return out;
+    }
+
+   /**
+    * Creates a new <code>BufferedDataTable</code> that simply wraps the 
+    * argument table. This is useful when a node just passes on the input table,
+    * for example. If the implementation of NodeModel does not use this method
+    * (but simply returns the input table directy), the framework will perform
+    * the wrapping operation.
+    * @param in The input table to wrap.
+    * @return A new table which can be returned in the execute method.
+    * @throws NullPointerException If the argument is null.
+    */
+    public BufferedDataTable createWrappedTable(final BufferedDataTable in) {
+        WrappedTable t = new WrappedTable(in);
         BufferedDataTable out = new BufferedDataTable(t);
         out.setOwnerRecursively(m_node);
         return out;

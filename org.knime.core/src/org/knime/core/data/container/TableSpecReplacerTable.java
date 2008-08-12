@@ -25,16 +25,13 @@
 package org.knime.core.data.container;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -83,7 +80,6 @@ public final class TableSpecReplacerTable implements KnowsRowCountTable {
 
     private static final String CFG_INTERNAL_META = "meta_internal";
     private static final String CFG_REFERENCE_ID = "table_reference_ID";
-    private static final String CFG_SPEC = "table_changed_spec";
     private static final String ZIP_ENTRY_SPEC = "newspec.xml";
     
     /**
@@ -94,13 +90,6 @@ public final class TableSpecReplacerTable implements KnowsRowCountTable {
             CanceledExecutionException {
         NodeSettingsWO subSettings = s.addNodeSettings(CFG_INTERNAL_META);
         subSettings.addInt(CFG_REFERENCE_ID, m_reference.getBufferedTableId());
-        ZipOutputStream zipOut = new ZipOutputStream(
-                new BufferedOutputStream(new FileOutputStream(f)));
-        zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_SPEC));
-        NodeSettings specWriteSettings = new NodeSettings(CFG_SPEC);
-        m_newSpec.save(specWriteSettings);
-        // will also close the stream.
-        specWriteSettings.saveToXML(zipOut);
     }
     
     /**
