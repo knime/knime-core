@@ -49,8 +49,7 @@ import org.knime.core.node.tableview.TableContentModel;
  * @see org.knime.core.node.tableview.TableContentModel
  */
 public class TableNodeModel extends NodeModel
-    implements BufferedDataTableHolder
-{
+    implements BufferedDataTableHolder {
 
     /** Index of the input port (only one anyway). */
     protected static final int INPORT = 0;
