@@ -98,8 +98,8 @@ public class CSVWriterNodeModel extends NodeModel {
 
         // the separator must not be contained in the missing value pattern
         // nor in the quote begin pattern.
-        if (notEmtpy(fws.getColSeparator())) {
-            if (notEmtpy(fws.getMissValuePattern())) {
+        if (notEmpty(fws.getColSeparator())) {
+            if (notEmpty(fws.getMissValuePattern())) {
                 if (fws.getMissValuePattern().contains(fws.getColSeparator())) {
                     throw new InvalidSettingsException(
                             "The pattern for missing values ('"
@@ -110,7 +110,7 @@ public class CSVWriterNodeModel extends NodeModel {
                 }
             }
 
-            if (notEmtpy(fws.getCommentBegin())) {
+            if (notEmpty(fws.getCommentBegin())) {
                 if (fws.getCommentBegin().contains(fws.getColSeparator())) {
                     throw new InvalidSettingsException(
                             "The left quote pattern ('" + fws.getQuoteBegin()
@@ -124,7 +124,7 @@ public class CSVWriterNodeModel extends NodeModel {
         // if we are supposed to add some creation data, we need to know
         // the comment pattern
         if (fws.addCreationTime() || fws.addCreationUser()
-                || fws.addTableName() || notEmtpy(fws.getCustomCommentLine())) {
+                || fws.addTableName() || notEmpty(fws.getCustomCommentLine())) {
             if (isEmpty(fws.getCommentBegin())) {
                 throw new InvalidSettingsException(
                         "The comment pattern must be defined in order to add "
@@ -136,12 +136,12 @@ public class CSVWriterNodeModel extends NodeModel {
 
         // if a custom comment line is specified, is must not contain the
         // comment end pattern
-        if (notEmtpy(fws.getCustomCommentLine())
-                && notEmtpy(fws.getCommentEnd())) {
+        if (notEmpty(fws.getCustomCommentLine())
+                && notEmpty(fws.getCommentEnd())) {
             if (fws.getCustomCommentLine().contains(fws.getCommentEnd())) {
                 throw new InvalidSettingsException(
                         "The specified comment to add must not contain the"
-                        + " comment end pattern.");
+                                + " comment end pattern.");
             }
         }
 
@@ -155,7 +155,7 @@ public class CSVWriterNodeModel extends NodeModel {
             throws InvalidSettingsException {
         m_settings = new FileWriterNodeSettings(settings);
 
-        if (notEmtpy(m_settings.getFileName())) {
+        if (notEmpty(m_settings.getFileName())) {
             StringHistory history = StringHistory.getInstance(FILE_HISTORY_ID);
             history.add(m_settings.getFileName());
         }
@@ -172,6 +172,18 @@ public class CSVWriterNodeModel extends NodeModel {
         DataTable in = data[0];
 
         File file = new File(m_settings.getFileName());
+        File parentDir = file.getParentFile();
+        boolean dirCreated = false;
+        if (!parentDir.exists()) {
+            if (!parentDir.mkdirs()) {
+                throw new IllegalStateException("Unable to create directory"
+                        + " for specified output file: "
+                        + parentDir.getAbsolutePath());
+            }
+            LOGGER.info("Created directory for specified output file: "
+                    + parentDir.getAbsolutePath());
+            dirCreated = true;
+        }
 
         // figure out if the writer is actually supposed to write col headers
         boolean writeColHeader = m_settings.writeColumnHeader();
@@ -183,8 +195,8 @@ public class CSVWriterNodeModel extends NodeModel {
         writerSettings.setWriteColumnHeader(writeColHeader);
 
         CSVWriter tableWriter =
-                new CSVWriter(new FileWriter(file, m_settings
-                        .appendToFile()), writerSettings);
+                new CSVWriter(new FileWriter(file, m_settings.appendToFile()),
+                        writerSettings);
 
         // write the comment header, if we are supposed to
         writeCommentHeader(m_settings, tableWriter, data[0]);
@@ -193,9 +205,17 @@ public class CSVWriterNodeModel extends NodeModel {
             tableWriter.write(in, exec);
         } catch (CanceledExecutionException cee) {
             LOGGER.info("Table FileWriter canceled.");
+            if (dirCreated) {
+                LOGGER.warn("The directory for the output file was created and"
+                        + " is not removed.");
+            }
             tableWriter.close();
             if (file.delete()) {
                 LOGGER.debug("File " + m_settings.getFileName() + " deleted.");
+                if (dirCreated) {
+                    LOGGER.debug("The directory created for the output file"
+                            + " is not removed though.");
+                }
             } else {
                 LOGGER.warn("Unable to delete file '"
                         + m_settings.getFileName() + "' after cancellation.");
@@ -218,9 +238,9 @@ public class CSVWriterNodeModel extends NodeModel {
      * @param inData the table that is going to be written in the file.
      * @throws IOException if something went wrong during writing.
      */
-    private void writeCommentHeader(
-            final FileWriterNodeSettings settings, final BufferedWriter file,
-            final DataTable inData) throws IOException {
+    private void writeCommentHeader(final FileWriterNodeSettings settings,
+            final BufferedWriter file, final DataTable inData)
+            throws IOException {
         if ((file == null) || (settings == null)) {
             return;
         }
@@ -233,7 +253,7 @@ public class CSVWriterNodeModel extends NodeModel {
         writeComment |= settings.addCreationTime();
         writeComment |= settings.addCreationUser();
         writeComment |= settings.addTableName();
-        writeComment |= notEmtpy(settings.getCustomCommentLine());
+        writeComment |= notEmpty(settings.getCustomCommentLine());
 
         if (!writeComment) {
             return;
@@ -241,7 +261,7 @@ public class CSVWriterNodeModel extends NodeModel {
 
         // if we have block comment patterns we write them only once. Otherwise
         // we add the commentBegin to every line.
-        boolean blockComment = notEmtpy(settings.getCommentEnd());
+        boolean blockComment = notEmpty(settings.getCommentEnd());
 
         if (blockComment) {
             file.write(settings.getCommentBegin());
@@ -278,7 +298,7 @@ public class CSVWriterNodeModel extends NodeModel {
         }
 
         // at last: add the user comment line
-        if (notEmtpy(settings.getCustomCommentLine())) {
+        if (notEmpty(settings.getCustomCommentLine())) {
             String[] lines = settings.getCustomCommentLine().split("\n");
             for (String line : lines) {
                 if (!blockComment) {
@@ -358,6 +378,13 @@ public class CSVWriterNodeModel extends NodeModel {
                 warnMsg +=
                         "Selected output file exists and will be overwritten!";
             }
+        } else {
+            File parentDir = file.getParentFile();
+            if (!parentDir.exists()) {
+                warnMsg +=
+                        "Directory of specified output file doesn't exist"
+                                + " and will be created.";
+            }
         }
 
         /*
@@ -371,7 +398,8 @@ public class CSVWriterNodeModel extends NodeModel {
             // time reading it in again.
             warnMsg +=
                     "No separator and no quotes and no missing value "
-                            + "pattern set.\nWritten data will be hard read!";
+                            + "pattern set."
+                            + "\nWritten data will be hard to read!";
         }
 
         DataTableSpec inSpec = inSpecs[0];
@@ -381,11 +409,12 @@ public class CSVWriterNodeModel extends NodeModel {
                     && !c.isCompatible(IntValue.class)
                     && !c.isCompatible(StringValue.class)) {
                 throw new InvalidSettingsException(
-                        "Input table contains not only String or Doubles");
+                        "Input table must only contain "
+                                + "String, Int, or Doubles");
             }
         }
 
-        if (notEmtpy(warnMsg)) {
+        if (notEmpty(warnMsg)) {
             setWarningMessage(warnMsg);
         }
 
@@ -396,7 +425,7 @@ public class CSVWriterNodeModel extends NodeModel {
      * @param s the String to test
      * @return true only if s is not null and not empty (i.e. not of length 0)
      */
-    static boolean notEmtpy(final String s) {
+    static boolean notEmpty(final String s) {
         if (s == null) {
             return false;
         }
@@ -408,6 +437,6 @@ public class CSVWriterNodeModel extends NodeModel {
      * @return true if s is null or of length zero.
      */
     static boolean isEmpty(final String s) {
-        return !notEmtpy(s);
+        return !notEmpty(s);
     }
 }
