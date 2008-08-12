@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.0"?>
 <plugin>
+   <extension-point id="pmmlports" name="pmml.ports" schema="schema/pmmlports.exsd"/>
     <extension
          point="org.knime.workbench.repository.categories">
       <category
@@ -704,5 +705,29 @@
              factory-class="org.knime.base.collection.list.split.CollectionSplitNodeFactory"
              id="org.knime.base.collection.list.split.CollectionSplitNodeFactory">
        </node>
+             <node
+            category-path="/mining/clustering"
+            factory-class="org.knime.base.node.mine.cluster.kmeans.PMMLClusterNodeFactory"
+            id="org.knime.base.node.mine.cluster.kmeans.PMMLClusterNodeFactory">
+      </node>
+
+      <node
+            category-path="/mining/clustering"
+            factory-class="org.knime.base.node.mine.cluster.assign.PMMLClusterAssignerNodeFactory"
+            id="org.knime.base.node.mine.cluster.assign.PMMLClusterAssignerNodeFactory">
+      </node>
+
+      <node
+            category-path="/io/read"
+            factory-class="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory"
+            id="org.knime.base.node.io.PMMLReaderNodeFactory">
+      </node>
+   </extension>
+      <extension
+         point="org.knime.base.pmmlports">
+      <PMMLModel
+            PMMLPortObject="org.knime.base.node.mine.cluster.PMMLClusterPortObject"
+            modeltype="ClusteringModel">
+      </PMMLModel>
    </extension>
 </plugin>

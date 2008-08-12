@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./kmeans.png" type="Learner">
+    <name>K-Means (PMML)</name>
+    <shortDescription>Creates a crisp center based clustering.</shortDescription>
+    <fullDescription>
+        <intro>
+			This node outputs the cluster centers for a predefined number of
+			clusters (no dynamic number of clusters).
+			K-means performs a crisp clustering that assigns a data
+			vector to exactly one cluster. The algorithm terminates when the
+			cluster assignments do not change anymore.
+			The node can be configured as follows:
+		</intro>
+		<option name="number of clusters">
+			The number of clusters (cluster centers) to be created.
+	    </option>
+		<option name="max number of iterations">
+		    The number of iterations after which the algorithm terminates,
+			independent of the accuracy improvement of the cluster centers.
+		</option>
+	</fullDescription>
+	
+    <ports>
+        <dataIn index="0" name="Clustering input">Input to clustering. All 
+        numerical values and only these are considered for clustering.</dataIn>
+        <dataOut index="0" name="Labeled input">The input data labeled with the 
+        cluster they are contained in.</dataOut>
+        <modelOut index="0" name="Prototypes">The prototypes of the clustering.</modelOut>
+	</ports>
+	
+	<views>
+		<view index="0" name="Cluster View">
+			Displays the cluster prototypes in a tree-like structure, with each
+            node containing the coordinates of the cluster center.
+		</view>
+	</views>
+</knimeNode>
+
+
