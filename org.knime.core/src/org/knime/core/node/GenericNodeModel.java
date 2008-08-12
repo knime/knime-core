@@ -150,15 +150,12 @@ public abstract class GenericNodeModel {
      * data structure which is necessary to provide all node functionalities
      * after the workflow is loaded, e.g. view content and/or hilite mapping.
      * <br>
-     * This method is not called if the model is autoexecutable. The node will
-     * be executed instead.
      *
      * @param nodeInternDir The directory to read from.
      * @param exec Used to report progress and to cancel the load process.
      * @throws IOException If an error occurs during reading from this dir.
      * @throws CanceledExecutionException If the loading has been canceled.
      * @see #saveInternals(File,ExecutionMonitor)
-     * @see #setAutoExecutable(boolean)
      */
     protected abstract void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
@@ -170,14 +167,12 @@ public abstract class GenericNodeModel {
      * internal structures into the given file directory which are necessary to
      * recreate this model when the workflow is loaded, e.g. view content and/or
      * hilite mapping.<br>
-     * This method is not called, if the model is autoexecutable.
      *
      * @param nodeInternDir The directory to write into.
      * @param exec Used to report progress and to cancel the save process.
      * @throws IOException If an error occurs during writing to this dir.
      * @throws CanceledExecutionException If the saving has been canceled.
      * @see #loadInternals(File,ExecutionMonitor)
-     * @see #setAutoExecutable(boolean)
      */
     protected abstract void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
