@@ -157,11 +157,11 @@ public final class DataColumnSpec {
     /**
      * Get names of sub elements such as bit vector positions or elements of
      * other vector data types. For non-vector types (most types are non-vector
-     * types) this list typically contains a single value whose value is equal
-     * to {@link #getName()}. For vector type columns (i.e. those which contain
-     * vectors of <code>DataCell</code> or a <code>BitVectorCell</code>)
-     * the elements of this list represent identifiers for each of the different
-     * vector positions. There is, however, no need that such a list is set.
+     * types) this list is typically empty. For vector type columns (i.e. those
+     * which contain vectors of <code>DataCell</code> or a
+     * <code>BitVectorCell</code>) the elements of this list represent
+     * identifiers for each of the different vector positions. There is,
+     * however, no need that such a list is set.
      * 
      * @return Names of the elements in a unmodifiable, random access list. The
      *         returned value will never be null, nor contain null elements. The

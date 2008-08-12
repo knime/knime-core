@@ -160,7 +160,7 @@ final class CopyOnAccessTask {
                 } else if (name.equals(DataContainer.ZIP_ENTRY_SPEC) 
                         && !isSpecFound) {
                     InputStream nonClosableStream = 
-                        new NonClosableZipInputStream(inStream);
+                        new NonClosableInputStream.Zip(inStream);
                     @SuppressWarnings("unchecked") // cast with generics
                     NodeSettingsRO settings = 
                         NodeSettings.loadFromXML(nonClosableStream);

@@ -25,11 +25,11 @@
  */
 package org.knime.core.data.def;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellDataInput;
+import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
@@ -214,7 +214,7 @@ public final class FuzzyNumberCell extends DataCell implements
          * {@inheritDoc}
          */
         public void serialize(final FuzzyNumberCell cell,
-                final DataOutput output) throws IOException {
+                final DataCellDataOutput output) throws IOException {
             output.writeDouble(cell.getMinSupport());
             output.writeDouble(cell.getCore());
             output.writeDouble(cell.getMaxSupport());
@@ -223,7 +223,7 @@ public final class FuzzyNumberCell extends DataCell implements
         /**
          * {@inheritDoc}
          */
-        public FuzzyNumberCell deserialize(final DataInput input)
+        public FuzzyNumberCell deserialize(final DataCellDataInput input)
                 throws IOException {
             double minSupp = input.readDouble();
             double core = input.readDouble();

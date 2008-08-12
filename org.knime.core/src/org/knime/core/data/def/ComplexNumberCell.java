@@ -26,12 +26,12 @@
  */
 package org.knime.core.data.def;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import org.knime.core.data.ComplexNumberValue;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellDataInput;
+import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
@@ -156,7 +156,7 @@ public final class ComplexNumberCell extends DataCell implements
          * {@inheritDoc}
          */
         public void serialize(final ComplexNumberCell cell,
-                final DataOutput output) throws IOException {
+                final DataCellDataOutput output) throws IOException {
             output.writeDouble(cell.getRealValue());
             output.writeDouble(cell.getImaginaryValue());
         }
@@ -164,7 +164,7 @@ public final class ComplexNumberCell extends DataCell implements
         /**
          * {@inheritDoc}
          */
-        public ComplexNumberCell deserialize(final DataInput input)
+        public ComplexNumberCell deserialize(final DataCellDataInput input)
                 throws IOException {
             double real = input.readDouble();
             double imag = input.readDouble();

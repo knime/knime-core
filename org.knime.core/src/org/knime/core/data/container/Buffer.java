@@ -24,17 +24,11 @@ package org.knime.core.data.container;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
@@ -45,6 +39,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,8 +47,8 @@ import java.util.NoSuchElementException;
 import java.util.WeakHashMap;
 import java.util.Map.Entry;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.Deflater;
-import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -65,7 +60,10 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.collection.BlobSupportDataCellIterator;
+import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
+import org.knime.core.data.container.BufferFromFileIteratorVersion20.DataCellStreamReader;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -75,7 +73,6 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.util.FileUtil;
-import org.knime.core.util.MutableInteger;
 
 /**
  * A buffer writes the rows from a {@link DataContainer} to a file.
@@ -85,7 +82,7 @@ import org.knime.core.util.MutableInteger;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-class Buffer {
+class Buffer implements KNIMEStreamConstants {
 
     /** Static field to enable/disable the usage of a GZipInput/OutpuStream
      * when writing the binary data. This option defaults to true, meaning
@@ -108,18 +105,6 @@ class Buffer {
         BLOB_COMPRESS_MAP =
             new HashMap<Class<? extends BlobDataCell>, Boolean>();
 
-    /** The char for missing cells. */
-    private static final byte BYTE_TYPE_MISSING = Byte.MIN_VALUE;
-
-    /** The char for cell whose type needs serialization. */
-    private static final byte BYTE_TYPE_SERIALIZATION = BYTE_TYPE_MISSING + 1;
-
-    /** The first used char for the map char --> type. */
-    private static final byte BYTE_TYPE_START = BYTE_TYPE_MISSING + 2;
-
-    /** Separator for different rows. */
-    private static final byte BYTE_ROW_SEPARATOR = BYTE_TYPE_MISSING + 3;
-    
     /** Name of the zip entry containing the data. */
     static final String ZIP_ENTRY_DATA = "data.bin";
 
@@ -159,10 +144,10 @@ class Buffer {
     private static final String CFG_CELL_CLASSES = "table.datacell.classes";
 
     /** Current version string. */
-    private static final String VERSION = "container_5";
+    private static final String VERSION = "container_6";
 
     /** The version number corresponding to VERSION. */
-    private static final int IVERSION = 5;
+    private static final int IVERSION = 6;
 
     private static final HashMap<String, Integer> COMPATIBILITY_MAP;
 
@@ -171,7 +156,8 @@ class Buffer {
         COMPATIBILITY_MAP.put("container_1.0.0", 1); // version 1.00
         COMPATIBILITY_MAP.put("container_1.1.0", 2); // version 1.1.x
         COMPATIBILITY_MAP.put("container_1.2.0", 3); // never released
-        COMPATIBILITY_MAP.put("container_4", 4); // version 1.2.x - 1.3.x
+        COMPATIBILITY_MAP.put("container_4", 4);     // version 1.2.x - 1.3.x
+        COMPATIBILITY_MAP.put("container_5", 5);     // 2.0 TechPreview Version
         COMPATIBILITY_MAP.put(VERSION, IVERSION);    // version 2.0
     }
 
@@ -289,12 +275,12 @@ class Buffer {
     private Map<Integer, ContainerTable> m_localRepository;
 
     /** Number of open file input streams on m_binFile. */
-    private int m_nrOpenInputStreams;
+    private AtomicInteger m_nrOpenInputStreams = new AtomicInteger();
 
     /** the stream that writes to the file, it's a special object output
      * stream, in which we can mark the end of an entry (to figure out
      * when a cell implementation reads too many or too few bytes). */
-    private DCObjectOutputStream m_outStream;
+    private DCObjectOutputVersion2 m_outStream;
 
     /** maximum number of rows that are in memory. */
     private int m_maxRowsInMem;
@@ -343,7 +329,7 @@ class Buffer {
      * over again. Useful in cases where a blob is added multiple times to 
      * a table... the iterator will read the blob address, treat it as unseen
      * an then ask the owning Buffer to restore the blob. */
-    private BlobLRUCache m_blobLRUCache;
+    private static final BlobLRUCache BLOB_LRU_CACHE = new BlobLRUCache();
 
     /**
      * Creates new buffer for <strong>writing</strong>. It has assigned a
@@ -424,7 +410,24 @@ class Buffer {
     public String getVersion() {
         return VERSION;
     }
-
+    
+    /** Get underlying stream version. Important for file iterators.
+     * @return Underlying stream version.
+     */
+    final int getReadVersion() {
+        return m_version;
+    }
+    
+    /** @return Underlying binary file. */
+    final File getBinFile() {
+        return m_binFile;
+    }
+    
+    /** @return Whether stream is zipped. */
+    final boolean isBinFileGZipped() {
+        return IS_USE_GZIP;
+    }
+    
     /**
      * Validate the version as read from the file if it can be parsed by
      * this implementation.
@@ -474,7 +477,7 @@ class Buffer {
         } catch (Throwable e) {
             if (!(e instanceof IOException)) {
                 LOGGER.coding("Writing cells to temporary buffer must not "
-                        + "throw " + e.getClass().getSimpleName());
+                        + "throw " + e.getClass().getSimpleName(), e);
             }
             StringBuilder builder =
                 new StringBuilder("Error while writing to buffer");
@@ -506,96 +509,140 @@ class Buffer {
         for (int col = 0; col < cellCount; col++) {
             DataCell cell = row instanceof BlobSupportDataRow
                 ? ((BlobSupportDataRow)row).getRawCell(col)
-                        : cellCopies[col];
-            boolean isWrapperCell = cell instanceof BlobWrapperDataCell;
-            boolean mustChangeRow = false;
-            BlobAddress ad;
-            final Class<? extends BlobDataCell> cl;
-            BlobWrapperDataCell wc;
-            if (isWrapperCell) {
-                assert row instanceof BlobSupportDataRow;
-                wc = (BlobWrapperDataCell)cell;
-                ad = wc.getAddress();
-                cl = wc.getBlobClass();
-                assert ad != null : "Blob address must not be null in wrapper";
-            } else if (cell instanceof BlobDataCell) {
-                cl = ((BlobDataCell)cell).getClass();
-                ad = ((BlobDataCell)cell).getBlobAddress();
-            } else {
-                continue; // ordinary cell (e.g. double cell)
-            }
-            final Buffer ownerBuffer;
-            if (ad != null) {
-                // has blob been added to this buffer in a preceding row?
-                // (and this is not an ordinary buffer (but a BufferedDataCont.)
-                if (ad.getBufferID() == getBufferID() && getBufferID() != -1) {
-                    ownerBuffer = this;
-                } else {
-                    // table that's been created somewhere in the workflow
-                    ContainerTable t = m_globalRepository.get(ad.getBufferID());
-                    ownerBuffer = t != null ? t.getBuffer() : null;
-                }
-            } else {
-                ownerBuffer = null;
-            }
-            if (ownerBuffer == null) {
-                // need to set ownership if this blob was not assigned yet
-                // or has been assigned to an unlinked (i.e. local) buffer
-                boolean isCompress = ad != null ? ad.isUseCompression()
-                        : isUseCompressionForBlobs(cl);
-                BlobAddress rewrite =
-                    new BlobAddress(m_bufferID, col, isCompress);
-                if (ad == null) {
-                    ((BlobDataCell)cell).setBlobAddress(rewrite);
-                    ad = rewrite;
-                }
-                if (m_indicesOfBlobInColumns == null) {
-                    m_indicesOfBlobInColumns = new int[cellCount];
-                }
-                ContainerTable b = m_localRepository.get(ad.getBufferID());
-                if (b != null) {
-                    int indexBlobInCol = m_indicesOfBlobInColumns[col]++;
-                    rewrite.setIndexOfBlobInColumn(indexBlobInCol);
-                    File source = b.getBuffer().getBlobFile(
-                            ad.getIndexOfBlobInColumn(),
-                            ad.getColumn(), false, ad.isUseCompression());
-                    File dest = getBlobFile(
-                            indexBlobInCol, col, true, ad.isUseCompression());
-                    FileUtil.copy(source, dest);
-                } else {
-                    BlobDataCell bc;
-                    if (isWrapperCell) {
-                        bc = ((BlobWrapperDataCell)cell).getCell();
-                    } else {
-                        bc = (BlobDataCell)cell;
-                    }
-                    writeBlobDataCell(
-                            bc, rewrite, getSerializerForDataCell(cl));
-                }
-                wc = new BlobWrapperDataCell(this, rewrite, cl);
-                mustChangeRow = true;
-            } else {
-                // blob has been saved in one of the predecessor nodes
-                if (isWrapperCell) {
-                    wc = (BlobWrapperDataCell)cell;
-                } else {
-                    mustChangeRow = true;
-                    wc = new BlobWrapperDataCell(ownerBuffer, ad, cl);
-                }
-            }
-            if (mustChangeRow) {
-                m_containsBlobs = true;
+                    : cellCopies[col];
+            DataCell processedCell = 
+                handleIncomingBlob(cell, col, row.getNumCells());
+            if (processedCell != cell) {
                 if (cellCopies == null) {
                     cellCopies = new DataCell[cellCount];
                     for (int i = 0; i < cellCount; i++) {
                         cellCopies[i] = ((BlobSupportDataRow)row).getRawCell(i);
                     }
                 }
-                cellCopies[col] = wc;
+                cellCopies[col] = processedCell;
             }
         }
         return cellCopies == null ? (BlobSupportDataRow)row
                 : new BlobSupportDataRow(row.getKey(), cellCopies);
+    }
+    
+    private DataCell handleIncomingBlob(final DataCell cell, 
+            final int col, final int totalColCount) throws IOException {
+        // whether the content of the argument row needs to be copied
+        // into a new BlobSupportDataRow (will do that when either this 
+        // flag is true or cellCopies != null)
+        
+        boolean isWrapperCell = cell instanceof BlobWrapperDataCell;
+        BlobAddress ad;
+        final Class<? extends BlobDataCell> cl;
+        BlobWrapperDataCell wc = null;
+        if (isWrapperCell) {
+            wc = (BlobWrapperDataCell)cell;
+            ad = wc.getAddress();
+            cl = wc.getBlobClass();
+        } else if (cell instanceof BlobDataCell) {
+            cl = ((BlobDataCell)cell).getClass();
+            ad = ((BlobDataCell)cell).getBlobAddress();
+        } else {
+            if (cell instanceof CollectionDataValue) {
+                CollectionDataValue cdv = (CollectionDataValue)cell;
+                if (cdv.containsBlobWrapperCells()) {
+                    Iterator<DataCell> it = cdv.iterator();
+                    if (!(it instanceof BlobSupportDataCellIterator)) {
+                        LOGGER.coding("(Collection) DataCell of class \"" 
+                                + cell.getClass().getSimpleName() 
+                                + "\" contains Blobs, but does not "
+                                + "return an iterator supporting those " 
+                                + "(expected " + BlobSupportDataCellIterator
+                                .class.getSimpleName() + ", got " 
+                                + it.getClass().getSimpleName() + ")");
+                    }
+                    BlobSupportDataCellIterator bit = 
+                        (BlobSupportDataCellIterator)it;
+                    while (bit.hasNext()) {
+                        // we disregard the return value here
+                        handleIncomingBlob(
+                                bit.nextWithBlobSupport(), col, totalColCount);
+                    }
+                }
+            }
+            return cell; // ordinary cell (e.g. double cell)
+        }
+        // (if ownerBuffer is null, m_containsBlobs must be true)
+        final Buffer ownerBuffer;
+        if (ad != null) {
+            // has blob been added to this buffer in a preceding row?
+            // (and this is not an ordinary buffer (but a BufferedDataCont.)
+            if (ad.getBufferID() == getBufferID() && getBufferID() != -1) {
+                ownerBuffer = this;
+            } else {
+                // table that's been created somewhere in the workflow
+                ContainerTable t = m_globalRepository.get(ad.getBufferID());
+                ownerBuffer = t != null ? t.getBuffer() : null;
+            }
+            /* this can only be true if the argument row contains wrapper 
+             * cells for blobs that do not have a buffer set; that is, 
+             * someone took a BlobDataCell from a predecessor node 
+             * (ad != null) and put it manually into a new wrapper cell
+             * (wc != null) - by doing that you loose the buffer info
+             * (wc.getBuffer == null) */
+            if (isWrapperCell && wc.getBuffer() == null) {
+                wc.setAddressAndBuffer(ad, ownerBuffer);
+            }
+        } else {
+            ownerBuffer = null;
+        }
+        if (ownerBuffer == null) {
+            // need to set ownership if this blob was not assigned yet
+            // or has been assigned to an unlinked (i.e. local) buffer
+            boolean isCompress = ad != null ? ad.isUseCompression()
+                    : isUseCompressionForBlobs(cl);
+            BlobAddress rewrite =
+                new BlobAddress(m_bufferID, col, isCompress);
+            if (ad == null) {
+                // take ownership
+                if (isWrapperCell) {
+                    ((BlobWrapperDataCell)cell).setAddressAndBuffer(
+                            rewrite, this);
+                } else {
+                    ((BlobDataCell)cell).setBlobAddress(rewrite);
+                }
+                ad = rewrite;
+            }
+            if (m_indicesOfBlobInColumns == null) {
+                m_indicesOfBlobInColumns = new int[totalColCount];
+            }
+            ContainerTable b = m_localRepository.get(ad.getBufferID());
+            if (b != null) {
+                int indexBlobInCol = m_indicesOfBlobInColumns[col]++;
+                rewrite.setIndexOfBlobInColumn(indexBlobInCol);
+                File source = b.getBuffer().getBlobFile(
+                        ad.getIndexOfBlobInColumn(),
+                        ad.getColumn(), false, ad.isUseCompression());
+                File dest = getBlobFile(
+                        indexBlobInCol, col, true, ad.isUseCompression());
+                FileUtil.copy(source, dest);
+            } else {
+                BlobDataCell bc;
+                if (isWrapperCell) {
+                    bc = ((BlobWrapperDataCell)cell).getCell();
+                } else {
+                    bc = (BlobDataCell)cell;
+                }
+                writeBlobDataCell(
+                        bc, rewrite, getSerializerForDataCell(cl));
+            }
+            wc = new BlobWrapperDataCell(this, rewrite, cl);
+        } else {
+            // blob has been saved in one of the predecessor nodes
+            if (isWrapperCell) {
+                wc = (BlobWrapperDataCell)cell;
+            } else {
+                wc = new BlobWrapperDataCell(ownerBuffer, ad, cl);
+            }
+        }
+        m_containsBlobs |= ownerBuffer != null;
+        return wc;
     }
 
     /** Creates temp file (m_binFile) and adds this buffer to shutdown hook. */
@@ -653,7 +700,7 @@ class Buffer {
      * @throws IOException If that fails.
      */
     private Class<? extends DataCell>[] closeFile(
-            final DCObjectOutputStream outStream) throws IOException {
+            final DCObjectOutputVersion2 outStream) throws IOException {
         Class<? extends DataCell>[] shortCutsLookup = createShortCutArray();
         outStream.close();
         return shortCutsLookup;
@@ -781,14 +828,26 @@ class Buffer {
     public int size() {
         return m_size;
     }
+    
+    /** Get whether the buffer wants to persist row keys. Here hard-coded
+     * to <code>true</code> but overwritten in {@link NoKeyBuffer}.
+     * @return whether row keys needs to be written/read.
+     */
+    boolean shouldSkipRowKey() {
+        return false;
+    }
 
     /** Restore content of this buffer into main memory (using a collection
      * implementation). The restoring will be performed with the next iteration.
      */
     final void restoreIntoMemory() {
         if (usesOutFile()) {
+            CloseableRowIterator it = iterator();
+            assert it instanceof FromFileIterator : "Iterator on a file-based "
+                + "buffer must be instance of " 
+                + FromFileIterator.class.getSimpleName(); 
+            m_backIntoMemoryIterator = (FromFileIterator)it;
             m_list = new ArrayList<BlobSupportDataRow>(size());
-            m_backIntoMemoryIterator = new FromFileIterator();
         }
     }
 
@@ -815,7 +874,7 @@ class Buffer {
      * @throws IOException If an IO error occurs while writing to the file.
      */
     private void writeRow(final BlobSupportDataRow row,
-            final DCObjectOutputStream outStream) throws IOException {
+            final DCObjectOutputVersion2 outStream) throws IOException {
         RowKey id = row.getKey();
         writeRowKey(id, outStream);
         for (int i = 0; i < row.getNumCells(); i++) {
@@ -825,9 +884,9 @@ class Buffer {
                 m_indicesOfBlobInColumns = new int[row.getNumCells()];
             }
             writeDataCell(cell, outStream);
+            outStream.endBlock();
         }
-        outStream.writeByte(BYTE_ROW_SEPARATOR);
-        outStream.reset();
+        outStream.endRow();
     }
 
     /** Writes the row key to the out stream. This method is overridden in
@@ -837,35 +896,23 @@ class Buffer {
      * @throws IOException If that fails.
      */
     void writeRowKey(final RowKey key,
-            final DCObjectOutputStream outStream) throws IOException {
-        outStream.writeUTF(key.getString());
-    }
-
-    /** Reads a row key from a string. Is overridden in {@link NoKeyBuffer}
-     * to return always the same key.
-     * @param inStream To read from
-     * @return The row key as read right from the stream.
-     * @throws IOException If reading fails for IO problems.
-     */
-    RowKey readRowKey(final DCObjectInputStream inStream) throws IOException {
-        String key;
-        if (m_version >= 5) { // < 5 is version 1.3.x and before, see above
-            key = inStream.readUTF();
-        } else {
-            key = readDataCell(inStream).toString();
+            final DCObjectOutputVersion2 outStream) throws IOException {
+        if (shouldSkipRowKey()) {
+            return;
         }
-        return new RowKey(key);
+        outStream.writeRowKey(key);
+        outStream.endBlock();
     }
 
     /** Writes a data cell to the outStream.
      * @param cell The cell to write.
      * @param outStream To write to.
-     * @throws IOException
+     * @throws IOException If stream corruption happens.
      */
-    private void writeDataCell(final DataCell cell,
-            final DCObjectOutputStream outStream) throws IOException {
+    void writeDataCell(final DataCell cell,
+            final DCObjectOutputVersion2 outStream) throws IOException {
         if (cell.isMissing()) {
-            outStream.writeByte(BYTE_TYPE_MISSING);
+            outStream.writeControlByte(BYTE_TYPE_MISSING);
             return;
         }
         boolean isBlob = cell instanceof BlobWrapperDataCell;
@@ -877,17 +924,17 @@ class Buffer {
         // DataCell is datacell-serializable
         if (ser != null || isBlob) {
             // memorize type if it does not exist
-            outStream.writeByte(identifier);
+            outStream.writeControlByte(identifier);
             if (isBlob) {
                 BlobWrapperDataCell bc = (BlobWrapperDataCell)cell;
                 outStream.writeBlobAddress(bc.getAddress());
             } else {
-                outStream.writeDataCell(ser, cell);
+                outStream.writeDataCellPerKNIMESerializer(ser, cell);
             }
         } else {
-            outStream.writeByte(BYTE_TYPE_SERIALIZATION);
-            outStream.writeByte(identifier);
-            outStream.writeObject(cell);
+            outStream.writeControlByte(BYTE_TYPE_SERIALIZATION);
+            outStream.writeControlByte(identifier);
+            outStream.writeDataCellPerJavaSerialization(cell);
         }
     }
 
@@ -895,6 +942,8 @@ class Buffer {
      * or <code>null</code> if it needs to be java-serialized.
      * @param cellClass The cell's class to write out.
      * @return The serializer to use or <code>null</code>.
+     * @throws IOException If there are too many different cell 
+     * implementations (currently 253 are theoretically supported)
      */
     private DataCellSerializer<DataCell> getSerializerForDataCell(
             final Class<? extends DataCell> cellClass) throws IOException {
@@ -917,92 +966,6 @@ class Buffer {
         return serializer;
     }
 
-    /** Reads a datacell from inStream, does no exception handling. */
-    @SuppressWarnings("unchecked")
-    private DataCell readDataCell(final DCObjectInputStream inStream)
-            throws IOException {
-        if (m_version == 1) {
-            return readDataCellVersion1(inStream);
-        }
-        inStream.setCurrentClassLoader(null);
-        byte identifier = inStream.readByte();
-        if (identifier == BYTE_TYPE_MISSING) {
-            return DataType.getMissingCell();
-        }
-        final boolean isSerialized = identifier == BYTE_TYPE_SERIALIZATION;
-        if (isSerialized) {
-            identifier = inStream.readByte();
-        }
-        Class<? extends DataCell> type = getTypeForChar(identifier);
-        boolean isBlob = BlobDataCell.class.isAssignableFrom(type);
-        if (isBlob) {
-            BlobAddress address = inStream.readBlobAddress();
-            Buffer blobBuffer = this;
-            if (address.getBufferID() != m_bufferID) {
-                ContainerTable cnTbl =
-                    m_globalRepository.get(address.getBufferID());
-                if (cnTbl == null) {
-                    throw new IOException(
-                    "Unable to retrieve table that owns the blob cell");
-                }
-                blobBuffer = cnTbl.getBuffer();
-            }
-            return new BlobWrapperDataCell(
-                    blobBuffer, address, (Class<? extends BlobDataCell>)type);
-        }
-        if (isSerialized) {
-            try {
-                ClassLoader cellLoader = type.getClassLoader();
-                inStream.setCurrentClassLoader(cellLoader);
-                return (DataCell)inStream.readObject();
-            } catch (ClassNotFoundException cnfe) {
-                IOException ioe = new IOException(cnfe.getMessage());
-                ioe.initCause(cnfe);
-                throw ioe;
-            }
-        } else {
-            DataCellSerializer<? extends DataCell> serializer =
-                DataType.getCellSerializer(type);
-            assert serializer != null;
-            return inStream.readDataCell(serializer);
-        }
-    }
-
-    /** Backward compatibility: DataCells that are (java-) serialized are
-     * not annotated with a byte identifying their type. We need that in the
-     * future to make sure we use the right class loader.
-     * @param inStream To read from.
-     * @return The cell.
-     * @throws IOException If fails.
-     */
-    private DataCell readDataCellVersion1(final DCObjectInputStream inStream)
-        throws IOException {
-        byte identifier = inStream.readByte();
-        if (identifier == BYTE_TYPE_MISSING) {
-            return DataType.getMissingCell();
-        }
-        if (identifier == BYTE_TYPE_SERIALIZATION) {
-            try {
-                return (DataCell)inStream.readObject();
-            } catch (ClassNotFoundException cnfe) {
-                IOException ioe = new IOException(cnfe.getMessage());
-                ioe.initCause(cnfe);
-                throw ioe;
-            }
-        } else {
-            Class<? extends DataCell> type = getTypeForChar(identifier);
-            DataCellSerializer<? extends DataCell> serializer =
-                DataType.getCellSerializer(type);
-            assert serializer != null;
-            try {
-                return inStream.readDataCell(serializer);
-            } catch (IOException ioe) {
-                LOGGER.debug("Unable to read cell from file.", ioe);
-                return DataType.getMissingCell();
-            }
-        }
-    } // readDataCellVersion1(DCObjectInputStream)
-
     private void writeBlobDataCell(final BlobDataCell cell, final BlobAddress a,
             final DataCellSerializer<DataCell> ser) throws IOException {
         // addRow will make sure that m_indicesOfBlobInColumns is initialized
@@ -1011,7 +974,7 @@ class Buffer {
         // (When can this happen? This buffer resizes in memory, a successor
         // node is written to disc; they have different memory policies.)
         if (m_indicesOfBlobInColumns == null) {
-            assert m_spec != null;
+            assert m_spec != null : "Spec is null, buffer not setup for write";
             m_indicesOfBlobInColumns = new int[m_spec.getNumColumns()];
         }
         int column = a.getColumn();
@@ -1047,23 +1010,21 @@ class Buffer {
             new BufferedOutputStream(new FileOutputStream(outFile));
         if (isToCompress) {
             out = new GZIPOutputStream(out);
+            // buffering the gzip stream brings another performance boost 
+            // (in one case from 5mins down to 2 mins)
+            out = new BufferedOutputStream(out);
         }
-        OutputStream outStream = null;
+        DCObjectOutputVersion2 outStream = 
+            new DCObjectOutputVersion2(out, this);
         try {
             if (ser != null) { // DataCell is datacell-serializable
-                outStream = new DataOutputStream(out);
-                DataOutput output =
-                    new LongUTFDataOutputStream((DataOutputStream)outStream);
-                ser.serialize(cell, output);
+                outStream.writeDataCellPerKNIMESerializer(ser, cell);
             } else {
-                outStream = new ObjectOutputStream(out);
-                ((ObjectOutputStream)outStream).writeObject(cell);
+                outStream.writeDataCellPerJavaSerialization(cell);
             }
         } finally {
             // do the best to minimize the number of open streams.
-            if (outStream != null) {
-                outStream.close();
-            }
+            outStream.close();
         }
     }
 
@@ -1086,61 +1047,29 @@ class Buffer {
             Buffer blobBuffer = cnTbl.getBuffer();
             return blobBuffer.readBlobDataCell(blobAddress, cl);
         }
-        if (m_blobLRUCache == null) {
-            m_blobLRUCache = new BlobLRUCache();
-        }
-        SoftReference<BlobDataCell> softRef = m_blobLRUCache.get(blobAddress);
+        SoftReference<BlobDataCell> softRef = BLOB_LRU_CACHE.get(blobAddress);
         BlobDataCell result = softRef != null ? softRef.get() : null;
-        if (result == null) {
-            int column = blobAddress.getColumn();
-            int indexInColumn = blobAddress.getIndexOfBlobInColumn();
-            boolean isCompress = blobAddress.isUseCompression();
-            File inFile = getBlobFile(indexInColumn, column, false, isCompress);
-            InputStream in = new BufferedInputStream(
-                    new FileInputStream(inFile));
-            if (isCompress) {
-                in = new GZIPInputStream(in);
-            }
-            DataCellSerializer<? extends DataCell> ser =
-                DataType.getCellSerializer(cl);
-            InputStream inStream = null;
-            try {
-                if (ser != null) {
-                    inStream = new DataInputStream(in);
-                    DataInput input =
-                        new LongUTFDataInputStream((DataInputStream)inStream);
-                    // the DataType class will reject Serializer that do not 
-                    // have the appropriate return type
-                    result = (BlobDataCell)ser.deserialize(input);
-                    result.setBlobAddress(blobAddress);
-                } else {
-                    inStream = new PriorityGlobalObjectInputStream(in);
-                    ((PriorityGlobalObjectInputStream)inStream).
-                        setCurrentClassLoader(cl.getClassLoader());
-                    try {
-                        result = (BlobDataCell)
-                            ((ObjectInputStream)inStream).readObject();
-                        result.setBlobAddress(blobAddress);
-                    } catch (ClassNotFoundException cnfe) {
-                        IOException e =
-                            new IOException("Unable to restore blob cell");
-                        e.initCause(cnfe);
-                        throw e;
-                    }
-                }
-            } finally {
-                // do the best to minimize the number of open streams.
-                if (inStream != null) {
-                    inStream.close();
-                }
-            }
-            m_blobLRUCache.put(
-                    blobAddress, new SoftReference<BlobDataCell>(result));
+        if (result != null) {
+            return result;
         }
+        if (getReadVersion() <= 5) { // 2.0 TechPreview and earlier
+            result = BufferFromFileIteratorVersion1x.readBlobDataCell(
+                    this, blobAddress, cl);
+        } else {
+            result = new DataCellStreamReader(this).readBlobDataCell(
+                    blobAddress, cl);
+        }
+        BLOB_LRU_CACHE.put(
+                blobAddress, new SoftReference<BlobDataCell>(result));
         return result;
     }
     
-    private Class<? extends DataCell> getTypeForChar(final byte identifier)
+    /** Perform lookup for the DataCell class mapped to the argument byte.
+     * @param identifier The byte as read from the stream.
+     * @return the associated DataCell class
+     * @throws IOException If the byte is invalid.
+     */
+    Class<? extends DataCell> getTypeForChar(final byte identifier)
         throws IOException {
         int shortCutIndex = (byte)(identifier - BYTE_TYPE_START);
         if (shortCutIndex < 0 || shortCutIndex >= m_shortCutsLookup.length) {
@@ -1149,19 +1078,22 @@ class Buffer {
         return m_shortCutsLookup[shortCutIndex];
     }
 
-    /**
-     * Creates short cut array and wraps the argument stream in a
-     * DCObjectOutputStream.
-     */
-    private DCObjectOutputStream initOutFile(
+    /** Creates short cut array and wraps the argument stream in a
+     * {@link DCObjectOutputVersion2}. */
+    private DCObjectOutputVersion2 initOutFile(
             final OutputStream outStream) throws IOException {
         OutputStream wrap;
         if (IS_USE_GZIP) {
             wrap = new GZIPOutputStream(outStream);
+            // buffering the input stream is important as the blockable
+            // stream, which will be put on top of it, reads bytes individually
+            // (had a table, on which a single read-scan took ~6min without
+            // and ~30s with buffering) 
+            wrap = new BufferedOutputStream(wrap);
         } else {
             wrap = outStream;
         }
-        return new DCObjectOutputStream(wrap);
+        return new DCObjectOutputVersion2(wrap, this);
     }
 
     private void ensureBlobDirExists() throws IOException {
@@ -1274,7 +1206,25 @@ class Buffer {
      */
     CloseableRowIterator iterator() {
         if (usesOutFile()) {
-            return new FromFileIterator();
+            FromFileIterator f;
+            try {
+                if (getReadVersion() <= 5) { // tech preview and before
+                    f = new BufferFromFileIteratorVersion1x(this);
+                } else {
+                    f = new BufferFromFileIteratorVersion20(this);
+                }
+                m_nrOpenInputStreams.incrementAndGet();
+                LOGGER.debug("Opening input stream on file \""
+                        + m_binFile.getAbsolutePath() + "\", "
+                        + m_nrOpenInputStreams + " open streams");
+                synchronized (m_openIteratorSet) {
+                    m_openIteratorSet.put(f, DUMMY);
+                }
+            } catch (IOException ioe) {
+                throw new RuntimeException("Cannot read file \""
+                        + m_binFile.getName() + "\"", ioe);
+            }
+            return f;
         } else {
             return new FromListIterator();
         }
@@ -1310,8 +1260,8 @@ class Buffer {
         zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_DATA));
         Class<? extends DataCell>[] shortCutsLookup;
         if (!usesOutFile() || m_version < IVERSION) {
-            DCObjectOutputStream outStream =
-                initOutFile(new NonClosableZipOutputStream(zipOut));
+            DCObjectOutputVersion2 outStream =
+                initOutFile(new NonClosableOutputStream.Zip(zipOut));
             int count = 1;
             for (RowIterator it = iterator(); it.hasNext();) {
                 BlobSupportDataRow row = (BlobSupportDataRow)it.next();
@@ -1340,7 +1290,7 @@ class Buffer {
         zipOut.setLevel(Deflater.DEFAULT_COMPRESSION);
         zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_META));
         writeMetaToFile(
-                new NonClosableZipOutputStream(zipOut), shortCutsLookup);
+                new NonClosableOutputStream.Zip(zipOut), shortCutsLookup);
     }
 
     /** Adds recursively the content of the directory <code>dir</code> to
@@ -1380,17 +1330,38 @@ class Buffer {
     int getBufferID() {
         return m_bufferID;
     }
-
-    /**
-     * Clears the temp file. Any subsequent iteration will fail!
+    
+    /** Clear the argument iterator (free the allocated resources.
+     * @param it The iterator
+     * @param removeFromHash Whether to remove from global hash.
      */
+    synchronized void clearIteratorInstance(final FromFileIterator it,
+            final boolean removeFromHash) {
+        String closeMes = (m_binFile != null) ? "Closing input stream on \""
+            + m_binFile.getAbsolutePath() + "\", " : "";
+        try {
+            if (it.performClose()) {
+                m_nrOpenInputStreams.decrementAndGet();
+                logDebug(closeMes + m_nrOpenInputStreams + " remaining", null);
+                if (removeFromHash) {
+                    synchronized (m_openIteratorSet) {
+                        m_openIteratorSet.remove(it);
+                    }
+                }
+            }
+        } catch (IOException ioe) {
+            logDebug(closeMes + "failed!", ioe);
+        }
+    }
+
+    /** Clears the temp file. Any subsequent iteration will fail! */
     void clear() {
         m_list = null;
         if (m_binFile != null) {
             synchronized (m_openIteratorSet) {
                 for (FromFileIterator f : m_openIteratorSet.keySet()) {
                     if (f != null) {
-                        f.clearIteratorInstance(false);
+                        clearIteratorInstance(f, false);
                     }
                 }
                 m_openIteratorSet.clear();
@@ -1406,8 +1377,8 @@ class Buffer {
     }
 
     private static final int MAX_FILES_TO_CREATE_BEFORE_GC = 10000;
-    private static final MutableInteger FILES_CREATED_COUNTER =
-        new MutableInteger(0);
+    private static final AtomicInteger FILES_CREATED_COUNTER =
+        new AtomicInteger(0);
 
     /** Method being called each time a file is created. It maintains a counter
      * and calls each {@link #MAX_FILES_TO_CREATE_BEFORE_GC} files the garbage
@@ -1416,15 +1387,11 @@ class Buffer {
      * which yields a "not enough system resources to perform operation" error.
      */
     private static void onFileCreated() {
-        synchronized (FILES_CREATED_COUNTER) {
-            FILES_CREATED_COUNTER.inc();
-            if (FILES_CREATED_COUNTER.intValue()
-                    % MAX_FILES_TO_CREATE_BEFORE_GC == 0) {
-                LOGGER.debug("created " + FILES_CREATED_COUNTER.intValue()
-                        + " files, performing garbage collection to"
-                        + " release handles");
-                System.gc();
-            }
+        int count = FILES_CREATED_COUNTER.incrementAndGet();
+        if (count % MAX_FILES_TO_CREATE_BEFORE_GC == 0) {
+            LOGGER.debug("created " + count + " files, performing garbage "
+                    + "collection to release handles");
+            System.gc();
         }
     }
 
@@ -1452,9 +1419,9 @@ class Buffer {
         
         /** {@inheritDoc} */
         @Override
-        protected boolean removeEldestEntry(
+        protected synchronized boolean removeEldestEntry(
                 final Entry<BlobAddress, SoftReference<BlobDataCell>> eldest) {
-            return size() >= 50;
+            return size() >= 500;
         }
         
         /** {@inheritDoc} */
@@ -1472,191 +1439,21 @@ class Buffer {
         }
         
     }
-
-    /**
-     * Iterator that traverses the out file on the disk and deserializes
-     * the rows.
-     */
-    private class FromFileIterator extends CloseableRowIterator {
-
-        private int m_pointer;
-        /** If an exception has been thrown while reading from this buffer (only
-         * if it has been written to disc). If so, further error messages are
-         * only written to debug output in order to reduce message spam on the
-         * console.
+    
+    /** Super class of all file iterators. */
+    abstract static class FromFileIterator extends CloseableRowIterator 
+    implements KNIMEStreamConstants {
+        
+        /** Called when the stream closing should take place.
+         * @return Whether the stream close was actually performed (that is 
+         * false when already closed.)
+         * @throws IOException If closing fails.
          */
-        private boolean m_hasThrownReadException;
-
-        private DCObjectInputStream m_inStream;
-
-        /**
-         * Inits the input stream.
-         */
-        FromFileIterator() {
-            m_pointer = 0;
-            if (m_binFile == null) {
-                throw new RuntimeException("Unable to read table from file, "
-                        + "table has been cleared.");
-            }
-            try {
-                BufferedInputStream bufferedStream =
-                    new BufferedInputStream(new FileInputStream(m_binFile));
-                InputStream in;
-                // stream was not zipped in KNIME 1.1.x
-                if (!IS_USE_GZIP || m_version < 3) {
-                    in = bufferedStream;
-                } else {
-                    in = new GZIPInputStream(bufferedStream);
-                }
-                m_inStream = new DCObjectInputStream(in);
-                m_nrOpenInputStreams++;
-                LOGGER.debug("Opening input stream on file \""
-                        + m_binFile.getAbsolutePath() + "\", "
-                        + m_nrOpenInputStreams + " open streams");
-            } catch (IOException ioe) {
-                throw new RuntimeException("Cannot read file \""
-                        + m_binFile.getName() + "\"", ioe);
-            }
-            synchronized (m_openIteratorSet) {
-                m_openIteratorSet.put(this, DUMMY);
-            }
-        }
-
-        /** Get the name of the out file that this iterator works on.
-         * @return The name of the out file
-         */
-        public String getOutFileName() {
-            return m_binFile.getAbsolutePath();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean hasNext() {
-            boolean hasNext = m_pointer < Buffer.this.m_size;
-            if (!hasNext && (m_inStream != null)) {
-                clearIteratorInstance(true);
-            }
-            return hasNext;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public synchronized BlobSupportDataRow next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException("Iterator at end");
-            }
-            final DCObjectInputStream inStream = m_inStream;
-            RowKey key;
-            try {
-                key = readRowKey(inStream);
-            } catch (Throwable throwable) {
-                handleReadThrowable(throwable);
-                // can't ensure that we generate a unique key but it should
-                // cover 99.9% of all cases
-                String keyS = "Read_failed__auto_generated_key_" + m_pointer;
-                key = new RowKey(keyS);
-            }
-            int colCount = m_spec.getNumColumns();
-            DataCell[] cells = new DataCell[colCount];
-            for (int i = 0; i < colCount; i++) {
-                DataCell nextCell;
-                try {
-                    nextCell = readDataCell(m_inStream);
-                } catch (final Throwable e) {
-                    handleReadThrowable(e);
-                    nextCell = DataType.getMissingCell();
-                }
-                cells[i] = nextCell;
-            }
-            try {
-                if (m_version >= 5) {
-                    byte eoRow = inStream.readByte();
-                    if (eoRow != BYTE_ROW_SEPARATOR) {
-                        throw new IOException("Expected end of row byte, "
-                            + "got '" + eoRow + "', (byte " + (int)eoRow + ")");
-                    }
-                } else {
-                    char eoRow = inStream.readChar();
-                    if (eoRow != '\n') {
-                        throw new IOException("Expected end of row character, "
-                            + "got '" + eoRow + "', (char " + (int)eoRow + ")");
-                    }
-                }
-            } catch (IOException ioe) {
-                handleReadThrowable(ioe);
-            } finally {
-                m_pointer++;
-            }
-            return new BlobSupportDataRow(key, cells);
-        }
-
-        private void handleReadThrowable(final Throwable throwable) {
-            String warnMessage = "Errors while reading row "
-                    + (m_pointer + 1) + " from file \""
-                    + m_binFile.getName() + "\": " + throwable.getMessage();
-            if (!m_hasThrownReadException) {
-                warnMessage = warnMessage.concat(
-                        "; Suppressing further warnings.");
-                LOGGER.error(warnMessage, throwable);
-            } else {
-                LOGGER.debug(warnMessage, throwable);
-            }
-            if (!(throwable instanceof IOException)) {
-                String messageCoding = throwable.getClass().getSimpleName()
-                + " caught, implementation may only throw IOException.";
-                if (!m_hasThrownReadException) {
-                    LOGGER.coding(messageCoding);
-                } else {
-                    LOGGER.debug(messageCoding);
-                }
-            }
-            m_hasThrownReadException = true;
-        }
-
-        private synchronized void clearIteratorInstance(
-                final boolean removeFromHash) {
-            m_pointer = Buffer.this.m_size; // mark it as end of file
-            // already closed (clear has been called before)
-            if (m_inStream == null) {
-                return;
-            }
-
-            String closeMes = (m_binFile != null) ? "Closing input stream on \""
-                + m_binFile.getAbsolutePath() + "\", " : "";
-            try {
-                m_inStream.close();
-                m_nrOpenInputStreams--;
-                logDebug(closeMes + m_nrOpenInputStreams + " remaining", null);
-                m_inStream = null;
-                if (removeFromHash) {
-                    synchronized (m_openIteratorSet) {
-                        m_openIteratorSet.remove(this);
-                    }
-                }
-            } catch (IOException ioe) {
-                logDebug(closeMes + "failed!", ioe);
-            }
-        }
+        abstract boolean performClose() throws IOException;
         
         /** {@inheritDoc} */
         @Override
-        public void close() {
-            clearIteratorInstance(true);
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        protected void finalize() throws Throwable {
-            /* This all relates much to bug #63: The temp files are not
-             * deleted under windows. It seems that there are open streams
-             * when the VM closes.
-             */
-            clearIteratorInstance(true);
-        }
+        public abstract BlobSupportDataRow next();
     }
 
     /**

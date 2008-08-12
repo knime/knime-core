@@ -22,8 +22,6 @@
  */
 package org.knime.core.data;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import org.knime.core.internal.SerializerMethodLoader.Serializer;
@@ -52,7 +50,8 @@ public interface DataCellSerializer<T extends DataCell> extends Serializer<T> {
      * @param output the place to write to
      * @throws IOException if writing fails
      */
-    void serialize(final T cell, final DataOutput output) throws IOException;
+    void serialize(final T cell, final DataCellDataOutput output) 
+        throws IOException;
 
     /**
      * Loads a new instance of {@link org.knime.core.data.DataCell} of type 
@@ -65,6 +64,6 @@ public interface DataCellSerializer<T extends DataCell> extends Serializer<T> {
      *         <code>DataCell</code>
      * @throws IOException if loading fails
      */
-    T deserialize(final DataInput input) throws IOException;
+    T deserialize(final DataCellDataInput input) throws IOException;
  
 }

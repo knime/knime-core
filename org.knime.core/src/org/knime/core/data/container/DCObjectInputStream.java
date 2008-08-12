@@ -34,11 +34,16 @@ import java.io.ObjectInputStream;
 import java.io.ObjectInputValidation;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 
 
 /**
+ * Obsolete input stream to read Files written with Buffer objects in KNIME
+ * 1.x (and 2.0TechPreview).
+ * 
+ * <p>
  * Input stream that is used by the Buffer to read (java.io.-)serialized  
  * <code>DataCell</code> (the ones whose type does not support customized 
  * reading/writing) and also <code>DataCell</code> objects that have been
@@ -64,7 +69,7 @@ final class DCObjectInputStream extends ObjectInputStream {
     private final PriorityGlobalObjectInputStream m_inObject;
     /** Wrapped stream that is passed to the DataCellSerializer,
      * this stream reads from m_in. */
-    private final LongUTFDataInputStream m_dataInStream;
+    private final ObsoleteDCDataInputStream m_dataInStream;
     /** Escapable stream, returns eof when block ends. */
     private final BlockableInputStream m_in;
     
@@ -76,7 +81,8 @@ final class DCObjectInputStream extends ObjectInputStream {
     DCObjectInputStream(final InputStream in) throws IOException {
         m_inObject = new PriorityGlobalObjectInputStream(in);
         m_in = new BlockableInputStream(m_inObject);
-        m_dataInStream = new LongUTFDataInputStream(new DataInputStream(m_in));
+        m_dataInStream = 
+            new ObsoleteDCDataInputStream(new DataInputStream(m_in));
     }
     
     /** Reads a data cell from the stream and pushes the stream forward to 
@@ -84,7 +90,7 @@ final class DCObjectInputStream extends ObjectInputStream {
      * @param serializer The factory that is used to create the cell
      * @return A new data cell instance.
      * @throws IOException If reading fails.
-     * @see DataCellSerializer#deserialize(java.io.DataInput)
+     * @see DataCellSerializer#deserialize(DataCellDataInput)
      */
     public DataCell readDataCell(
             final DataCellSerializer<? extends DataCell> serializer)
@@ -355,6 +361,27 @@ final class DCObjectInputStream extends ObjectInputStream {
      */
     void setCurrentClassLoader(final ClassLoader l) {
         m_inObject.setCurrentClassLoader(l);
+    }
+    
+    private static final class ObsoleteDCDataInputStream 
+        extends LongUTFDataInputStream implements DataCellDataInput {
+
+        /** Inherited constructor.
+         * @param input Passed to super implementation.
+         */
+        public ObsoleteDCDataInputStream(final DataInputStream input) {
+            super(input);
+        }
+
+        /** Throws always an exception as reading DataCells is not supported.
+         * {@inheritDoc} */
+        @Override
+        public DataCell readDataCell() throws IOException {
+            throw new IOException("The stream was written with a version that "
+                    + "does not support reading/writing of encapsulated " 
+                    + "DataCells");
+        }
+        
     }
     
 }

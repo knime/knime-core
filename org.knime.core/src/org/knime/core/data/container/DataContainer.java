@@ -469,24 +469,25 @@ public class DataContainer implements RowAppender {
         for (int c = 0; c < numCells; c++) {
             DataType columnClass = m_spec.getColumnSpec(c).getType();
             DataCell value;
-            DataType runtimeClass;
+            DataType runtimeType;
             if (row instanceof BlobSupportDataRow) {
                 BlobSupportDataRow bsvalue = (BlobSupportDataRow)row;
-                DataCell ce  = bsvalue.getRawCell(c);
-                runtimeClass = ce instanceof BlobWrapperDataCell
-                    ? DataType.getType(((BlobWrapperDataCell)ce).getBlobClass())
-                            : ce.getType();
-                value = ce;
+                value  = bsvalue.getRawCell(c);
             } else {
                 value = row.getCell(c);
-                runtimeClass = value.getType();
+            }
+            if (value instanceof BlobWrapperDataCell) {
+                BlobWrapperDataCell bw = (BlobWrapperDataCell)value;
+                runtimeType = DataType.getType(bw.getBlobClass());
+            } else {
+                runtimeType = value.getType();
             }
                 
-            if (!columnClass.isASuperTypeOf(runtimeClass)) {
+            if (!columnClass.isASuperTypeOf(runtimeType)) {
                 throw new IllegalArgumentException("Runtime class of object \""
                         + value.toString() + "\" (index " + c
                         + ") in " + "row \"" + key + "\" is "
-                        + runtimeClass.toString()
+                        + runtimeType.toString()
                         + " and does not comply with its supposed superclass "
                         + columnClass.toString());
             }
@@ -753,7 +754,7 @@ public class DataContainer implements RowAppender {
         NodeSettings settings = new NodeSettings("Table Spec");
         NodeSettingsWO specSettings = settings.addNodeSettings(CFG_TABLESPEC);
         buf.getTableSpec().save(specSettings);
-        settings.saveToXML(new NonClosableZipOutputStream(zipOut));
+        settings.saveToXML(new NonClosableOutputStream.Zip(zipOut));
         zipOut.close();
     }
     

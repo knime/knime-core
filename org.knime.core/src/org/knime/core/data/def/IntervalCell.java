@@ -25,11 +25,11 @@
  */
 package org.knime.core.data.def;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellDataInput;
+import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
@@ -246,8 +246,8 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
         /**
          * {@inheritDoc}
          */
-        public void serialize(final IntervalCell cell, final DataOutput output)
-                throws IOException {
+        public void serialize(final IntervalCell cell, 
+                final DataCellDataOutput output) throws IOException {
             output.writeDouble(cell.getLeftBound());
             output.writeDouble(cell.getRightBound());
             output.writeBoolean(cell.leftBoundIncluded());
@@ -257,7 +257,7 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
         /**
          * {@inheritDoc}
          */
-        public IntervalCell deserialize(final DataInput input)
+        public IntervalCell deserialize(final DataCellDataInput input)
                 throws IOException {
             return new IntervalCell(input.readDouble(), input.readDouble(),
                     input.readBoolean(), input.readBoolean());

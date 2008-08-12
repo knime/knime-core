@@ -31,7 +31,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowKey;
 import org.knime.core.node.NodeLogger;
 
 
@@ -48,13 +47,11 @@ class NoKeyBuffer extends Buffer {
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(NoKeyBuffer.class);
     
-    private static final RowKey DUMMY_KEY = new RowKey("non-existing");
-    
     /** Current version string. */
-    private static final String VERSION = "noRowKeyContainer_5";
+    private static final String VERSION = "noRowKeyContainer_6";
     
     /** The version number corresponding to VERSION. */
-    private static final int IVERSION = 5;
+    private static final int IVERSION = 6;
     
     private static final HashMap<String, Integer> COMPATIBILITY_MAP;
     
@@ -65,11 +62,15 @@ class NoKeyBuffer extends Buffer {
         COMPATIBILITY_MAP.put("noRowKeyContainer_1.1.0", 2);
         COMPATIBILITY_MAP.put("noRowKeyContainer_1.2.0", 3);
         COMPATIBILITY_MAP.put("noRowKeyContainer_4", 4);
+        COMPATIBILITY_MAP.put("noRowKeyContainer_5", 5);
         COMPATIBILITY_MAP.put(VERSION, IVERSION);
     }
-    /**
-     * For writing.
-     * @see Buffer#Buffer(int, int, java.util.Map, java.util.Map)
+    
+    /** Creates new buffer for writing.
+     * @param maxRowsInMemory Passed on to super.
+     * @param bufferID Passed on to super.
+     * @param tblRep Passed on to super.
+     * @param localTblRep Passed on to super.
      */
     NoKeyBuffer(final int maxRowsInMemory, 
             final int bufferID, final Map<Integer, ContainerTable> tblRep,
@@ -77,8 +78,14 @@ class NoKeyBuffer extends Buffer {
         super(maxRowsInMemory, bufferID, tblRep, localTblRep);
     }
     
-    /**
-     * @see Buffer#Buffer(File, File, DataTableSpec, InputStream, int, Map)
+    /** Creates new buffer for reading.
+     * @param binFile Passed on to super.
+     * @param blobDir Passed on to super.
+     * @param spec Passed on to super.
+     * @param metaIn Passed on to super.
+     * @param bufferID Passed on to super.
+     * @param tblRep Passed on to super.
+     * @throws IOException Passed on from super.
      */
     NoKeyBuffer(final File binFile, final File blobDir, 
             final DataTableSpec spec, final InputStream metaIn, 
@@ -87,17 +94,13 @@ class NoKeyBuffer extends Buffer {
         super(binFile, blobDir, spec, metaIn, bufferID, tblRep);
     }
     
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public String getVersion() {
         return VERSION;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public int validateVersion(final String version) throws IOException {
         Integer iVersion = COMPATIBILITY_MAP.get(version);
@@ -110,22 +113,11 @@ class NoKeyBuffer extends Buffer {
         }
         return iVersion;
     }
-    /**
-     * Does nothing as row keys are not stored.
-     * {@inheritDoc}
-     */
+    
+    /** {@inheritDoc} */
     @Override
-    void writeRowKey(final RowKey key, final DCObjectOutputStream outStream) 
-        throws IOException {
-        // left empty, uses always the same key
+    boolean shouldSkipRowKey() {
+        return true;
     }
     
-    /**
-     * Returns always the same key, does nothing to the stream.
-     * {@inheritDoc}
-     */
-    @Override
-    RowKey readRowKey(final DCObjectInputStream inStream) {
-        return DUMMY_KEY;
-    }
 }

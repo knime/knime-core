@@ -25,11 +25,11 @@
  */
 package org.knime.core.data.def;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellDataInput;
+import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
@@ -42,7 +42,7 @@ import org.knime.core.data.StringValue;
  * 
  * @author Michael Berthold, University of Konstanz
  */
-public final class StringCell extends DataCell
+public final class StringCell extends DataCell 
 implements StringValue, NominalValue {
 
     /**
@@ -130,15 +130,16 @@ implements StringValue, NominalValue {
         /**
          * {@inheritDoc}
          */
-        public void serialize(final StringCell cell, final DataOutput output)
-                throws IOException {
+        public void serialize(final StringCell cell, 
+                final DataCellDataOutput output) throws IOException {
             output.writeUTF(cell.getStringValue());
         }
 
         /**
          * {@inheritDoc}
          */
-        public StringCell deserialize(final DataInput input) throws IOException {
+        public StringCell deserialize(
+                final DataCellDataInput input) throws IOException {
             String s = input.readUTF();
             return new StringCell(s);
         }

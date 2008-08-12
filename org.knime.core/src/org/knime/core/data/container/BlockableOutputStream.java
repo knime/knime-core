@@ -40,16 +40,8 @@ import java.io.OutputStream;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-final class BlockableOutputStream extends OutputStream {
-
-    /** The byte being used as block terminate. */
-    static final byte TC_TERMINATE = (byte)0x61;
-
-    /**
-     * The byte being used to escape the next byte. The next byte will therefore
-     * neither be considered as terminate nor as escape byte.
-     */
-    static final byte TC_ESCAPE = (byte)0x62;
+final class BlockableOutputStream 
+extends OutputStream implements KNIMEStreamConstants {
 
     /** The stream to write to. */
     private final OutputStream m_outStream;
@@ -90,7 +82,7 @@ final class BlockableOutputStream extends OutputStream {
                 m_outStream.write(b, start, newLength);
             }
             if (end != len) {
-                // escape current character and procceed
+                // escape current character and proceed
                 escapeAndWrite(b[end++]);
             }
         }

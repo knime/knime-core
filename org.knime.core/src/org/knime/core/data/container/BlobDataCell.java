@@ -103,12 +103,21 @@ public abstract class BlobDataCell extends DataCell {
      * @param blobAddress The blob address object.
      */
     void setBlobAddress(final BlobAddress blobAddress) {
-        // generally, blob addresses are only assigned once (by the first
-        // buffer that a cell is added to. It may be reassigned if it was
-        // assigned to a buffer writing to a stream directly (for instance
-        // to a zip file using the table writer node).
-        if (m_blobAddress != null && m_blobAddress.getBufferID() != -1) {
-            throw new IllegalStateException("BlobAddress already assigned.");
+        if (blobAddress == null) {
+            throw new NullPointerException("BlobAddress must not be null.");
+        }
+        if (m_blobAddress != null) {
+            if (m_blobAddress.getBufferID() != -1) {
+                // generally, blob addresses are only assigned once (by the
+                // first buffer that a cell is added to. It may be reassigned
+                // if it was assigned to a buffer writing to a stream directly 
+                // (for instance to a zip file using the table writer node).
+            } else if (m_blobAddress.equals(blobAddress)) {
+                // ignore setting the same blob address
+            } else {
+                throw new IllegalStateException(
+                        "BlobAddress already assigned.");
+            }
         }
         m_blobAddress = blobAddress;
     }

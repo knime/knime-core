@@ -694,5 +694,15 @@
              factory-class="org.knime.base.node.variabletotable.VariableToTableNodeFactory"
              id="org.knime.base.node.variabletotable.VariableToTableNodeFactory">
        </node>
+       <node
+             category-path="/misc"
+             factory-class="org.knime.base.collection.list.create.CollectionCreateNodeFactory"
+             id="org.knime.base.collection.list.create.CollectionCreateNodeFactory">
+       </node>
+       <node
+             category-path="/misc"
+             factory-class="org.knime.base.collection.list.split.CollectionSplitNodeFactory"
+             id="org.knime.base.collection.list.split.CollectionSplitNodeFactory">
+       </node>
    </extension>
 </plugin>

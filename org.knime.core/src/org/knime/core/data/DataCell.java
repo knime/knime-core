@@ -27,6 +27,8 @@ package org.knime.core.data;
 
 import java.io.Serializable;
 
+import org.knime.core.data.collection.CollectionDataValue;
+
 /**
  * Abstract base class of all <code>DataCell</code>s, which acts as a container 
  * for arbitrary values and defines the common abilities all cells must provide,
@@ -98,7 +100,11 @@ public abstract class DataCell implements DataValue, Serializable {
      * @see DataType#getType(Class)
      */
     public final DataType getType() {
-        return DataType.getType(getClass());
+        DataType elementType = null;
+        if (this instanceof CollectionDataValue) {
+            elementType = ((CollectionDataValue)this).getElementType();
+        }
+        return DataType.getType(getClass(), elementType);
     }
     
     /**

@@ -26,13 +26,13 @@
  */
 package org.knime.core.data.def;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import org.knime.core.data.BoundedValue;
 import org.knime.core.data.ComplexNumberValue;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellDataInput;
+import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
@@ -196,15 +196,16 @@ public class IntCell extends DataCell implements IntValue, DoubleValue,
         /**
          * {@inheritDoc}
          */
-        public void serialize(final IntCell cell, final DataOutput output)
-                throws IOException {
+        public void serialize(final IntCell cell, 
+                final DataCellDataOutput output) throws IOException {
             output.writeInt(cell.m_int);
         }
 
         /**
          * {@inheritDoc}
          */
-        public IntCell deserialize(final DataInput input) throws IOException {
+        public IntCell deserialize(
+                final DataCellDataInput input) throws IOException {
             int i = input.readInt();
             return new IntCell(i);
         }

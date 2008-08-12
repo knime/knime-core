@@ -100,30 +100,22 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         return m_spec;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     public CloseableRowIterator iterator() {
         return new MyIterator();
     }
 
-    /** Does nothing.
-     * @see KnowsRowCountTable#putIntoTableRepository(HashMap)
-     */
+    /** {@inheritDoc} */
     public void putIntoTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
     }
 
-    /** Does nothing.
-     * @see KnowsRowCountTable#removeFromTableRepository(HashMap)
-     */
+    /** {@inheritDoc} */
     public void removeFromTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     public void saveToFile(final File f, final NodeSettingsWO s,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
@@ -136,6 +128,13 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         subSettings.addInt(CFG_ROW_COUNT, m_rowCount);
     }
     
+    /** Restore table form node settings object.
+     * @param s Containing information.
+     * @param spec Associated spec.
+     * @param tblRep For table lookup
+     * @return The newly instantiated table.
+     * @throws InvalidSettingsException If information is invalid.
+     */
     public static ConcatenateTable load(final NodeSettingsRO s, 
             final DataTableSpec spec, 
             final Map<Integer, BufferedDataTable> tblRep) 
@@ -150,6 +149,12 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         return new ConcatenateTable(tables, spec, rowCount);
     }
 
+    /** Creates a new table from argument tables.
+     * @param mon for progress info/cancellation
+     * @param tables Tables to put together.
+     * @return The new table.
+     * @throws CanceledExecutionException If cancelled.
+     */
     public static ConcatenateTable create(
             final ExecutionMonitor mon, final BufferedDataTable... tables) 
             throws CanceledExecutionException {
@@ -178,6 +183,11 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         return new ConcatenateTable(tables, finalSpec, rowCount);
     }
     
+    /** Creates merged table spec.
+     * @param specs the argument tables.
+     * @return the new spec
+     * @see DataTableSpec#mergeDataTableSpecs(DataTableSpec...)
+     */
     public static DataTableSpec createSpec(final DataTableSpec... specs) {
         return DataTableSpec.mergeDataTableSpecs(specs);
     }
@@ -187,6 +197,7 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         private CloseableRowIterator m_curIterator;
         private DataRow m_next;
         
+        /** Creates new iterator. */
         public MyIterator() {
             m_tableIndex = 0;
             m_curIterator = m_tables[m_tableIndex].iterator();

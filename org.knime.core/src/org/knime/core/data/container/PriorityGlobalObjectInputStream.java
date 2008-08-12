@@ -39,8 +39,9 @@ import org.knime.core.eclipseUtil.GlobalObjectInputStream;
 class PriorityGlobalObjectInputStream extends GlobalObjectInputStream {
     private ClassLoader m_classLoader;
     
-    /**
-     * @see GlobalObjectInputStream#GlobalObjectInputStream(InputStream)
+    /** Delegates to super.
+     * @param in Delegated to super.
+     * @throws IOException If super throws an exception.
      */
     PriorityGlobalObjectInputStream(final InputStream in) 
         throws IOException {

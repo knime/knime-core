@@ -492,8 +492,8 @@ public final class ColumnRearranger {
         DataColumnSpec[] colSpecs = fac.getColumnSpecs();
         if (colSpecs.length != colIndex.length) {
             throw new IndexOutOfBoundsException(
-                    "Arguments do not apply to same number of columns: "
-                    + colSpecs.length + " vs. " + colIndex.length + ")");
+                    "Arguments do not provide to same number of columns: "
+                    + colSpecs.length + " vs. " + colIndex.length);
         }
         for (int i = 0; i < colSpecs.length; i++) {
             remove(colIndex[i]);

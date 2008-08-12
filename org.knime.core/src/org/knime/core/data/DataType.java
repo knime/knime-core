@@ -39,6 +39,7 @@ import java.util.Set;
 import javax.swing.Icon;
 
 import org.knime.core.data.DataValue.UtilityFactory;
+import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 import org.knime.core.data.renderer.SetOfRendererFamilies;
@@ -48,6 +49,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  * Type description associated with a certain implementation of a
@@ -156,16 +158,18 @@ public final class DataType {
     
     /** Config key for the cell class of native types. */
     private static final String CFG_CELL_NAME = "cell_class";
+    /** Config key for the collection elements type. */
+    private static final String CFG_COLL_ELEMENT_TYPE = 
+        "collection_element_type";
     /** Config key for the preferred value class flag. */
     private static final String CFG_HAS_PREF_VALUE = "has_pref_value_class";
-    /** Config key for the value classes. */
+    /** Config key for value classes. */
     private static final String CFG_VALUE_CLASSES = "value_classes";
 
     /** Map of the referring <code>DataCell</code> serializer. */
     private static final Map<Class<? extends DataCell>, DataCellSerializer>
         CLASS_TO_SERIALIZER_MAP =
             new HashMap<Class<? extends DataCell>, DataCellSerializer>();
-    
     
     /** 
      * Map containing all <code>DataCell.class-DataType</code> tuples 
@@ -180,8 +184,8 @@ public final class DataType {
      * instances for  different instances of the 
      * {@link org.knime.core.data.DataValue} implementation.
      */
-    private static final Map<Class<? extends DataCell>, DataType> 
-        CLASS_TO_TYPE_MAP = new HashMap<Class<? extends DataCell>, DataType>();
+    private static final Map<ClassAndSubDataTypePair, DataType> 
+        CLASS_TO_TYPE_MAP = new HashMap<ClassAndSubDataTypePair, DataType>();
     
     /**
      * The String representation comparator. Fall back comparator if no other is
@@ -448,6 +452,13 @@ public final class DataType {
      * implementations have a static member for convenience access, e.g. 
      * {@link org.knime.core.data.def.DoubleCell#TYPE DoubleCell.TYPE}.
      * 
+     * <p>
+     * If the argument class implements a {@link CollectionDataValue} 
+     * (a special cell that bundles multiple cells into one), consider to use
+     * {@link #getType(Class, DataType)} in order to retain the sub element 
+     * type. In most cases, however, this method is the preferred way to 
+     * determine the <code>DataType</code> to a cell class.
+     * 
      * @see org.knime.core.data.DataCell
      * @see org.knime.core.data.DataValue
      * @see org.knime.core.data.DataCell#getType()
@@ -462,15 +473,60 @@ public final class DataType {
         if (cell == null) {
             throw new NullPointerException("Class must not be null.");
         }
-        DataType result = CLASS_TO_TYPE_MAP.get(cell);
+        ClassAndSubDataTypePair key = new ClassAndSubDataTypePair(cell, null);
+        DataType result = CLASS_TO_TYPE_MAP.get(key);
         if (result == null) {
-            result = new DataType(cell);
-            CLASS_TO_TYPE_MAP.put(cell, result);
+            result = new DataType(cell, null);
+            CLASS_TO_TYPE_MAP.put(key, result);
         }
         return result;
     }
     
-    
+    /** Implementation of {@link #getType(Class)} dedicated for special cell
+     * classes that represent collections of {@link DataCell}. The second 
+     * argument <code>collectionElementType</code> must be non-null if and only
+     * if <code>cellImplementsCollectionDataValue</code> implements 
+     * {@link CollectionDataValue}, otherwise an 
+     * {@link IllegalArgumentException} is thrown.
+     * 
+     * <p>For a general description of types representing collections,
+     * refer to the section in the 
+     * <a href="doc-files/newtypes.html#typecollection">manual</a>.
+     * 
+     * @param cellImplementsCollectionDataValue The cell class hosting the
+     * collection by implementing {@link CollectionDataValue}. 
+     * (Other cell are also accepted, but then
+     *  <code>collectionElementType</code> must be null.)  
+     * @param collectionElementType The type of the elements in the collection.
+     * @return A data type representing that type of collection.
+     * @throws IllegalArgumentException As outlined above.
+     * @throws NullPointerException If the class argument is null.
+     */
+    public static DataType getType(
+            final Class<? extends DataCell> cellImplementsCollectionDataValue,
+            final DataType collectionElementType) {
+        if (cellImplementsCollectionDataValue == null) {
+            throw new NullPointerException("Cell class must not be null.");
+        }
+        ClassAndSubDataTypePair key = new ClassAndSubDataTypePair(
+                cellImplementsCollectionDataValue, collectionElementType);
+        DataType result = CLASS_TO_TYPE_MAP.get(key);
+        if (result == null) {
+            if (!CollectionDataValue.class.isAssignableFrom(
+                    cellImplementsCollectionDataValue) 
+                    && collectionElementType != null) {
+                throw new IllegalArgumentException("Cell class \"" 
+                        + cellImplementsCollectionDataValue.getSimpleName() 
+                        + " does not implement \"" 
+                        + CollectionDataValue.class.getSimpleName() + "\"");
+            }
+            result = new DataType(
+                    cellImplementsCollectionDataValue, collectionElementType);
+            CLASS_TO_TYPE_MAP.put(key, result);
+        }
+        return result;
+    }
+
     /** 
      * Determines the <code>UtilityFactory</code> for a given 
      * {@link org.knime.core.data.DataValue} implementation. 
@@ -550,13 +606,19 @@ public final class DataType {
     public static DataType load(final ConfigRO config) 
             throws InvalidSettingsException {
         String cellClassName = config.getString(CFG_CELL_NAME);
+        // collection elements class name, null for "ordinary" cells
+        DataType collectionElementType = null;
+        if (config.containsKey(CFG_COLL_ELEMENT_TYPE)) {
+            collectionElementType = 
+                load(config.getConfig(CFG_COLL_ELEMENT_TYPE));
+        }
         // if it has a class name it is a native type
         if (cellClassName != null) {
             try {
                 Class<? extends DataCell> cellClass = 
                     (Class<? extends DataCell>)
                     GlobalClassCreator.createClass(cellClassName);
-                return getType(cellClass);
+                return getType(cellClass, collectionElementType);
             } catch (ClassCastException cce) {
                 throw new InvalidSettingsException(cellClassName 
                     + " Class not derived from DataCell: " + cce.getMessage());
@@ -584,7 +646,8 @@ public final class DataType {
             }
         }
         try { 
-            return new DataType(hasPrefValueClass, valueClasses);
+            return new DataType(
+                    hasPrefValueClass, valueClasses, collectionElementType);
         } catch (IllegalArgumentException iae) {
             throw new InvalidSettingsException(iae);
         }
@@ -601,6 +664,8 @@ public final class DataType {
      * interfaces. */
     private final List<Class<? extends DataValue>> m_valueClasses;
     
+    private final DataType m_collectionElementType;
+    
     /**
      * Creates a new, non-native <code>DataType</code>. This method is used 
      * from the {@link #load(ConfigRO)} method.
@@ -609,10 +674,28 @@ public final class DataType {
      * interfaces
      */
     private DataType(final boolean hasPreferredValue, 
-            final List<Class<? extends DataValue>> valueClasses) {
+            final List<Class<? extends DataValue>> valueClasses,
+            final DataType collectionElementType) {
         m_cellClass = null;
         m_hasPreferredValueClass = hasPreferredValue;
         m_valueClasses = valueClasses;
+        boolean hasCollectionDataValue = false;
+        for (Class<? extends DataValue> v : m_valueClasses) {
+            if (CollectionDataValue.class.isAssignableFrom(v)) {
+                hasCollectionDataValue = true;
+            }
+        }
+        if (collectionElementType != null && !hasCollectionDataValue) {
+            throw new IllegalArgumentException(
+                    "None of the given DataValue interfaces subclasses \"" 
+                    + CollectionDataValue.class.getSimpleName() + "\" although "
+                    + "a collection element type was provided");
+        }
+        if (hasCollectionDataValue && collectionElementType == null) {
+            throw new IllegalArgumentException("The type represents a "
+                    + "collection but no element type was provided");
+        }
+        m_collectionElementType = collectionElementType;
     }
 
     /**
@@ -622,7 +705,8 @@ public final class DataType {
      * implementing and also retrieves their meta information. This constructor 
      * is used by the static {@link #getType(Class)} method.
      */
-    private DataType(final Class<? extends DataCell> cl) {
+    private DataType(final Class<? extends DataCell> cl, 
+            final DataType elementType) {
         // filter for classes that extend DataValue
         LinkedHashSet<Class<? extends DataValue>> valueClasses = 
             new LinkedHashSet<Class<? extends DataValue>>();
@@ -643,6 +727,17 @@ public final class DataType {
         }
         m_valueClasses.addAll(valueClasses);
         m_cellClass = cl;
+        if (CollectionDataValue.class.isAssignableFrom(cl) 
+                && elementType == null) {
+            throw new IllegalArgumentException("The type represents a "
+                    + "collection but no element type was provided");
+        }
+        if (!CollectionDataValue.class.isAssignableFrom(cl)
+                && elementType != null) {
+            throw new IllegalArgumentException("The type does not represent "
+                    + "a collection, element type must be null");
+        }
+        m_collectionElementType = elementType;
     }
     
     /** 
@@ -673,6 +768,7 @@ public final class DataType {
                 m_valueClasses.add(c);
             }
         }
+        m_collectionElementType = type.m_collectionElementType;
         m_hasPreferredValueClass = true;
     }
 
@@ -692,7 +788,35 @@ public final class DataType {
         hash.addAll(type1.m_valueClasses);
         hash.retainAll(type2.m_valueClasses);
         m_valueClasses = new ArrayList<Class<? extends DataValue>>(hash);
+        if (type1.m_collectionElementType != null
+                && type2.m_collectionElementType != null) {
+            boolean containsCollectionValue = false;
+            for (Class<? extends DataValue> v : m_valueClasses) {
+                if (CollectionDataValue.class.isAssignableFrom(v)) {
+                    containsCollectionValue = true;
+                }
+            }
+            if (containsCollectionValue) {
+                m_collectionElementType = getCommonSuperType(
+                        type1.m_collectionElementType, 
+                        type2.m_collectionElementType);
+            } else {
+                m_collectionElementType = null;
+            }
+        } else {
+            m_collectionElementType = null;
+        }
         m_cellClass = null;
+    }
+    
+    /** Get the type of the elements in collection or <code>null</code> if
+     * this type does not represent a collection. This method returns a non-null
+     * value if and only if this type is {@link #isCompatible(Class) is 
+     * compatible} to {@link CollectionDataValue}.
+     * @return the type of the elements in a collection or null.
+     */
+    public DataType getCollectionElementType() {
+        return m_collectionElementType;
     }
 
     /**
@@ -925,6 +1049,11 @@ public final class DataType {
      * @param config write to this {@link org.knime.core.node.config.ConfigWO}
      */
     public void save(final ConfigWO config) {
+        if (m_collectionElementType != null) {
+            ConfigWO sub = config.addConfig(CFG_COLL_ELEMENT_TYPE);
+            m_collectionElementType.save(sub);
+        }
+
         if (m_cellClass == null) {
             config.addString(CFG_CELL_NAME, null);
             config.addBoolean(CFG_HAS_PREF_VALUE, m_hasPreferredValueClass);
@@ -947,10 +1076,76 @@ public final class DataType {
      */
     @Override
     public String toString() {
+        StringBuilder b = new StringBuilder();
         if (m_cellClass != null) {
-            return m_cellClass.getSimpleName(); 
+            b.append(m_cellClass.getSimpleName()); 
+        } else {
+            b.append("Non-Native ");
+            b.append(Arrays.toString(m_valueClasses.toArray()));
         }
-        String valuesToString = Arrays.toString(m_valueClasses.toArray());
-        return "Non-Native " + valuesToString;
+        if (getCollectionElementType() != null) {
+            b.append(" (Collection of: ");
+            b.append(getCollectionElementType().toString());
+            b.append(")");
+        }
+        return b.toString();
+    }
+    
+    private static final class ClassAndSubDataTypePair {
+        private final Class<? extends DataCell> m_cellClass;
+        private final DataType m_elementDataType;
+        
+        /**
+         * 
+         */
+        ClassAndSubDataTypePair(
+                final Class<? extends DataCell> cellClass,
+                final DataType elementDataType) {
+            assert cellClass != null : "Cell class is null";
+            m_cellClass = cellClass;
+            m_elementDataType = elementDataType;
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            StringBuilder b = new StringBuilder();
+            b.append("Cell: ");
+            b.append(m_cellClass.getSimpleName());
+            if (m_elementDataType != null) {
+                b.append(" (element type: ");
+                b.append(m_elementDataType.toString());
+                b.append(")");
+            }
+            return b.toString();
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public int hashCode() {
+            int hash = m_cellClass.hashCode();
+            if (m_elementDataType != null) {
+                hash = hash ^ m_elementDataType.hashCode();
+            }
+            return hash;
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public boolean equals(final Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (!(obj instanceof ClassAndSubDataTypePair)) {
+                return false;
+            }
+            ClassAndSubDataTypePair d = (ClassAndSubDataTypePair)obj;
+            if (!d.m_cellClass.equals(m_cellClass)) {
+                return false;
+            }
+            // handles null cases
+            return ConvenienceMethods.areEqual(
+                    d.m_elementDataType, m_elementDataType);
+        }
     }
 }

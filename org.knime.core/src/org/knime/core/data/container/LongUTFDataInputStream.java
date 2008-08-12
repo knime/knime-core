@@ -28,6 +28,7 @@ import java.io.Closeable;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UTFDataFormatException;
 
 /**
@@ -37,7 +38,8 @@ import java.io.UTFDataFormatException;
  * @see LongUTFDataOutputStream
  * @author wiswedel, University of Konstanz
  */
-public class LongUTFDataInputStream implements DataInput, Closeable {
+public class LongUTFDataInputStream extends InputStream 
+    implements DataInput, Closeable {
     
     private final DataInputStream m_input;
     
@@ -52,236 +54,156 @@ public class LongUTFDataInputStream implements DataInput, Closeable {
         m_input = input;
     }
 
-    /**
-     * @return Delegates to underlying stream.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.FilterInputStream#available()
-     */
+    /** {@inheritDoc} */
+    @Override
     public int available() throws IOException {
         return m_input.available();
     }
 
-    /**
-     * @throws IOException When delgating method call fails.
-     * @see java.io.FilterInputStream#close()
-     */
+    /** {@inheritDoc} */
+    @Override
     public void close() throws IOException {
         m_input.close();
     }
 
-    /**
-     * @return Result from delegate object.
-     * @see java.lang.Object#hashCode()
-     */
+    /** {@inheritDoc} */
     @Override
     public int hashCode() {
         return m_input.hashCode();
     }
 
-    /**
-     * @param readlimit 
-     * @see java.io.FilterInputStream#mark(int)
-     */
+    /** {@inheritDoc} */
+    @Override
     public void mark(final int readlimit) {
         m_input.mark(readlimit);
     }
 
-    /**
-     * @return Result from delegate object.
-     * @see java.io.FilterInputStream#markSupported()
-     */
+    /** {@inheritDoc} */
+    @Override
     public boolean markSupported() {
         return m_input.markSupported();
     }
 
-    /**
-     * @return Result from delegate object.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.FilterInputStream#read()
-     */
+    /** {@inheritDoc} */
+    @Override
     public int read() throws IOException {
         return m_input.read();
     }
 
-    /**
-     * @param b Forwarded to delegate object.
-     * @param off Forwarded to delegate object.
-     * @param len Forwarded to delegate object.
-     * @return Result from delegate object.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.FilterInputStream#read(byte[], int, int)
-     */
+    /** {@inheritDoc} */
+    @Override
     public int read(
             final byte[] b, final int off, final int len) throws IOException {
         return m_input.read(b, off, len);
     }
 
-    /**
-     * @param b Forwarded to delegate object.
-     * @return Result from delegate object.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.FilterInputStream#read(byte[])
-     */
+    /** {@inheritDoc} */
+    @Override
     public int read(final byte[] b) throws IOException {
         return m_input.read(b);
     }
 
-    /**
-     * @return Result from delegate object.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.DataInput#readBoolean()
-     */
+    /** {@inheritDoc} */
+    @Override
     public boolean readBoolean() throws IOException {
         return m_input.readBoolean();
     }
 
-    /**
-     * @return Result from delegate object.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.DataInput#readByte()
-     */
+    /** {@inheritDoc} */
+    @Override
     public byte readByte() throws IOException {
         return m_input.readByte();
     }
 
-    /**
-     * @return Result from delegate object.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.DataInput#readChar()
-     */
+    /** {@inheritDoc} */
+    @Override
     public char readChar() throws IOException {
         return m_input.readChar();
     }
 
-    /**
-     * @return Result from delegate object.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.DataInput#readDouble()
-     */
+    /** {@inheritDoc} */
+    @Override
     public double readDouble() throws IOException {
         return m_input.readDouble();
     }
 
-    /**
-     * @return Result from delegate object.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.DataInput#readFloat()
-     */
+    /** {@inheritDoc} */
+    @Override
     public float readFloat() throws IOException {
         return m_input.readFloat();
     }
 
-    /**
-     * @param b Forwarded to delegate object.
-     * @param off Forwarded to delegate object.
-     * @param len Forwarded to delegate object.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.DataInput#readFully(byte[], int, int)
-     */
+    /** {@inheritDoc} */
+    @Override
     public void readFully(
             final byte[] b, final int off, final int len) throws IOException {
         m_input.readFully(b, off, len);
     }
 
-    /**
-     * @param b Forwarded to delegate object.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.DataInput#readFully(byte[])
-     */
+    /** {@inheritDoc} */
+    @Override
     public void readFully(final byte[] b) throws IOException {
         m_input.readFully(b);
     }
 
-    /**
-     * @return Result from delegate object.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.DataInput#readInt()
-     */
+    /** {@inheritDoc} */
+    @Override
     public int readInt() throws IOException {
         return m_input.readInt();
     }
 
-    /**
-     * @return Result from delegate object.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.DataInput#readLine()
-     * @deprecated As in {@link DataInputStream#readLine()}.
-     */
+    /** {@inheritDoc} */
+    @Override
     @Deprecated
     @SuppressWarnings("deprecation")
     public String readLine() throws IOException {
         return m_input.readLine();
     }
 
-    /**
-     * @return Result from delegate object.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.DataInput#readLong()
-     */
+    /** {@inheritDoc} */
+    @Override
     public long readLong() throws IOException {
         return m_input.readLong();
     }
 
-    /**
-     * @return Result from delegate object.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.DataInput#readShort()
-     */
+    /** {@inheritDoc} */
+    @Override
     public short readShort() throws IOException {
         return m_input.readShort();
     }
 
-    /**
-     * @return Result from delegate object.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.DataInput#readUnsignedByte()
-     */
+    /** {@inheritDoc} */
+    @Override
     public int readUnsignedByte() throws IOException {
         return m_input.readUnsignedByte();
     }
 
-    /**
-     * @return Result from delegate object.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.DataInput#readUnsignedShort()
-     */
+    /** {@inheritDoc} */
+    @Override
     public int readUnsignedShort() throws IOException {
         return m_input.readUnsignedShort();
     }
     
-    /**
-     * @throws IOException When delgating method call fails.
-     * @see java.io.FilterInputStream#reset()
-     */
+    /** {@inheritDoc} */
+    @Override
     public void reset() throws IOException {
         m_input.reset();
     }
     
-    /**
-     * @param n Forwarded to delegate object.
-     * @return Result from delegate object.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.FilterInputStream#skip(long)
-     */
+    /** {@inheritDoc} */
+    @Override
     public long skip(final long n) throws IOException {
         return m_input.skip(n);
     }
     
-    /**
-     * @param n Forwarded to delegate object.
-     * @return Result from delegate object.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.DataInput#skipBytes(int)
-     */
+    /** {@inheritDoc} */
+    @Override
     public int skipBytes(final int n) throws IOException {
         return m_input.skipBytes(n);
     }
 
-    /**
-     * @return Result from delegate object.
-     * @throws IOException When delgating method call fails.
-     * @see java.io.DataInput#readUTF()
-     */
+    /** {@inheritDoc} */
+    @Override
     public String readUTF() throws IOException {
         int s = readUnsignedShort();
         long utflen;

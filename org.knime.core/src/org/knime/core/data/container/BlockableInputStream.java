@@ -35,7 +35,8 @@ import java.io.InputStream;
  * @see org.knime.core.data.container.BlockableOutputStream
  * @author wiswedel, University of Konstanz
  */
-final class BlockableInputStream extends InputStream {
+final class BlockableInputStream 
+    extends InputStream implements KNIMEStreamConstants {
 
     /** Input stream to wrap. */
     private final InputStream m_inStream;
@@ -68,10 +69,10 @@ final class BlockableInputStream extends InputStream {
         }
         int c = m_inStream.read();
         switch (c) {
-        case BlockableOutputStream.TC_TERMINATE:
+        case TC_TERMINATE:
             m_simulateTerminate = true;
             return -1;
-        case BlockableOutputStream.TC_ESCAPE:
+        case TC_ESCAPE:
             return m_inStream.read();
         default:
             return c;

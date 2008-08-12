@@ -401,7 +401,7 @@ public final class DataColumnSpecCreator {
      */
     public DataColumnSpec createSpec() {
         String[] elNames = 
-            m_elementNames == null ? new String[]{m_name} : m_elementNames;
+            m_elementNames == null ? new String[0] : m_elementNames;
         return new DataColumnSpec(m_name, elNames, m_type, m_domain,
                 m_properties, m_sizeHandler, m_colorHandler, m_shapeHandler);
     }

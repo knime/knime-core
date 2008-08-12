@@ -24,16 +24,15 @@
  */
 package org.knime.core.data.container;
 
-import java.io.Closeable;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
-import java.io.Flushable;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * Wrapper class of a DataOutputStream that also allows to write UTF strings
- * longer than 65535. This class delegates all method calles, except for 
- * the writeUTF method, an delegates it to an underlying output stream. 
+ * longer than 65535. This class delegates all method calls -- except for 
+ * the writeUTF method -- and delegates it to an underlying output stream. 
  * 
  * <p>The writeUTF method of this class uses a longer header (10 bytes in total)
  * to encode the utf length when processing long strings. This class has been
@@ -43,10 +42,10 @@ import java.io.IOException;
  * http://bugs.sun.com/bugdatabase</a>, bug id 4025564.
  * 
  * @see DataOutputStream#writeUTF(String)
- * @author wiswedel, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public class LongUTFDataOutputStream 
-    implements DataOutput, Closeable, Flushable {
+extends OutputStream implements DataOutput {
     
     private final DataOutputStream m_output;
     
@@ -62,147 +61,99 @@ public class LongUTFDataOutputStream
         m_output = output;
     }
 
-    /**
-     * @throws IOException
-     * @see java.io.FilterOutputStream#close()
-     */
+    /** {@inheritDoc} */
+    @Override
     public void close() throws IOException {
         m_output.close();
     }
 
-    /**
-     * @throws IOException
-     * @see java.io.DataOutputStream#flush()
-     */
+    /** {@inheritDoc} */
+    @Override
     public void flush() throws IOException {
         m_output.flush();
     }
 
-    /**
-     * @param b
-     * @param off
-     * @param len
-     * @throws IOException
-     * @see java.io.DataOutputStream#write(byte[], int, int)
-     */
+    /** {@inheritDoc} */
+    @Override
     public void write(final byte[] b, final int off, final int len)
         throws IOException {
         m_output.write(b, off, len);
     }
 
-    /**
-     * @param b
-     * @throws IOException
-     * @see java.io.FilterOutputStream#write(byte[])
-     */
+    /** {@inheritDoc} */
+    @Override
     public void write(final byte[] b) throws IOException {
         m_output.write(b);
     }
 
-    /**
-     * @param b
-     * @throws IOException
-     * @see java.io.DataOutputStream#write(int)
-     */
+    /** {@inheritDoc} */
+    @Override
     public void write(final int b) throws IOException {
         m_output.write(b);
     }
 
-    /**
-     * @param v
-     * @throws IOException
-     * @see java.io.DataOutput#writeBoolean(boolean)
-     */
+    /** {@inheritDoc} */
+    @Override
     public void writeBoolean(final boolean v) throws IOException {
         m_output.writeBoolean(v);
     }
 
-    /**
-     * @param v
-     * @throws IOException
-     * @see java.io.DataOutput#writeByte(int)
-     */
+    /** {@inheritDoc} */
+    @Override
     public void writeByte(final int v) throws IOException {
         m_output.writeByte(v);
     }
 
-    /**
-     * @param s
-     * @throws IOException
-     * @see java.io.DataOutput#writeBytes(java.lang.String)
-     */
+    /** {@inheritDoc} */
+    @Override
     public void writeBytes(final String s) throws IOException {
         m_output.writeBytes(s);
     }
 
-    /**
-     * @param v
-     * @throws IOException
-     * @see java.io.DataOutput#writeChar(int)
-     */
+    /** {@inheritDoc} */
+    @Override
     public void writeChar(final int v) throws IOException {
         m_output.writeChar(v);
     }
 
-    /**
-     * @param s
-     * @throws IOException
-     * @see java.io.DataOutput#writeChars(java.lang.String)
-     */
+    /** {@inheritDoc} */
+    @Override
     public void writeChars(final String s) throws IOException {
         m_output.writeChars(s);
     }
 
-    /**
-     * @param v
-     * @throws IOException
-     * @see java.io.DataOutput#writeDouble(double)
-     */
+    /** {@inheritDoc} */
+    @Override
     public void writeDouble(final double v) throws IOException {
         m_output.writeDouble(v);
     }
 
-    /**
-     * @param v
-     * @throws IOException
-     * @see java.io.DataOutput#writeFloat(float)
-     */
+    /** {@inheritDoc} */
+    @Override
     public void writeFloat(final float v) throws IOException {
         m_output.writeFloat(v);
     }
 
-    /**
-     * @param v
-     * @throws IOException
-     * @see java.io.DataOutput#writeInt(int)
-     */
+    /** {@inheritDoc} */
+    @Override
     public void writeInt(final int v) throws IOException {
         m_output.writeInt(v);
     }
 
-    /**
-     * @param v
-     * @throws IOException
-     * @see java.io.DataOutput#writeLong(long)
-     */
+    /** {@inheritDoc} */
+    @Override
     public void writeLong(final long v) throws IOException {
         m_output.writeLong(v);
     }
 
-    /**
-     * @param v
-     * @throws IOException
-     * @see java.io.DataOutput#writeShort(int)
-     */
+    /** {@inheritDoc} */
+    @Override
     public void writeShort(final int v) throws IOException {
         m_output.writeShort(v);
     }
 
-    /**
-     * @param str
-     * @throws IOException
-     * @see java.io.DataOutput#writeUTF(java.lang.String)
-     */
+    /** {@inheritDoc} */
+    @Override
     public void writeUTF(final String str) throws IOException {
         long strLength = getUTFLength(str);
         if (strLength <= MAX_UTF_SHORT_SIZE) {

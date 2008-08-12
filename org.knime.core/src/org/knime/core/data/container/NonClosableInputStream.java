@@ -26,7 +26,6 @@ package org.knime.core.data.container;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
@@ -34,20 +33,20 @@ import java.util.zip.ZipInputStream;
  * only closes the current entry on {@link #close()}.
  * @author Bernd Wiswedel, University of Konstanz
  */
-class NonClosableZipInputStream extends InputStream {
+class NonClosableInputStream extends InputStream {
 
-    private final ZipInputStream m_zipIn;
+    private final InputStream m_in;
     
     /**
      * Creates new input stream.
      * @param inStream To wrap.
      * @throws NullPointerException If the argument is null.
      */
-    public NonClosableZipInputStream(final ZipInputStream inStream) {
+    public NonClosableInputStream(final InputStream inStream) {
         if (inStream == null) {
             throw new NullPointerException("Argument must not be null.");
         }
-        m_zipIn = inStream;
+        m_in = inStream;
     }
 
     /**
@@ -55,99 +54,88 @@ class NonClosableZipInputStream extends InputStream {
      */
     @Override
     public int available() throws IOException {
-        return m_zipIn.available();
+        return m_in.available();
     }
 
-    /**
-     * Does NOT delegate to wrapped zip input stream but rather calls
-     * closeEntry().
-     * @see ZipInputStream#closeEntry()
-     */
+    /** Does NOT delegate to wrapped input stream, ignores call.
+    * {@inheritDoc} */
     @Override
     public void close() throws IOException {
-        m_zipIn.closeEntry();
     }
 
-    /**
-     * @see ZipInputStream#closeEntry()
-     */
-    public void closeEntry() throws IOException {
-        m_zipIn.closeEntry();
-    }
-
-    /**
-     * @return Delegates only.
-     * @see ZipInputStream#getNextEntry()
-     * @throws IOException Delegates only.
-     */
-    public ZipEntry getNextEntry() throws IOException {
-        return m_zipIn.getNextEntry();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public void mark(final int readlimit) {
-        m_zipIn.mark(readlimit);
+        m_in.mark(readlimit);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public boolean markSupported() {
-        return m_zipIn.markSupported();
+        return m_in.markSupported();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public int read() throws IOException {
-        return m_zipIn.read();
+        return m_in.read();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public int read(final byte[] b, final int off, final int len) 
         throws IOException {
-        return m_zipIn.read(b, off, len);
+        return m_in.read(b, off, len);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public int read(final byte[] b) throws IOException {
-        return m_zipIn.read(b);
+        return m_in.read(b);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public void reset() throws IOException {
-        m_zipIn.reset();
+        m_in.reset();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public long skip(final long n) throws IOException {
-        return m_zipIn.skip(n);
+        return m_in.skip(n);
     }
 
-    /**
-     * @return Delegates only.
-     * @see java.lang.Object#toString()
-     */
+    /** {@inheritDoc} */
     @Override
     public String toString() {
-        return m_zipIn.toString();
+        return m_in.toString();
+    }
+    
+    /** Get reference to underlying stream.
+     * @return The delegated stream. */
+    final InputStream getUnderlyingStream() {
+        return m_in;
+    }
+    
+    /** Special implementation that wraps {@link ZipInputStream} objects
+     * and calls {@link ZipInputStream#closeEntry()} when the stream is closed.
+     */
+    public static final class Zip extends NonClosableInputStream {
+
+        /** Wraps a given zip output stream.
+         * @param zipOut The stream to wrap.
+         */
+        public Zip(final ZipInputStream zipOut) {
+            super(zipOut);
+        }
+        
+        /** Closes the currently open zip entry.
+         * {@inheritDoc} */
+        @Override
+        public void close() throws IOException {
+            ((ZipInputStream)getUnderlyingStream()).closeEntry();
+        }
     }
 
 }

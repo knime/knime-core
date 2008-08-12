@@ -33,15 +33,22 @@ import org.knime.core.data.container.BlobDataCell.BlobAddress;
 /**
  * Wrapper for {@link BlobDataCell}. We explicitly wrap those cells in this
  * package to delay the access to the latest time possible (when someone
- * calls getCell() on the row).
+ * calls getCell() on the row). If such a cell has been added to an table
+ * (by calling e.g. 
+ * {@link org.knime.core.node.BufferedDataContainer#addRowToTable(
+ * org.knime.core.data.DataRow) addRowToTable in a DataContainer}, 
+ * the framework will write the underlying blob to a dedicated file and 
+ * internally link to this blob file. The blob object itself can be garbage
+ * collected and will silently re-instantiated if accessed.
  * @author Bernd Wiswedel, University of Konstanz
  */
-final class BlobWrapperDataCell extends DataCell {
+public final class BlobWrapperDataCell extends DataCell {
     
-    private final Buffer m_buffer;
-    private final BlobAddress m_blobAddress;
+    private Buffer m_buffer;
+    private BlobAddress m_blobAddress;
     private final Class<? extends BlobDataCell> m_blobClass;
     private SoftReference<BlobDataCell> m_cellRef;
+    private BlobDataCell m_hardCellRef;
     
     /**
      * Keeps references.
@@ -58,10 +65,26 @@ final class BlobWrapperDataCell extends DataCell {
     }
     
     /**
+     * Create a new wrapper cell for a blob object. The wrapper will keep a
+     * hard reference to the cell unless the cell is added to data container,
+     * in which case the reference is softened. 
+     * @param cell The cell to wrap.
+     */
+    public BlobWrapperDataCell(final BlobDataCell cell) {
+        m_blobClass = cell.getClass(); 
+        m_blobAddress = cell.getBlobAddress();
+        m_cellRef = new SoftReference<BlobDataCell>(cell);
+        m_hardCellRef = cell;
+    }
+    
+    /**
      * Fetches the content of the blob cell. May last long.
      * @return The blob Data cell being read.
      */
-    BlobDataCell getCell() {
+    public BlobDataCell getCell() {
+        if (m_hardCellRef != null) {
+            return m_hardCellRef;
+        }
         BlobDataCell cell = m_cellRef != null ? m_cellRef.get() : null;
         if (cell == null) {
             try {
@@ -74,22 +97,47 @@ final class BlobWrapperDataCell extends DataCell {
         return cell;
     }
     
+    /** Framework method to set buffer and address.
+     * @param address Address to set.
+     * @param buffer Owner buffer to set.
+     */
+    void setAddressAndBuffer(final BlobAddress address, final Buffer buffer) {
+        if (address == null || buffer == null) {
+            throw new NullPointerException("Args must not be null");
+        }
+        if (m_blobAddress != null && !m_blobAddress.equals(address)) {
+            throw new IllegalStateException("Blob wrapper cell has already "
+                    + "an assigned blob address (" + m_blobAddress 
+                    + ", new one is " + address + ")");
+        }
+        if (m_buffer == null) {
+            assert m_hardCellRef != null 
+            : "Should not keep hard reference when buffer is not available.";
+            m_hardCellRef.setBlobAddress(address);
+            m_blobAddress = address;
+            m_buffer = buffer;
+            m_hardCellRef = null;
+        }
+    }
+    
     /** @return The blob address. */
     BlobAddress getAddress() {
         return m_blobAddress;
     }
     
     /** @return Blob class. */
-    Class<? extends BlobDataCell> getBlobClass() {
+    public Class<? extends BlobDataCell> getBlobClass() {
         return m_blobClass;
     }
-
-    /**
-     * {@inheritDoc}
-     */
+    
+    /** @return owning buffer or null if not set yet. */
+    Buffer getBuffer() {
+        return m_buffer;
+    }
+    
+    /** {@inheritDoc} */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
-        assert false : "equalsDataCell must not be called on Blob wrapper";
         return getCell().equals(dc);
     }
 
@@ -98,7 +146,6 @@ final class BlobWrapperDataCell extends DataCell {
      */
     @Override
     public int hashCode() {
-        assert false : "hasCode must not be called on Blob wrapper";
         return getCell().hashCode();
     }
 
