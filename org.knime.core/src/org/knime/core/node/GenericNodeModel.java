@@ -371,6 +371,10 @@ public abstract class GenericNodeModel {
                     "Result discarded due to user cancel");
         }
         
+        if (outData == null) {
+            outData = new PortObject[getNrOutPorts()];
+        }
+        
         /* Cleanup operation for nodes that just pass on their input 
          * data table. We need to wrap those here so that the framework 
          * explicitly references them (instead of copying) */
@@ -387,9 +391,6 @@ public abstract class GenericNodeModel {
 
         // TODO: check outgoing types! (inNode!)
 
-        if (outData == null) {
-            outData = new PortObject[getNrOutPorts()];
-        }
         // if number of out tables does not match: fail
         if (outData.length != getNrOutPorts()) {
             throw new IllegalStateException(

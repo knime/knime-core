@@ -26,6 +26,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.zip.ZipOutputStream;
 
@@ -160,7 +161,11 @@ public final class ContainerTable implements DataTable, KnowsRowCountTable {
      */
     public void putIntoTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
-        rep.put(getBufferID(), this);
+        ContainerTable old = rep.put(getBufferID(), this);
+        assert old == null || old == this
+            : "Different container table with same ID " + getBufferID() 
+                + " already present in global table repository: "
+                + Arrays.toString(rep.keySet().toArray());
     }
     
     /**
