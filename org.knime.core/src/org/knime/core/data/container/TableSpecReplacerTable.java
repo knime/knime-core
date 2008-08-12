@@ -56,7 +56,7 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
  *       BufferedDataTable, DataTableSpec)
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class TableSpecReplacerTable implements KnowsRowCountTable {
+public final class TableSpecReplacerTable implements KnowsRowCountTable {
     
     private final BufferedDataTable m_reference;
     private final DataTableSpec m_newSpec;

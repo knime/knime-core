@@ -63,7 +63,8 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
  * {@link ColumnRearranger} for more details on how to use them.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
+public final class RearrangeColumnsTable 
+    implements DataTable, KnowsRowCountTable {
     
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(RearrangeColumnsTable.class);

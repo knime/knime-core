@@ -49,7 +49,7 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
  * fixed.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class ContainerTable implements DataTable, KnowsRowCountTable {
+public final class ContainerTable implements DataTable, KnowsRowCountTable {
     
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(ContainerTable.class);
