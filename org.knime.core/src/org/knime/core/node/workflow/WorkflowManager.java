@@ -2127,7 +2127,13 @@ public final class WorkflowManager extends NodeContainer {
         for (ConnectionContainer cc : m_connectionsBySource.get(id)) {
             if (cc.getSourcePort() == port) {
                 NodeID succNode = cc.getDest();
-                configureNodeAndSuccessors(succNode, true, true);
+                if (cc.getType().isLeavingWorkflow()) {
+                    assert succNode.equals(getID());
+                    getParent().configureWorkFlowPortSuccessors(
+                            getID(), cc.getDestPort());
+                } else {
+                    configureNodeAndSuccessors(succNode, true, true);
+                }
             }
         }
     }
