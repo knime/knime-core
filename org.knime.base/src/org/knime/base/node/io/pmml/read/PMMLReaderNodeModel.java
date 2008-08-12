@@ -30,7 +30,6 @@ import org.knime.base.util.pmml.ExtractModelTypeHandler;
 import org.knime.base.util.pmml.PMMLMasterContentHandler;
 import org.knime.base.util.pmml.PMMLModelType;
 import org.knime.base.util.pmml.PMMLPortObject;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -83,10 +82,6 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
 
             m_spec = dataDictionaryToDataTableSpec();
 
-            for (DataColumnSpec colSpec : m_spec) {
-                LOGGER.debug(colSpec.extendedToString());
-            }
-            
             LOGGER.debug("model type: " + m_type.name());
             
             return new PortObjectSpec[] {m_spec};
