@@ -93,8 +93,10 @@ public class NodePersistorVersion1xx implements NodePersistor {
     
     protected boolean shouldLoadAsNotExecuted(final Node node) {
         String facName = node.getFactory().getClass().getSimpleName();
+        // all auto-executable nodes, don't exist anymore with 2.0
         if (facName.equals("InteractivePieNodeFactory")
                 || facName.equals("HistogramNodeFactory")
+                || facName.equals("JmolViewerNodeFactory")
                 || facName.equals("TableNodeFactory")) {
             return true;
         }
