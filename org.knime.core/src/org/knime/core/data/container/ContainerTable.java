@@ -161,11 +161,17 @@ public final class ContainerTable implements DataTable, KnowsRowCountTable {
     public void putIntoTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
         rep.put(getBufferID(), this);
-//        ContainerTable old = rep.put(getBufferID(), this);
-//        assert old == null || old == this
-//            : "Different container table with same ID " + getBufferID() 
-//                + " already present in global table repository: "
-//                + Arrays.toString(rep.keySet().toArray());
+        /* The following assertion must generally hold. Unfortunately, we have
+         * a bug in pre 2.0 versions (bug #1291), which prevents us from 
+         * enabling this assertion. The bug can lead to different tables with
+         * the exact same content. If we enable the assertion, we may run into
+         * problems with workflows saved in 1.x (more precisely the disturber
+         * node in the testing plugin was copying input files). */
+        // ContainerTable old = rep.put(getBufferID(), this);
+        // assert old == null || old == this
+        //     : "Different container table with same ID " + getBufferID() 
+        //         + " already present in global table repository: "
+        //         + Arrays.toString(rep.keySet().toArray());
     }
     
     /**
