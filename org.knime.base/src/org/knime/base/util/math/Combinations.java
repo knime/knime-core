@@ -242,7 +242,7 @@ public final class Combinations {
         int[] c = unrank(from);
 
         for (long i = from; i <= to; i++) {
-            if (!callback.visit(c, m_n, m_k, i - from, m_nrOfCombinations)) {
+            if (!callback.visit(c, m_n, m_k, i, m_nrOfCombinations)) {
                 break;
             }
 
