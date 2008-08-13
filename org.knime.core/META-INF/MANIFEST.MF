@@ -51,6 +51,6 @@ Provide-Package: junit.awtui,
  org.knime.core.util,
  org.knime.core.xml
 Bundle-Activator: org.knime.core.internal.CorePlugin
-Require-Bundle: org.eclipse.core.runtime,
+Require-Bundle: org.eclipse.core.runtime;reprovide=true,
  org.apache.xerces
 Eclipse-AutoStart: true
