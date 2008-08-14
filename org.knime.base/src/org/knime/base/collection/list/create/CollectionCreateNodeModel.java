@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 1, 2008 (wiswedel): created
  */
@@ -34,6 +34,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.collection.ListCell;
+import org.knime.core.data.collection.SetCell;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
@@ -45,22 +46,27 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 public class CollectionCreateNodeModel extends NodeModel {
-    
+
     private SettingsModelFilterString m_includeModel;
 
+    // if true, a SetCell is created, otherwise a ListCell
+    private final SettingsModelBoolean m_createSet;
+
     /**
-     * 
+     *
      */
     public CollectionCreateNodeModel() {
         super(1, 1);
         m_includeModel = createSettingsModel();
+        m_createSet = createSettingsModelSetOrList();
     }
 
     /** {@inheritDoc} */
@@ -75,13 +81,13 @@ public class CollectionCreateNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        ColumnRearranger rearranger = 
+        ColumnRearranger rearranger =
             createColumnRearranger(inData[0].getDataTableSpec());
-        BufferedDataTable out = 
+        BufferedDataTable out =
             exec.createColumnRearrangeTable(inData[0], rearranger, exec);
         return new BufferedDataTable[]{out};
     }
-    
+
     private ColumnRearranger createColumnRearranger(final DataTableSpec in)
         throws InvalidSettingsException {
         List<String> includes = m_includeModel.getIncludeList();
@@ -98,14 +104,14 @@ public class CollectionCreateNodeModel extends NodeModel {
                         "No column \"" + names[i] + "\" in input table");
             }
             DataColumnSpec colSpec = in.getColumnSpec(index);
-            comType = comType == null ? colSpec.getType() 
+            comType = comType == null ? colSpec.getType()
                     : DataType.getCommonSuperType(comType, colSpec.getType());
             colIndices[i] = index;
         }
         assert comType != null;
         String newColName = DataTableSpec.getUniqueColumnName(in, "List");
         DataType type = ListCell.getCollectionType(comType);
-        DataColumnSpecCreator newColSpecC = 
+        DataColumnSpecCreator newColSpecC =
             new DataColumnSpecCreator(newColName, type);
         newColSpecC.setElementNames(names);
         DataColumnSpec newColSpec = newColSpecC.createSpec();
@@ -113,8 +119,12 @@ public class CollectionCreateNodeModel extends NodeModel {
             /** {@inheritDoc} */
             @Override
             public DataCell getCell(final DataRow row) {
-                return ListCell.create(row, colIndices);
-            }  
+                if (m_createSet.getBooleanValue()) {
+                    return SetCell.create(row, colIndices);
+                } else {
+                    return ListCell.create(row, colIndices);
+                }
+            }
         };
         ColumnRearranger rearranger = new ColumnRearranger(in);
         rearranger.append(appendFactory);
@@ -126,6 +136,7 @@ public class CollectionCreateNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // no loads here
     }
 
     /** {@inheritDoc} */
@@ -133,11 +144,18 @@ public class CollectionCreateNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_includeModel.loadSettingsFrom(settings);
+        try {
+            m_createSet.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            // default to false for backward compatibility
+            m_createSet.setBooleanValue(false);
+        }
     }
 
     /** {@inheritDoc} */
     @Override
     protected void reset() {
+        // nothing to reset
     }
 
     /** {@inheritDoc} */
@@ -145,12 +163,14 @@ public class CollectionCreateNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // nothing to save here
     }
 
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_includeModel.saveSettingsTo(settings);
+        m_createSet.saveSettingsTo(settings);
     }
 
     /** {@inheritDoc} */
@@ -158,12 +178,19 @@ public class CollectionCreateNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_includeModel.validateSettings(settings);
+        // m_create is not checked as it is optional for backward compatibility
     }
-    
+
     /** Create settings model collection create node.
      * @return a new settings object. */
     static SettingsModelFilterString createSettingsModel() {
         return new SettingsModelFilterString("includes");
+    }
+
+    /** Create settings model for flag to create SetCell or ListCell
+     * @return a new settings model object */
+    static SettingsModelBoolean createSettingsModelSetOrList() {
+        return new SettingsModelBoolean("createSet", false);
     }
 
 }

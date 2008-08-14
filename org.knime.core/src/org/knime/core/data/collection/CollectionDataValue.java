@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Aug 5, 2008 (wiswedel): created
  */
@@ -41,58 +41,58 @@ import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 /**
  * Special interface that is implemented by {@link DataCell}s that represent
  * collection of cells. A detailed description of this interface is given
- * in the <a href=../doc-files/newtypes.html#typecollection>new 
+ * in the <a href=../doc-files/newtypes.html#typecollection>new
  * types manual</a>.
  * @author Bernd Wiswedel, University of Konstanz
  */
 public interface CollectionDataValue extends DataValue, Iterable<DataCell> {
-    
+
     /** Meta information to collection values.
      * @see DataValue#UTILITY
      */
     public static final UtilityFactory UTILITY = new CollectionUtilityFactory();
-    
+
     /** Get the common super type of all elements in this collection.
-     * @return The common super type, never null. */   
+     * @return The common super type, never null. */
     public DataType getElementType();
-    
-    /** Get the number of elements in this collection. 
+
+    /** Get the number of elements in this collection.
      * @return size of the collection. */
     public int size();
-    
+
     /** Get whether the collection contains special {@link BlobWrapperDataCell}
      * (framework use). This method gives a hint to the framwork (specifically
-     * to the classes {@link org.knime.core.data.container.DataContainer 
+     * to the classes {@link org.knime.core.data.container.DataContainer
      * DataContainer} and {@link org.knime.core.node.BufferedDataContainer
      * BufferedDataContainer}) whether they should handle the cell implementing
      * this interface with care with respect to contained {@link BlobDataCell}.
-     * 
-     * <p>This method should return <code>true</code> only if 
+     *
+     * <p>This method should return <code>true</code> only if
      * <ul>
-     * <li>The iterator returned by {@link #iterator()} implements 
+     * <li>The iterator returned by {@link #iterator()} implements
      * {@link BlobSupportDataCellIterator} (which allows the framework to access
-     * the {@link BlobWrapperDataCell} without touching the contained 
+     * the {@link BlobWrapperDataCell} without touching the contained
      * {@link BlobDataCell} (which is an expensive operation) and </li>
-     * <li>at least one element returned by the iterator is indeed a 
+     * <li>at least one element returned by the iterator is indeed a
      * {@link BlobWrapperDataCell}.</li>
      * </ul>
-     * 
-     * <p>Implementation note: This method is really only a helper for the 
-     * framework. The same information can be retrieved by accessing the 
+     *
+     * <p>Implementation note: This method is really only a helper for the
+     * framework. The same information can be retrieved by accessing the
      * iterator. This can be an expensive and unnecessary operation, however.
-     * 
+     *
      * @return Whether the collection contains blob wrapper cells.
      */
     public boolean containsBlobWrapperCells();
-    
+
     /** {@inheritDoc} */
     @Override
     public Iterator<DataCell> iterator();
-    
+
     /** Implementations of the meta information of this value class. */
     public static class CollectionUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON = 
+        private static final Icon ICON =
             loadIcon(DoubleValue.class, "/../icon/fuzzyintervalicon.png");
 
         /** Only subclasses are allowed to instantiate this class. */
@@ -110,32 +110,32 @@ public interface CollectionDataValue extends DataValue, Iterable<DataCell> {
         protected DataValueRendererFamily getRendererFamily(
                 final DataColumnSpec spec) {
             return new DefaultDataValueRendererFamily(
-                    new CollectionRenderer(true), 
-                    new CollectionRenderer(false)); 
+                    new CollectionRenderer(true),
+                    new CollectionRenderer(false));
         }
-        
-        private static final class CollectionRenderer 
+
+        private static final class CollectionRenderer
         extends DefaultDataValueRenderer {
-            
+
             private final StringBuilder m_stringBuilder;
             private final boolean m_isShort;
-            
+
             /** Instantiate renderer.
              * @param isShort Whether to use a short description. */
             public CollectionRenderer(final boolean isShort) {
                 m_isShort = isShort;
                 m_stringBuilder = new StringBuilder();
             }
-            
+
             /** {@inheritDoc} */
             @Override
             protected void setValue(final Object value) {
                 if (value instanceof CollectionDataValue) {
                     m_stringBuilder.setLength(0);
                     m_stringBuilder.append("[");
-                    Iterator<DataCell> it = 
+                    Iterator<DataCell> it =
                         ((CollectionDataValue)value).iterator();
-                    for (int i = 0; it.hasNext() 
+                    for (int i = 0; it.hasNext()
                         && (!m_isShort || i < 3); i++) {
                         if (i > 0) {
                             m_stringBuilder.append(",");
@@ -143,19 +143,19 @@ public interface CollectionDataValue extends DataValue, Iterable<DataCell> {
                         m_stringBuilder.append(it.next().toString());
                     }
                     if (it.hasNext()) {
-                        m_stringBuilder.append(", ...");
+                        m_stringBuilder.append(",...");
                     }
-                    m_stringBuilder.append(" ]");
+                    m_stringBuilder.append("]");
                     super.setValue(m_stringBuilder.toString());
                 } else {
                     super.setValue(value);
                 }
             }
-            
+
             /** {@inheritDoc} */
             @Override
             public String getDescription() {
-                return "Collection ( " + (m_isShort ? "short" : "full") + ")";
+                return "Collection (" + (m_isShort ? "short" : "full") + ")";
             }
         }
     }

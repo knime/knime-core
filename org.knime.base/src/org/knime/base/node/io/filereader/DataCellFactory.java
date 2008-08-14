@@ -246,7 +246,10 @@ public class DataCellFactory {
             if (trimmed.isEmpty()) {
                 return DataType.getMissingCell();
             }
-
+            // this is a feature of the parseInt method: it bails on '+'
+            if (trimmed.charAt(0) == '+') {
+                trimmed = trimmed.substring(1);
+            }
             try {
                 int val = Integer.parseInt(trimmed);
                 return new IntCell(val);
