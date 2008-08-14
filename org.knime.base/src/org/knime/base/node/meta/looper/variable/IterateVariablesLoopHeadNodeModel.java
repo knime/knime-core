@@ -40,17 +40,20 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.PortObject;
+import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.PortType;
 import org.knime.core.node.workflow.LoopStartNode;
 
 /**
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class IterateVariablesLoopHeadNodeModel extends NodeModel implements
+public class IterateVariablesLoopHeadNodeModel extends GenericNodeModel implements
         LoopStartNode {
 
     private int m_iteration;
@@ -61,16 +64,18 @@ public class IterateVariablesLoopHeadNodeModel extends NodeModel implements
     
     /** Two inputs, one output..  */
     public IterateVariablesLoopHeadNodeModel() {
-        super(2, 1);
+        super(new PortType[]{
+                new PortType(PortObject.class), BufferedDataTable.TYPE},
+                new PortType[]{new PortType(PortObject.class)});
     }
 
     /** {@inheritDoc} */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        m_variablesSpec = inSpecs[1];
+        m_variablesSpec = (DataTableSpec)inSpecs[1];
         pushVariables();
-        return new DataTableSpec[]{inSpecs[0]};
+        return new PortObjectSpec[]{inSpecs[0]};
     }
     
     private void pushVariables() {
@@ -112,9 +117,9 @@ public class IterateVariablesLoopHeadNodeModel extends NodeModel implements
     
     /** {@inheritDoc} */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        BufferedDataTable variables = inData[1];
+        BufferedDataTable variables = (BufferedDataTable)inData[1];
         if (m_variablesSpec != null) {
             assert m_variablesSpec.equalStructure(variables.getDataTableSpec())
                 : "Spec in loop iterations don't match";
@@ -131,7 +136,7 @@ public class IterateVariablesLoopHeadNodeModel extends NodeModel implements
         m_currentVariables = m_variablesIterator.next();
         pushVariables();
         m_iteration += 1;
-        return new BufferedDataTable[]{inData[0]};
+        return new PortObject[]{inData[0]};
     }
     
     /** {@inheritDoc} */

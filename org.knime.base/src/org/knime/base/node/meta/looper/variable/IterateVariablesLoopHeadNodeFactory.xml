@@ -17,9 +17,9 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Any datatable">Any datatable</dataIn>
+		<dataIn index="0" name="Any port object">Port object being passed on to output port.</dataIn>
 		<dataIn index="1" name="Parameters table">The table whose rows will constitute 
 		the variables' values, each row representing one iteration.</dataIn>
-		<dataOut index="0" name="Unaltered input">The unaltered input table (first input port)</dataOut>
+		<dataOut index="0" name="Unaltered input">The unaltered input connection object (first input port)</dataOut>
 	</ports>
 </knimeNode>

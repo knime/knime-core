@@ -24,16 +24,16 @@
  */
 package org.knime.base.node.meta.looper.variable;
 
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
 
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
 public class IterateVariablesLoopHeadNodeFactory 
-    extends NodeFactory<IterateVariablesLoopHeadNodeModel> {
+    extends GenericNodeFactory<IterateVariablesLoopHeadNodeModel> {
 
     /** {@inheritDoc} */
     @Override
@@ -49,7 +49,7 @@ public class IterateVariablesLoopHeadNodeFactory
 
     /** {@inheritDoc} */
     @Override
-    public NodeView<IterateVariablesLoopHeadNodeModel> createNodeView(
+    public GenericNodeView<IterateVariablesLoopHeadNodeModel> createNodeView(
             final int index, final IterateVariablesLoopHeadNodeModel model) {
         return null;
     }
