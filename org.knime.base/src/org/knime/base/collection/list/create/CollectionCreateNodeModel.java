@@ -33,6 +33,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.collection.SetCell;
 import org.knime.core.data.container.CellFactory;
@@ -48,6 +49,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  *
@@ -60,6 +62,10 @@ public class CollectionCreateNodeModel extends NodeModel {
     // if true, a SetCell is created, otherwise a ListCell
     private final SettingsModelBoolean m_createSet;
 
+    private final SettingsModelBoolean m_removeCols;
+
+    private final SettingsModelString m_newColName;
+
     /**
      *
      */
@@ -67,6 +73,8 @@ public class CollectionCreateNodeModel extends NodeModel {
         super(1, 1);
         m_includeModel = createSettingsModel();
         m_createSet = createSettingsModelSetOrList();
+        m_removeCols = createSettingsModelRemoveCols();
+        m_newColName = createSettingsModelColumnName();
     }
 
     /** {@inheritDoc} */
@@ -74,7 +82,13 @@ public class CollectionCreateNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         ColumnRearranger rearranger = createColumnRearranger(inSpecs[0]);
-        return new DataTableSpec[]{rearranger.createSpec()};
+        try {
+            DataTableSpec outspec = rearranger.createSpec();
+            return new DataTableSpec[]{outspec};
+        } catch (IllegalArgumentException iae) {
+            throw new InvalidSettingsException(iae.getMessage());
+        }
+
     }
 
     /** {@inheritDoc} */
@@ -82,37 +96,38 @@ public class CollectionCreateNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         ColumnRearranger rearranger =
-            createColumnRearranger(inData[0].getDataTableSpec());
+                createColumnRearranger(inData[0].getDataTableSpec());
         BufferedDataTable out =
-            exec.createColumnRearrangeTable(inData[0], rearranger, exec);
+                exec.createColumnRearrangeTable(inData[0], rearranger, exec);
         return new BufferedDataTable[]{out};
     }
 
     private ColumnRearranger createColumnRearranger(final DataTableSpec in)
-        throws InvalidSettingsException {
+            throws InvalidSettingsException {
         List<String> includes = m_includeModel.getIncludeList();
         if (includes == null || includes.isEmpty()) {
-            throw new InvalidSettingsException("Not configured");
+            throw new InvalidSettingsException("Select columns to aggregate");
         }
         String[] names = includes.toArray(new String[includes.size()]);
         final int[] colIndices = new int[names.length];
-        DataType comType = null;
         for (int i = 0; i < names.length; i++) {
             int index = in.findColumnIndex(names[i]);
             if (index < 0) {
-                throw new InvalidSettingsException(
-                        "No column \"" + names[i] + "\" in input table");
+                throw new InvalidSettingsException("No column \"" + names[i]
+                        + "\" in input table");
             }
-            DataColumnSpec colSpec = in.getColumnSpec(index);
-            comType = comType == null ? colSpec.getType()
-                    : DataType.getCommonSuperType(comType, colSpec.getType());
             colIndices[i] = index;
         }
-        assert comType != null;
-        String newColName = DataTableSpec.getUniqueColumnName(in, "List");
-        DataType type = ListCell.getCollectionType(comType);
+        DataType comType = CollectionCellFactory.getElementType(in, colIndices);
+        String newColName = m_newColName.getStringValue();
+        DataType type;
+        if (m_createSet.getBooleanValue()) {
+            type = SetCell.getCollectionType(comType);
+        } else {
+            type = ListCell.getCollectionType(comType);
+        }
         DataColumnSpecCreator newColSpecC =
-            new DataColumnSpecCreator(newColName, type);
+                new DataColumnSpecCreator(newColName, type);
         newColSpecC.setElementNames(names);
         DataColumnSpec newColSpec = newColSpecC.createSpec();
         CellFactory appendFactory = new SingleCellFactory(newColSpec) {
@@ -120,13 +135,16 @@ public class CollectionCreateNodeModel extends NodeModel {
             @Override
             public DataCell getCell(final DataRow row) {
                 if (m_createSet.getBooleanValue()) {
-                    return SetCell.create(row, colIndices);
+                    return CollectionCellFactory.createSetCell(row, colIndices);
                 } else {
-                    return ListCell.create(row, colIndices);
+                    return CollectionCellFactory.createSetCell(row, colIndices);
                 }
             }
         };
         ColumnRearranger rearranger = new ColumnRearranger(in);
+        if (m_removeCols.getBooleanValue()) {
+            rearranger.remove(colIndices);
+        }
         rearranger.append(appendFactory);
         return rearranger;
     }
@@ -144,12 +162,9 @@ public class CollectionCreateNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_includeModel.loadSettingsFrom(settings);
-        try {
-            m_createSet.loadSettingsFrom(settings);
-        } catch (InvalidSettingsException ise) {
-            // default to false for backward compatibility
-            m_createSet.setBooleanValue(false);
-        }
+        m_createSet.loadSettingsFrom(settings);
+        m_removeCols.loadSettingsFrom(settings);
+        m_newColName.loadSettingsFrom(settings);
     }
 
     /** {@inheritDoc} */
@@ -171,6 +186,8 @@ public class CollectionCreateNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_includeModel.saveSettingsTo(settings);
         m_createSet.saveSettingsTo(settings);
+        m_removeCols.saveSettingsTo(settings);
+        m_newColName.saveSettingsTo(settings);
     }
 
     /** {@inheritDoc} */
@@ -178,19 +195,44 @@ public class CollectionCreateNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_includeModel.validateSettings(settings);
-        // m_create is not checked as it is optional for backward compatibility
+        m_createSet.validateSettings(settings);
+        m_removeCols.validateSettings(settings);
+        m_newColName.validateSettings(settings);
     }
 
-    /** Create settings model collection create node.
-     * @return a new settings object. */
+    /**
+     * Create settings model collection create node.
+     *
+     * @return a new settings object.
+     */
     static SettingsModelFilterString createSettingsModel() {
         return new SettingsModelFilterString("includes");
     }
 
-    /** Create settings model for flag to create SetCell or ListCell
-     * @return a new settings model object */
+    /**
+     * Create settings model for flag to create SetCell or ListCell.
+     *
+     * @return a new settings model object
+     */
     static SettingsModelBoolean createSettingsModelSetOrList() {
         return new SettingsModelBoolean("createSet", false);
     }
 
+    /**
+     * Create settings model for flag to remove aggregated columns.
+     *
+     * @return a new settings model instance
+     */
+    static SettingsModelBoolean createSettingsModelRemoveCols() {
+        return new SettingsModelBoolean("removeCols", false);
+    }
+
+    /**
+     * Creates settings model holding the name of the new column.
+     *
+     * @return a new settings model instance
+     */
+    static SettingsModelString createSettingsModelColumnName() {
+        return new SettingsModelString("newColName", "AggregatedValues");
+    }
 }

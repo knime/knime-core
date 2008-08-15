@@ -27,8 +27,10 @@ import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  *
@@ -44,6 +46,7 @@ public class CollectionCreateNodeDialogPane extends DefaultNodeSettingsPane {
                 CollectionCreateNodeModel.createSettingsModel();
         DialogComponent dc = new DialogComponentColumnFilter(m, 0);
         addDialogComponent(dc);
+
         createNewGroup("Collection type");
         SettingsModelBoolean t =
                 CollectionCreateNodeModel.createSettingsModelSetOrList();
@@ -52,5 +55,19 @@ public class CollectionCreateNodeDialogPane extends DefaultNodeSettingsPane {
                         "Create a collection of type 'set' "
                         + "(doesn't store duplicate values)");
         addDialogComponent(type);
+        closeCurrentGroup();
+
+        createNewGroup("Output table structure");
+        SettingsModelBoolean remCols =
+            CollectionCreateNodeModel.createSettingsModelRemoveCols();
+        DialogComponentBoolean remove =
+            new DialogComponentBoolean(remCols,
+                    "Remove aggregated column from table");
+        addDialogComponent(remove);
+        SettingsModelString colName =
+            CollectionCreateNodeModel.createSettingsModelColumnName();
+        DialogComponentString col = new DialogComponentString(colName,
+                "Enter the name of the new column:", true, 25);
+        addDialogComponent(col);
     }
 }
