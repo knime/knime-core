@@ -224,6 +224,39 @@ public class BlobSupportDataCellSet implements Iterable<DataCell> {
         return new BlobSupportDataCellSet(cells);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return m_set.toString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_set.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof BlobSupportDataCellSet)) {
+            return false;
+        }
+
+        BlobSupportDataCellSet s = (BlobSupportDataCellSet)obj;
+        return s.getElementType().equals(m_elementType)
+                && s.m_set.equals(m_set);
+    }
+
     /*
      * -----------------------------------------------------------------------
      */
