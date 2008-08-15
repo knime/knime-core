@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Aug 5, 2008 (wiswedel): created
  */
@@ -33,45 +33,55 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
-import org.knime.core.node.BufferedDataTable;
 
 /**
- * Default implementation of a {@link CollectionDataValue}, whereby the 
+ * Default implementation of a {@link CollectionDataValue}, whereby the
  * underlying data structure is a list.
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class ListCell extends DataCell implements CollectionDataValue {
-    
-    /** Convenience method to determine the type of collection. This is a 
+public class ListCell extends DataCell implements ListDataValue {
+
+    /**
+     * Convenience method to determine the type of collection. This is a
      * shortcut for <code>DataType.getType(ListCell.class, elementType)</code>.
+     *
      * @param elementType The type of the elements
      * @return a DataType representing the collection.
      */
     public static final DataType getCollectionType(final DataType elementType) {
         return DataType.getType(ListCell.class, elementType);
     }
-    
+
     private final BlobSupportDataCellList m_list;
-    
-    private static final DataCellSerializer<ListCell> SERIALIZER = 
-        new ListCellSerializer();
-    
-    /** Get serializer as required by {@link DataCell}.
-     * @return Such a serializer. */
+
+    private static final DataCellSerializer<ListCell> SERIALIZER =
+            new ListCellSerializer();
+
+    /**
+     * Get serializer as required by {@link DataCell}.
+     *
+     * @return Such a serializer.
+     */
     public static final DataCellSerializer<ListCell> getCellSerializer() {
         return SERIALIZER;
     }
-    
-    /** Create new list cell based on blob support list.
-     * @param list The underlying list. */
+
+    /**
+     * Rather use one of the factory methods.
+     *
+     * @param list the list that will be taken over.
+     * @see CollectionCellFactory#createListCell(Collection)
+     * @see CollectionCellFactory#createListCell(DataRow, int[])
+     */
     protected ListCell(final BlobSupportDataCellList list) {
         m_list = list;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public DataType getElementType() {
-        return m_list.getElementType(); 
+        return m_list.getElementType();
     }
 
     /** {@inheritDoc} */
@@ -80,18 +90,26 @@ public class ListCell extends DataCell implements CollectionDataValue {
         return m_list.iterator();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataCell get(final int index) {
+        return m_list.get(index);
+    }
+
     /** {@inheritDoc} */
     @Override
     public int size() {
         return m_list.size();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean containsBlobWrapperCells() {
         return m_list.containsBlobWrapperCells();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
@@ -110,58 +128,31 @@ public class ListCell extends DataCell implements CollectionDataValue {
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return m_list.toString(); 
+        return m_list.toString();
     }
-    
+
     /**
      * @return the list
      */
     protected BlobSupportDataCellList getList() {
         return m_list;
     }
-    
-    /** Factory method to create a list based on a collection.
-     * <p>If the underlying collection stems from a {@link DataRow} 
-     * (as read from a any table), consider to use 
-     * {@link #create(DataRow, int[])} in order to minimize cell access. 
-     * @param coll The underlying collection. 
-     * @return The newly created list cell. 
-     * @throws NullPointerException If the argument is null or 
-     * contains null values. */
-    public static DataCell create(final Collection<DataCell> coll) {
-        BlobSupportDataCellList l = BlobSupportDataCellList.create(coll);
-        return new ListCell(l);
-    }
-    
-    /** Create new list based on selected cell from a {@link DataRow}. Using
-     * this method will check if the row is returned by a 
-     * {@link BufferedDataTable} and will handle blobs appropriately.
-     * @param row The underlying row
-     * @param cols The indices of interest.
-     * @return A newly create list.
-     * @throws NullPointerException If either argument is null.
-     * @throws IndexOutOfBoundsException If the indices are invalid.
-     */
-    public static DataCell create(final DataRow row, final int[] cols) {
-        BlobSupportDataCellList l = BlobSupportDataCellList.create(row, cols);
-        return new ListCell(l);
-    }
-    
-    private static final class ListCellSerializer 
-        implements DataCellSerializer<ListCell> {
-        
+
+
+    private static final class ListCellSerializer implements
+            DataCellSerializer<ListCell> {
+
         /** {@inheritDoc} */
         @Override
-        public ListCell deserialize(
-                final DataCellDataInput input) throws IOException {
+        public ListCell deserialize(final DataCellDataInput input)
+                throws IOException {
             return new ListCell(BlobSupportDataCellList.deserialize(input));
         }
-        
+
         /** {@inheritDoc} */
         @Override
-        public void serialize(final ListCell cell, 
-                    final DataCellDataOutput output)
-                throws IOException {
+        public void serialize(final ListCell cell,
+                final DataCellDataOutput output) throws IOException {
             cell.m_list.serialize(output);
         }
     }

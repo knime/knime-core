@@ -31,7 +31,6 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.DoubleValue;
 import org.knime.core.data.container.BlobDataCell;
 import org.knime.core.data.container.BlobWrapperDataCell;
 import org.knime.core.data.renderer.DataValueRendererFamily;
@@ -93,7 +92,7 @@ public interface CollectionDataValue extends DataValue, Iterable<DataCell> {
     public static class CollectionUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
         private static final Icon ICON =
-            loadIcon(DoubleValue.class, "/../icon/fuzzyintervalicon.png");
+            loadIcon(CollectionDataValue.class, "/../icon/collectionicon.png");
 
         /** Only subclasses are allowed to instantiate this class. */
         protected CollectionUtilityFactory() {

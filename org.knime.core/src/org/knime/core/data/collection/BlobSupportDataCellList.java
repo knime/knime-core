@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Aug 11, 2008 (wiswedel): created
  */
@@ -44,20 +44,25 @@ import org.knime.core.node.BufferedDataTable;
 /**
  * A list of {@link DataCell} objects, which special treatment for
  * {@link BlobDataCell}. The implementation will keep blobs in special
- * {@link BlobWrapperDataCell} in order to allow for a possible 
- * garbage collection (and deserializing when a blob is accessed.)
- * 
+ * {@link BlobWrapperDataCell} in order to allow for a possible garbage
+ * collection (and deserializing when a blob is accessed.)
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class BlobSupportDataCellList implements Iterable<DataCell> {
-    
+
     private final List<DataCell> m_cellList;
+
     private boolean m_containsBlobWrapperCells;
+
     private final DataType m_elementType;
-    
-    /** Creates new instance based on a collection of data cells.
-     * @param coll The underlying collection (will be copied). 
-     * {@link BlobDataCell} in this collection will be handled with care.
+
+    /**
+     * Creates new instance based on a collection of data cells.
+     *
+     * @param coll The underlying collection (will be copied).
+     *            {@link BlobDataCell} in this collection will be handled with
+     *            care.
      */
     protected BlobSupportDataCellList(final Collection<DataCell> coll) {
         ArrayList<DataCell> cellList = new ArrayList<DataCell>(coll.size());
@@ -70,8 +75,9 @@ public class BlobSupportDataCellList implements Iterable<DataCell> {
             if (c instanceof BlobWrapperDataCell) {
                 m_containsBlobWrapperCells = true;
                 cellList.add(c);
-                cellType = DataType.getType(
-                        ((BlobWrapperDataCell)c).getBlobClass());
+                cellType =
+                        DataType.getType(((BlobWrapperDataCell)c)
+                                .getBlobClass());
             } else if (c instanceof BlobDataCell) {
                 m_containsBlobWrapperCells = true;
                 cellList.add(new BlobWrapperDataCell((BlobDataCell)c));
@@ -84,8 +90,8 @@ public class BlobSupportDataCellList implements Iterable<DataCell> {
                 if (commonType == null) {
                     commonType = cellType;
                 } else {
-                    commonType = 
-                        DataType.getCommonSuperType(commonType, cellType);
+                    commonType =
+                            DataType.getCommonSuperType(commonType, cellType);
                 }
             }
         }
@@ -96,14 +102,46 @@ public class BlobSupportDataCellList implements Iterable<DataCell> {
         }
         m_cellList = Collections.unmodifiableList(cellList);
     }
-    
+
     /**
      * @return the containsBlobs
      */
     public final boolean containsBlobWrapperCells() {
         return m_containsBlobWrapperCells;
     }
-    
+
+    /**
+     * Returns the element at the specified position of the list. If it is a
+     * blob wrapper cell, it is unwrapped and the contained data cell is
+     * returned.
+     *
+     * @param index the index of the element to return
+     * @return the element at the specified position.
+     * @throws IndexOutOfBoundsException if the index is larger than the list is
+     *             long
+     */
+    public DataCell get(final int index) {
+        DataCell cell = m_cellList.get(index);
+        if (cell instanceof BlobWrapperDataCell) {
+            return ((BlobWrapperDataCell)cell).getCell();
+        } else {
+            return cell;
+        }
+    }
+
+    /**
+     * Returns the element at the specified position of the list. If the element
+     * is a blob wrapper cell the wrapper will be returned (and not unwrapped).
+     *
+     * @param index the index of the element to return
+     * @return the element at the specified position.
+     * @throws IndexOutOfBoundsException if the index is larger than the list is
+     *             long
+     */
+    public DataCell getWithBlobSupport(final int index) {
+        return m_cellList.get(index);
+    }
+
     /** {@inheritDoc} */
     @Override
     public Iterator<DataCell> iterator() {
@@ -112,25 +150,25 @@ public class BlobSupportDataCellList implements Iterable<DataCell> {
         }
         return new DefaultBlobSupportDataCellIterator(m_cellList.iterator());
     }
-    
+
     /**
      * @return the elementType
      */
     public DataType getElementType() {
         return m_elementType;
     }
-    
+
     /** @return Size of the list. */
     public int size() {
         return m_cellList.size();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public String toString() {
         return m_cellList.toString();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean equals(final Object obj) {
@@ -142,16 +180,18 @@ public class BlobSupportDataCellList implements Iterable<DataCell> {
         }
         BlobSupportDataCellList o = (BlobSupportDataCellList)obj;
         return o.getElementType().equals(m_elementType)
-            && o.m_cellList.equals(m_cellList);
+                && o.m_cellList.equals(m_cellList);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
         return m_cellList.hashCode();
     }
-    
-    /** Write this object to an output.
+
+    /**
+     * Write this object to an output.
+     *
      * @param output To write to.
      * @throws IOException If that fails.
      */
@@ -161,8 +201,10 @@ public class BlobSupportDataCellList implements Iterable<DataCell> {
             output.writeDataCell(c);
         }
     }
-    
-    /** Static deserializer for a list.  
+
+    /**
+     * Static deserializer for a list.
+     *
      * @param input To read from.
      * @return A newly create list.
      * @throws IOException If that fails
@@ -180,31 +222,36 @@ public class BlobSupportDataCellList implements Iterable<DataCell> {
         }
         return new BlobSupportDataCellList(cells);
     }
-    
-    /** Factory method to create a list based on a collection.
-     * <p>If the underlying collection stems from a {@link DataRow} 
-     * (as read from a any table), consider to use 
-     * {@link #create(DataRow, int[])} in order to minimize cell access. 
-     * @param coll The underlying collection. 
-     * @return The newly created list. 
-     * @throws NullPointerException If the argument is null or 
-     * contains null values. */
-    public static BlobSupportDataCellList create(
-            final Collection<DataCell> coll) {
+
+    /**
+     * Factory method to create a list based on a collection.
+     * <p>
+     * If the underlying collection stems from a {@link DataRow} (as read from a
+     * any table), consider to use {@link #create(DataRow, int[])} in order to
+     * minimize cell access.
+     *
+     * @param coll The underlying collection.
+     * @return The newly created list.
+     * @throws NullPointerException If the argument is null or contains null
+     *             values.
+     */
+    public static BlobSupportDataCellList create(final Collection<DataCell> coll) {
         return new BlobSupportDataCellList(coll);
     }
-    
-    /** Create new list based on selected cell from a {@link DataRow}. Using
-     * this method will check if the row is returned by a 
+
+    /**
+     * Create new list based on selected cell from a {@link DataRow}. Using
+     * this method will check if the row is returned by a
      * {@link BufferedDataTable} and will handle blobs appropriately.
+     *
      * @param row The underlying row
      * @param cols The indices of interest.
      * @return A newly create list.
      * @throws NullPointerException If either argument is null.
      * @throws IndexOutOfBoundsException If the indices are invalid.
      */
-    public static BlobSupportDataCellList create(
-            final DataRow row, final int[] cols) {
+    public static BlobSupportDataCellList create(final DataRow row,
+            final int[] cols) {
         ArrayList<DataCell> coll = new ArrayList<DataCell>(cols.length);
         for (int i = 0; i < cols.length; i++) {
             DataCell c;

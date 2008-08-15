@@ -26,8 +26,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
@@ -47,7 +47,7 @@ import org.knime.core.node.BufferedDataTable;
  */
 public class BlobSupportDataCellSet implements Iterable<DataCell> {
 
-    private final Set<Wrapperli> m_set;
+    private final Set<Wrapper> m_set;
 
     private boolean m_containsBlobWrapperCells;
 
@@ -102,7 +102,7 @@ public class BlobSupportDataCellSet implements Iterable<DataCell> {
      *
      */
     BlobSupportDataCellSet(final Collection<DataCell> cells) {
-        HashSet<Wrapperli> cellSet = new HashSet<Wrapperli>();
+        LinkedHashSet<Wrapper> cellSet = new LinkedHashSet<Wrapper>();
         DataType commonType = null;
         for (DataCell c : cells) {
             if (c == null) {
@@ -110,21 +110,20 @@ public class BlobSupportDataCellSet implements Iterable<DataCell> {
                         "Collection element must not be null");
             }
             DataType cellType;
-            Wrapperli element;
+            Wrapper element;
 
             if (c instanceof BlobWrapperDataCell) {
                 m_containsBlobWrapperCells = true;
-                element = new Wrapperli(c);
+                element = new Wrapper(c);
                 cellType =
                         DataType.getType(((BlobWrapperDataCell)c)
                                 .getBlobClass());
             } else if (c instanceof BlobDataCell) {
                 m_containsBlobWrapperCells = true;
-                element =
-                        new Wrapperli(new BlobWrapperDataCell((BlobDataCell)c));
+                element = new Wrapper(new BlobWrapperDataCell((BlobDataCell)c));
                 cellType = c.getType();
             } else {
-                element = new Wrapperli(c);
+                element = new Wrapper(c);
                 cellType = c.getType();
             }
 
@@ -149,10 +148,20 @@ public class BlobSupportDataCellSet implements Iterable<DataCell> {
     }
 
     /**
+     * Returns true if the set contains the specified cell.
+     *
+     * @param cell the cell to check for
+     * @return true if the set contains the specified cell.
+     */
+    public boolean contains(final DataCell cell) {
+        return m_set.contains(new Wrapper(cell));
+    }
+
+    /**
      * {@inheritDoc}
      */
     public Iterator<DataCell> iterator() {
-        return new WrapperliIterator(m_set.iterator());
+        return new WrapperIterator(m_set.iterator());
     }
 
     /**
@@ -188,7 +197,7 @@ public class BlobSupportDataCellSet implements Iterable<DataCell> {
      */
     public void serialize(final DataCellDataOutput output) throws IOException {
         output.writeInt(size());
-        for (Wrapperli w : m_set) {
+        for (Wrapper w : m_set) {
             DataCell c = w.getCell();
             output.writeDataCell(c);
         }
@@ -225,13 +234,13 @@ public class BlobSupportDataCellSet implements Iterable<DataCell> {
      * possibly wrapped elements.
      *
      */
-    private class Wrapperli {
+    private final class Wrapper {
         private final DataCell m_cell;
 
         /**
          *
          */
-        private Wrapperli(final DataCell c) {
+        private Wrapper(final DataCell c) {
             m_cell = c;
         }
 
@@ -247,7 +256,7 @@ public class BlobSupportDataCellSet implements Iterable<DataCell> {
          */
         @Override
         public boolean equals(final Object obj) {
-            if (!(obj instanceof Wrapperli)) {
+            if (!(obj instanceof Wrapper)) {
                 return false;
             }
             if (this == obj) {
@@ -256,7 +265,7 @@ public class BlobSupportDataCellSet implements Iterable<DataCell> {
 
             // we need to compare the real data cells in both wrappers
             DataCell thisCell = m_cell;
-            DataCell otherCell = ((Wrapperli)obj).m_cell;
+            DataCell otherCell = ((Wrapper)obj).m_cell;
             if (thisCell == otherCell) {
                 return true;
             }
@@ -277,6 +286,7 @@ public class BlobSupportDataCellSet implements Iterable<DataCell> {
             // BlobWrapper descends
             return m_cell.hashCode();
         }
+
         /**
          * {@inheritDoc}
          */
@@ -286,11 +296,11 @@ public class BlobSupportDataCellSet implements Iterable<DataCell> {
         }
     }
 
-    private class WrapperliIterator implements BlobSupportDataCellIterator {
+    private final class WrapperIterator implements BlobSupportDataCellIterator {
 
-        private final Iterator<Wrapperli> m_iter;
+        private final Iterator<Wrapper> m_iter;
 
-        private WrapperliIterator(final Iterator<Wrapperli> iter) {
+        private WrapperIterator(final Iterator<Wrapper> iter) {
             m_iter = iter;
         }
 

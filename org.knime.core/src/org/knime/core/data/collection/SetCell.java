@@ -32,7 +32,6 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
-import org.knime.core.node.BufferedDataTable;
 
 /**
  * Default implementation of a {@link CollectionDataValue}, whereas the
@@ -41,7 +40,7 @@ import org.knime.core.node.BufferedDataTable;
  *
  * @author ohl, University of Konstanz
  */
-public class SetCell extends DataCell implements CollectionDataValue {
+public class SetCell extends DataCell implements SetDataValue {
 
     /**
      * Convenience method to determine the type of collection. This is a
@@ -69,44 +68,11 @@ public class SetCell extends DataCell implements CollectionDataValue {
     private final BlobSupportDataCellSet m_set;
 
     /**
-     * Factory method to create a data cell set based on a collection.
-     * <p>
-     * If the underlying collection stems from a {@link DataRow} (as read from a
-     * any table), consider to use {@link #create(DataRow, int[])} in order to
-     * minimize cell access.
-     *
-     * @param coll The underlying collection.
-     * @return The newly created set cell.
-     * @throws NullPointerException If the argument is null or contains null
-     *             values.
-     */
-    public static DataCell create(final Collection<DataCell> coll) {
-        BlobSupportDataCellSet l = BlobSupportDataCellSet.create(coll);
-        return new SetCell(l);
-    }
-
-    /**
-     * Create new set based on selected cell from a {@link DataRow}. Using this
-     * method will check if the row is returned by a {@link BufferedDataTable}
-     * and will handle blobs appropriately.
-     *
-     * @param row The underlying row
-     * @param cols The indices of cells to be stored in the set.
-     * @return A newly created set.
-     * @throws NullPointerException If either argument is null.
-     * @throws IndexOutOfBoundsException If the indices are invalid.
-     */
-    public static DataCell create(final DataRow row, final int[] cols) {
-        BlobSupportDataCellSet l = BlobSupportDataCellSet.create(row, cols);
-        return new SetCell(l);
-    }
-
-    /**
      * Rather use one of the factory methods.
      *
      * @param cellSet the set that will be taken over.
-     * @see #create(Collection)
-     * @see #create(DataRow, int[])
+     * @see CollectionCellFactory#createSetCell(Collection)
+     * @see CollectionCellFactory#createSetCell(DataRow, int[])
      */
     protected SetCell(final BlobSupportDataCellSet cellSet) {
         m_set = cellSet;
@@ -147,6 +113,14 @@ public class SetCell extends DataCell implements CollectionDataValue {
      */
     public Iterator<DataCell> iterator() {
         return m_set.iterator();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean contains(final DataCell cell) {
+        return m_set.contains(cell);
     }
 
     /**
