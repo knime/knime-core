@@ -249,6 +249,11 @@ public class DataCellFactory {
             // this is a feature of the parseInt method: it bails on '+'
             if (trimmed.charAt(0) == '+') {
                 trimmed = trimmed.substring(1);
+                if (trimmed.isEmpty()) {
+                    m_lastErrorMessage =
+                        "Invalid number format. Got '+' for an integer.";
+                    return null;
+                }
             }
             try {
                 int val = Integer.parseInt(trimmed);
