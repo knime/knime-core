@@ -235,7 +235,8 @@ public class BlobSupportDataCellList implements Iterable<DataCell> {
      * @throws NullPointerException If the argument is null or contains null
      *             values.
      */
-    public static BlobSupportDataCellList create(final Collection<DataCell> coll) {
+    public static BlobSupportDataCellList create(
+            final Collection<DataCell> coll) {
         return new BlobSupportDataCellList(coll);
     }
 

@@ -65,7 +65,8 @@ public class BlobSupportDataCellSet implements Iterable<DataCell> {
      * @throws NullPointerException If the argument is null or contains null
      *             elements.
      */
-    public static BlobSupportDataCellSet create(final Collection<DataCell> coll) {
+    public static BlobSupportDataCellSet create(
+            final Collection<DataCell> coll) {
         return new BlobSupportDataCellSet(coll);
     }
 
