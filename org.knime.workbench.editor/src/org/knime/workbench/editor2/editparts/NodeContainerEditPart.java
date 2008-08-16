@@ -29,9 +29,6 @@ import java.util.List;
 import java.util.Vector;
 
 import org.eclipse.draw2d.IFigure;
-import org.eclipse.draw2d.Label;
-import org.eclipse.draw2d.MouseEvent;
-import org.eclipse.draw2d.MouseMotionListener;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.DragTracker;
@@ -176,31 +173,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             // has no knowledge about a extrainfo
             ModellingNodeExtraInfo info = new ModellingNodeExtraInfo();
             info.setNodeLocation(0, 0, -1, -1);
-
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // TODO: very bad hack for version 1.0.0!!!!
-            // just to set the x-partitioner of the x-validation meta node
-            // to a suitable position; this is done as the meta nodes
-            // can not determine locations and set them for a node
-            // which is (like the x-partitioner) created from the code (not
-            // from the user)
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            if (getNodeContainer().getName().equals("X-Partitioner")) {
-                info.setNodeLocation(125, 0, -1, -1);
-            }
-
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // TODO: very bad hack for version 1.2.1!!!!
-            // just to set the aggregator of the x-validation meta node
-            // to a suitable position; this is done as the meta nodes
-            // can not determine locations and set them for a node
-            // which is (like the x-partitioner) created from the code (not
-            // from the user)
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            if (getNodeContainer().getName().equals("Aggregator")) {
-                info.setNodeLocation(250, 10, -1, -1);
-            }
-
             getNodeContainer().setUIInformation(info);
 
         }
@@ -228,35 +200,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         // create the visuals for the node container.
         final NodeContainerFigure nodeFigure =
                 new NodeContainerFigure(new ProgressFigure());
-        nodeFigure.addMouseMotionListener(new MouseMotionListener() {
-
-            public void mouseDragged(MouseEvent me) {
-                // TODO Auto-generated method stub
-                
-            }
-
-            public void mouseEntered(MouseEvent me) {
-                // TODO Auto-generated method stub
-                
-            }
-
-            public void mouseExited(MouseEvent me) {
-                // TODO Auto-generated method stub
-                
-            }
-
-            public void mouseHover(MouseEvent me) {
-                nodeFigure.setToolTip(new Label(
-                        "current state: " + getNodeContainer().getState()));
-            }
-
-            public void mouseMoved(MouseEvent me) {
-                
-                
-            }
-            
-        });
-
         // init the user specified node name
         nodeFigure.setCustomName(getCustomName());
 
