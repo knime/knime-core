@@ -91,6 +91,13 @@ public class NodeContainerOutPort extends NodePortAdaptor
                       ? m_snc.getNode().getOutputObject(getPortIndex()) : null;
     }
     
+    /** {@inheritDoc} */
+    @Override
+    public String getPortSummary() {
+        return m_snc.getState().equals(State.EXECUTED)
+            ? m_snc.getNode().getOutputObjectSummary(getPortIndex()) : null;
+    }
+    
     /**
      * {@inheritDoc}
      */

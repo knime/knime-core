@@ -98,6 +98,13 @@ public interface PortObject {
         throws IOException, CanceledExecutionException;
     }
     
+    /** Get a short summary of this <code>PortObject</code>. 
+     * The return value will be shown in a node port's tooltip, for instance. 
+     * @return Summary of the object's content, suitable for a tooltip. Empty
+     * strings and null result values are ok (though not encouraged). 
+     */ 
+    String getSummary();
+    
     /**
      * Get specification to this port object. That is, the corresponding
      * {@link PortObjectSpec} which is used to configure any successor node

@@ -52,6 +52,15 @@ public interface NodeOutPort extends NodePort, NodeStateChangeListener {
      * @return PortObject the object for this port. Can be null.
      */
     public PortObject getPortObject();
+    
+    /** Get summary of the underlying port object as provided by 
+     * {@link PortObject#getSummary()}. It's a separate method since calling
+     * getPortObject().getSummary() may force the underlying table (if it is
+     * a table) to restore its content from disc. Summaries are saved in the 
+     * workflow file (or the node's corresponding sub directory).
+     * @return The port object's summary. 
+     */ 
+    public String getPortSummary();
 
     /**
      * @return the state of the node owning this port.

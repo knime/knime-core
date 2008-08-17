@@ -112,6 +112,12 @@ public final class LinearRegressionPortObject extends AbstractSimplePortObject
         return m_spec;
     }
     
+    /** {@inheritDoc} */
+    @Override
+    public String getSummary() {
+        return null;
+    }
+    
     /**
      * Get the name of the response column, i.e. the prediction column.
      * 

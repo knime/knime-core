@@ -66,6 +66,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
 
     private PortObjectSpec[] m_portObjectSpecs;
     
+    private String[] m_portObjectSummaries;
+
     private BufferedDataTable[] m_internalHeldTables;
 
     private boolean m_needsResetAfterLoad;
@@ -157,7 +159,9 @@ public class NodePersistorVersion1xx implements NodePersistor {
                         setPortObjectSpec(i, object.getSpec());
                     }
                 }
+                String summary = object != null ? object.getSummary() : null;
                 setPortObject(i, object);
+                setPortObjectSummary(i, summary);
             }
             execPort.setProgress(1.0);
         }
@@ -361,6 +365,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         exec.setMessage("settings");
         m_portObjects = new PortObject[node.getNrOutPorts()];
         m_portObjectSpecs = new PortObjectSpec[node.getNrOutPorts()];
+        m_portObjectSummaries = new String[node.getNrOutPorts()];
         m_nodeDirectory = configFileRef.getParent();
         if (m_nodeDirectory == null) {
             throw new IOException("parent of config file \"" + configFileRef
@@ -511,7 +516,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
     public void setPortObject(final int idx, final PortObject portObject) {
         m_portObjects[idx] = portObject;
     }
-
+    
     /** {@inheritDoc} */
     public PortObjectSpec getPortObjectSpec(final int outportIndex) {
         return m_portObjectSpecs[outportIndex];
@@ -524,6 +529,21 @@ public class NodePersistorVersion1xx implements NodePersistor {
     public void setPortObjectSpec(
             final int idx, final PortObjectSpec portObjectSpec) {
         m_portObjectSpecs[idx] = portObjectSpec;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public String getPortObjectSummary(final int outportIndex) {
+        return m_portObjectSummaries[outportIndex];
+    }
+    
+    /**
+     * @param idx port for which to set summary
+     * @param portObjectSummary the portObjectSummary to set
+     */
+    public void setPortObjectSummary(final int idx, 
+            final String portObjectSummary) {
+        m_portObjectSummaries[idx] = portObjectSummary;
     }
     
     /** {@inheritDoc} */

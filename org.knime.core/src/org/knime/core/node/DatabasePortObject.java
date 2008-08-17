@@ -45,12 +45,17 @@ public class DatabasePortObject implements PortObject {
      */
     public static final PortType TYPE = new PortType(DatabasePortObject.class);
     
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
+    @Override
     public DatabasePortObjectSpec getSpec() {
         return new DatabasePortObjectSpec(
                     m_data.getDataTableSpec(), m_conn);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public String getSummary() {
+        return null;
     }
 
     private final DataTable m_data;

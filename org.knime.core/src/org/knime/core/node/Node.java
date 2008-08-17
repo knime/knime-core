@@ -119,6 +119,7 @@ public final class Node implements NodeModelWarningListener {
         PortObjectSpec spec;
         PortObject object;
         HiLiteHandler hiliteHdl;
+        String summary;
     }
     private final Output[] m_outputs;
 
@@ -232,6 +233,7 @@ public final class Node implements NodeModelWarningListener {
             m_outputs[i].name = m_factory.getOutportName(i);
             m_outputs[i].spec = null;
             m_outputs[i].object = null;
+            m_outputs[i].summary = null;
             m_outputs[i].hiliteHdl = m_model.getOutHiLiteHandler(i);
         }
 
@@ -352,6 +354,7 @@ public final class Node implements NodeModelWarningListener {
                         + objClass.getSimpleName());
             } else {
                 m_outputs[i].object = obj;
+                m_outputs[i].summary = loader.getPortObjectSummary(i);
             }
             if (m_outputs[i].object != null) {
                 m_outputs[i].hiliteHdl = m_model.getOutHiLiteHandler(i);
@@ -548,6 +551,10 @@ public final class Node implements NodeModelWarningListener {
     public PortObject getOutputObject(final int index) {
         return m_outputs[index].object;
     }
+    
+    public String getOutputObjectSummary(final int index) {
+        return m_outputs[index].summary;
+    }
 
     public HiLiteHandler getOutputHiLiteHandler(final int index) {
         return m_outputs[index].hiliteHdl;
@@ -714,6 +721,7 @@ public final class Node implements NodeModelWarningListener {
                 BufferedDataTable t = thisTable;
                 t.setOwnerRecursively(this);
                 m_outputs[p].object = t;
+                m_outputs[p].summary = t.getSummary();
                 m_outputs[p].spec = newPortSpec;
             } else {
                 // TODO save them, don't simply hand them over!
@@ -721,6 +729,9 @@ public final class Node implements NodeModelWarningListener {
                 if (newOutData[p] != null) {
                     assert !continuesLoop;
                     m_outputs[p].spec = newOutData[p].getSpec();
+                    m_outputs[p].summary = newOutData[p].getSummary();
+                } else {
+                    m_outputs[p].summary = null;
                 }
             }
             m_outputs[p].hiliteHdl = m_model.getOutHiLiteHandler(p);
@@ -871,6 +882,7 @@ public final class Node implements NodeModelWarningListener {
             }
             m_outputs[i].spec = null;
             m_outputs[i].object = null;
+            m_outputs[i].summary = null;
         }
         if (m_internalHeldTables != null) {
             for (BufferedDataTable t : m_internalHeldTables) {

@@ -76,6 +76,12 @@ public abstract class BasisFunctionPortObject extends AbstractSimplePortObject {
      */
     public abstract DataTableSpec getSpec();
     
+    /** {@inheritDoc} */
+    @Override
+    public String getSummary() {
+        return null;
+    }
+    
     /**
      * @return basisfunction rules by class label
      */

@@ -106,7 +106,7 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
         }
         return m_underlyingPort.getScopeContextStackContainer();
     }
-
+    
     /**
      * {@inheritDoc}
      */
@@ -115,6 +115,15 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
             return null;
         }
         return m_underlyingPort.getPortObject();
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public String getPortSummary() {
+        if (m_underlyingPort == null) {
+            return null;
+        }
+        return m_underlyingPort.getPortSummary();
     }
     
     /**

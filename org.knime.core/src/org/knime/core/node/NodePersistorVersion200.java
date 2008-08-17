@@ -203,11 +203,16 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         settings.addString("port_spec_class", spec != null ? spec.getClass()
                 .getName() : null);
         PortObject object = node.getOutputObject(portIdx);
+        String summary = node.getOutputObjectSummary(portIdx);
         boolean isSaveObject = saveData && object != null;
         settings.addString("port_object_class", isSaveObject ? object
                 .getClass().getName() : null);
+        if (saveData && object != null) {
+            settings.addString("port_object_summary", summary);
+        }
         if (node.getOutputType(portIdx).equals(BufferedDataTable.TYPE)) {
-            assert object == null || object instanceof BufferedDataTable : "Expected BufferedDataTable, got "
+            assert object == null || object instanceof BufferedDataTable 
+                : "Expected BufferedDataTable, got " 
                     + object.getClass().getSimpleName();
             // executed and instructed to save data
             if (saveData && object != null) {
@@ -446,8 +451,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                         + "\"");
             }
             if (objectClass != null) {
-                object =
-                        loadBufferedDataTable(portDir, exec, loadTblRep, tblRep);
+                object = loadBufferedDataTable(
+                        portDir, exec, loadTblRep, tblRep);
                 ((BufferedDataTable)object).setOwnerRecursively(node);
                 spec = ((BufferedDataTable)object).getDataTableSpec();
             } else if (specClass != null) {
@@ -532,6 +537,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                                 .getSimpleName() + "\")");
             }
         }
+        String summary = null;
         if (object != null) {
             if (!designatedType.getPortObjectClass().isInstance(object)) {
                 throw new IOException("Actual port object type (\""
@@ -540,9 +546,14 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                         + designatedType.getPortObjectClass().getSimpleName()
                         + "\")");
             }
+            summary = settings.getString("port_object_summary", null);
+            if (summary == null) {
+                summary = object.getSummary();
+            }
         }
         setPortObjectSpec(portIdx, spec);
         setPortObject(portIdx, object);
+        setPortObjectSummary(portIdx, summary);
     }
 
     private BufferedDataTable loadBufferedDataTable(

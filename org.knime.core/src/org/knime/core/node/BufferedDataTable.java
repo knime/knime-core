@@ -217,6 +217,13 @@ public final class BufferedDataTable implements DataTable, PortObject {
     }
 
     /** {@inheritDoc} */
+    @Override
+    public String getSummary() {
+        return "Rows: " + getRowCount() 
+            + ", Cols: " + getSpec().getNumColumns();
+    }
+
+    /** {@inheritDoc} */
     public CloseableRowIterator iterator() {
         return m_delegate.iterator();
     }

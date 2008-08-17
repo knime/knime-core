@@ -39,7 +39,6 @@ import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.requests.SelectionRequest;
 import org.eclipse.gef.tools.ConnectionDragCreationTool;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
@@ -337,23 +336,13 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
         if (portName == null) {
             name = port.getPortName();
         }
-        int cols = -1;
-        int rows = -1;
-        if (port.getPortObject() != null
-                && port.getPortType().equals(BufferedDataTable.TYPE)) {
-            cols = ((BufferedDataTable)port.getPortObject()).getDataTableSpec()
-                .getNumColumns();
-            rows = ((BufferedDataTable)port.getPortObject()).getRowCount();
-        }
         StringBuilder sb = new StringBuilder();
         sb.append(name);
-        if (cols >= 0) {
-            sb.append(" (Cols: " + cols);
-            if (rows >= 0) {
-                sb.append(", Rows: " + rows + ")");
-            } else {
-                sb.append(")");
-            }
+        String portSummary = port.getPortSummary();
+        if (portSummary != null && portSummary.length() > 0) {
+            sb.append(" (");
+            sb.append(portSummary);
+            sb.append(")");
         }
         return sb.toString();
     }

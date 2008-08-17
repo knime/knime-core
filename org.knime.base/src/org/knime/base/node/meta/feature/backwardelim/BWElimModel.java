@@ -113,6 +113,12 @@ public class BWElimModel implements PortObject, PortObjectSpec {
     public PortObjectSpec getSpec() {
         return this;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public String getSummary() {
+        return null;
+    }
 
     /**
      * Returns a serializer object for this model.

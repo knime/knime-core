@@ -294,6 +294,12 @@ public class PMMLPortObject implements PortObject {
         m_spec = (DataTableSpec)spec;
     }
     
+    /** {@inheritDoc} */
+    @Override
+    public String getSummary() {
+        return null;
+    }
+    
     /**
      * Loads the port object by reading the file and setting the member 
      * variables, subclasses must override this method in order to register a 

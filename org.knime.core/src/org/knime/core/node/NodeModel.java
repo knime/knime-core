@@ -183,6 +183,11 @@ public abstract class NodeModel extends GenericNodeModel {
         public ModelContentWrapper getSpec() {
             return this;
         }
+        /** {@inheritDoc} */
+        @Override
+        public String getSummary() {
+            return null;
+        }
         
         /** @return serializer as required by class {@link PortObject}. */
         public static final PortObjectSerializer<ModelContentWrapper> 
