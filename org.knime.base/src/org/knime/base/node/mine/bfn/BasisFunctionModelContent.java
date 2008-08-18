@@ -61,18 +61,6 @@ public final class BasisFunctionModelContent {
     }
     
     /**
-     * Creates a new basis function model object.
-     * @param bfs basisfunction rules by class
-     * @param spec model spec
-     */
-    public BasisFunctionModelContent(
-            final Map<DataCell, List<BasisFunctionPredictorRow>> bfs,
-            final DataTableSpec spec) {
-        m_bfs = bfs;
-        m_spec = spec;
-    }
-    
-    /**
      * Loads a this basisfunction content from the given file directory.
      * @param modelCont model content to read rules and spec from
      * @param cr used to instantiate basisfunction predictor rows
