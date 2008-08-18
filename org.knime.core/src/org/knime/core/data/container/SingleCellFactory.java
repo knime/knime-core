@@ -65,7 +65,7 @@ public abstract class SingleCellFactory implements CellFactory {
 
     /**
      * Called from getCells. Return the single cell to be returned.
-     * @param row The refernence row.
+     * @param row The reference row.
      * @return The new cell.
      */
     public abstract DataCell getCell(final DataRow row);
