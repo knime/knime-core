@@ -24,20 +24,11 @@
  */
 package org.knime.base.node.mine.bfn.fuzzy;
 
-import java.util.List;
-import java.util.Map;
-
 import org.knime.base.node.mine.bfn.BasisFunctionModelContent;
 import org.knime.base.node.mine.bfn.BasisFunctionPortObject;
 import org.knime.base.node.mine.bfn.BasisFunctionPredictorRow;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.ModelContentWO;
-import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.PortType;
 
 /**
@@ -51,8 +42,6 @@ public final class FuzzyBasisFunctionPortObject
     public static final PortType TYPE = new PortType(
             FuzzyBasisFunctionPortObject.class);
     
-    private BasisFunctionModelContent m_content;
-    
     /**
      * 
      */
@@ -61,46 +50,11 @@ public final class FuzzyBasisFunctionPortObject
     }
     
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DataTableSpec getSpec() {
-        return m_content.getSpec();
-    }
-    
-    /**
-     * @return basisfunctions rules by class
-     */
-    @Override
-    public Map<DataCell, List<BasisFunctionPredictorRow>> getBasisFunctions() {
-        return m_content.getBasisFunctions();
-    }
-    
-    /**
      * Creates a new basis function model object.
      * @param cont basisfunction model content containing rules and spec
      */
     public FuzzyBasisFunctionPortObject(final BasisFunctionModelContent cont) {
-        m_content = cont;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void save(final ModelContentWO model, final ExecutionMonitor exec)
-            throws CanceledExecutionException {
-        m_content.save(model);
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void load(final ModelContentRO model, final PortObjectSpec spec,
-            final ExecutionMonitor exec) throws InvalidSettingsException,
-            CanceledExecutionException {
-        m_content = new BasisFunctionModelContent(model, new FuzzyCreator());
+        super(cont);
     }
 
     /**
@@ -124,6 +78,14 @@ public final class FuzzyBasisFunctionPortObject
                 throws InvalidSettingsException {
             return new FuzzyBasisFunctionPredictorRow(pp);
         }
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Creator getCreator() {
+        return new FuzzyCreator();
     }
     
 }

@@ -587,7 +587,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
         ColumnRearranger colre = new ColumnRearranger(spec);
         colre.replace(new SingleCellFactory(cr.createSpec()) {
             @Override
-            public DataCell getCell(DataRow row) {
+            public DataCell getCell(final DataRow row) {
                 return row.getCell(idx);
             }
         }, idx);

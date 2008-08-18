@@ -134,5 +134,23 @@ public final class BasisFunctionModelContent {
             cspec.save(modelSpec.addConfig(cspec.getName()));
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        int total = 0;
+        for (DataCell key : m_bfs.keySet()) {
+            if (buf.length() > 0) {
+                buf.append(" ,");
+            }
+            int t = m_bfs.get(key).size();
+            buf.append(key.toString() + " (" + t + ")");
+            total += t;
+        }
+        return total + " rules for class: " + buf.toString();
+    }
     
 }

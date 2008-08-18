@@ -29,8 +29,12 @@ import java.util.Map;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.ModelContentWO;
+import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.portobject.AbstractSimplePortObject;
 
 /**
@@ -39,11 +43,38 @@ import org.knime.core.node.portobject.AbstractSimplePortObject;
  */
 public abstract class BasisFunctionPortObject extends AbstractSimplePortObject {
     
+    
+    private BasisFunctionModelContent m_content;
+    
     /**
      * Creates a new abstract <code>BasisFunctionPortObject</code>.
      */
     public BasisFunctionPortObject() {
         
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public final DataTableSpec getSpec() {
+        return m_content.getSpec();
+    }
+    
+    /**
+     * @return basisfunctions rules by class
+     */
+    public final Map<DataCell, 
+            List<BasisFunctionPredictorRow>> getBasisFunctions() {
+        return m_content.getBasisFunctions();
+    }
+    
+    /**
+     * Creates a new basis function model object.
+     * @param cont basisfunction model content containing rules and spec
+     */
+    public BasisFunctionPortObject(final BasisFunctionModelContent cont) {
+        m_content = cont;
     }
     
     /**
@@ -71,20 +102,33 @@ public abstract class BasisFunctionPortObject extends AbstractSimplePortObject {
     public abstract BasisFunctionPortObject createPortObject(
             final BasisFunctionModelContent content);
     
-    /**
-     * {@inheritDoc}
-     */
-    public abstract DataTableSpec getSpec();
-    
     /** {@inheritDoc} */
     @Override
     public String getSummary() {
-        return null;
+        return m_content.toString();
     }
     
     /**
-     * @return basisfunction rules by class label
+     * {@inheritDoc}
      */
-    public abstract 
-        Map<DataCell, List<BasisFunctionPredictorRow>> getBasisFunctions();
+    @Override
+    protected void save(final ModelContentWO model, final ExecutionMonitor exec)
+            throws CanceledExecutionException {
+        m_content.save(model);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void load(final ModelContentRO model, final PortObjectSpec spec,
+            final ExecutionMonitor exec) throws InvalidSettingsException,
+            CanceledExecutionException {
+        m_content = new BasisFunctionModelContent(model, getCreator());
+    }
+    
+    /**
+     * @return a creator for the desired basisfunction rows
+     */
+    public abstract Creator getCreator(); 
 }
