@@ -101,9 +101,10 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
                 
                 final String er;
                 if (!result.hasErrorDuringNonDataLoad()) {
-                    er = "Could not load data from workflow, possibly the "
-                            + "workflow was exported with the \"exclude data " 
-                            + "flag\" being set. Marking flow as dirty.";
+                    er = "Could not load data from workflow; possibly the "
+                            + "workflow was exported with the \"exclude data\" "
+                            + "flag being set. Amended workflow to be in a " 
+                            + "consistent state.";
                 } else {
                     er = result.getErrors();
                 }
