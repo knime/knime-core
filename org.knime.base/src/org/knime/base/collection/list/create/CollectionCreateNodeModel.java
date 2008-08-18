@@ -137,7 +137,8 @@ public class CollectionCreateNodeModel extends NodeModel {
                 if (m_createSet.getBooleanValue()) {
                     return CollectionCellFactory.createSetCell(row, colIndices);
                 } else {
-                    return CollectionCellFactory.createSetCell(row, colIndices);
+                    return CollectionCellFactory.createListCell(
+                            row, colIndices);
                 }
             }
         };
