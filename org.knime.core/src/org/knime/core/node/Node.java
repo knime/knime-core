@@ -299,6 +299,7 @@ public final class Node implements NodeModelWarningListener {
                 } else {
                     createErrorMessageAndNotify(error, e);
                 }
+                loader.setNeedsResetAfterLoad();
                 break;
             case WARN:
                 if (e instanceof InvalidSettingsException) {
@@ -324,11 +325,11 @@ public final class Node implements NodeModelWarningListener {
                         + "Loading model internals failed: " + e.getMessage();
                 }
                 if (e instanceof IOException) {
-                    m_logger.warn(error);
+                    m_logger.debug(error);
                 } else {
                     m_logger.coding(error, e);
                 }
-                result.addError(error);
+                result.addError(error, true);
             } finally {
                 internDirRef.unlock();
             }
@@ -340,7 +341,8 @@ public final class Node implements NodeModelWarningListener {
             if (spec != null && !specClass.isInstance(spec)) {
                 result.addError("Loaded PortObjectSpec of class \""
                         + spec.getClass().getSimpleName() + ", expected "
-                        + specClass.getSimpleName());
+                        + specClass.getSimpleName(), true);
+                loader.setNeedsResetAfterLoad();
             } else {
                 m_outputs[i].spec = spec;
             }
@@ -351,7 +353,8 @@ public final class Node implements NodeModelWarningListener {
             if (obj != null && !objClass.isInstance(obj)) {
                 result.addError("Loaded PortObject of class \""
                         + obj.getClass().getSimpleName() + ", expected "
-                        + objClass.getSimpleName());
+                        + objClass.getSimpleName(), true);
+                loader.setNeedsResetAfterLoad();
             } else {
                 m_outputs[i].object = obj;
                 m_outputs[i].summary = loader.getPortObjectSummary(i);

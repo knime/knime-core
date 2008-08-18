@@ -541,7 +541,6 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     + "UI information: " + e.getMessage();
             LOGGER.debug(error, e);
             loadResult.addError(error);
-            uiInfoClassName = null;
         }
         if (uiInfoClassName != null) {
             inPortsBarUIInfo = loadUIInfoInstance(uiInfoClassName);
@@ -586,7 +585,6 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                             + e.getMessage();
             LOGGER.debug(error, e);
             loadResult.addError(error);
-            uiInfoClassName = null;
         }
         if (uiInfoClassName != null) {
             outPortsBarUIInfo = loadUIInfoInstance(uiInfoClassName);

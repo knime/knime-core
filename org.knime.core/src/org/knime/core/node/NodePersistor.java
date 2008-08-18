@@ -40,7 +40,7 @@ public interface NodePersistor {
     static final String SETTINGS_FILE_NAME = "settings.xml";
 
     /** Directory name to save and load node internals. */
-    static final String INTERN_FILE_DIR = "internal";
+    public static final String INTERN_FILE_DIR = "internal";
 
     /** Directory name to save and load the data. */
     static final String DATA_FILE_DIR = "data";
@@ -87,6 +87,9 @@ public interface NodePersistor {
             throws IOException, CanceledExecutionException;
     
     boolean needsResetAfterLoad();
+    /** Indicate an error and that this node should better be reset after load.
+     */
+    public void setNeedsResetAfterLoad();
     
     boolean isConfigured();
     boolean isExecuted();

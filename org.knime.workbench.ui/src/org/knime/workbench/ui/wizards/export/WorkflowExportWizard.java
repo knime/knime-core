@@ -52,6 +52,7 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.internal.dialogs.ExportWizard;
 import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin;
 import org.eclipse.ui.internal.wizards.datatransfer.ArchiveFileExportOperation;
+import org.knime.core.node.NodePersistorVersion200;
 
 /**
  * This wizard is intended to export a knime workflow project.
@@ -168,7 +169,20 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
             if (name.equals("data.xml")) {
                 return true;
             }
-
+        }
+        
+        // exclusion list for workflows in format of 2.x
+        if (resource.getType() == IResource.FOLDER) {
+            if (name.startsWith(NodePersistorVersion200.PORT_FOLDER_PREFIX)) {
+                return true;
+            }
+            if (name.startsWith(
+                    NodePersistorVersion200.INTERNAL_TABLE_FOLDER_PREFIX)) {
+                return true;
+            }
+            if (name.startsWith(NodePersistorVersion200.INTERN_FILE_DIR)) {
+                return true;
+            }
         }
 
         // get extension to check if this resource is a zip file
@@ -213,7 +227,7 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
 
         // start zipping
         monitor.beginTask("Collect resources... ", 3);
-
+        
         IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
         IResource resource = root.findMember(new Path(containerName));
         if (!resource.exists() || !(resource instanceof IContainer)) {
@@ -233,7 +247,7 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
         } else {
             resourceList.add(container);
         }
-
+        
         monitor.worked(1);
 
         ArchiveFileExportOperation exportOperation =

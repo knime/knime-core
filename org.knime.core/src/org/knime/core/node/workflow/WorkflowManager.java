@@ -2797,7 +2797,7 @@ public final class WorkflowManager extends NodeContainer {
             if (!needsReset && isExecuted 
                     && Arrays.asList(portObjects).contains(null)) {
                 needsReset = true;
-                subResult.addError("Predecessor ports have no data");
+                subResult.addError("Predecessor ports have no data", true);
             }
             if (needsReset) {
                 failedNodes.add(bfsID);

@@ -48,7 +48,15 @@ import org.knime.core.util.FileUtil;
  * @author wiswedel, University of Konstanz
  */
 public class NodePersistorVersion200 extends NodePersistorVersion1xx {
+    
+    /** Prefix of associated port folders.
+     * (Also used in export wizard, public declaration here.) */
+    public static final String PORT_FOLDER_PREFIX = "port_";
 
+    /** Prefix of associated port folders.
+     * (Also used in export wizard, public declaration here.) */
+    public static final String INTERNAL_TABLE_FOLDER_PREFIX = "internalTables";
+    
     /** Invokes super constructor. 
      * @param modelSettingsFailPolicy Forwared.*/
     public NodePersistorVersion200(
@@ -117,7 +125,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         NodeSettingsWO portSettings = settings.addNodeSettings("ports");
         exec.setMessage("Saving outport data");
         for (int i = 0; i < portCount; i++) {
-            String portName = "port_" + i;
+            String portName = PORT_FOLDER_PREFIX + i;
             ExecutionMonitor subProgress =
                     exec.createSubProgress(1.0 / portCount);
             NodeSettingsWO singlePortSetting =
@@ -159,7 +167,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         }
         final int internalTblsCount = internalTbls.length;
         NodeSettingsWO subSettings = settings.addNodeSettings("internalTables");
-        String subDirName = "internalTables";
+        String subDirName = INTERNAL_TABLE_FOLDER_PREFIX;
         ReferencedFile subDirFile = new ReferencedFile(nodeDirRef, subDirName);
         subSettings.addString("location", subDirName);
         NodeSettingsWO portSettings = subSettings.addNodeSettings("content");

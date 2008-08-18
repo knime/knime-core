@@ -346,10 +346,10 @@ public class NodePersistorVersion1xx implements NodePersistor {
     public boolean needsResetAfterLoad() {
         return m_needsResetAfterLoad;
     }
-    
-    /** Indicate an error and that this node should better be reset after load.
-     */
-    protected void setNeedsResetAfterLoad() {
+
+    /** {@inheritDoc} */
+    @Override
+    public void setNeedsResetAfterLoad() {
         m_needsResetAfterLoad = true;
     }
     
@@ -449,9 +449,9 @@ public class NodePersistorVersion1xx implements NodePersistor {
                 LOGGER.error("Unexpected \"" + e.getClass().getSimpleName() 
                         + "\" encountered");
             }
-            String err = "Unable to load content for node \"" + node.getName()
-                + "\": " + e.getMessage();
-            result.addError(err);
+            String err = "Unable to load port content for node \"" 
+                + node.getName() + "\": " + e.getMessage();
+            result.addError(err, true);
             LOGGER.warn(err, e);
             setNeedsResetAfterLoad();
         }
@@ -467,7 +467,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             }
             String err = "Unable to load internally held tables for node \"" 
                 + node.getName() + "\": " + e.getMessage();
-            result.addError(err);
+            result.addError(err, true);
             LOGGER.warn(err, e);
             setNeedsResetAfterLoad();
         }

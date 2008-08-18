@@ -195,10 +195,19 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     public static class LoadResult {
         
         private final StringBuilder m_errors = new StringBuilder();
+        private boolean m_hasErrorDuringNonDataLoad = false;
         
         public void addError(final String error) {
+            addError(error, false);
+        }
+        
+        public void addError(final String error, 
+                final boolean isErrorDuringDataLoad) {
             m_errors.append(error);
             m_errors.append('\n');
+            if (!isErrorDuringDataLoad) {
+                m_hasErrorDuringNonDataLoad = true;
+            }
         }
         
         public void addError(final String parentName, final LoadResult loadResult) {
@@ -211,10 +220,16 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
                 m_errors.append(tokenizer.nextToken());
                 m_errors.append('\n');
             }
+            if (loadResult.hasErrorDuringNonDataLoad()) {
+                m_hasErrorDuringNonDataLoad = true;
+            }
         }
         
         public void addError(final LoadResult loadResult) {
             m_errors.append(loadResult.m_errors);
+            if (loadResult.hasErrorDuringNonDataLoad()) {
+                m_hasErrorDuringNonDataLoad = true;
+            }
         }
         
         public boolean hasErrors() {
@@ -230,6 +245,14 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         public String toString() {
             return m_errors.toString();
         }
+        
+        /**
+         * @return the hasErrorDuringNonDataLoad
+         */
+        public boolean hasErrorDuringNonDataLoad() {
+            return m_hasErrorDuringNonDataLoad;
+        }
+        
     }
     
     public static final class WorkflowLoadResult extends LoadResult {

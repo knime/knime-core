@@ -98,14 +98,23 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
             
             if (result.hasErrors()) {
                 m_editor.markDirty();
+                
+                final String er;
+                if (!result.hasErrorDuringNonDataLoad()) {
+                    er = "Could not load data from workflow, possibly the "
+                            + "workflow was exported with the \"exclude data " 
+                            + "flag\" being set. Marking flow as dirty.";
+                } else {
+                    er = result.getErrors();
+                }
+                
                 Display.getDefault().asyncExec(new Runnable() {
-
+ 
                     public void run() {
                         
                         MessageDialog.openError(
                                 new Shell(Display.getDefault().getActiveShell()),
-                                "Errors during load: ",
-                                result.getErrors());
+                                "Errors during load: ", er);
                     }
                     
                 });
