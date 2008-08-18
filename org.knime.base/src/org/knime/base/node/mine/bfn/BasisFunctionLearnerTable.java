@@ -30,13 +30,17 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -572,7 +576,22 @@ public final class BasisFunctionLearnerTable implements DataTable {
      * {@inheritDoc}
      */
     public DataTableSpec getDataTableSpec() {
-        return getFactory().getModelSpec();
+        DataTableSpec spec = getFactory().getModelSpec();
+        final int idx = spec.getNumColumns() - 5;
+        final DataColumnSpec cspec = spec.getColumnSpec(idx);
+        DataColumnSpecCreator cr = new DataColumnSpecCreator(cspec);
+        DataColumnDomainCreator domcr = 
+            new DataColumnDomainCreator(cspec.getDomain());
+        domcr.setValues(m_bfs.keySet());
+        cr.setDomain(domcr.createDomain());
+        ColumnRearranger colre = new ColumnRearranger(spec);
+        colre.replace(new SingleCellFactory(cr.createSpec()) {
+            @Override
+            public DataCell getCell(DataRow row) {
+                return row.getCell(idx);
+            }
+        }, idx);
+        return colre.createSpec();
     }
 
     /**
