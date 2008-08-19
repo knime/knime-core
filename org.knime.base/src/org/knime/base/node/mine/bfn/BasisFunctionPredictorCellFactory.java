@@ -62,32 +62,36 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
      * <code>ColumnRearranger</code> with the appended model spec.
      * @param modelSpecs column specs of the model
      * @param newTargetName new column target name
-     * 
+     * @param appendClassProps if class probability columns are appended
      */
     public BasisFunctionPredictorCellFactory(
             final DataTableSpec modelSpecs,
-            final String newTargetName) {
+            final String newTargetName,
+            final boolean appendClassProps) {
         m_model = null;
         m_filteredColumns = null;
         m_dontKnowClass = Double.NaN;
         m_normClass = false;
-        m_specs = createSpec(modelSpecs, newTargetName);
+        m_specs = createSpec(modelSpecs, newTargetName, appendClassProps);
     }
     
     private static DataColumnSpec[] createSpec(
             final DataTableSpec modelSpecs, 
-            final String newTargetName) {
+            final String newTargetName,
+            final boolean appendClassProps) {
         int modelClassIdx = modelSpecs.getNumColumns() - 5;
         Set<DataCell> possClasses = 
             modelSpecs.getColumnSpec(modelClassIdx).getDomain().getValues();
-        if (possClasses == null) {
-            return new DataColumnSpec[0];
-        }
-        DataColumnSpec[] specs = new DataColumnSpec[possClasses.size() + 1];
-        Iterator<DataCell> it = possClasses.iterator();
-        for (int i = 0; i < possClasses.size(); i++) {
-            specs[i] = new DataColumnSpecCreator(
-                    it.next().toString(), DoubleCell.TYPE).createSpec();
+        final DataColumnSpec[] specs;
+        if (possClasses == null || !appendClassProps) {
+            specs = new DataColumnSpec[1];
+        } else {
+            specs = new DataColumnSpec[possClasses.size() + 1];
+            Iterator<DataCell> it = possClasses.iterator();
+            for (int i = 0; i < possClasses.size(); i++) {
+                specs[i] = new DataColumnSpecCreator(
+                        it.next().toString(), DoubleCell.TYPE).createSpec();
+            }
         }
         DataColumnSpecCreator newTargetSpec = new DataColumnSpecCreator(
                 modelSpecs.getColumnSpec(modelClassIdx));
@@ -107,6 +111,7 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
      * @param newTargetName name of the new predicted column
      * @param dontKnowClass the don't know class probability
      * @param normClass normalize classification output
+     * @param appendClassProps if class probability columns are appended 
      * @throws NullPointerException if one of the arguments is <code>null</code>
      */
     public BasisFunctionPredictorCellFactory(final DataTableSpec dataSpec, 
@@ -114,7 +119,8 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
             final Map<DataCell, List<BasisFunctionPredictorRow>> model,
             final String newTargetName,
             final double dontKnowClass,
-            final boolean normClass) {
+            final boolean normClass,
+            final boolean appendClassProps) {
         
         // check input
         assert (model != null);
@@ -128,7 +134,7 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
         
         m_normClass = normClass;
         
-        m_specs = createSpec(modelSpecs, newTargetName);
+        m_specs = createSpec(modelSpecs, newTargetName, appendClassProps);
         
         m_filteredColumns = new int[modelSpecs.getNumColumns() - 5];
         for (int i = 0; i < m_filteredColumns.length; i++) {

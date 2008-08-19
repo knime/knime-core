@@ -56,6 +56,8 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
     
     private boolean m_ignoreDontKnow = false;
     
+    private boolean m_appendClassProps = true;
+    
     /**
      * Creates a new basisfunction predictor model with two inputs, the first
      * one which contains the data and the second with the model.
@@ -80,7 +82,8 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
         final ColumnRearranger colreg = new ColumnRearranger(dataSpec);
         colreg.append(new BasisFunctionPredictorCellFactory(
                 dataSpec, modelSpec, pred.getBasisFunctions(), 
-                m_applyColumn, m_dontKnow, normalizeClassification()));
+                m_applyColumn, m_dontKnow, normalizeClassification(),
+                m_appendClassProps));
        return new BufferedDataTable[]{exec.createColumnRearrangeTable(
                 data, colreg, exec)};
     }
@@ -117,7 +120,7 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
         
         final ColumnRearranger colreg = createRearranger(dataSpec, modelSpec);
         colreg.append(new BasisFunctionPredictorCellFactory(
-                modelSpec, m_applyColumn));
+                modelSpec, m_applyColumn, m_appendClassProps));
         return new DataTableSpec[]{colreg.createSpec()};
     }
     
@@ -178,6 +181,9 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
                 .getDouble(BasisFunctionPredictorNodeDialog.DONT_KNOW_PROP);
         m_ignoreDontKnow = settings.getBoolean(
                 BasisFunctionPredictorNodeDialog.CFG_DONT_KNOW_IGNORE, false);
+        // append class probability columns
+        m_appendClassProps = settings.getBoolean(
+                BasisFunctionPredictorNodeDialog.CFG_CLASS_PROPS, true);
     }
 
     /**
@@ -194,6 +200,9 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
         settings.addBoolean(
                 BasisFunctionPredictorNodeDialog.CFG_DONT_KNOW_IGNORE, 
                 m_ignoreDontKnow);
+        // append class probability columns
+        settings.addBoolean(BasisFunctionPredictorNodeDialog.CFG_CLASS_PROPS,
+                m_appendClassProps);
     }
 
     /**

@@ -63,6 +63,8 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
     private final JCheckBox m_ignButton;
 
     private final JSpinner m_dontKnow;
+    
+    private final JCheckBox m_appendProp;
 
     /** Key for the applied column: <i>apply_column</i>. */
     public static final String APPLY_COLUMN = "apply_column";
@@ -72,6 +74,9 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
     
     /** Config key if don't know should be ignored. */
     public static final String CFG_DONT_KNOW_IGNORE = "ignore_dont_know";
+    
+    /** Config key if class probabilities should be appended to the table. */
+    public static final String CFG_CLASS_PROPS = "append_class_probabilities";
 
     /**
      * Creates a new predictor dialog to set a name for the applied column.
@@ -79,7 +84,7 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
     public BasisFunctionPredictorNodeDialog() {
         super();
         // panel with advance settings
-        JPanel p = new JPanel(new GridLayout(2, 1));
+        JPanel p = new JPanel(new GridLayout(3, 1));
         p.setPreferredSize(new Dimension(200, 150));
 
         // add apply column
@@ -89,6 +94,15 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
         normPanel.add(m_apply);
         p.add(normPanel);
 
+        // append class probabilities
+        m_appendProp = new JCheckBox("Append Class Columns", true);
+        m_appendProp.setPreferredSize(new Dimension(175, 25));
+        JPanel propPanel = new JPanel();
+        propPanel.setBorder(
+                BorderFactory.createTitledBorder(" Class Probabilities "));
+        propPanel.add(m_appendProp);
+        p.add(propPanel);
+        
         // add don't know probability
         m_dftButton = new JRadioButton("Default ", true);
         m_setButton = new JRadioButton("Use ");
@@ -171,6 +185,7 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
                 m_dontKnow.setValue(new Double(value));
             }
         }
+        m_appendProp.setSelected(settings.getBoolean(CFG_CLASS_PROPS, true));
         selectionChanged();
     }
 
@@ -198,5 +213,6 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
                 settings.addDouble(DONT_KNOW_PROP, value.doubleValue());
             }
         }
+        settings.addBoolean(CFG_CLASS_PROPS, m_appendProp.isSelected());
     }
 }
