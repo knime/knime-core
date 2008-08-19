@@ -2823,7 +2823,9 @@ public final class WorkflowManager extends NodeContainer {
             nc.setDirty();
         }
         for (NodeID id : needConfigurationNodes) {
-            configureNodeAndSuccessors(id, true, true);
+            // don't push the configure outside the workflow manager here
+            // (i.e. last flag in method call is false).
+            configureNodeAndSuccessors(id, true, false);
         }
         if (!sweep(false)) {
             loadResult.addError("Some node states were invalid");
