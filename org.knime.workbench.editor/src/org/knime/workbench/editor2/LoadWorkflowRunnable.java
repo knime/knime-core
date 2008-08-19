@@ -147,8 +147,9 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
 //            m_editor.setWorkflowException(we);
  *
  */
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.error("Workflow could not be loaded. " + e.getMessage(), e);
+            createEmptyWorkflow = true;
             m_editor.setWorkflowManager(null);
         } finally {
             // terminate the check thread
