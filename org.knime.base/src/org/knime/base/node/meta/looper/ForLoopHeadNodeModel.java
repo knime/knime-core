@@ -27,15 +27,16 @@ package org.knime.base.node.meta.looper;
 import java.io.File;
 import java.io.IOException;
 
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.PortObject;
+import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.PortType;
 import org.knime.core.node.workflow.LoopStartNode;
 
 /**
@@ -43,7 +44,7 @@ import org.knime.core.node.workflow.LoopStartNode;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ForLoopHeadNodeModel extends NodeModel implements LoopStartNode {
+public class ForLoopHeadNodeModel extends GenericNodeModel implements LoopStartNode {
 
     private int m_iteration;
 
@@ -53,14 +54,15 @@ public class ForLoopHeadNodeModel extends NodeModel implements LoopStartNode {
      * Creates a new model with one input and one output port.
      */
     public ForLoopHeadNodeModel() {
-        super(1, 1);
+        super(new PortType[] {new PortType(PortObject.class)},
+                new PortType[] {new PortType(PortObject.class)});
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         if (m_settings.loops() < 1) {
             throw new InvalidSettingsException("Cannot loop fewer than once");
@@ -75,7 +77,7 @@ public class ForLoopHeadNodeModel extends NodeModel implements LoopStartNode {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
         // let's see if we have access to the tail: if we do, it's not the
         // first time we are doing this...
