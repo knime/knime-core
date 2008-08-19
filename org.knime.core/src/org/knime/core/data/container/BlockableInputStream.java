@@ -99,5 +99,11 @@ final class BlockableInputStream
         } while (c >= 0 && !m_simulateTerminate);
         m_simulateTerminate = false;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void close() throws IOException {
+        m_inStream.close();
+    }
 
 }
