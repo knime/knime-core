@@ -106,6 +106,13 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
     public double getDontKnowClassDegree() {
         return m_dontKnow;
     }
+    
+    /**
+     * @return true if class probability columns should be appended
+     */
+    public boolean appendClassProbabilities() {
+        return m_appendClassProps;
+    }
 
     /**
      * {@inheritDoc}
