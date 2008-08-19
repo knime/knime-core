@@ -300,7 +300,7 @@ public final class WorkflowManager extends NodeContainer {
             newID = createUniqueID();
             SingleNodeContainer container = new SingleNodeContainer(this,
                new Node((GenericNodeFactory<GenericNodeModel>)factory), newID);
-            addNodeContainer(container);
+            addNodeContainer(container, true);
         }
         configureNodeAndSuccessors(newID, true, true);
         LOGGER.debug("Added new node " + newID);
@@ -390,7 +390,7 @@ public final class WorkflowManager extends NodeContainer {
         synchronized (m_workflowMutex) {
             newID = createUniqueID();
             wfm = new WorkflowManager(this, newID, inPorts, outPorts);
-            addNodeContainer(wfm);
+            addNodeContainer(wfm, true);
             LOGGER.debug("Added new subworkflow " + newID);
         }
         setDirty();
@@ -436,8 +436,11 @@ public final class WorkflowManager extends NodeContainer {
     /** Adds the NodeContainer to m_nodes and adds empty connection sets to
      * m_connectionsBySource and m_connectionsByDest.
      * @param nodeContainer new Container to add.
+     * @param propagateChanges Whether to also check workflow state
+     * (this is always true unless called from the load routines)
      */
-    private void addNodeContainer(final NodeContainer nodeContainer) {
+    private void addNodeContainer(final NodeContainer nodeContainer, 
+            final boolean propagateChanges) {
         if (this == ROOT && !(nodeContainer instanceof WorkflowManager)) {
             throw new IllegalStateException("Can't add ordinary node to root "
                     + "workflow, use createProject() first");
@@ -459,7 +462,7 @@ public final class WorkflowManager extends NodeContainer {
         notifyWorkflowListeners(
                 new WorkflowEvent(WorkflowEvent.Type.NODE_ADDED,
                 id, null, nodeContainer));
-        checkForNodeStateChanges(true);
+        checkForNodeStateChanges(propagateChanges);
     }
 
     ///////////////////////////
@@ -2653,7 +2656,7 @@ public final class WorkflowManager extends NodeContainer {
         synchronized (ROOT.m_workflowMutex) {
             NodeID newID = ROOT.createUniqueID();
             manager = ROOT.createSubWorkflow(persistor, newID);
-            ROOT.addNodeContainer(manager);
+            ROOT.addNodeContainer(manager, false);
             synchronized (manager.m_workflowMutex) {
                 result.addError(manager.loadContent(
                         persistor, tblRep, null, loadExec));
@@ -2710,6 +2713,9 @@ public final class WorkflowManager extends NodeContainer {
         if (postLoadResult.hasErrors()) {
             loadResult.addError(postLoadResult);
         }
+//        if (persistor.needsResetAfterLoad()) {
+//            setDirty();
+//        }
         return loadResult;
     }
     
@@ -2850,7 +2856,7 @@ public final class WorkflowManager extends NodeContainer {
             NodeContainerPersistor pers = nodeEntry.getValue();
             translationMap.put(suffix, subId);
             NodeContainer container = pers.getNodeContainer(this, subId);
-            addNodeContainer(container);
+            addNodeContainer(container, false);
         }
 
         for (ConnectionContainerTemplate c : connections) {
