@@ -2713,9 +2713,11 @@ public final class WorkflowManager extends NodeContainer {
         if (postLoadResult.hasErrors()) {
             loadResult.addError(postLoadResult);
         }
-//        if (persistor.needsResetAfterLoad()) {
-//            setDirty();
-//        }
+        // set dirty if this wm should be reset (for instance when the state
+        // of the workflow can't be properly read from the workflow.knime)
+        if (persistor.needsResetAfterLoad()) {
+            setDirty();
+        }
         return loadResult;
     }
     
