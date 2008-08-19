@@ -113,11 +113,11 @@ public class BWElimModel implements PortObject, PortObjectSpec {
     public PortObjectSpec getSpec() {
         return this;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public String getSummary() {
-        return null;
+        return m_featureLevels.size() + " different features";
     }
 
     /**
@@ -197,7 +197,7 @@ public class BWElimModel implements PortObject, PortObjectSpec {
          */
         @Override
         public BWElimModel loadPortObject(final File directory,
-                final PortObjectSpec spec, final ExecutionMonitor exec) 
+                final PortObjectSpec spec, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
             return (BWElimModel)spec;
         }
