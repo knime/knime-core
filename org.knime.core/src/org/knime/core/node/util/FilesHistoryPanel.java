@@ -28,12 +28,16 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
@@ -43,10 +47,11 @@ import javax.swing.JFileChooser;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
 
 import org.knime.core.util.SimpleFileFilter;
-
 
 /**
  * Panel that contains an editable Combo Box showing the file to write to and a
@@ -62,6 +67,8 @@ import org.knime.core.util.SimpleFileFilter;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class FilesHistoryPanel extends JPanel {
+    private final List<ChangeListener> m_changeListener =
+            new ArrayList<ChangeListener>();
 
     private final JComboBox m_textBox;
 
@@ -74,12 +81,12 @@ public final class FilesHistoryPanel extends JPanel {
     /**
      * Creates new instance, sets properties, for instance renderer,
      * accordingly.
-     * @param historyID identifier for the string history,
-     *        see {@link StringHistory}
+     *
+     * @param historyID identifier for the string history, see
+     *            {@link StringHistory}
      * @param suffixes the set of suffixes for the file chooser
      */
-    public FilesHistoryPanel(
-            final String historyID, final String...  suffixes) {
+    public FilesHistoryPanel(final String historyID, final String... suffixes) {
         if (historyID == null || suffixes == null) {
             throw new NullPointerException("Argument must not be null.");
         }
@@ -93,12 +100,30 @@ public final class FilesHistoryPanel extends JPanel {
         m_textBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
         m_textBox.setPreferredSize(new Dimension(300, 25));
         m_textBox.setRenderer(new MyComboBoxRenderer());
+        m_textBox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                if ((e.getStateChange() == ItemEvent.SELECTED)
+                        && (e.getItem() != null)) {
+                    ChangeEvent ev = new ChangeEvent(FilesHistoryPanel.this);
+                    for (ChangeListener cl : m_changeListener) {
+                        cl.stateChanged(ev);
+                    }
+                }
+            }
+        });
+
         m_chooseButton = new JButton("Browse...");
         m_chooseButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 String newFile = getOutputFileName();
                 if (newFile != null) {
                     m_textBox.setSelectedItem(newFile);
+                    StringHistory.getInstance(m_historyID).add(newFile);
+                    ChangeEvent ev = new ChangeEvent(FilesHistoryPanel.this);
+                    for (ChangeListener cl : m_changeListener) {
+                        cl.stateChanged(ev);
+                    }
                 }
             }
         });
@@ -169,8 +194,8 @@ public final class FilesHistoryPanel extends JPanel {
                 continue;
             }
         }
-        DefaultComboBoxModel comboModel = (DefaultComboBoxModel)m_textBox
-                .getModel();
+        DefaultComboBoxModel comboModel =
+                (DefaultComboBoxModel)m_textBox.getModel();
         comboModel.removeAllElements();
         for (Iterator<String> it = list.iterator(); it.hasNext();) {
             comboModel.addElement(it.next());
@@ -179,6 +204,25 @@ public final class FilesHistoryPanel extends JPanel {
         // quite big. We have tooltips, we don't need that
         Dimension newMin = new Dimension(0, getPreferredSize().height);
         setMinimumSize(newMin);
+    }
+
+    /**
+     * Adds a change listener that gets notified if a new file name is
+     * entered into the text field.
+     *
+     * @param cl a change listener
+     */
+    public void addChangeListener(final ChangeListener cl) {
+        m_changeListener.add(cl);
+    }
+
+    /**
+     * Removes the given change listener from the listener list.
+     *
+     * @param cl a change listener
+     */
+    public void removeChangeListener(final ChangeListener cl) {
+        m_changeListener.remove(cl);
     }
 
     /**
