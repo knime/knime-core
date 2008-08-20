@@ -320,13 +320,14 @@ public final class Node implements NodeModelWarningListener {
                 String error;
                 if (e instanceof IOException) {
                     error = "Loading model internals failed: " + e.getMessage();
+                    if (loader.mustWarnOnDataLoadError()) {
+                        m_logger.debug(error, e);
+                    } else {
+                        m_logger.debug(error);
+                    }
                 } else {
                     error = "Caught \"" + e.getClass().getSimpleName() + "\", "
                         + "Loading model internals failed: " + e.getMessage();
-                }
-                if (e instanceof IOException) {
-                    m_logger.debug(error);
-                } else {
                     m_logger.coding(error, e);
                 }
                 result.addError(error, true);
@@ -341,7 +342,7 @@ public final class Node implements NodeModelWarningListener {
             if (spec != null && !specClass.isInstance(spec)) {
                 result.addError("Loaded PortObjectSpec of class \""
                         + spec.getClass().getSimpleName() + ", expected "
-                        + specClass.getSimpleName(), true);
+                        + specClass.getSimpleName());
                 loader.setNeedsResetAfterLoad();
             } else {
                 m_outputs[i].spec = spec;
@@ -353,7 +354,7 @@ public final class Node implements NodeModelWarningListener {
             if (obj != null && !objClass.isInstance(obj)) {
                 result.addError("Loaded PortObject of class \""
                         + obj.getClass().getSimpleName() + ", expected "
-                        + objClass.getSimpleName(), true);
+                        + objClass.getSimpleName());
                 loader.setNeedsResetAfterLoad();
             } else {
                 m_outputs[i].object = obj;

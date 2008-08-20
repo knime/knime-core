@@ -31,7 +31,7 @@ package org.knime.core.node.workflow;
  * 
  * @author M. Berthold, University of Konstanz
  */
-public final class ScopeLoopContext extends ScopeObject {
+public class ScopeLoopContext extends ScopeObject {
 
     private NodeID m_tailNode;
 
@@ -53,5 +53,9 @@ public final class ScopeLoopContext extends ScopeObject {
         ScopeLoopContext clone = (ScopeLoopContext)super.cloneAndUnsetOwner();
         clone.setTailNode(null);
         return clone;
+    }
+    
+    public static class RestoredScopeLoopContext extends ScopeLoopContext {
+        
     }
 }

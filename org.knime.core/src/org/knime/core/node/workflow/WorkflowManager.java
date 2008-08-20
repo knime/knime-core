@@ -71,6 +71,7 @@ import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
+import org.knime.core.node.workflow.ScopeLoopContext.RestoredScopeLoopContext;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -1291,6 +1292,12 @@ public final class WorkflowManager extends NodeContainer {
                                 + snc.getScopeObjectStack().toDeepString());
                         throw new IllegalStateException("Encountered"
                                     + " loop-end without corresponding head!");
+                    } else if (slc instanceof RestoredScopeLoopContext) {
+                        throw new IllegalStateException(
+                                "Can't continue loop as the workflow was "
+                                + "restored with the loop being partially " 
+                                + "executed. Reset loop start and execute "
+                                + "entire loop again.");
                     }
                     NodeContainer headNode = m_nodes.get(slc.getOwner());
                     snc.getNode().setLoopStartNode(
@@ -1344,6 +1351,12 @@ public final class WorkflowManager extends NodeContainer {
                 if (slc == null) {
                     throw new IllegalStateException(
                             "No Loop start for this Loop End!");
+                } else if (slc instanceof RestoredScopeLoopContext) {
+                    throw new IllegalStateException(
+                            "Can't continue loop as the workflow was restored " 
+                            + "with the loop being partially executed. " 
+                            + "Reset loop start and execute entire loop "
+                            + "again.");
                 }
             }
             Node node = snc.getNode();
@@ -1352,8 +1365,7 @@ public final class WorkflowManager extends NodeContainer {
                 // first retrieve ScopeContext
                 ScopeLoopContext slc = node.getLoopStatus();
                 // first check if the loop is properly configured:
-                if (m_nodes.get(slc.getOwner())
-                        == null) {
+                if (m_nodes.get(slc.getOwner()) == null) {
                     // obviously not: origin of the loop is not in this WFM!
                     // nothing else to do: NC stays configured
                     assert snc.getState() == NodeContainer.State.CONFIGURED;
@@ -2617,7 +2629,7 @@ public final class WorkflowManager extends NodeContainer {
             throw new InvalidSettingsException(
                 "Refuse to load workflow: Workflow version not available.");
         }
-        WorkflowPersistor persistor;
+        WorkflowPersistorVersion1xx persistor;
         if (WorkflowPersistorVersion200.canReadVersion(version)) {
             persistor = new WorkflowPersistorVersion200(
                     new HashMap<Integer, ContainerTable>());
@@ -2653,6 +2665,7 @@ public final class WorkflowManager extends NodeContainer {
         contentExec.setProgress(1.0);
         WorkflowManager manager;
         exec.setMessage("Creating workflow instance");
+        boolean fixDataLoadProblems = false;
         synchronized (ROOT.m_workflowMutex) {
             NodeID newID = ROOT.createUniqueID();
             manager = ROOT.createSubWorkflow(persistor, newID);
@@ -2661,14 +2674,40 @@ public final class WorkflowManager extends NodeContainer {
                 result.addError(manager.loadContent(
                         persistor, tblRep, null, loadExec));
             }
+            // if all errors during the load process are related to data loading
+            // it might be that the flow is ex/imported without data;
+            // check for it and silently overwrite the workflow
+            if (result.hasErrors() && (!result.hasErrorDuringNonDataLoad()
+                    && !persistor.mustWarnOnDataLoadError())) {
+                LOGGER.debug("Workflow was apparently ex/imported without "
+                        + "data, silently fixing states writing changes");
+                try {
+                    manager.save(directory, new ExecutionMonitor(), true);
+                    fixDataLoadProblems = true;
+                } catch (Throwable t) {
+                    LOGGER.warn("Failed in an attempt to write workflow to "
+                            + "file (workflow was ex/imported without data; "
+                            + "could not write the \"corrected\" flow.)", t);
+                }
+            }
         }
         exec.setProgress(1.0);
         result.setWorkflowManager(manager);
         String message;
-        if (result.hasErrors()) {
+        if (result.hasErrors() && (result.hasErrorDuringNonDataLoad()
+                || persistor.mustWarnOnDataLoadError())) {
             message = "Loaded workflow from \"" + directory.getAbsolutePath()
                 + "\" with errors";
             LOGGER.debug(result.getErrors());
+            result.setGUIMustReportError(true);
+        } else if (result.hasErrors() && !result.hasErrorDuringNonDataLoad()) {
+            message = "Loaded workflow from \"" + directory.getAbsolutePath()
+                + "\" with errors during data load. ";
+            if (fixDataLoadProblems) {
+                message += "Problems were fixed and (silently) saved.";
+            } else {
+                message += "Problems were fixed but could not be saved.";
+            }
         } else {
             message = "Successfully loaded workflow from \""
                 + directory.getAbsolutePath() + "\"";

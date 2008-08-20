@@ -65,7 +65,7 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
         m_editor = editor;
         m_workflowFile = workflowFile;
     }
-
+    
     public void run(final IProgressMonitor pm) {
         CheckThread checkThread = null;
         // indicates whether to create an empty workflow
@@ -95,26 +95,18 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
             m_editor.setWorkflowManager(result.getWorkflowManager());
             pm.subTask("Finished.");
             pm.done();
-            
-            if (result.hasErrors()) {
+            if (result.getWorkflowManager().isDirty()) {
                 m_editor.markDirty();
-                
-                final String er;
-                if (!result.hasErrorDuringNonDataLoad()) {
-                    er = "Could not load data from workflow; possibly the "
-                            + "workflow was exported with the \"exclude data\" "
-                            + "flag being set. Amended workflow to be in a " 
-                            + "consistent state.";
-                } else {
-                    er = result.getErrors();
-                }
-                
+            }
+            
+            if (result.getGUIMustReportError()) {
+                assert result.hasErrors() : "No errors in workflow result";
+                final String er = result.getErrors();
                 Display.getDefault().asyncExec(new Runnable() {
  
                     public void run() {
-                        
-                        MessageDialog.openError(
-                                new Shell(Display.getDefault().getActiveShell()),
+                        MessageDialog.openError(new Shell(
+                                Display.getDefault().getActiveShell()),
                                 "Errors during load: ", er);
                     }
                     

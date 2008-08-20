@@ -646,14 +646,14 @@ public abstract class NodeContainer {
     /**
      * @return the isDirty
      */
-    protected final boolean isDirty() {
+    public final boolean isDirty() {
         return m_isDirty;
     } 
     
     /**
      * Mark this node container to be changed, that is, it needs to be saved.
      */
-    protected void setDirty() {
+    public void setDirty() {
         if (!m_isDirty) {
             LOGGER.debug("Setting dirty flag on " + getNameWithID());
         }

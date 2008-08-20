@@ -84,6 +84,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     private String m_name;
     
     private boolean m_needsResetAfterLoad;
+    private boolean m_mustWarnOnDataLoadError;
     
     private NodeSettingsRO m_workflowSett;
     private ReferencedFile m_workflowDir;
@@ -116,6 +117,11 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     /** {@inheritDoc} */
     public Map<Integer, NodeContainerPersistor> getNodeLoaderMap() {
         return m_nodeContainerLoaderMap;
+    }
+    
+    /** @return the shouldFailOnLoadDataError */
+    boolean mustWarnOnDataLoadError() {
+        return m_mustWarnOnDataLoadError;
     }
     
     /** {@inheritDoc} */
@@ -187,6 +193,8 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     + "\" is not represented by " 
                     + ReferencedFile.class.getSimpleName() + " object");
         }
+        m_mustWarnOnDataLoadError = 
+            loadIfMustWarnOnDataLoadError(parentRef.getFile());
         m_metaPersistor = createNodeContainerMetaPersistor(parentRef);
         InputStream in = new BufferedInputStream(new FileInputStream(nodeFile));
         NodeSettingsRO subWFSettings = NodeSettings.loadFromXML(in);
@@ -811,6 +819,10 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         throw new InvalidSettingsException(
             "No ports for meta nodes in version 1.x.x");
     }
+    
+    protected boolean loadIfMustWarnOnDataLoadError(final File workflowFile) {
+        return false;
+    }
 
     protected NodeContainerMetaPersistorVersion1xx
             createNodeContainerMetaPersistor(final ReferencedFile baseDir) {
@@ -819,8 +831,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
 
     protected SingleNodeContainerPersistorVersion1xx 
             createSingleNodeContainerPersistor() {
-        return new SingleNodeContainerPersistorVersion1xx(
-                getGlobalTableRepository());
+        return new SingleNodeContainerPersistorVersion1xx(this);
     }
 
     protected WorkflowPersistorVersion1xx createWorkflowPersistor() {

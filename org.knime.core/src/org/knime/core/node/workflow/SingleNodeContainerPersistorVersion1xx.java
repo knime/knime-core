@@ -55,7 +55,8 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
  * 
  * @author wiswedel, University of Konstanz
  */
-class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersistor {
+public class SingleNodeContainerPersistorVersion1xx 
+    implements SingleNodeContainerPersistor {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(SingleNodeContainerPersistorVersion1xx.class);
@@ -63,13 +64,13 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
     private Node m_node;
     
     private NodeContainerMetaPersistorVersion1xx m_metaPersistor;
-    
-    private final HashMap<Integer, ContainerTable> m_globalTableRepository;
+    private final WorkflowPersistorVersion1xx m_wfmPersistor;
     
     private NodeSettingsRO m_nodeSettings;
     private ReferencedFile m_nodeDir;
     private boolean m_needsResetAfterLoad;
     private List<ScopeObject> m_scopeObjects;
+    private LoadNodeModelSettingsFailPolicy m_settingsFailPolicy;
     
     /** {@inheritDoc} */
     public boolean needsResetAfterLoad() {
@@ -83,8 +84,8 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
 
     
     SingleNodeContainerPersistorVersion1xx(
-            final HashMap<Integer, ContainerTable> tableRep) {
-        m_globalTableRepository = tableRep;
+            WorkflowPersistorVersion1xx workflowPersistor) {
+        m_wfmPersistor = workflowPersistor;
     }
 
     public NodeContainerMetaPersistor getMetaPersistor() {
@@ -107,12 +108,8 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
         return new SingleNodeContainer(wm, id, this);
     }
     
-    protected NodePersistorVersion1xx createNodePersistor(
-            final LoadNodeModelSettingsFailPolicy failPolicy) {
-        // we explicitly null the argument here so the node decides on how
-        // to behave (in workflows 1.x.x it's not known what is the correct
-        // state of the node at this point)
-        return new NodePersistorVersion1xx(null);
+    protected NodePersistorVersion1xx createNodePersistor() {
+        return new NodePersistorVersion1xx(this);
     }
 
     /** {@inheritDoc} */
@@ -179,11 +176,14 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
             return result;
         }
         ReferencedFile nodeFile = new ReferencedFile(m_nodeDir, nodeFileName);
-        NodePersistorVersion1xx nodePersistor = createNodePersistor(
-                translateToFailPolicy(m_metaPersistor.getState()));
+        m_settingsFailPolicy = 
+            translateToFailPolicy(m_metaPersistor.getState());
+        NodePersistorVersion1xx nodePersistor = createNodePersistor();
         try {
+            HashMap<Integer, ContainerTable> globalTableRepository =
+                getWorkflowManagerPersistor().getGlobalTableRepository();
             LoadResult nodeLoadResult = nodePersistor.load(
-                    m_node, nodeFile, exec, tblRep, m_globalTableRepository);
+                    m_node, nodeFile, exec, tblRep, globalTableRepository);
             result.addError(nodeLoadResult);
         } catch (final Exception e) {
             String error = "Error loading node content: " + e.getMessage();
@@ -273,6 +273,21 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
     
     protected boolean shouldFixModelPortOrder() {
         return true;
+    }
+    
+    WorkflowPersistorVersion1xx getWorkflowManagerPersistor() {
+        return m_wfmPersistor;
+    }
+    
+    public boolean mustWarnOnDataLoadError() {
+        return getWorkflowManagerPersistor().mustWarnOnDataLoadError();
+    }
+    
+    /**
+     * @return the settingsFailPolicy
+     */
+    public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy() {
+        return m_settingsFailPolicy;
     }
     
     static final LoadNodeModelSettingsFailPolicy translateToFailPolicy(

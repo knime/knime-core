@@ -38,6 +38,7 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeModel.ModelContentWrapper;
 import org.knime.core.node.workflow.NodeMessage;
+import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion1xx;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
@@ -45,9 +46,10 @@ public class NodePersistorVersion1xx implements NodePersistor {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(NodePersistorVersion1xx.class);
-    
-    private final LoadNodeModelSettingsFailPolicy m_modelSettingsFailPolicy;
 
+    private SingleNodeContainerPersistorVersion1xx 
+        m_sncPersistor;
+    
     private boolean m_isExecuted;
     
     private boolean m_hasContent;
@@ -84,8 +86,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
      * for loading, i.e. all getXXX() methods will return invalid values.
      */
     public NodePersistorVersion1xx(
-            final LoadNodeModelSettingsFailPolicy modelSettingsFailPolicy) {
-        m_modelSettingsFailPolicy = modelSettingsFailPolicy;
+            final SingleNodeContainerPersistorVersion1xx sncPersistor) {
+        m_sncPersistor = sncPersistor;
     }
     
     protected boolean loadIsExecuted(final NodeSettingsRO settings)
@@ -324,6 +326,14 @@ public class NodePersistorVersion1xx implements NodePersistor {
             return outSpec;
         }
     }
+    
+    /**
+     * @return the singleNodeContainerPersistor
+     */
+    public SingleNodeContainerPersistorVersion1xx 
+        getSingleNodeContainerPersistor() {
+        return m_sncPersistor;
+    }
 
     /** Is configured according to the settings object. 
      * @return If node is saved in configured state. */
@@ -331,13 +341,14 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return m_isConfigured;
     }
     
-    /** Is executed according to the settings object. 
-     * @return If node is saved in executed state. */
+    /** {@inheritDoc} */
+    @Override
     public boolean isExecuted() {
         return m_isExecuted;
     }
     
     /** {@inheritDoc} */
+    @Override
     public boolean hasContent() {
         return m_hasContent;
     }
@@ -351,6 +362,12 @@ public class NodePersistorVersion1xx implements NodePersistor {
     @Override
     public void setNeedsResetAfterLoad() {
         m_needsResetAfterLoad = true;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public boolean mustWarnOnDataLoadError() {
+        return getSingleNodeContainerPersistor().mustWarnOnDataLoadError();
     }
     
     public LoadResult load(Node node,
@@ -452,7 +469,11 @@ public class NodePersistorVersion1xx implements NodePersistor {
             String err = "Unable to load port content for node \"" 
                 + node.getName() + "\": " + e.getMessage();
             result.addError(err, true);
-            LOGGER.warn(err, e);
+            if (mustWarnOnDataLoadError()) {
+                LOGGER.warn(err, e);
+            } else {
+                LOGGER.debug(err);
+            }
             setNeedsResetAfterLoad();
         }
         loadExec.setProgress(1.0);
@@ -468,7 +489,11 @@ public class NodePersistorVersion1xx implements NodePersistor {
             String err = "Unable to load internally held tables for node \"" 
                 + node.getName() + "\": " + e.getMessage();
             result.addError(err, true);
-            LOGGER.warn(err, e);
+            if (mustWarnOnDataLoadError()) {
+                LOGGER.warn(err, e);
+            } else {
+                LOGGER.debug(err);
+            }
             setNeedsResetAfterLoad();
         }
         loadIntTblsExec.setProgress(1.0);
@@ -487,7 +512,10 @@ public class NodePersistorVersion1xx implements NodePersistor {
     
     /** {@inheritDoc} */
     public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy() {
-        return m_modelSettingsFailPolicy;
+        // we explicitly return null here as the node decides on how
+        // to behave (in workflows 1.x.x it's not known what is the correct
+        // state of the node at this point)
+        return null;
     }
     
     public ReferencedFile getNodeDirectory() {

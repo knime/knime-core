@@ -40,6 +40,7 @@ import org.knime.core.internal.SerializerMethodLoader;
 import org.knime.core.node.PortObject.PortObjectSerializer;
 import org.knime.core.node.PortObjectSpec.PortObjectSpecSerializer;
 import org.knime.core.node.workflow.NodeMessage;
+import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.util.FileUtil;
 
@@ -60,8 +61,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     /** Invokes super constructor. 
      * @param modelSettingsFailPolicy Forwared.*/
     public NodePersistorVersion200(
-            final LoadNodeModelSettingsFailPolicy modelSettingsFailPolicy) {
-        super(modelSettingsFailPolicy);
+            final SingleNodeContainerPersistorVersion200 sncPersistor) {
+        super(sncPersistor);
     }
 
     private static final NodeLogger LOGGER =
@@ -296,7 +297,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     protected void saveCustomName(final Node node, final NodeSettingsWO settings) {
         settings.addString(CFG_NAME, node.getName());
     }
-
+    
     /** {@inheritDoc} */
     @Override
     protected boolean loadIsExecuted(final NodeSettingsRO settings)
@@ -308,6 +309,15 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     @Override
     protected boolean shouldLoadAsNotExecuted(Node node) {
         return false;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy() {
+        LoadNodeModelSettingsFailPolicy result = 
+            getSingleNodeContainerPersistor().getModelSettingsFailPolicy();
+        assert result != null : "fail policy is null";
+        return result;
     }
 
     /** {@inheritDoc} */

@@ -1209,6 +1209,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     public void markDirty() {
         if (!m_isDirty) {
             m_isDirty = true;
+            m_manager.setDirty();
 
             Display.getDefault().asyncExec(new Runnable() {
                 public void run() {

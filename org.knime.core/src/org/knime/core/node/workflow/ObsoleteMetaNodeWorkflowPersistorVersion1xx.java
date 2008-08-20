@@ -165,7 +165,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
     protected SingleNodeContainerPersistorVersion1xx 
             createSingleNodeContainerPersistor() {
         return new ObsoleteSpecialNodeSingleNodeContainerPersistorVersion1xx(
-                getGlobalTableRepository());
+                this);
     }
     
     /** {@inheritDoc} */
@@ -363,8 +363,8 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
          * 
          */
         public ObsoleteSpecialNodeSingleNodeContainerPersistorVersion1xx(
-                final HashMap<Integer, ContainerTable> tableRep){
-            super(tableRep);
+                WorkflowPersistorVersion1xx workflowPersistor){
+            super(workflowPersistor);
         }
         
         /** {@inheritDoc} */

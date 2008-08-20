@@ -29,10 +29,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -43,7 +41,7 @@ import org.knime.core.node.NodePersistorVersion200;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
+import org.knime.core.node.workflow.ScopeLoopContext.RestoredScopeLoopContext;
 import org.knime.core.node.workflow.ScopeVariable.Type;
 import org.knime.core.util.FileUtil;
 
@@ -57,15 +55,14 @@ public class SingleNodeContainerPersistorVersion200 extends
     private static final String NODE_FILE = "node.xml";
 
     public SingleNodeContainerPersistorVersion200(
-            final HashMap<Integer, ContainerTable> tableRep) {
-        super(tableRep);
+            final WorkflowPersistorVersion200 workflowPersistor) {
+        super(workflowPersistor);
     }
     
     /** {@inheritDoc} */
     @Override
-    protected NodePersistorVersion200 createNodePersistor(
-            final LoadNodeModelSettingsFailPolicy failPolicy) {
-        return new NodePersistorVersion200(failPolicy);
+    protected NodePersistorVersion200 createNodePersistor() {
+        return new NodePersistorVersion200(this);
     }
     
     /** {@inheritDoc} */
@@ -119,7 +116,7 @@ public class SingleNodeContainerPersistorVersion200 extends
                 }
                 result.add(v);
             } else if ("loopcontext".equals(type)) {
-                result.add(new ScopeLoopContext());
+                result.add(new RestoredScopeLoopContext());
 //                int tailID = sub.getInt("tailID");
             } else {
                 throw new InvalidSettingsException(
@@ -163,8 +160,7 @@ public class SingleNodeContainerPersistorVersion200 extends
         NodeContainerMetaPersistorVersion200 metaPersistor = 
             createNodeContainerMetaPersistor(null);
         metaPersistor.save(snc, settings);
-        NodePersistorVersion200 persistor = createNodePersistor(
-            translateToFailPolicy(snc.getState()));
+        NodePersistorVersion200 persistor = createNodePersistor();
         persistor.save(snc.getNode(), nodeXMLFileRef, exec, isSaveData 
                 && snc.getState().equals(NodeContainer.State.EXECUTED));
         File nodeSettingsXMLFile = new File(nodeDir, SETTINGS_FILE_NAME);

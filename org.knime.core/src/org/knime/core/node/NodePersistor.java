@@ -94,6 +94,7 @@ public interface NodePersistor {
     boolean isConfigured();
     boolean isExecuted();
     boolean hasContent();
+    boolean mustWarnOnDataLoadError();
     ReferencedFile getNodeInternDirectory();
     // may return null in which case the node decides what to do.
     LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy();

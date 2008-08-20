@@ -510,7 +510,7 @@ public final class SingleNodeContainer extends NodeContainer
     }
 
     /**
-     * Execute underlying Node asynchronisly. Make sure to give Workflow-
+     * Execute underlying Node asynchronously. Make sure to give Workflow-
      * Manager a chance to call pre- and postExecuteNode() appropriately
      * and synchronize those parts (since they changes states!).
      *
@@ -520,7 +520,7 @@ public final class SingleNodeContainer extends NodeContainer
     private void executeNode(final PortObject[] inObjects,
             final ExecutionContext ec) {
         // this will allow the parent to call state changes etc properly
-        // synchronized. The main execution is done asynchronsly.
+        // synchronized. The main execution is done asynchronously.
         getParent().doBeforeExecution(SingleNodeContainer.this);
         // TODO: the progress monitor should not be accessible from the
         // public world.
@@ -749,7 +749,7 @@ public final class SingleNodeContainer extends NodeContainer
      * {@inheritDoc}
      */
     @Override
-    protected void setDirty() {
+    public void setDirty() {
         /* Ensures that any port object in the associated node is read from its
          * saved location. Especially BufferedDataTable objects are read as late
          * as possible (in order to reduce start-up time), this method makes

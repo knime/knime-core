@@ -48,20 +48,16 @@ public class WorkflowEvent {
     public enum Type {
         /** Event: connection added to workflow. */
      CONNECTION_ADDED,
-     /** Event: UI info attached to connection has changed. */
-     CONNECTION_UI_CHANGED,
      /** Event: connection removed from workflow. */
      CONNECTION_REMOVED,
      /** Event: node added to workflow. */
      NODE_ADDED,
+     /** Event: node removed from workflow. */
+     NODE_REMOVED,
      /** Event: node was configured. */
      NODE_CONFIGURED,
      /** Event: UI info attached to node has changed. */
-     NODE_UI_CHANGED,
-     /** Event: node execution is finished. */
      NODE_FINISHED,
-     /** Event: node removed from workflow. */
-     NODE_REMOVED,
      /** Event: node was reset. */
      NODE_RESET,
      /** Event: node is being executed. */

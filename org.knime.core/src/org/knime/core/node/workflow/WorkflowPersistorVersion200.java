@@ -22,10 +22,13 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 
 import org.knime.core.data.container.ContainerTable;
@@ -192,6 +195,12 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         result.setPortName(name);
         return result;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected boolean loadIfMustWarnOnDataLoadError(final File workflowDir) {
+        return new File(workflowDir, SAVED_WITH_DATA_FILE).isFile();
+    }
 
     protected void saveUIInfoClassName(final NodeSettingsWO settings,
             final UIInformation info) {
@@ -228,8 +237,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     @Override
     protected SingleNodeContainerPersistorVersion200 
         createSingleNodeContainerPersistor() {
-        return new SingleNodeContainerPersistorVersion200(
-                getGlobalTableRepository());
+        return new SingleNodeContainerPersistorVersion200(this);
     }
     
     public String save(final WorkflowManager wm,
@@ -310,10 +318,22 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         }
         File workflowFile = new File(workflowDir, WORKFLOW_FILE);
         settings.saveToXML(new FileOutputStream(workflowFile));
+        File saveWithDataFile = new File(workflowDir, SAVED_WITH_DATA_FILE);
+        BufferedWriter o = new BufferedWriter(new FileWriter(saveWithDataFile));
+        o.write("Do not delete this file!");
+        o.newLine();
+        o.write("This file serves to indicate that the workflow was written " 
+                + "as part of the usual save routine (not exported).");
+        o.newLine();
+        o.newLine();
+        o.write("Workflow was last saved by user "); 
+        o.write(System.getProperty("user.name"));
+        o.write(" on " + new Date());
+        o.close();
         if (wm.getNodeContainerDirectory() == null) {
             wm.setNodeContainerDirectory(workflowDirRef);
         }
-        if (workflowDir.equals(wm.getNodeContainerDirectory())) {
+        if (workflowDirRef.equals(wm.getNodeContainerDirectory())) {
             wm.unsetDirty();
         }
         execMon.setProgress(1.0);

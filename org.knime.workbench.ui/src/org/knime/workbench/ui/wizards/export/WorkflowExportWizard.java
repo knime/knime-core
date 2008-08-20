@@ -53,6 +53,7 @@ import org.eclipse.ui.internal.dialogs.ExportWizard;
 import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin;
 import org.eclipse.ui.internal.wizards.datatransfer.ArchiveFileExportOperation;
 import org.knime.core.node.NodePersistorVersion200;
+import org.knime.core.node.workflow.WorkflowPersistor;
 
 /**
  * This wizard is intended to export a knime workflow project.
@@ -172,7 +173,8 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
         }
         
         // exclusion list for workflows in format of 2.x
-        if (resource.getType() == IResource.FOLDER) {
+        switch (resource.getType()) {
+        case IResource.FOLDER: 
             if (name.startsWith(NodePersistorVersion200.PORT_FOLDER_PREFIX)) {
                 return true;
             }
@@ -183,6 +185,13 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
             if (name.startsWith(NodePersistorVersion200.INTERN_FILE_DIR)) {
                 return true;
             }
+            break;
+        case IResource.FILE:
+            if (name.startsWith(WorkflowPersistor.SAVED_WITH_DATA_FILE)) {
+                return true;
+            }
+            break;
+        default:
         }
 
         // get extension to check if this resource is a zip file

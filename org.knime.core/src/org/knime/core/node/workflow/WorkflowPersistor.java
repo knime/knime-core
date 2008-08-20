@@ -54,6 +54,11 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     
     /** Identifier for KNIME workflows when saved to disc. */
     public static final String WORKFLOW_FILE = "workflow.knime";
+    
+    /** File used to signal that workflow was saved in usual manner. It will
+     * always be present in the workflow directory unless the workflow is 
+     * exported with the "exclude data" flag being set. */
+    public static final String SAVED_WITH_DATA_FILE = ".savedWithData";
 
     String getLoadVersion();
 
@@ -258,6 +263,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     public static final class WorkflowLoadResult extends LoadResult {
         
         private WorkflowManager m_workflowManager;
+        private boolean m_guiMustReportError = false;
         
         /**
          * @param workflowManager the workflowManager to set
@@ -272,6 +278,21 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         public WorkflowManager getWorkflowManager() {
             return m_workflowManager;
         }
+        
+        /**
+         * @param guiMustReportError the guiMustReportError to set
+         */
+        void setGUIMustReportError(final boolean guiMustReportError) {
+            m_guiMustReportError = guiMustReportError;
+        }
+        
+        /**
+         * @return the guiMustReportError
+         */
+        public boolean getGUIMustReportError() {
+            return m_guiMustReportError;
+        }
+        
     }
     
     
