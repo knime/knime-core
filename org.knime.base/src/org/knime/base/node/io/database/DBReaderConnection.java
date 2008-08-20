@@ -277,15 +277,17 @@ final class DBReaderConnection implements DataTable {
                                 BufferedReader buf =
                                         new BufferedReader(clob
                                                 .getCharacterStream());
-                                StringBuilder sb = new StringBuilder();
+                                StringBuilder sb = null;
                                 String line;
                                 while ((line = buf.readLine()) != null) {
-                                    if (sb.length() > 0) {
+                                    if (sb == null) {
+                                        sb = new StringBuilder();
+                                    } else {
                                         sb.append("\n");
                                     }
                                     sb.append(line);
                                 }
-                                s = sb.toString();
+                                s = (sb == null ? null : sb.toString()); 
                             }
                         } else if (dbType == Types.BLOB) {
                             Blob blob = m_result.getBlob(i + 1);
@@ -296,15 +298,17 @@ final class DBReaderConnection implements DataTable {
                                 BufferedReader buf =
                                         new BufferedReader(
                                                 new InputStreamReader(is));
-                                StringBuilder sb = new StringBuilder();
+                                StringBuilder sb = null;
                                 String line;
                                 while ((line = buf.readLine()) != null) {
-                                    if (sb.length() > 0) {
+                                    if (sb == null) {
+                                        sb = new StringBuilder();
+                                    } else {
                                         sb.append("\n");
                                     }
                                     sb.append(line);
                                 }
-                                s = sb.toString();
+                                s = (sb == null ? null : sb.toString()); 
                             }
                         } else {
                             s = m_result.getString(i + 1);
