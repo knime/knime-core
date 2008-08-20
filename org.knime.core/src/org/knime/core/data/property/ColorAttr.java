@@ -23,7 +23,6 @@
 package org.knime.core.data.property;
 
 import java.awt.Color;
-import java.io.Serializable;
 import java.util.HashMap;
 
 /**
@@ -36,7 +35,7 @@ import java.util.HashMap;
  * @author Thomas Gabriel, University of Konstanz
  * @author Fabian Dill, University of Konstanz
  */
-public final class ColorAttr implements Serializable {
+public final class ColorAttr {
     
     /** The default color attribute value, used when no color attribute set. */
     public static final ColorAttr DEFAULT;
