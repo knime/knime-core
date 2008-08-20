@@ -82,9 +82,9 @@ final class DBQueryNodeModel extends DBNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected String createQuery(final String query) {
+    protected String createQuery(final String query, final String tableID) {
         return m_query.getStringValue().replaceAll(
-                TABLE_PLACE_HOLDER, "(" + query + ")");
+                TABLE_PLACE_HOLDER, "(" + query + ") " + tableID);
     }
         
 }

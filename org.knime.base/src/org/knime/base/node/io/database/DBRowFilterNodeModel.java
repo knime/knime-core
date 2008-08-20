@@ -101,11 +101,12 @@ final class DBRowFilterNodeModel extends DBNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected String createQuery(final String query) {
+    protected String createQuery(final String query, final String tableID) {
         String buf = m_column.getStringValue()
             + " " + m_operator.getStringValue()
             + " " + m_value.getStringValue();
-        return "SELECT * FROM (" + query + ") WHERE " + buf.toString(); 
+        return "SELECT * FROM (" + query + ") " + tableID + " WHERE " 
+                + buf.toString(); 
     }
         
 }

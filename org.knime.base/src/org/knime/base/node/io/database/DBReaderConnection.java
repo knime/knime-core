@@ -171,25 +171,25 @@ final class DBReaderConnection implements DataTable {
             int type = meta.getColumnType(dbIdx);
             DataType newType;
             switch (type) {
-            case Types.INTEGER:
-            case Types.BIT:
-            case Types.BINARY:
-            case Types.BOOLEAN:
-            case Types.VARBINARY:
-            case Types.SMALLINT:
-            case Types.TINYINT:
-            case Types.BIGINT:
-                newType = IntCell.TYPE;
-                break;
-            case Types.FLOAT:
-            case Types.DOUBLE:
-            case Types.NUMERIC:
-            case Types.DECIMAL:
-            case Types.REAL:
-                newType = DoubleCell.TYPE;
-                break;
-            default:
-                newType = StringCell.TYPE;
+                case Types.INTEGER:
+                case Types.BIT:
+                case Types.BINARY:
+                case Types.BOOLEAN:
+                case Types.VARBINARY:
+                case Types.SMALLINT:
+                case Types.TINYINT:
+                case Types.BIGINT:
+                    newType = IntCell.TYPE;
+                    break;
+                case Types.FLOAT:
+                case Types.DOUBLE:
+                case Types.NUMERIC:
+                case Types.DECIMAL:
+                case Types.REAL:
+                    newType = DoubleCell.TYPE;
+                    break;
+                default:
+                    newType = StringCell.TYPE;
             }
             if (spec == null) {
                 spec = new DataTableSpec(new DataColumnSpecCreator(

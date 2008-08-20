@@ -117,7 +117,7 @@ abstract class DBNodeModel extends GenericNodeModel {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
         m_conn = new DBQueryConnection();
         m_conn.loadValidatedConnection(dbObj.getConnectionModel());
-        String newQuery = createQuery(m_conn.getQuery()); 
+        String newQuery = createQuery(m_conn.getQuery(), m_tableId); 
         LOGGER.debug("Execute SQL query: " + newQuery);
         if (DBTableOptions.CREATE_TABLE.getActionCommand().equals(
                 m_tableOption.getStringValue())) {
@@ -185,7 +185,7 @@ abstract class DBNodeModel extends GenericNodeModel {
         m_conn = new DBQueryConnection();
         m_conn.loadValidatedConnection(spec.getConnectionModel());
         // replace view place holder and create where clause
-        String newQuery = createQuery(m_conn.getQuery());
+        String newQuery = createQuery(m_conn.getQuery(), m_tableId);
         LOGGER.debug("Execute SQL query: " + newQuery);
         DBQueryConnection conn = new DBQueryConnection(m_conn, newQuery);
         // try to create database connection
@@ -210,8 +210,9 @@ abstract class DBNodeModel extends GenericNodeModel {
      * <code>oldQuery</code>, the <code>tableId</code> has to be used to 
      * create an unique table. 
      * @param oldQuery the old SQL query from the input
+     * @param tableID the table if
      * @return the new SQL query
      */
-    abstract String createQuery(final String oldQuery);
+    abstract String createQuery(final String oldQuery, final String tableID);
         
 }
