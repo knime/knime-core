@@ -28,7 +28,6 @@
  */
 package org.knime.core.data;
 
-import java.io.Serializable;
 
 /**
  * Key for a specific row which holds an identifier of type {@link String}.
@@ -36,7 +35,7 @@ import java.io.Serializable;
  * @see DataRow
  * @author Michael Berthold, University of Konstanz
  */
-public final class RowKey implements Serializable {
+public final class RowKey {
 
     /** Private member holding non-null row id. */
     private final String m_id;
