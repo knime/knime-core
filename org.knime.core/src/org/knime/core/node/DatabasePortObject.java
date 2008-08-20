@@ -38,6 +38,9 @@ import org.knime.core.data.container.ContainerTable;
  */
 public class DatabasePortObject implements PortObject {
     
+    private final DataTable m_data;
+    
+    private final ModelContentRO m_conn;
 
     /**
      * Database port type formed <code>PortObjectSpec.class</code> and 
@@ -55,12 +58,8 @@ public class DatabasePortObject implements PortObject {
     /** {@inheritDoc} */
     @Override
     public String getSummary() {
-        return null;
+        return "No. of columns: " + m_data.getDataTableSpec().getNumColumns();
     }
-
-    private final DataTable m_data;
-    
-    private final ModelContentRO m_conn;
     
     /**
      * Creates a new database port object.
@@ -75,7 +74,7 @@ public class DatabasePortObject implements PortObject {
         }
         if (conn == null) {
             throw new NullPointerException(
-                    "Datbase connection must not be null!");
+                    "Database connection must not be null!");
         }
         m_data = data;
         m_conn = conn;
