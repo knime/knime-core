@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   24.03.2005 (cebron): created
  */
@@ -33,7 +33,7 @@ import org.knime.core.node.NodeView;
 /**
  * The FuzzyClusterNodeView provides the user with information about the quality
  * of the clustering.
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
  */
 public class FuzzyClusterNodeView extends NodeView {
@@ -69,7 +69,7 @@ public class FuzzyClusterNodeView extends NodeView {
      * <li>Between Cluster Variation</li>
      * <li>Clustering Quality (BCV / WCV)</li>
      * </ul>
-     * 
+     *
      * @see NodeView#modelChanged()
      */
     @Override
@@ -128,7 +128,7 @@ public class FuzzyClusterNodeView extends NodeView {
             buffer.append("</body>\n");
             buffer.append("</html>\n");
             m_output.setText(buffer.toString());
-        } 
+        }
     }
 
     /**
@@ -151,25 +151,25 @@ public class FuzzyClusterNodeView extends NodeView {
      * Prints the cluster centers from the FuzzyClusterNodeModel
      */
     private String printClusterCenters() {
-        String temp = new String();
+        StringBuilder temp = new StringBuilder();
         if (m_model.getClusterCentres() != null) {
             double[][] clustercenters = m_model.getClusterCentres();
             for (int i = 0; i < clustercenters.length; i++) {
-                temp += "<h4>Cluster " + i + ":</h4><br>";
-                if (m_model.noiseClustering() 
+                temp.append("<h4>Cluster " + i + ":</h4><br>");
+                if (m_model.noiseClustering()
                         && i == clustercenters.length - 1) {
-                    temp += "Noise Cluster";
+                    temp.append("Noise Cluster");
                 } else {
                     for (int j = 0; j < clustercenters[i].length; j++) {
-                        temp += clustercenters[i][j];
+                        temp.append(clustercenters[i][j]);
                         if (j != clustercenters[i].length - 1) {
-                            temp += ",";
+                            temp.append(",");
                         }
                     }
                 }
-                temp += "<br>";
+                temp.append("<br>");
             }
         }
-        return temp;
+        return temp.toString();
     }
 }
