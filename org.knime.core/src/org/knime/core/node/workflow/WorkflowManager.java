@@ -1275,6 +1275,8 @@ public final class WorkflowManager extends NodeContainer {
      * executed.
      *
      * @param snc SingleNodeContainer which finished execution in a JobExecutor
+     * @throws IllegalContextStackObjectException If loop end nodes have 
+     * problems identifying their start node
      */
     void doBeforeExecution(final SingleNodeContainer snc) {
         assert !snc.getID().equals(this.getID());
@@ -1290,16 +1292,22 @@ public final class WorkflowManager extends NodeContainer {
                         LOGGER.debug("Incoming scope object stack for "
                                 + snc.getNameWithID() + ":\n"
                                 + snc.getScopeObjectStack().toDeepString());
-                        throw new IllegalStateException("Encountered"
-                                    + " loop-end without corresponding head!");
+                        throw new IllegalContextStackObjectException(
+                                "Encountered loop-end without " +
+                                "corresponding head!");
                     } else if (slc instanceof RestoredScopeLoopContext) {
-                        throw new IllegalStateException(
+                        throw new IllegalContextStackObjectException(
                                 "Can't continue loop as the workflow was "
                                 + "restored with the loop being partially " 
                                 + "executed. Reset loop start and execute "
                                 + "entire loop again.");
                     }
                     NodeContainer headNode = m_nodes.get(slc.getOwner());
+                    if (headNode == null) {
+                        throw new IllegalContextStackObjectException(
+                                "Loop start and end node must be in the same " 
+                                + "workflow");
+                    }
                     snc.getNode().setLoopStartNode(
                             ((SingleNodeContainer)headNode).getNode());
                 } else {
@@ -1348,16 +1356,13 @@ public final class WorkflowManager extends NodeContainer {
                 // no matter what happened, try to clean up the stack.
                 ScopeLoopContext slc =
                     snc.getScopeObjectStack().pop(ScopeLoopContext.class);
-                if (slc == null) {
-                    throw new IllegalStateException(
-                            "No Loop start for this Loop End!");
-                } else if (slc instanceof RestoredScopeLoopContext) {
-                    throw new IllegalStateException(
-                            "Can't continue loop as the workflow was restored " 
-                            + "with the loop being partially executed. " 
-                            + "Reset loop start and execute entire loop "
-                            + "again.");
-                }
+                assert !success || slc != null 
+                    : "No Loop start for this Loop End. This should have been "
+                        + "caught in doBeforeExecution";
+                assert !success || !(slc instanceof RestoredScopeLoopContext) 
+                    : "Can't continue loop as the workflow was restored " 
+                            + "with the loop being partially executed. This " 
+                            + "should have been caught in doBeforeExecution";
             }
             Node node = snc.getNode();
             if (node.getLoopStatus() != null) {
@@ -2240,6 +2245,8 @@ public final class WorkflowManager extends NodeContainer {
                             ScopeLoopContext slc = new ScopeLoopContext();
                             scsc.push(slc);
                         }
+                        // TODO: the stack is invalid if if a predecessor 
+                        // is a loop end node, need to pop...()
                         snc.setScopeObjectStack(scsc);
                         // update HiLiteHandlers on inports of SNC only
                         // TODO think about it... happens magically
