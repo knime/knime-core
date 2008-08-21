@@ -102,7 +102,7 @@ public class SettingsModelString extends SettingsModel {
     @Override
     protected void saveSettingsForDialog(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        saveSettingsForModel(settings);
+        settings.addString(m_configName, getStringValue());
     }
 
     /**
