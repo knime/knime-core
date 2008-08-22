@@ -166,6 +166,7 @@ public class DefaultVisualizationNodeView extends NodeView {
             }
         }
     }
+
     
     /**
      * Dynamically creates a hilite menu with the typical hilite options:
@@ -211,6 +212,11 @@ public class DefaultVisualizationNodeView extends NodeView {
      */
     @Override
     protected void onClose() {
+        if (m_plotters != null) {
+            for (AbstractPlotter plotter : m_plotters) {
+                plotter.reset();
+            }
+        }
     }
 
     /**
