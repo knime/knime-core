@@ -58,11 +58,6 @@ import org.knime.core.util.SimpleFileFilter;
  * button to trigger a file chooser. The elements in the combo are files that
  * have been recently used.
  *
- * <br />
- * This file may be move to a different package (utility class in core) when we
- * decide that people benefit from it. So far, we do not recommend to use this
- * class elsewhere as it is subject to change.
- *
  * @see org.knime.core.node.util.StringHistory
  * @author Bernd Wiswedel, University of Konstanz
  */
@@ -77,6 +72,8 @@ public final class FilesHistoryPanel extends JPanel {
     private final String[] m_suffixes;
 
     private final String m_historyID;
+
+    private int m_selectMode = JFileChooser.FILES_ONLY;
 
     /**
      * Creates new instance, sets properties, for instance renderer,
@@ -138,7 +135,7 @@ public final class FilesHistoryPanel extends JPanel {
         final JFileChooser fileChooser = new JFileChooser();
         fileChooser.setAcceptAllFileFilterUsed(true);
         fileChooser.setFileFilter(new SimpleFileFilter(m_suffixes));
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setFileSelectionMode(m_selectMode);
 
         String f = m_textBox.getEditor().getItem().toString();
         File dirOrFile = getFile(f);
@@ -150,8 +147,9 @@ public final class FilesHistoryPanel extends JPanel {
         int r = fileChooser.showDialog(FilesHistoryPanel.this, "OK");
         if (r == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
-            if (file.exists() && file.isDirectory()) {
-                JOptionPane.showMessageDialog(this, "Error: Please specify "
+            if (file.exists() && (m_selectMode == JFileChooser.FILES_ONLY)
+                    && file.isDirectory()) {
+                JOptionPane.showMessageDialog(this, "Error: Please select "
                         + "a file, not a directory.");
                 return null;
             }
@@ -207,8 +205,8 @@ public final class FilesHistoryPanel extends JPanel {
     }
 
     /**
-     * Adds a change listener that gets notified if a new file name is
-     * entered into the text field.
+     * Adds a change listener that gets notified if a new file name is entered
+     * into the text field.
      *
      * @param cl a change listener
      */
@@ -223,6 +221,19 @@ public final class FilesHistoryPanel extends JPanel {
      */
     public void removeChangeListener(final ChangeListener cl) {
         m_changeListener.remove(cl);
+    }
+
+    /**
+     * Sets the select mode for the file chooser dialog.
+     *
+     * @param mode one of {@link JFileChooser#FILES_ONLY},
+     *            {@link JFileChooser#DIRECTORIES_ONLY}, or
+     *            {@link JFileChooser#FILES_AND_DIRECTORIES}
+     *
+     * @see JFileChooser#setFileSelectionMode(int)
+     */
+    public void setSelectMode(final int mode) {
+        m_selectMode = mode;
     }
 
     /**
