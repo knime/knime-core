@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   30.07.2007 (thor): created
  */
@@ -37,10 +37,10 @@ import org.knime.core.data.DataColumnSpec;
  * This class renders a list with {@link DataColumnSpec}s and strings. Column
  * specs get a nice icon describing the type in front of the column name,
  * string columns are rendered italic.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
-class ColumnSpecListRenderer extends DefaultListCellRenderer {
+public class ColumnSpecListRenderer extends DefaultListCellRenderer {
     private static final Font RK_FONT;
 
     private static final Font CS_FONT;
