@@ -17,7 +17,8 @@ Require-Bundle: org.eclipse.ui,
  org.knime.workbench.editor,
  org.knime.workbench.repository,
  org.knime.workbench.ui,
- org.knime.workbench.help
+ org.knime.workbench.help,
+ org.eclipse.ui.intro
 Eclipse-AutoStart: true
 Bundle-ManifestVersion: 2
 Export-Package: org.knime.product,

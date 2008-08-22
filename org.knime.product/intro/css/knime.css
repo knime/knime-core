@@ -1,0 +1,56 @@
+body {
+	background: #fff url(img/KNIME_logo_white.png);
+	background-repeat: no-repeat;
+	background-position: top left;
+	color: #333;
+	font-family: Arial, sans-serif;
+	font-size: 12px;
+}
+
+#page-links {
+	padding-top: 200px;
+	padding-left: 5px;
+	}
+
+h1 {
+	font-style: normal;
+	}
+	
+a {
+	color: #666;
+	display: block;
+	margin-bottom: 50px;
+	text-decoration: none;
+	width: 550px;
+	padding: 5px;
+	}
+
+
+a .link-label {
+	   padding-left: 75px;
+	   font-size: 16px;
+	   font-weight: bold;
+	}
+	
+a .text {
+	padding-left: 75px;
+	}
+	
+#update {
+	background: url(img/update.png) no-repeat 5px center;
+    height: 64px;
+
+	}
+#update:hover {
+    background: #eee url(img/update_hover.png) no-repeat 5px center;
+    height: 64px; 
+    }
+
+#launch {
+	background: url(img/launch.png) no-repeat 5px center;
+    height: 64px;
+	}
+#launch:hover {
+    background: #eee url(img/launch_hover.png) no-repeat 5px center;
+    height: 64px;
+    }

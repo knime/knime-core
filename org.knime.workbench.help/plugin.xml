@@ -15,41 +15,5 @@
             file="context_help.xml">
       </contexts>
    </extension>
-   <extension
-         point="org.eclipse.ui.intro">
-      <intro
-            class="org.eclipse.ui.intro.config.CustomizableIntroPart"
-            icon="icons/intro.png"
-            id="org.knime.workbench.help.intro"/>
-      <introProductBinding
-            introId="org.knime.workbench.help.intro"
-            productId="org.knime.product.KNIME_PRODUCT"/>
-   </extension>
-   <extension
-         point="org.eclipse.ui.intro.config">
-      <config
-            content="intro/introContent.xml"
-            id="org.knime.workbench.help.intro.config"
-            introId="org.knime.workbench.help.intro">
-         <presentation
-               home-page-id="root"
-               standby-page-id="standby">
-            <implementation
-                  kind="html"
-                  style="css/shared.css"/>
-            <implementation kind="swt"/>
-         </presentation>
-      </config>
-   </extension>
-   <extension point="org.eclipse.ui.intro.configExtension">
-	<action
-		name="createProjectFromIntro"
-		replaces="runAction?pluginId=org.eclipse.pde.ui&amp;class=org.eclipse.pde.ui.internal.samples.ShowSampleAction">
-	</action>
-	<action
-		name="launchUpdateWizard"
-		replaces="runAction?pluginId=org.knime.workbench.help&amp;class=org.knime.workbench.help.intro.InvokeInstallSiteAction">
-	</action>
-</extension>
-   
+
 </plugin>
