@@ -142,7 +142,12 @@ public class PMMLClusterAssignerNodeModel extends GenericNodeModel {
         for (int i = 0; i < protos.length; i++) {
             double min = mins[i];
             double max = maxs[i];
-            double[] prototype = unormalize(protos[i], min, max);
+            double[] prototype = protos[i];
+            // fields might not be normalized
+            // then the handler puts Double.NaN in the referring min and max pos
+            if (!Double.isNaN(min) && !Double.isNaN(max)) {
+                prototype = unormalize(protos[i], min, max);
+            }
             m_prototypes.add(new Prototype(prototype, 
                     new StringCell(labels[i])));
         }
@@ -161,7 +166,8 @@ public class PMMLClusterAssignerNodeModel extends GenericNodeModel {
         }
     }
     
-    private double[] unormalize(double[] normalized, double min, double max) {
+    private double[] unormalize(final double[] normalized, 
+            final double min, final double max) {
         double[] prototypes = new double[normalized.length];
         for (int i = 0; i < normalized.length; i++) {
             prototypes[i] = (normalized[i] * (max - min)) + min;

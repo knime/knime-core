@@ -131,7 +131,13 @@ public class PMMLClusterHandler extends PMMLContentHandler {
                 // have min and max values
                 m_mins[i] = vals[0];
                 m_maxs[i] = vals[1];
-            } 
+            } else {
+                // fields can not be normalized
+                // then we put Double.NaN in order to signalize the predictor
+                // that unnormalization is not necessary
+                m_mins[i] = Double.NaN;
+                m_maxs[i] = Double.NaN;             
+            }
             i++;
         }
         m_normValues.clear();
@@ -196,6 +202,16 @@ public class PMMLClusterHandler extends PMMLContentHandler {
             } else {
                 m_usedColumns.add(atts.getValue("field"));
             }
+            // some models do not have ClusteringField but MiningField
+        } else if (name.equals("MiningField")) {
+            // but then it must be of usageType=active
+            if (atts.getValue("usageType") != null 
+                    && atts.getValue("usageType").equals("active")) {
+                // since we have a set this should not mess up with the 
+                // clustering fields 
+                // (if both clustering and mining fields are defined) 
+                m_usedColumns.add(atts.getValue("name"));
+            }            
         } else if (name.equals("NormContinuous")) {
             m_lastDerivedField = atts.getValue("field");
         } else if (name.equals("LinearNorm")) {
