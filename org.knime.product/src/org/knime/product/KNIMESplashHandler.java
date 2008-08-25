@@ -77,6 +77,7 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         // If no splash extensions were loaded abort the splash handler
         if (!hasSplashExtensions()) {
             initProgressBar();
+            doEventLoop();
             return;
         }
 
