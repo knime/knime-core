@@ -818,6 +818,17 @@ public final class DataType {
     public DataType getCollectionElementType() {
         return m_collectionElementType;
     }
+    
+    /** Does this type represent a collection. This method is a convenience 
+     * short cut for <code>isCompatible(CollectionDataValue.class)</code>.
+     * 
+     * <p>If this method returns true, {@link #getCollectionElementType()} is
+     * guaranteed to return a non-null value.
+     * @return If this type represent 
+     */
+    public boolean isCollectionType() {
+        return isCompatible(CollectionDataValue.class);
+    }
 
     /**
      * Types are equal if the list of compatible 
