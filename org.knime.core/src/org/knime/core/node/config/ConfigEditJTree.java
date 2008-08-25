@@ -82,6 +82,14 @@ public class ConfigEditJTree extends JTree {
                     + ConfigEditTreeModel.class.getSimpleName());
         }
         super.setModel(newModel);
+        expandAll();
+    }
+    
+    /** Expand the tree. */
+    public void expandAll() {
+        for (int i = 0; i < getRowCount(); i++) {
+            expandRow(i);
+        }
     }
     
     /** {@inheritDoc} */
