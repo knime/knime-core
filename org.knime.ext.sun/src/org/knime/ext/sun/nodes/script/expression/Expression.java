@@ -148,10 +148,8 @@ public class Expression implements Serializable {
             throw new CompilationFailedException("Unable to compile \"" + body
                     + "\":\n" + logString.toString());
         }
-        classAbsoluteName = javaAbsoluteName.substring(0, javaAbsoluteName
-                .length()
-                - ".java".length())
-                + ".class";
+        classAbsoluteName = javaAbsoluteName.substring(
+                0, javaAbsoluteName.length() - ".java".length()) + ".class";
         m_classFile = new File(classAbsoluteName);
         assert (m_classFile.exists());
         m_classFile.deleteOnExit();
@@ -227,7 +225,9 @@ public class Expression implements Serializable {
         for (Map.Entry<String, Class<?>> entry : m_properties.entrySet()) {
             String name = entry.getKey();
             Class<?> type = entry.getValue();
-            buffer.append("  public " + type.getName() + " " + name + ";");
+            buffer.append("  public ");
+            buffer.append(type.getSimpleName());
+            buffer.append(" " + name + ";");
             buffer.append("\n");
         }
         buffer.append("\n");

@@ -34,6 +34,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -150,16 +151,37 @@ public class ColumnCalculator implements CellFactory {
         for (int i = 0; i < row.getNumCells(); i++) {
             DataCell cell = row.getCell(i);
             DataType cellType = m_spec.getColumnSpec(i).getType();
+            boolean isArray = cellType.isCollectionType();
+            if (isArray) {
+                cellType = cellType.getCollectionElementType();
+            }
             Object cellVal = null;
             if (!cell.isMissing()) {
                 if (cellType.isCompatible(IntValue.class)) {
-                    cellVal = new Integer(((IntValue)cell).getIntValue());
+                    if (isArray) {
+                        cellVal = asIntArray((CollectionDataValue)cell);
+                    } else {
+                        cellVal = new Integer(((IntValue)cell).getIntValue());
+                    }
                 } else if (cellType.isCompatible(DoubleValue.class)) {
-                    cellVal = new Double(((DoubleValue)cell).getDoubleValue());
+                    if (isArray) {
+                        cellVal = asDoubleArray((CollectionDataValue)cell);
+                    } else {
+                        cellVal = new Double(
+                                ((DoubleValue)cell).getDoubleValue());
+                    }
                 } else if (cellType.isCompatible(StringValue.class)) {
-                    cellVal = ((StringValue)cell).getStringValue();
+                    if (isArray) {
+                        cellVal = asStringArray((CollectionDataValue)cell);
+                    } else {
+                        cellVal = ((StringValue)cell).getStringValue();
+                    }
                 } else {
-                    cellVal = cell.toString();
+                    if (isArray) {
+                        cellVal = asStringArray((CollectionDataValue)cell);
+                    } else {
+                        cellVal = cell.toString();
+                    }
                 }
             }
             if (cellVal != null) {
@@ -172,9 +194,9 @@ public class ColumnCalculator implements CellFactory {
             m_expression.set(nameValueMap);
             o = m_expression.evaluate();
             if (!(m_returnType.isAssignableFrom(o.getClass()))) {
-                LOGGER.warn("Unable to cast return type of instantj "
-                        + "expression \"" + o.getClass().getName()
-                        + "\" to desired output \"" + m_returnType.getName()
+                LOGGER.warn("Unable to cast return type of expression \""
+                        + o.getClass().getName() + "\" to desired output \"" 
+                        + m_returnType.getName() 
                         + "\" - putting missing value instead.");
                 o = null;
             }
@@ -224,5 +246,41 @@ public class ColumnCalculator implements CellFactory {
      */
     static String createColField(final int col) {
         return "col" + col;
+    }
+    
+    private static int[] asIntArray(final CollectionDataValue cellValue) {
+        int[] result = new int[cellValue.size()];
+        int i = 0;
+        for (DataCell c : cellValue) {
+            if (c.isMissing()) {
+                return null;
+            }
+            result[i++] = ((IntValue)c).getIntValue();
+        }
+        return result;
+    }
+    
+    private static double[] asDoubleArray(final CollectionDataValue cellValue) {
+        double[] result = new double[cellValue.size()];
+        int i = 0;
+        for (DataCell c : cellValue) {
+            if (c.isMissing()) {
+                return null;
+            }
+            result[i++] = ((DoubleValue)c).getDoubleValue();
+        }
+        return result;
+    }
+    
+    private static String[] asStringArray(final CollectionDataValue cellValue) {
+        String[] result = new String[cellValue.size()];
+        int i = 0;
+        for (DataCell c : cellValue) {
+            if (c.isMissing()) {
+                return null;
+            }
+            result[i++] = c.toString();
+        }
+        return result;
     }
 }

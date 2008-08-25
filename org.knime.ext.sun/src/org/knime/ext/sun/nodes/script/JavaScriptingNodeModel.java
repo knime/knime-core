@@ -47,7 +47,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-
 import org.knime.ext.sun.nodes.script.expression.CompilationFailedException;
 import org.knime.ext.sun.nodes.script.expression.Expression;
 
@@ -415,14 +414,30 @@ public class JavaScriptingNodeModel extends NodeModel {
                         DataType colType =
                             spec.getColumnSpec(colIndex).getType();
                         correctedExp.append(colFieldName);
+                        boolean isArray = colType.isCollectionType();
+                        if (isArray) {
+                            colType = colType.getCollectionElementType();
+                        }
                         if (colType.isCompatible(IntValue.class)) {
-                            type = Integer.class;
-                            correctedExp.append(".intValue()");
+                            if (isArray) {
+                                type = int[].class;
+                            } else {
+                                type = Integer.class;
+                                correctedExp.append(".intValue()");
+                            }
                         } else if (colType.isCompatible(DoubleValue.class)) {
-                            type = Double.class;
-                            correctedExp.append(".doubleValue()");
+                            if (isArray) {
+                                type = double[].class;
+                            } else {
+                                type = Double.class;
+                                correctedExp.append(".doubleValue()");
+                            }
                         } else {
-                            type = String.class;
+                            if (isArray) {
+                                type = String[].class;
+                            } else {
+                                type = String.class;
+                            }
                         }
                         nameValueMap.put(colFieldName, type.getName());
                     }
