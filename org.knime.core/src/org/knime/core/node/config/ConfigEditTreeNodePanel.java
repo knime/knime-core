@@ -24,29 +24,36 @@
  */
 package org.knime.core.node.config;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.Collection;
 import java.util.Collections;
 
+import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.border.Border;
 
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
+import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.ScopeObjectStack;
 import org.knime.core.node.workflow.ScopeVariable;
 import org.knime.core.node.workflow.ScopeVariable.Type;
@@ -96,6 +103,15 @@ public class ConfigEditTreeNodePanel extends JPanel {
             } 
         };
         m_valueField.addFocusListener(l);
+        m_valueField.addItemListener(new ItemListener() {
+            /** {@inheritDoc} */
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    onSelectedItemChange(e.getItem());
+                }
+            }
+        });
         m_exposeAsVariableField = new JTextField(8);
         m_exposeAsVariableField.addFocusListener(l);
         add(m_keyLabel);
@@ -146,18 +162,19 @@ public class ConfigEditTreeNodePanel extends JPanel {
             }
             m_keyIcon = icon;
             m_keyLabel.setText(entry.getKey());
+            m_keyLabel.setToolTipText(entry.getKey());
             usedVariable = m_treeNode.getUseVariableName();
             String exposeVariable = m_treeNode.getExposeVariableName();
             m_exposeAsVariableField.setText(exposeVariable);
         } else {
             selType = Type.STRING;
             m_keyLabel.setText("");
+            m_keyLabel.setToolTipText(null);
             m_keyIcon = ICON_UNKNOWN;
             m_exposeAsVariableField.setText("");
             usedVariable = null;
         }
 
-        setToolTipText(m_keyLabel.getText());
         m_keyLabel.setMinimumSize(LABEL_DIMENSION);
         m_keyLabel.setMaximumSize(LABEL_DIMENSION);
         m_keyLabel.setPreferredSize(LABEL_DIMENSION);
@@ -170,7 +187,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
         Collection<ScopeVariable> allVars = getScopeStack() != null
             ? getScopeStack().getAvailableVariables().values() 
             : (Collection<ScopeVariable>)Collections.EMPTY_LIST;
-        ScopeVariable match = null;
+        ComboBoxElement match = null;
         for (ScopeVariable v : allVars) {
             boolean isOk = false;
             switch (selType) {
@@ -185,16 +202,59 @@ public class ConfigEditTreeNodePanel extends JPanel {
                 isOk |= v.getType().equals(Type.INTEGER);
             }
             if (isOk) {
-                model.addElement(v);
+                ComboBoxElement cbe = new ComboBoxElement(v);
+                model.addElement(cbe);
                 if (v.getName().equals(usedVariable)) {
-                    match = v; 
+                    match = cbe;
                 }
+            } else if (v.getName().equals(usedVariable)) {
+                String error = "Variable \"" + usedVariable 
+                + "\" has wrong type (" + v.getType() 
+                + "), expected " + selType;
+                ComboBoxElement cbe = new ComboBoxElement(v, error);
+                model.addElement(cbe);
+                match = cbe;
             }
         }
         if (match != null) {
             m_valueField.setSelectedItem(match);
-        } 
+        } else if (usedVariable != null) {
+            String error = "Invalid variable \"" + usedVariable + "\"";
+            ScopeVariable virtualVar;
+            switch (selType) {
+            case DOUBLE: 
+                virtualVar = new ScopeVariable(usedVariable, 0.0);
+                break;
+            case INTEGER: 
+                virtualVar = new ScopeVariable(usedVariable, 0);
+                break;
+            default:
+                virtualVar = new ScopeVariable(usedVariable, "");
+                break;
+            }
+            ComboBoxElement cbe = new ComboBoxElement(virtualVar, error);
+            model.addElement(cbe);
+            m_valueField.setSelectedItem(cbe);
+        }
         m_valueField.setEnabled(model.getSize() > 1);
+    }
+    
+    private void onSelectedItemChange(final Object newItem) {
+        String newToolTip;
+        if (newItem instanceof ComboBoxElement) {
+            ComboBoxElement cbe = (ComboBoxElement)newItem;
+            if (cbe.m_errorString != null) {
+                newToolTip = cbe.m_errorString;
+            } else {
+                newToolTip = m_keyLabel.getText();
+            }
+        } else {
+            newToolTip = m_keyLabel.getText();
+        }
+        String oldToolTip = getToolTipText();
+        if (!ConvenienceMethods.areEqual(oldToolTip, newToolTip)) {
+            setToolTipText(newToolTip);
+        }
     }
     
     /** Write the currently edited values to the underlying model. */
@@ -204,8 +264,11 @@ public class ConfigEditTreeNodePanel extends JPanel {
         }
         String v = null;
         Object selVar = m_valueField.getSelectedItem();
-        if (selVar instanceof ScopeVariable) {
-            v = ((ScopeVariable)selVar).getName();
+        if (selVar instanceof ComboBoxElement) {
+            ComboBoxElement cbe = (ComboBoxElement)selVar;
+            if (cbe.m_errorString == null) {
+                v = cbe.m_variable.getName();
+            }
         }
         m_treeNode.setUseVariableName(v != null && v.length() > 0 ? v : null);
         v = m_exposeAsVariableField.getText();
@@ -234,12 +297,36 @@ public class ConfigEditTreeNodePanel extends JPanel {
         return m_scopeObjectStack;
     }
     
+    /** Elements in the combo box. Used to also indicate errors with the 
+     * current selection. */
+    private static final class ComboBoxElement {
+        private final ScopeVariable m_variable;
+        private final String m_errorString;
+        
+        /** Create ordinary element, without error. */
+        private ComboBoxElement(final ScopeVariable v) {
+            this(v, null);
+        }
+        
+        /** Creator error element. */
+        private ComboBoxElement(final ScopeVariable v, final String error) {
+            m_variable = v;
+            m_errorString = error;
+        }
+        
+    }
+    
     /** Renderer for the combo box. */
     private static final class ComboBoxRenderer 
         extends DefaultListCellRenderer {
         
         /** Instance to be used. */
         static final ComboBoxRenderer INSTANCE = new ComboBoxRenderer();
+        
+        private final Border m_errBorder = 
+            BorderFactory.createLineBorder(Color.RED);
+        private final Border m_okBorder =
+            BorderFactory.createEmptyBorder(1, 1, 1, 1);
         
         /** {@inheritDoc} */
         @Override
@@ -248,8 +335,10 @@ public class ConfigEditTreeNodePanel extends JPanel {
                 final boolean cellHasFocus) {
             Component c = super.getListCellRendererComponent(
                     list, value, index, isSelected, cellHasFocus);
-            if (value instanceof ScopeVariable) {
-                ScopeVariable v = (ScopeVariable)value;
+            ((JComponent)c).setBorder(m_okBorder);
+            if (value instanceof ComboBoxElement) {
+                ComboBoxElement cbe = (ComboBoxElement)value;
+                ScopeVariable v = cbe.m_variable;
                 Icon icon;
                 String curValue;
                 switch (v.getType()) {
@@ -274,6 +363,10 @@ public class ConfigEditTreeNodePanel extends JPanel {
                 setText(v.getName());
                 setToolTipText(v.getName() + " (currently \"" 
                         + curValue + "\")");
+                if (cbe.m_errorString != null) {
+                    ((JComponent)c).setBorder(m_errBorder);
+                    setToolTipText(cbe.m_errorString);
+                }
             } else {
                 setToolTipText(null);
             }
