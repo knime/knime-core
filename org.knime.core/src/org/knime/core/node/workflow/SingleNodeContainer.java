@@ -519,17 +519,30 @@ public final class SingleNodeContainer extends NodeContainer
      */
     private void executeNode(final PortObject[] inObjects,
             final ExecutionContext ec) {
-        // this will allow the parent to call state changes etc properly
-        // synchronized. The main execution is done asynchronously.
-        getParent().doBeforeExecution(SingleNodeContainer.this);
+        boolean caughtContextStackException = false;
+        String errorString = null;
+        try {
+            // this will allow the parent to call state changes etc properly
+            // synchronized. The main execution is done asynchronously.
+            getParent().doBeforeExecution(SingleNodeContainer.this);
+        } catch (IllegalContextStackObjectException ice) {
+            errorString = ice.getMessage();
+            caughtContextStackException = true;
+        }
         // TODO: the progress monitor should not be accessible from the
         // public world.
         ec.getProgressMonitor().reset();
         // execute node outside any synchronization!
-        boolean success = m_node.execute(inObjects, ec);
+        boolean success = !caughtContextStackException 
+            && m_node.execute(inObjects, ec);
         if (success) {
             // output tables are made publicly available (for blobs)
             putOutputTablesIntoGlobalRepository(ec);
+        }
+        if (caughtContextStackException) {
+            LOGGER.warn(errorString);
+            m_node.notifyMessageListeners(
+                    new NodeMessage(NodeMessage.Type.ERROR, errorString));
         }
         // clean up stuff and especially change states synchronized again
         getParent().doAfterExecution(SingleNodeContainer.this, success);
