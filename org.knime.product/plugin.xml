@@ -2,6 +2,7 @@
 <?eclipse version="3.0"?>
 
 <plugin>
+   <extension-point id="splashExtension" name="KNIME Splash Extensions" schema="schema/splashExtension.exsd"/>
 
    <extension id="KNIME_APPLICATION" point="org.eclipse.core.runtime.applications">
       <application>
@@ -36,6 +37,47 @@
          <run class="org.knime.product.headless.KNIMEBatchApplication"/>
       </application>
    </extension>
+   <extension
+         point="org.eclipse.ui.splashHandlers">
+      <splashHandler
+            class="org.knime.product.KNIMESplashHandler"
+            id="org.knime.product.splashHandlers.extensible">
+      </splashHandler>
+      <splashHandlerProductBinding
+            productId="org.knime.product.KNIME_PRODUCT"
+            splashId="org.knime.product.splashHandlers.extensible">
+      </splashHandlerProductBinding>
+   </extension>
+   <!--
+   <extension
+         point="org.knime.product.splashExtension">
+      <splashExtension
+            icon="icons/af.png"
+            id="af"
+            tooltip="Application Framework">
+      </splashExtension>
+      <splashExtension
+            icon="icons/embedded.png"
+            id="embedded"
+            tooltip="Embedded">
+      </splashExtension>
+      <splashExtension
+            icon="icons/enterprise.png"
+            id="enterprise"
+            tooltip="Enterprise">
+      </splashExtension>
+      <splashExtension
+            icon="icons/languages.png"
+            id="languages"
+            tooltip="Languages">
+      </splashExtension>
+      <splashExtension
+            icon="icons/rcp.png"
+            id="rcp"
+            tooltip="RCP">
+      </splashExtension>
+   </extension>
+   -->
    <extension
          point="org.eclipse.ui.intro">
       <intro

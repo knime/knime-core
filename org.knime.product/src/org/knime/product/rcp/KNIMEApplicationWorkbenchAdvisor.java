@@ -28,7 +28,7 @@ import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 
 /**
  * Provides the initial workbench perspective ID (KNIME perspective).
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
@@ -44,9 +44,12 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
      * Initializes the application. At the moment it just forces the product to
      * save and restore the window and perspective settings (remembers whether
      * editors are open, etc.).
-     * 
+     *
+     * @param configurer an object for configuring the workbench
+     *
+     *
      * @see org.eclipse.ui.application.WorkbenchAdvisor
-     *  #initialize(org.eclipse.ui.application.IWorkbenchConfigurer)
+     *      #initialize(org.eclipse.ui.application.IWorkbenchConfigurer)
      */
     @Override
     public void initialize(final IWorkbenchConfigurer configurer) {
@@ -56,16 +59,11 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
     }
 
     /**
-     * Create our window advisor that configures the workbench.
-     * 
-     * @see org.eclipse.ui.application.WorkbenchAdvisor
-     *      #createWorkbenchWindowAdvisor
-     *      (org.eclipse.ui.application.IWorkbenchWindowConfigurer)
+     * {@inheritDoc}
      */
     @Override
     public WorkbenchWindowAdvisor createWorkbenchWindowAdvisor(
             final IWorkbenchWindowConfigurer configurer) {
-
         return new KNIMEApplicationWorkbenchWindowAdvisor(configurer);
     }
 }

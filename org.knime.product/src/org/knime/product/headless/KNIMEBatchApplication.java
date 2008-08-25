@@ -21,32 +21,37 @@
  */
 package org.knime.product.headless;
 
-import org.eclipse.core.runtime.IPlatformRunnable;
+import org.eclipse.equinox.app.IApplication;
+import org.eclipse.equinox.app.IApplicationContext;
 import org.knime.core.node.workflow.BatchExecutor;
 import org.knime.workbench.repository.RepositoryManager;
 
 /**
- * The run method of this class is executed when KNIME is run headless, 
- * that is in batch mode. 
+ * The run method of this class is executed when KNIME is run headless, that is
+ * in batch mode.
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class KNIMEBatchApplication implements IPlatformRunnable {
-
+public class KNIMEBatchApplication implements IApplication {
     /**
      * {@inheritDoc}
      */
-    public Object run(final Object args) throws Exception {
+    @Override
+    public Object start(final IApplicationContext context) throws Exception {
         // unless the user specified this property, we set it to true here
         // (true means no icons etc will be loaded, if it is false, the
-        // loading of the repository manager is likely to print many errors 
+        // loading of the repository manager is likely to print many errors
         // - though it will still function)
         if (System.getProperty("java.awt.headless") == null) {
             System.setProperty("java.awt.headless", "true");
         }
         // load the ui plugin to read the preferences
-//        KNIMEUIPlugin.getDefault();
+        // KNIMEUIPlugin.getDefault();
         // this is just to load the repository plugin
         RepositoryManager.INSTANCE.toString();
+        Object args =
+                context.getArguments()
+                        .get(IApplicationContext.APPLICATION_ARGS);
         String[] stringArgs;
         if (args instanceof String[]) {
             stringArgs = (String[])args;
@@ -56,15 +61,16 @@ public class KNIMEBatchApplication implements IPlatformRunnable {
                 stringArgs = copy;
             }
         } else if (args != null) {
-            System.err.println("Unable to cast class " 
-                    + args.getClass().getName() 
-                    + " to string array, toString() returns "
-                    + args.toString());
+            System.err
+                    .println("Unable to cast class "
+                            + args.getClass().getName()
+                            + " to string array, toString() returns "
+                            + args.toString());
             stringArgs = new String[0];
         } else {
             stringArgs = new String[0];
         }
-        // this actually returns with a non-0 value when failed, 
+        // this actually returns with a non-0 value when failed,
         // we ignore it here
         try {
             BatchExecutor.mainRun(stringArgs);
@@ -73,5 +79,12 @@ public class KNIMEBatchApplication implements IPlatformRunnable {
             throw e;
         }
         return EXIT_OK;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void stop() {
     }
 }

@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   28.08.2005 (Florian Georg): created
  */
@@ -33,14 +33,17 @@ import org.eclipse.ui.internal.ide.model.WorkbenchAdapterBuilder;
 /**
  * This advisor is used for configuring the workbench window and creating the
  * action bar advisor.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class KNIMEApplicationWorkbenchWindowAdvisor extends
         WorkbenchWindowAdvisor {
 
     /**
-     * @param configurer
+     * Creates a new workbench window advisor for configuring a workbench window
+     * via the given workbench window configurer.
+     *
+     * @param configurer an object for configuring the workbench window
      */
     public KNIMEApplicationWorkbenchWindowAdvisor(
             final IWorkbenchWindowConfigurer configurer) {
@@ -51,7 +54,10 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends
     /**
      * Creates our <code>KNIMEActionBarAdvisor</code> that form the action
      * bars.
-     * 
+     *
+     * @param configurer the action bar configurer for the window
+     * @return the action bar advisor for the window
+     *
      * @see KNIMEApplicationActionBarAdvisor
      * @see org.eclipse.ui.application.WorkbenchWindowAdvisor
      *      #createActionBarAdvisor

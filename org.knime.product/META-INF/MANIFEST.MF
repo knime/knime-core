@@ -5,7 +5,6 @@ Bundle-Version: 2.0.0.0016392
 Bundle-ClassPath: workbench-product.jar
 Bundle-Activator: org.knime.product.ProductPlugin
 Bundle-Vendor: Chair for Bioinformatics and Information Mining, Prof. Berthold, University of Konstanz, Germany
-Bundle-Localization: plugin
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.core.resources,
@@ -18,8 +17,11 @@ Require-Bundle: org.eclipse.ui,
  org.knime.workbench.repository,
  org.knime.workbench.ui,
  org.knime.workbench.help,
+ org.eclipse.swt,
+ org.eclipse.jface,
+ org.eclipse.ui.workbench,
  org.eclipse.ui.intro
-Eclipse-AutoStart: true
+Eclipse-LazyStart: false
 Bundle-ManifestVersion: 2
 Export-Package: org.knime.product,
  org.knime.product.rcp

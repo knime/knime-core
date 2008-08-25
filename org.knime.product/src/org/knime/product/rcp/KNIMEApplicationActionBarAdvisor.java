@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   28.08.2005 (Florian Georg): created
  */
@@ -48,7 +48,7 @@ import org.knime.workbench.help.intro.InvokeInstallSiteAction;
 /**
  * This advisor is resposible for creating the workbench actions and fills them
  * into the menu / cool bar of the workbench window.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
@@ -77,35 +77,38 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     private IWorkbenchAction m_redoAction;
 
     private IWorkbenchAction m_deleteAction;
-    
+
     private IWorkbenchAction m_selectAllAction;
 
     private IWorkbenchAction m_newWizardDropdownAction;
 
     private IWorkbenchAction m_saveAction;
-    
+
     private IWorkbenchAction m_saveAllAction;
-    
+
     private IWorkbenchAction m_changeWorkspaceAction;
-    
+
     private IAction m_updateKnimeAction;
 
     // private IAction m_openOutlineViewAction;
-    //    
+    //
     // private IAction m_openNavigatorViewAction;
-    //    
+    //
     // private IAction m_openRepositoryViewAction;
-    //    
+    //
     // private IAction m_openRepositoryHelpViewAction;
-    //    
+    //
     // private IAction m_openConsoleViewAction;
-    //    
+    //
     // private IAction m_openProgressViewAction;
 
     private IContributionItem m_showViewShortlistContributionItem;
 
     /**
-     * @param configurer
+     * Creates a new action bar advisor to configure a workbench
+     * window's action bars via the given action bar configurer.
+     *
+     * @param configurer the action bar configurer
      */
     public KNIMEApplicationActionBarAdvisor(
             final IActionBarConfigurer configurer) {
@@ -115,7 +118,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     /**
      * This creates all the actions that are available for the knime workbench
      * action bars.
-     * 
+     *
      * @see org.eclipse.ui.application.ActionBarAdvisor
      *      #makeActions(org.eclipse.ui.IWorkbenchWindow)
      */
@@ -199,10 +202,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     }
 
     /**
-     * Fills the actions into the menu bar.
-     * 
-     * @see org.eclipse.ui.application.ActionBarAdvisor
-     *      #fillMenuBar(org.eclipse.jface.action.IMenuManager)
+     * {@inheritDoc}
      */
     @Override
     protected void fillMenuBar(final IMenuManager menuBar) {
@@ -270,10 +270,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     }
 
     /**
-     * Fills the cool bar (under the menu bar) with tool shortcuts.
-     * 
-     * @see org.eclipse.ui.application.ActionBarAdvisor
-     *      #fillCoolBar(org.eclipse.jface.action.ICoolBarManager)
+     * {@inheritDoc}
      */
     @Override
     protected void fillCoolBar(final ICoolBarManager coolBar) {

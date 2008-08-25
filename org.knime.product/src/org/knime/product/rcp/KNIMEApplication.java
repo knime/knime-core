@@ -23,8 +23,9 @@ package org.knime.product.rcp;
 
 import java.io.File;
 
-import org.eclipse.core.runtime.IPlatformRunnable;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.equinox.app.IApplication;
+import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.SWT;
@@ -37,21 +38,19 @@ import org.knime.core.util.FileLocker;
 /**
  * This class controls all aspects of the application's execution.
  */
-public class KNIMEApplication implements IPlatformRunnable {
+public class KNIMEApplication implements IApplication {
 
     private static final String PROP_EXIT_CODE = "eclipse.exitcode";
 
-    private static String LOCK_FOLDERNAME = ".metadata";
+    private static final String LOCK_FOLDERNAME = ".metadata";
 
-    private static String LOCK_FILENAME = ".lock";
+    private static final String LOCK_FILENAME = ".lock";
 
     /**
-     * @param args The args
-     * @throws Exception on general application error
-     * @return return code, interpreted by OS (e.g. "restart app")
-     * @see org.eclipse.core.runtime.IPlatformRunnable#run(java.lang.Object)
+     * {@inheritDoc}
      */
-    public Object run(final Object args) throws Exception {
+    @Override
+    public Object start(final IApplicationContext context) throws Exception {
         Display display = PlatformUI.createDisplay();
         // check if the workspace is already in use
         // at this point its valid, so try to lock it and update the
@@ -65,7 +64,7 @@ public class KNIMEApplication implements IPlatformRunnable {
                                 shell,
                                 IDEWorkbenchMessages.IDEApplication_workspaceCannotLockTitle,
                                 IDEWorkbenchMessages.IDEApplication_workspaceCannotLockMessage);
-                return EXIT_OK;
+                return IApplication.EXIT_OK;
             }
         } catch (Exception e) {
             // do nothing if locking could not be performed
@@ -99,7 +98,7 @@ public class KNIMEApplication implements IPlatformRunnable {
     private boolean lockWorkspace() throws Exception {
 
         Location instanceLoc = Platform.getInstanceLocation();
-        
+
         File lockFileFolder =
                 new File(instanceLoc.getURL().getFile(), LOCK_FOLDERNAME);
         if (!lockFileFolder.exists()) {
@@ -112,5 +111,12 @@ public class KNIMEApplication implements IPlatformRunnable {
 
         FileLocker locker = new FileLocker(lockFile);
         return locker.lock();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void stop() {
     }
 }

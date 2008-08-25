@@ -8,7 +8,7 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   height="295"
+   height="329"
    id="svg2"
    inkscape:export-filename="/home/thor/workspace/KNIME/org.knime.product/splash.png"
    inkscape:export-xdpi="90"
@@ -19,7 +19,7 @@
    sodipodi:docname="splash.svg"
    sodipodi:version="0.32"
    version="1.0"
-   width="455">
+   width="454">
   <svg:defs
      id="defs4">
     <inkscape:perspective
@@ -2375,7 +2375,7 @@
      height="295px"
      id="base"
      inkscape:current-layer="g2137"
-     inkscape:cx="418.94052"
+     inkscape:cx="366.71337"
      inkscape:cy="73.523313"
      inkscape:document-units="px"
      inkscape:pageopacity="0.0"
@@ -2402,7 +2402,8 @@
   <svg:g
      id="layer1"
      inkscape:groupmode="layer"
-     inkscape:label="Ebene 1">
+     inkscape:label="Ebene 1"
+     transform="translate(-230.70968,-88.709696)">
     <svg:g
        id="g1898"
        inkscape:label="Ebene 1"
@@ -2411,30 +2412,30 @@
          id="g2137"
          transform="translate(1.086609,119.656)">
         <svg:rect
-           height="291.58063"
+           height="326.88168"
            id="rect1391"
            inkscape:export-xdpi="90"
            inkscape:export-ydpi="90"
-           style="fill:#ffffff;stroke:#333333;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;fill-opacity:1"
-           width="451.58066"
-           x="-4.0725126"
-           y="-132.23198"
-           inkscape:export-filename="/home/thor/workspace/KNIME/org.knime.product/splash.png" />
+           style="fill:#ffffff;fill-opacity:1;stroke:#333333;stroke-width:2.1183157;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           width="451.88168"
+           x="225.98663"
+           y="-44.592197"
+           inkscape:export-filename="/home/thor/workspace/KNIME/org.knime.product/splash.bmp.png" />
         <svg:text
            id="text1365"
            inkscape:export-xdpi="90"
            inkscape:export-ydpi="90"
            sodipodi:linespacing="125%"
            style="font-size:7.20367289px;font-style:normal;font-weight:normal;line-height:125%;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
-           x="14.018124"
+           x="244.01813"
            xml:space="preserve"
-           y="153.74597"
-           inkscape:export-filename="/home/thor/workspace/KNIME/org.knime.product/splash.png"> <svg:tspan
+           y="275.74597"
+           inkscape:export-filename="/home/thor/workspace/KNIME/org.knime.product/splash.bmp.png"> <svg:tspan
    id="tspan2161"
    sodipodi:role="line"
    style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial;-inkscape-font-specification:Arial"
-   x="14.018124"
-   y="153.74597"> Copyright, 2003 - 2008, KNIME GmbH, Germany, http://www.knime.org/, contact@knime.org </svg:tspan> </svg:text>
+   x="244.01813"
+   y="275.74597"> Copyright, 2003 - 2008, KNIME GmbH, Germany, http://www.knime.org/, contact@knime.org </svg:tspan> </svg:text>
         <svg:rect
            height="491.77713"
            id="rect1389"
@@ -2449,17 +2450,15 @@
            inkscape:label="#text2163"
            sodipodi:linespacing="125%"
            style="font-size:7.20367289px;font-style:normal;font-weight:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
-           x="438.18289"
+           x="668.18286"
            xml:space="preserve"
-           y="46.346283"
-           inkscape:export-filename="/home/thor/workspace/KNIME/org.knime.product/splash.png">
-<svg:tspan
+           y="134.34628"
+           inkscape:export-filename="/home/thor/workspace/KNIME/org.knime.product/splash.bmp.png"> <svg:tspan
    id="tspan2165"
    sodipodi:role="line"
-   style="font-size:16;font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial;-inkscape-font-specification:Arial"
-   x="440.47625"
-   y="46.346283">Version 2.0.0.0016392</svg:tspan>
-</svg:text>
+   style="font-size:16px;font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial;-inkscape-font-specification:Arial"
+   x="670.4762"
+   y="134.34628">Version 2.0.0.0016392</svg:tspan> </svg:text>
         <svg:text
            id="KNIME-Builddate"
            inkscape:export-xdpi="90"
@@ -2467,24 +2466,24 @@
            inkscape:label="#text2179"
            sodipodi:linespacing="125%"
            style="font-size:7.20367289px;font-style:normal;font-weight:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
-           x="439.30548"
+           x="669.30548"
            xml:space="preserve"
-           y="60.92131"
-           inkscape:export-filename="/home/thor/workspace/KNIME/org.knime.product/splash.png"> <svg:tspan
+           y="148.92131"
+           inkscape:export-filename="/home/thor/workspace/KNIME/org.knime.product/splash.bmp.png"> <svg:tspan
    id="tspan2183"
    sodipodi:role="line"
    style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial;-inkscape-font-specification:Arial"
-   x="441.59885"
-   y="60.92131">(Unstable Build)</svg:tspan> </svg:text>
+   x="671.59882"
+   y="148.92131">(Unstable Build)</svg:tspan> </svg:text>
         <svg:image
            height="205"
            id="image3225"
            sodipodi:absref="icons/logo/splash_logo.png"
            width="414"
-           x="13.217804"
+           x="243.2178"
            xlink:href="icons/logo/splash_logo.png"
-           y="-123.44167"
-           inkscape:export-filename="/home/thor/workspace/KNIME/org.knime.product/splash.png"
+           y="-35.441673"
+           inkscape:export-filename="/home/thor/workspace/KNIME/org.knime.product/splash.bmp.png"
            inkscape:export-xdpi="90"
            inkscape:export-ydpi="90" />
       </svg:g>
