@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   2005/04/19 (georg): created
  */
@@ -41,38 +41,64 @@ import org.eclipse.ui.console.IConsoleManager;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.Pointer;
 
 
 /**
  * This is an implementation of a writer which logs to the ConsoleView inside
  * Eclipse.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public final class ConsoleViewAppender extends Writer {
     /** Name for the console view. * */
     public static final String CONSOLE_NAME = "KNIME Console";
-    
+
+    static {
+        final Pointer<Color> fatal = new Pointer<Color>();
+        final Pointer<Color> error = new Pointer<Color>();
+        final Pointer<Color> warn = new Pointer<Color>();
+        final Pointer<Color> info = new Pointer<Color>();
+        final Pointer<Color> debug = new Pointer<Color>();
+
+        Display.getDefault().syncExec(new Runnable() {
+            @Override
+            public void run() {
+                fatal.set(Display.getDefault()
+                        .getSystemColor(SWT.COLOR_DARK_RED));
+                error.set(Display.getDefault()
+                        .getSystemColor(SWT.COLOR_RED));
+                warn.set(Display.getDefault().getSystemColor(
+                        SWT.COLOR_BLUE));
+                info.set(Display.getDefault().getSystemColor(
+                        SWT.COLOR_DARK_GREEN));
+                debug.set(Display.getDefault()
+                        .getSystemColor(SWT.COLOR_DARK_GRAY));
+            }
+        });
+
+        COLOR_FATAL_ERROR = fatal.get();
+        COLOR_ERROR = error.get();
+        COLOR_WARN = warn.get();
+        COLOR_INFO = info.get();
+        COLOR_DEBUG = debug.get();
+    }
+
     /** Color: fatal error. * */
-    public static final Color COLOR_FATAL_ERROR = Display.getDefault()
-            .getSystemColor(SWT.COLOR_DARK_RED);
+    public static final Color COLOR_FATAL_ERROR;
 
     /** Color: error. * */
-    public static final Color COLOR_ERROR = Display.getDefault()
-            .getSystemColor(SWT.COLOR_RED);
+    public static final Color COLOR_ERROR;
 
     /** Color: warning. * */
-    public static final Color COLOR_WARN = Display.getDefault().getSystemColor(
-            SWT.COLOR_BLUE);
+    public static final Color COLOR_WARN;
 
     /** Color: info. * */
-    public static final Color COLOR_INFO = Display.getDefault().getSystemColor(
-            SWT.COLOR_DARK_GREEN);
+    public static final Color COLOR_INFO;
 
     /** Color: debug. * */
-    public static final Color COLOR_DEBUG = Display.getDefault()
-            .getSystemColor(SWT.COLOR_DARK_GRAY);
-    
+    public static final Color COLOR_DEBUG;
+
     private final Color m_color;
 
     /** Appender: fatal error. */
@@ -83,7 +109,7 @@ public final class ConsoleViewAppender extends Writer {
     /** Appender: error. * */
     public static final ConsoleViewAppender ERROR_APPENDER
         = new ConsoleViewAppender(COLOR_ERROR, "Error", NodeLogger.LEVEL.ERROR);
-    
+
     /** Appender: info. */
     public static final ConsoleViewAppender WARN_APPENDER
         = new ConsoleViewAppender(COLOR_WARN, "Warn", NodeLogger.LEVEL.WARN);
@@ -97,40 +123,40 @@ public final class ConsoleViewAppender extends Writer {
         = new ConsoleViewAppender(COLOR_DEBUG, "Debug", NodeLogger.LEVEL.DEBUG);
 
     private final String m_name;
-    
+
     private final NodeLogger.LEVEL m_level;
-    
+
     /**
      * Initializes the ConsoleView appender.S.
-     * 
+     *
      */
     private ConsoleViewAppender(
-            final Color color, final String name, 
+            final Color color, final String name,
             final NodeLogger.LEVEL level) {
         m_color = color;
         m_name  = name;
         m_level = level;
     }
-    
+
     /**
      * @return The name for this writer.
      */
     public String getName() {
         return m_name;
     }
-    
+
     /**
      * @return Logging level.
      */
     public NodeLogger.LEVEL getLevel() {
         return m_level;
     }
-        
+
 
     /**
      * Appends a logging message to the console log. Color is selected based
      * upon the given logging level.
-     * 
+     *
      * @param text text
      */
     public void append(final String text) {
@@ -183,7 +209,7 @@ public final class ConsoleViewAppender extends Writer {
     /**
      * Looks up the console view that is responsible for the given event, does
      * not activate the view.
-     * 
+     *
      * @param consoleName The name of the console to look up
      */
     private MessageConsole findConsole(final String consoleName) {
@@ -200,7 +226,7 @@ public final class ConsoleViewAppender extends Writer {
         conMan.addConsoles(new IConsole[] {myConsole});
         return myConsole;
     }
-    
+
     private static ConsoleWriteJob consoleWriteJob =
         new ConsoleWriteJob();
 
@@ -213,7 +239,7 @@ public final class ConsoleViewAppender extends Writer {
         // make new string here as the caller reuses the char[]
         final String str = new String(cbuf, off, len);
         // makes sure that the printing is not queued in the UI thread,
-        // to be changed when bug 
+        // to be changed when bug
         // https://bugs.eclipse.org/bugs/show_bug.cgi?id=140540
         // is fixed.
         consoleWriteJob.add(this, str);
@@ -234,26 +260,27 @@ public final class ConsoleViewAppender extends Writer {
     public void close() throws IOException {
         // nothing to do here
     }
-    
+
     /**
      * Little job (i.e. also thread) that prints messages to the console. It
      * must not be the UI thread because of bug #140540:
      * https://bugs.eclipse.org/bugs/show_bug.cgi?id=140540
-     * @deprecated To be removed when the bug has been fixed 
-     * (I, BW, am on the cc list) 
+     * @deprecated To be removed when the bug has been fixed
+     * (I, BW, am on the cc list)
      */
+    @Deprecated
     private static class ConsoleWriteJob extends Job {
         private final LinkedList<ConsoleStringTuple> m_queueEntries;
         private static final int MAX_STACK_SIZE = 100000;
         /**
-         * 
+         *
          */
         public ConsoleWriteJob() {
             super("Console Write Job");
             setSystem(true);
             m_queueEntries = new LinkedList<ConsoleStringTuple>();
         }
-        
+
         /**
          * @param appender
          * @param str
@@ -264,7 +291,7 @@ public final class ConsoleViewAppender extends Writer {
                 if (m_queueEntries.size() > MAX_STACK_SIZE) {
                     m_queueEntries.clear();
                     m_queueEntries.add(new ConsoleStringTuple(WARN_APPENDER,
-                            "Console stack exceeded " 
+                            "Console stack exceeded "
                             + MAX_STACK_SIZE + " messages, flushing..."));
                 } else {
                     m_queueEntries.add(new ConsoleStringTuple(appender, str));
@@ -275,7 +302,7 @@ public final class ConsoleViewAppender extends Writer {
                 }
             }
         }
-        
+
         /**
          * {@inheritDoc}
          */
@@ -306,7 +333,7 @@ public final class ConsoleViewAppender extends Writer {
             }
             return Status.OK_STATUS;
         }
-        
+
         /** Two members: ConsoleViewAppender and the string to print. */
         private static final class ConsoleStringTuple {
             private final ConsoleViewAppender m_appender;
@@ -317,6 +344,6 @@ public final class ConsoleViewAppender extends Writer {
                 m_string = string;
             }
         }
-        
+
     }
 }
