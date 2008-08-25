@@ -10,6 +10,20 @@ Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.repository,
  org.knime.core,
  org.knime.base
-Eclipse-LazyStart: false
-Bundle-ClassPath: knime-timeseries.jar
+Eclipse-LazyStart: true
+Bundle-ClassPath: knime-timeseries-patches.jar,
+ knime-timeseries.jar
+Export-Package: org.knime.timeseries,
+ org.knime.timeseries.node.display,
+ org.knime.timeseries.node.display.barchart,
+ org.knime.timeseries.node.display.timeplot,
+ org.knime.timeseries.node.FilterWindows,
+ org.knime.timeseries.node.fuzzyCPmeans,
+ org.knime.timeseries.node.MA,
+ org.knime.timeseries.node.Segmentation.ExtractFromTo,
+ org.knime.timeseries.node.Segmentation.OneSampleperDay,
+ org.knime.timeseries.node.Segmentation.PatternsBetweenEvents,
+ org.knime.timeseries.node.Segmentation.TSBetweenEvents,
+ org.knime.timeseries.node.String2TimeStamp,
+ org.knime.timeseries.types
 

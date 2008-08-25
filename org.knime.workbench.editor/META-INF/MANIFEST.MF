@@ -2,10 +2,10 @@ Manifest-Version: 1.0
 Bundle-Name: KNIME Workbench Flow-Editor
 Bundle-SymbolicName: org.knime.workbench.editor;singleton:=true
 Bundle-Version: 2.0.0.0016392
-Bundle-ClassPath: workbench-editor.jar
+Bundle-ClassPath: workbench-editor-patches.jar,
+ workbench-editor.jar
 Bundle-Activator: org.knime.workbench.KNIMEEditorPlugin
 Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
-Bundle-Localization: plugin
 Provide-Package: org.knime.workbench,
  org.knime.workbench.editor2,
  org.knime.workbench.editor2.actions,
@@ -31,7 +31,7 @@ Require-Bundle: org.eclipse.core.resources,
  org.knime.workbench.repository,
  org.knime.workbench.ui
 Eclipse-RegisterBuddy: org.knime.base
-Eclipse-AutoStart: true
+Eclipse-LazyStart: true
 Bundle-ManifestVersion: 2
 Export-Package: org.knime.workbench,
  org.knime.workbench.editor2,
@@ -45,4 +45,6 @@ Export-Package: org.knime.workbench,
  org.knime.workbench.editor2.editparts.policy,
  org.knime.workbench.editor2.editparts.snap,
  org.knime.workbench.editor2.extrainfo,
- org.knime.workbench.editor2.figures
+ org.knime.workbench.editor2.figures,
+ org.knime.workbench.editor2.meta,
+ org.knime.workbench.editor2.model

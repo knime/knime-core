@@ -2,7 +2,8 @@ Manifest-Version: 1.0
 Bundle-Name: KNIME Workbench Help
 Bundle-SymbolicName: org.knime.workbench.help;singleton:=true
 Bundle-Version: 2.0.0.0016392
-Bundle-ClassPath: workbench-help.jar
+Bundle-ClassPath: workbench-help-patches.jar,
+ workbench-help.jar
 Bundle-Activator: org.knime.workbench.help.KNIMEHelpPlugin
 Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
 Bundle-Localization: plugin
@@ -19,7 +20,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.update.scheduler,
  org.eclipse.update.ui,
  org.eclipse.help.ui
-Eclipse-AutoStart: true
+Eclipse-LazyStart: true
 Bundle-ManifestVersion: 2
 Export-Package: org.knime.workbench.help,
  org.knime.workbench.help.intro

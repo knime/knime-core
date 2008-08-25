@@ -4,7 +4,6 @@ Bundle-Name: Deprecated KNIME nodes
 Bundle-SymbolicName: org.knime.deprecated
 Bundle-Version: 2.0.0.0016392
 Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
-Bundle-Localization: plugin
 Require-Bundle: org.knime.workbench.repository,
  org.knime.core,
  org.knime.base,
