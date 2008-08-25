@@ -472,7 +472,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             ScopeVariable var = variables.get(varString);
             if (var == null) {
                 throw new InvalidSettingsException(
-                        "Unknown variable \"" + var + "\"");
+                        "Unknown variable \"" + varString + "\"");
             }
             return var;
         }
@@ -489,7 +489,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                 return v.getIntValue();
             default:
                 throw new InvalidSettingsException("Can't evaluate variable \""
-                        + varString + "\" as double expression, it's a "
+                        + varString + "\" as double expression, it is a "
                         + v.getType() + " (\"" + v + "\")");
             }
         }
