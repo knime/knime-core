@@ -24,6 +24,8 @@
  */
 package org.knime.product.rcp;
 
+import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
@@ -87,5 +89,15 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends
         // dependency to org.eclipse.ui.ide (otherwise we don't see our
         // Resources)
         WorkbenchAdapterBuilder.registerAdapters();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void postWindowOpen() {
+        for (MenuItem item : PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getMenuBar().getItems()) {
+            System.err.println(item.toString() + " => " + item.getText());
+        }
     }
 }
