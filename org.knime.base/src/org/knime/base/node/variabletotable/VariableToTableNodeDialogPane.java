@@ -24,22 +24,16 @@
  */
 package org.knime.base.node.variabletotable;
 
-import java.awt.Component;
 import java.util.Arrays;
 import java.util.Map;
 
-import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
-import javax.swing.Icon;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
+import org.knime.base.util.scopevariable.ScopeVariableListCellRenderer;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
-import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -59,7 +53,7 @@ class VariableToTableNodeDialogPane extends NodeDialogPane {
     /** Inits components. */
     public VariableToTableNodeDialogPane() {
         m_list = new JList(new DefaultListModel());
-        m_list.setCellRenderer(new Renderer());
+        m_list.setCellRenderer(new ScopeVariableListCellRenderer());
         m_list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         addTab("Variable Selection", new JScrollPane(m_list));
     }
@@ -98,38 +92,6 @@ class VariableToTableNodeDialogPane extends NodeDialogPane {
         VariableToTableSettings sets = new VariableToTableSettings();
         sets.setVariablesOfInterest(svSels);
         sets.saveSettingsTo(settings);
-    }
-
-    private static final class Renderer extends DefaultListCellRenderer {
-        /** {@inheritDoc} */
-        @Override
-        public Component getListCellRendererComponent(final JList list,
-                final Object value, final int index, final boolean isSelected,
-                final boolean cellHasFocus) {
-            Component c =
-                    super.getListCellRendererComponent(list, value, index,
-                            isSelected, cellHasFocus);
-            if (value instanceof ScopeVariable) {
-                ScopeVariable v = (ScopeVariable)value;
-                Icon icon;
-                setText(v.getName());
-                switch (v.getType()) {
-                case DOUBLE:
-                    icon = DoubleValue.UTILITY.getIcon();
-                    break;
-                case INTEGER:
-                    icon = IntValue.UTILITY.getIcon();
-                    break;
-                case STRING:
-                    icon = StringValue.UTILITY.getIcon();
-                    break;
-                default:
-                    icon = DataValue.UTILITY.getIcon();
-                }
-                setIcon(icon);
-            }
-            return c;
-        }
     }
 
 }
