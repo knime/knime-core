@@ -55,20 +55,28 @@ public class ScopeVariableListCellRenderer extends DefaultListCellRenderer {
             ScopeVariable v = (ScopeVariable)value;
             Icon icon;
             setText(v.getName());
+            String curValue;
             switch (v.getType()) {
             case DOUBLE:
                 icon = DoubleValue.UTILITY.getIcon();
+                curValue = Double.toString(v.getDoubleValue());
                 break;
             case INTEGER:
                 icon = IntValue.UTILITY.getIcon();
+                curValue = Integer.toString(v.getIntValue());
                 break;
             case STRING:
                 icon = StringValue.UTILITY.getIcon();
+                curValue = v.getStringValue();
                 break;
             default:
                 icon = DataValue.UTILITY.getIcon();
+                curValue = v.toString();
             }
             setIcon(icon);
+            setToolTipText(v.getName() + " (current value: " + curValue + ")");
+        } else {
+            setToolTipText(null);
         }
         return c;
     }
