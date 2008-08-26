@@ -27,6 +27,7 @@ package org.knime.core.node.workflow;
 
 
 
+
 /**
  * ScopeContext interface holding local variables of basic type.
  * 
@@ -42,26 +43,52 @@ public final class ScopeVariable extends ScopeObject {
     private double m_valueD = Double.NaN;
     private int m_valueI = 0;
 
-    private ScopeVariable(final String name, final Type type) {
+    private ScopeVariable(final String name, final Type type,
+            final boolean isGlobalConstant) {
         if (name == null || type == null) {
             throw new NullPointerException("Argument must not be null");
+        }
+        if (!isGlobalConstant && name.startsWith("knime.")) {
+            throw new IllegalContextStackObjectException(
+                    "Name of scope variables must not start with \"knime.\": "
+                    + name);
+        }
+        if (isGlobalConstant && !name.startsWith("knime.")) {
+            throw new IllegalContextStackObjectException(
+                    "Name of global scope constant must start with \"knime.\": "
+                    + name);
         }
         m_name = name;
         m_type = type;
     }
     
     public ScopeVariable(final String name, final String valueS) {
-        this(name, Type.STRING);
-        m_valueS = valueS;
+        this(name, valueS, false);
     }
 
     public ScopeVariable(final String name, final double valueD) {
-        this(name, Type.DOUBLE);
-        m_valueD = valueD;
+        this(name, valueD, false);
     }
 
     public ScopeVariable(final String name, final int valueI) {
-        this(name, Type.INTEGER);
+        this(name, valueI, false);
+    }
+    
+    ScopeVariable(final String name, final String valueS, 
+            final boolean isGlobalConstant) {
+        this(name, Type.STRING, isGlobalConstant);
+        m_valueS = valueS;
+    }
+    
+    ScopeVariable(final String name, final double valueD,
+            final boolean isGlobalConstant) {
+        this(name, Type.DOUBLE, isGlobalConstant);
+        m_valueD = valueD;
+    }
+    
+    ScopeVariable(final String name, final int valueI,
+            final boolean isGlobalConstant) {
+        this(name, Type.INTEGER, isGlobalConstant);
         m_valueI = valueI;
     }
     

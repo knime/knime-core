@@ -33,7 +33,10 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 
+import org.knime.core.internal.KNIMEPath;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ScopeVariable.Type;
+import org.knime.core.util.Pair;
 
 
 /**
@@ -42,13 +45,58 @@ import org.knime.core.node.workflow.ScopeVariable.Type;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class ScopeObjectStack {
-
+    
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(ScopeObjectStack.class);
+    
+    /** Root stack with all constants. */
+    private static ScopeObjectStack rootStack = new ScopeObjectStack();
+    
     /** Stack of ScopeContext, which is shared among nodes along the
      * workflow. */
     private final Vector<ScopeObject> m_stack;
     /** Owner of ScopeContext object, which are put onto m_stack via this
      * StackWrapper. */
     private final NodeID m_nodeID;
+    
+    /** Root stack. */
+    private ScopeObjectStack() {
+        m_nodeID = WorkflowManager.ROOT.getID();
+        m_stack = new Vector<ScopeObject>();
+        push(new ScopeVariable("knime.workspace",
+                KNIMEPath.getWorkspaceDirPath().getAbsolutePath(), true));
+        for (Map.Entry<Object, Object> p : System.getProperties().entrySet()) {
+            String name = p.getKey().toString();
+            Pair<String, Type> varDef = getVariableDefinition(name);
+            if (varDef != null) {
+                String value = p.getValue().toString();
+                String key = varDef.getFirst();
+                switch (varDef.getSecond()) {
+                case INTEGER:
+                    try {
+                        int i = Integer.parseInt(value);
+                        push(new ScopeVariable("knime." + key, i, true));
+                    } catch (Exception e) {
+                        LOGGER.warn("Can't parse assignment of integer "
+                                + "constant \"" + key + "\": " + value);
+                    }
+                    break;
+                case DOUBLE:
+                    try {
+                        double d = Double.parseDouble(value);
+                        push(new ScopeVariable("knime." + key, d, true));
+                    } catch (Exception e) {
+                        LOGGER.warn("Can't parse assignment of double"
+                                + "constant\"" + key + "\": " + value);
+                    }
+                    break;
+                case STRING:
+                    push(new ScopeVariable("knime." + key, value, true));
+                    break;
+                }
+            }
+        }
+    }
 
     /**
      * Creates new stack based. If the argument stack is empty, null or
@@ -66,26 +114,25 @@ public final class ScopeObjectStack {
         if (id == null) {
             throw new NullPointerException("NodeID argument must not be null.");
         }
-        if (predStacks == null || predStacks.length == 0) {
+        List<Vector<ScopeObject>> predecessors = 
+            new ArrayList<Vector<ScopeObject>>();
+        for (int i = 0; i < predStacks.length; i++) {
+            if (predStacks[i] != null) {
+                predecessors.add(predStacks[i].m_stack);
+            }
+        }
+        if (predecessors.isEmpty()) {
+            predecessors.add(rootStack.m_stack);
+        }
+        if (predecessors.size() == 0) {
             m_stack = new Vector<ScopeObject>();
+        } else if (predecessors.size() == 1) {
+            m_stack = (Vector<ScopeObject>)predecessors.get(0).clone();
         } else {
-            List<Vector<ScopeObject>> predecessors =
-                new ArrayList<Vector<ScopeObject>>();
-            for (int i = 0; i < predStacks.length; i++) {
-                if (predStacks[i] != null) {
-                    predecessors.add(predStacks[i].m_stack);
-                }
-            }
-            if (predecessors.size() == 0) {
-                m_stack = new Vector<ScopeObject>();
-            } else if (predecessors.size() == 1) {
-                m_stack = (Vector<ScopeObject>)predecessors.get(0).clone();
-            } else {
-                @SuppressWarnings("unchecked")
-                Vector<ScopeObject>[] sos = predecessors.toArray(
-                        new Vector[predecessors.size()]);
-                m_stack = merge(sos);
-            }
+            @SuppressWarnings("unchecked")
+            Vector<ScopeObject>[] sos = predecessors.toArray(
+                    new Vector[predecessors.size()]);
+            m_stack = merge(sos);
         }
         m_nodeID = id;
     }
@@ -236,7 +283,6 @@ public final class ScopeObjectStack {
 
     /**
      * @param item ScopeContext to be put onto stack.
-     * @return
      * @see java.util.Stack#push(java.lang.Object)
      */
     public void push(final ScopeObject item) {
@@ -275,4 +321,29 @@ public final class ScopeObjectStack {
         b.append("--------");
         return b.toString();
     }
+    
+    private static final Pair<String, Type> getVariableDefinition(
+            final String propKey) {
+        String varName;
+        Type varType;
+        if (propKey.startsWith("knime.constant.double.")) {
+            varName = propKey.substring("knime.constant.double.".length());
+            varType = Type.DOUBLE;
+        } else if (propKey.startsWith("knime.constant.integer.")) {
+            varName = propKey.substring("knime.constant.integer.".length());
+            varType = Type.INTEGER;
+        } else if (propKey.startsWith("knime.constant.string.")) {
+            varName = propKey.substring("knime.constant.string.".length());
+            varType = Type.STRING;
+        } else {
+            return null;
+        }
+        if (varName.length() == 0) {
+            LOGGER.warn("Ignoring constant defintion \"" + propKey + "\": "
+                    + "missing suffix, e.g. \"" + propKey + "somename\"");
+            return null;
+        }
+        return new Pair<String, Type>(varName, varType);
+    }
+    
 }
