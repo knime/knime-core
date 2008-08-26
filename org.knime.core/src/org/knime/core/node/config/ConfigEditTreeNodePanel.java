@@ -94,7 +94,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
         m_valueField = new JComboBox(new DefaultComboBoxModel());
         m_valueField.setToolTipText(" "); // enable tooltip;
         m_valueField.setRenderer(ComboBoxRenderer.INSTANCE);
-        m_valueField.setPrototypeDisplayValue("xxxxxxxxxxxxxxxx");
+        m_valueField.setPrototypeDisplayValue("xxxxxxxxxxxxxxxxxxxxxxxx");
         FocusListener l = new FocusAdapter() {
             /** {@inheritDoc} */
             @Override
