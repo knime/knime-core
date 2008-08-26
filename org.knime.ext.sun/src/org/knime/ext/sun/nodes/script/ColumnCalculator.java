@@ -149,6 +149,10 @@ public class ColumnCalculator implements CellFactory {
         nameValueMap.put(ROWINDEX, m_lastProcessedRow);
         nameValueMap.put(ROWKEY, row.getKey().getString());
         for (int i = 0; i < row.getNumCells(); i++) {
+            String colFieldName = createColField(i);
+            if (!m_expression.needsColumn(colFieldName)) {
+                continue;
+            }
             DataCell cell = row.getCell(i);
             DataType cellType = m_spec.getColumnSpec(i).getType();
             boolean isArray = cellType.isCollectionType();
@@ -185,7 +189,6 @@ public class ColumnCalculator implements CellFactory {
                 }
             }
             if (cellVal != null) {
-                String colFieldName = createColField(i);
                 nameValueMap.put(colFieldName, cellVal);
             }
         }

@@ -68,6 +68,14 @@ public class ExpressionInstance {
         }
 
     }
+    
+    /** Is the column denoted by <code>name</code> used within the expression.
+     * @param name The name of the column
+     * @return <code>true</code> when used, <code>false</code> otherwise.
+     */
+    public boolean needsColumn(final String name) {
+        return m_properties.containsKey(name);
+    }
 
     /**
      * Sets field values.
