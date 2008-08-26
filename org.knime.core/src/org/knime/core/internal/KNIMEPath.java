@@ -39,6 +39,7 @@ import org.knime.core.node.KNIMEConstants;
 public final class KNIMEPath {
 
     private static File homeDir;
+    private static File workspaceDir;
 
     /**
      * Disallow instantiation.
@@ -46,6 +47,41 @@ public final class KNIMEPath {
     private KNIMEPath() {
     }
 
+    /**
+     * Set the workspace directory.
+     * @param file The directory of the workspace.
+     */
+    static void setWorkspaceDir(final File file) {
+        if (file.exists()) {
+            if (!file.isDirectory()) {
+                throw new IllegalArgumentException("KNIME workspace path " 
+                        + "is not a directory: " + file.getAbsolutePath());
+            }
+            if (!file.canWrite()) {
+                throw new IllegalArgumentException("Unable to write to " 
+                        + "workspace path: " + file.getAbsolutePath());
+            }
+        } else {
+            if (!file.mkdirs()) {
+                throw new IllegalArgumentException("Unable to create workspace "
+                        + "directory " + file.getAbsolutePath());
+            }
+        }
+        workspaceDir = file.getAbsoluteFile();
+    }
+    
+    /**
+     * Getter for the workspace directory.
+     * 
+     * @return The workspace directory.
+     */
+    public static File getWorkspaceDirPath() {
+        if (workspaceDir == null) {
+            initDefaultDir();
+        }
+        return workspaceDir;
+    }
+    
     /**
      * Set the knime home dir.
      * @param file The file to use as home dir (should be a directory).

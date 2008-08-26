@@ -58,6 +58,7 @@ public class CorePlugin extends org.eclipse.core.runtime.Plugin {
                     knimeHomeDir.mkdir();
                 }
                 KNIMEPath.setKNIMEHomeDir(knimeHomeDir.getAbsoluteFile());
+                KNIMEPath.setWorkspaceDir(workspaceDir.getAbsoluteFile());
             }
 
         } catch (Exception e) {
