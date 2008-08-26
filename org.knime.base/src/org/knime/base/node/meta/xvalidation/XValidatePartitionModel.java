@@ -98,6 +98,7 @@ implements LoopStartNode {
             if (m_settings.leaveOneOut()) {
                 m_nrIterations = inData[0].getRowCount();
                 m_currIteration = 0;
+                m_partNumbers = new short[0];
             } else {
                 m_partNumbers = new short[inData[0].getRowCount()];
 
