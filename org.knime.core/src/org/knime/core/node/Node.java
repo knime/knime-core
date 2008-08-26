@@ -1208,13 +1208,12 @@ public final class Node implements NodeModelWarningListener {
                 pushOntoStack(newVariables);
                 success = true;
             } catch (InvalidSettingsException ise) {
-
                 createWarningMessageAndNotify(ise.getMessage());
-
-            } catch (Exception e) {
-                m_logger.error("Configure failed", e);
             } catch (Throwable t) {
-                m_logger.fatal("Configure failed", t);
+                String error = "Configure failed (" 
+                    + t.getClass().getSimpleName() + "): " 
+                    + t.getMessage();
+                createErrorMessageAndNotify(error, t);
             } finally {
                 for (int p = 0; p < newOutSpec.length; p++) {
                     // update data table spec
