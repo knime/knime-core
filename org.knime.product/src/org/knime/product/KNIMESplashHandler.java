@@ -40,9 +40,9 @@ public class KNIMESplashHandler extends BasicSplashHandler {
 
     private static final String DEFAULT_TOOLTIP = "Image";
 
-    private static final int IMAGE_WIDTH = 50;
+    private static final int MAX_IMAGE_WIDTH = 50;
 
-    private static final int IMAGE_HEIGHT = 50;
+    private static final int MAX_IMAGE_HEIGHT = 50;
 
     private static final int SPLASH_SCREEN_BEVEL = 5;
 
@@ -127,16 +127,20 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         Shell splash = getSplash();
         // Create the composite
         m_iconPanel = new Composite(splash, SWT.NONE);
-        // Determine the maximum number of columns that can fit on the splash
-        // screen. One 50x50 image per column.
-        int maxColumnCount = getUsableSplashScreenWidth() / IMAGE_WIDTH;
+
+        int maxWidth = 0;
+        for (Image img : m_images) {
+            maxWidth = Math.max(maxWidth, img.getBounds().width + 3);
+        }
+
+        int maxColumnCount = getUsableSplashScreenWidth() / maxWidth;
         // Limit size to the maximum number of columns if the number of images
         // exceed this amount; otherwise, use the exact number of columns
         // required.
         int actualColumnCount = Math.min(m_images.size(), maxColumnCount);
         // Configure the layout
         GridLayout layout = new GridLayout(actualColumnCount, true);
-        layout.horizontalSpacing = 0;
+        layout.horizontalSpacing = 5;
         layout.verticalSpacing = 0;
         layout.marginHeight = 0;
         layout.marginWidth = 0;
@@ -215,8 +219,8 @@ public class KNIMESplashHandler extends BasicSplashHandler {
             return;
         }
         // Abort if the image does not have dimensions of 50x50
-        if ((image.getBounds().width != IMAGE_WIDTH)
-                || (image.getBounds().height != IMAGE_HEIGHT)) {
+        if ((image.getBounds().width > MAX_IMAGE_WIDTH)
+                || (image.getBounds().height > MAX_IMAGE_HEIGHT)) {
             // Dipose of the image
             image.dispose();
             return;

@@ -40,7 +40,7 @@
    <extension
          point="org.eclipse.ui.splashHandlers">
       <splashHandler
-            class="org.knime.product.splashHandlers.ExtensibleSplashHandler"
+            class="org.knime.product.KNIMESplashHandler"
             id="org.knime.product.splashHandlers.extensible">
       </splashHandler>
       <splashHandlerProductBinding
@@ -116,33 +116,4 @@
         replaces="runAction?pluginId=org.knime.workbench.help&amp;class=org.knime.workbench.help.intro.InvokeInstallSiteAction">
     </action>
     </extension>
-   <extension
-         point="org.knime.product.splashExtension">
-      <splashExtension
-            icon="icons/af.png"
-            id="af"
-            tooltip="Application Framework">
-      </splashExtension>
-      <splashExtension
-            icon="icons/embedded.png"
-            id="embedded"
-            tooltip="Embedded">
-      </splashExtension>
-      <splashExtension
-            icon="icons/enterprise.png"
-            id="enterprise"
-            tooltip="Enterprise">
-      </splashExtension>
-      <splashExtension
-            icon="icons/languages.png"
-            id="languages"
-            tooltip="Languages">
-      </splashExtension>
-      <splashExtension
-            icon="icons/rcp.png"
-            id="rcp"
-            tooltip="RCP">
-      </splashExtension>
-   </extension>
-
 </plugin>
