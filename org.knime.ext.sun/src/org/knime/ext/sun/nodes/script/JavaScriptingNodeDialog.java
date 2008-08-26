@@ -44,12 +44,14 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import org.knime.base.util.scopevariable.ScopeVariableListCellRenderer;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
@@ -60,6 +62,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionPanel;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
+import org.knime.core.node.workflow.ScopeVariable;
 import org.knime.ext.sun.nodes.script.expression.CompilationFailedException;
 
 /**
@@ -69,6 +72,8 @@ import org.knime.ext.sun.nodes.script.expression.CompilationFailedException;
 public class JavaScriptingNodeDialog extends NodeDialogPane {
 
     private final JList m_colList;
+    
+    private final JList m_scopeVarsList;
 
     private final JEditorPane m_expEdit;
 
@@ -89,7 +94,6 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
     /** Inits GUI. */
     @SuppressWarnings("unchecked")
     public JavaScriptingNodeDialog() {
-        super();
         m_colList = new JList(new DefaultListModel());
         m_colList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         m_colList.addListSelectionListener(new ListSelectionListener() {
@@ -111,6 +115,24 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
             }
         });
         m_colList.setCellRenderer(new ListRenderer());
+        m_scopeVarsList = new JList(new DefaultListModel());
+        m_scopeVarsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        m_scopeVarsList.setToolTipText(""); // enable tooltip
+        // TODO enable
+        m_scopeVarsList.setEnabled(false);
+        m_scopeVarsList.addListSelectionListener(new ListSelectionListener() {
+            public void valueChanged(final ListSelectionEvent e) {
+                Object selected = m_scopeVarsList.getSelectedValue();
+                if (selected instanceof ScopeVariable) {
+                    ScopeVariable v = (ScopeVariable)selected;
+                    String enter = "$${" + v.getName() + "}$$";
+                    m_expEdit.replaceSelection(enter);
+                    m_scopeVarsList.clearSelection();
+                    m_expEdit.requestFocus();
+                }
+            }
+        });
+        m_scopeVarsList.setCellRenderer(new ScopeVariableListCellRenderer());
         m_expEdit = new JEditorPane();
         Font font = m_expEdit.getFont();
         m_expEdit.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 
@@ -209,6 +231,12 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
             DataColumnSpec colSpec = specs[0].getColumnSpec(i);
             listModel.addElement(colSpec);
         }
+        DefaultListModel svListModel = 
+            (DefaultListModel)m_scopeVarsList.getModel();
+        svListModel.removeAllElements();
+        for (ScopeVariable v : getAvailableScopeVariables().values()) {
+            svListModel.addElement(v);
+        }
         m_compileOnCloseChecker.setSelected(isTestCompilation);
     }
 
@@ -262,10 +290,18 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
 
     private JPanel createPanel() {
         JPanel finalPanel = new JPanel(new BorderLayout());
-        finalPanel.add(new JScrollPane(m_colList), BorderLayout.WEST);
+        final JSplitPane varSplitPane = 
+            new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        varSplitPane.setTopComponent(new JScrollPane(m_colList));
+        varSplitPane.setBottomComponent(new JScrollPane(m_scopeVarsList));
+        varSplitPane.setOneTouchExpandable(true);
+        varSplitPane.setResizeWeight(0.9);
 
         JPanel centerPanel = new JPanel(new GridLayout(0, 1));
-        centerPanel.add(new JScrollPane(m_expEdit));
+        JSplitPane mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        mainSplitPane.setLeftComponent(varSplitPane);
+        mainSplitPane.setRightComponent(new JScrollPane(m_expEdit));
+        centerPanel.add(mainSplitPane);
 
         JPanel southPanel = new JPanel(new GridLayout(0, 2));
         JPanel replaceOrAppend = new JPanel(new GridLayout(0, 2));
