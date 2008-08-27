@@ -361,8 +361,9 @@ public class ConfigEditTreeNodePanel extends JPanel {
                 }
                 setIcon(icon);
                 setText(v.getName());
-                setToolTipText(v.getName() + " (currently \"" 
-                        + curValue + "\")");
+                setToolTipText(v.getName() + " (" 
+                        + (v.getName().startsWith("knime.") ? "constant " 
+                                : "currently ") + "\"" + curValue + "\")");
                 if (cbe.m_errorString != null) {
                     ((JComponent)c).setBorder(m_errBorder);
                     setToolTipText(cbe.m_errorString);
