@@ -26,11 +26,11 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.sax.TransformerHandler;
 
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.PortObject;
 import org.knime.core.node.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
@@ -45,7 +45,7 @@ public class PMMLClusterPortObject extends PMMLPortObject
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             PMMLClusterPortObject.class);
     
-    private DataColumnSpec[] m_usedColumns;
+    private Set<DataColumnSpec> m_usedColumns;
     private double[][]m_prototypes;
     private int m_nrOfClusters;
     private int[] m_clusterCoverage;
@@ -89,12 +89,10 @@ public class PMMLClusterPortObject extends PMMLPortObject
             final int nrOfClusters, 
             final double[] mins,
             final double[] maxs,
-            final DataTableSpec tableSpec,
-            final DataColumnSpec... usedColumns) {
-        super();
-        setSpec(tableSpec);
+            final PMMLPortObjectSpec portSpec) {
+        super(portSpec);
         m_nrOfClusters = nrOfClusters;
-        m_usedColumns = usedColumns;
+        m_usedColumns = portSpec.getLearningFields();
         m_labels = new String[m_nrOfClusters];
         for (int i = 0; i < m_nrOfClusters; i++) {
             m_labels[i] = "cluster_" + i;
@@ -109,11 +107,11 @@ public class PMMLClusterPortObject extends PMMLPortObject
     }
     
     /**
-     * This constructor creates an invalid object!!! Use this constructor only 
-     * to call {@link #loadFrom(File)}.
+     * 
+     * @param labels cluster labels
      */
-    public PMMLClusterPortObject() {
-        
+    public void setClusterLabels(final String[] labels) {
+        m_labels = labels;
     }
     
     /**
@@ -161,7 +159,7 @@ public class PMMLClusterPortObject extends PMMLPortObject
      * 
      * @return used columns
      */
-    public DataColumnSpec[] getUsedColumns() {
+    public Set<DataColumnSpec> getUsedColumns() {
         return m_usedColumns;
     }
 
@@ -221,7 +219,7 @@ public class PMMLClusterPortObject extends PMMLPortObject
                 "" + m_nrOfClusters);
         handler.startElement(null, null, "ClusteringModel", atts);
         if (m_usedColumns != null) {
-            addMiningSchema(handler, m_usedColumns);
+            PMMLPortObjectSpec.writeMiningSchema(getSpec(), handler);
             addUsedDistanceMeasure(handler);
             addClusteringFields(handler, m_usedColumns);
             addCenterFields(handler, m_usedColumns);
@@ -277,7 +275,7 @@ public class PMMLClusterPortObject extends PMMLPortObject
      * @throws SAXException if something goes wrong
      */
     protected void addClusteringFields(final TransformerHandler handler,
-            final DataColumnSpec... colSpecs) throws SAXException {
+            final Set<DataColumnSpec> colSpecs) throws SAXException {
         for (DataColumnSpec colSpec : colSpecs) {
             AttributesImpl atts = new AttributesImpl();
             atts.addAttribute(null, null, "field", CDATA, colSpec.getName());
@@ -295,7 +293,7 @@ public class PMMLClusterPortObject extends PMMLPortObject
      * @throws SAXException if something goes wrong
      */
     protected void addCenterFields(final TransformerHandler handler,
-            final DataColumnSpec... colSpecs) throws SAXException {
+            final Set<DataColumnSpec> colSpecs) throws SAXException {
         handler.startElement(null, null, "CenterFields", null);
         int i = 0;
         // for each column add
@@ -401,19 +399,8 @@ public class PMMLClusterPortObject extends PMMLPortObject
         
         m_mins = hdl.getMins();
         m_maxs = hdl.getMaxs();
-        
-        Set<String>usedCols = hdl.getUsedColumns();
-        
-        DataTableSpec spec = (DataTableSpec)getSpec(); 
         //dataDictionaryToDataTableSpec(f);
-        m_usedColumns = new DataColumnSpec[usedCols.size()];
-        int i = 0;
-        for (DataColumnSpec colSpec : spec) {
-            if (usedCols.contains(colSpec.getName())) {
-              m_usedColumns[i] = colSpec;
-              i++;
-            }
-        }
+        m_usedColumns = getSpec().getLearningFields();
         LOGGER.info("loaded cluster port object");
         LOGGER.debug("number of clusters: " + m_nrOfClusters);
         return this;

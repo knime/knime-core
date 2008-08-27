@@ -25,8 +25,10 @@ import javax.xml.transform.TransformerConfigurationException;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.PortObjectSpec;
-import org.knime.core.node.PortObject.PortObjectSerializer;
+import org.knime.core.node.port.pmml.PMMLPortObjectSerializer;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.xml.sax.SAXException;
 
 /**
@@ -38,8 +40,11 @@ import org.xml.sax.SAXException;
  * @author Fabian Dill, University of Konstanz
  */
 public class PMMLClusterPortObjectSerializer 
-    extends PortObjectSerializer<PMMLClusterPortObject> {
+    extends PMMLPortObjectSerializer<PMMLClusterPortObject> {
     
+    
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            PMMLClusterPortObjectSerializer.class);
     /**
      * 
      * {@inheritDoc}
@@ -49,8 +54,31 @@ public class PMMLClusterPortObjectSerializer
             final PortObjectSpec spec, 
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        PMMLClusterPortObject o = new PMMLClusterPortObject();
-        o.setSpec(spec);
+        PMMLClusterHandler hdl = new PMMLClusterHandler();
+        super.addPMMLContentHandler("clusterModel", 
+                hdl);
+        hdl = (PMMLClusterHandler)super.getPMMLContentHandler(
+                "clusterModel");
+        int[] clusterCoverage = null;
+        if (hdl.getClusterCoverage() != null) {
+            clusterCoverage = hdl.getClusterCoverage();
+        }
+        int nrOfClusters = hdl.getNrOfClusters();
+        double[][] prototypes = hdl.getPrototypes();
+        String[] labels = hdl.getLabels();
+        
+        double[] mins = hdl.getMins();
+        double[] maxs = hdl.getMaxs();
+        //dataDictionaryToDataTableSpec(f);
+        LOGGER.info("loaded cluster port object");
+        LOGGER.debug("number of clusters: " + nrOfClusters);
+        PMMLClusterPortObject o = new PMMLClusterPortObject(
+                prototypes, nrOfClusters, mins, maxs,
+                (PMMLPortObjectSpec)spec);
+        o.setClusterLabels(labels);
+        if (clusterCoverage != null) {
+            o.setClusterCoverage(clusterCoverage);
+        }
         try {
             o.loadFrom(new File(directory, "pmml.xml"));
         } catch (Exception e) {

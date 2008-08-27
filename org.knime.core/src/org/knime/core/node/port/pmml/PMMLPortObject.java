@@ -34,15 +34,7 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
-import org.knime.core.data.NominalValue;
-import org.knime.core.data.StringValue;
 import org.knime.core.node.PortObject;
-import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.PortType;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -66,13 +58,13 @@ public class PMMLPortObject implements PortObject {
     private FileOutputStream m_fos;
     private File m_result;
     
-    private DataTableSpec m_spec;
-    
     private PMMLModelType m_modelType;
     
     private PMMLMasterContentHandler m_masterHandler;
     
     private static PortObjectSerializer<? extends PMMLPortObject>serializer;
+    
+    private PMMLPortObjectSpec m_spec;
     
     
     /**
@@ -87,33 +79,7 @@ public class PMMLPortObject implements PortObject {
         return serializer;
     }
     
-    /**
-     * Reads the data dictionary directly from the PMML file and converts it 
-     * into a {@link DataTableSpec}. 
-     * 
-     * @param f the PMML file
-     * @return the referring data table spec for the data dictionary
-     * @throws ParserConfigurationException if the parser cannot be instantiated
-     * @throws SAXException if something goes wrong during parsing
-     * @throws IOException if the file cannot be found, or opened
-     */
-    public static DataTableSpec dataDictionaryToDataTableSpec(final File f)
-            throws ParserConfigurationException, SAXException, IOException {
-                SAXParserFactory fac = SAXParserFactory.newInstance();
-                SAXParser parser = fac.newSAXParser();
-                PMMLMasterContentHandler masterHandler 
-                    = new PMMLMasterContentHandler();
-                DataDictionaryContentHandler ddHandler =
-                        new DataDictionaryContentHandler();
-                masterHandler.addContentHandler(DataDictionaryContentHandler.ID,
-                        ddHandler);
-                ExtractModelTypeHandler modelTypeHdl 
-                    = new ExtractModelTypeHandler();
-                masterHandler.addContentHandler(ExtractModelTypeHandler.ID,
-                        modelTypeHdl);
-                parser.parse(f, masterHandler);
-                return ddHandler.getDataTableSpec();
-            }
+
 
     /**
      * Type of this port.
@@ -122,9 +88,10 @@ public class PMMLPortObject implements PortObject {
     
     
     /**
-     * 
+     * @param spec the referring {@link PMMLPortObjectSpec}
      */
-    public PMMLPortObject() {
+    public PMMLPortObject(final PMMLPortObjectSpec spec) {
+        m_spec = spec;
         m_masterHandler = new PMMLMasterContentHandler();
     }
     
@@ -188,70 +155,7 @@ public class PMMLPortObject implements PortObject {
         m_handler.startElement(null, null, "PMML", attr);
     }
     
-    /**
-     * Convenience method to write a PMML DataDictionary based on the data 
-     * table spec.
-     * @param spec the spec to be converted into a PMML DataDictionary
-     * @throws SAXException if something goes wrong during writing
-     */
-    protected void writeDataDictionary(final DataTableSpec spec) 
-        throws SAXException {
-        AttributesImpl attr = new AttributesImpl();
-        attr.addAttribute(null, null, "numberOfFields", CDATA, 
-                "" + spec.getNumColumns());
-        m_handler.startElement(null, null, DATA_DICT, attr);
-            // DataFields
-            attr = new AttributesImpl();
-            for (DataColumnSpec colSpec : spec) {
-                // name
-                attr.addAttribute(null, null, "name", CDATA, 
-                        colSpec.getName());
-                // optype
-                String opType = "";
-                if (colSpec.getType().isCompatible(DoubleValue.class)) {
-                    opType = "continuous";
-                } else if (colSpec.getType().isCompatible(NominalValue.class)) {
-                    opType = "categorical";
-                }
-                attr.addAttribute(null, null, "optype", CDATA, opType);
-                // data type
-                String dataType = "";
-                if (colSpec.getType().isCompatible(IntValue.class)) {
-                    dataType = "integer";
-                } else if (colSpec.getType().isCompatible(DoubleValue.class)) {
-                    dataType = "double";
-                } else if (colSpec.getType().isCompatible(StringValue.class)) {
-                    dataType = "string";
-                }
-                attr.addAttribute(null, null, "dataType", CDATA, dataType);
-                m_handler.startElement(null, null, DATA_FIELD, attr);
-                // Value
-                if (colSpec.getType().isCompatible(NominalValue.class)
-                        && colSpec.getDomain().hasValues()) {
-                    for (DataCell possVal : colSpec.getDomain().getValues()) {
-                        AttributesImpl attr2 = new AttributesImpl();
-                        attr2.addAttribute(null, null, "value", CDATA, 
-                                possVal.toString());
-                        m_handler.startElement(null, null, VALUE, attr2);
-                        m_handler.endElement(null, null, VALUE);
-                    }
-                } else if (colSpec.getType().isCompatible(DoubleValue.class)
-                        && colSpec.getDomain().hasBounds()) {
-                    // Interval
-                    AttributesImpl attr2 = new AttributesImpl();
-                    attr2.addAttribute(null, null, "closure", CDATA, 
-                            "openOpen");
-                    attr2.addAttribute(null, null, "leftMargin", CDATA, 
-                            "" + colSpec.getDomain().getLowerBound());
-                    attr2.addAttribute(null, null, "rightMargin", CDATA, 
-                            "" + colSpec.getDomain().getUpperBound());
-                    m_handler.startElement(null, null, "Interval", attr2);
-                    m_handler.endElement(null, null, "Interval");
-                }
-                m_handler.endElement(null, null, DATA_FIELD);
-            }
-            m_handler.endElement(null, null, DATA_DICT);        
-    }
+    
     
     /**
      * Writes the port object to valid PMML. Subclasses should not override this
@@ -268,7 +172,8 @@ public class PMMLPortObject implements PortObject {
     public File save(final File file) 
         throws SAXException, IOException, TransformerConfigurationException {
         init(file);
-        writeDataDictionary((DataTableSpec)getSpec());
+        PMMLPortObjectSpec.writeDataDictionary(getSpec().getDataTableSpec(),
+                m_handler);
         writePMMLModel(m_handler);
         m_handler.endElement(null, null, "PMML");
         m_handler.endDocument();
@@ -276,23 +181,7 @@ public class PMMLPortObject implements PortObject {
         return m_result;
     }
     
-    /**
-     * 
-     * {@inheritDoc}
-     */
-    @Override
-    public PortObjectSpec getSpec() {
-        return m_spec;
-    }
     
-    /**
-     * 
-     * @param spec generic spec object. Subclasses are free to use a different 
-     * spec than the {@link DataTableSpec}.
-     */
-    public void setSpec(final PortObjectSpec spec) {
-        m_spec = (DataTableSpec)spec;
-    }
     
     /** {@inheritDoc} */
     @Override
@@ -317,20 +206,26 @@ public class PMMLPortObject implements PortObject {
         throws ParserConfigurationException, SAXException, IOException {
         SAXParserFactory fac = SAXParserFactory.newInstance();
         SAXParser parser = fac.newSAXParser();
+        ExtractModelTypeHandler modelTypeHdl = new ExtractModelTypeHandler();
         m_masterHandler.addContentHandler(ExtractModelTypeHandler.ID, 
-                new ExtractModelTypeHandler());
-        m_masterHandler.addContentHandler(DataDictionaryContentHandler.ID,
-                new DataDictionaryContentHandler());
+                modelTypeHdl);
         parser.parse(f, m_masterHandler);
         ExtractModelTypeHandler hdl = (ExtractModelTypeHandler)m_masterHandler
             .getDefaultHandler(ExtractModelTypeHandler.ID);
-        m_spec = ((DataDictionaryContentHandler)m_masterHandler
-                    .getDefaultHandler(DataDictionaryContentHandler.ID))
-                    .getDataTableSpec();
         m_modelType = hdl.getModelType();
         return this;
         
     }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public PMMLPortObjectSpec getSpec() {
+        return m_spec;
+    }
+    
 
     /**
      * 
@@ -341,5 +236,6 @@ public class PMMLPortObject implements PortObject {
         throws SAXException {
         
     }
+    
 
 }

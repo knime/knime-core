@@ -61,6 +61,7 @@ import org.knime.core.node.PortType;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -539,14 +540,14 @@ public class PMMLClusterNodeModel extends GenericNodeModel {
     }
 
     private PMMLPortObject getPMMLOutPortObject() throws Exception {
-        DataColumnSpec[] colSpecs =
-                new DataColumnSpec[m_dimension - m_nrIgnoredColumns];
+        int length = m_dimension - m_nrIgnoredColumns;
+        Set<DataColumnSpec> usedCols = new HashSet<DataColumnSpec>();
         int pos = 0;
-        double[] mins = new double[colSpecs.length];
-        double[] maxs = new double[colSpecs.length];
+        double[] mins = new double[length];
+        double[] maxs = new double[length];
         for (int i = 0; i < m_spec.getNumColumns(); i++) {
             if (!m_ignoreColumn[i]) {
-                colSpecs[pos] = m_spec.getColumnSpec(i);
+                usedCols.add(m_spec.getColumnSpec(i));
                 // detect min and max
                 mins[pos] = ((DoubleValue)m_spec.getColumnSpec(i).getDomain()
                         .getLowerBound()).getDoubleValue();
@@ -561,10 +562,14 @@ public class PMMLClusterNodeModel extends GenericNodeModel {
 //        for (int i = 0; i < m_clusters.length; i++) {
 //            normClusters[i] = normalizePrototype(m_clusters[i], mins, maxs);
 //        }
-                
+        
+        PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
+                m_spec);
+        creator.setLearningCols(usedCols);
+        
         PMMLClusterPortObject outport =
                 new PMMLClusterPortObject(m_clusters, m_nrOfClusters
-                        .getIntValue(), mins, maxs, m_spec, colSpecs);
+                        .getIntValue(), mins, maxs, creator.createSpec());
         outport.setClusterCoverage(m_clusterCoverage);
         outport.setMaxima(maxs);
         outport.setMinima(mins);

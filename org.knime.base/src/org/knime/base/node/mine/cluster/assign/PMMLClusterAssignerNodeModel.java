@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 
 import org.knime.base.node.mine.cluster.PMMLClusterPortObject;
@@ -151,18 +152,20 @@ public class PMMLClusterAssignerNodeModel extends GenericNodeModel {
             m_prototypes.add(new Prototype(prototype, 
                     new StringCell(labels[i])));
         }
-        DataColumnSpec[] inclCols = model.getUsedColumns();
-        m_colIndices = new int[inclCols.length];
-        for (int i = 0; i < inclCols.length; i++) {
+        Set<DataColumnSpec> inclCols = model.getUsedColumns();
+        m_colIndices = new int[inclCols.size()];
+        int i = 0;
+        for (DataColumnSpec colSpec : inclCols) {
             int idx = ((DataTableSpec)spec).findColumnIndex(
-                    inclCols[i].getName());
+                    colSpec.getName());
             if (idx < 0) {
                 throw new InvalidSettingsException(
-                        "Column " + inclCols[i].getName() 
+                        "Column " + colSpec.getName() 
                         + " was not found in spec");
             } else {
                 m_colIndices[i] = idx;
             }
+            i++;
         }
     }
     

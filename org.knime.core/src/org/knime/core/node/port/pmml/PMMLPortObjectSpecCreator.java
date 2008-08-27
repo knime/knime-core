@@ -49,7 +49,7 @@ public class PMMLPortObjectSpecCreator {
     /**
      * @param learningCols the learningCols to set
      */
-    public void setLearningCols(final Set<String> learningCols) {
+    public void setLearningColsNames(final Set<String> learningCols) {
         m_learningCols = new HashSet<DataColumnSpec>();
         for (String colName : learningCols) {
             DataColumnSpec colSpec = m_dataTableSpec.getColumnSpec(colName);
@@ -61,11 +61,21 @@ public class PMMLPortObjectSpecCreator {
             m_learningCols.add(colSpec);
         }
     }
+    
+    /**
+     * 
+     * @param learningCols column used for training
+     */
+    public void setLearningCols(final Set<DataColumnSpec> learningCols) {
+        // TODO: sanity checks . != null, etc.
+        m_learningCols = learningCols;
+    }
+    
 
     /**
      * @param ignoredCols the ignoredCols to set
      */
-    public void setIgnoredCols(final Set<String> ignoredCols) {
+    public void setIgnoredColsNames(final Set<String> ignoredCols) {
         m_ignoredCols = new HashSet<DataColumnSpec>();
         for (String colName : ignoredCols) {
             DataColumnSpec colSpec = m_dataTableSpec.getColumnSpec(colName);
@@ -78,10 +88,19 @@ public class PMMLPortObjectSpecCreator {
         }
     }
 
+    
+    /**
+     * 
+     * @param ignoredCols columns ignored during learning
+     */
+    public void setIgnoredCols(final Set<DataColumnSpec>ignoredCols) {
+        // TODO: sanity checks != null, etc.
+        m_ignoredCols = ignoredCols;
+    }
     /**
      * @param targetCols the targetCols to set
      */
-    public void setTargetCols(final Set<String> targetCols) {
+    public void setTargetColsNames(final Set<String> targetCols) {
         m_targetCols = new HashSet<DataColumnSpec>();
         for (String colName : targetCols) {
             DataColumnSpec colSpec = m_dataTableSpec.getColumnSpec(colName);
@@ -92,6 +111,15 @@ public class PMMLPortObjectSpecCreator {
             }
             m_targetCols.add(colSpec);
         }
+    }
+    
+    /**
+     * 
+     * @param targetCols predicted columns
+     */
+    public void setTargetCols(final Set<DataColumnSpec>targetCols) {
+        // TODO: sanity checks != null, etc.
+        m_targetCols = targetCols;
     }
 
     /**

@@ -129,7 +129,7 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
                     m_portObjectClassName.getStringValue());
         PMMLPortObject portObject = clazz.newInstance();
         m_spec = dataDictionaryToDataTableSpec();
-        portObject.setSpec(dataDictionaryToDataTableSpec());
+//        portObject.setSpec(dataDictionaryToDataTableSpec());
         portObject.loadFrom(new File(m_file.getStringValue()));
         return new PortObject[] {portObject};
     }
