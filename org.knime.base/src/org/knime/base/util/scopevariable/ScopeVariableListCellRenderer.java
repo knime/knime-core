@@ -74,7 +74,16 @@ public class ScopeVariableListCellRenderer extends DefaultListCellRenderer {
                 curValue = v.toString();
             }
             setIcon(icon);
-            setToolTipText(v.getName() + " (current value: " + curValue + ")");
+            StringBuilder b = new StringBuilder(v.getName());
+            b.append(" (");
+            if (v.getName().startsWith("knime.")) { // constant
+                b.append("constant: ");
+            } else {
+                b.append("current value: ");
+            }
+            b.append(curValue);
+            b.append(")");
+            setToolTipText(b.toString());
         } else {
             setToolTipText(null);
         }
