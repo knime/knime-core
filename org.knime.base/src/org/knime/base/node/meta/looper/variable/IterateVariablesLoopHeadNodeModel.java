@@ -26,6 +26,7 @@ package org.knime.base.node.meta.looper.variable;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -83,10 +84,23 @@ public class IterateVariablesLoopHeadNodeModel extends GenericNodeModel implemen
         if (m_variablesSpec != null) {
             colCount = m_variablesSpec.getNumColumns();
         }
+        // column names starting with "knime." are uniquified as they represent
+        // global constants. 
+        HashSet<String> variableNames = new HashSet<String>();
         for (int i = 0; i < colCount; i++) {
             DataColumnSpec spec = m_variablesSpec.getColumnSpec(i);
             DataType type = spec.getType();
             String name = spec.getName();
+            if (name.equals("knime.")) {
+                name = "column_" + i;
+            } else if (name.startsWith("knime.")) {
+                name = name.substring("knime.".length());
+            }
+            int uniquifier = 1;
+            String basename = name;
+            while (!variableNames.add(name)) {
+                name = basename + "(#" + (uniquifier++) + ")";
+            }
             DataCell cell = m_currentVariables == null 
                 ? null : m_currentVariables.getCell(i);
             if (type.isCompatible(IntValue.class)) {
