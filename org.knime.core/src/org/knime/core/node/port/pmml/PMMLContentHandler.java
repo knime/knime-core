@@ -16,7 +16,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  */
-package org.knime.base.util.pmml;
+package org.knime.core.node.port.pmml;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;

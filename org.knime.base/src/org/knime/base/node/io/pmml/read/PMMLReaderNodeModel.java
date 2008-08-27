@@ -25,11 +25,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.knime.base.util.pmml.DataDictionaryContentHandler;
-import org.knime.base.util.pmml.ExtractModelTypeHandler;
-import org.knime.base.util.pmml.PMMLMasterContentHandler;
-import org.knime.base.util.pmml.PMMLModelType;
-import org.knime.base.util.pmml.PMMLPortObject;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -43,6 +38,11 @@ import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.PortType;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.pmml.DataDictionaryContentHandler;
+import org.knime.core.node.port.pmml.ExtractModelTypeHandler;
+import org.knime.core.node.port.pmml.PMMLMasterContentHandler;
+import org.knime.core.node.port.pmml.PMMLModelType;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.xml.sax.SAXException;
 
 /**

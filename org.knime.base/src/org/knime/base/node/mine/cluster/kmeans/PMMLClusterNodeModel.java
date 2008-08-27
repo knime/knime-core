@@ -33,7 +33,6 @@ import java.util.Set;
 
 import org.knime.base.data.append.column.AppendedColumnRow;
 import org.knime.base.node.mine.cluster.PMMLClusterPortObject;
-import org.knime.base.util.pmml.PMMLPortObject;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
@@ -61,6 +60,7 @@ import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.PortType;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;

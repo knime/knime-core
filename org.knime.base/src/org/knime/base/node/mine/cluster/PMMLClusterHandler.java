@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import org.knime.base.util.pmml.PMMLContentHandler;
+import org.knime.core.node.port.pmml.PMMLContentHandler;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 

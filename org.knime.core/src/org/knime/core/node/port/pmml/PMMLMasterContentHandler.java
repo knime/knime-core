@@ -16,7 +16,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  */
-package org.knime.base.util.pmml;
+package org.knime.core.node.port.pmml;
 
 import java.util.HashMap;
 import java.util.Map;

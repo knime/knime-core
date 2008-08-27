@@ -36,14 +36,14 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.InvalidRegistryObjectException;
 import org.eclipse.core.runtime.Platform;
-import org.knime.base.util.pmml.ExtractModelTypeHandler;
-import org.knime.base.util.pmml.PMMLMasterContentHandler;
-import org.knime.base.util.pmml.PMMLPortObject;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.pmml.ExtractModelTypeHandler;
+import org.knime.core.node.port.pmml.PMMLMasterContentHandler;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.xml.sax.SAXException;
 
 /**

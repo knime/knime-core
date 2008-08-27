@@ -25,12 +25,12 @@ import java.util.Set;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.sax.TransformerHandler;
 
-import org.knime.base.util.pmml.PMMLPortObject;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.PortObject;
 import org.knime.core.node.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 

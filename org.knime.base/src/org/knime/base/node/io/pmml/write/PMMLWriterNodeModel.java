@@ -21,7 +21,6 @@ package org.knime.base.node.io.pmml.write;
 import java.io.File;
 import java.io.IOException;
 
-import org.knime.base.util.pmml.PMMLPortObject;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -33,6 +32,7 @@ import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.PortType;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 
 /**
  * 

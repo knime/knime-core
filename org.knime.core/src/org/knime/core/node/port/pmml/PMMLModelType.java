@@ -16,7 +16,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  */
-package org.knime.base.util.pmml;
+package org.knime.core.node.port.pmml;
 
 /**
  * Enum to describe valid PMML models (and extensions) as of version 2.1.
