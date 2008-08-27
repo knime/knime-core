@@ -29,6 +29,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.container.CloseableRowIterator;
 
 
 /**
@@ -41,7 +42,7 @@ import org.knime.core.data.RowIterator;
  * <p>
  * The ordering of the final table is depending on the order of the column names
  * resp. column indices.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class FilterColumnTable implements DataTable {
@@ -64,7 +65,7 @@ public final class FilterColumnTable implements DataTable {
     /**
      * Inits a new filter column table based on a {@link DataTable} and an
      * unique, unordered number of column indices.
-     * 
+     *
      * @param data the underlying data table
      * @param columns the column indices to INCLUDE or EXCLUDE from the table
      * @param include if <code>true</code> the columns are INCLUDEd otherwise
@@ -100,7 +101,7 @@ public final class FilterColumnTable implements DataTable {
     /**
      * Inits a new filter column table based on a {@link DataTable} and an
      * unique, unordered number of column indices.
-     * 
+     *
      * @param data the underlying data table
      * @param columns the column indices to INCLUDE in the new table
      * @throws NullPointerException if one of the args is <code>null</code>
@@ -117,7 +118,7 @@ public final class FilterColumnTable implements DataTable {
      * Calls {@link #createFilterTableSpec(DataTableSpec, int[])} arguments with
      * the correct values in the <code>int[]</code> argument, i.e. it will
      * locate the columns and assign the "right" values.
-     * 
+     *
      * @param spec the input spec
      * @param columns the names of the columns that should survive
      * @return a new spec with extracted columns
@@ -139,7 +140,7 @@ public final class FilterColumnTable implements DataTable {
      * table spec it extracts the specified indicies and arranges them
      * accordingly. It stores references in the new table spec pointing to
      * objects referenced to by the passed table spec.
-     * 
+     *
      * @param spec the input spec
      * @param include whether the column indices are to include or exclude
      * @param columns the output column indices to extract from the input spec
@@ -185,7 +186,7 @@ public final class FilterColumnTable implements DataTable {
      * table spec it extracts the specified indicies and arranges them
      * accordingly. It stores references in the new table spec pointing to
      * objects referenced to by the passed table spec.
-     * 
+     *
      * @param spec the input spec
      * @param columns The output column indices to extract from the input spect
      * @return a new spec with extracted columns
@@ -225,7 +226,7 @@ public final class FilterColumnTable implements DataTable {
     /**
      * Inits a new filter column table based on a {@link DataTable} and a
      * unique, unordered number of column names.
-     * 
+     *
      * @param data the underlying data table
      * @param columns the column name to filter
      * @throws NullPointerException if one of the args is <code>null</code>
@@ -238,7 +239,7 @@ public final class FilterColumnTable implements DataTable {
 
     /**
      * Find all column indices in the spec.
-     * 
+     *
      * @param spec The spec to search in.
      * @param columns The column indices.
      * @return A sorted array of indices.
@@ -269,7 +270,7 @@ public final class FilterColumnTable implements DataTable {
      * Inits a new filter column table based on a {@link DataTable} and one
      * type ({@link org.knime.core.data.DataCell}))
      * using {@link java.lang.Class} to extract these columns.
-     * 
+     *
      * @param data the underlying table
      * @param type the column type to be extractedt
      * @throws IllegalArgumentException if the given type does not appear in the
@@ -310,7 +311,7 @@ public final class FilterColumnTable implements DataTable {
      * Inits a new filter column table based on a {@link DataTable} and a
      * {@link DataValue} class as value. This table will contain all columns
      * from <code>data</code> which are compatible to <code>value</code>.
-     * 
+     *
      * @param data the underlying table
      * @param value the compatible value type to be included
      * @throws NullPointerException if any argument is <code>null</code>
@@ -357,6 +358,12 @@ public final class FilterColumnTable implements DataTable {
      * {@inheritDoc}
      */
     public RowIterator iterator() {
-        return new FilterColumnRowIterator(m_data.iterator(), m_columns);
+        RowIterator it = m_data.iterator();
+        if (it instanceof CloseableRowIterator) {
+            return new CloseableFilterColumnRowIterator(
+                    (CloseableRowIterator) it, m_columns);
+        } else {
+            return new FilterColumnRowIterator(it, m_columns);
+        }
     }
 }
