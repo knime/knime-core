@@ -66,7 +66,7 @@ public class PMMLReaderNodeDialog extends DefaultNodeSettingsPane {
         EMPTY_LIST.add("No valid PortObject found for this selected model!");
         IExtensionRegistry registry = Platform.getExtensionRegistry();
         for (IConfigurationElement element : registry
-                    .getConfigurationElementsFor("org.knime.dev.pmmlports")) {
+                    .getConfigurationElementsFor("org.knime.base.pmmlports")) {
             String modelType = element.getAttribute("modeltype");
             try {
                 Class<? extends PMMLPortObject> clazz 
