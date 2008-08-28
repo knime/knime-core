@@ -60,17 +60,17 @@ public abstract class PMMLPortObject implements PortObject {
     
     private PMMLMasterContentHandler m_masterHandler;
     
-    private static PortObjectSerializer<? extends PMMLPortObject>serializer;
+    private static PMMLPortObjectSerializer serializer;
     
     /**
      * Static serializer as demanded from {@link PortObject} framework.
      * @return serializer for PMML (reads and writes PMML files)
      */
-    public static PortObjectSerializer<? extends PMMLPortObject> 
-        getPortObjectSerializer() {
-            if (serializer == null) {
-                serializer = new PMMLPortObjectSerializer<PMMLPortObject>();
-            }
+    public static final PortObjectSerializer<PMMLPortObject> 
+    getPortObjectSerializer() {
+        if (serializer == null) {
+            serializer = new PMMLPortObjectSerializer();
+        }
         return serializer;
     }
     

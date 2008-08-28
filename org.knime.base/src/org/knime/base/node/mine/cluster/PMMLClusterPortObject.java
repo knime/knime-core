@@ -29,10 +29,8 @@ import javax.xml.transform.sax.TransformerHandler;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
-import org.knime.core.node.port.pmml.PMMLPortObjectSerializer;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -42,8 +40,7 @@ import org.xml.sax.helpers.AttributesImpl;
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class PMMLClusterPortObject extends PMMLPortObject 
-    implements PortObject {
+public class PMMLClusterPortObject extends PMMLPortObject {
     
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             PMMLClusterPortObject.class);
@@ -61,21 +58,6 @@ public class PMMLClusterPortObject extends PMMLPortObject
      */
     public static final PortType TYPE 
         = new PortType(PMMLClusterPortObject.class);
-    
-    private static PortObjectSerializer<PMMLClusterPortObject>serializer;
-    
-    /**
-     * Static serializer as demanded from {@link PortObject} framework.
-     * @return serializer for PMML (reads and writes PMML files)
-     */
-    public static PortObjectSerializer<PMMLClusterPortObject> 
-        getPortObjectSerializer() {
-            if (serializer == null) {
-                serializer 
-                    = new PMMLPortObjectSerializer<PMMLClusterPortObject>();
-            }
-        return serializer;
-    }
     
     /**
      * Default constructor necessary for loading.

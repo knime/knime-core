@@ -39,8 +39,8 @@ import org.xml.sax.SAXException;
  *  
  * @author Fabian Dill, University of Konstanz
  */
-public final class PMMLPortObjectSerializer<T extends PMMLPortObject> 
-    extends PortObjectSerializer<T> {
+public final class PMMLPortObjectSerializer 
+    extends PortObjectSerializer<PMMLPortObject> {
 
     private static final String FILE_NAME = "model.pmml";
     private static final String CLAZZ_FILE_NAME = "clazz";
@@ -50,7 +50,7 @@ public final class PMMLPortObjectSerializer<T extends PMMLPortObject>
     /**
      * 
      */
-    public PMMLPortObjectSerializer() {
+    PMMLPortObjectSerializer() {
         m_masterHandler = new PMMLMasterContentHandler();
     }
     
@@ -83,10 +83,10 @@ public final class PMMLPortObjectSerializer<T extends PMMLPortObject>
      * {@inheritDoc}
      */
     @Override
-    public T loadPortObject(final PortObjectZipInputStream in, 
+    public PMMLPortObject loadPortObject(final PortObjectZipInputStream in, 
             final PortObjectSpec spec, final ExecutionMonitor exec) 
         throws IOException, CanceledExecutionException {
-        // TODO: check name consistancy
+        // TODO: check name consistency
         in.getNextEntry();
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
         String clazzName = reader.readLine();
@@ -106,7 +106,7 @@ public final class PMMLPortObjectSerializer<T extends PMMLPortObject>
             in.getNextEntry();
             // TODO: check name consistancy
             portObj.loadFrom((PMMLPortObjectSpec)spec, in);
-            return (T)portObj;
+            return (PMMLPortObject)portObj;
         } catch (Exception e) {
             throw new IOException(e);
         }
@@ -117,7 +117,7 @@ public final class PMMLPortObjectSerializer<T extends PMMLPortObject>
      * {@inheritDoc}
      */
     @Override
-    public void savePortObject(final T portObject, 
+    public void savePortObject(final PMMLPortObject portObject, 
             final PortObjectZipOutputStream out,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
