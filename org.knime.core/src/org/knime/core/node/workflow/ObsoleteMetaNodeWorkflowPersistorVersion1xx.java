@@ -39,10 +39,10 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NodeModel.ModelContentWrapper;
 import org.knime.core.node.port.PortType;
 
 /**
@@ -218,7 +218,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         if ("data".equals(stype)) {
             type = BufferedDataTable.TYPE;
         } else if ("model".equals(stype)) {
-            type = ModelContentWrapper.TYPE;
+            type = NodeModel.OLDSTYLEMODELPORTTYPE;
         } else {
             throw new InvalidSettingsException("Unknown port: " + stype);
         }
@@ -363,7 +363,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
          * 
          */
         public ObsoleteSpecialNodeSingleNodeContainerPersistorVersion1xx(
-                WorkflowPersistorVersion1xx workflowPersistor){
+                final WorkflowPersistorVersion1xx workflowPersistor) {
             super(workflowPersistor);
         }
         

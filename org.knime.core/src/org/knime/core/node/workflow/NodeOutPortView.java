@@ -37,7 +37,6 @@ import javax.swing.WindowConstants;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.ModelPortObject;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortObject;
@@ -72,9 +71,6 @@ abstract class NodeOutPortView extends JFrame {
             final String nodeName, final String portName) {
         if (type == BufferedDataTable.TYPE) {
             return new DataOutPortView(nodeName, portName);
-        } else if (type == ModelPortObject.TYPE) {
-            throw new IllegalArgumentException(
-                    "ModelPort type " + type + " not supported yet!");
         } else if (type == NodeModel.OLDSTYLEMODELPORTTYPE) {
             return new ModelContentOutPortView(nodeName, portName);
         } else if (type == DatabasePortObject.TYPE) {
