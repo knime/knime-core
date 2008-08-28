@@ -32,6 +32,10 @@
     			 per group.</li>
     			 <li>Unique count: Counts each value only once per group.</li>
     			<li>Count: Counts members per group.</li>
+    			<li>List: Creates a ListCell that contains all elements
+    			per group (including missing values).</li>
+    			<li>Set: Creates a ListCell that contains each element 
+    			only once per group (including missing values).</li>
     		</ul>
 			Additional aggregation methods only available for numerical columns:
 			<ul>
@@ -56,24 +60,22 @@
             If the 'Sort in memory' option is checked the complete table is 
             loaded into the memory to speed up the sorting process.
             </p>
-    	</intro>	
-        <option name="Nominal aggregation method">
-        	The aggregation method to use for all non-selected columns
-        	that do not contain numerical values.
+    	</intro>
+        <option name="Group settings">
+            Select one or more column(s) according to which the group(s) 
+            is/are created.
         </option>
-        <option name="Numeric aggregation method">
-        	The aggregation method to use for all non-selected numerical 
-        	columns.
+        <option name="Aggregation settings">
+            Select one or more column(s) for aggregation from the available 
+            columns list. Change the aggregation method in the Aggregation 
+            column of the column table. You can add the same column multiple
+            times.
         </option>
         <option name="Maximum unique values per group">
 	        Defines the maximum number of unique values per group to avoid 
-	        problems with memory overloading. This option is only enabled if a 
-	        memory-consuming method like Mode is selected. All groups with more unique
+	        problems with memory overloading. All groups with more unique
 	        values are skipped during the calculation and a missing value is set 
             in the corresponding column.
-        </option>
-        <option name="Move group column(s) to front">
-			Moves the selected group column(s) to the front of the result table.
         </option>
         <option name="Sort in memory">
 			Performs necessary sorting in the memory. Speeds up the process
@@ -84,10 +86,6 @@
 			group in other views. Depending of the number of rows, enabling this 
 			feature might consume a lot of memory.
         </option>
-        <option name="Group by column(s)">
-	        Select one or more column(s) according to which the group(s) 
-	        is/are created.
-		</option>
     </fullDescription>
     <ports>
         <dataIn index="0" name="Data table">

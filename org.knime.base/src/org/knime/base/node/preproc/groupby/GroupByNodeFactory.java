@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,50 +18,51 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- *  
- *  History 
+ *
+ *  History
  *      28.06.2007 (Tobias Koetter): created
  */
 package org.knime.base.node.preproc.groupby;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
+import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
  * Factory class of the group by node.
+ *
  * @author Tobias Koetter, University of Konstanz
  */
-public class GroupByNodeFactory extends NodeFactory {
+public class GroupByNodeFactory extends GenericNodeFactory<GroupByNodeModel> {
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new GroupByNodeDialogPane();
+    protected GenericNodeDialogPane createNodeDialogPane() {
+        return new GroupByNodeDialog();
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public GroupByNodeModel createNodeModel() {
         return new GroupByNodeModel();
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
+    @SuppressWarnings("unchecked")
     @Override
-    public NodeView createNodeView(final int viewIndex, 
-            final NodeModel nodeModel) {
+    public NodeView createNodeView(final int viewIndex,
+            final GroupByNodeModel nodeModel) {
         return null;
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected int getNrNodeViews() {
@@ -69,7 +70,7 @@ public class GroupByNodeFactory extends NodeFactory {
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     protected boolean hasDialog() {

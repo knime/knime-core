@@ -23,14 +23,11 @@
  *    28.06.2007 (Tobias Koetter): created
  */
 
-package org.knime.base.node.preproc.groupby;
+package org.knime.base.node.preproc.groupby.aggregation;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataType;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.StringCell;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 import java.util.ArrayList;
@@ -47,93 +44,50 @@ public enum AggregationMethod {
 
 //The numerical methods
     /**Minimum.*/
-    MIN("Minimum", true, "Min({1})", null, false, true,
-            NumericOperators.getInstance().new MinOperator(0)),
+    MIN(NumericOperators.getInstance().new MinOperator(0)),
     /**Maximum.*/
-    MAX("Maximum", true, "Max({1})", null, false, true,
-            NumericOperators.getInstance().new MaxOperator(0)),
+    MAX(NumericOperators.getInstance().new MaxOperator(0)),
     /**Average.*/
-    MEAN("Mean", true, "Mean({1})", DoubleCell.TYPE, false, false,
-            NumericOperators.getInstance().new MeanOperator(0)),
+    MEAN(NumericOperators.getInstance().new MeanOperator(0)),
     /**Sum.*/
-    SUM("Sum", true, "Sum({1})", DoubleCell.TYPE, false, false,
-            NumericOperators.getInstance().new SumOperator(0)),
+    SUM(NumericOperators.getInstance().new SumOperator(0)),
     /**Variance.*/
-    VARIANCE("Variance", true, "Variance({1})", DoubleCell.TYPE, false, false,
-            NumericOperators.getInstance().new VarianceOperator(0)),
+    VARIANCE(NumericOperators.getInstance().new VarianceOperator(0)),
     /**Standard deviation.*/
-    STD_DEVIATION("Standard deviation", true, "Standard deviation({1})",
-            DoubleCell.TYPE, false, false,
-            NumericOperators.getInstance().new StdDeviationOperator(0)),
+    STD_DEVIATION(NumericOperators.getInstance().new StdDeviationOperator(0)),
 
 //The none numerical methods
     /**Takes the first cell per group.*/
-    FIRST("First", false, "First({1})", null, false, true,
-            Operators.getInstance().new FirstOperator(0)),
+    FIRST(Operators.getInstance().new FirstOperator(0)),
     /**Takes the first value per group.*/
-    FIRST_VALUE("First value", false, "First value({1})", null, false, true,
-            Operators.getInstance().new FirstValueOperator(0)),
+    FIRST_VALUE(Operators.getInstance().new FirstValueOperator(0)),
     /**Takes the last cell per group.*/
-    LAST("Last", false, "Last({1})", null, false, true,
-            Operators.getInstance().new LastOperator(0)),
+    LAST(Operators.getInstance().new LastOperator(0)),
     /**Takes the last value per group.*/
-    LAST_VALUE("Last value", false, "Last value({1})", null, false, true,
-            Operators.getInstance().new LastValueOperator(0)),
+    LAST_VALUE(Operators.getInstance().new LastValueOperator(0)),
     /**Takes the value which occurs most.*/
-    MODE("Mode", false, "Mode({1})", null, true, true,
-            Operators.getInstance().new ModeOperator(0)),
+    MODE(Operators.getInstance().new ModeOperator(0)),
     /**Takes the value which occurs most.*/
-    CONCATENATE("Concatenate", false, "Concatenate({1})", StringCell.TYPE,
-            false, false, Operators.getInstance().new ConcatenateOperator(0)),
+    CONCATENATE(Operators.getInstance().new ConcatenateOperator(0)),
     /**Takes the value which occurs most.*/
-    UNIQUE_CONCATENATE("Unique concatenate", false, "Unique concatenate({1})",
-            StringCell.TYPE, true, false,
+    UNIQUE_CONCATENATE(
             Operators.getInstance().new UniqueConcatenateOperator(0)),
     /**Counts the number of unique group members.*/
-    UNIQUE_COUNT("Unique count", false, "Unique count({1})",
-            IntCell.TYPE, true, false,
-            Operators.getInstance().new UniqueCountOperator(0)),
+    UNIQUE_COUNT(Operators.getInstance().new UniqueCountOperator(0)),
     /**Counts the number of group members.*/
-    COUNT("Count", false, "Count({1})", IntCell.TYPE, false, false,
-            Operators.getInstance().new CountOperator(0));
-
-    /**The column name place holder.*/
-    private static final String PLACE_HOLDER = "{1}";
-
-    /**The String to use by concatenation operators.*/
-    public static final String CONCATENATOR = ", ";
+    COUNT(Operators.getInstance().new CountOperator(0)),
+    /** List collection.*/
+    LIST(Operators.getInstance().new ListCellOperator(0)),
+    /** Set collection.*/
+    SET(Operators.getInstance().new SetCellOperator(0));
 
     private final AggregationOperator m_operator;
-    private final String m_label;
-    private final boolean m_numerical;
-    private final String m_columnNamePattern;
-    private final DataType m_dataType;
-    private final boolean m_usesLimit;
-    private final boolean m_keepColSpec;
 
     /**Constructor for class AggregationMethod.
-     * @param label user readable label
-     * @param numerical <code>true</code> if the operator is only suitable
-     * for numerical columns
-     * @param columnNamePattern the pattern for the result column name
-     * @param type the {@link DataType} of the result column or
-     * <code>null</code> if the type stays the same
-     * @param usesLimit <code>true</code> if the method checks the number of
-     * unique values limit.
-     * @param keepColSpec <code>true</code> if the original column specification
-     * should be kept if possible
+     *
      * @param operator the {@link AggregationOperator} implementation to use
      */
-    private AggregationMethod(final String label, final boolean numerical,
-            final String columnNamePattern, final DataType type,
-            final boolean usesLimit, final boolean keepColSpec,
-            final AggregationOperator operator) {
-        m_label = label;
-        m_numerical = numerical;
-        m_columnNamePattern = columnNamePattern;
-        m_dataType = type;
-        m_usesLimit = usesLimit;
-        m_keepColSpec = keepColSpec;
+    private AggregationMethod(final AggregationOperator operator) {
         m_operator = operator;
     }
 
@@ -142,7 +96,7 @@ public enum AggregationMethod {
      * @return the label
      */
     public String getLabel() {
-        return m_label;
+        return m_operator.getLabel();
     }
 
 
@@ -150,7 +104,7 @@ public enum AggregationMethod {
      * @return <code>true</code> if only numerical columns are accepted
      */
     public boolean isNumerical() {
-        return m_numerical;
+        return m_operator.isNumerical();
     }
 
     /**
@@ -165,43 +119,19 @@ public enum AggregationMethod {
      * @param origColumnName the original column name
      * @return the new name of the aggregation column
      */
-    public String getColumnName(final String origColumnName) {
-        if (m_columnNamePattern == null || m_columnNamePattern.length() < 1) {
-            return origColumnName;
-        }
-        return m_columnNamePattern.replace(PLACE_HOLDER, origColumnName);
+    public String createColumnName(final String origColumnName) {
+        return m_operator.createColumnName(origColumnName);
     }
 
     /**
+     * @param colName the name of the new column
      * @param origSpec the original {@link DataColumnSpec}
-     * @param keepColName <code>true</code> if the original column name
      * should be kept
-     * @return the new {@link DataColumnSpec} for the aggregated column
+     * @return the new {@link DataColumnSpecCreator} for the aggregated column
      */
-    public DataColumnSpec createColumnSpec(final DataColumnSpec origSpec,
-            final boolean keepColName) {
-        if (origSpec == null) {
-            throw new NullPointerException(
-                    "Original column spec must not be null");
-        }
-        final DataColumnSpecCreator specCreator;
-        if (m_keepColSpec && (m_dataType == null
-                || origSpec.getType().equals(m_dataType))) {
-             specCreator = new DataColumnSpecCreator(origSpec);
-        } else {
-            final DataType type;
-            if (m_dataType == null) {
-                type = origSpec.getType();
-            } else {
-                type = m_dataType;
-            }
-            specCreator = new DataColumnSpecCreator(origSpec.getName(), type);
-        }
-
-        if (!keepColName) {
-            specCreator.setName(getColumnName(origSpec.getName()));
-        }
-        return specCreator.createSpec();
+    public DataColumnSpec createColumnSpec(final String colName,
+            final DataColumnSpec origSpec) {
+       return m_operator.createColumnSpec(colName, origSpec);
     }
 
     /**
@@ -209,7 +139,59 @@ public enum AggregationMethod {
      * values limit.
      */
     public boolean isUsesLimit() {
-        return m_usesLimit;
+        return m_operator.isUsesLimit();
+    }
+
+    /**
+     * @param colSpec the {@link DataColumnSpec} to test for compatibility to
+     * this {@link AggregationMethod}
+     * @return <code>true</code> if this method could be used to aggregation
+     * the column with the given specification
+     */
+    public boolean isCompatible(final DataColumnSpec colSpec) {
+        return !isNumerical()
+            || colSpec.getType().isCompatible(DoubleValue.class);
+    }
+
+    /**
+     * @param colSpec the {@link DataColumnSpec} to check
+     * @param numericColMethod the {@link AggregationMethod} for
+     * numerical columns
+     * @param nominalColMethod the {@link AggregationMethod} for none
+     * numerical columns
+     * @return the {@link AggregationMethod} to use
+     */
+    public static AggregationMethod getAggregationMethod(
+            final DataColumnSpec colSpec,
+            final AggregationMethod numericColMethod,
+            final AggregationMethod nominalColMethod) {
+        if (colSpec.getType().isCompatible(DoubleValue.class)) {
+            return numericColMethod;
+        }
+        return nominalColMethod;
+    }
+
+    /**
+     * @param colSpec the {@link DataColumnSpec} to check
+     * @return all aggregation methods that are compatible with the given
+     * {@link DataColumnSpec}
+     */
+    public static List<AggregationMethod> getCompatibleMethods(
+            final DataColumnSpec colSpec) {
+        return getMethods(colSpec.getType().isCompatible(DoubleValue.class));
+    }
+
+
+    /**
+     * @param spec the {@link DataColumnSpec} to get the default method for
+     * @return the default {@link AggregationMethod} for the given column spec
+     */
+    public static AggregationMethod getDefaultMethod(
+            final DataColumnSpec spec) {
+        if (spec.getType().isCompatible(DoubleValue.class)) {
+            return getDefaultNumericMethod();
+        }
+        return getDefaultNominalMethod();
     }
 
     /**
@@ -258,6 +240,18 @@ public enum AggregationMethod {
         }
         throw new IllegalArgumentException("No method found for label: "
                 + label);
+    }
+
+    private static List<AggregationMethod> getMethods(final boolean numeric) {
+        final AggregationMethod[] methods = values();
+        final List<AggregationMethod> labels =
+            new ArrayList<AggregationMethod>(methods.length);
+        for (int i = 0, length = methods.length; i < length; i++) {
+            if (methods[i].isNumerical() == numeric) {
+                labels.add(methods[i]);
+            }
+        }
+        return labels;
     }
 
     /**

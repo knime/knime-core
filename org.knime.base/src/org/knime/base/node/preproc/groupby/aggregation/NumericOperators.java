@@ -23,7 +23,7 @@
  *    18.07.2008 (Tobias Koetter): created
  */
 
-package org.knime.base.node.preproc.groupby;
+package org.knime.base.node.preproc.groupby.aggregation;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
@@ -70,7 +70,16 @@ public final class NumericOperators {
          * @param maxUniqueValues the maximum number of unique values
          */
         MinOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
+            super("Minimum", true, "Min(" + PLACE_HOLDER + ")", false, true,
+                    maxUniqueValues);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataType getDataType(final DataType origType) {
+            return origType;
         }
 
         /**
@@ -130,7 +139,16 @@ public final class NumericOperators {
          * @param maxUniqueValues the maximum number of unique values
          */
         MaxOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
+            super("Maximum", true, "Max(" + PLACE_HOLDER + ")", false, true,
+                    maxUniqueValues);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataType getDataType(final DataType origType) {
+            return origType;
         }
 
         /**
@@ -184,6 +202,7 @@ public final class NumericOperators {
      */
     final class MeanOperator extends AggregationOperator {
 
+        private final DataType m_type = DoubleCell.TYPE;
         private double m_sum = 0;
         private int m_count = 0;
 
@@ -191,7 +210,16 @@ public final class NumericOperators {
          * @param maxUniqueValues the maximum number of unique values
          */
         MeanOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
+            super("Mean", true, "Mean(" + PLACE_HOLDER + ")", false, false,
+                    maxUniqueValues);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataType getDataType(final DataType origType) {
+            return m_type;
         }
 
         /**
@@ -243,6 +271,8 @@ public final class NumericOperators {
      * @author Tobias Koetter, University of Konstanz
      */
     final class SumOperator extends AggregationOperator {
+
+        private final DataType m_type = DoubleCell.TYPE;
         private boolean m_valid = false;
         private double m_sum = 0;
 
@@ -250,7 +280,16 @@ public final class NumericOperators {
          * @param maxUniqueValues the maximum number of unique values
          */
         SumOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
+            super("Sum", true, "Sum(" + PLACE_HOLDER + ")", false, false,
+                    maxUniqueValues);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataType getDataType(final DataType origType) {
+            return m_type;
         }
 
         /**
@@ -303,11 +342,44 @@ public final class NumericOperators {
      */
     class VarianceOperator extends AggregationOperator {
 
+        private final DataType m_type = DoubleCell.TYPE;
+
+        private double m_sumSquare = 0;
+        private double m_sum = 0;
+        private int m_validCount = 0;
+
         /**Constructor for class VarianceOperator.
          * @param maxUniqueValues the maximum number of unique values
          */
         VarianceOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
+            super("Variance", true, "Variance(" + PLACE_HOLDER + ")",
+                    false, false, maxUniqueValues);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataType getDataType(final DataType origType) {
+            return m_type;
+        }
+
+        /**Constructor for class NumericOperators.VarianceOperator.
+         * @param label user readable label
+         * @param numerical <code>true</code> if the operator is only suitable
+         * for numerical columns
+         * @param columnNamePattern the pattern for the result column name
+         * @param usesLimit <code>true</code> if the method checks the number of
+         * unique values limit.
+         * @param keepColSpec <code>true</code> if the original column
+         * specification should be kept if possible
+         * @param maxUniqueValues the maximum number of unique values
+         */
+        VarianceOperator(final String label, final boolean numerical,
+                final String columnNamePattern, final boolean usesLimit,
+                final boolean keepColSpec, final int maxUniqueValues) {
+            super(label, numerical, columnNamePattern, usesLimit, keepColSpec,
+                    maxUniqueValues);
         }
 
         /**
@@ -317,10 +389,6 @@ public final class NumericOperators {
         public AggregationOperator createInstance(final int maxUniqueValues) {
             return new VarianceOperator(maxUniqueValues);
         }
-
-        private double m_sumSquare = 0;
-        private double m_sum = 0;
-        private int m_validCount = 0;
 
         /**
          * {@inheritDoc}
@@ -383,7 +451,9 @@ public final class NumericOperators {
          * @param maxUniqueValues the maximum number of unique values
          */
         StdDeviationOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
+            super("Standard deviation", true,
+                    "Standard deviation(" + PLACE_HOLDER + ")",
+                    false, false, maxUniqueValues);
         }
 
         /**

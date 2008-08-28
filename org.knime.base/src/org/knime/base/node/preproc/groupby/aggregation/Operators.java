@@ -23,16 +23,21 @@
  *    18.07.2008 (Tobias Koetter): created
  */
 
-package org.knime.base.node.preproc.groupby;
+package org.knime.base.node.preproc.groupby.aggregation;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
+import org.knime.core.data.collection.CollectionCellFactory;
+import org.knime.core.data.collection.ListCell;
+import org.knime.core.data.collection.SetCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.util.MutableInteger;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
@@ -77,7 +82,34 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         FirstOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
+            super("First", false, "First(" + PLACE_HOLDER + ")", false, true,
+                    maxUniqueValues);
+        }
+
+        /**Constructor for class FirstOperator.
+         * @param label user readable label
+         * @param numerical <code>true</code> if the operator is only suitable
+         * for numerical columns
+         * @param columnNamePattern the pattern for the result column name
+         * @param usesLimit <code>true</code> if the method checks the number of
+         * unique values limit.
+         * @param keepColSpec <code>true</code> if the original column
+         * specification should be kept if possible
+         * @param maxUniqueValues the maximum number of unique values
+         */
+        public FirstOperator(final String label, final boolean numerical,
+                final String columnNamePattern, final boolean usesLimit,
+                final boolean keepColSpec, final int maxUniqueValues) {
+            super(label, numerical, columnNamePattern,  usesLimit, keepColSpec,
+                    maxUniqueValues);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataType getDataType(final DataType origType) {
+            return origType;
         }
 
         /**
@@ -130,7 +162,8 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         FirstValueOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
+            super("First value", false, "First value(" + PLACE_HOLDER + ")",
+                    false, true, maxUniqueValues);
         }
 
         /**
@@ -166,7 +199,34 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         LastOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
+            super("Last", false, "Last(" + PLACE_HOLDER + ")", false,
+                    true, maxUniqueValues);
+        }
+
+        /**Constructor for class LastOperator.
+         * @param label user readable label
+         * @param numerical <code>true</code> if the operator is only suitable
+         * for numerical columns
+         * @param columnNamePattern the pattern for the result column name
+         * @param usesLimit <code>true</code> if the method checks the number of
+         * unique values limit.
+         * @param keepColSpec <code>true</code> if the original column
+         * specification should be kept if possible
+         * @param maxUniqueValues the maximum number of unique values
+         */
+        public LastOperator(final String label, final boolean numerical,
+                final String columnNamePattern, final boolean usesLimit,
+                final boolean keepColSpec, final int maxUniqueValues) {
+            super(label, numerical, columnNamePattern,  usesLimit, keepColSpec,
+                    maxUniqueValues);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataType getDataType(final DataType origType) {
+            return origType;
         }
 
         /**
@@ -216,7 +276,8 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         LastValueOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
+            super("Last value", false, "Last value(" + PLACE_HOLDER + ")",
+                    false, true, maxUniqueValues);
         }
 
         /**
@@ -252,7 +313,8 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         ModeOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
+            super("Mode", false, "Mode(" + PLACE_HOLDER + ")", true, true,
+                    maxUniqueValues);
             try {
                 m_valCounter =
                     new LinkedHashMap<DataCell, MutableInteger>(
@@ -261,6 +323,14 @@ public final class Operators {
                 throw new IllegalArgumentException(
                         "Maximum unique values number to big");
             }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataType getDataType(final DataType origType) {
+            return origType;
         }
 
         /**
@@ -329,6 +399,8 @@ public final class Operators {
      */
     final class ConcatenateOperator extends AggregationOperator {
 
+        private final DataType m_type = StringCell.TYPE;
+
         private final StringBuilder m_buf = new StringBuilder();
 
         private boolean m_first = true;
@@ -337,7 +409,16 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         public ConcatenateOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
+            super("Concatenate", false, "Concatenate(" + PLACE_HOLDER + ")",
+                    false, false, maxUniqueValues);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataType getDataType(final DataType origType) {
+            return m_type;
         }
 
         /**
@@ -359,7 +440,7 @@ public final class Operators {
             if (m_first) {
                 m_first = false;
             } else {
-                m_buf.append(AggregationMethod.CONCATENATOR);
+                m_buf.append(AggregationOperator.CONCATENATOR);
             }
             m_buf.append(cell.toString());
             return false;
@@ -390,6 +471,8 @@ public final class Operators {
      */
     final class UniqueConcatenateOperator extends AggregationOperator {
 
+        private final DataType m_type = StringCell.TYPE;
+
         private final Set<String> m_vals;
 
         private final StringBuilder m_buf = new StringBuilder();
@@ -400,13 +483,23 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         public UniqueConcatenateOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
+            super("Unique concatenate", false,
+                    "Unique concatenate(" + PLACE_HOLDER + ")",
+                    true, false, maxUniqueValues);
             try {
                 m_vals = new HashSet<String>(maxUniqueValues);
             } catch (final OutOfMemoryError e) {
                 throw new IllegalArgumentException(
                         "Maximum unique values number to big");
             }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataType getDataType(final DataType origType) {
+            return m_type;
         }
 
         /**
@@ -438,7 +531,7 @@ public final class Operators {
             if (m_first) {
                 m_first = false;
             } else {
-                m_buf.append(AggregationMethod.CONCATENATOR);
+                m_buf.append(AggregationOperator.CONCATENATOR);
             }
             m_buf.append(val);
             return false;
@@ -463,7 +556,6 @@ public final class Operators {
         }
     }
 
-
     /**
      * Returns the count of the unique values per group.
      *
@@ -471,13 +563,16 @@ public final class Operators {
      */
     final class UniqueCountOperator extends AggregationOperator {
 
+        private final DataType m_type = IntCell.TYPE;
+
         private final Set<String> m_vals;
 
         /**Constructor for class Concatenate.
          * @param maxUniqueValues the maximum number of unique values
          */
         public UniqueCountOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
+            super("Unique count", false, "Unique count(" + PLACE_HOLDER + ")",
+                    true, false, maxUniqueValues);
             try {
                 m_vals = new HashSet<String>(maxUniqueValues);
             } catch (final OutOfMemoryError e) {
@@ -492,6 +587,14 @@ public final class Operators {
         @Override
         public AggregationOperator createInstance(final int maxUniqueValues) {
             return new UniqueCountOperator(maxUniqueValues);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataType getDataType(final DataType origType) {
+            return m_type;
         }
 
         /**
@@ -539,13 +642,24 @@ public final class Operators {
      */
     final class CountOperator extends AggregationOperator {
 
+        private final DataType m_type = IntCell.TYPE;
+
         private int m_counter = 0;
 
         /**Constructor for class CountOperator.
          * @param maxUniqueValues the maximum number of unique values
          */
         CountOperator(final int maxUniqueValues) {
-            super(maxUniqueValues);
+            super("Count", false, "Count(" + PLACE_HOLDER + ")", false, false,
+                    maxUniqueValues);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataType getDataType(final DataType origType) {
+            return m_type;
         }
 
         /**
@@ -579,6 +693,137 @@ public final class Operators {
         @Override
         protected void resetInternal() {
             m_counter = 0;
+        }
+    }
+
+    /**
+     * Returns all values as a {@link ListCell} per group.
+     *
+     * @author Tobias Koetter, University of Konstanz
+     */
+    final class ListCellOperator extends AggregationOperator {
+
+        private final Collection<DataCell> m_cells;
+
+        /**Constructor for class Concatenate.
+         * @param maxUniqueValues the maximum number of unique values
+         */
+        public ListCellOperator(final int maxUniqueValues) {
+            super("List", false, "List(" + PLACE_HOLDER + ")", false,
+                    false, maxUniqueValues);
+            m_cells = new LinkedList<DataCell>();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataType getDataType(final DataType origType) {
+            return ListCell.getCollectionType(origType);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public AggregationOperator createInstance(final int maxUniqueValues) {
+            return new ListCellOperator(maxUniqueValues);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected boolean computeInternal(final DataCell cell) {
+            if (m_cells.size() >= getMaxUniqueValues()) {
+                return true;
+            }
+            m_cells.add(cell);
+            return false;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataCell getResultInternal() {
+            return CollectionCellFactory.createListCell(m_cells);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected void resetInternal() {
+            m_cells.clear();
+        }
+    }
+
+    /**
+     * Returns all values as a {@link SetCell} per group.
+     *
+     * @author Tobias Koetter, University of Konstanz
+     */
+    final class SetCellOperator extends AggregationOperator {
+
+        private final Set<DataCell> m_cells;
+
+        /**Constructor for class Concatenate.
+         * @param maxUniqueValues the maximum number of unique values
+         */
+        public SetCellOperator(final int maxUniqueValues) {
+            super("Set", false, "Set(" + PLACE_HOLDER + ")", true,
+                    false, maxUniqueValues);
+            try {
+                m_cells = new HashSet<DataCell>(maxUniqueValues);
+            } catch (final OutOfMemoryError e) {
+                throw new IllegalArgumentException(
+                        "Maximum unique values number to big");
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataType getDataType(final DataType origType) {
+            return ListCell.getCollectionType(origType);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public AggregationOperator createInstance(final int maxUniqueValues) {
+            return new ListCellOperator(maxUniqueValues);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected boolean computeInternal(final DataCell cell) {
+            if (m_cells.size() >= getMaxUniqueValues()) {
+                return true;
+            }
+            m_cells.add(cell);
+            return false;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataCell getResultInternal() {
+            return CollectionCellFactory.createSetCell(m_cells);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected void resetInternal() {
+            m_cells.clear();
         }
     }
 }
