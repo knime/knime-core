@@ -26,20 +26,24 @@ package org.knime.base.node.meta.feature.backwardelim;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.zip.ZipEntry;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.PortObjectSpecZipInputStream;
+import org.knime.core.node.PortObjectSpecZipOutputStream;
+import org.knime.core.node.PortObjectZipInputStream;
+import org.knime.core.node.PortObjectZipOutputStream;
 import org.knime.core.node.PortType;
 import org.knime.core.util.Pair;
 
@@ -143,15 +147,14 @@ public class BWElimModel implements PortObject, PortObjectSpec {
             PortObjectSpecSerializer<BWElimModel> {
         static final SpecSerializer INSTANCE = new SpecSerializer();
 
+        /** {@inheritDoc} */
         @Override
-        protected BWElimModel loadPortObjectSpec(final File directory)
-                throws IOException {
-            File f = new File(directory, "model.txt");
-            if (!f.exists()) {
-                throw new IOException("Model file 'model.txt' not found");
-            }
-
-            BufferedReader in = new BufferedReader(new FileReader(f));
+        protected BWElimModel loadPortObjectSpec(
+                final PortObjectSpecZipInputStream inStream) 
+        throws IOException {
+            inStream.getNextEntry();
+            BufferedReader in = 
+                new BufferedReader(new InputStreamReader(inStream));
             String line;
             BWElimModel model = new BWElimModel(in.readLine());
             while ((line = in.readLine()) != null) {
@@ -169,12 +172,14 @@ public class BWElimModel implements PortObject, PortObjectSpec {
             return model;
         }
 
+        /** {@inheritDoc} */
         @Override
         protected void savePortObjectSpec(final BWElimModel pos,
-                final File directory) throws IOException {
-            File f = new File(directory, "model.txt");
-            PrintWriter out =
-                    new PrintWriter(new BufferedWriter(new FileWriter(f)));
+                final PortObjectSpecZipOutputStream outStream) 
+        throws IOException {
+            outStream.putNextEntry(new ZipEntry("spec.file"));
+            PrintWriter out = new PrintWriter(
+                    new BufferedWriter(new OutputStreamWriter(outStream)));
 
             out.println(pos.m_targetColumn);
             for (Pair<Double, Collection<String>> p : pos.m_featureLevels) {
@@ -196,7 +201,7 @@ public class BWElimModel implements PortObject, PortObjectSpec {
          * {@inheritDoc}
          */
         @Override
-        public BWElimModel loadPortObject(final File directory,
+        public BWElimModel loadPortObject(final PortObjectZipInputStream in,
                 final PortObjectSpec spec, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
             return (BWElimModel)spec;
@@ -207,7 +212,8 @@ public class BWElimModel implements PortObject, PortObjectSpec {
          */
         @Override
         public void savePortObject(final BWElimModel portObject,
-                final File directory, final ExecutionMonitor exec)
+                final PortObjectZipOutputStream out, 
+                final ExecutionMonitor exec)
                 throws IOException, CanceledExecutionException {
         }
     }

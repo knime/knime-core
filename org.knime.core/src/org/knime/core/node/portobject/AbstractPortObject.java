@@ -24,13 +24,12 @@
  */
 package org.knime.core.node.portobject;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.zip.ZipEntry;
 
+import org.knime.core.data.container.NonClosableInputStream;
+import org.knime.core.data.container.NonClosableOutputStream;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -39,6 +38,8 @@ import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.PortObjectZipInputStream;
+import org.knime.core.node.PortObjectZipOutputStream;
 
 /**
  * Abstract implementation of general port objects. Extending this class
@@ -74,29 +75,29 @@ public abstract class AbstractPortObject implements PortObject {
     public AbstractPortObject() {
     }
     
-    /** Saves this object to clean directory. This method represents the 
+    /** Saves this object to an output stream. This method represents the 
      * implementation of {@link PortObjectSerializer#savePortObject}.
-     * @param directory A clean directory to write to.
+     * @param out A clean directory to write to.
      * @param exec For progress/cancelation.
      * @throws IOException If writing fails
      * @throws CanceledExecutionException If canceled.
      */
     protected abstract void save(
-            final File directory, ExecutionMonitor exec) 
+            final PortObjectZipOutputStream out, ExecutionMonitor exec) 
         throws IOException, CanceledExecutionException;
     
     /** Loads the content into the freshly instantiated object. This method
      * is called at most once in the life time of the object 
      * (after the serializer has created a new object using the public no-arg
      * constructor.)
-     * @param directory To restore from
+     * @param in To restore from
      * @param spec The accompanying spec (which can be safely cast to the 
      * expected class).
      * @param exec For progress/cancelation.
      * @throws IOException If reading fails.
      * @throws CanceledExecutionException If canceled.
      */
-    protected abstract void load(final File directory, 
+    protected abstract void load(final PortObjectZipInputStream in, 
             final PortObjectSpec spec, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException;
     
@@ -113,12 +114,18 @@ public abstract class AbstractPortObject implements PortObject {
 
         /** {@inheritDoc} */
         @Override
-        protected AbstractPortObject loadPortObject(final File directory,
+        protected AbstractPortObject loadPortObject(
+                final PortObjectZipInputStream in,
                 final PortObjectSpec spec, final ExecutionMonitor exec)
                 throws IOException, CanceledExecutionException {
-            File metaFile = new File(directory, "meta.xml");
-            ModelContentRO meta = ModelContent.loadFromXML(
-                    new BufferedInputStream(new FileInputStream(metaFile)));
+            AbstractPortObject result;
+            ZipEntry entry = in.getNextEntry();
+            if (!entry.getName().equals("meta.xml")) {
+                throw new IOException("Expected meta.xml file in stream, got "
+                        + entry.getName());
+            }
+            InputStream noneCloseIn = new NonClosableInputStream.Zip(in);
+            ModelContentRO meta = ModelContent.loadFromXML(noneCloseIn);
             String className;
             try {
                 className = meta.getString("class_name");
@@ -134,40 +141,38 @@ public abstract class AbstractPortObject implements PortObject {
             }
             if (!AbstractPortObject.class.isAssignableFrom(cl)) {
                 throw new RuntimeException(
-                        "Class \"" + className + "\" is not of"
-                        + " type " + AbstractPortObject.class.getSimpleName());
+                        "Class \"" + className + "\" is not of type " 
+                        + AbstractPortObject.class.getSimpleName());
             }
             Class<? extends AbstractPortObject> acl = 
                 cl.asSubclass(AbstractPortObject.class);
-            AbstractPortObject result;
             try {
                 result = acl.newInstance();
             } catch (Exception e) {
-                throw new RuntimeException("Failed to instantiate class \""
+                throw new RuntimeException(
+                        "Failed to instantiate class \""
                         + acl.getSimpleName() 
                         + "\" (failed to invoke no-arg constructor): " 
                         + e.getMessage(), e);
             }
-            File subDir = new File(directory, "content");
-            result.load(subDir, spec, exec);
+            // current zip entry was already closed by ModelContent.loadFrom...
+            result.load(in, spec, exec);
             return result;
         }
 
         /** {@inheritDoc} */
         @Override
         protected void savePortObject(final AbstractPortObject portObject,
-                final File directory, final ExecutionMonitor exec)
+                final PortObjectZipOutputStream out, 
+                final ExecutionMonitor exec)
                 throws IOException, CanceledExecutionException {
             // this is going to throw a runtime exception in case...
+            out.putNextEntry(new ZipEntry("meta.xml"));
             ModelContent meta = new ModelContent("meta.xml");
             meta.addInt("version", 1);
             meta.addString("class_name", portObject.getClass().getName());
-            File metaFile = new File(directory, "meta.xml");
-            meta.saveToXML(new BufferedOutputStream(
-                    new FileOutputStream(metaFile)));
-            File subDir = new File(directory, "content");
-            subDir.mkdir();
-            portObject.save(subDir, exec);
+            meta.saveToXML(new NonClosableOutputStream.Zip(out));
+            portObject.save(out, exec);
         }
     }
 }

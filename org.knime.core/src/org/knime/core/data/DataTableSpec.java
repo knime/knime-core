@@ -25,13 +25,7 @@
  */
 package org.knime.core.data;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -40,6 +34,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.zip.ZipEntry;
 
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.data.property.ShapeFactory;
@@ -50,6 +45,8 @@ import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.PortObjectSpecZipInputStream;
+import org.knime.core.node.PortObjectSpecZipOutputStream;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
@@ -113,10 +110,14 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
             
             /** {@inheritDoc} */
             @Override
-            protected DataTableSpec loadPortObjectSpec(final File directory)
+            protected DataTableSpec loadPortObjectSpec(
+                    final PortObjectSpecZipInputStream in)
                 throws IOException {
-                InputStream in = new BufferedInputStream(
-                        new FileInputStream(new File(directory, FILENAME)));
+                ZipEntry entry = in.getNextEntry();
+                if (!FILENAME.equals(entry.getName())) {
+                    throw new IOException("Excpected '" + FILENAME 
+                            + "' zip entry, got " + entry.getName());
+                }
                 ModelContentRO cnt = ModelContent.loadFromXML(in);
                 try {
                     return DataTableSpec.load(cnt);
@@ -128,11 +129,12 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
             /** {@inheritDoc} */
             @Override
             protected void savePortObjectSpec(final DataTableSpec spec,
-                    final File directory) throws IOException {
+                    final PortObjectSpecZipOutputStream out) 
+                throws IOException {
                 ModelContent cnt = new ModelContent(FILENAME);
                 spec.save(cnt);
-                cnt.saveToXML(new BufferedOutputStream(
-                        new FileOutputStream(new File(directory, FILENAME))));
+                out.putNextEntry(new ZipEntry(FILENAME));
+                cnt.saveToXML(out);
             }
         };
     }

@@ -33,7 +33,7 @@ import java.util.zip.ZipOutputStream;
  * closing it.
  * @author Bernd Wiswedel, University of Konstanz 
  */
-class NonClosableOutputStream extends OutputStream {
+public class NonClosableOutputStream extends OutputStream {
    
     private final OutputStream m_out;
     

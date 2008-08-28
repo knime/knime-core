@@ -29,11 +29,11 @@ import java.io.InputStream;
 import java.util.zip.ZipInputStream;
 
 /**
- * InputStream that delegates to an underlying {@link ZipInputStream} but
- * only closes the current entry on {@link #close()}.
+ * InputStream that delegates to an underlying {@link InputStream} but ignores
+ * calls of {@link #close()}.
  * @author Bernd Wiswedel, University of Konstanz
  */
-class NonClosableInputStream extends InputStream {
+public class NonClosableInputStream extends InputStream {
 
     private final InputStream m_in;
     
@@ -114,7 +114,7 @@ class NonClosableInputStream extends InputStream {
     
     /** Get reference to underlying stream.
      * @return The delegated stream. */
-    final InputStream getUnderlyingStream() {
+    public final InputStream getUnderlyingStream() {
         return m_in;
     }
     

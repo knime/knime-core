@@ -104,7 +104,7 @@ final class CopyOnAccessTask {
      * @return The buffer instance reading from the temp file.
      * @throws IOException If the file can't be accessed. 
      */
-    final Buffer createBuffer() throws IOException {
+    Buffer createBuffer() throws IOException {
         // timer task which prints a INFO message that the copying 
         // is in progress.
         TimerTask timerTask = null;
@@ -123,89 +123,100 @@ final class CopyOnAccessTask {
                 }
             };
             KNIMETimer.getInstance().schedule(timerTask, NOTIFICATION_DELAY);
-            ZipInputStream inStream = new ZipInputStream(
+            return createBuffer(
                     new BufferedInputStream(new FileInputStream(file)));
-            ZipEntry entry;
-            File binFile = DataContainer.createTempFile();
-            File blobDir = null;
-            // we only need to read from this file while being in 
-            // this method; temp file is deleted later on.
-            File metaTempFile = File.createTempFile("meta", ".xml");
-            metaTempFile.deleteOnExit();
-            DataTableSpec spec = m_spec;
-            boolean isSpecFound = m_spec != null;
-            boolean isDataFound = false;
-            boolean isMetaFound = false;
-            while ((entry = inStream.getNextEntry()) != null) {
-                String name = entry.getName(); 
-                if (name.equals(Buffer.ZIP_ENTRY_DATA)) {
-                    OutputStream output = new BufferedOutputStream(
-                            new FileOutputStream(binFile));
-                    FileUtil.copy(inStream, output);
-                    inStream.closeEntry();
-                    output.close();
-                    isDataFound = true;
-                } else if (name.equals(Buffer.ZIP_ENTRY_META)) {
-                    OutputStream output = new BufferedOutputStream(
-                            new FileOutputStream(metaTempFile));
-                    FileUtil.copy(inStream, output);
-                    inStream.closeEntry();
-                    output.close();
-                    isMetaFound = true;
-                } else if (name.startsWith(Buffer.ZIP_ENTRY_BLOBS)) {
-                    if (blobDir == null) {
-                        blobDir = Buffer.createBlobDirNameForTemp(binFile);
-                    }
-                    copyEntryToDir(entry, inStream, blobDir);
-                } else if (name.equals(DataContainer.ZIP_ENTRY_SPEC) 
-                        && !isSpecFound) {
-                    InputStream nonClosableStream = 
-                        new NonClosableInputStream.Zip(inStream);
-                    @SuppressWarnings("unchecked") // cast with generics
-                    NodeSettingsRO settings = 
-                        NodeSettings.loadFromXML(nonClosableStream);
-                    try {
-                        NodeSettingsRO specSettings = settings.getNodeSettings(
-                                DataContainer.CFG_TABLESPEC);
-                        spec = DataTableSpec.load(specSettings);
-                        isSpecFound = true;
-                    } catch (InvalidSettingsException ise) {
-                        IOException ioe = new IOException(
-                                "Unable to read spec from file " + file);
-                        ioe.initCause(ise);
-                        throw ioe;
-                    }
-                }
-            }
-            inStream.close();
-            if (!isDataFound) {
-                throw new IOException("No entry " + Buffer.ZIP_ENTRY_DATA 
-                        + " in file");
-            } 
-            if (!isMetaFound) {
-                throw new IOException("No entry " + Buffer.ZIP_ENTRY_META
-                        + " in file");
-            } 
-            if (!isSpecFound) {
-                throw new IOException("No entry " + DataContainer.ZIP_ENTRY_SPEC
-                        + " in file: " + file.getAbsolutePath());
-            } 
-            InputStream metaIn = new BufferedInputStream(
-                    new FileInputStream(metaTempFile));
-            Buffer buffer = m_bufferCreator.createBuffer(
-                    binFile, blobDir, spec, metaIn, m_bufferID, m_tableRep);
-            if (m_needsRestoreIntoMemory) {
-                buffer.restoreIntoMemory();
-            }
-            metaIn.close();
-            metaTempFile.delete();
-            return buffer;
         } finally {
             if (timerTask != null) {
                 timerTask.cancel();
             }
             m_fileRef.unlock();
         }
+    }
+    
+    /**
+     * Called to start the copy process. Is only called once.
+     * @param in To read from, will instantiate a zip input stream on top of
+     * it, which will call close() eventually
+     * @return The buffer instance reading from the temp file.
+     * @throws IOException If the file can't be accessed. 
+     */
+    Buffer createBuffer(final InputStream in) throws IOException {
+        ZipInputStream inStream = new ZipInputStream(in);
+        ZipEntry entry;
+        File binFile = DataContainer.createTempFile();
+        File blobDir = null;
+        // we only need to read from this file while being in 
+        // this method; temp file is deleted later on.
+        File metaTempFile = File.createTempFile("meta", ".xml");
+        metaTempFile.deleteOnExit();
+        DataTableSpec spec = m_spec;
+        boolean isSpecFound = m_spec != null;
+        boolean isDataFound = false;
+        boolean isMetaFound = false;
+        while ((entry = inStream.getNextEntry()) != null) {
+            String name = entry.getName(); 
+            if (name.equals(Buffer.ZIP_ENTRY_DATA)) {
+                OutputStream output = new BufferedOutputStream(
+                        new FileOutputStream(binFile));
+                FileUtil.copy(inStream, output);
+                inStream.closeEntry();
+                output.close();
+                isDataFound = true;
+            } else if (name.equals(Buffer.ZIP_ENTRY_META)) {
+                OutputStream output = new BufferedOutputStream(
+                        new FileOutputStream(metaTempFile));
+                FileUtil.copy(inStream, output);
+                inStream.closeEntry();
+                output.close();
+                isMetaFound = true;
+            } else if (name.startsWith(Buffer.ZIP_ENTRY_BLOBS)) {
+                if (blobDir == null) {
+                    blobDir = Buffer.createBlobDirNameForTemp(binFile);
+                }
+                copyEntryToDir(entry, inStream, blobDir);
+            } else if (name.equals(DataContainer.ZIP_ENTRY_SPEC) 
+                    && !isSpecFound) {
+                InputStream nonClosableStream = 
+                    new NonClosableInputStream.Zip(inStream);
+                @SuppressWarnings("unchecked") // cast with generics
+                NodeSettingsRO settings = 
+                    NodeSettings.loadFromXML(nonClosableStream);
+                try {
+                    NodeSettingsRO specSettings = settings.getNodeSettings(
+                            DataContainer.CFG_TABLESPEC);
+                    spec = DataTableSpec.load(specSettings);
+                    isSpecFound = true;
+                } catch (InvalidSettingsException ise) {
+                    IOException ioe = new IOException(
+                            "Unable to read spec from file");
+                    ioe.initCause(ise);
+                    throw ioe;
+                }
+            }
+        }
+        inStream.close();
+        if (!isDataFound) {
+            throw new IOException("No entry " + Buffer.ZIP_ENTRY_DATA 
+                    + " in file");
+        } 
+        if (!isMetaFound) {
+            throw new IOException("No entry " + Buffer.ZIP_ENTRY_META
+                    + " in file");
+        } 
+        if (!isSpecFound) {
+            throw new IOException("No entry " + DataContainer.ZIP_ENTRY_SPEC
+                    + " in file");
+        } 
+        InputStream metaIn = new BufferedInputStream(
+                new FileInputStream(metaTempFile));
+        Buffer buffer = m_bufferCreator.createBuffer(
+                binFile, blobDir, spec, metaIn, m_bufferID, m_tableRep);
+        if (m_needsRestoreIntoMemory) {
+            buffer.restoreIntoMemory();
+        }
+        metaIn.close();
+        metaTempFile.delete();
+        return buffer;
     }
     
     /** Get name of file to copy from. Used for better error messages.

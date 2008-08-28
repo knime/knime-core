@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
@@ -718,6 +719,31 @@ public class DataContainer implements RowAppender {
     public static void writeToZip(final DataTable table, final File zipFile,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        OutputStream out = 
+            new BufferedOutputStream(new FileOutputStream(zipFile));
+        writeToStream(table, out, exec);
+        out.close();
+    }
+    
+    /** Writes a given DataTable permanently to an output stream. This includes
+     * also all table spec information, such as color, size, and shape 
+     * properties. 
+     * 
+     * <p>The content is saved by instantiating a {@link ZipOutputStream} on
+     * the argument stream, saving the necessary information in respective
+     * zip entries and eventually closing the entire stream. If the stream 
+     * should not be closed, consider to use a {@link NonClosableOutputStream}
+     * as argument stream. 
+     * @param table The table to write.
+     * @param out The stream to save to.
+     * @param exec For progress info.
+     * @throws IOException If writing fails.
+     * @throws CanceledExecutionException If canceled.
+     * @see #readFromStream(InputStream)
+     */
+    public static void writeToStream(final DataTable table, 
+            final OutputStream out, final ExecutionMonitor exec) 
+            throws IOException, CanceledExecutionException {
         Buffer buf;
         ExecutionMonitor e = exec;
         boolean canUseBuffer = table instanceof ContainerTable;
@@ -747,8 +773,8 @@ public class DataContainer implements RowAppender {
             exec.setMessage("Closing zip file");
             e = exec.createSubProgress(0.2);
         }
-        ZipOutputStream zipOut = new ZipOutputStream(
-                new BufferedOutputStream(new FileOutputStream(zipFile)));
+        ZipOutputStream zipOut = 
+            new ZipOutputStream(new BufferedOutputStream(out));
         buf.addToZipFile(zipOut, e);
         zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_SPEC));
         NodeSettings settings = new NodeSettings("Table Spec");
@@ -767,8 +793,29 @@ public class DataContainer implements RowAppender {
      * @see #writeToZip(DataTable, File, ExecutionMonitor)
      */
     public static ContainerTable readFromZip(final File zipFile) 
-        throws IOException {
+    throws IOException {
         return readFromZip(new ReferencedFile(zipFile), new BufferCreator());
+    }
+    
+    /** 
+     * Reads a table from an input stream. This is the reverse operation of
+     * {@link #writeToStream(DataTable, OutputStream, ExecutionMonitor)}.
+     * 
+     * <p>The argument stream will be closed. If this is not desired, consider
+     * to use a {@link NonClosableInputStream} as argument.
+     * @param in To read from, Stream will be closed finally.
+     * @return The table contained in the stream.
+     * @throws IOException If that fails.
+     * @see #writeToStream(DataTable, OutputStream, ExecutionMonitor)
+     */
+    public static ContainerTable readFromStream(final InputStream in) 
+    throws IOException {
+        // mimic the behavior of readFromZip(ReferencedFile)
+        CopyOnAccessTask coa = new CopyOnAccessTask(/*File*/null, null, -1, 
+                new HashMap<Integer, ContainerTable>(), new BufferCreator());
+        // executing the createBuffer() method will start the copying process
+        Buffer buffer = coa.createBuffer(in);
+        return new ContainerTable(buffer);
     }
     
     /**

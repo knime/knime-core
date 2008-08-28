@@ -24,13 +24,10 @@
  */
 package org.knime.core.node.portobject;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.zip.ZipEntry;
 
+import org.knime.core.data.container.NonClosableInputStream;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -40,6 +37,8 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.PortObjectZipInputStream;
+import org.knime.core.node.PortObjectZipOutputStream;
 
 /**
  * Abstract implementation of basic port objects that save and load themselves
@@ -114,12 +113,17 @@ public abstract class AbstractSimplePortObject implements PortObject {
 
         /** {@inheritDoc} */
         @Override
-        protected AbstractSimplePortObject loadPortObject(final File directory,
+        protected AbstractSimplePortObject loadPortObject(
+                final PortObjectZipInputStream in,
                 final PortObjectSpec spec, final ExecutionMonitor exec)
                 throws IOException, CanceledExecutionException {
-            File modelFile = new File(directory, "model.xml.gz");
+            ZipEntry entry = in.getNextEntry();
+            if (!"content.xml".equals(entry.getName())) {
+                throw new IOException("Expected zip entry content.xml, got "
+                        + entry.getName());
+            }
             ModelContentRO model = ModelContent.loadFromXML(
-                    new BufferedInputStream(new FileInputStream(modelFile)));
+                    new NonClosableInputStream.Zip(in));
             String className;
             try {
                 className = model.getString("class_name");
@@ -162,17 +166,16 @@ public abstract class AbstractSimplePortObject implements PortObject {
         /** {@inheritDoc} */
         @Override
         protected void savePortObject(final AbstractSimplePortObject portObject,
-                final File directory, final ExecutionMonitor exec)
+                final PortObjectZipOutputStream out, final ExecutionMonitor exec)
                 throws IOException, CanceledExecutionException {
             // this is going to throw a runtime exception in case...
-            ModelContent model = new ModelContent("model.xml.gz");
+            ModelContent model = new ModelContent("model.xml");
             model.addInt("version", 1);
             model.addString("class_name", portObject.getClass().getName());
             ModelContentWO subModel = model.addModelContent("model");
             portObject.save(subModel, exec);
-            File modelFile = new File(directory, "model.xml.gz");
-            model.saveToXML(new BufferedOutputStream(
-                    new FileOutputStream(modelFile)));
+            out.putNextEntry(new ZipEntry("content.xml"));
+            model.saveToXML(out);
         }
     }
 }

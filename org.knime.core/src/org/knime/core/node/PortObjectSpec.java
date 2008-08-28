@@ -24,7 +24,6 @@
  */
 package org.knime.core.node;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.knime.core.internal.SerializerMethodLoader.Serializer;
@@ -74,21 +73,23 @@ public interface PortObjectSpec {
     abstract static class PortObjectSpecSerializer
         <T extends PortObjectSpec> implements Serializer<T> {
         
-        /** Saves the port specification to a directory location.
+        /** Saves the port specification to an output stream.
          * @param portObjectSpec The spec to save.
-         * @param directory Where to save to
+         * @param out Where to save to
          * @throws IOException If that fails for IO problems.
          */
         protected abstract void savePortObjectSpec(final T portObjectSpec,
-                final File directory)
+                final PortObjectSpecZipOutputStream out)
         throws IOException;
         
-        /** Load a specification from a directory location.
-         * @param directory Where to load from
+        /** Load a specification from an input stream.
+         * @param in Where to load from
          * @return The restored object.
          * @throws IOException If that fails for IO problems.
          */
-        protected abstract T loadPortObjectSpec(final File directory)
+        protected abstract T loadPortObjectSpec(
+                final PortObjectSpecZipInputStream in)
             throws IOException;
     }
+    
 }

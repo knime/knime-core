@@ -24,8 +24,8 @@
  */
 package org.knime.core.node;
 
-import java.io.File;
 import java.io.IOException;
+import java.util.zip.ZipEntry;
 
 import org.knime.core.data.DataTableSpec;
 
@@ -197,8 +197,8 @@ public abstract class NodeModel extends GenericNodeModel {
                 /** {@inheritDoc} */
                 @Override
                 protected ModelContentWrapper loadPortObject(
-                        final File directory, final PortObjectSpec spec, 
-                        final ExecutionMonitor exec)
+                        final PortObjectZipInputStream in, 
+                        final PortObjectSpec spec, final ExecutionMonitor exec)
                         throws IOException, CanceledExecutionException {
                     return (ModelContentWrapper)spec;
                 }
@@ -207,9 +207,9 @@ public abstract class NodeModel extends GenericNodeModel {
                  */
                 @Override
                 protected void savePortObject(final ModelContentWrapper o,
-                        final File directory, final ExecutionMonitor c)
-                        throws IOException, CanceledExecutionException {
-                    o.m_hiddenModel.save(directory, c);
+                        final PortObjectZipOutputStream out, 
+                        final ExecutionMonitor c) 
+                    throws IOException, CanceledExecutionException {
                 }
             };
         }
@@ -223,37 +223,44 @@ public abstract class NodeModel extends GenericNodeModel {
                  */
                 @Override
                 protected ModelContentWrapper loadPortObjectSpec(
-                        final File directory) throws IOException {
-                    File nullFile = new File(directory, "null.xml");
-                    if (nullFile.exists()) {
+                        final PortObjectSpecZipInputStream in) throws IOException {
+                    ZipEntry entry = in.getNextEntry();
+                    if (entry.getName().equals("null.xml")) {
                         return new ModelContentWrapper(null);
+                    } else if (entry.getName().equals("predictor.xml")) {
+                        ModelContent cnt = new ModelContent("predictor");
+                        try {
+                            cnt.load(in, new ExecutionMonitor());
+                        } catch (CanceledExecutionException cee) {
+                            new ModelContentWrapper(null);
+                        }
+                        return new ModelContentWrapper(cnt);
+                    } else {
+                        throw new IOException("No spec in input found");
                     }
-                    ModelContent cnt = new ModelContent("predictor");
-                    try {
-                        cnt.load(directory, new ExecutionMonitor());
-                    } catch (CanceledExecutionException cee) {
-                        new ModelContentWrapper(null);
-                    }
-                    return new ModelContentWrapper(cnt);
                 }
+                
                 /**
                  * {@inheritDoc}
                  */
                 @Override
                 protected void savePortObjectSpec(final ModelContentWrapper o,
-                        final File directory) throws IOException {
+                        final PortObjectSpecZipOutputStream out) 
+                    throws IOException {
                     if (o.m_hiddenModel != null) {
                         try {
-                            o.m_hiddenModel.save(directory, 
+                            out.putNextEntry(new ZipEntry("predictor.xml"));
+                            o.m_hiddenModel.save(out, 
                                     new ExecutionMonitor());
                         } catch (CanceledExecutionException cee) {
                             // can't happen, no access to ExecutionMonitor
                             assert false;
                         }
                     } else {
-                        File nullFile = new File(directory, "null.xml");
-                        nullFile.createNewFile();
+                        out.putNextEntry(new ZipEntry("null.xml"));
+                        out.closeEntry();
                     }
+                    out.close();
                 }
             };
         }

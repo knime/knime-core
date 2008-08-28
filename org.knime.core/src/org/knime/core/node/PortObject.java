@@ -22,7 +22,6 @@
  */
 package org.knime.core.node;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.knime.core.internal.SerializerMethodLoader.Serializer;
@@ -69,23 +68,25 @@ public interface PortObject {
     abstract static class PortObjectSerializer<T extends PortObject> 
         implements Serializer<T> {
         
-        /** Saves the portObject to a directory location. There is no need
+        /** Saves the portObject to an output stream. There is no need
          * to also save the {@link PortObjectSpec} associated with the port
          * object as the framework will save both in different places and
-         * will provide the spec when {@link #loadPortObject(
-         * File, PortObjectSpec, ExecutionMonitor)} is called.
+         * will provide the spec when {@link #loadPortObject
+         * PortObjectZipInputStream, PortObjectSpec, ExecutionMonitor)} 
+         * is called.
          * @param portObject The object to save.
-         * @param directory Where to save to
+         * @param out Where to save to
          * @param exec To report progress to and to check for cancelation.
          * @throws IOException If that fails for IO problems.
          * @throws CanceledExecutionException If canceled.
          */
         protected abstract void savePortObject(final T portObject,
-                final File directory, final ExecutionMonitor exec)
+                final PortObjectZipOutputStream out, 
+                final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException;
         
-        /** Load a portObject from a directory location.
-         * @param directory Where to load from
+        /** Load a portObject from an input stream.
+         * @param in Where to load from
          * @param spec The spec that was associated with the object. It can
          * safely be cast to the expected PortObjectSpec class.
          * @param exec To report progress to and to check for cancelation.
@@ -93,7 +94,7 @@ public interface PortObject {
          * @throws IOException If that fails for IO problems.
          * @throws CanceledExecutionException If canceled.
          */
-        protected abstract T loadPortObject(final File directory, 
+        protected abstract T loadPortObject(final PortObjectZipInputStream in, 
                 final PortObjectSpec spec, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException;
     }

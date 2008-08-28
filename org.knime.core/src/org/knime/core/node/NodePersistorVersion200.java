@@ -24,8 +24,10 @@
  */
 package org.knime.core.node;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
@@ -233,16 +235,24 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             exec.setMessage("Saving specification");
             if (spec != null) {
                 String specDirName = "spec";
+                String specFileName = "spec.zip";
+                String specPath = specDirName + "/" + specFileName;
                 File specDir = new File(portDir, specDirName);
                 specDir.mkdir();
                 if (!specDir.isDirectory() || !specDir.canWrite()) {
                     throw new IOException("Can't create directory "
                             + specDir.getAbsolutePath());
                 }
-                settings.addString("port_spec_location", specDirName);
+                
+                File specFile = new File(specDir, specFileName);
+                PortObjectSpecZipOutputStream out = 
+                    new PortObjectSpecZipOutputStream(new BufferedOutputStream(
+                        new FileOutputStream(specFile)));
+                settings.addString("port_spec_location", specPath);
                 PortObjectSpecSerializer serializer =
                         getPortObjectSpecSerializer(spec.getClass());
-                serializer.savePortObjectSpec(spec, specDir);
+                serializer.savePortObjectSpec(spec, out);
+                out.close();
             }
             if (isSaveObject) {
                 String objectDirName = null;
@@ -253,16 +263,25 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     throw new IOException("Can't create directory "
                             + objectDir.getAbsolutePath());
                 }
-                settings.addString("port_object_location", objectDirName);
+                String objectPath;
                 // object is BDT, but port type is not BDT.TYPE - still though..
                 if (object instanceof BufferedDataTable) {
+                    objectPath = objectDirName;
                     saveBufferedDataTable((BufferedDataTable)object, objectDir,
                             exec);
                 } else {
+                    String objectFileName = "portobject.zip";
+                    objectPath = objectDirName + "/" + objectFileName;
+                    File file = new File(objectDir, objectFileName);
+                    PortObjectZipOutputStream out = 
+                        new PortObjectZipOutputStream(new BufferedOutputStream(
+                                new FileOutputStream(file)));
                     PortObjectSerializer serializer =
                             getPortObjectSerializer(object.getClass());
-                    serializer.savePortObject(object, objectDir, exec);
+                    serializer.savePortObject(object, out, exec);
+                    out.close();
                 }
+                settings.addString("port_object_location", objectPath);
             }
         }
     }
@@ -494,15 +513,19 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                 ReferencedFile specDirRef =
                         new ReferencedFile(portDir, settings
                                 .getString("port_spec_location"));
-                File specDir = specDirRef.getFile();
-                if (!specDir.isDirectory()) {
-                    throw new IOException("Can't read directory "
-                            + specDir.getAbsolutePath());
+                File specFile = specDirRef.getFile();
+                if (!specFile.isFile()) {
+                    throw new IOException("Can't read spec file "
+                            + specFile.getAbsolutePath());
                 }
+                PortObjectSpecZipInputStream in = 
+                    new PortObjectSpecZipInputStream(new BufferedInputStream(
+                        new FileInputStream(specFile)));
                 PortObjectSpecSerializer<?> serializer =
                         getPortObjectSpecSerializer(cl
                                 .asSubclass(PortObjectSpec.class));
-                spec = serializer.loadPortObjectSpec(specDir);
+                spec = serializer.loadPortObjectSpec(in);
+                in.close();
                 if (spec == null) {
                     throw new IOException("Serializer \""
                             + serializer.getClass().getName()
@@ -522,27 +545,36 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                             + "\" does not a sub-class \""
                             + PortObject.class.getSimpleName() + "\"");
                 }
-                ReferencedFile objectDirRef =
+                ReferencedFile objectFileRef =
                         new ReferencedFile(portDir, settings
                                 .getString("port_object_location"));
-                File objectDir = objectDirRef.getFile();
-                if (!objectDir.isDirectory()) {
-                    throw new IOException("Can't read directory "
-                            + objectDir.getAbsolutePath());
-                }
                 if (BufferedDataTable.class.equals(cl)) {
+                    File objectDir = objectFileRef.getFile();
+                    if (!objectDir.isDirectory()) {
+                        throw new IOException("Can't read directory "
+                                + objectDir.getAbsolutePath());
+                    }
                     // can't be true, however as BDT can only be saved
                     // for adequate port types (handled above)
                     // we leave the code here for future versions..
-                    object =
-                            loadBufferedDataTable(objectDirRef, exec,
+                    object = loadBufferedDataTable(objectFileRef, exec,
                                     loadTblRep, tblRep);
                     ((BufferedDataTable)object).setOwnerRecursively(node);
                 } else {
+                    File objectFile = objectFileRef.getFile();
+                    if (!objectFile.isFile()) {
+                        throw new IOException("Can't read file "
+                                + objectFile.getAbsolutePath());
+                    }
+                    // buffering both disc I/O and the gzip stream pays off
+                    PortObjectZipInputStream in = new PortObjectZipInputStream(
+                            new BufferedInputStream(
+                                    new FileInputStream(objectFile)));
                     PortObjectSerializer<?> serializer =
                             getPortObjectSerializer(cl
                                     .asSubclass(PortObject.class));
-                    object = serializer.loadPortObject(objectDir, spec, exec);
+                    object = serializer.loadPortObject(in, spec, exec);
+                    in.close();
                 }
             }
         }

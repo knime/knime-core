@@ -24,16 +24,9 @@
  */
 package org.knime.core.node;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import org.knime.core.node.config.Config;
 
@@ -102,39 +95,32 @@ public final class ModelContent extends Config
         return (ModelContent) super.getConfig(key);
     }
 
-    /** File name that's used for the save and load (object-) methods. */
-    private static final String FILE_NAME = "model.xml.gz";
-    
-    /** Saves this object to a directory. This method is used when (derived)
-     * objects represent a {@link PortObject}.
-     * @param directory Where to save to.
+    /** Saves this object to an output stream. This method is used when 
+     * (derived) objects represent a {@link PortObject}.
+     * @param out Where to save to.
      * @param exec To report progress to.
      * @throws IOException If saving fails for IO problems.
      * @throws CanceledExecutionException If canceled.
      * @see #load(InputStream)
      */
-    final void save(final File directory, final ExecutionMonitor exec) 
+    final void save(final OutputStream out, final ExecutionMonitor exec) 
             throws IOException, CanceledExecutionException {
         exec.setMessage("Saving model container to file");
-        OutputStream out = new GZIPOutputStream(new BufferedOutputStream(
-                new FileOutputStream(new File(directory, FILE_NAME))));
         exec.checkCanceled();
         saveToXML(out);
     }
     
     /** Load this object from a directory. This method is used when (derived)
      * objects represent a {@link PortObject}.
-     * @param directory Where to load from
+     * @param in Where to load from
      * @param exec To report progress to.
      * @throws IOException If loading fails for IO problems.
      * @throws CanceledExecutionException If canceled.
-     * @see #save(File, ExecutionMonitor)
+     * @see #save(OutputStream, ExecutionMonitor)
      */
-    final void load(final File directory, final ExecutionMonitor exec) 
+    final void load(final InputStream in, final ExecutionMonitor exec) 
             throws IOException, CanceledExecutionException {
         exec.setMessage("Loading model container from file");
-        InputStream in = new GZIPInputStream(new BufferedInputStream(
-                new FileInputStream(new File(directory, FILE_NAME))));
         exec.checkCanceled();
         load(in);
     }
