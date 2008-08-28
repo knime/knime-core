@@ -32,6 +32,8 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.util.NonClosableInputStream;
+import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -312,8 +314,9 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
         throws IOException {
         NodeSettings settings = new NodeSettings(DTS_KEY);
         m_dataTableSpec.save(settings);
+        NonClosableOutputStream noCloseOut = new NonClosableOutputStream(out);
         out.putNextEntry(new ZipEntry(DTS_FILE));
-        settings.saveToXML(out);
+        settings.saveToXML(noCloseOut);
 
         NodeSettings miningSchema = new NodeSettings(MINING_SCHEMA_KEY);
         miningSchema.addStringArray(IGNORED_KEY, 
@@ -324,7 +327,8 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
                 m_targetCols.toArray(new String[0]));
         
         out.putNextEntry(new ZipEntry(MINING_SCHEMA_FILE));
-        miningSchema.saveToXML(out);
+        miningSchema.saveToXML(noCloseOut);
+        out.close();
     }
     
     /**
@@ -338,15 +342,17 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
     public static PMMLPortObjectSpec loadFrom(
             final PortObjectSpecZipInputStream in) 
         throws IOException, InvalidSettingsException {
+        NonClosableInputStream noCloseIn = new NonClosableInputStream(in);
         // the data table spec 
         in.getNextEntry();
         // TODO: sanitycheck if name is the same
-        NodeSettingsRO settings = NodeSettings.loadFromXML(in);
+        NodeSettingsRO settings = NodeSettings.loadFromXML(noCloseIn);
         DataTableSpec dataTableSpec = DataTableSpec.load(settings);
         // the mining schema
         in.getNextEntry();
         // TODO: sanity check if names are consistent
-        NodeSettingsRO miningSchemaSettings = NodeSettings.loadFromXML(in);
+        NodeSettingsRO miningSchemaSettings = NodeSettings.loadFromXML(
+                noCloseIn);
         Set<String>ignoredCols = new LinkedHashSet<String>();
         for (String colName : miningSchemaSettings.getStringArray(
                 IGNORED_KEY)) {
