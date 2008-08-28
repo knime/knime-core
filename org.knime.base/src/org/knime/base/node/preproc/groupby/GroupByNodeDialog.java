@@ -25,23 +25,6 @@
 
 package org.knime.base.node.preproc.groupby;
 
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.GenericNodeDialogPane;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.PortObjectSpec;
-import org.knime.core.node.defaultnodesettings.DialogComponent;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
-
-import org.knime.base.node.preproc.groupby.dialogutil.AggregationColumnPanel;
-
 import java.awt.Dimension;
 
 import javax.swing.BorderFactory;
@@ -51,6 +34,22 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import org.knime.base.node.preproc.groupby.dialogutil.AggregationColumnPanel;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.DialogComponent;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.port.PortObjectSpec;
 
 
 /**
@@ -169,7 +168,6 @@ public class GroupByNodeDialog extends GenericNodeDialogPane {
 
     /**
      * {@inheritDoc}
-     * @throws InvalidSettingsException
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
