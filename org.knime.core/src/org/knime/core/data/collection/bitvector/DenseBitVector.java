@@ -43,7 +43,7 @@ public class DenseBitVector {
     private static final int STORAGE_ADDRBITS = 6;
 
     // bits are stored in these objects
-    private long[] m_storage;
+    private final long[] m_storage;
 
     // the first storage address containing a set bit
     private int m_firstAddr;
@@ -55,7 +55,7 @@ public class DenseBitVector {
      * could be different from the actual storage length if some bits are left
      * unused "at the end".
      */
-    private int m_length;
+    private final int m_length;
 
     // lazy hashcode
     private int m_hash;
@@ -887,18 +887,23 @@ public class DenseBitVector {
     }
 
     /**
-     * {@inheritDoc}
+     * Returns a string containing (comma separated) indices of the bits set in
+     * this vector. The number of bit indices added to the string is limited to
+     * 30000. If the output is truncated, the string ends on &quot;... }&quot;
+     *
+     * @return a string containing (comma separated) indices of the bits
+     *         set in this vector.
      */
     @Override
     public String toString() {
         assert (checkConsistency() == null);
         long ones = cardinality();
-        // who needs more than 30000 indices?!?
+
         int use = (int)Math.min(ones, 30000);
 
         StringBuilder result = new StringBuilder(use * 7);
         result.append('{');
-        for (int i = nextSetBit(0); i > -1; i = nextSetBit(i)) {
+        for (int i = nextSetBit(0); i > -1; i = nextSetBit(++i)) {
             result.append(i).append(", ");
         }
         if (use < ones) {
@@ -976,7 +981,7 @@ public class DenseBitVector {
      *
      * @return a multi-line dump of the internal storage.
      */
-    public String dump() {
+    public String dumpBits() {
         assert (checkConsistency() == null);
         if (m_length == 0) {
             return "<bitvector of length zero>";
