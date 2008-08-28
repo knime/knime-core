@@ -22,7 +22,7 @@
  * History
  *   Nov 15, 2006 (wiswedel): created
  */
-package org.knime.core.data.container;
+package org.knime.core.data.util;
 
 import java.io.IOException;
 import java.io.OutputStream;

@@ -64,6 +64,7 @@ import org.knime.core.data.collection.BlobSupportDataCellIterator;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.data.container.BufferFromFileIteratorVersion20.DataCellStreamReader;
+import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;

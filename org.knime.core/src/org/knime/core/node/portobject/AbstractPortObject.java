@@ -28,8 +28,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipEntry;
 
-import org.knime.core.data.container.NonClosableInputStream;
-import org.knime.core.data.container.NonClosableOutputStream;
+import org.knime.core.data.util.NonClosableInputStream;
+import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;

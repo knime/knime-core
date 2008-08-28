@@ -40,6 +40,7 @@ import java.util.zip.ZipInputStream;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.DataContainer.BufferCreator;
+import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;

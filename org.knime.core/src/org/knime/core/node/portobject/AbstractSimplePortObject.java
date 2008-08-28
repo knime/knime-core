@@ -27,7 +27,7 @@ package org.knime.core.node.portobject;
 import java.io.IOException;
 import java.util.zip.ZipEntry;
 
-import org.knime.core.data.container.NonClosableInputStream;
+import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;

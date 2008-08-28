@@ -35,6 +35,7 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.data.container.BufferFromFileIteratorVersion20.DataCellStreamReader;
+import org.knime.core.data.util.NonClosableInputStream;
 
 
 /**

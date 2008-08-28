@@ -49,6 +49,8 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.util.NonClosableInputStream;
+import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;

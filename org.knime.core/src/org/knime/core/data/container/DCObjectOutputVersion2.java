@@ -34,6 +34,7 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
+import org.knime.core.data.util.NonClosableOutputStream;
 
 
 /**
