@@ -787,7 +787,7 @@ public final class Operators {
          */
         @Override
         protected DataType getDataType(final DataType origType) {
-            return ListCell.getCollectionType(origType);
+            return SetCell.getCollectionType(origType);
         }
 
         /**
@@ -795,7 +795,7 @@ public final class Operators {
          */
         @Override
         public AggregationOperator createInstance(final int maxUniqueValues) {
-            return new ListCellOperator(maxUniqueValues);
+            return new SetCellOperator(maxUniqueValues);
         }
 
         /**
