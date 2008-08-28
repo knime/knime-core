@@ -182,9 +182,7 @@ public abstract class PMMLPortObject implements PortObject {
     
     /** {@inheritDoc} */
     @Override
-    public String getSummary() {
-        return null;
-    }
+    public abstract String getSummary();
     
     /**
      * Loads the port object by reading the file and setting the member 

@@ -408,4 +408,22 @@ public class PMMLClusterPortObject extends PMMLPortObject
         LOGGER.debug("number of clusters: " + m_nrOfClusters);
         return this;
     }
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public String getSummary() {
+        String labels = "";
+        for (int i = 0; i < m_labels.length; i++) {
+            if (i < m_labels.length - 1) {
+                labels += m_labels[i] + ", ";
+            } else {
+                labels += m_labels[i];
+            }
+        }
+        return "ClusteringModel with " + m_nrOfClusters 
+            + " cluster: " + labels;
+    }
 }
