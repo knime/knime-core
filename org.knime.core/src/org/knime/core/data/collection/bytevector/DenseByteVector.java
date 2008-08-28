@@ -26,7 +26,7 @@ import java.util.Arrays;
 
 /**
  * A vector of fixed length holding byte counts at specific positions. Only
- * possible values of counts are supported. Each index can store a number
+ * positive values of counts are supported. Each index can store a number
  * between 0 and 255 (both inclusive). Attempts to store negative numbers or
  * numbers larger than 255 cause an exception. The maximum length is 2147483645.
  *
