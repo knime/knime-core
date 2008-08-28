@@ -22,15 +22,24 @@
  * History
  *   13.02.2008 (gabriel): created
  */
-package org.knime.core.node;
+package org.knime.core.node.port.database;
 
-import java.io.File;
 import java.io.IOException;
+import java.util.zip.ZipEntry;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.util.NonClosableInputStream;
+import org.knime.core.data.util.NonClosableOutputStream;
+import org.knime.core.node.BufferedDataContainer;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortObjectZipInputStream;
+import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
 
 /**
@@ -106,37 +115,48 @@ public class DatabasePortObject implements PortObject {
         return new PortObjectSerializer<DatabasePortObject>() {
             /** {@inheritDoc} */
             @Override
-            protected void savePortObject(final DatabasePortObject portObject,
-                    final File directory, final ExecutionMonitor exec)
+            public void savePortObject(final DatabasePortObject portObject,
+                    final PortObjectZipOutputStream out, 
+                    final ExecutionMonitor exec)
                     throws IOException, CanceledExecutionException {
-                save(directory, exec, portObject);
+                save(out, exec, portObject);
 
             }
             
             /** {@inheritDoc} */
             @Override
-            protected DatabasePortObject loadPortObject(final File directory,
-                    final PortObjectSpec spec, final ExecutionMonitor exec)
+            public DatabasePortObject loadPortObject(
+                    final PortObjectZipInputStream in, 
+                    final PortObjectSpec spec, 
+                    final ExecutionMonitor exec)
                     throws IOException, CanceledExecutionException {
-                return load(directory, (DatabasePortObjectSpec) spec);
+                return load(in, (DatabasePortObjectSpec) spec);
             }
-
         };
     }
     
+    private static final String KEY_PREVIEW_TABLE = "preview_table.zip";
+    
     private static DatabasePortObject load(
-            final File dir, final DatabasePortObjectSpec spec) 
-                throws IOException {
-        File dataFile = new File(dir, "data.zip");
-        ContainerTable data = BufferedDataContainer.readFromZip(dataFile);
+            final PortObjectZipInputStream in, 
+            final DatabasePortObjectSpec spec) throws IOException {
+        ZipEntry ze = in.getNextEntry();
+        if (!ze.getName().equals(KEY_PREVIEW_TABLE)) {
+            throw new IOException("Key \"" + ze.getName() + "\" does not "
+                    + " match expected zip entry name \"" 
+                    + KEY_PREVIEW_TABLE + "\".");
+        }
+        ContainerTable data = BufferedDataContainer.readFromStream(
+                new NonClosableInputStream.Zip(in));
         return new DatabasePortObject(data, spec.getConnectionModel());
     }
     
-    private static void save(final File dir, final ExecutionMonitor em,
-            final DatabasePortObject portObject) 
+    private static void save(final PortObjectZipOutputStream out, 
+            final ExecutionMonitor em, final DatabasePortObject portObject) 
             throws IOException, CanceledExecutionException {
-        File dataFile = new File(dir, "data.zip");
-        BufferedDataContainer.writeToZip(portObject.m_data, dataFile, em);
+        out.putNextEntry(new ZipEntry(KEY_PREVIEW_TABLE));
+        BufferedDataContainer.writeToStream(portObject.m_data, 
+                new NonClosableOutputStream.Zip(out), em);
     }
     
     

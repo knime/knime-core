@@ -25,9 +25,9 @@
 package org.knime.workbench.editor2.meta;
 
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.DatabasePortObject;
 import org.knime.core.node.ModelPortObject;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.database.DatabasePortObject;
 
 /**
  * Helper class to represent a port with name and type.

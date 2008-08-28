@@ -23,7 +23,6 @@
 package org.knime.base.node.io.database;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.DatabasePortObjectSpec;
 import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -32,6 +31,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.database.DatabasePortObjectSpec;
 
 /**
  *

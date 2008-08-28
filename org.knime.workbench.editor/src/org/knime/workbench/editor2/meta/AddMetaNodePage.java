@@ -46,9 +46,9 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Text;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.DatabasePortObject;
 import org.knime.core.node.ModelPortObject;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
 

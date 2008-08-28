@@ -22,15 +22,20 @@
  * History
  *   13.02.2008 (gabriel): created
  */
-package org.knime.core.node;
+package org.knime.core.node.port.database;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.zip.ZipEntry;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.util.NonClosableInputStream;
+import org.knime.core.data.util.NonClosableOutputStream;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContent;
+import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortObjectSpecZipInputStream;
+import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 
 /**
  * Class used as database port object holding a {@link DataTableSpec}
@@ -78,28 +83,45 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
         return new PortObjectSpecSerializer<DatabasePortObjectSpec>() {
 
             @Override
-            protected DatabasePortObjectSpec loadPortObjectSpec(
-                    final File directory) throws IOException {
-                return load(directory);
+            public DatabasePortObjectSpec loadPortObjectSpec(
+                    final PortObjectSpecZipInputStream in) throws IOException {
+                return load(in);
             }
 
             @Override
-            protected void savePortObjectSpec(
+            public void savePortObjectSpec(
                     final DatabasePortObjectSpec portObjectSpec, 
-                    final File directory) throws IOException {
-                save(directory, portObjectSpec);
+                    final PortObjectSpecZipOutputStream out) 
+                    throws IOException {
+                save(out, portObjectSpec);
             }
         };
     }
     
-    private static DatabasePortObjectSpec load(final File dir)
-            throws IOException {
-        File connFile = new File(dir, "db_connection.xml");
+    private static final String KEY_DATABASE_CONNECTION = 
+        "database_connection.zip";
+    
+    private static final String KEY_SPEC = "spec_xml.zip";
+    
+    private static DatabasePortObjectSpec load(
+            final PortObjectSpecZipInputStream is) throws IOException {
+        ZipEntry ze = is.getNextEntry();
+        if (!ze.getName().equals(KEY_DATABASE_CONNECTION)) {
+            throw new IOException("Key \"" + ze.getName() + "\" does not "
+                    + " match expected zip entry name \"" 
+                    + KEY_DATABASE_CONNECTION + "\".");
+        }
         ModelContentRO conn = ModelContent.loadFromXML(
-                new FileInputStream(connFile));
-        File specFile = new File(dir, "spec.xml");
+                new NonClosableInputStream.Zip(is));
+        is.getNextEntry();
+        ze = is.getNextEntry();
+        if (!ze.getName().equals(KEY_SPEC)) {
+            throw new IOException("Key \"" + ze.getName() + "\" does not "
+                    + " match expected zip entry name \"" 
+                    + KEY_SPEC + "\".");
+        }
         ModelContentRO specModel = ModelContent.loadFromXML(
-                new FileInputStream(specFile));
+                new NonClosableInputStream.Zip(is));
         DataTableSpec spec = null;
         try {
             spec = DataTableSpec.load(specModel);
@@ -109,14 +131,19 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
         return new DatabasePortObjectSpec(spec, conn);
     }
     
-    private static void save(final File dir, 
+    private static void save(final PortObjectSpecZipOutputStream os, 
             final DatabasePortObjectSpec portObjectSpec) throws IOException {
-        File connFile = new File(dir, "db_connection.xml");
-        portObjectSpec.m_conn.saveToXML(new FileOutputStream(connFile));
-        ModelContent specModel = new ModelContent("spec.xml");
+        ZipEntry ze = new ZipEntry(KEY_DATABASE_CONNECTION);
+        os.putNextEntry(ze);
+        portObjectSpec.m_conn.saveToXML(new NonClosableOutputStream.Zip(os));
+        ze.clone();
+        ze = new ZipEntry(KEY_SPEC);
+        ModelContent specModel = new ModelContent(KEY_SPEC);
         portObjectSpec.m_spec.save(specModel);
-        File specFile = new File(dir, "spec.xml");
-        specModel.saveToXML(new FileOutputStream(specFile));
+        os.putNextEntry(new ZipEntry(KEY_SPEC));
+        specModel.saveToXML(new NonClosableOutputStream.Zip(os));
+        ze.clone();
+        os.close();
     }
     
 }

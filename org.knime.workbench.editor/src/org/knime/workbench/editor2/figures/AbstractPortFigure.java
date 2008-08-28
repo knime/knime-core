@@ -33,10 +33,11 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.DatabasePortObject;
 import org.knime.core.node.ModelPortObject;
 import org.knime.core.node.port.AbstractSimplePortObject;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.database.DatabasePortObject;
+
 
 /**
  * 

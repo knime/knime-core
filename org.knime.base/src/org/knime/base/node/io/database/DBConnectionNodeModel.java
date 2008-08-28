@@ -30,8 +30,6 @@ import java.io.IOException;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.DatabasePortObject;
-import org.knime.core.node.DatabasePortObjectSpec;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.GenericNodeModel;
@@ -42,6 +40,8 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.database.DatabasePortObject;
+import org.knime.core.node.port.database.DatabasePortObjectSpec;
 
 /**
  * 

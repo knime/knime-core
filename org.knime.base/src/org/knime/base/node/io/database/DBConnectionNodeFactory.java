@@ -23,11 +23,11 @@
 package org.knime.base.node.io.database;
 
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.DatabasePortObject;
 import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.database.DatabasePortObject;
 
 /**
  * 

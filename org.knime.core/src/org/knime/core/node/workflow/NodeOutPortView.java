@@ -36,7 +36,6 @@ import javax.swing.JMenuItem;
 import javax.swing.WindowConstants;
 
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.DatabasePortObject;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.ModelPortObject;
 import org.knime.core.node.NodeModel;
@@ -44,6 +43,7 @@ import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.database.DatabasePortObject;
 
 /**
  * Implements a view to inspect the data stored in an output port.
