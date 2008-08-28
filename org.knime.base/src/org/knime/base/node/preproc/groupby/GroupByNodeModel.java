@@ -75,6 +75,11 @@ public class GroupByNodeModel extends GenericNodeModel {
     public static final String OLD_CFG_NUMERIC_COL_METHOD =
         "numericColumnMethod";
 
+    /**Old configuration key for the move the group by columns to front
+     * option. This was used by the previous version.*/
+    protected static final String OLD_CFG_MOVE_GROUP_BY_COLS_2_FRONT =
+        "moveGroupByCols2Front";
+
     /**Old configuration key of the selected aggregation method for
      * none numerical columns. This was used by the previous version.*/
     public static final String OLD_CFG_NOMINAL_COL_METHOD =
@@ -89,10 +94,6 @@ public class GroupByNodeModel extends GenericNodeModel {
 
     /**Configuration key for the sort in memory option.*/
     protected static final String CFG_SORT_IN_MEMORY = "sortInMemory";
-
-//    /**Configuration key for the move the group by columns to front option.*/
-//    protected static final String CFG_MOVE_GROUP_BY_COLS_2_FRONT =
-//        "moveGroupByCols2Front";
 
     /**Configuration key for the keep original column name option.*/
     protected static final String CFG_KEEP_COLUMN_NAME =
@@ -262,6 +263,12 @@ public class GroupByNodeModel extends GenericNodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+       final boolean move2Front =
+           settings.getBoolean(OLD_CFG_MOVE_GROUP_BY_COLS_2_FRONT, true);
+       if (!move2Front) {
+           setWarningMessage(
+                   "Setting ignored: Group columns will be moved to front");
+       }
        m_groupByCols.loadSettingsFrom(settings);
        m_columnAggregators.clear();
        try {
@@ -330,6 +337,11 @@ public class GroupByNodeModel extends GenericNodeModel {
         }
         final List<String> groupByCols = m_groupByCols.getIncludeList();
         final DataTableSpec origSpec = (DataTableSpec)inSpecs[0];
+        //we have to explicit set the all not group columns in the
+        //exclude list of the SettingsModelFilterString
+        final Collection<String> exclList =
+            getExcludeList(origSpec, groupByCols);
+        m_groupByCols.setExcludeList(exclList);
         try {
             GroupByTable.checkGroupCols(origSpec, groupByCols);
         } catch (final IllegalArgumentException e) {
@@ -357,6 +369,18 @@ public class GroupByNodeModel extends GenericNodeModel {
                 m_keepColumnName.getBooleanValue());
 
         return new DataTableSpec[] {spec};
+    }
+
+    private static Collection<String> getExcludeList(
+            final DataTableSpec origSpec, final List<String> groupByCols) {
+        final Collection<String> exlList = new LinkedList<String>();
+        for (final DataColumnSpec spec : origSpec) {
+            if (groupByCols == null || groupByCols.isEmpty()
+                    || !groupByCols.contains(spec.getName())) {
+                exlList.add(spec.getName());
+            }
+        }
+        return exlList;
     }
 
     /**
