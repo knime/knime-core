@@ -247,7 +247,7 @@ public enum AggregationMethod {
         final List<AggregationMethod> labels =
             new ArrayList<AggregationMethod>(methods.length);
         for (int i = 0, length = methods.length; i < length; i++) {
-            if (methods[i].isNumerical() == numeric) {
+            if (numeric || methods[i].isNumerical() == numeric) {
                 labels.add(methods[i]);
             }
         }
