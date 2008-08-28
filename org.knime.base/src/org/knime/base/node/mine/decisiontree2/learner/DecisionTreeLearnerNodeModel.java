@@ -435,7 +435,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         timer = System.currentTimeMillis();
 
         DecisionTreeNode root = null;
-        root = buildTree(initialTable, exec, 0);
+        root = buildTree(initialTable, exec, 0, m_splitQualityMeasure);
 
         LOGGER.info("Tree built in (ms) "
                 + (System.currentTimeMillis() - timer));
@@ -525,9 +525,11 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      *            partitioning
      * @param exec the execution context for progress information
      * @param depth the current recursion depth
+     * @throws CloneNotSupportedException
      */
     private DecisionTreeNode buildTree(final InMemoryTable table,
-            final ExecutionContext exec, final int depth)
+            final ExecutionContext exec, final int depth,
+            final SplitQualityMeasure splitQualityMeasure)
             throws CanceledExecutionException, IllegalAccessException {
 
         exec.checkCanceled();
@@ -552,7 +554,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             long time = System.currentTimeMillis();
             LOGGER.info("Find best split...");
             SplitFinder splittFinder =
-                    new SplitFinder(table, m_splitQualityMeasure,
+                    new SplitFinder(table, splitQualityMeasure,
                             m_averageSplitpoint, m_minNumberRecordsPerNode,
                             m_binaryNominalSplitMode,
                             m_maxNumNominalsForCompleteComputation);
@@ -618,7 +620,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                 exec.checkCanceled();
                 if (partitionTable.getNumberDataRows() * m_numberAttributes < 10000
                         || !m_parallelProcessing.isThreadAvailable()) {
-                    children[i] = buildTree(partitionTable, exec, depth + 1);
+                    children[i] = buildTree(partitionTable, exec, depth + 1,
+                            splitQualityMeasure);
                 } else {
                     String threadName =
                             "Build thread, node: " + nodeId + "." + i;
@@ -908,7 +911,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         @Override
         public void run() {
             try {
-                m_resultNode = buildTree(m_table, m_exec, m_depth);
+                m_resultNode = buildTree(m_table, m_exec, m_depth,
+                        (SplitQualityMeasure)m_splitQualityMeasure.clone());
                 LOGGER.info("Thread: " + getName() + " finished");
             } catch (Exception e) {
                 m_exception = e;

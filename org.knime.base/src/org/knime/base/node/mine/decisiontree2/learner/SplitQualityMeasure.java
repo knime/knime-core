@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   19.03.2007 (sieb): created
  */
@@ -26,14 +26,14 @@ package org.knime.base.node.mine.decisiontree2.learner;
 
 /**
  * The abstract class for split quality measures like gini or gain ratio.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
-public abstract class SplitQualityMeasure {
+public abstract class SplitQualityMeasure implements Cloneable {
 
     /**
      * Calculates the quality for a given split.
-     * 
+     *
      * @param allOverRecords the allover number of records with known values in
      *            the partition to split; corresponds to N in the formula
      * @param partitionFrequency the frequencies of the different patitions;
@@ -53,7 +53,7 @@ public abstract class SplitQualityMeasure {
     /**
      * Determines if the first passed quality is better or equal compared to the
      * second quality.
-     * 
+     *
      * @param quality1 first quality to compare
      * @param quality2 second quality to compare
      * @return true, iff the first quality is better or equal to the second
@@ -65,7 +65,7 @@ public abstract class SplitQualityMeasure {
     /**
      * Determines if the first passed quality is better compared to the second
      * quality.
-     * 
+     *
      * @param quality1 first quality to compare
      * @param quality2 second quality to compare
      * @return true, iff the first quality is better to the second quality
@@ -75,7 +75,7 @@ public abstract class SplitQualityMeasure {
 
     /**
      * Returns the worst value for this quality measure.
-     * 
+     *
      * @return the worst value for this quality measure
      */
     public abstract double getWorstValue();
@@ -85,7 +85,7 @@ public abstract class SplitQualityMeasure {
      * a previous distribution compared to a new one. This previous distribution
      * can be reused. For those cases a init method is provided that enable pre
      * calculations to increase performance.
-     * 
+     *
      * @param classFrequencies the class frequencies
      * @param allOverRecords the overall count
      */
@@ -104,16 +104,24 @@ public abstract class SplitQualityMeasure {
      * compared inside a single attribute, this method allows to perform post
      * processing (normalization) of quality measures to avoid a lot of
      * unnecessary calculations.
-     * 
+     *
      * @param qualityMeasure the quality measure to post process
      * @param allOverRecords the allover number of known (non-missing) records
      * @param partitionFrequency the frequencies of the potential split
      *            partitions
      * @param numUnknownRecords the number of unknown (missing) records
-     * 
+     *
      * @return the post processed quality measure
      */
     public abstract double postProcessMeasure(final double qualityMeasure,
             final double allOverRecords, final double[] partitionFrequency,
             final double numUnknownRecords);
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
 }
