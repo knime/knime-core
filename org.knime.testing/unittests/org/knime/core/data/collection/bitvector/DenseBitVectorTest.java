@@ -170,7 +170,7 @@ public class DenseBitVectorTest extends TestCase {
 
         // toString on zero length shouldn't fail.
         bvZ1.toString();
-        bvZ1.dump();
+        bvZ1.dumpBits();
         assertTrue(bvZ1.getAllBits().length == 0);
         bvZ1.hashCode();
     }
@@ -371,6 +371,17 @@ public class DenseBitVectorTest extends TestCase {
         assertTrue(bv129.getAllBits()[1] == 0xC000000000000007L);
         assertTrue(bv129.getAllBits()[2] == 0x1L);
 
+        bv129.set(0, 129);
+        long[] bits = bv129.getAllBits();
+        assertTrue(bits[0] == 0xFFFFFFFFFFFFFFFFL);
+        assertTrue(bits[1] == 0xFFFFFFFFFFFFFFFFL);
+        assertTrue(bv129.cardinality() == 129);
+        assertTrue(bv129.get(3));
+        // make sure we got a copy
+        bits[0] = 0L;
+        assertTrue(bv129.cardinality() == 129);
+        assertTrue(bv129.get(3));
+
     }
 
     /**
@@ -498,7 +509,7 @@ public class DenseBitVectorTest extends TestCase {
     /**
      * Tests the nextSetBit and nextClearBit methods.
      */
-    public void nextSetClearBit() {
+    public void testNextSetClearBit() {
 
         DenseBitVector bv10 = new DenseBitVector(10);
 
@@ -527,23 +538,23 @@ public class DenseBitVectorTest extends TestCase {
         assertTrue(bv10.nextClearBit(8) == 9);
 
         DenseBitVector bv64 = new DenseBitVector(64);
-        assertTrue(bv10.nextClearBit(0) == 0);
-        assertTrue(bv10.nextClearBit(62) == 62);
-        assertTrue(bv10.nextClearBit(63) == 63);
-        assertTrue(bv10.nextClearBit(64) == -1);
-        assertTrue(bv10.nextSetBit(8) == -1);
-        assertTrue(bv10.nextSetBit(62) == -1);
-        assertTrue(bv10.nextSetBit(63) == -1);
-        assertTrue(bv10.nextSetBit(64) == -1);
+        assertTrue(bv64.nextClearBit(0) == 0);
+        assertTrue(bv64.nextClearBit(62) == 62);
+        assertTrue(bv64.nextClearBit(63) == 63);
+        assertTrue(bv64.nextClearBit(64) == -1);
+        assertTrue(bv64.nextSetBit(8) == -1);
+        assertTrue(bv64.nextSetBit(62) == -1);
+        assertTrue(bv64.nextSetBit(63) == -1);
+        assertTrue(bv64.nextSetBit(64) == -1);
 
         bv64.set(0, 64);
-        assertTrue(bv10.nextClearBit(0) == -1);
-        assertTrue(bv10.nextClearBit(62) == -1);
-        assertTrue(bv10.nextClearBit(63) == -1);
-        assertTrue(bv10.nextSetBit(8) == 8);
-        assertTrue(bv10.nextSetBit(62) == 62);
-        assertTrue(bv10.nextSetBit(63) == 63);
-        assertTrue(bv10.nextSetBit(64) == -1);
+        assertTrue(bv64.nextClearBit(0) == -1);
+        assertTrue(bv64.nextClearBit(62) == -1);
+        assertTrue(bv64.nextClearBit(63) == -1);
+        assertTrue(bv64.nextSetBit(8) == 8);
+        assertTrue(bv64.nextSetBit(62) == 62);
+        assertTrue(bv64.nextSetBit(63) == 63);
+        assertTrue(bv64.nextSetBit(64) == -1);
 
         DenseBitVector bv120 = new DenseBitVector(120);
         assertTrue(bv120.nextClearBit(0) == 0);
@@ -899,5 +910,18 @@ public class DenseBitVectorTest extends TestCase {
         bv130.clear(129);
         assertTrue(!bv130.intersects(bv256));
         assertTrue(!bv256.intersects(bv130));
+    }
+
+    /**
+     * tests toString
+     */
+    public void testToString() {
+        DenseBitVector bv = new DenseBitVector(500000);
+        bv.set(18);
+        bv.set(7645);
+        bv.set(700);
+        bv.set(381966);
+        assertEquals(bv.toString(), "{18, 700, 7645, 381966}");
+
     }
 }
