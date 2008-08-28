@@ -26,7 +26,7 @@ package org.knime.workbench.editor2.figures;
 
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Locator;
-import org.knime.core.node.PortType;
+import org.knime.core.node.port.PortType;
 
 /**
  *

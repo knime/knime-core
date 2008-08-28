@@ -35,8 +35,8 @@ import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.DatabasePortObject;
 import org.knime.core.node.ModelPortObject;
-import org.knime.core.node.PortType;
-import org.knime.core.node.portobject.AbstractSimplePortObject;
+import org.knime.core.node.port.AbstractSimplePortObject;
+import org.knime.core.node.port.PortType;
 
 /**
  * 

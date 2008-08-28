@@ -24,7 +24,7 @@
  */
 package org.knime.workbench.editor2.figures;
 
-import org.knime.core.node.PortType;
+import org.knime.core.node.port.PortType;
 
 /**
  * TODO: make this class obsolete

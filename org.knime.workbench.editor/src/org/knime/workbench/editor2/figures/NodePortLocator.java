@@ -28,7 +28,7 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.knime.core.node.PortType;
+import org.knime.core.node.port.PortType;
 
 /**
  * Locator for port figures. Makes sure that the ports are "near" the centered

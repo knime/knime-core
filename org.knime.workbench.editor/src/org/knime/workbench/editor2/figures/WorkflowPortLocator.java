@@ -29,7 +29,7 @@ import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.PortType;
+import org.knime.core.node.port.PortType;
 
 /**
  *
