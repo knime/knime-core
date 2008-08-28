@@ -22,7 +22,7 @@
  * History
  *   Jun 5, 2008 (wiswedel): created
  */
-package org.knime.core.node.portobject;
+package org.knime.core.node.port;
 
 import java.io.IOException;
 import java.io.InputStream;

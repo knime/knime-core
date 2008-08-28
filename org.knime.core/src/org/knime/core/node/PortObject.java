@@ -25,8 +25,8 @@ package org.knime.core.node;
 import java.io.IOException;
 
 import org.knime.core.internal.SerializerMethodLoader.Serializer;
-import org.knime.core.node.portobject.AbstractPortObject;
-import org.knime.core.node.portobject.AbstractSimplePortObject;
+import org.knime.core.node.port.AbstractPortObject;
+import org.knime.core.node.port.AbstractSimplePortObject;
 
 
 /**
