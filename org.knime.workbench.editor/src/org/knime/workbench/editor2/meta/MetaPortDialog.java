@@ -58,7 +58,7 @@ public class MetaPortDialog extends Dialog {
         /** Data port. */
         DataPort,
         /** Model port. */
-        ModelPort,
+        PMMLPort,
         /** Database port. */
         DatabasePort;
         
@@ -67,7 +67,7 @@ public class MetaPortDialog extends Dialog {
         static {
             names = new String[3];
             names[0] = DataPort.name();
-            names[1] = ModelPort.name();
+            names[1] = PMMLPort.name();
             names[2] = DatabasePort.name();
         }
         
@@ -182,7 +182,7 @@ public class MetaPortDialog extends Dialog {
                 if (PortTypes.valueOf(selected).equals(PortTypes.DataPort)) {
                     m_port = new Port(BufferedDataTable.TYPE, m_name.getText());
                 } else if (PortTypes.valueOf(selected).equals(
-                        PortTypes.ModelPort)) {
+                        PortTypes.PMMLPort)) {
                     m_port = new Port(PMMLPortObject.TYPE, m_name.getText());
                 } else if (PortTypes.valueOf(selected).equals(
                         PortTypes.DatabasePort)) {

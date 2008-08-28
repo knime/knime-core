@@ -74,8 +74,8 @@ public class Port {
     public String toString() {
         if (m_type.equals(BufferedDataTable.TYPE)) {
             return m_name + "(Data)";
-        } else if (m_type.equals(PMMLPortObject.TYPE)) {
-            return m_name + "(Model)";
+        } else if (PMMLPortObject.TYPE.isSuperTypeOf(m_type)) {
+            return m_name + "(PMML)";
         } else if (m_type.equals(DatabasePortObject.TYPE)) {
             return m_name + "(Data base)";
         } else {

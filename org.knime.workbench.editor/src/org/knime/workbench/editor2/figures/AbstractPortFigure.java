@@ -98,7 +98,7 @@ public abstract class AbstractPortFigure extends Shape {
     @Override
     public Color getBackgroundColor() {
         Color color = Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);
-        if (getType().equals(PMMLPortObject.TYPE)) {
+        if (PMMLPortObject.TYPE.isSuperTypeOf(getType())) {
             // model
             color = Display.getCurrent().getSystemColor(SWT.COLOR_BLUE);
         } else if (AbstractSimplePortObject.class.isAssignableFrom(

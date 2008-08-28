@@ -94,9 +94,9 @@ public class OpenPortViewAction extends Action {
         if (m_nodeContainer.getOutPort(m_index).getPortType().equals(
                 BufferedDataTable.TYPE)) {
             name = "Data Outport " + m_index;
-        } else if (m_nodeContainer.getOutPort(m_index).getPortType().equals(
-                PMMLPortObject.TYPE)){
-            name = "Model Outport " + m_index;
+        } else if (PMMLPortObject.TYPE.isSuperTypeOf(
+                m_nodeContainer.getOutPort(m_index).getPortType())) {
+            name = "PMML Model Outport " + m_index;
         } else {
             name ="Unknown Outport " + m_index;
         }

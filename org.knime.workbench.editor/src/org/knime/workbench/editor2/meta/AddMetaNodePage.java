@@ -135,7 +135,8 @@ public class AddMetaNodePage extends WizardPage {
                                 left - PORT_SIZE, y,
                                 left, y + (PORT_SIZE / 2),
                                 left - PORT_SIZE, y + PORT_SIZE});
-                    } else if (inPort.getType().equals(PMMLPortObject.TYPE)) {
+                    } else if (PMMLPortObject.TYPE.isSuperTypeOf(
+                            inPort.getType())) {
                         gc.setBackground(ColorConstants.blue);
                         gc.fillRectangle(
                                 left - PORT_SIZE, 
@@ -166,7 +167,8 @@ public class AddMetaNodePage extends WizardPage {
                                 right, y,
                                 right + PORT_SIZE, y + (PORT_SIZE / 2),
                                 right, y + PORT_SIZE});
-                    } else if (inPort.getType().equals(PMMLPortObject.TYPE)) {
+                    } else if (PMMLPortObject.TYPE.isSuperTypeOf(
+                            inPort.getType())) {
                         gc.setBackground(ColorConstants.blue);
                         gc.fillRectangle(right, y, PORT_SIZE, PORT_SIZE);
                     } else if (inPort.getType().equals(
