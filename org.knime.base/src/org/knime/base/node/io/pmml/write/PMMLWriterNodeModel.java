@@ -19,6 +19,7 @@
 package org.knime.base.node.io.pmml.write;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.knime.core.node.CanceledExecutionException;
@@ -70,7 +71,7 @@ public class PMMLWriterNodeModel extends GenericNodeModel {
             throws Exception {
         File f = new File(m_outfile.getStringValue());
         PMMLPortObject pmml = (PMMLPortObject)inData[0];
-        pmml.save(f);
+        pmml.save(new FileOutputStream(f));
         return new PortObject[] {};
     }
 

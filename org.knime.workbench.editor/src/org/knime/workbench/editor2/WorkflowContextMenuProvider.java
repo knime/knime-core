@@ -206,7 +206,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                  * available (to enable them uncomment the following lines and
                  * also change the settings in MainPreferencePage.
                  */
-                boolean openEmbedded = false;
+                boolean openEmbedded = true;
                 // boolean openEmbedded = KNIMEUIPlugin.getDefault().
                 // getPreferenceStore().getString(
                 // PreferenceConstants.P_CHOICE_VIEWMODE).equals(

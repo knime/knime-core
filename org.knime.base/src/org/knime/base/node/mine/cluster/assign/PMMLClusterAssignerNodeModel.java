@@ -52,6 +52,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 /**
  * 
@@ -84,7 +85,7 @@ public class PMMLClusterAssignerNodeModel extends GenericNodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        m_clusterSpec = (DataTableSpec)inSpecs[1];
+        m_clusterSpec = ((PMMLPortObjectSpec)inSpecs[1]).getDataTableSpec();
         Vector<Integer> colIndices = new Vector<Integer>();
         for (DataColumnSpec colspec : m_clusterSpec) {
             int index =
@@ -133,7 +134,7 @@ public class PMMLClusterAssignerNodeModel extends GenericNodeModel {
     private void extractModelInfo(final PMMLClusterPortObject model, 
             final PortObjectSpec spec)
             throws InvalidSettingsException {
-        m_clusterSpec = (DataTableSpec)spec;
+        m_clusterSpec = ((PMMLPortObjectSpec)spec).getDataTableSpec();
 
         m_prototypes = new ArrayList<Prototype>();
         String[] labels = model.getLabels();
@@ -156,8 +157,8 @@ public class PMMLClusterAssignerNodeModel extends GenericNodeModel {
         m_colIndices = new int[inclCols.size()];
         int i = 0;
         for (DataColumnSpec colSpec : inclCols) {
-            int idx = ((DataTableSpec)spec).findColumnIndex(
-                    colSpec.getName());
+            int idx = ((PMMLPortObjectSpec)spec).getDataTableSpec()
+                .findColumnIndex(colSpec.getName());
             if (idx < 0) {
                 throw new InvalidSettingsException(
                         "Column " + colSpec.getName() 

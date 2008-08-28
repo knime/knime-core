@@ -18,18 +18,21 @@
  */
 package org.knime.base.node.mine.cluster;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.sax.TransformerHandler;
 
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.port.pmml.PMMLPortObjectSerializer;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -62,18 +65,24 @@ public class PMMLClusterPortObject extends PMMLPortObject
     private static PortObjectSerializer<PMMLClusterPortObject>serializer;
     
     /**
-     * 
-     * @return specialized serializer for cluster port object
+     * Static serializer as demanded from {@link PortObject} framework.
+     * @return serializer for PMML (reads and writes PMML files)
      */
     public static PortObjectSerializer<PMMLClusterPortObject> 
         getPortObjectSerializer() {
-        if (serializer == null) {
-            serializer 
-                = new PMMLClusterPortObjectSerializer();
-        }
+            if (serializer == null) {
+                serializer 
+                    = new PMMLPortObjectSerializer<PMMLClusterPortObject>();
+            }
         return serializer;
     }
     
+    /**
+     * Default constructor necessary for loading.
+     */
+    public PMMLClusterPortObject() {
+        
+    }
     
     /**
      * 
@@ -81,8 +90,8 @@ public class PMMLClusterPortObject extends PMMLPortObject
      * @param nrOfClusters number of clusters
      * @param mins minima of the used column domains
      * @param maxs maxima of the used column domains
-     * @param tableSpec the table spec
-     * @param usedColumns used columns for clustering
+     * @param portSpec the {@link PMMLPortObjectSpec} holding information of the
+     *  PMML DataDictionary and the PMML MiningSchema
      */
     public PMMLClusterPortObject(
             final double[][] prototypes,
@@ -92,7 +101,8 @@ public class PMMLClusterPortObject extends PMMLPortObject
             final PMMLPortObjectSpec portSpec) {
         super(portSpec);
         m_nrOfClusters = nrOfClusters;
-        m_usedColumns = portSpec.getLearningFields();
+        m_usedColumns = getColumnSpecsFor(portSpec.getLearningFields(), 
+                portSpec.getDataTableSpec());
         m_labels = new String[m_nrOfClusters];
         for (int i = 0; i < m_nrOfClusters; i++) {
             m_labels[i] = "cluster_" + i;
@@ -103,7 +113,21 @@ public class PMMLClusterPortObject extends PMMLPortObject
             m_prototypes[i] = normalizePrototype(prototypes[i], 
                     mins[i], maxs[i]);
         }
-        
+    }
+    
+    
+    private Set<DataColumnSpec> getColumnSpecsFor(final Set<String> colNames,
+            final DataTableSpec tableSpec) {
+        Set<DataColumnSpec> colSpecs = new LinkedHashSet<DataColumnSpec>();
+        for (String colName : colNames) {
+            DataColumnSpec colSpec = tableSpec.getColumnSpec(colName);
+            if (colName == null) {
+                throw new IllegalArgumentException(
+                        "Column " + colName + " not found in data table spec!");
+            }
+            colSpecs.add(colSpec);
+        }
+        return colSpecs;
     }
     
     /**
@@ -226,28 +250,6 @@ public class PMMLClusterPortObject extends PMMLPortObject
             addClusters(handler, m_prototypes);
         }
         handler.endElement(null, null, "ClusteringModel");
-    }
-    
-    /**
-     * Writes the used columns as PMML mining schema.
-     * @param handler to write to
-     * @param colSpecs specs of the used columns
-     * @throws SAXException if something goes wrong
-     */
-    protected void addMiningSchema(final TransformerHandler handler, 
-            final DataColumnSpec... colSpecs) throws SAXException {
-        // open mining schema
-        handler.startElement(null, null, "MiningSchema", null);
-        // for each column add it as a mining field
-        for (DataColumnSpec colSpec : colSpecs) {
-            // add mining field name
-            AttributesImpl atts = new AttributesImpl();
-            atts.addAttribute(null, null, "name", CDATA, colSpec.getName());
-            handler.startElement(null, null, "MiningField", atts);
-            handler.endElement(null, null, "MiningField");
-        }
-        // close mining schema
-        handler.endElement(null, null, "MiningSchema");
     }
     
     /**
@@ -382,12 +384,13 @@ public class PMMLClusterPortObject extends PMMLPortObject
      * @throws ParserConfigurationException 
      */
     @Override
-    public PMMLClusterPortObject loadFrom(final File f) 
+    public PMMLClusterPortObject loadFrom(final PMMLPortObjectSpec spec, 
+            final InputStream in) 
         throws ParserConfigurationException, SAXException, IOException {
         PMMLClusterHandler hdl = new PMMLClusterHandler();
         super.addPMMLContentHandler("clusterModel", 
                 hdl);
-        super.loadFrom(f);
+        super.loadFrom(spec, in);
         hdl = (PMMLClusterHandler)super.getPMMLContentHandler(
                 "clusterModel");
         if (hdl.getClusterCoverage() != null) {
@@ -399,8 +402,8 @@ public class PMMLClusterPortObject extends PMMLPortObject
         
         m_mins = hdl.getMins();
         m_maxs = hdl.getMaxs();
-        //dataDictionaryToDataTableSpec(f);
-        m_usedColumns = getSpec().getLearningFields();
+        m_usedColumns = getColumnSpecsFor(spec.getLearningFields(), 
+                spec.getDataTableSpec()); 
         LOGGER.info("loaded cluster port object");
         LOGGER.debug("number of clusters: " + m_nrOfClusters);
         return this;

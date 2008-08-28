@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -43,7 +44,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
@@ -61,6 +61,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
@@ -126,10 +127,6 @@ public class PMMLClusterNodeModel extends GenericNodeModel {
 
     private DataTableSpec m_spec;
 
-    private DataTableSpec m_appendedSpec;
-
-    // predictor params constants
-   
 //    private static final String CFG_PROTOTYPE = "prototype";
 
     private static final String CFG_FEATURE_NAMES = "FeatureNames";
@@ -240,6 +237,8 @@ public class PMMLClusterNodeModel extends GenericNodeModel {
         assert (settings != null);
         m_nrOfClusters.loadSettingsFrom(settings);
         m_nrMaxIterations.loadSettingsFrom(settings);
+        m_dimension = m_usedColumns.getIncludeList().size()
+            + m_usedColumns.getExcludeList().size();
         try {
             m_usedColumns.loadSettingsFrom(settings);
         } catch (InvalidSettingsException ise) {
@@ -352,11 +351,12 @@ public class PMMLClusterNodeModel extends GenericNodeModel {
             final ExecutionContext exec) throws Exception {
         assert (data.length == 1);
         BufferedDataTable inData = (BufferedDataTable)data[0];
+        m_spec = inData.getDataTableSpec();
         // get dimension of feature space
         m_dimension = inData.getDataTableSpec().getNumColumns();
         HashMap<RowKey, Set<RowKey>> mapping
           = new HashMap<RowKey, Set<RowKey>>();
-
+        addExcludeColumnsToIgnoreList();
         initialize(inData);
         // --------- create clusters --------------
         // reserve space for cluster center updates (do batch update!)
@@ -453,7 +453,7 @@ public class PMMLClusterNodeModel extends GenericNodeModel {
             j++;
         } while (j < m_dimension);
         // create output container and also mapping for HiLiteing
-        DataContainer labeledInput = new DataContainer(m_appendedSpec);
+        DataContainer labeledInput = new DataContainer(createAppendedSpec());
         for (DataRow row : inData) {
             int winner = findClosestPrototypeFor(row);
             DataCell cell = new StringCell(CLUSTER + winner);
@@ -476,6 +476,7 @@ public class PMMLClusterNodeModel extends GenericNodeModel {
     }
 
     private void initialize(final DataTable input) {
+        m_dimension = input.getDataTableSpec().getNumColumns();
         // initialize matrix of double (nr clusters * input dimension)
         m_clusters = new double[m_nrOfClusters.getIntValue()][];
         for (int c = 0; c < m_nrOfClusters.getIntValue(); c++) {
@@ -576,56 +577,6 @@ public class PMMLClusterNodeModel extends GenericNodeModel {
         return outport;
     }
     
-    /*
-    private double[] normalizePrototype(final double[] prototype, 
-            final double[] min, final double[] max) {
-        double[] normalized = new double[prototype.length];
-        for (int i = 0; i < prototype.length; i++) {
-            normalized[i] = (prototype[i] - min[i]) / (max[i] - min[i]); 
-        }
-        return normalized;
-    }
-    
-    /*
-     * {@inheritDoc}
-     *
-    @Override
-    protected void saveModelContent(final int index,
-            final ModelContentWO predParams) throws InvalidSettingsException {
-        /*
-         * Determine the columns that have been used for clustering.
-         *
-        String[] colsUsed = new String[m_dimension - m_nrIgnoredColumns];
-        DataColumnSpec[] colSpecs 
-            = new DataColumnSpec[m_dimension - m_nrIgnoredColumns];
-        int pos = 0;
-        for (int i = 0; i < m_spec.getNumColumns(); i++) {
-            if (!m_ignoreColumn[i]) {
-                colsUsed[pos] = m_spec.getColumnSpec(i).getName();
-                colSpecs[pos] = m_spec.getColumnSpec(i);
-                pos++;
-            }
-        }
-       
-        ModelContentWO specWO =
-                predParams.addModelContent(Prototype.CFG_COLUMNSUSED);
-        ColumnRearranger colre = new ColumnRearranger(m_spec);
-        colre.keepOnly(colsUsed);
-        DataTableSpec clusterSpec = colre.createSpec();
-        clusterSpec.save(specWO);
-
-        ModelContentWO protos =
-                predParams.addModelContent(Prototype.CFG_PROTOTYPE);
-
-        for (int c = 0; c < m_nrOfClusters.getIntValue(); c++) {
-            ModelContentWO protoWO = protos.addModelContent(CFG_PROTOTYPE + c);
-            Prototype proto =
-                    new Prototype(m_clusters[c], new StringCell(CLUSTER
-                            + c));
-            proto.save(protoWO);
-        }
-    }
-    
     /**
      * Clears the model.
      * 
@@ -679,24 +630,18 @@ public class PMMLClusterNodeModel extends GenericNodeModel {
             m_usedColumns.setIncludeList(includedColumns);
             m_usedColumns.setExcludeList(excludedColumns);
         }
-        // add all excluded columns to the ignore list
-        for (int i = 0; i < m_dimension; i++) {
-            // ignore if not compatible with double
-            m_ignoreColumn[i] = !(m_spec.getColumnSpec(i).getType()
-                    .isCompatible(DoubleValue.class)) 
-                    || 
-                    //  or if it is in the exclude list:
-                    m_usedColumns.getExcludeList()
-                    .contains(m_spec.getColumnSpec(i).getName());
-            if (m_ignoreColumn[i]) {
-                m_nrIgnoredColumns++;
-            }
-        }
+        addExcludeColumnsToIgnoreList();
         // check if some columns are included
         if (m_usedColumns.getIncludeList().size() <= 0) {
             setWarningMessage("No column in include list! " 
                     + "Produces one huge cluster");
         }
+        DataTableSpec appendedSpec = createAppendedSpec();
+        // return spec for data and model outport!
+        return new PortObjectSpec[]{appendedSpec, createPMMLSpec(m_spec)};
+    }
+    
+    private DataTableSpec createAppendedSpec() {
         // determine the possible values of the appended column
         DataCell[] possibleValues = new DataCell[m_nrOfClusters.getIntValue()];
         for (int i = 0; i < m_nrOfClusters.getIntValue(); i++) {
@@ -720,19 +665,34 @@ public class PMMLClusterNodeModel extends GenericNodeModel {
         // create the appended column spec
         DataColumnSpec labelColSpec = creator.createSpec();
         DataTableSpec appendedSpec = new DataTableSpec(labelColSpec);
-        m_appendedSpec = new DataTableSpec(m_spec, appendedSpec);
-        // return spec for data and model outport!
-        DataTableSpec clusterSpec = getUsedColumnSpec();
-        return new DataTableSpec[]{m_appendedSpec, clusterSpec};
+        return new DataTableSpec(m_spec, appendedSpec);    
     }
 
-    private DataTableSpec getUsedColumnSpec() {
-        String[] colsUsed = new String[m_usedColumns.getIncludeList().size()];
-        colsUsed = m_usedColumns.getIncludeList().toArray(colsUsed);
-        ColumnRearranger colre = new ColumnRearranger(m_spec);
-        colre.keepOnly(colsUsed);
-        DataTableSpec clusterSpec = colre.createSpec();
-        return clusterSpec;
+    private void addExcludeColumnsToIgnoreList() {
+        // add all excluded columns to the ignore list
+        m_ignoreColumn = new boolean[m_dimension];
+        m_nrIgnoredColumns = 0;
+        for (int i = 0; i < m_dimension; i++) {
+            // ignore if not compatible with double
+            m_ignoreColumn[i] = !(m_spec.getColumnSpec(i).getType()
+                    .isCompatible(DoubleValue.class)) 
+                    || 
+                    //  or if it is in the exclude list:
+                    m_usedColumns.getExcludeList()
+                    .contains(m_spec.getColumnSpec(i).getName());
+            if (m_ignoreColumn[i]) {
+                m_nrIgnoredColumns++;
+            }
+        }
+    }
+    
+    private PMMLPortObjectSpec createPMMLSpec(final DataTableSpec tableSpec) {
+        PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
+                tableSpec);
+        Set<String>activeCols = new LinkedHashSet<String>();
+        activeCols.addAll(m_usedColumns.getIncludeList());
+        creator.setLearningColsNames(activeCols);
+        return creator.createSpec();
     }
 
     /**

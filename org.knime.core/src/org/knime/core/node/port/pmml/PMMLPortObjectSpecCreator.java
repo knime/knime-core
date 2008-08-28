@@ -18,7 +18,7 @@
  */
 package org.knime.core.node.port.pmml;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.knime.core.data.DataColumnSpec;
@@ -32,11 +32,11 @@ public class PMMLPortObjectSpecCreator {
     
     private final DataTableSpec m_dataTableSpec;
     
-    private Set<DataColumnSpec>m_learningCols;
+    private Set<String>m_learningCols;
     
-    private Set<DataColumnSpec> m_ignoredCols;
+    private Set<String> m_ignoredCols;
     
-    private Set<DataColumnSpec> m_targetCols;
+    private Set<String> m_targetCols;
     
     /**
      * 
@@ -50,15 +50,12 @@ public class PMMLPortObjectSpecCreator {
      * @param learningCols the learningCols to set
      */
     public void setLearningColsNames(final Set<String> learningCols) {
-        m_learningCols = new HashSet<DataColumnSpec>();
-        for (String colName : learningCols) {
-            DataColumnSpec colSpec = m_dataTableSpec.getColumnSpec(colName);
-            if (colSpec == null) {
-                m_learningCols = new HashSet<DataColumnSpec>();
-                throw new IllegalArgumentException("Column with name " 
-                        + colName + " is not in underlying DataTableSpec!");
-            }
-            m_learningCols.add(colSpec);
+        if (learningCols == null) {
+            throw new IllegalArgumentException(
+                    "Learning columns must not be null!");
+        }
+        if (validColumnSpecNames(learningCols)) {
+            m_learningCols = learningCols;
         }
     }
     
@@ -68,7 +65,16 @@ public class PMMLPortObjectSpecCreator {
      */
     public void setLearningCols(final Set<DataColumnSpec> learningCols) {
         // TODO: sanity checks . != null, etc.
-        m_learningCols = learningCols;
+        if (learningCols == null) {
+           throw new IllegalArgumentException(
+                   "Learning columns must not be null!");
+        }
+        if (validColumnSpec(learningCols)) {
+            m_learningCols = new LinkedHashSet<String>();
+            for (DataColumnSpec colSpec : learningCols) {            
+                m_learningCols.add(colSpec.getName());
+            }
+        }
     }
     
 
@@ -76,15 +82,12 @@ public class PMMLPortObjectSpecCreator {
      * @param ignoredCols the ignoredCols to set
      */
     public void setIgnoredColsNames(final Set<String> ignoredCols) {
-        m_ignoredCols = new HashSet<DataColumnSpec>();
-        for (String colName : ignoredCols) {
-            DataColumnSpec colSpec = m_dataTableSpec.getColumnSpec(colName);
-            if (colSpec == null) {
-                m_ignoredCols = new HashSet<DataColumnSpec>();
-                throw new IllegalArgumentException("Column with name " 
-                        + colName + " is not in underlying DataTableSpec!");
-            }
-            m_ignoredCols.add(colSpec);
+        if (ignoredCols == null) {
+            throw new IllegalArgumentException(
+                    "Ignored columns must not be null!");
+        }
+        if (validColumnSpecNames(ignoredCols)) {
+            m_ignoredCols = ignoredCols;
         }
     }
 
@@ -94,22 +97,27 @@ public class PMMLPortObjectSpecCreator {
      * @param ignoredCols columns ignored during learning
      */
     public void setIgnoredCols(final Set<DataColumnSpec>ignoredCols) {
-        // TODO: sanity checks != null, etc.
-        m_ignoredCols = ignoredCols;
+        if (ignoredCols == null) {
+            throw new IllegalArgumentException(
+                    "Ignored columns must not be null!");
+        }
+        if (validColumnSpec(ignoredCols)) {
+            m_ignoredCols = new LinkedHashSet<String>();
+            for (DataColumnSpec colSpec : ignoredCols) {
+                m_ignoredCols.add(colSpec.getName());
+            }
+        }
     }
     /**
      * @param targetCols the targetCols to set
      */
     public void setTargetColsNames(final Set<String> targetCols) {
-        m_targetCols = new HashSet<DataColumnSpec>();
-        for (String colName : targetCols) {
-            DataColumnSpec colSpec = m_dataTableSpec.getColumnSpec(colName);
-            if (colSpec == null) {
-                m_targetCols = new HashSet<DataColumnSpec>();
-                throw new IllegalArgumentException("Column with name " 
-                        + colName + " is not in underlying DataTableSpec!");
-            }
-            m_targetCols.add(colSpec);
+        if (targetCols == null) {
+            throw new IllegalArgumentException(
+                    "Target columns must not be null!");
+        }
+        if (validColumnSpecNames(targetCols)) {
+            m_targetCols = targetCols;
         }
     }
     
@@ -119,9 +127,40 @@ public class PMMLPortObjectSpecCreator {
      */
     public void setTargetCols(final Set<DataColumnSpec>targetCols) {
         // TODO: sanity checks != null, etc.
-        m_targetCols = targetCols;
+        if (targetCols == null) {
+            throw new IllegalArgumentException(
+                    "Target columns must not be null!");
+        }
+        if (validColumnSpec(targetCols)) {
+            m_targetCols = new LinkedHashSet<String>();
+            for (DataColumnSpec colSpec : targetCols) {
+                m_targetCols.add(colSpec.getName());
+            }
+        }
+    }
+    
+    private boolean validColumnSpec(final Set<DataColumnSpec> colSpecs) {
+        for (DataColumnSpec colSpec : colSpecs) {
+            if (m_dataTableSpec.getColumnSpec(colSpec.getName()) == null) {
+                throw new IllegalArgumentException("Column with name " 
+                        + colSpec.getName() 
+                        + " is not in underlying DataTableSpec!");
+            }
+        }
+        return true;
     }
 
+    private boolean validColumnSpecNames(final Set<String> colSpecs) {
+        for (String colSpec : colSpecs) {
+            if (m_dataTableSpec.getColumnSpec(colSpec) == null) {
+                throw new IllegalArgumentException("Column with name " 
+                        + colSpec 
+                        + " is not in underlying DataTableSpec!");
+            }
+        }
+        return true;
+    }
+    
     /**
      * Creates a new {@link PMMLPortObjectSpec} based on the internal attributes
      * of this creator.

@@ -18,10 +18,9 @@
  */
 package org.knime.core.node.port.pmml;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -43,7 +42,7 @@ import org.xml.sax.helpers.AttributesImpl;
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class PMMLPortObject implements PortObject {
+public abstract class PMMLPortObject implements PortObject {
     
     /** Constant for CDATA. */
     protected static final String CDATA = "CDATA";
@@ -55,17 +54,13 @@ public class PMMLPortObject implements PortObject {
     protected static final String VALUE = "Value";
     
     private TransformerHandler m_handler;
-    private FileOutputStream m_fos;
-    private File m_result;
     
+    private PMMLPortObjectSpec m_spec;
     private PMMLModelType m_modelType;
     
     private PMMLMasterContentHandler m_masterHandler;
     
     private static PortObjectSerializer<? extends PMMLPortObject>serializer;
-    
-    private PMMLPortObjectSpec m_spec;
-    
     
     /**
      * Static serializer as demanded from {@link PortObject} framework.
@@ -86,6 +81,13 @@ public class PMMLPortObject implements PortObject {
      */
     public static final PortType TYPE = new PortType(PMMLPortObject.class);
     
+    /**
+     * Default constructor necessary for loading. Derived classes also 
+     * <em>must</em> provide a default constructor, otherwise loading will fail.
+     */
+    public PMMLPortObject() {
+        m_masterHandler = new PMMLMasterContentHandler();
+    }
     
     /**
      * @param spec the referring {@link PMMLPortObjectSpec}
@@ -129,9 +131,8 @@ public class PMMLPortObject implements PortObject {
         return m_modelType;
     }
     
-    private void init(final File file) 
-        throws TransformerConfigurationException, SAXException, 
-        FileNotFoundException {
+    private void init(final OutputStream out) 
+        throws TransformerConfigurationException, SAXException {
         SAXTransformerFactory fac = (SAXTransformerFactory)TransformerFactory
         .newInstance();
         m_handler = fac.newTransformerHandler();
@@ -140,9 +141,7 @@ public class PMMLPortObject implements PortObject {
         t.setOutputProperty(OutputKeys.METHOD, "xml");
         t.setOutputProperty(OutputKeys.INDENT, "yes");
         
-        m_result = file;        
-        m_fos = new FileOutputStream(m_result);
-        m_handler.setResult(new StreamResult(m_fos));
+        m_handler.setResult(new StreamResult(out));
         
         // PMML root element, namespace declaration, etc.
         m_handler.startDocument();
@@ -162,23 +161,21 @@ public class PMMLPortObject implements PortObject {
      * method but the {@link #writePMMLModel(TransformerHandler)} instead.
      *    
      * 
-     * @param file directory which should contain the PMML file 
-     * @return valid PMML file
+     * @param out zipped stream which reads the PMML file 
      * @throws SAXException if something goes wrong during writing of PMML
      * @throws IOException if the file cannot be written to the directory
      * @throws TransformerConfigurationException if something goes wrong with 
      *  the transformation handler 
      */
-    public File save(final File file) 
+    public void save(final OutputStream out) 
         throws SAXException, IOException, TransformerConfigurationException {
-        init(file);
+        init(out);
         PMMLPortObjectSpec.writeDataDictionary(getSpec().getDataTableSpec(),
                 m_handler);
         writePMMLModel(m_handler);
         m_handler.endElement(null, null, "PMML");
         m_handler.endDocument();
-        m_fos.close();
-        return m_result;
+        out.close();
     }
     
     
@@ -195,24 +192,27 @@ public class PMMLPortObject implements PortObject {
      * specific content handler to the master content handler.
      * @see #addPMMLContentHandler(String, PMMLContentHandler)
      *  
-     * @param f the fire containing the PMML
+     * @param spec the referring port object spec 
+     * @param stream the streamed file containing the PMML
      * @return a loaded PMML object with all fields initialized with the values 
      *  found in the PMML
      * @throws ParserConfigurationException if parser cannot be instantiated
      * @throws SAXException if something goes wrong during parsing
      * @throws IOException if the file cannot be found or read
      */
-    public PMMLPortObject loadFrom(final File f) 
-        throws ParserConfigurationException, SAXException, IOException {
+    public PMMLPortObject loadFrom(final PMMLPortObjectSpec spec, 
+            final InputStream stream) 
+            throws ParserConfigurationException, SAXException, IOException {
         SAXParserFactory fac = SAXParserFactory.newInstance();
         SAXParser parser = fac.newSAXParser();
         ExtractModelTypeHandler modelTypeHdl = new ExtractModelTypeHandler();
         m_masterHandler.addContentHandler(ExtractModelTypeHandler.ID, 
                 modelTypeHdl);
-        parser.parse(f, m_masterHandler);
+        parser.parse(stream, m_masterHandler);
         ExtractModelTypeHandler hdl = (ExtractModelTypeHandler)m_masterHandler
             .getDefaultHandler(ExtractModelTypeHandler.ID);
         m_modelType = hdl.getModelType();
+        m_spec = spec;
         return this;
         
     }
@@ -232,10 +232,9 @@ public class PMMLPortObject implements PortObject {
      * @param handler the handler responsible for writing the PMML
      * @throws SAXException if something goes wrong during writing the PMML
      */
-    protected void writePMMLModel(final TransformerHandler handler)
-        throws SAXException {
-        
-    }
+    protected abstract void writePMMLModel(final TransformerHandler handler)
+        throws SAXException;
+    
     
 
 }

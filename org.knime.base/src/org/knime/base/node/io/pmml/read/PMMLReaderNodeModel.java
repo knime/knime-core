@@ -19,13 +19,13 @@
 package org.knime.base.node.io.pmml.read;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -40,9 +40,12 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.DataDictionaryContentHandler;
 import org.knime.core.node.port.pmml.ExtractModelTypeHandler;
+import org.knime.core.node.port.pmml.MiningSchemaContentHandler;
 import org.knime.core.node.port.pmml.PMMLMasterContentHandler;
 import org.knime.core.node.port.pmml.PMMLModelType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.xml.sax.SAXException;
 
 /**
@@ -63,7 +66,7 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
 
     private PMMLModelType m_type;
     
-    private DataTableSpec m_spec;
+    private PMMLPortObjectSpec m_spec;
     
     /**
      * 
@@ -79,7 +82,8 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         try {
-
+            // read the data dictionary and the mining schema and create a 
+            // PMMLPortObjectSpec
             m_spec = dataDictionaryToDataTableSpec();
 
             LOGGER.debug("model type: " + m_type.name());
@@ -90,7 +94,7 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
         }
     }
 
-    private DataTableSpec dataDictionaryToDataTableSpec() 
+    private PMMLPortObjectSpec dataDictionaryToDataTableSpec() 
         throws ParserConfigurationException, SAXException {
         File f = new File(m_file.getStringValue());
         SAXParserFactory fac = SAXParserFactory.newInstance();
@@ -103,6 +107,10 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
         ExtractModelTypeHandler modelTypeHdl = new ExtractModelTypeHandler();
         masterHandler.addContentHandler(ExtractModelTypeHandler.ID, 
                 modelTypeHdl);
+        MiningSchemaContentHandler miningSchemaHdl 
+            = new MiningSchemaContentHandler();
+        masterHandler.addContentHandler(MiningSchemaContentHandler.ID, 
+                miningSchemaHdl);
         try {
             parser.parse(f, masterHandler);
         } catch (Exception e) {
@@ -110,7 +118,12 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
             LOGGER.error("Error parsing file" + m_file.getStringValue(), e);
         }
         m_type = modelTypeHdl.getModelType();
-        m_spec = ddHandler.getDataTableSpec(); 
+        PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
+                ddHandler.getDataTableSpec());
+        creator.setIgnoredColsNames(miningSchemaHdl.getIgnoredFields());
+        creator.setLearningColsNames(miningSchemaHdl.getLearningFields());
+        creator.setTargetColsNames(miningSchemaHdl.getTargetFields());
+        m_spec = creator.createSpec();
         return m_spec;
     }
     
@@ -121,7 +134,8 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
     protected PortObject[] execute(final PortObject[] inData, 
             final ExecutionContext exec)
             throws Exception {
-        // TODO: model type registration!!!
+        // TODO: this instantiation has to be done differently 
+        // (without the necessity of a default contructor)
         // retrieve selected PortObject class -> instantiate and load it
         LOGGER.debug("class name: " + m_portObjectClassName.getStringValue());
         Class<? extends PMMLPortObject> clazz 
@@ -129,8 +143,8 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
                     m_portObjectClassName.getStringValue());
         PMMLPortObject portObject = clazz.newInstance();
         m_spec = dataDictionaryToDataTableSpec();
-//        portObject.setSpec(dataDictionaryToDataTableSpec());
-        portObject.loadFrom(new File(m_file.getStringValue()));
+        portObject.loadFrom(m_spec, new FileInputStream(
+                new File(m_file.getStringValue())));
         return new PortObject[] {portObject};
     }
 

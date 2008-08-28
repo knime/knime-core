@@ -18,10 +18,11 @@
  */
 package org.knime.core.node.port.pmml;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.PortObjectSpecZipInputStream;
+import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 import org.knime.core.node.port.PortObjectSpec.PortObjectSpecSerializer;
 
 /**
@@ -47,10 +48,11 @@ public class PMMLPortObjectSpecSerializer
      * {@inheritDoc}
      */
     @Override
-    protected PMMLPortObjectSpec loadPortObjectSpec(final File directory)
+    public PMMLPortObjectSpec loadPortObjectSpec(
+            final PortObjectSpecZipInputStream in)
             throws IOException {
         try {
-            return PMMLPortObjectSpec.loadFrom(directory);
+            return PMMLPortObjectSpec.loadFrom(in);
         } catch (InvalidSettingsException e) {
             throw new IOException(e);
         }
@@ -60,9 +62,9 @@ public class PMMLPortObjectSpecSerializer
      * {@inheritDoc}
      */
     @Override
-    protected void savePortObjectSpec(final PMMLPortObjectSpec portObjectSpec,
-            final File directory) throws IOException {
-        portObjectSpec.saveTo(directory);
+    public void savePortObjectSpec(final PMMLPortObjectSpec portObjectSpec,
+            final PortObjectSpecZipOutputStream out) throws IOException {
+        portObjectSpec.saveTo(out);
         
     }
     
