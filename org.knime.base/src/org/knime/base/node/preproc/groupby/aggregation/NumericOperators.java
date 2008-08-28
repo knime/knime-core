@@ -469,7 +469,7 @@ public final class NumericOperators {
          */
         @Override
         protected DataCell getResultInternal() {
-            final DataCell result = super.getResult();
+            final DataCell result = super.getResultInternal();
             if (result instanceof DoubleCell) {
                 final double value = ((DoubleCell)result).getDoubleValue();
                 return new DoubleCell(Math.sqrt(Math.abs(value)));
