@@ -37,7 +37,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * A dialog for PNN learner to set properties, such as theta minus and plus. 

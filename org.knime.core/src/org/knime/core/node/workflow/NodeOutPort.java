@@ -25,8 +25,8 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.PortObject;
-import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 

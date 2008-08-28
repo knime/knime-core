@@ -26,8 +26,8 @@ package org.knime.base.node.mine.regression;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.PortObject;
-import org.knime.core.node.PortType;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortType;
 
 /**
  * Port object representing simple regression models.

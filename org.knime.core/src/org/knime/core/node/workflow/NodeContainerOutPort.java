@@ -28,8 +28,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.PortObject;
-import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContainer.State;

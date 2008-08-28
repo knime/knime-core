@@ -47,6 +47,8 @@ import org.knime.core.data.container.WrappedTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortType;
 
 
 /**

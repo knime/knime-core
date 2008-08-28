@@ -24,6 +24,8 @@
  */
 package org.knime.core.node;
 
+import org.knime.core.node.port.PortObjectSpec;
+
 /**
  *  <code>ModelPortObjectSpec</code> interface used for model ports.
  *   

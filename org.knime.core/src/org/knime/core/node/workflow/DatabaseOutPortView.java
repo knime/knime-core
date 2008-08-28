@@ -28,8 +28,8 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.DatabasePortObject;
 import org.knime.core.node.DatabasePortObjectSpec;
-import org.knime.core.node.PortObject;
-import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * Database out port overrides the data put port view to visualize the

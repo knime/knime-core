@@ -28,6 +28,13 @@ import java.io.IOException;
 import java.util.zip.ZipEntry;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortObjectSpecZipInputStream;
+import org.knime.core.node.port.PortObjectSpecZipOutputStream;
+import org.knime.core.node.port.PortObjectZipInputStream;
+import org.knime.core.node.port.PortObjectZipOutputStream;
+import org.knime.core.node.port.PortType;
 
 
 /**
@@ -196,7 +203,7 @@ public abstract class NodeModel extends GenericNodeModel {
                 
                 /** {@inheritDoc} */
                 @Override
-                protected ModelContentWrapper loadPortObject(
+                public ModelContentWrapper loadPortObject(
                         final PortObjectZipInputStream in, 
                         final PortObjectSpec spec, final ExecutionMonitor exec)
                         throws IOException, CanceledExecutionException {
@@ -206,7 +213,7 @@ public abstract class NodeModel extends GenericNodeModel {
                  * {@inheritDoc}
                  */
                 @Override
-                protected void savePortObject(final ModelContentWrapper o,
+                public void savePortObject(final ModelContentWrapper o,
                         final PortObjectZipOutputStream out, 
                         final ExecutionMonitor c) 
                     throws IOException, CanceledExecutionException {
@@ -222,7 +229,7 @@ public abstract class NodeModel extends GenericNodeModel {
                  * {@inheritDoc}
                  */
                 @Override
-                protected ModelContentWrapper loadPortObjectSpec(
+                public ModelContentWrapper loadPortObjectSpec(
                         final PortObjectSpecZipInputStream in) throws IOException {
                     ZipEntry entry = in.getNextEntry();
                     if (entry.getName().equals("null.xml")) {
@@ -244,7 +251,7 @@ public abstract class NodeModel extends GenericNodeModel {
                  * {@inheritDoc}
                  */
                 @Override
-                protected void savePortObjectSpec(final ModelContentWrapper o,
+                public void savePortObjectSpec(final ModelContentWrapper o,
                         final PortObjectSpecZipOutputStream out) 
                     throws IOException {
                     if (o.m_hiddenModel != null) {

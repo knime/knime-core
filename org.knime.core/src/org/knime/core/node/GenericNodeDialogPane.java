@@ -62,6 +62,8 @@ import org.knime.core.node.Node.MemoryPolicy;
 import org.knime.core.node.Node.SettingsLoaderAndWriter;
 import org.knime.core.node.config.ConfigEditJTree;
 import org.knime.core.node.config.ConfigEditTreeModel;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.ScopeObjectStack;
 import org.knime.core.node.workflow.ScopeVariable;

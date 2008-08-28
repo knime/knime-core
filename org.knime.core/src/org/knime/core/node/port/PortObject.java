@@ -20,13 +20,17 @@
  * ---------------------------------------------------------------------
  * 
  */
-package org.knime.core.node;
+package org.knime.core.node.port;
 
 import java.io.IOException;
 
 import org.knime.core.internal.SerializerMethodLoader.Serializer;
-import org.knime.core.node.port.AbstractPortObject;
-import org.knime.core.node.port.AbstractSimplePortObject;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.ModelContent;
 
 
 /**
@@ -80,7 +84,7 @@ public interface PortObject {
          * @throws IOException If that fails for IO problems.
          * @throws CanceledExecutionException If canceled.
          */
-        protected abstract void savePortObject(final T portObject,
+        public abstract void savePortObject(final T portObject,
                 final PortObjectZipOutputStream out, 
                 final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException;
@@ -94,7 +98,7 @@ public interface PortObject {
          * @throws IOException If that fails for IO problems.
          * @throws CanceledExecutionException If canceled.
          */
-        protected abstract T loadPortObject(final PortObjectZipInputStream in, 
+        public abstract T loadPortObject(final PortObjectZipInputStream in, 
                 final PortObjectSpec spec, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException;
     }

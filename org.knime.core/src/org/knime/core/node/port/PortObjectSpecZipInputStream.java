@@ -21,29 +21,26 @@
  * History
  *   Aug 27, 2008 (wiswedel): created
  */
-package org.knime.core.node;
+package org.knime.core.node.port;
 
-import java.io.OutputStream;
-import java.util.zip.ZipOutputStream;
+import java.io.InputStream;
+import java.util.zip.ZipInputStream;
 
 /**
- * Zip stream that is used to persist objects of class {@link PortObject}. Its
- * current implementation offers the functionality provided by an 
- * {@link ZipOutputStream}; it is a separate class to enable future 
- * customization (for instance by adding methods that are needed in future
- * versions of KNIME).
+ * Counterpart to {@link PortObjectZipOutputStream}.
  * 
- * <p>This class is not meant to be instantiated by ordinary node 
- * implementations. This class may change without notice. 
+ * <p>Not meant to be instantiated or sub-classed.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class PortObjectZipOutputStream extends ZipOutputStream {
+public class PortObjectSpecZipInputStream extends ZipInputStream {
     
-    /** Delegates to underlying output stream.
-     * @param outStream To write to.
-     * @see ZipOutputStream#ZipOutputStream(OutputStream)
+    /**
+     * Instantiates stream based on argument stream.
+     * @param inStream Delegated to super implementation.
+     * @see ZipInputStream#ZipInputStream(InputStream)
      */
-    public PortObjectZipOutputStream(final OutputStream outStream) {
-        super(outStream);
+    public PortObjectSpecZipInputStream(final InputStream inStream) {
+        super(inStream);
     }
+
 }

@@ -38,13 +38,13 @@ import java.util.zip.ZipEntry;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.PortObject;
-import org.knime.core.node.PortObjectSpec;
-import org.knime.core.node.PortObjectSpecZipInputStream;
-import org.knime.core.node.PortObjectSpecZipOutputStream;
-import org.knime.core.node.PortObjectZipInputStream;
-import org.knime.core.node.PortObjectZipOutputStream;
-import org.knime.core.node.PortType;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortObjectSpecZipInputStream;
+import org.knime.core.node.port.PortObjectSpecZipOutputStream;
+import org.knime.core.node.port.PortObjectZipInputStream;
+import org.knime.core.node.port.PortObjectZipOutputStream;
+import org.knime.core.node.port.PortType;
 import org.knime.core.util.Pair;
 
 /**
@@ -149,7 +149,7 @@ public class BWElimModel implements PortObject, PortObjectSpec {
 
         /** {@inheritDoc} */
         @Override
-        protected BWElimModel loadPortObjectSpec(
+        public BWElimModel loadPortObjectSpec(
                 final PortObjectSpecZipInputStream inStream) 
         throws IOException {
             inStream.getNextEntry();
@@ -174,7 +174,7 @@ public class BWElimModel implements PortObject, PortObjectSpec {
 
         /** {@inheritDoc} */
         @Override
-        protected void savePortObjectSpec(final BWElimModel pos,
+        public void savePortObjectSpec(final BWElimModel pos,
                 final PortObjectSpecZipOutputStream outStream) 
         throws IOException {
             outStream.putNextEntry(new ZipEntry("spec.file"));

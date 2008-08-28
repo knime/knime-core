@@ -44,11 +44,11 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.PortObjectSpec;
-import org.knime.core.node.PortObjectSpecZipInputStream;
-import org.knime.core.node.PortObjectSpecZipOutputStream;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortObjectSpecZipInputStream;
+import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 
 /**
  * <code>DataTableSpec</code>s specify the structure of a {@link DataTable}.
@@ -110,7 +110,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
             
             /** {@inheritDoc} */
             @Override
-            protected DataTableSpec loadPortObjectSpec(
+            public DataTableSpec loadPortObjectSpec(
                     final PortObjectSpecZipInputStream in)
                 throws IOException {
                 ZipEntry entry = in.getNextEntry();
@@ -128,7 +128,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
             
             /** {@inheritDoc} */
             @Override
-            protected void savePortObjectSpec(final DataTableSpec spec,
+            public void savePortObjectSpec(final DataTableSpec spec,
                     final PortObjectSpecZipOutputStream out) 
                 throws IOException {
                 ModelContent cnt = new ModelContent(FILENAME);

@@ -30,6 +30,8 @@ import java.util.Map;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 

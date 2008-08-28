@@ -24,7 +24,7 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.PortType;
+import org.knime.core.node.port.PortType;
 
 /**
  * Implements a node's input port. Internally it keeps a reference to its

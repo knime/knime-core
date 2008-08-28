@@ -36,10 +36,6 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.PortObject;
-import org.knime.core.node.PortObjectSpec;
-import org.knime.core.node.PortObjectZipInputStream;
-import org.knime.core.node.PortObjectZipOutputStream;
 
 /**
  * Abstract implementation of general port objects. Extending this class
@@ -114,7 +110,7 @@ public abstract class AbstractPortObject implements PortObject {
 
         /** {@inheritDoc} */
         @Override
-        protected AbstractPortObject loadPortObject(
+        public AbstractPortObject loadPortObject(
                 final PortObjectZipInputStream in,
                 final PortObjectSpec spec, final ExecutionMonitor exec)
                 throws IOException, CanceledExecutionException {
@@ -162,7 +158,7 @@ public abstract class AbstractPortObject implements PortObject {
 
         /** {@inheritDoc} */
         @Override
-        protected void savePortObject(final AbstractPortObject portObject,
+        public void savePortObject(final AbstractPortObject portObject,
                 final PortObjectZipOutputStream out, 
                 final ExecutionMonitor exec)
                 throws IOException, CanceledExecutionException {

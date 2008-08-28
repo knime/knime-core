@@ -32,7 +32,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.port.PortObjectSpec;
 
 import org.knime.base.node.viz.pie.datamodel.interactive.InteractivePieDataModel;
 import org.knime.base.node.viz.pie.datamodel.interactive.InteractivePieVizModel;

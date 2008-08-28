@@ -29,7 +29,7 @@ import org.knime.base.node.mine.bfn.BasisFunctionPortObject;
 import org.knime.base.node.mine.bfn.BasisFunctionPredictorRow;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.PortType;
+import org.knime.core.node.port.PortType;
 
 /**
  * 

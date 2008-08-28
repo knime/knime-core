@@ -22,11 +22,15 @@
  * History
  *   11.09.2007 (mb): created
  */
-package org.knime.core.node;
+package org.knime.core.node.port;
 
 import java.lang.reflect.Method;
 
 import org.knime.core.eclipseUtil.GlobalClassCreator;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /** Holds type information about node port types.
  * 
@@ -93,11 +97,11 @@ public final class PortType {
         settings.addString("object_class", m_objectClass.getName());
     }
     
-    boolean acceptsPortObjectSpec(final PortObjectSpec spec) {
+    public boolean acceptsPortObjectSpec(final PortObjectSpec spec) {
         return spec == null || m_specClass.isAssignableFrom(spec.getClass());
     }
     
-    boolean acceptsPortObject(final PortObject obj) {
+    public boolean acceptsPortObject(final PortObject obj) {
         return obj == null || m_objectClass.isAssignableFrom(obj.getClass());
     }
 

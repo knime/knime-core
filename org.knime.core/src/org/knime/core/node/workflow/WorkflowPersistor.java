@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.node.PortType;
+import org.knime.core.node.port.PortType;
 
 /**
  * 

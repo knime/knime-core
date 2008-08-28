@@ -29,6 +29,9 @@ import java.io.IOException;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 
 /**
  * Class used as database port object holding a {@link BufferedDataTable}

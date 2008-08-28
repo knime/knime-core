@@ -51,8 +51,8 @@ import org.knime.core.data.property.SizeHandler;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.PortObject;
-import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.tableview.TableView;
 
 /**

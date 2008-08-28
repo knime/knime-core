@@ -34,8 +34,8 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
-import org.knime.core.node.PortObject;
-import org.knime.core.node.PortType;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortType;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 

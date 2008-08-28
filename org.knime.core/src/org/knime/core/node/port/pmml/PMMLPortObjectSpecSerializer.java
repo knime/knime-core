@@ -22,7 +22,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.PortObjectSpec.PortObjectSpecSerializer;
+import org.knime.core.node.port.PortObjectSpec.PortObjectSpecSerializer;
 
 /**
  * 

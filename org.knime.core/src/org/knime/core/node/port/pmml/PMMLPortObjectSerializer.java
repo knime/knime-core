@@ -25,8 +25,8 @@ import javax.xml.transform.TransformerConfigurationException;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.PortObjectSpec;
-import org.knime.core.node.PortObject.PortObjectSerializer;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortObject.PortObjectSerializer;
 import org.xml.sax.SAXException;
 
 /**

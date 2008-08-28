@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.knime.core.node.config.Config;
+import org.knime.core.node.port.PortObject;
 
 
 

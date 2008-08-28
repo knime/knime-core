@@ -42,8 +42,8 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.PortType;
 import org.knime.core.node.NodeModel.ModelContentWrapper;
+import org.knime.core.node.port.PortType;
 
 /**
  * 

@@ -21,7 +21,7 @@
  * History
  *   Aug 27, 2008 (wiswedel): created
  */
-package org.knime.core.node;
+package org.knime.core.node.port;
 
 import java.io.InputStream;
 import java.util.zip.ZipInputStream;

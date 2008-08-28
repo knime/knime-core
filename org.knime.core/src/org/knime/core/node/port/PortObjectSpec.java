@@ -22,11 +22,12 @@
  * History
  *   10.09.2007 (mb): created
  */
-package org.knime.core.node;
+package org.knime.core.node.port;
 
 import java.io.IOException;
 
 import org.knime.core.internal.SerializerMethodLoader.Serializer;
+import org.knime.core.node.GenericNodeModel;
 
 /**
  * General interface for object specifications that are passed along node
@@ -78,7 +79,7 @@ public interface PortObjectSpec {
          * @param out Where to save to
          * @throws IOException If that fails for IO problems.
          */
-        protected abstract void savePortObjectSpec(final T portObjectSpec,
+        public abstract void savePortObjectSpec(final T portObjectSpec,
                 final PortObjectSpecZipOutputStream out)
         throws IOException;
         
@@ -87,7 +88,7 @@ public interface PortObjectSpec {
          * @return The restored object.
          * @throws IOException If that fails for IO problems.
          */
-        protected abstract T loadPortObjectSpec(
+        public abstract T loadPortObjectSpec(
                 final PortObjectSpecZipInputStream in)
             throws IOException;
     }

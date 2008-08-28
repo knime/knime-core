@@ -49,7 +49,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.KnimeEncryption;
 import org.knime.core.util.SimpleFileFilter;

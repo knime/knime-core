@@ -21,9 +21,11 @@
  * History
  *   Aug 27, 2008 (wiswedel): created
  */
-package org.knime.core.node;
+package org.knime.core.node.port;
 
+import java.io.IOException;
 import java.io.OutputStream;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
@@ -37,13 +39,31 @@ import java.util.zip.ZipOutputStream;
  * implementations. This class may change without notice. 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class PortObjectSpecZipOutputStream extends ZipOutputStream {
+public class PortObjectZipOutputStream extends ZipOutputStream {
+    
+    private boolean m_hasEntries = false;
     
     /** Delegates to underlying output stream.
      * @param outStream To write to.
      * @see ZipOutputStream#ZipOutputStream(OutputStream)
      */
-    public PortObjectSpecZipOutputStream(final OutputStream outStream) {
+    public PortObjectZipOutputStream(final OutputStream outStream) {
         super(outStream);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void putNextEntry(final ZipEntry e) throws IOException {
+        m_hasEntries = true;
+        super.putNextEntry(e);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void close() throws IOException {
+        if (!m_hasEntries) {
+            putNextEntry(new ZipEntry("empty_entry"));
+        }
+        super.close();
     }
 }

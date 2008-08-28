@@ -30,6 +30,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * Class used as database port object holding a {@link DataTableSpec}

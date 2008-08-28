@@ -38,7 +38,7 @@ import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.port.PortObjectSpec;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 

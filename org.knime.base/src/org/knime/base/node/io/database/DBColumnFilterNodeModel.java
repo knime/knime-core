@@ -26,8 +26,8 @@ import org.knime.core.node.DatabasePortObjectSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * 

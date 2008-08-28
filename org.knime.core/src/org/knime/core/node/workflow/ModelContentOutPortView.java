@@ -45,9 +45,9 @@ import javax.swing.tree.TreePath;
 
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.PortObject;
-import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.NodeModel.ModelContentWrapper;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * A port view showing the port's <code>ModelContent</code> as

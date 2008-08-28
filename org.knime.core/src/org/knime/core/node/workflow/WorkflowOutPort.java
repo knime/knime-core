@@ -24,8 +24,8 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.PortObject;
-import org.knime.core.node.PortType;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortType;
 
 /**
  * 
