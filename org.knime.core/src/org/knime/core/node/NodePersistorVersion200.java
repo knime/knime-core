@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.ZipEntry;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
@@ -258,6 +259,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                 settings.addString("port_spec_location", specPath);
                 PortObjectSpecSerializer serializer =
                         getPortObjectSpecSerializer(spec.getClass());
+                out.putNextEntry(new ZipEntry("portSpec.file"));
                 serializer.savePortObjectSpec(spec, out);
                 out.close();
             }
@@ -285,6 +287,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                                 new FileOutputStream(file)));
                     PortObjectSerializer serializer =
                             getPortObjectSerializer(object.getClass());
+                    out.putNextEntry(new ZipEntry("portObject.file"));
                     serializer.savePortObject(object, out, exec);
                     out.close();
                 }
@@ -531,6 +534,11 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                 PortObjectSpecSerializer<?> serializer =
                         getPortObjectSpecSerializer(cl
                                 .asSubclass(PortObjectSpec.class));
+                ZipEntry entry = in.getNextEntry();
+                if (!"portSpec.file".equals(entry.getName())) {
+                    throw new IOException("Expected zip entry 'portSpec.file', "
+                            + "got '"  + entry.getName() + "'");
+                }
                 spec = serializer.loadPortObjectSpec(in);
                 in.close();
                 if (spec == null) {
@@ -580,6 +588,12 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     PortObjectSerializer<?> serializer =
                             getPortObjectSerializer(cl
                                     .asSubclass(PortObject.class));
+                    ZipEntry entry = in.getNextEntry();
+                    if (!"portObject.file".equals(entry.getName())) {
+                        throw new IOException(
+                                "Expected zip entry 'portObject.file', "
+                                + "got '"  + entry.getName() + "'");
+                    }
                     object = serializer.loadPortObject(in, spec, exec);
                     in.close();
                 }

@@ -23,9 +23,7 @@
  */
 package org.knime.core.node.port;
 
-import java.io.IOException;
 import java.io.OutputStream;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
@@ -41,8 +39,6 @@ import java.util.zip.ZipOutputStream;
  */
 public class PortObjectSpecZipOutputStream extends ZipOutputStream {
     
-    private boolean m_hasEntries = false;
-    
     /** Delegates to underlying output stream.
      * @param outStream To write to.
      * @see ZipOutputStream#ZipOutputStream(OutputStream)
@@ -51,19 +47,4 @@ public class PortObjectSpecZipOutputStream extends ZipOutputStream {
         super(outStream);
     }
     
-    /** {@inheritDoc} */
-    @Override
-    public void putNextEntry(final ZipEntry e) throws IOException {
-        m_hasEntries = true;
-        super.putNextEntry(e);
-    }
-    
-    /** {@inheritDoc} */
-    @Override
-    public void close() throws IOException {
-        if (!m_hasEntries) {
-            putNextEntry(new ZipEntry("empty_entry"));
-        }
-        super.close();
-    }
 }
