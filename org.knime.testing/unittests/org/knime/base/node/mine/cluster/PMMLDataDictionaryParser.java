@@ -25,11 +25,11 @@ import javax.xml.parsers.SAXParserFactory;
 
 import junit.framework.TestCase;
 
-import org.knime.base.util.pmml.DataDictionaryContentHandler;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.port.pmml.DataDictionaryContentHandler;
 
 /**
  * 
