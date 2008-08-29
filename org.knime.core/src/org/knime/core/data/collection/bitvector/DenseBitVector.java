@@ -30,7 +30,8 @@ import java.util.Arrays;
  * Implementation stores the bits in a collection of longs. Thus it can be used
  * for well populated vectors. Its length is restricted to
  * {@link Integer#MAX_VALUE} - 1(i.e. 2147483646, in which case it uses around
- * 4GigaByte of memory).
+ * 4GigaByte of memory).<br />
+ * The implementation is not thread-safe.
  *
  * @author ohl, University of Konstanz
  */

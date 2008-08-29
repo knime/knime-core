@@ -33,7 +33,8 @@ import java.util.Arrays;
  * The length of the vector is restricted to {@link Long#MAX_VALUE} (i.e.
  * 9223372036854775807). The number of ones that can be stored is limited to
  * {@link Integer#MAX_VALUE} (which is 2147483647), in which case it uses about
- * 16Gbyte of memory.
+ * 16Gbyte of memory.<br />
+ * The implementation is not thread-safe.
  *
  * @author ohl, University of Konstanz
  */
@@ -480,6 +481,7 @@ public class SparseBitVector {
             }
         }
         result.m_lastIdx = resultIdx;
+        assert result.checkConsistency() == null;
         return result;
     }
 
@@ -527,6 +529,8 @@ public class SparseBitVector {
             resultIdx += bv.m_lastIdx - bvIdx + 1;
         }
         result.m_lastIdx = resultIdx;
+
+        assert result.checkConsistency() == null;
         return result;
     }
 
@@ -574,13 +578,15 @@ public class SparseBitVector {
         }
 
         result.m_lastIdx = resultIdx;
+        assert result.checkConsistency() == null;
+
         return result;
     }
 
     /**
      * Creates and returns a new bit vector that contains copies of both (this
      * and the argument vector). The argument vector is appended at the end of
-     * this vector, i.e. it's bit with index zero will be stored at index
+     * this vector, i.e. its bit with index zero will be stored at index
      * "length-of-this-vector" in the result vector. The length of the result is
      * the length of this plus the length of the argument vector.
      *
@@ -604,6 +610,8 @@ public class SparseBitVector {
         assert resIdx == m_lastIdx + bv.m_lastIdx + 1 + 1;
 
         result.m_lastIdx = m_lastIdx + bv.m_lastIdx + 1;
+        assert result.checkConsistency() == null;
+
         return result;
 
     }
