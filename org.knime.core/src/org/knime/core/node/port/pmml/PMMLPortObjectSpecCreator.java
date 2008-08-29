@@ -32,18 +32,30 @@ public class PMMLPortObjectSpecCreator {
     
     private final DataTableSpec m_dataTableSpec;
     
-    private Set<String>m_learningCols;
+    private final Set<String>m_learningCols;
     
-    private Set<String> m_ignoredCols;
+    private final Set<String> m_ignoredCols;
     
-    private Set<String> m_targetCols;
+    private final Set<String> m_targetCols;
     
     /**
+     * Adds all columns in the table spec as learning columns. 
+     * When the target or ignore columns are set, they are removed from the 
+     * learning columns. 
      * 
      * @param tableSpec equivalent to the data dictionary
      */
     public PMMLPortObjectSpecCreator(final DataTableSpec tableSpec) {
         m_dataTableSpec = tableSpec;
+        m_learningCols = new LinkedHashSet<String>();
+        m_ignoredCols = new LinkedHashSet<String>();
+        m_targetCols = new LinkedHashSet<String>();
+        // add all columns as learning columns
+        Set<String>colNames = new LinkedHashSet<String>();
+        for (DataColumnSpec colSpec : tableSpec) {
+            colNames.add(colSpec.getName());
+        }
+        setLearningColsNames(colNames);
     }
 
     /**
@@ -55,7 +67,8 @@ public class PMMLPortObjectSpecCreator {
                     "Learning columns must not be null!");
         }
         if (validColumnSpecNames(learningCols)) {
-            m_learningCols = learningCols;
+            m_learningCols.clear();
+            m_learningCols.addAll(learningCols);
         }
     }
     
@@ -70,7 +83,7 @@ public class PMMLPortObjectSpecCreator {
                    "Learning columns must not be null!");
         }
         if (validColumnSpec(learningCols)) {
-            m_learningCols = new LinkedHashSet<String>();
+            m_learningCols.clear();
             for (DataColumnSpec colSpec : learningCols) {            
                 m_learningCols.add(colSpec.getName());
             }
@@ -87,8 +100,11 @@ public class PMMLPortObjectSpecCreator {
                     "Ignored columns must not be null!");
         }
         if (validColumnSpecNames(ignoredCols)) {
-            m_ignoredCols = ignoredCols;
+            m_ignoredCols.clear();
+            m_ignoredCols.addAll(ignoredCols);
         }
+        m_learningCols.removeAll(m_ignoredCols);
+        m_targetCols.removeAll(m_ignoredCols);
     }
 
     
@@ -102,12 +118,15 @@ public class PMMLPortObjectSpecCreator {
                     "Ignored columns must not be null!");
         }
         if (validColumnSpec(ignoredCols)) {
-            m_ignoredCols = new LinkedHashSet<String>();
+            m_ignoredCols.clear();
             for (DataColumnSpec colSpec : ignoredCols) {
                 m_ignoredCols.add(colSpec.getName());
             }
         }
+        m_learningCols.removeAll(m_ignoredCols);
+        m_targetCols.removeAll(m_ignoredCols);
     }
+    
     /**
      * @param targetCols the targetCols to set
      */
@@ -117,8 +136,10 @@ public class PMMLPortObjectSpecCreator {
                     "Target columns must not be null!");
         }
         if (validColumnSpecNames(targetCols)) {
-            m_targetCols = targetCols;
+            m_targetCols.clear();
+            m_targetCols.addAll(targetCols);
         }
+        m_learningCols.removeAll(m_targetCols);
     }
     
     /**
@@ -132,11 +153,12 @@ public class PMMLPortObjectSpecCreator {
                     "Target columns must not be null!");
         }
         if (validColumnSpec(targetCols)) {
-            m_targetCols = new LinkedHashSet<String>();
+            m_targetCols.clear();
             for (DataColumnSpec colSpec : targetCols) {
                 m_targetCols.add(colSpec.getName());
             }
         }
+        m_learningCols.removeAll(m_targetCols);
     }
     
     private boolean validColumnSpec(final Set<DataColumnSpec> colSpecs) {
