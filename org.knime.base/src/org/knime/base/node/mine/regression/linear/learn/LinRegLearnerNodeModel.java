@@ -37,7 +37,8 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.knime.base.data.filter.column.FilterColumnTable;
-import org.knime.base.node.mine.regression.linear.LinearRegressionPortObject;
+import org.knime.base.node.mine.regression.PMMLRegressionPortObject;
+import org.knime.base.node.mine.regression.linear.LinearRegressionContent;
 import org.knime.base.node.mine.regression.linear.view.LinRegDataProvider;
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.util.DefaultDataArray;
@@ -65,6 +66,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 /**
  * NodeModel to the linear regression learner node. It performs the calculation.
@@ -119,12 +121,12 @@ public class LinRegLearnerNodeModel extends GenericNodeModel implements
     private double m_error;
 
     /** The learned values and also the means for each input variable. */
-    private LinearRegressionPortObject m_params;
+    private LinearRegressionContent m_params;
 
     /** Inits a new node model, it will have 1 data input and 1 model output. */
     public LinRegLearnerNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE}, 
-                new PortType[]{LinearRegressionPortObject.TYPE});
+                new PortType[]{PMMLRegressionPortObject.TYPE});
     }
 
     /**
@@ -328,16 +330,16 @@ public class LinRegLearnerNodeModel extends GenericNodeModel implements
                 m_error += (b - out) * (b - out);
             }
         }
-        DataTableSpec outSpec = getOutputSpec(spec);
+        DataTableSpec outSpec = getLearningSpec(spec);
         double offset = multipliers[0];
         multipliers = Arrays.copyOfRange(multipliers, 1, multipliers.length);
-        m_params = new LinearRegressionPortObject(
+        m_params = new LinearRegressionContent(
                 outSpec, offset, multipliers, means);
         // cache the entire table as otherwise the color information
         // may be lost (filtering out the "colored" column)
         m_rowContainer = new DefaultDataArray(data, m_firstRowPaint,
                 m_rowCountPaint);
-        return new PortObject[]{m_params};
+        return new PortObject[]{m_params.createPortObject()};
     }
 
     /**
@@ -426,11 +428,17 @@ public class LinRegLearnerNodeModel extends GenericNodeModel implements
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         DataTableSpec in = (DataTableSpec)inSpecs[0];
-        return new DataTableSpec[]{getOutputSpec(in)};
+        return new PortObjectSpec[]{getOutputSpec(in)};
     }
     
-    private DataTableSpec getOutputSpec(final DataTableSpec in)
+    private PMMLPortObjectSpec getOutputSpec(final DataTableSpec in)
         throws InvalidSettingsException {
+        return LinearRegressionContent.createPortObjectSpec(
+                getLearningSpec(in));
+    }
+    
+    private DataTableSpec getLearningSpec(final DataTableSpec in)
+    throws InvalidSettingsException {
         if (m_includes == null) {
             throw new InvalidSettingsException("No settings available");
         }
@@ -484,7 +492,7 @@ public class LinRegLearnerNodeModel extends GenericNodeModel implements
      * @return a reference to the current values
      * @see LinRegDataProvider#getParams()
      */
-    public LinearRegressionPortObject getParams() {
+    public LinearRegressionContent getParams() {
         return m_params;
     }
 
@@ -557,7 +565,7 @@ public class LinRegLearnerNodeModel extends GenericNodeModel implements
             ModelContentRO specContent = c.getModelContent(CFG_SPEC);
             DataTableSpec outSpec = DataTableSpec.load(specContent);
             ModelContentRO parContent = c.getModelContent(CFG_PARAMS);
-            m_params = LinearRegressionPortObject.instantiateAndLoad(
+            m_params = LinearRegressionContent.instantiateAndLoad(
                     parContent, outSpec, new ExecutionMonitor());
         } catch (InvalidSettingsException ise) {
             IOException ioe = new IOException("Unable to restore state: "

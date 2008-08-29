@@ -27,7 +27,7 @@ package org.knime.base.node.mine.regression.linear.learn;
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 
-import org.knime.base.node.mine.regression.linear.LinearRegressionPortObject;
+import org.knime.base.node.mine.regression.linear.LinearRegressionContent;
 import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.GenericNodeView;
@@ -64,7 +64,7 @@ public class LinRegLearnerNodeView
     protected void modelChanged() {
         LinRegLearnerNodeModel model = getNodeModel();
         m_pane.setText("");
-        LinearRegressionPortObject params = model.getParams();
+        LinearRegressionContent params = model.getParams();
         int nrRows = model.getNrRows();
         int nrSkipped = model.getNrRowsSkipped();
         final StringBuilder buffer = new StringBuilder();

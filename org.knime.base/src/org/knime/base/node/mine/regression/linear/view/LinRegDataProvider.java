@@ -24,7 +24,7 @@
  */
 package org.knime.base.node.mine.regression.linear.view;
 
-import org.knime.base.node.mine.regression.linear.LinearRegressionPortObject;
+import org.knime.base.node.mine.regression.linear.LinearRegressionContent;
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.viz.plotter.DataProvider;
 
@@ -40,7 +40,7 @@ public interface LinRegDataProvider extends DataProvider {
      * 
      * @return the parameters, may be <code>null</code>
      */
-    public LinearRegressionPortObject getParams();
+    public LinearRegressionContent getParams();
 
     /**
      * Get the row container for the rows to paint in the view.

@@ -27,7 +27,7 @@ package org.knime.base.node.mine.regression.linear.view;
 import java.util.Arrays;
 import java.util.List;
 
-import org.knime.base.node.mine.regression.linear.LinearRegressionPortObject;
+import org.knime.base.node.mine.regression.linear.LinearRegressionContent;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotter;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
 import org.knime.base.util.coordinate.NumericCoordinate;
@@ -65,7 +65,7 @@ public class LinRegLinePlotter extends ScatterPlotter {
                 || getDataProvider().getDataArray(0) == null) {
             return;
         }
-        LinearRegressionPortObject params =
+        LinearRegressionContent params =
                 ((LinRegDataProvider)getDataProvider()).getParams();
         if (params == null) {
             return;
@@ -124,7 +124,7 @@ public class LinRegLinePlotter extends ScatterPlotter {
                 || getDataProvider().getDataArray(0) == null) {
             return;
         }
-        LinearRegressionPortObject params =
+        LinearRegressionContent params =
                 ((LinRegDataProvider)getDataProvider()).getParams();
         if (params == null) {
             return;

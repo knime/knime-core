@@ -24,7 +24,12 @@
  */
 package org.knime.base.node.mine.regression.linear;
 
-import org.knime.base.node.mine.regression.RegressionPortObject;
+import java.util.Collections;
+
+import org.knime.base.node.mine.regression.PMMLRegressionContentHandler;
+import org.knime.base.node.mine.regression.PMMLRegressionPortObject;
+import org.knime.base.node.mine.regression.PMMLRegressionPortObject.NumericPredictor;
+import org.knime.base.node.mine.regression.PMMLRegressionPortObject.RegressionTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -36,9 +41,9 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
-import org.knime.core.node.port.AbstractSimplePortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 
 
 /**
@@ -47,13 +52,8 @@ import org.knime.core.node.port.PortType;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public final class LinearRegressionPortObject extends AbstractSimplePortObject 
-    implements RegressionPortObject {
+public final class LinearRegressionContent {
     
-    /** convenience access member for port type. */
-    public static final PortType TYPE = 
-        new PortType(LinearRegressionPortObject.class);
-
     private static final String CFG_OFFSET = "offset";
     private static final String CFG_MULTIPLIER = "multipliers";
     private static final String CFG_MEANS = "means";
@@ -73,7 +73,7 @@ public final class LinearRegressionPortObject extends AbstractSimplePortObject
     private DataTableSpec m_spec;
     
     /** Public no arg constructor as required by super class. */
-    public LinearRegressionPortObject() {
+    public LinearRegressionContent() {
     }
 
     /**
@@ -84,7 +84,8 @@ public final class LinearRegressionPortObject extends AbstractSimplePortObject
      * @param multipliers multiplier values
      * @param means means of all variables (used for 2D plot approximation)
      */
-    public LinearRegressionPortObject(final DataTableSpec spec, final double offset,
+    public LinearRegressionContent(
+            final DataTableSpec spec, final double offset,
             final double[] multipliers, final double[] means) {
         if (multipliers == null || means == null) {
             throw new NullPointerException();
@@ -105,19 +106,29 @@ public final class LinearRegressionPortObject extends AbstractSimplePortObject
         m_means = means;
         m_spec = spec;
     }
+    
+    public PMMLRegressionPortObject createPortObject() {
+        PMMLPortObjectSpec spec = createPortObjectSpec(m_spec);
+        PMMLRegressionContentHandler c = new PMMLRegressionContentHandler(spec);
+        c.setAlgorithmName("LinearRegression");
+        c.setModelName("KNIME Linear Regression");
+        NumericPredictor[] nps = new NumericPredictor[m_multipliers.length];
+        for (int i = 0; i < nps.length; i++) {
+            nps[i] = new NumericPredictor(
+                    m_spec.getColumnSpec(i).getName(), 1, m_multipliers[i]);
+        }
+        c.setRegressionTable(new RegressionTable(m_offset, nps));
+        return new PMMLRegressionPortObject(spec, c);
+    }
+    
+    public static PMMLPortObjectSpec createPortObjectSpec(
+            final DataTableSpec spec) {
+        PMMLPortObjectSpecCreator c = new PMMLPortObjectSpecCreator(spec);
+        c.setTargetCols(Collections.singleton(
+                spec.getColumnSpec(spec.getNumColumns() - 1)));
+        return c.createSpec();
+    }
 
-    /** {@inheritDoc} */
-    @Override
-    public DataTableSpec getSpec() {
-        return m_spec;
-    }
-    
-    /** {@inheritDoc} */
-    @Override
-    public String getSummary() {
-        return null;
-    }
-    
     /**
      * Get the name of the response column, i.e. the prediction column.
      * 
@@ -165,9 +176,14 @@ public final class LinearRegressionPortObject extends AbstractSimplePortObject
         }
         return sum;
     }
+    
+    /**
+     * @return the spec
+     */
+    public DataTableSpec getSpec() {
+        return m_spec;
+    }
 
-    /** {@inheritDoc} */
-    @Override
     public DataCell predict(final DataRow row) {
         double sum = m_offset;
         for (int i = 0; i < row.getNumCells(); i++) {
@@ -181,8 +197,6 @@ public final class LinearRegressionPortObject extends AbstractSimplePortObject
         return new DoubleCell(sum);
     }
     
-    /** {@inheritDoc} */
-    @Override
     public void save(final ModelContentWO par, final ExecutionMonitor exec)
             throws CanceledExecutionException {
         par.addDouble(CFG_OFFSET, m_offset);
@@ -190,8 +204,6 @@ public final class LinearRegressionPortObject extends AbstractSimplePortObject
         par.addDoubleArray(CFG_MEANS, m_means);
     }
     
-    /** {@inheritDoc} */
-    @Override
     protected void load(final ModelContentRO par, final PortObjectSpec spec,
             final ExecutionMonitor exec) throws InvalidSettingsException {
         m_offset = par.getDouble(CFG_OFFSET);
@@ -210,10 +222,10 @@ public final class LinearRegressionPortObject extends AbstractSimplePortObject
         }
     }
     
-    public static LinearRegressionPortObject instantiateAndLoad(
+    public static LinearRegressionContent instantiateAndLoad(
             final ModelContentRO par, final PortObjectSpec spec,
             final ExecutionMonitor exec) throws InvalidSettingsException {
-        LinearRegressionPortObject result = new LinearRegressionPortObject();
+        LinearRegressionContent result = new LinearRegressionContent();
         result.load(par, spec, exec);
         return result;
     }
