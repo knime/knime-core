@@ -53,8 +53,12 @@ public final class PMMLPortObjectSerializer
     public PMMLPortObject loadPortObject(final PortObjectZipInputStream in, 
             final PortObjectSpec spec, final ExecutionMonitor exec) 
         throws IOException, CanceledExecutionException {
-        // TODO: check name consistency
-        in.getNextEntry();
+        String entryName = in.getNextEntry().getName();
+        if (!entryName.equals(CLAZZ_FILE_NAME)) {
+            throw new IOException(
+                    "Found unexcted zip entry " + entryName 
+                    + "! Expected " + CLAZZ_FILE_NAME);
+        }
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
         String clazzName = reader.readLine();
         if (clazzName == null) {
@@ -70,8 +74,12 @@ public final class PMMLPortObjectSerializer
                         + " must extend PMMLPortObject! Loading failed!");
             }
             PMMLPortObject portObj = (PMMLPortObject)clazz.newInstance();
-            in.getNextEntry();
-            // TODO: check name consistancy
+            entryName = in.getNextEntry().getName();
+            if (!entryName.equals(FILE_NAME)) {
+                throw new IOException(
+                        "Found unexcted zip entry " + entryName 
+                        + "! Expected " + FILE_NAME);
+            }
             portObj.loadFrom((PMMLPortObjectSpec)spec, in);
             return (PMMLPortObject)portObj;
         } catch (Exception e) {
