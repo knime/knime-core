@@ -35,7 +35,6 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IPluginDescriptor;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.eclipseUtil.ClassCreator;
-import org.knime.core.node.NodeLogger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 /**
@@ -51,8 +50,8 @@ import org.osgi.framework.BundleException;
  * @author Florian Georg, University of Konstanz
  */
 public class EclipseClassCreator implements ClassCreator {
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(EclipseClassCreator.class);
+//    private static final NodeLogger LOGGER =
+//            NodeLogger.getLogger(EclipseClassCreator.class);
 
     private static final List<Bundle> DEPRECATED_PLUGINS =
             new ArrayList<Bundle>();
