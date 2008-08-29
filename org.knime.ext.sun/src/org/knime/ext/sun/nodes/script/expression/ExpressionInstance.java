@@ -26,6 +26,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Map;
 
+import org.knime.ext.sun.nodes.script.expression.Expression.ExpressionField;
+import org.knime.ext.sun.nodes.script.expression.Expression.InputField;
+
 /**
  * An expression instance combines the compiled source code along with some
  * access method to set fields and to get the evaluation result from.
@@ -33,7 +36,7 @@ import java.util.Map;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class ExpressionInstance {
-    private final Map<String, Class<?>> m_properties;
+    private final Map<InputField, ExpressionField> m_fieldMap;
 
     private final Object m_compiled;
 
@@ -43,12 +46,12 @@ public class ExpressionInstance {
      * 
      * @param compiled the object being wrapped. Must have an
      *            <code>internalEvaluate</code> method.
-     * @param properties map of field name to field class
+     * @param fieldMap map of field name to field class
      */
     protected ExpressionInstance(final Object compiled,
-            final Map<String, Class<?>> properties) {
+            final Map<InputField, ExpressionField> fieldMap) {
         m_compiled = compiled;
-        m_properties = properties;
+        m_fieldMap = fieldMap;
     }
 
     /**
@@ -69,12 +72,20 @@ public class ExpressionInstance {
 
     }
     
-    /** Is the column denoted by <code>name</code> used within the expression.
-     * @param name The name of the column
+    /** Is the input field denoted by the argument actually used by the 
+     * expression.
+     * @param inField To check for.
      * @return <code>true</code> when used, <code>false</code> otherwise.
      */
-    public boolean needsColumn(final String name) {
-        return m_properties.containsKey(name);
+    public boolean needsInputField(final InputField inField) {
+        return m_fieldMap.containsKey(inField);
+    }
+    
+    /**
+     * @return the fieldMap
+     */
+    public Map<InputField, ExpressionField> getFieldMap() {
+        return m_fieldMap;
     }
 
     /**
@@ -84,25 +95,26 @@ public class ExpressionInstance {
      * @throws IllegalPropertyException if a field is unkown or a value is
      *             incompatible
      */
-    public final void set(final Map<String, Object> property2ValueMap)
+    public final void set(final Map<InputField, Object> property2ValueMap)
             throws IllegalPropertyException {
         // Prepare the values by looking at what properties where
         // specified in the constructor
-        for (Map.Entry<String, Class<?>> entry : m_properties.entrySet()) {
-            String prop = entry.getKey();
-            Class<?> clas = entry.getValue();
-            Object value = property2ValueMap.get(prop);
+        for (Map.Entry<InputField, ExpressionField> entry 
+                : m_fieldMap.entrySet()) {
+            InputField field = entry.getKey();
+            ExpressionField expressionField = entry.getValue();
+            Object value = property2ValueMap.get(field);
             if (value == null) {
                 throw new IllegalPropertyException(
-                        "No value for field " + prop);
+                        "No value for field " + field);
             }
-            if (!clas.isInstance(value)) {
+            if (!expressionField.getFieldClass().isInstance(value)) {
                 throw new IllegalPropertyException(
-                        "Type for field not matched: got "
+                        "Type for field \"" + field + "\" not matched: got "
                                 + value.getClass().getName() + " but expected "
-                                + clas.getName() + ".");
+                                + expressionField.getFieldClass().getName());
             }
-            setField(prop, value);
+            setField(expressionField.getExpressionFieldName(), value);
         }
     }
 

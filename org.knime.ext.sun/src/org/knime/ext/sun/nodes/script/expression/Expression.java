@@ -34,7 +34,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Hashtable;
 import java.util.Map;
 
 import org.knime.core.node.NodeLogger;
@@ -51,6 +50,16 @@ import com.sun.tools.javac.Main;
 public class Expression implements Serializable {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(Expression.class);
+    
+    /** Source of a field. */
+    public enum FieldType {
+        /** Represents a column value. */ 
+        Column,
+        /** Represents a scope variable. */
+        Variable,
+        /** Represents a table column, e.g. total row count. */
+        TableConstant
+    }
 
     /** These imports are put in the import section of the source file. */
     private static final Collection<String> IMPORTS = Arrays
@@ -67,7 +76,7 @@ public class Expression implements Serializable {
      * Properties, i.e. fields in the source file with their corresponding
      * class.
      */
-    private final Map<String, Class<?>> m_properties;
+    private final Map<InputField, ExpressionField> m_fieldMap;
 
     /** The compiled class for the instance of the expression. */
     private final Class<?> m_compiled;
@@ -76,8 +85,8 @@ public class Expression implements Serializable {
      * Constructor for an expression with fields.
      * 
      * @param body the expression body (Java)
-     * @param props the property-names mapped to types, i.e. class name of the
-     *            field that is available to the evaluated expression
+     * @param fieldMap the property-names mapped to types, i.e. class name of
+     *             the field that is available to the evaluated expression
      * @param rType the return type of the expression (i.e. Integer.class,
      *            Double.class, String.class)
      * @param tempFile the temp file to write the java source to
@@ -86,7 +95,8 @@ public class Expression implements Serializable {
      * @throws IllegalArgumentException if the map contains <code>null</code>
      *             elements
      */
-    public Expression(final String body, final Map<String, String> props,
+    public Expression(final String body, 
+            final Map<InputField, ExpressionField> fieldMap,
             final Class<?> rType, final File tempFile)
             throws CompilationFailedException {
         if (!tempFile.getName().endsWith(".java")) {
@@ -94,34 +104,13 @@ public class Expression implements Serializable {
                     + tempFile.getName());
         }
         m_javaFile = tempFile;
-        m_properties = new Hashtable<String, Class<?>>();
-        m_compiled = createClass(body, props, rType);
+        m_fieldMap = fieldMap;
+        m_compiled = createClass(body, rType);
     }
 
     /* Called from the constructor. */
-    private Class<?> createClass(final String body,
-            final Map<String, String> props, final Class<?> rType)
+    private Class<?> createClass(final String body, final Class<?> rType)
             throws CompilationFailedException {
-
-        // Remember the properties
-        for (Map.Entry<String, String> entry : props.entrySet()) {
-            // Here's the property name and type
-            String propName = entry.getKey();
-            String propClass = entry.getValue();
-            Class<?> clazz;
-
-            // .. might be a type or a type-name
-            if (propClass == null) {
-                throw new IllegalArgumentException("Map contains null value"
-                        + " for field \"" + propName + "\".");
-            }
-            try {
-                clazz = Class.forName(propClass);
-            } catch (ClassNotFoundException cnf) {
-                throw new CompilationFailedException(cnf);
-            }
-            m_properties.put(propName, clazz);
-        }
 
         String javaAbsoluteName;
         String javaClassName;
@@ -193,13 +182,20 @@ public class Expression implements Serializable {
     public ExpressionInstance getInstance() throws InstantiationException {
         try {
             return new ExpressionInstance(
-                    m_compiled.newInstance(), m_properties);
+                    m_compiled.newInstance(), m_fieldMap);
         } catch (IllegalAccessException iae) {
             LOGGER.error("Unexpected IllegalAccessException occured", iae);
             throw new InternalError();
         }
     }
-
+    
+    /**
+     * @return the fieldMap
+     */
+    public Map<InputField, ExpressionField> getFieldMap() {
+        return m_fieldMap;
+    }
+    
     /*
      * Creates the source for given expression classname, body & properties.
      */
@@ -222,12 +218,10 @@ public class Expression implements Serializable {
         buffer.append("\n");
 
         /* Add the source fields */
-        for (Map.Entry<String, Class<?>> entry : m_properties.entrySet()) {
-            String name = entry.getKey();
-            Class<?> type = entry.getValue();
+        for (ExpressionField type : m_fieldMap.values()) {
             buffer.append("  public ");
-            buffer.append(type.getSimpleName());
-            buffer.append(" " + name + ";");
+            buffer.append(type.getFieldClass().getSimpleName());
+            buffer.append(" " + type.getExpressionFieldName() + ";");
             buffer.append("\n");
         }
         buffer.append("\n");
@@ -263,6 +257,96 @@ public class Expression implements Serializable {
         buffer.append('}');
         buffer.append("\n");
         return buffer.toString();
+    }
+    
+    /** Object that pairs the name of the field used in the temporarily created
+     * java class with the class of that field. */
+    public static final class ExpressionField {
+        private final String m_expressionFieldName;
+        private final Class<?> m_fieldClass;
+        
+        /** @param expressionFieldName The field name
+         * @param fieldClass The class representing the field.
+         */
+        public ExpressionField(final String expressionFieldName,
+                final Class<?> fieldClass) {
+            if (expressionFieldName == null || fieldClass == null) {
+                throw new NullPointerException("Arg must not be null");
+            }
+            m_expressionFieldName = expressionFieldName;
+            m_fieldClass = fieldClass;
+        }
+        
+        /** @return the expressionFieldName */
+        public String getExpressionFieldName() {
+            return m_expressionFieldName;
+        }
+        
+        /** @return the field class. */
+        public Class<?> getFieldClass() {
+            return m_fieldClass;
+        }
+    }
+    
+    /** Pair of original column name or scope variable identifier with a 
+     * enum type indicating the source. */
+    public static final class InputField {
+        
+        private final String m_colOrVarName;
+        private final FieldType m_fieldType;
+
+        /** @param colOrVarName The name of the (original!) field 
+         * @param fieldType The type of the source.
+         */
+        public InputField(final String colOrVarName, 
+                final FieldType fieldType) {
+            if (colOrVarName == null || fieldType == null) {
+                throw new NullPointerException("Arg is null");
+            }
+            m_colOrVarName = colOrVarName;
+            m_fieldType = fieldType;
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return m_fieldType + " \"" + m_colOrVarName + "\"";
+                
+        }
+        
+        /**
+         * @return the fieldType
+         */
+        public FieldType getFieldType() {
+            return m_fieldType;
+        }
+        
+        /**
+         * @return the colOrVarName
+         */
+        public String getColOrVarName() {
+            return m_colOrVarName;
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public int hashCode() {
+            return m_colOrVarName.hashCode() + m_fieldType.hashCode();
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public boolean equals(final Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (!(obj instanceof InputField)) {
+                return false;
+            }
+            InputField f = (InputField)obj;
+            return f.m_fieldType.equals(m_fieldType) 
+                && f.m_colOrVarName.equals(m_colOrVarName);
+        }
     }
 
     /** String containing the objectivy method for compilation. */

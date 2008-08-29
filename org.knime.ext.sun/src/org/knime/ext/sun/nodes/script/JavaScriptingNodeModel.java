@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -49,6 +50,9 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.ext.sun.nodes.script.expression.CompilationFailedException;
 import org.knime.ext.sun.nodes.script.expression.Expression;
+import org.knime.ext.sun.nodes.script.expression.Expression.ExpressionField;
+import org.knime.ext.sun.nodes.script.expression.Expression.FieldType;
+import org.knime.ext.sun.nodes.script.expression.Expression.InputField;
 
 /**
  *
@@ -127,7 +131,7 @@ public class JavaScriptingNodeModel extends NodeModel {
         settings.getString(CFG_COLUMN_NAME);
         settings.getBoolean(CFG_IS_REPLACE);
         String returnType = settings.getString(CFG_RETURN_TYPE);
-        getReturnType(returnType);
+        getClassForReturnType(returnType);
     }
 
     /**
@@ -144,7 +148,7 @@ public class JavaScriptingNodeModel extends NodeModel {
         m_colName = settings.getString(CFG_COLUMN_NAME);
         m_isReplace = settings.getBoolean(CFG_IS_REPLACE);
         String returnType = settings.getString(CFG_RETURN_TYPE);
-        m_returnType = getReturnType(returnType);
+        m_returnType = getClassForReturnType(returnType);
         // this setting is not available in 1.2.x
         m_isTestCompilationOnDialogClose =
             settings.getBoolean(CFG_TEST_COMPILATION, true);
@@ -157,14 +161,9 @@ public class JavaScriptingNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         DataTableSpec inSpec = inData[0].getDataTableSpec();
-        if (m_tempFile == null) {
-            m_tempFile = createTempFile();
-        }
-        Expression exp =
-            compile(m_expression, inSpec, m_returnType, m_tempFile);
-        ColumnRearranger c = createColumnRearranger(inSpec, exp);
-        BufferedDataTable o = exec.createColumnRearrangeTable(inData[0], c,
-                exec);
+        ColumnRearranger c = createColumnRearranger(inSpec);
+        BufferedDataTable o = exec.createColumnRearrangeTable(
+                inData[0], c, exec);
         return new BufferedDataTable[]{o};
     }
 
@@ -202,53 +201,77 @@ public class JavaScriptingNodeModel extends NodeModel {
         if (m_expression == null) {
             throw new InvalidSettingsException("No expression has been set.");
         }
-        ColumnRearranger c;
+        ColumnRearranger c = createColumnRearranger(inSpecs[0]);
+        return new DataTableSpec[]{c.createSpec()};
+    }
+
+    private ColumnRearranger createColumnRearranger(final DataTableSpec spec)
+            throws InvalidSettingsException {
         try {
             if ((m_compiledExpression == null)
-                    || (!m_inputSpec.equalStructure(inSpecs[0]))) {
+                    || (!m_inputSpec.equalStructure(spec))) {
                 // if the spec changes, we need to re-compile the expression
                 if (m_tempFile == null) {
                     m_tempFile = createTempFile();
                 }
                 m_compiledExpression =
-                    compile(m_expression, inSpecs[0], m_returnType, m_tempFile);
-                m_inputSpec = inSpecs[0];
+                    compile(m_expression, spec, m_returnType, m_tempFile);
+                m_inputSpec = spec;
             }
-
-            assert m_compiledExpression != null;
             assert m_inputSpec != null;
-
-            c = createColumnRearranger(inSpecs[0], m_compiledExpression);
-
-        } catch (IOException ioe) {
-            LOGGER.warn("Unable to create temp file.", ioe);
-            setWarningMessage("Unable to create temp file.");
-            throw new InvalidSettingsException("Error creating temp file", ioe);
-        } catch (CompilationFailedException cfe) {
-            LOGGER.debug("Unable to compile expression: ", cfe);
-            throw new InvalidSettingsException(cfe.getMessage());
-        } catch (InstantiationException ie) {
-            LOGGER.debug("Unable to instantiate auto-generated class.", ie);
-            throw new InvalidSettingsException(ie.getMessage());
+            DataColumnSpec newColSpec = getNewColSpec();
+            ColumnCalculator cc = new ColumnCalculator(this, newColSpec);
+            ColumnRearranger result = new ColumnRearranger(spec);
+            if (m_isReplace) {
+                result.replace(cc, m_colName);
+            } else {
+                result.append(cc);
+            }
+            return result;
+        } catch (Exception e) {
+            throw new InvalidSettingsException(e.getMessage(), e);
         }
-        return new DataTableSpec[]{c.createSpec()};
     }
-
-    private ColumnRearranger createColumnRearranger(final DataTableSpec spec,
-            final Expression exp)
-            throws InvalidSettingsException, InstantiationException {
-        DataColumnSpec newColSpec = getNewColSpec();
-        ColumnCalculator cc = new ColumnCalculator(exp, m_returnType, spec,
-                newColSpec);
-        ColumnRearranger result = new ColumnRearranger(spec);
-        if (m_isReplace) {
-            result.replace(cc, m_colName);
+    
+    /** Reads a variable from this node model. Calls for instance
+     * {@link #peekScopeVariableDouble(String)}.
+     * @param name The name of variable.
+     * @param type Type of variable.
+     * @return The value
+     */
+    Object readVariable(final String name, final Class<?> type) {
+        if (Integer.class.equals(type)) {
+            return peekScopeVariableInt(name);
+        } else if (Double.class.equals(type)) {
+            return peekScopeVariableDouble(name);
+        } else if (String.class.equals(type)) {
+            return peekScopeVariableString(name);
         } else {
-            result.append(cc);
+            throw new RuntimeException("Invalid variable class: " + type);
         }
-        return result;
+    }
+    
+    /**
+     * @return the returnType
+     */
+    Class<?> getReturnType() {
+        return m_returnType;
     }
 
+    /**
+     * @return the compiledExpression
+     */
+    Expression getCompiledExpression() {
+        return m_compiledExpression;
+    }
+    
+    /**
+     * @return the inputSpec
+     */
+    DataTableSpec getInputSpec() {
+        return m_inputSpec;
+    }
+    
     /** Creates an returns a temp java file, for which no .class file exists
      * yet.
      * @return The temporary java file to use.
@@ -310,7 +333,7 @@ public class JavaScriptingNodeModel extends NodeModel {
      * @return the associated class
      * @throws InvalidSettingsException if the argument is invalid
      */
-    static Class<?> getReturnType(final String returnType)
+    static Class<?> getClassForReturnType(final String returnType)
             throws InvalidSettingsException {
         if (Integer.class.getName().equals(returnType)) {
             return Integer.class;
@@ -339,7 +362,8 @@ public class JavaScriptingNodeModel extends NodeModel {
     static Expression compile(final String expression,
             final DataTableSpec spec, final Class<?> rType, final File tempFile)
             throws CompilationFailedException, InvalidSettingsException {
-        HashMap<String, String> nameValueMap = new HashMap<String, String>();
+        Map<InputField, ExpressionField> nameValueMap = 
+            new HashMap<InputField, ExpressionField>();
         StringBuffer correctedExp = new StringBuffer();
         StreamTokenizer t = new StreamTokenizer(new StringReader(expression));
         t.resetSyntax();
@@ -352,28 +376,65 @@ public class JavaScriptingNodeModel extends NodeModel {
         t.quoteChar('"');
         t.quoteChar('$');
         int tokType;
+        int variableIndex = 0;
         boolean isNextTokenSpecial = false;
         try {
             while ((tokType = t.nextToken()) != StreamTokenizer.TT_EOF) {
-                String colFieldName;
-                Class<?> type;
+                final String expFieldName;
+                final Class<?> expFieldClass;
+                final FieldType inputFieldType;
+                final String inputFieldName;
                 switch (tokType) {
                 case StreamTokenizer.TT_WORD:
                     String s = t.sval;
                     if (isNextTokenSpecial) {
                         if (ColumnCalculator.ROWINDEX.equals(s)) {
-                            colFieldName = ColumnCalculator.ROWINDEX;
-                            type = Integer.class;
+                            expFieldName = ColumnCalculator.ROWINDEX;
+                            expFieldClass = Integer.class;
+                            inputFieldName = ColumnCalculator.ROWINDEX;
+                            inputFieldType = FieldType.TableConstant;
                         } else if (ColumnCalculator.ROWKEY.equals(s)) {
-                            colFieldName = ColumnCalculator.ROWKEY;
-                            type = String.class;
+                            expFieldName = ColumnCalculator.ROWKEY;
+                            expFieldClass = String.class;
+                            inputFieldName = ColumnCalculator.ROWKEY;
+                            inputFieldType = FieldType.TableConstant;
+                        } else if (s.startsWith("{") && s.endsWith("}")) {
+                            String var = s.substring(1, s.length() - 1);
+                            if (var.length() == 0) {
+                                throw new InvalidSettingsException(
+                                        "Empty variable string at line "
+                                        + t.lineno());
+                            }
+                            switch (var.charAt(0)) {
+                            case 'I': expFieldClass = Integer.class; break;
+                            case 'D': expFieldClass = Double.class; break;
+                            case 'S': expFieldClass = String.class; break;
+                            default:
+                                throw new InvalidSettingsException(
+                                        "Invalid type identifier for variable "
+                                        + "in line " + t.lineno() + ": " 
+                                        + var.charAt(0));
+                            }
+                            var = var.substring(1);
+                            if (var.length() == 0) {
+                                throw new InvalidSettingsException(
+                                        "Empty variable identifier in line " 
+                                        + t.lineno());
+                            }
+                            expFieldName = "variable_" + (variableIndex++);
+                            inputFieldName = var;
+                            inputFieldType = FieldType.Variable;
                         } else {
                             throw new InvalidSettingsException(
                                     "Invalid special identifier: " + s
                                     + " (at line " + t.lineno() + ")");
                         }
-                        nameValueMap.put(colFieldName, type.getName());
-                        correctedExp.append(colFieldName);
+                        InputField inputField = 
+                            new InputField(inputFieldName, inputFieldType);
+                        ExpressionField expField =
+                            new ExpressionField(expFieldName, expFieldClass);
+                        nameValueMap.put(inputField, expField);
+                        correctedExp.append(expFieldName);
                     } else {
                         correctedExp.append(s);
                     }
@@ -409,37 +470,43 @@ public class JavaScriptingNodeModel extends NodeModel {
                                     "No such column: "
                                     + s + " (at line " + t.lineno() + ")");
                         }
-                        colFieldName =
+                        inputFieldName = s;
+                        inputFieldType = FieldType.Column;
+                        expFieldName = 
                             ColumnCalculator.createColField(colIndex);
                         DataType colType =
                             spec.getColumnSpec(colIndex).getType();
-                        correctedExp.append(colFieldName);
+                        correctedExp.append(expFieldName);
                         boolean isArray = colType.isCollectionType();
                         if (isArray) {
                             colType = colType.getCollectionElementType();
                         }
                         if (colType.isCompatible(IntValue.class)) {
                             if (isArray) {
-                                type = int[].class;
+                                expFieldClass = int[].class;
                             } else {
-                                type = Integer.class;
+                                expFieldClass = Integer.class;
                                 correctedExp.append(".intValue()");
                             }
                         } else if (colType.isCompatible(DoubleValue.class)) {
                             if (isArray) {
-                                type = double[].class;
+                                expFieldClass = double[].class;
                             } else {
-                                type = Double.class;
+                                expFieldClass = Double.class;
                                 correctedExp.append(".doubleValue()");
                             }
                         } else {
                             if (isArray) {
-                                type = String[].class;
+                                expFieldClass = String[].class;
                             } else {
-                                type = String.class;
+                                expFieldClass = String.class;
                             }
                         }
-                        nameValueMap.put(colFieldName, type.getName());
+                        InputField inputField = 
+                            new InputField(inputFieldName, inputFieldType);
+                        ExpressionField expField =
+                            new ExpressionField(expFieldName, expFieldClass);
+                        nameValueMap.put(inputField, expField);
                     }
                     break;
                 default:

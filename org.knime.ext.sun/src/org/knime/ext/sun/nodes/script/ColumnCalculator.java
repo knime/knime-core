@@ -24,6 +24,7 @@ package org.knime.ext.sun.nodes.script;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -41,11 +42,12 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
-
 import org.knime.ext.sun.nodes.script.expression.EvaluationFailedException;
-import org.knime.ext.sun.nodes.script.expression.Expression;
 import org.knime.ext.sun.nodes.script.expression.ExpressionInstance;
 import org.knime.ext.sun.nodes.script.expression.IllegalPropertyException;
+import org.knime.ext.sun.nodes.script.expression.Expression.ExpressionField;
+import org.knime.ext.sun.nodes.script.expression.Expression.FieldType;
+import org.knime.ext.sun.nodes.script.expression.Expression.InputField;
 
 /**
  * Interface implementation that executes the java code snippet and calculates
@@ -53,7 +55,7 @@ import org.knime.ext.sun.nodes.script.expression.IllegalPropertyException;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class ColumnCalculator implements CellFactory {
+class ColumnCalculator implements CellFactory {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(ColumnCalculator.class);
 
@@ -70,12 +72,12 @@ public class ColumnCalculator implements CellFactory {
     static final String ROWKEY = "ROWKEY";
 
     private final ExpressionInstance m_expression;
-
-    private final Class<?> m_returnType;
-
-    private final DataTableSpec m_spec;
+    
+    private final JavaScriptingNodeModel m_model;
 
     private final DataColumnSpec[] m_colSpec;
+    
+    private Map<InputField, Object> m_scopeVarAssignmentMap; 
 
     /**
      * The row index may be used for calculation. Need to be set immediately
@@ -88,29 +90,15 @@ public class ColumnCalculator implements CellFactory {
      * temporary java code, sets the fields dynamically and evaluates the
      * expression.
      * 
-     * @param expression the expression from which to create an instance
-     * @param rType the return type, we need it to construct {@link DataCell}s
-     * @param spec the table spec to read the field names and types
+     * @param model contributes information regarding return type, etc.
      * @param newColSpec the column spec for the newly generated column
      * @throws InstantiationException if the instance cannot be instantiated.
      */
-    protected ColumnCalculator(final Expression expression,
-            final Class<?> rType, final DataTableSpec spec,
+    ColumnCalculator(final JavaScriptingNodeModel model,
             final DataColumnSpec newColSpec)
             throws InstantiationException {
-        if (expression == null) {
-            throw new NullPointerException("Expression must not be null.");
-        }
-        if (spec == null) {
-            throw new NullPointerException("Spec must not be null.");
-        }
-        if (!rType.equals(Double.class) && !rType.equals(Integer.class)
-                && !rType.equals(String.class)) {
-            throw new IllegalArgumentException("Invalid class: " + rType);
-        }
-        m_expression = expression.getInstance();
-        m_returnType = rType;
-        m_spec = spec;
+        m_model = model;
+        m_expression = model.getCompiledExpression().getInstance();
         m_colSpec = new DataColumnSpec[]{newColSpec};
     }
 
@@ -145,16 +133,36 @@ public class ColumnCalculator implements CellFactory {
      * @return the resulting cell
      */
     public DataCell calculate(final DataRow row) {
-        HashMap<String, Object> nameValueMap = new HashMap<String, Object>();
-        nameValueMap.put(ROWINDEX, m_lastProcessedRow);
-        nameValueMap.put(ROWKEY, row.getKey().getString());
+        if (m_scopeVarAssignmentMap == null) {
+            m_scopeVarAssignmentMap = new HashMap<InputField, Object>();
+            for (Map.Entry<InputField, ExpressionField> e 
+                    : m_expression.getFieldMap().entrySet()) {
+                InputField f = e.getKey();
+                if (f.getFieldType().equals(FieldType.Variable)) {
+                    Class<?> c = e.getValue().getFieldClass();
+                    m_scopeVarAssignmentMap.put(f, 
+                            m_model.readVariable(f.getColOrVarName(), c));
+                }
+            }
+        }
+        DataTableSpec spec = m_model.getInputSpec();
+        Class<?> returnType = m_model.getReturnType();
+        Map<InputField, Object> nameValueMap = 
+            new HashMap<InputField, Object>();
+        nameValueMap.put(new InputField(ROWINDEX, FieldType.TableConstant), 
+                m_lastProcessedRow);
+        nameValueMap.put(new InputField(ROWKEY, FieldType.TableConstant), 
+                row.getKey().getString());
+        nameValueMap.putAll(m_scopeVarAssignmentMap);
         for (int i = 0; i < row.getNumCells(); i++) {
-            String colFieldName = createColField(i);
-            if (!m_expression.needsColumn(colFieldName)) {
+            DataColumnSpec columnSpec = spec.getColumnSpec(i);
+            InputField inputField = 
+                new InputField(columnSpec.getName(), FieldType.Column); 
+            if (!m_expression.needsInputField(inputField)) {
                 continue;
             }
             DataCell cell = row.getCell(i);
-            DataType cellType = m_spec.getColumnSpec(i).getType();
+            DataType cellType = columnSpec.getType();
             boolean isArray = cellType.isCollectionType();
             if (isArray) {
                 cellType = cellType.getCollectionElementType();
@@ -189,17 +197,17 @@ public class ColumnCalculator implements CellFactory {
                 }
             }
             if (cellVal != null) {
-                nameValueMap.put(colFieldName, cellVal);
+                nameValueMap.put(inputField, cellVal);
             }
         }
         Object o = null;
         try {
             m_expression.set(nameValueMap);
             o = m_expression.evaluate();
-            if (!(m_returnType.isAssignableFrom(o.getClass()))) {
+            if (!(returnType.isAssignableFrom(o.getClass()))) {
                 LOGGER.warn("Unable to cast return type of expression \""
                         + o.getClass().getName() + "\" to desired output \"" 
-                        + m_returnType.getName() 
+                        + returnType.getName() 
                         + "\" - putting missing value instead.");
                 o = null;
             }
@@ -217,19 +225,19 @@ public class ColumnCalculator implements CellFactory {
                     + row.getKey() + "\": " + ipe.getMessage(), ipe);
         }
         DataCell result;
-        if (m_returnType.equals(Integer.class)) {
+        if (returnType.equals(Integer.class)) {
             if (o == null) {
                 result = DataType.getMissingCell();
             } else {
                 result = new IntCell(((Integer)o).intValue());
             }
-        } else if (m_returnType.equals(Double.class)) {
+        } else if (returnType.equals(Double.class)) {
             if (o == null || ((Double)o).isNaN()) {
                 result = DataType.getMissingCell();
             } else {
                 result = new DoubleCell(((Double)o).doubleValue());
             }
-        } else if (m_returnType.equals(String.class)) {
+        } else if (returnType.equals(String.class)) {
             if (o == null) {
                 result = DataType.getMissingCell();
             } else {

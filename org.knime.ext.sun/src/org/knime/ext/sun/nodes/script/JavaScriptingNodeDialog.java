@@ -29,6 +29,10 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
@@ -48,8 +52,6 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import org.knime.base.util.scopevariable.ScopeVariableListCellRenderer;
 import org.knime.core.data.DataColumnSpec;
@@ -96,21 +98,27 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
     public JavaScriptingNodeDialog() {
         m_colList = new JList(new DefaultListModel());
         m_colList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        m_colList.addListSelectionListener(new ListSelectionListener() {
-            public void valueChanged(final ListSelectionEvent e) {
-                Object selected = m_colList.getSelectedValue();
-                if (selected != null) {
-                    String enter;
-                    if (selected instanceof String) {
-                        enter = "$$" + selected + "$$";
-                    } else {
-                        DataColumnSpec colSpec = (DataColumnSpec)selected;
-                        String name = colSpec.getName().replace("$", "\\$");
-                        enter = "$" + name + "$";
+        m_colList.addKeyListener(new KeyAdapter() {
+            /** {@inheritDoc} */
+            @Override
+            public void keyTyped(final KeyEvent e) {
+                if (e.getKeyChar() == KeyEvent.VK_ENTER) {
+                    Object selected = m_colList.getSelectedValue();
+                    if (selected != null) {
+                        onSelectionInColumnList(selected);
                     }
-                    m_expEdit.replaceSelection(enter);
-                    m_colList.clearSelection();
-                    m_expEdit.requestFocus();
+                }
+            }
+        });
+        m_colList.addMouseListener(new MouseAdapter() {
+            /** {@inheritDoc} */
+            @Override
+            public void mouseClicked(final MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    Object selected = m_colList.getSelectedValue();
+                    if (selected != null) {
+                        onSelectionInColumnList(selected);
+                    }
                 }
             }
         });
@@ -118,17 +126,27 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         m_scopeVarsList = new JList(new DefaultListModel());
         m_scopeVarsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         m_scopeVarsList.setToolTipText(""); // enable tooltip
-        // TODO enable
-        m_scopeVarsList.setEnabled(false);
-        m_scopeVarsList.addListSelectionListener(new ListSelectionListener() {
-            public void valueChanged(final ListSelectionEvent e) {
-                Object selected = m_scopeVarsList.getSelectedValue();
-                if (selected instanceof ScopeVariable) {
-                    ScopeVariable v = (ScopeVariable)selected;
-                    String enter = "$${" + v.getName() + "}$$";
-                    m_expEdit.replaceSelection(enter);
-                    m_scopeVarsList.clearSelection();
-                    m_expEdit.requestFocus();
+        m_scopeVarsList.addKeyListener(new KeyAdapter() {
+            /** {@inheritDoc} */
+            @Override
+            public void keyTyped(final KeyEvent e) {
+                if (e.getKeyChar() == KeyEvent.VK_ENTER) {
+                    Object selected = m_scopeVarsList.getSelectedValue();
+                    if (selected != null) {
+                        onSelectionInVariableList(selected);
+                    }
+                }
+            }
+        });
+        m_scopeVarsList.addMouseListener(new MouseAdapter() {
+            /** {@inheritDoc} */
+            @Override
+            public void mouseClicked(final MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    Object selected = m_scopeVarsList.getSelectedValue();
+                    if (selected != null) {
+                        onSelectionInVariableList(selected);
+                    }
                 }
             }
         });
@@ -176,6 +194,46 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         m_returnTypeButtonGroup.add(stringReturnRadio);
 
         addTab("Java Scripting", createPanel());
+    }
+    
+    private void onSelectionInColumnList(final Object selected) {
+        if (selected != null) {
+            String enter;
+            if (selected instanceof String) {
+                enter = "$$" + selected + "$$";
+            } else {
+                DataColumnSpec colSpec = (DataColumnSpec)selected;
+                String name = colSpec.getName().replace("$", "\\$");
+                enter = "$" + name + "$";
+            }
+            m_expEdit.replaceSelection(enter);
+            m_colList.clearSelection();
+            m_expEdit.requestFocus();
+        }
+    }
+    
+    private void onSelectionInVariableList(final Object selected) {
+        if (selected instanceof ScopeVariable) {
+            ScopeVariable v = (ScopeVariable)selected;
+            String typeChar;
+            switch (v.getType()) {
+            case DOUBLE:
+                typeChar = "D";
+                break;
+            case INTEGER:
+                typeChar = "I";
+                break;
+            case STRING:
+                typeChar = "S";
+                break;
+            default:
+                return;
+            }
+            String enter = "$${" + typeChar + v.getName() + "}$$";
+            m_expEdit.replaceSelection(enter);
+            m_scopeVarsList.clearSelection();
+            m_expEdit.requestFocus();
+        }
     }
 
     /**
@@ -269,7 +327,8 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
                 tempFile = JavaScriptingNodeModel.createTempFile();
                 classFile = 
                     JavaScriptingNodeModel.getAccompanyingClassFile(tempFile);
-                Class<?> rType = JavaScriptingNodeModel.getReturnType(type);
+                Class<?> rType = 
+                    JavaScriptingNodeModel.getClassForReturnType(type);
                 JavaScriptingNodeModel.compile(exp, m_currenteSpec, rType,
                         tempFile);
             } catch (CompilationFailedException cfe) {
@@ -292,8 +351,13 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         JPanel finalPanel = new JPanel(new BorderLayout());
         final JSplitPane varSplitPane = 
             new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        varSplitPane.setTopComponent(new JScrollPane(m_colList));
-        varSplitPane.setBottomComponent(new JScrollPane(m_scopeVarsList));
+        JScrollPane pane = new JScrollPane(m_colList);
+        pane.setBorder(BorderFactory.createTitledBorder(" Column List "));
+        varSplitPane.setTopComponent(pane);
+        pane = new JScrollPane(m_scopeVarsList);
+        pane.setBorder(BorderFactory.createTitledBorder(
+                " Flow Variable List "));
+        varSplitPane.setBottomComponent(pane);
         varSplitPane.setOneTouchExpandable(true);
         varSplitPane.setResizeWeight(0.9);
 
