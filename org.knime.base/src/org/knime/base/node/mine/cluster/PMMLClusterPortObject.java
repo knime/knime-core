@@ -359,19 +359,13 @@ public class PMMLClusterPortObject extends PMMLPortObject {
     }
     
     
-    /**
-     * {@inheritDoc}
-     * @throws IOException 
-     * @throws SAXException 
-     * @throws ParserConfigurationException 
-     */
+    /** {@inheritDoc} */
     @Override
-    public PMMLClusterPortObject loadFrom(final PMMLPortObjectSpec spec, 
+    public void loadFrom(final PMMLPortObjectSpec spec, 
             final InputStream in) 
         throws ParserConfigurationException, SAXException, IOException {
         PMMLClusterHandler hdl = new PMMLClusterHandler();
-        super.addPMMLContentHandler("clusterModel", 
-                hdl);
+        super.addPMMLContentHandler("clusterModel", hdl);
         super.loadFrom(spec, in);
         hdl = (PMMLClusterHandler)super.getPMMLContentHandler(
                 "clusterModel");
@@ -388,7 +382,6 @@ public class PMMLClusterPortObject extends PMMLPortObject {
                 spec.getDataTableSpec()); 
         LOGGER.info("loaded cluster port object");
         LOGGER.debug("number of clusters: " + m_nrOfClusters);
-        return this;
     }
 
     /**

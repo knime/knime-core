@@ -192,13 +192,11 @@ public abstract class PMMLPortObject implements PortObject {
      *  
      * @param spec the referring port object spec 
      * @param stream the streamed file containing the PMML
-     * @return a loaded PMML object with all fields initialized with the values 
-     *  found in the PMML
      * @throws ParserConfigurationException if parser cannot be instantiated
      * @throws SAXException if something goes wrong during parsing
      * @throws IOException if the file cannot be found or read
      */
-    public PMMLPortObject loadFrom(final PMMLPortObjectSpec spec, 
+    public void loadFrom(final PMMLPortObjectSpec spec, 
             final InputStream stream) 
             throws ParserConfigurationException, SAXException, IOException {
         SAXParserFactory fac = SAXParserFactory.newInstance();
@@ -211,8 +209,6 @@ public abstract class PMMLPortObject implements PortObject {
             .getDefaultHandler(ExtractModelTypeHandler.ID);
         m_modelType = hdl.getModelType();
         m_spec = spec;
-        return this;
-        
     }
     
     /**

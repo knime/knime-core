@@ -235,10 +235,8 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
         // active columns = learning fields
         for (String colSpec : portSpec.getLearningFields()) {
             AttributesImpl atts = new AttributesImpl();
-            // name
+            // don't write usageType = active (is default)
             atts.addAttribute(null, null, "name", CDATA, colSpec);
-            // usageType = active
-            atts.addAttribute(null, null, "usageType", CDATA, "active");
             handler.startElement(null, null, MINING_FIELD, atts);
             handler.endElement(null, null, MINING_FIELD);
         }

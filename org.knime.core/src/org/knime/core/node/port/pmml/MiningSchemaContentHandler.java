@@ -106,6 +106,9 @@ public class MiningSchemaContentHandler extends PMMLContentHandler {
             // get attributes
             String colName = atts.getValue("name");
             String usageType = atts.getValue("usageType");
+            if (usageType == null) {
+                usageType = "active";
+            }
             if ("active".equals(usageType)) {
                 m_learningFields.add(colName);
             } else if ("supplementary".equals(usageType)) {
