@@ -1,6 +1,6 @@
-/* @(#)$RCSfile$ 
+/* @(#)$RCSfile$
  * $Revision$ $Date$ $Author$
- * 
+ *
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -20,7 +20,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   04.07.2005 (Florian Georg): created
  */
@@ -41,13 +41,13 @@ import org.osgi.framework.BundleException;
 /**
  * Class creator, used inside Eclipse to load classes for the KNIME core. We
  * need this to lookup classes from the contributing plugins.
- * 
+ *
  * This class is kinda hack ... it first tries to load classes from the core and
  * editor plugins. If this fails, the requested class is tried to be loaded from
  * all plugins that contribute extensions to a given extension point ID. In our
  * case, this is normally the "knime.nodes" extension point, so that we can load
  * <code>NodeFactory</code> classes from contributing plugins.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class EclipseClassCreator implements ClassCreator {
@@ -59,9 +59,9 @@ public class EclipseClassCreator implements ClassCreator {
 
     /**
      * Try to load a deprecated plugin, so that its classes are loadable.
-     * 
+     *
      * @param pluginID the plugin's ID
-     * 
+     *
      * @throws NoSuchPluginException if the plugin cannot be found
      * @throws BundleException if an error
      */
@@ -76,23 +76,23 @@ public class EclipseClassCreator implements ClassCreator {
         }
     }
 
-    static {
-        try {
-            addDeprecatedPlugin("org.knime.deprecated");
-        } catch (NoSuchPluginException ex) {
-            LOGGER.warn("Plugin org.knime.deprecated not found, the "
-                    + "old nodes will not be available", ex);
-        } catch (BundleException ex) {
-            LOGGER.warn("Plugin org.knime.deprecated could not be "
-                    + "started, the old nodes will not be available", ex);
-        }
-    }
+//    static {
+//        try {
+//            addDeprecatedPlugin("org.knime.deprecated");
+//        } catch (NoSuchPluginException ex) {
+//            LOGGER.warn("Plugin org.knime.deprecated not found, the "
+//                    + "old nodes will not be available", ex);
+//        } catch (BundleException ex) {
+//            LOGGER.warn("Plugin org.knime.deprecated could not be "
+//                    + "started, the old nodes will not be available", ex);
+//        }
+//    }
 
     private IExtension[] m_extensions;
 
     /**
      * Constructor.
-     * 
+     *
      * @param pointID The extension point to process
      */
     public EclipseClassCreator(final String pointID) {
@@ -109,7 +109,7 @@ public class EclipseClassCreator implements ClassCreator {
     /**
      * Tries to resolve the class by asking all plugins that contribute to our
      * extension point.
-     * 
+     *
      * @param className The class to lookup
      * @return class, or <code>null</code>
      */
@@ -183,7 +183,7 @@ public class EclipseClassCreator implements ClassCreator {
     /**
      * Exception that is thrown if a plugin cannot be loaded because it does not
      * exist.
-     * 
+     *
      * @author Thorsten Meinl, University of Konstanz
      */
     public static class NoSuchPluginException extends Exception {
@@ -194,7 +194,7 @@ public class EclipseClassCreator implements ClassCreator {
          * Note that the detail message associated with <code>cause</code> is
          * <i>not</i> automatically incorporated in this exception's detail
          * message.
-         * 
+         *
          * @param pluginID the ID of the non-existing plugin
          * @param cause the cause (which is saved for later retrieval by the
          *            {@link #getCause()} method). (A <tt>null</tt> value is
@@ -210,7 +210,7 @@ public class EclipseClassCreator implements ClassCreator {
          * Constructs a new exception with the specified detail message. The
          * cause is not initialized, and may subsequently be initialized by a
          * call to {@link #initCause(Throwable)}.
-         * 
+         *
          * @param pluginID the ID of the non-existing plugin
          */
         public NoSuchPluginException(final String pluginID) {
@@ -224,7 +224,7 @@ public class EclipseClassCreator implements ClassCreator {
          * This constructor is useful for exceptions that are little more than
          * wrappers for other throwables (for example, {@link
          * java.security.PrivilegedActionException}).
-         * 
+         *
          * @param cause the cause (which is saved for later retrieval by the
          *            {@link #getCause()} method). (A <tt>null</tt> value is
          *            permitted, and indicates that the cause is nonexistent or

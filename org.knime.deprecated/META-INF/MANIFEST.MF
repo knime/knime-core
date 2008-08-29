@@ -4,10 +4,8 @@ Bundle-Name: Deprecated KNIME nodes
 Bundle-SymbolicName: org.knime.deprecated
 Bundle-Version: 2.0.0.0016392
 Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
-Require-Bundle: org.knime.workbench.repository,
- org.knime.core,
- org.knime.base,
- org.eclipse.core.runtime
+Fragment-Host: org.knime.base;bundle-version="2.0.0"
+Require-Bundle: org.knime.core
 Export-Package: org.knime.base.node.mine.decisiontree.predictor,
  org.knime.base.node.mine.decisiontree.predictor.decisiontree,
  org.knime.base.node.mine.mds,
@@ -28,8 +26,6 @@ Export-Package: org.knime.base.node.mine.decisiontree.predictor,
  org.knime.base.node.viz.property.size,
  org.knime.base.node.viz.rulevis2d,
  org.knime.base.node.viz.scatterplot,
- org.knime.core.node.defaultnodedialog,
- org.knime.deprecated
-Eclipse-LazyStart: false
-Bundle-Activator: org.knime.deprecated.DeprecatedPlugin
+ org.knime.core.node.defaultnodedialog
+Eclipse-LazyStart: true
 Bundle-ClassPath: knime-deprecated.jar
