@@ -44,40 +44,7 @@ public final class PMMLPortObjectSerializer
 
     private static final String FILE_NAME = "model.pmml";
     private static final String CLAZZ_FILE_NAME = "clazz";
-    
-    private PMMLMasterContentHandler m_masterHandler;
-    
-    /**
-     * 
-     */
-    PMMLPortObjectSerializer() {
-        m_masterHandler = new PMMLMasterContentHandler();
-    }
-    
-    /**
-     * Adds a content handler to the master content handler. The master content 
-     * handler forwards all relevant events from PMML file parsing to all 
-     * registered content handlers.
-     *  
-     * @param id to later on retrieve the registered content handler
-     * @param defaultHandler specialized content handler interested in certain 
-     * parts of the PMML file (ClusteringModel, TreeModel, etc.)
-     * @return true if the handler was added, false if it is already registered
-     */
-    public boolean addPMMLContentHandler(final String id, 
-            final PMMLContentHandler defaultHandler) {
-        return m_masterHandler.addContentHandler(id, defaultHandler);
-    }
-    
-    /**
-     * 
-     * @param id the id which was used for registration of the handler
-     * @return the handler registered with this id or null if no handler with 
-     *  this id can be found
-     */
-    public PMMLContentHandler getPMMLContentHandler(final String id) {
-        return m_masterHandler.getDefaultHandler(id);
-    }
+
     
     /**
      * {@inheritDoc}
