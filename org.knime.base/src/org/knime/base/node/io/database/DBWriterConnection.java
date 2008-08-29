@@ -85,7 +85,8 @@ final class DBWriterConnection {
                 rs = conn.createStatement().executeQuery(
                         "SELECT * FROM " + table);
             } catch (SQLException sqle) {
-                LOGGER.info("Table \"" + table + "\" not in database, "
+                LOGGER.info("Table \"" + table 
+                        + "\" does not exist in database, "
                         + "will create new table.");
                 // and create new table
                 conn.createStatement().execute("CREATE TABLE " + table + " " 

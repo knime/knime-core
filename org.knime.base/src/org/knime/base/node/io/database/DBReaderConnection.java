@@ -354,9 +354,11 @@ final class DBReaderConnection implements DataTable {
                     try {
                         m_result.close();
                         m_conn.close();
-                    } catch (Exception e) {
-                        LOGGER.error("SQL Exception:", e);
-                    }
+                    } catch (SQLException e) {
+                        LOGGER.error("SQL Exception: ", e);
+                    } catch (Throwable t) {
+                        LOGGER.fatal("Unknown error: ", t);
+                    }   
                 }
             }
             return ret;

@@ -136,8 +136,8 @@ final class DBReaderConnectionNodeModel extends GenericNodeModel {
         try {
             m_conn.execute("DROP TABLE " + m_tableId);
         } catch (Exception e) {
-            super.setWarningMessage("Can't drop table \"" + m_tableId + "\": "
-                    + e.getMessage());
+            super.setWarningMessage("Can't drop table with id \"" 
+                    + m_tableId + "\", reason: " + e.getMessage());
         }
     }
 
@@ -183,8 +183,8 @@ final class DBReaderConnectionNodeModel extends GenericNodeModel {
             return new PortObjectSpec[]{dbSpec};
         } catch (InvalidSettingsException ise) {
             throw ise;
-        } catch (Exception e) {
-            throw new InvalidSettingsException(e.getMessage(), e);
+        } catch (Throwable t) {
+            throw new InvalidSettingsException(t);
         }
     }
 

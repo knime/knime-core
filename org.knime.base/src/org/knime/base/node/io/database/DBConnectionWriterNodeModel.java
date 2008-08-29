@@ -118,8 +118,8 @@ final class DBConnectionWriterNodeModel extends GenericNodeModel {
             conn.createConnection();
         } catch (InvalidSettingsException ise) {
             throw ise;
-        } catch (Exception e) {
-            throw new InvalidSettingsException(e.getMessage(), e);
+        } catch (Throwable t) {
+            throw new InvalidSettingsException(t);
         }
         super.setWarningMessage("Existing table \"" 
                 + m_tableName.getStringValue() + "\" will be dropped!");

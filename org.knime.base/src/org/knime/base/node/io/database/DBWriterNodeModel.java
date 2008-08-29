@@ -241,8 +241,8 @@ final class DBWriterNodeModel extends NodeModel {
         
         try {
             m_conn.createConnection();
-        } catch (Exception e) {
-            throw new InvalidSettingsException(e);
+        } catch (Throwable t) {
+            throw new InvalidSettingsException(t);
         }
         return new DataTableSpec[0];
     }

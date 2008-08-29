@@ -75,9 +75,9 @@ final class DBReaderNodeModel extends NodeModel {
             BufferedDataTable data = exec.createBufferedDataTable(load, exec);
             load.close();
             return new BufferedDataTable[]{data};
-        } catch (Exception e) {
+        } catch (Throwable t) {
             m_lastSpec = null;
-            throw e;
+            throw new RuntimeException(t);
         }
     }
 
@@ -144,9 +144,9 @@ final class DBReaderNodeModel extends NodeModel {
         } catch (InvalidSettingsException e) {
             m_lastSpec = null;
             throw e;
-        } catch (Exception e) {
+        } catch (Throwable t) {
             m_lastSpec = null;
-            throw new InvalidSettingsException(e.getMessage(), e);
+            throw new InvalidSettingsException(t);
         }
     }
     

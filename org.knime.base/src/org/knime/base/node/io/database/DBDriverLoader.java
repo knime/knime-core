@@ -157,9 +157,9 @@ final class DBDriverLoader {
         try {
             DriverManager.registerDriver(DBDriverLoader
                     .getWrappedDriver(driver));
-        } catch (Exception e) {
+        } catch (Throwable t) {
             throw new InvalidSettingsException("Could not register database"
-                    + " driver \"" + driver);
+                  + " driver \"" + driver + "\", reason: " + t.getMessage(), t);
         }
     }
 

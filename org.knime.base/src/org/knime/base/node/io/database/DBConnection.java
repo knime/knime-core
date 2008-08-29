@@ -111,9 +111,10 @@ class DBConnection {
                 throw new InvalidSettingsException("Driver \"" + wDriver 
                         + "\" does not accept URL: " + m_dbName);
             }
-        } catch (Exception e) {
+        } catch (Throwable t) {
             throw new InvalidSettingsException("Could not register database"
-                    + " driver \"" + wDriver + "\".", e);
+                    + " driver \"" + wDriver + "\", reason: " 
+                    + t.getMessage(), t);
         }
         DBDriverLoader.registerDriver(m_driver);
         String password = KnimeEncryption.decrypt(m_pass);

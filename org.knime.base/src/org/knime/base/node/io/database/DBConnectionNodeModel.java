@@ -81,9 +81,9 @@ final class DBConnectionNodeModel extends GenericNodeModel {
             exec.setProgress("Reading data from database...");
             return new BufferedDataTable[]{
                     exec.createBufferedDataTable(load, exec)};
-        } catch (Exception e) {
+        } catch (Throwable t) {
             m_lastSpec = null;
-            throw e;
+            throw new RuntimeException(t);
         }
     }
 
@@ -152,9 +152,9 @@ final class DBConnectionNodeModel extends GenericNodeModel {
         } catch (InvalidSettingsException ise) {
             m_lastSpec = null;
             throw ise;
-        } catch (Exception e) {
+        } catch (Throwable t) {
             m_lastSpec = null;
-            throw new InvalidSettingsException(e);
+            throw new InvalidSettingsException(t);
         }
     }
     
