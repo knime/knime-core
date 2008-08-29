@@ -25,9 +25,10 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.knime.base.data.statistics.StatisticsTable;
-import org.knime.base.node.preproc.groupby.AggregationMethod;
 import org.knime.base.node.preproc.groupby.GroupByNodeFactory;
 import org.knime.base.node.preproc.groupby.GroupByTable;
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
+import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -42,6 +43,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettings;
 
@@ -234,7 +236,8 @@ public class MeanCaluclation extends TestCase {
         double[] means = statsTable.getMean();
         assertTrue(Arrays.equals(reference, means));
         // group by
-        Node groupByNode = new Node(new GroupByNodeFactory());
+        Node groupByNode = new Node(
+                (GenericNodeFactory)new GroupByNodeFactory());
         ExecutionContext exec = new ExecutionContext(
                 new DefaultNodeProgressMonitor(),
                 groupByNode);
@@ -242,9 +245,16 @@ public class MeanCaluclation extends TestCase {
                 table, exec);
         List<String>colNames = new ArrayList<String>();
         colNames.add("Col1"); 
-        GroupByTable groupTable = new GroupByTable(bdt, colNames, 
-                AggregationMethod.MEAN, AggregationMethod.FIRST,
-                10000, true, false, false, true, exec);
+        ColumnAggregator[] columnAggregators = new ColumnAggregator[]{
+            new ColumnAggregator(bdt.getDataTableSpec().getColumnSpec(1),
+                    AggregationMethod.MEAN), 
+            new ColumnAggregator(bdt.getDataTableSpec().getColumnSpec(2),
+                    AggregationMethod.MEAN), 
+            new ColumnAggregator(bdt.getDataTableSpec().getColumnSpec(3),
+                    AggregationMethod.MEAN),                     
+        };
+        GroupByTable groupTable = new GroupByTable(exec, bdt, colNames, 
+                columnAggregators, 10000, true, false, true);
         for (DataRow row : groupTable.getBufferedTable()) {
             assertEquals(reference[1], 
                     ((DoubleValue)row.getCell(1)).getDoubleValue());
@@ -355,7 +365,7 @@ public class MeanCaluclation extends TestCase {
         double[] means = statsTable.getMean();
         assertTrue(Arrays.equals(reference, means));
         // group by
-        Node groupByNode = new Node(new GroupByNodeFactory());
+        Node groupByNode = new Node((GenericNodeFactory)new GroupByNodeFactory());
         ExecutionContext exec = new ExecutionContext(
                 new DefaultNodeProgressMonitor(),
                 groupByNode);
@@ -363,9 +373,16 @@ public class MeanCaluclation extends TestCase {
                 table, exec);
         List<String>colNames = new ArrayList<String>();
         colNames.add("Col1"); 
-        GroupByTable groupTable = new GroupByTable(bdt, colNames, 
-                AggregationMethod.MEAN, AggregationMethod.FIRST,
-                10000, true, false, false, true, exec);
+        ColumnAggregator[] columnAggregators = new ColumnAggregator[]{
+                new ColumnAggregator(bdt.getDataTableSpec().getColumnSpec(1),
+                        AggregationMethod.MEAN), 
+                new ColumnAggregator(bdt.getDataTableSpec().getColumnSpec(2),
+                        AggregationMethod.MEAN), 
+                new ColumnAggregator(bdt.getDataTableSpec().getColumnSpec(3),
+                        AggregationMethod.MEAN),                     
+            };
+            GroupByTable groupTable = new GroupByTable(exec, bdt, colNames, 
+                    columnAggregators, 10000, true, false, true);
         for (DataRow row : groupTable.getBufferedTable()) {
             assertEquals(reference[1], 
                     ((DoubleValue)row.getCell(1)).getDoubleValue());
