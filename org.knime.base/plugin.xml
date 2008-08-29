@@ -376,8 +376,8 @@
 	         id="org.knime.base.node.mine.regression.linear.learn.LinRegLearnerNodeFactory"/>
 	   <node
           category-path="/statistics/regression"
-          factory-class="org.knime.base.node.mine.regression.linear.predict.LinRegPredictorNodeFactory"
-          id="org.knime.base.node.mine.regression.linear.predict.LinRegPredictorNodeFactory"/>
+          factory-class="org.knime.base.node.mine.regression.predict.RegressionPredictorNodeFactory"
+          id="org.knime.base.node.mine.regression.predict.RegressionPredictorNodeFactory"/>
 	    <node
 	          category-path="/mining/modeleval"
 	          factory-class="org.knime.base.node.mine.scorer.entrop.NewEntropyNodeFactory"

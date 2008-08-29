@@ -33,6 +33,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.sax.TransformerHandler;
 
 import org.knime.base.node.util.DoubleFormat;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.xml.sax.SAXException;
@@ -42,6 +43,9 @@ import org.xml.sax.SAXException;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class PMMLRegressionPortObject extends PMMLPortObject {
+    
+    public static final PortType TYPE = 
+        new PortType(PMMLRegressionPortObject.class);
     
     /** */
     public PMMLRegressionPortObject() {
@@ -151,15 +155,15 @@ public final class PMMLRegressionPortObject extends PMMLPortObject {
             m_value = value;
         }
         /** @return the name */
-        final String getName() {
+        public String getName() {
             return m_name;
         }
         /** @return the exponent */
-        final int getExponent() {
+        public int getExponent() {
             return m_exponent;
         }
         /** @return the value */
-        final double getValue() {
+        public double getValue() {
             return m_value;
         }
         
@@ -186,12 +190,12 @@ public final class PMMLRegressionPortObject extends PMMLPortObject {
         }
 
         /** @return the intercept */
-        double getIntercept() {
+        public double getIntercept() {
             return m_intercept;
         }
 
         /** @return the variables */
-        List<NumericPredictor> getVariables() {
+        public List<NumericPredictor> getVariables() {
             return m_variables;
         }
         
