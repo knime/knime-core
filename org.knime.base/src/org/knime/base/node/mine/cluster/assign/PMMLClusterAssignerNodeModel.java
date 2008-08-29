@@ -64,6 +64,9 @@ public class PMMLClusterAssignerNodeModel extends GenericNodeModel {
    
    private List<Prototype> m_prototypes;
    
+   private static final int PMML_PORT = 0;
+   private static final int DATA_PORT = 1;
+   
    private int[] m_colIndices;
    
    private static final DataColumnSpec NEWCOLSPEC =
@@ -75,8 +78,9 @@ public class PMMLClusterAssignerNodeModel extends GenericNodeModel {
      */
     public PMMLClusterAssignerNodeModel() {
         super(new PortType[] {
-                BufferedDataTable.TYPE, 
-                PMMLClusterPortObject.TYPE},
+                PMMLClusterPortObject.TYPE,
+                BufferedDataTable.TYPE 
+                },
                 new PortType[] {BufferedDataTable.TYPE});
     }
     /**
@@ -85,11 +89,12 @@ public class PMMLClusterAssignerNodeModel extends GenericNodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        m_clusterSpec = ((PMMLPortObjectSpec)inSpecs[1]).getDataTableSpec();
+        m_clusterSpec = ((PMMLPortObjectSpec)inSpecs[PMML_PORT])
+            .getDataTableSpec();
         Vector<Integer> colIndices = new Vector<Integer>();
         for (DataColumnSpec colspec : m_clusterSpec) {
             int index =
-                    ((DataTableSpec)inSpecs[0]).findColumnIndex(colspec
+                    ((DataTableSpec)inSpecs[DATA_PORT]).findColumnIndex(colspec
                             .getName());
             if (index < 0) {
                 throw new InvalidSettingsException("Column "
@@ -104,7 +109,7 @@ public class PMMLClusterAssignerNodeModel extends GenericNodeModel {
         }
 
         ColumnRearranger colre =
-                new ColumnRearranger((DataTableSpec)inSpecs[0]);
+                new ColumnRearranger((DataTableSpec)inSpecs[DATA_PORT]);
         colre.append(new ClusterAssignFactory(NEWCOLSPEC));
         DataTableSpec out = colre.createSpec();
         return new DataTableSpec[]{out};
@@ -117,15 +122,15 @@ public class PMMLClusterAssignerNodeModel extends GenericNodeModel {
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
 //        extractModelInfo(m_predParams);
-        extractModelInfo((PMMLClusterPortObject)inData[1], 
-                inData[1].getSpec());
-        DataTableSpec inSpec = ((BufferedDataTable)inData[0])
+        extractModelInfo((PMMLClusterPortObject)inData[PMML_PORT], 
+                inData[PMML_PORT].getSpec());
+        DataTableSpec inSpec = ((BufferedDataTable)inData[DATA_PORT])
             .getDataTableSpec();
         ColumnRearranger colre = new ColumnRearranger(inSpec);
         colre.append(new ClusterAssignFactory(NEWCOLSPEC));
         BufferedDataTable bdt =
                 exec.createColumnRearrangeTable(
-                        (BufferedDataTable)inData[0], colre, exec);
+                        (BufferedDataTable)inData[DATA_PORT], colre, exec);
         return new BufferedDataTable[]{bdt};
     }
     
