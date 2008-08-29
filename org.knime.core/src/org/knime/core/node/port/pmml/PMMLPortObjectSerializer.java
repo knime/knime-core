@@ -56,7 +56,7 @@ public final class PMMLPortObjectSerializer
         String entryName = in.getNextEntry().getName();
         if (!entryName.equals(CLAZZ_FILE_NAME)) {
             throw new IOException(
-                    "Found unexcted zip entry " + entryName 
+                    "Found unexpected zip entry " + entryName 
                     + "! Expected " + CLAZZ_FILE_NAME);
         }
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
@@ -77,7 +77,7 @@ public final class PMMLPortObjectSerializer
             entryName = in.getNextEntry().getName();
             if (!entryName.equals(FILE_NAME)) {
                 throw new IOException(
-                        "Found unexcted zip entry " + entryName 
+                        "Found unexpected zip entry " + entryName 
                         + "! Expected " + FILE_NAME);
             }
             portObj.loadFrom((PMMLPortObjectSpec)spec, in);
