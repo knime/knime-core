@@ -64,7 +64,7 @@ public class Expression implements Serializable {
     /** These imports are put in the import section of the source file. */
     private static final Collection<String> IMPORTS = Arrays
             .asList(new String[]{"java.text.*", "java.util.*", "java.io.*",
-                    "java.net.*"});
+                    "java.net.*", "java.util.regex.*"});
 
     /** Temp file to use. Must end with .java, passed in constructor. */
     private final File m_javaFile;
