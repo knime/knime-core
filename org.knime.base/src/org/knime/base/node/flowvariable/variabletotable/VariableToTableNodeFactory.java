@@ -22,7 +22,7 @@
  * History
  *   May 1, 2008 (wiswedel): created
  */
-package org.knime.base.node.variabletotable;
+package org.knime.base.node.flowvariable.variabletotable;
 
 import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.GenericNodeView;
