@@ -44,10 +44,13 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.ScopeVariable;
 import org.knime.core.util.Pair;
 
@@ -55,19 +58,20 @@ import org.knime.core.util.Pair;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class VariableToTableNodeModel extends NodeModel {
+public class VariableToTableNodeModel extends GenericNodeModel {
 
     private final VariableToTableSettings m_settings;
     
     /** One input, one output. */
     public VariableToTableNodeModel() {
-        super(1, 1);
+        super(new PortType[]{new PortType(PortObject.class)},
+              new PortType[]{BufferedDataTable.TYPE});
         m_settings = new VariableToTableSettings();
     }
 
     /** {@inheritDoc} */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
         DataTableSpec spec = createOutSpec();
         BufferedDataContainer cont = exec.createDataContainer(spec);
@@ -115,7 +119,7 @@ public class VariableToTableNodeModel extends NodeModel {
 
     /** {@inheritDoc} */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         return new DataTableSpec[]{createOutSpec()};
     }

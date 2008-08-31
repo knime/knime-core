@@ -33,12 +33,12 @@ import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
 import org.knime.base.util.scopevariable.ScopeVariableListCellRenderer;
-import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.workflow.ScopeVariable;
 import org.knime.core.util.Pair;
 
@@ -46,7 +46,7 @@ import org.knime.core.util.Pair;
  * 
  * @author wiswedel, University of Konstanz
  */
-class VariableToTableNodeDialogPane extends NodeDialogPane {
+class VariableToTableNodeDialogPane extends GenericNodeDialogPane {
 
     private final JList m_list;
 
@@ -61,7 +61,7 @@ class VariableToTableNodeDialogPane extends NodeDialogPane {
     /** {@inheritDoc} */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
         Map<String, ScopeVariable> scopeVars = getAvailableScopeVariables();
         VariableToTableSettings sets = new VariableToTableSettings();
         sets.loadSettingsFrom(settings, scopeVars);

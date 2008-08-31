@@ -24,20 +24,19 @@
  */
 package org.knime.base.node.variabletotable;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
 public class VariableToTableNodeFactory extends
-        NodeFactory<VariableToTableNodeModel> {
+        GenericNodeFactory<VariableToTableNodeModel> {
 
     /** {@inheritDoc} */
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
+    protected VariableToTableNodeDialogPane createNodeDialogPane() {
         return new VariableToTableNodeDialogPane();
     }
 
@@ -49,8 +48,8 @@ public class VariableToTableNodeFactory extends
 
     /** {@inheritDoc} */
     @Override
-    public NodeView<VariableToTableNodeModel> createNodeView(final int index,
-            final VariableToTableNodeModel model) {
+    public GenericNodeView<VariableToTableNodeModel> 
+        createNodeView(final int index, final VariableToTableNodeModel model) {
         return null;
     }
 
