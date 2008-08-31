@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Other">
+	<name>Import Variables</name>
+	
+	<shortDescription>
+		Defines new flow variables based on row of input table.  
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+		  This node uses a single row of a data table to define new
+		  flow variables. The names of the variables are defined 
+		  by the column names and the variable assignments (i.e. the values)
+		  are given by the values in the row. The variables are merged into
+		  the flow, which is passed-through this node.
+		</intro>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Any port object">
+		  Port object being passed on to output port.</dataIn>
+		<dataIn index="1" name="Parameters table">The table whose first(!) 
+		  row will constitute  variables' values.</dataIn>
+		<dataOut index="0" name="Unaltered input">The unaltered input 
+		  connection object (first input port)</dataOut>
+	</ports>
+</knimeNode>

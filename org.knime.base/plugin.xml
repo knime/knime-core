@@ -693,7 +693,7 @@
        <node
              category-path="/misc"
              factory-class="org.knime.base.node.flowvariable.variabletotable.VariableToTableNodeFactory"
-             id="org.knime.base.node.variabletotable.VariableToTableNodeFactory">
+             id="org.knime.base.node.flowvariable.variabletotable.VariableToTableNodeFactory">
        </node>
        <node
              category-path="/misc"
@@ -721,6 +721,11 @@
             category-path="/io/read"
             factory-class="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory"
             id="org.knime.base.node.io.PMMLReaderNodeFactory">
+      </node>
+      <node
+            category-path="/misc"
+            factory-class="org.knime.base.node.flowvariable.tabletovariable.TableToVariableNodeFactory"
+            id="org.knime.base.node.flowvariable.tabletovariable.TableToVariableNodeFactory">
       </node>
    </extension>
       <extension
