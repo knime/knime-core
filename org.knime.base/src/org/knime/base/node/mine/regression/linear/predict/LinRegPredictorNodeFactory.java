@@ -24,9 +24,7 @@
  */
 package org.knime.base.node.mine.regression.linear.predict;
 
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
-import org.knime.core.node.NodeDialogPane;
+import org.knime.base.node.mine.regression.predict.RegressionPredictorNodeFactory;
 
 /**
  * Factory for linear regression predictor node.
@@ -34,45 +32,6 @@ import org.knime.core.node.NodeDialogPane;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class LinRegPredictorNodeFactory 
-    extends GenericNodeFactory<LinRegPredictorNodeModel> {
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public LinRegPredictorNodeModel createNodeModel() {
-        return new LinRegPredictorNodeModel();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public GenericNodeView<LinRegPredictorNodeModel> 
-        createNodeView(final int index, final LinRegPredictorNodeModel m) {
-        throw new IndexOutOfBoundsException();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        throw new IllegalStateException();
-    }
+    extends RegressionPredictorNodeFactory {
+    
 }
