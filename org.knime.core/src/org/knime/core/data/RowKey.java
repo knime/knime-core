@@ -92,7 +92,7 @@ public final class RowKey {
      */
     public static String[] toString(final RowKey... rowKeys) {
         if (rowKeys == null) {
-            return (String[]) null;
+            return null;
         }
         String[] strs = new String[rowKeys.length];
         for (int i = 0; i < strs.length; i++) {
@@ -109,13 +109,27 @@ public final class RowKey {
      */
     public static RowKey[] toString(final String... strs) {
         if (strs == null) {
-            return (RowKey[]) null;
+            return null;
         }
         RowKey[] rowKeys = new RowKey[strs.length];
         for (int i = 0; i < rowKeys.length; i++) {
             rowKeys[i] = new RowKey(strs[i]);
         }
         return rowKeys;
+    }
+    
+    /** Factory method to create "default" row IDs based on the row index. This
+     * method should be used in all cases where row keys are auto-generated
+     * (e.g. they are not read from a file) in order to comply to standard
+     * naming conventions. The returned key will be in the form of 
+     * <code>"Row" + rowIndex</code>.
+     * @param rowIndex The index of the row, for which to generate a key. 
+     * The first row has index 0. Note that non-negative values for 
+     * <code>rowIndex</code> are perfectly legal but not encouraged.
+     * @return A new key of the form <code>"Row" + rowIndex</code>
+     */
+    public static RowKey createRowKey(final int rowIndex) {
+        return new RowKey("Row" + rowIndex);
     }
     
 }
