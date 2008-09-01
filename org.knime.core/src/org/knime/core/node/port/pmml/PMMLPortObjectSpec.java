@@ -44,11 +44,11 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class PMMLPortObjectSpec implements PortObjectSpec {
-    
+
     /** Constant for CDATA. */
     protected static final String CDATA = "CDATA";
     /** Constant for DataDictionary. */
@@ -61,113 +61,178 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
     protected static final String MINING_FIELD = "MiningField";
     /** Constant for the MiningSchema tag. */
     protected static final String MINING_SCHEMA = "MiningSchema";
-    
+
     private final DataTableSpec m_dataTableSpec;
-    
-    private final Set<String>m_learningCols;
-    
-    private final Set<String> m_ignoredCols;
-    
-    private final Set<String> m_targetCols;
-    
+
+    private final Set<String> m_learningFields;
+
+    private final Set<String> m_ignoredFields;
+
+    private final Set<String> m_targetFields;
+
+    private Set<DataColumnSpec> m_learningCols;
+
+    private Set<DataColumnSpec> m_ignoredCols;
+
+    private Set<DataColumnSpec> m_targetCols;
+
     private static PortObjectSpecSerializer<PMMLPortObjectSpec>serializer;
-    
+
     /**
-     * 
+     *
      * @see PortObjectSpec
      * @return the serializer
      */
-    public static PortObjectSpecSerializer<PMMLPortObjectSpec> 
+    public static PortObjectSpecSerializer<PMMLPortObjectSpec>
         getPortObjectSpecSerializer() {
         if (serializer == null) {
             serializer = new PMMLPortObjectSpecSerializer();
         }
         return serializer;
     }
-    
+
     /**
-     * 
+     *
      * @param dataDictionary {@link DataTableSpec} describing the training data
      * @param learningCols columns used for learning of the model
      * @param ignoredCols columns ignored while learning the model
      * @param targetCols columns to be predicted
      */
-    public PMMLPortObjectSpec(final DataTableSpec dataDictionary, 
-            final Set<String> learningCols, 
-            final Set<String> ignoredCols, 
+    public PMMLPortObjectSpec(final DataTableSpec dataDictionary,
+            final Set<String> learningCols,
+            final Set<String> ignoredCols,
             final Set<String> targetCols) {
         m_dataTableSpec = dataDictionary;
         if (learningCols == null) {
-            m_learningCols = new LinkedHashSet<String>();
+            m_learningFields = new LinkedHashSet<String>();
         } else {
-            m_learningCols = learningCols;
+            m_learningFields = learningCols;
         }
         if (ignoredCols == null) {
-            m_ignoredCols = new LinkedHashSet<String>();
-        } else {            
-            m_ignoredCols = ignoredCols;
+            m_ignoredFields = new LinkedHashSet<String>();
+        } else {
+            m_ignoredFields = ignoredCols;
         }
         if (targetCols == null) {
-            m_targetCols = new LinkedHashSet<String>();
+            m_targetFields = new LinkedHashSet<String>();
         } else {
-            m_targetCols = targetCols;
+            m_targetFields = targetCols;
         }
     }
-    
+
     /**
-     * 
-     * @return the {@link DataTableSpec} describing the training data  
+     *
+     * @return the {@link DataTableSpec} describing the training data
      */
     public DataTableSpec getDataTableSpec() {
         return m_dataTableSpec;
     }
-    
+
     /**
-     * 
+     *
      * @return those columns used for learning of the model
      */
     public Set<String> getLearningFields() {
-        return m_learningCols;
-    }
-    
-    /**
-     * 
-     * @return those columns ignored while learning the model
-     */
-    public Set<String> getIgnoredFields() {
-        return m_ignoredCols;
+        return m_learningFields;
     }
 
     /**
-     * 
-     * @return by the model predicted columns 
+     *
+     * @return those columns used for learning of the model
+     */
+    public Set<DataColumnSpec> getLearningCols() {
+        if (m_learningCols != null) {
+            return m_learningCols;
+        }
+        Set<DataColumnSpec> learningCols = new LinkedHashSet<DataColumnSpec>();
+        for (String learncol : m_learningFields) {
+            DataColumnSpec colspec = m_dataTableSpec.getColumnSpec(learncol);
+            assert colspec != null : "Learning column " + learncol + " not "
+                    + "found in DataTableSpec.";
+            learningCols.add(colspec);
+        }
+        m_learningCols = learningCols;
+        return m_learningCols;
+    }
+
+    /**
+     *
+     * @return those columns ignored while learning the model
+     */
+    public Set<String> getIgnoredFields() {
+        return m_ignoredFields;
+    }
+
+    /**
+    *
+    * @return those columns used for learning of the model
+    */
+   public Set<DataColumnSpec> getIgnoredCols() {
+       if (m_ignoredCols != null) {
+           return m_ignoredCols;
+       }
+       Set<DataColumnSpec> ignoredCols = new LinkedHashSet<DataColumnSpec>();
+       for (String ignoredcol : m_ignoredFields) {
+           DataColumnSpec colspec = m_dataTableSpec.getColumnSpec(ignoredcol);
+           assert colspec != null : "Ignored column " + ignoredcol + " not "
+                   + "found in DataTableSpec.";
+           ignoredCols.add(colspec);
+       }
+       m_ignoredCols = ignoredCols;
+       return m_ignoredCols;
+   }
+
+
+    /**
+     *
+     * @return by the model predicted columns
      */
     public Set<String> getTargetFields() {
-        return m_targetCols;
+        return m_targetFields;
     }
-    
-    
-    // **************** Persistence methods*****************/
-    
+
     /**
-     * Convenience method to write a PMML DataDictionary based on the data 
+    *
+    * @return those columns used for learning of the model
+    */
+   public Set<DataColumnSpec> getTargetCols() {
+       if (m_targetCols != null) {
+           return m_targetCols;
+       }
+       Set<DataColumnSpec> targetCols = new LinkedHashSet<DataColumnSpec>();
+       for (String targetCol : m_targetFields) {
+           DataColumnSpec colspec = m_dataTableSpec.getColumnSpec(targetCol);
+           assert colspec != null : "Target column " + targetCol + " not "
+                   + "found in DataTableSpec.";
+           targetCols.add(colspec);
+       }
+       m_targetCols = targetCols;
+       return m_targetCols;
+   }
+
+
+
+    // **************** Persistence methods*****************/
+
+    /**
+     * Convenience method to write a PMML DataDictionary based on the data
      * table spec.
      * @param spec the spec to be converted into a PMML DataDictionary
      * @param handler th econtent handler to write to
      * @throws SAXException if something goes wrong during writing
      */
-    public static void writeDataDictionary(final DataTableSpec spec, 
-            final TransformerHandler handler) 
+    public static void writeDataDictionary(final DataTableSpec spec,
+            final TransformerHandler handler)
         throws SAXException {
         AttributesImpl attr = new AttributesImpl();
-        attr.addAttribute(null, null, "numberOfFields", CDATA, 
+        attr.addAttribute(null, null, "numberOfFields", CDATA,
                 "" + spec.getNumColumns());
         handler.startElement(null, null, DATA_DICT, attr);
             // DataFields
             attr = new AttributesImpl();
             for (DataColumnSpec colSpec : spec) {
                 // name
-                attr.addAttribute(null, null, "name", CDATA, 
+                attr.addAttribute(null, null, "name", CDATA,
                         colSpec.getName());
                 // optype
                 String opType = "";
@@ -193,7 +258,7 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
                         && colSpec.getDomain().hasValues()) {
                     for (DataCell possVal : colSpec.getDomain().getValues()) {
                         AttributesImpl attr2 = new AttributesImpl();
-                        attr2.addAttribute(null, null, "value", CDATA, 
+                        attr2.addAttribute(null, null, "value", CDATA,
                                 possVal.toString());
                         handler.startElement(null, null, VALUE, attr2);
                         handler.endElement(null, null, VALUE);
@@ -202,31 +267,31 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
                         && colSpec.getDomain().hasBounds()) {
                     // Interval
                     AttributesImpl attr2 = new AttributesImpl();
-                    attr2.addAttribute(null, null, "closure", CDATA, 
+                    attr2.addAttribute(null, null, "closure", CDATA,
                             "openOpen");
-                    attr2.addAttribute(null, null, "leftMargin", CDATA, 
+                    attr2.addAttribute(null, null, "leftMargin", CDATA,
                             "" + colSpec.getDomain().getLowerBound());
-                    attr2.addAttribute(null, null, "rightMargin", CDATA, 
+                    attr2.addAttribute(null, null, "rightMargin", CDATA,
                             "" + colSpec.getDomain().getUpperBound());
                     handler.startElement(null, null, "Interval", attr2);
                     handler.endElement(null, null, "Interval");
                 }
                 handler.endElement(null, null, DATA_FIELD);
             }
-            handler.endElement(null, null, DATA_DICT);        
+            handler.endElement(null, null, DATA_DICT);
     }
-    
+
     /**
-     * Writes the MiningSchema based upon the fields of the passed 
+     * Writes the MiningSchema based upon the fields of the passed
      *  {@link PMMLPortObjectSpec}. Since the MiningSchema is inside the model
      *  tag of the PMML file, implementing classes have to take open their model
      *  tag, then call this method, write their model content andclose the model
      *  tag.
-     *  
-     * @param portSpec based upon this port object spec the mining schema is 
+     *
+     * @param portSpec based upon this port object spec the mining schema is
      *      written
      * @param handler transformartion handler to write to
-     * @throws SAXException if something goes wrong 
+     * @throws SAXException if something goes wrong
      */
     public static void writeMiningSchema(final PMMLPortObjectSpec portSpec,
             final TransformerHandler handler) throws SAXException {
@@ -262,9 +327,9 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
         }
         handler.endElement(null, null, MINING_SCHEMA);
     }
-    
+
     /*
-    public static PMMLPortObjectSpec loadFrom(final File specFile) 
+    public static PMMLPortObjectSpec loadFrom(final File specFile)
         throws IOException {
         try {
             SAXParserFactory fac = SAXParserFactory.newInstance();
@@ -294,7 +359,7 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
         }
     }
     */
-    
+
     private static final String DTS_KEY = "DataTableSpec";
     private static final String DTS_FILE = "DataTableSpec.xml";
     private static final String MINING_SCHEMA_KEY = "MiningSchema";
@@ -302,13 +367,13 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
     private static final String IGNORED_KEY = "ignored";
     private static final String LEARNING_KEY = "learning";
     private static final String TARGET_KEY = "target";
-    
+
     /**
-     * 
+     *
      * @param out zipped stream to write the entries to
      * @throws IOException if something goes wrong
      */
-    public void saveTo(final PortObjectSpecZipOutputStream out) 
+    public void saveTo(final PortObjectSpecZipOutputStream out)
         throws IOException {
         NodeSettings settings = new NodeSettings(DTS_KEY);
         m_dataTableSpec.save(settings);
@@ -317,31 +382,31 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
         settings.saveToXML(noCloseOut);
 
         NodeSettings miningSchema = new NodeSettings(MINING_SCHEMA_KEY);
-        miningSchema.addStringArray(IGNORED_KEY, 
-                m_ignoredCols.toArray(new String[0]));
-        miningSchema.addStringArray(LEARNING_KEY, 
+        miningSchema.addStringArray(IGNORED_KEY,
+                m_ignoredFields.toArray(new String[0]));
+        miningSchema.addStringArray(LEARNING_KEY,
                 m_learningCols.toArray(new String[0]));
-        miningSchema.addStringArray(TARGET_KEY, 
-                m_targetCols.toArray(new String[0]));
-        
+        miningSchema.addStringArray(TARGET_KEY,
+                m_targetFields.toArray(new String[0]));
+
         out.putNextEntry(new ZipEntry(MINING_SCHEMA_FILE));
         miningSchema.saveToXML(noCloseOut);
         out.close();
     }
-    
+
     /**
-     * 
+     *
      * @param in stream reading the relevant files
      * @return a completely loaded port object spec with {@link DataTableSpec},
-     *  and the sets of learning, ignored and target columns. 
+     *  and the sets of learning, ignored and target columns.
      * @throws IOException if something goes wrong
      * @throws InvalidSettingsException if something goes wrong
      */
     public static PMMLPortObjectSpec loadFrom(
-            final PortObjectSpecZipInputStream in) 
+            final PortObjectSpecZipInputStream in)
         throws IOException, InvalidSettingsException {
         NonClosableInputStream noCloseIn = new NonClosableInputStream(in);
-        // the data table spec 
+        // the data table spec
         in.getNextEntry();
         // TODO: sanitycheck if name is the same
         NodeSettingsRO settings = NodeSettings.loadFromXML(noCloseIn);
@@ -356,7 +421,7 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
                 IGNORED_KEY)) {
             DataColumnSpec colSpec = dataTableSpec.getColumnSpec(colName);
             if (colSpec == null) {
-                throw new InvalidSettingsException("Column " 
+                throw new InvalidSettingsException("Column "
                         + colName + " is not in DataTableSpec");
             }
             ignoredCols.add(colName);
@@ -366,7 +431,7 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
                 LEARNING_KEY)) {
             DataColumnSpec colSpec = dataTableSpec.getColumnSpec(colName);
             if (colSpec == null) {
-                throw new InvalidSettingsException("Column " 
+                throw new InvalidSettingsException("Column "
                         + colName + " is not in DataTableSpec");
             }
             learningCols.add(colName);
@@ -376,13 +441,13 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
                 TARGET_KEY)) {
             DataColumnSpec colSpec = dataTableSpec.getColumnSpec(colName);
             if (colSpec == null) {
-                throw new InvalidSettingsException("Column " 
-                        + colName + " is not in DataTableSpec");                
+                throw new InvalidSettingsException("Column "
+                        + colName + " is not in DataTableSpec");
             }
             targetCols.add(colName);
         }
-        return new PMMLPortObjectSpec(dataTableSpec, 
+        return new PMMLPortObjectSpec(dataTableSpec,
                 learningCols, ignoredCols, targetCols);
     }
-    
+
 }
