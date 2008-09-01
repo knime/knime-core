@@ -727,6 +727,11 @@
             factory-class="org.knime.base.node.flowvariable.tabletovariable.TableToVariableNodeFactory"
             id="org.knime.base.node.flowvariable.tabletovariable.TableToVariableNodeFactory">
       </node>
+      <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.regexsplit.RegexSplitNodeFactory"
+            id="org.knime.base.node.preproc.regexsplit.RegexSplitNodeFactory">
+      </node>
    </extension>
       <extension
          point="org.knime.base.pmmlports">

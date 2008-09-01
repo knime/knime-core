@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd" >
+<knimeNode type="Manipulator">
+    <name>Regex Split</name>
+    <shortDescription>
+    	Splits an input string (column) into multiple groups according
+    	to a regular expression.
+    </shortDescription>
+    <fullDescription>
+    	<intro>This node splits the string content of a selected column into
+    	   logical groups using regular expressions. A group is identified
+    	   by a pair of parentheses, whereby the pattern in such parentheses
+    	   is a regular expression. Each content of each group is appended
+    	   as an individual column.
+    	   
+    	   <p>
+             A short introduction to Groups and Capturing is given by in the
+<a href="http://java.sun.com/javase/6/docs/api/java/util/regex/Pattern.html#cg">
+Java API</a>. Some examples are given below:
+    	   </p>
+    	</intro>
+        <option name="Ignore Case">Enables case-insensitive matching.
+        </option>
+        <option name="Multiline">Enables multiline mode, i.e. when selected the 
+        expression ^ and $ match the start and end of the input string. This
+        option only matters if the input string have line breaks.
+		</option>
+    </fullDescription>
+    <ports>
+        <dataIn index="0" name="Data table">Input table with string column
+        to be split.
+        </dataIn>
+        <dataOut index="0" name="Input with split columns">Input table amended
+        by additional column representing the pattern groups.
+		</dataOut>
+    </ports>
+</knimeNode>
