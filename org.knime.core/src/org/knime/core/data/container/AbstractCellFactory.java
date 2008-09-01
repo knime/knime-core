@@ -35,7 +35,7 @@ import org.knime.core.node.ExecutionMonitor;
  * @see SingleCellFactory
  * @author Bernd Wiswedel, University of Konstanz
  */
-public abstract class DefaultCellFactory implements CellFactory {
+public abstract class AbstractCellFactory implements CellFactory {
     
     private final DataColumnSpec[] m_colSpecs;
     
@@ -43,7 +43,7 @@ public abstract class DefaultCellFactory implements CellFactory {
      * specified by the array argument.
      * @param colSpecs The specs of the columns being created.
      */
-    public DefaultCellFactory(final DataColumnSpec... colSpecs) {
+    public AbstractCellFactory(final DataColumnSpec... colSpecs) {
         if (colSpecs == null || Arrays.asList(colSpecs).contains(null)) {
             throw new NullPointerException("Argument must not be null or " 
                     + "contain null elements");

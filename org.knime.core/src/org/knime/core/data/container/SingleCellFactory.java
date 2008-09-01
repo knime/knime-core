@@ -33,7 +33,7 @@ import org.knime.core.data.DataRow;
  * Convenience implementation of a cell factory with one new column.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public abstract class SingleCellFactory extends DefaultCellFactory {
+public abstract class SingleCellFactory extends AbstractCellFactory {
     
     /** Create new cell factory that provides one column given by newColSpec. 
      * @param newColSpec The spec of the new column.
