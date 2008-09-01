@@ -206,6 +206,13 @@ public final class SingleNodeContainer extends NodeContainer
     void cleanup() {
         super.cleanup();
         m_node.cleanup();
+        if (m_outputPorts != null) {
+            for (NodeOutPort p : m_outputPorts) {
+                if (p != null) {
+                    p.disposePortView();
+                }
+            }
+        }
     }
 
     /**

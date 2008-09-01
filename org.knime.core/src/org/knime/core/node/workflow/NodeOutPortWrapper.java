@@ -171,7 +171,13 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
         }
         m_underlyingPort.openPortView(name);
     }
-
+    
+    /** {@inheritDoc} */
+    @Override
+    public void disposePortView() {
+        // it's task of the underlying port to dispose views.
+    }
+    
     ///////////////////////////
     // Equals/HashCode/ToString
     ///////////////////////////

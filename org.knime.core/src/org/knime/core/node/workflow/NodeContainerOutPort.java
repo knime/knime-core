@@ -159,11 +159,9 @@ public class NodeContainerOutPort extends NodePortAdaptor
         m_portView.openView();
     }
 
-    /**
-     * Call this when the port is not used anymore, certainly when you've opened
-     * a view before. All port views will be closed and disposed.
-     */
-    protected void disposePortView() {
+    /** {@inheritDoc} */
+    @Override
+    public void disposePortView() {
         if (m_portView == null) {
             return;
         }

@@ -91,6 +91,9 @@ public interface NodeOutPort extends NodePort, NodeStateChangeListener {
     // TODO: return component with convenience method for Frame construction.
     public void openPortView(final String name);
     
+    /** Dispose the view (if any) associated with this port. */
+    public void disposePortView();
+    
     /**
      * 
      * @param listener a listener to the state of the port, that is the state
