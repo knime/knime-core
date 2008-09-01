@@ -33,8 +33,8 @@
 				number ("5443036") and possibly some application code
 				("X21"), which is separated by a dash or a space
 				character, can be grouped by the expression
-				<tt>([A-Za-z]{1,2})([0-9]*)[ \-]*(.*$)</tt>
-				. Each of the parenthesized terms corresponds to the
+				<tt>([A-Za-z]{1,2})([0-9]*)[ \-]*(.*$)</tt>.
+				Each of the parenthesized terms corresponds to the
 				aforementioned properties.
 			</p>
 			<h4>Strip File URLs</h4>
