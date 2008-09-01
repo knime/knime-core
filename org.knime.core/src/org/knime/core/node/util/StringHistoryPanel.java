@@ -77,9 +77,9 @@ public final class StringHistoryPanel extends JPanel {
     }
 
     /**
-     * Get currently selected file.
+     * Get currently selected entry.
      * 
-     * @return the current file url
+     * @return the current entry
      * @see javax.swing.JComboBox#getSelectedItem()
      */
     public String getSelectedString() {
@@ -87,13 +87,13 @@ public final class StringHistoryPanel extends JPanel {
     }
 
     /**
-     * Set the file url as default.
+     * Set the default entry.  
      * 
-     * @param url the file to choose
+     * @param entry the entry to choose.
      * @see javax.swing.JComboBox#setSelectedItem(java.lang.Object)
      */
-    public void setSelectedString(final String url) {
-        m_textBox.setSelectedItem(url);
+    public void setSelectedString(final String entry) {
+        m_textBox.setSelectedItem(entry);
     }
     
     /** Adds the currently selected element to the string history. */
