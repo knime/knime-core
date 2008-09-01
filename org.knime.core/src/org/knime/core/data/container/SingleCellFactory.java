@@ -28,37 +28,22 @@ package org.knime.core.data.container;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.RowKey;
-import org.knime.core.node.ExecutionMonitor;
 
 /**
  * Convenience implementation of a cell factory with one new column.
- * @author wiswedel, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
-public abstract class SingleCellFactory implements CellFactory {
-    
-    private final DataColumnSpec[] m_colSpec;
+public abstract class SingleCellFactory extends DefaultCellFactory {
     
     /** Create new cell factory that provides one column given by newColSpec. 
      * @param newColSpec The spec of the new column.
      */
     public SingleCellFactory(final DataColumnSpec newColSpec) {
-        if (newColSpec == null) {
-            throw new NullPointerException("Argument must not be null.");
-        }
-        m_colSpec = new DataColumnSpec[]{newColSpec};
+        super(newColSpec);
     }
     
-    /**
-     * {@inheritDoc}
-     */
-    public DataColumnSpec[] getColumnSpecs() {
-        return m_colSpec;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
+    @Override
     public DataCell[] getCells(final DataRow row) {
         return new DataCell[]{getCell(row)};
     }
@@ -70,13 +55,4 @@ public abstract class SingleCellFactory implements CellFactory {
      */
     public abstract DataCell getCell(final DataRow row);
     
-    /**
-     * {@inheritDoc}
-     */
-    public void setProgress(final int curRowNr, final int rowCount, 
-            final RowKey lastKey, final ExecutionMonitor exec) {
-        exec.setProgress(curRowNr / (double)rowCount, "Processed row " 
-                + curRowNr + " (\"" + lastKey + "\")");
-    }
-
 }
