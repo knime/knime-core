@@ -18,7 +18,7 @@
  */
 package org.knime.core.node.port.pmml;
 
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -129,21 +129,19 @@ public class PMMLPortObjectSpecCreator {
     }
 
     /**
+     * Puts argument into set and call {@link #setTargetColsNames(Set)}.
      * @param targetCol the target column to set
      */
     public void setTargetColName(final String targetCol) {
-        Set<String> set = new HashSet<String>();
-        set.add(targetCol);
-        setTargetColsNames(set);
+        setTargetColsNames(Collections.singleton(targetCol));
     }
 
     /**
+     * Puts argument into set and call {@link #setTargetCols(Set)}.
      * @param targetCol the target column to set
      */
     public void setTargetCol(final DataColumnSpec targetCol) {
-        Set<DataColumnSpec> set = new HashSet<DataColumnSpec>();
-        set.add(targetCol);
-        setTargetCols(set);
+        setTargetCols(Collections.singleton(targetCol));
     }
 
     /**
