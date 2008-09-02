@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,15 +18,16 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.mine.svm.kernel;
 
+import org.knime.base.node.mine.svm.kernel.KernelFactory.KernelType;
 import org.knime.base.node.mine.svm.util.DoubleVector;
 
 /**
  * Polynomial kernel of the form:
- * (x * y + bias) ^ power. 
+ * (x * y + bias) ^ power.
  * @author Stefan Ciobaca, University of Konstanz
  * @author Nicolas Cebron, University of Konstanz
  */
@@ -37,10 +38,13 @@ public class PolynomialKernel implements Kernel {
     /* power. */
     private double m_power;
 
+    /* gamma. */
+    private double m_gamma;
+
     /** evaluate the kernel.
      * @param a first vector
      * @param b second vector
-     * @return the result 
+     * @return the result
      * */
     public double evaluate(final DoubleVector a, final DoubleVector b) {
         assert a.getNumberValues() == b.getNumberValues();
@@ -49,12 +53,13 @@ public class PolynomialKernel implements Kernel {
             double oldresult = result;
             result = oldresult + a.getValue(i) * b.getValue(i);
         }
+        result = m_gamma * result;
         result = result + m_bias;
         return Math.pow(result, m_power);
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     public double evaluate(final double[] a, final double[] b) {
@@ -64,6 +69,7 @@ public class PolynomialKernel implements Kernel {
             double oldresult = result;
             result = oldresult + a[i] * b[i];
         }
+        result = m_gamma * result;
         result = result + m_bias;
         return Math.pow(result, m_power);
     }
@@ -74,7 +80,7 @@ public class PolynomialKernel implements Kernel {
      * @see org.knime.base.node.mine.svm.kernel.Kernel#getNumberParameters()
      */
     public int getNumberParameters() {
-        return 2; 
+        return 3;
     }
 
     /**
@@ -88,6 +94,8 @@ public class PolynomialKernel implements Kernel {
             return "Bias";
         } else if (index == 1) {
             return "Power";
+        } else if (index == 2) {
+            return "Gamma";
         }
         assert false : "Parameter index out of range";
         return "";
@@ -99,7 +107,7 @@ public class PolynomialKernel implements Kernel {
      * @see org.knime.base.node.mine.svm.kernel.Kernel#areValid(double[])
      */
     public boolean areValid(final double[] params) {
-        assert params.length == 2;
+        assert params.length == 3;
         return true;
     }
 
@@ -113,6 +121,8 @@ public class PolynomialKernel implements Kernel {
             m_bias = value;
         } else if (index == 1) {
             m_power = value;
+        } else if (index == 2) {
+            m_gamma = value;
         } else {
             assert false : "Trying to set nonexistant parameter";
         }
@@ -124,8 +134,10 @@ public class PolynomialKernel implements Kernel {
     public double getDefaultParameter(final int index) {
        if (index == 1) {
            return 1.0;
+       } else if (index == 2) {
+           return 1.0;
        }
-        return 0;
+       return 0;
     }
 
     /**
@@ -139,9 +151,19 @@ public class PolynomialKernel implements Kernel {
             return m_bias;
         } else if (index == 1) {
             return m_power;
+        } else if (index == 2) {
+            return m_gamma;
         } else {
             assert false : "Trying to set nonexistant parameter";
         }
         return 0.0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public KernelType getType() {
+        return KernelType.Polynomial;
     }
 }

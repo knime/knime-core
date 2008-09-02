@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,68 +18,82 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.mine.svm.kernel;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * This class is responsible for managing all the kernels that are known
- * to the SVM. 
- * 
+ * to the SVM.
+ *
  * @author Stefan Ciobaca, University of Konstanz
  * @author Nicolas Cebron, University of Konstanz
  */
 public final class KernelFactory {
-    
+
+    /**
+     * The different kernel types.
+     *
+     * @author cebron, University of Konstanz
+     */
+    public enum KernelType {
+        /** Polynomial Kernel. */
+        Polynomial,
+        /** Hypertangent Kernel. */
+        HyperTangent,
+        /** Radial Basis Function Kernel. */
+        RBF
+    }
     /* Map with all known kernels */
-    private Map<String, Kernel> m_kernels;
+    private Map<KernelType, Kernel> m_kernels;
 
     /* The singleton instance. */
-    private static KernelFactory instance = null; 
+    private static KernelFactory instance = null;
 
     /*
      * Constructor of the kernel factory. If someone wants to add a kernel,
      * this is what needs to be modified (and the getType function).
      */
     private KernelFactory() {
-        m_kernels = new HashMap<String, Kernel>();
-        m_kernels.put("Polynomial", new PolynomialKernel());
-        m_kernels.put("HyperTangent", new HyperTangentKernel());
-        m_kernels.put("RBF", new RBFKernel());
+        m_kernels = new HashMap<KernelType, Kernel>();
+        m_kernels.put(KernelType.Polynomial, new PolynomialKernel());
+        m_kernels.put(KernelType.HyperTangent, new HyperTangentKernel());
+        m_kernels.put(KernelType.RBF, new RBFKernel());
     }
-    
+
     /**
      * Return a default kernel.
-     * @return String
+     * @return KernelType
      */
-    public static String getDefaultKernelType() {
+    public static KernelType getDefaultKernelType() {
         assureInstance();
-        return getKernelNames()[1];
+        return KernelType.valueOf(getKernelNames()[1]);
     }
 
     /**
      * Given a pointer to a kernel, get its type.
      * If you modify this function, don't forget the constructor.
      * @param kernel instance
-     * @return kernel name 
+     * @return kernel name
      */
-    public static String getType(final Kernel kernel) {
+    public static KernelType getType(final Kernel kernel) {
         if (kernel.getClass().getSimpleName().equals("PolynomialKernel")) {
-            return "Polynomial";
+            return KernelType.Polynomial;
         }
         if (kernel.getClass().getSimpleName().equals("HyperTangentKernel")) {
-            return "HyperTangent";
+            return KernelType.HyperTangent;
         }
         if (kernel.getClass().getSimpleName().equals("RBFKernel")) {
-            return "RBF";
+            return KernelType.RBF;
         }
         assert false : "Trying to get name of unknown kernel type";
-        return "";
+        return null;
     }
-    
+
     /*
      * Make sure the singleton instance has been created.
      */
@@ -91,36 +105,40 @@ public final class KernelFactory {
 
     /**
      * Returns a kernel given by its name.
-     * @param name the name of the kernel 
-     * @return the requested kernel 
+     * @param kerneltype the type of the Kernel
+     * @return the requested kernel
      */
-    public static Kernel getKernel(final String name) {
+    public static Kernel getKernel(final KernelType kerneltype) {
         assureInstance();
-        return instance.m_kernels.get(name);
+        return instance.m_kernels.get(kerneltype);
     }
-    
+
     /**
      * Returns all the kernels known by this factory.
-     * @return the array of kernel names 
+     * @return the array of kernel names
      */
     public static String [] getKernelNames() {
         assureInstance();
         String [] names = new String [instance.m_kernels.keySet().size()];
-        names = instance.m_kernels.keySet().toArray(names);
-        return names; 
+        int counter = 0;
+        for (KernelType k : instance.m_kernels.keySet()) {
+            names[counter] = k.name();
+            counter++;
+        }
+        Arrays.sort(names);
+        return names;
     }
-    
+
     /**
      * For each kernel, look at the number of parameters it requires, and
      * return the highest.
      * @return the maximal number of parameters from any of the kernels
      */
     public static int getMaximalParameters() {
-        String [] kernelNames = getKernelNames();
         int result = 0;
-        for (int i = 0; i < kernelNames.length; ++i) {
-            if (getKernel(kernelNames[i]).getNumberParameters() > result) {
-                result = getKernel(kernelNames[i]).getNumberParameters();
+        for (KernelType type : KernelType.values()) {
+            if (getKernel(type).getNumberParameters() > result) {
+                result = getKernel(type).getNumberParameters();
             }
         }
         return result;

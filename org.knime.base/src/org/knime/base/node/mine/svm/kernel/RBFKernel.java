@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,15 +18,16 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.mine.svm.kernel;
 
+import org.knime.base.node.mine.svm.kernel.KernelFactory.KernelType;
 import org.knime.base.node.mine.svm.util.DoubleVector;
 
 /**
  * RBF Kernel.
- * 
+ *
  * @author Stefan Ciobaca, University of Konstanz
  * @author Nicolas Cebron, University of Konstanz
  */
@@ -34,21 +35,17 @@ public class RBFKernel implements Kernel {
     /* the only kernel parameter. */
     private double m_sigma;
 
-    /** default constructor. */
-    public RBFKernel() {
-    }
-
     /** evaluate the kernel.
      * @param a first vector
      * @param b second vector
-     * @return the result 
+     * @return the result
      * */
     public double evaluate(final DoubleVector a, final DoubleVector b) {
         double result = 0;
         assert a.getNumberValues() == b.getNumberValues();
         for (int i = 0; i < a.getNumberValues(); ++i) {
             double dif = a.getValue(i) - b.getValue(i);
-            result = result + dif * dif;  
+            result = result + dif * dif;
         }
         return Math.pow(Math.E, -result / 2.0 / m_sigma / m_sigma);
     }
@@ -61,7 +58,7 @@ public class RBFKernel implements Kernel {
         assert a.length == b.length;
         for (int i = 0; i < a.length; ++i) {
             double dif = a[i] - b[i];
-            result = result + dif * dif;  
+            result = result + dif * dif;
         }
         return Math.pow(Math.E, -result / 2.0 / m_sigma / m_sigma);
     }
@@ -101,7 +98,7 @@ public class RBFKernel implements Kernel {
      */
     public double getDefaultParameter(final int index) {
         if (index == 0) {
-            return 0.01;
+            return 0.1;
         }
         return 0;
     }
@@ -126,5 +123,13 @@ public class RBFKernel implements Kernel {
     public double getParameter(final int index) {
         assert index == 0;
         return m_sigma;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public KernelType getType() {
+        return KernelType.RBF;
     }
 }

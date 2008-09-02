@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,20 +18,21 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.mine.svm.kernel;
 
+import org.knime.base.node.mine.svm.kernel.KernelFactory.KernelType;
 import org.knime.base.node.mine.svm.util.DoubleVector;
 
 /**
  * Hypertangent kernel.
- * 
+ *
  * @author Stefan Ciobaca, University of Konstanz
  * @author Nicolas Cebron, University of Konstanz
  */
 public class HyperTangentKernel implements Kernel {
-   
+
     /* first parameter. */
     private double m_kappa;
 
@@ -41,7 +42,7 @@ public class HyperTangentKernel implements Kernel {
     /** evaluate the kernel.
      * @param a first vector
      * @param b second vector
-     * @return the result 
+     * @return the result
      * */
     public double evaluate(final DoubleVector a, final DoubleVector b) {
         assert a.getNumberValues() == b.getNumberValues();
@@ -49,8 +50,8 @@ public class HyperTangentKernel implements Kernel {
         for (int i = 0; i < a.getNumberValues(); ++i) {
             result += a.getValue(i) * b.getValue(i);
         }
-        return Math.tanh(m_kappa * result - m_delta);
-    }    
+        return Math.tanh(m_kappa * result + m_delta);
+    }
 
     /**
      * {@inheritDoc}
@@ -61,7 +62,7 @@ public class HyperTangentKernel implements Kernel {
         for (int i = 0; i < a.length; ++i) {
             result += a[i] * b[i];
         }
-        return Math.tanh(m_kappa * result - m_delta);
+        return Math.tanh(m_kappa * result + m_delta);
     }
 
     /**
@@ -123,7 +124,7 @@ public class HyperTangentKernel implements Kernel {
         if (index == 0) {
             return .1;
         }
-        return .5; 
+        return .5;
     }
 
     /**
@@ -138,5 +139,13 @@ public class HyperTangentKernel implements Kernel {
             assert false : "Trying to get nonexistant parameter";
         }
         return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public KernelType getType() {
+        return KernelType.HyperTangent;
     }
 }
