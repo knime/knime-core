@@ -31,6 +31,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
@@ -48,12 +49,12 @@ import org.knime.core.node.util.ViewUtils;
  * The part specific to the special purpose node view must be implemented in the
  * derived class and must take place in a <code>Panel</code>. This panel is
  * registered in this base class (method <code>#setComponent(Component)</code>)
- * and will be displayed in the {@link JFrame} provided and handled by this 
+ * and will be displayed in the {@link JFrame} provided and handled by this
  * class.
  *
  * @author Thomas Gabriel, University of Konstanz
  * @param <T> the implementation of the {@link GenericNodeModel} this node view
- *          is based on 
+ *          is based on
  */
 public abstract class GenericNodeView<T extends GenericNodeModel> {
 
@@ -125,9 +126,20 @@ public abstract class GenericNodeView<T extends GenericNodeModel> {
      */
     private boolean m_alwaysOnTop = false;
 
-    
+
     private String m_frameTitle;
-    
+
+    private final WindowListener m_windowListener = new WindowAdapter() {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void windowClosing(final WindowEvent e) {
+            // triggered when user clicks [x] to close window
+            closeView();
+        }
+    };
+
     /**
      * This class sends property events when the status changes.
      */
@@ -169,16 +181,7 @@ public abstract class GenericNodeView<T extends GenericNodeModel> {
         m_frame.setBackground(COLOR_BACKGROUND);
         // DO_NOTHING sends a windowClosing to window listeners
         m_frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        m_frame.addWindowListener(new WindowAdapter() {
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public void windowClosing(final WindowEvent e) {
-                // triggered when user clicks [x] to close window
-                closeView();
-            }
-        });
+        m_frame.addWindowListener(m_windowListener);
 
         // creates menu item to close this view
         JMenuBar menuBar = new JMenuBar();
@@ -277,7 +280,7 @@ public abstract class GenericNodeView<T extends GenericNodeModel> {
                        + "changed model, reason: " + npe.getMessage(), npe);
             } catch (Throwable t) {
                 m_logger.error("GenericNodeView.modelChanged() causes an error "
-                       + "during notification of a changed model, reason: " 
+                       + "during notification of a changed model, reason: "
                        + t.getMessage(), t);
             } finally {
                 // repaint and pack if the view has not been opened yet or
@@ -374,7 +377,7 @@ public abstract class GenericNodeView<T extends GenericNodeModel> {
     }
 
     /**
-    * 
+    *
     * @return a {@link JFrame} with an initialized {@link GenericNodeView}
     */
    public final JFrame createFrame(final String viewTitle) {
@@ -413,15 +416,19 @@ public abstract class GenericNodeView<T extends GenericNodeModel> {
     public final void closeView() {
         m_nodeModel.unregisterView(this);
         try {
-            onClose();  
+            onClose();
         } catch (Throwable t) {
             m_logger.error("GenericNodeView.onClose() causes an error "
                     + "during closing node view, reason: " + t.getMessage(), t);
         }
         m_frame.getContentPane().firePropertyChange(PROP_CHANGE_CLOSE, 0, 1);
+        m_activeComp = null;
+        m_comp = null;
         Runnable runner = new Runnable() {
             public void run() {
                 m_frame.setVisible(false);
+                m_frame.removeWindowListener(m_windowListener);
+                m_frame.getContentPane().removeAll();
                 m_frame.dispose();
             }
         };
