@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -29,12 +30,16 @@ import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
@@ -170,6 +175,7 @@ public abstract class PMMLPortObject implements PortObject {
     public void save(final OutputStream out) 
         throws SAXException, IOException, TransformerConfigurationException {
         init(out);
+        PMMLPortObjectSpec.writeHeader(m_handler);
         PMMLPortObjectSpec.writeDataDictionary(getSpec().getDataTableSpec(),
                 m_handler);
         writePMMLModel(m_handler);
@@ -200,8 +206,16 @@ public abstract class PMMLPortObject implements PortObject {
             final InputStream stream) 
             throws ParserConfigurationException, SAXException, IOException {
         SAXParserFactory fac = SAXParserFactory.newInstance();
-        SAXParser parser = fac.newSAXParser();
+        SchemaFactory schemaFac = SchemaFactory.newInstance(
+                XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        Schema schema = schemaFac.newSchema(new SAXSource(new InputSource(
+                getSchemaInputStream())));
+        fac.setSchema(schema);
+        fac.setNamespaceAware(true);
+
+        SAXParser parser = fac.newSAXParser();  
         ExtractModelTypeHandler modelTypeHdl = new ExtractModelTypeHandler();
+        
         m_masterHandler.addContentHandler(ExtractModelTypeHandler.ID, 
                 modelTypeHdl);
         parser.parse(stream, m_masterHandler);
@@ -210,6 +224,17 @@ public abstract class PMMLPortObject implements PortObject {
         m_modelType = hdl.getModelType();
         m_spec = spec;
     }
+    
+    
+    private InputStream getSchemaInputStream() {
+        ClassLoader loader = PMMLPortObject.class.getClassLoader();
+        String packagePath =
+                PMMLPortObject.class.getPackage().getName().replace('.', '/');
+        String correctedPath = "/schemata/pmml-3-1.xsd";
+        return loader.getResourceAsStream(
+                packagePath + correctedPath);
+    }
+
     
     /**
      * 

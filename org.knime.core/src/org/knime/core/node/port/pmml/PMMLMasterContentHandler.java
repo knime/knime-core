@@ -21,15 +21,20 @@ package org.knime.core.node.port.pmml;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.knime.core.node.NodeLogger;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 /**
  * 
  * @author Fabian Dill, University of Konstanz
  */
 public class PMMLMasterContentHandler extends PMMLContentHandler {
+    
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            "PMMLErrorHandler");
     
     private Map<String, PMMLContentHandler>m_registeredHandlers 
         = new HashMap<String, PMMLContentHandler>();
@@ -116,5 +121,43 @@ public class PMMLMasterContentHandler extends PMMLContentHandler {
             hdl.startElement(uri, localName, name, atts);
         }        
     }
+    
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public void error(final SAXParseException exception) throws SAXException {
+        exception.printStackTrace();
+        LOGGER.error("Error during validation of PMML port object: ", 
+                exception);
+        throw exception;
+    }
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public void fatalError(final SAXParseException exception)
+            throws SAXException {
+        LOGGER.fatal("Error during validation of PMML port object: ", 
+                exception);
+        throw exception;
+    }
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public void warning(final SAXParseException exception)
+            throws SAXException {
+        LOGGER.warn("Error during validation of PMML port object: ", 
+                exception);
+        throw exception;
+    }
+
 
 }
