@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   27.09.2007 (cebron): created
  */
@@ -42,6 +42,7 @@ import javax.swing.border.Border;
 
 import org.knime.base.node.mine.svm.kernel.Kernel;
 import org.knime.base.node.mine.svm.kernel.KernelFactory;
+import org.knime.base.node.mine.svm.kernel.KernelFactory.KernelType;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -58,7 +59,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 /**
  * Dialog for the SVM Learner. Lets the user choose the overlapping penalty,
  * class column and the kernel with its parameters.
- * 
+ *
  * @author cebron, University of Konstanz
  */
 public class SVMLearnerNodeDialog extends NodeDialogPane {
@@ -100,16 +101,18 @@ public class SVMLearnerNodeDialog extends NodeDialogPane {
         ButtonGroup group = new ButtonGroup();
         m_kernels = new ArrayList<JRadioButton>();
         m_kernelPanels = new ArrayList<KernelPanel>();
-        HashMap<String, Vector<SettingsModelDouble>> kernelparams =
+        HashMap<KernelType, Vector<SettingsModelDouble>> kernelparams =
                 SVMLearnerNodeModel.createKernelParams();
-        for (Map.Entry<String, Vector<SettingsModelDouble>> entry : kernelparams
+        for (Map.Entry<KernelType, Vector<SettingsModelDouble>>
+        entry : kernelparams
                 .entrySet()) {
             KernelPanel kernelpanel = new KernelPanel();
             kernelpanel.setLayout(new GridLayout(3, 1));
             Border paramborder =
                     BorderFactory.createTitledBorder("");
             kernelpanel.setBorder(paramborder);
-            final JRadioButton kernelbutton = new JRadioButton(entry.getKey());
+            final JRadioButton kernelbutton = new JRadioButton(
+                    entry.getKey().toString());
 
             group.add(kernelbutton);
             m_kernels.add(kernelbutton);
@@ -148,7 +151,7 @@ public class SVMLearnerNodeDialog extends NodeDialogPane {
 
     /**
      * add component.
-     * 
+     *
      * @param component which one
      */
     private void addDialogComponent(final DialogComponent component) {
@@ -167,7 +170,7 @@ public class SVMLearnerNodeDialog extends NodeDialogPane {
         }
         String selected =
                 settings.getString(SVMLearnerNodeModel.CFG_KERNELTYPE,
-                        KernelFactory.getDefaultKernelType());
+                        KernelFactory.getDefaultKernelType().toString());
         for (JRadioButton button : m_kernels) {
             if (button.getText().equals(selected)) {
                 button.setSelected(true);

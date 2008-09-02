@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   27.09.2007 (cebron): created
  */
@@ -30,14 +30,19 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimerTask;
 import java.util.Vector;
 import java.util.concurrent.Future;
 
+import org.knime.base.node.mine.svm.PMMLSVMPortObject;
 import org.knime.base.node.mine.svm.Svm;
 import org.knime.base.node.mine.svm.kernel.Kernel;
 import org.knime.base.node.mine.svm.kernel.KernelFactory;
+import org.knime.base.node.mine.svm.kernel.KernelFactory.KernelType;
 import org.knime.base.node.mine.svm.util.BinarySvmRunnable;
 import org.knime.base.node.mine.svm.util.DoubleVector;
 import org.knime.core.data.DataColumnSpec;
@@ -51,24 +56,26 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.ModelContentWO;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.config.Config;
 import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.knime.core.util.KNIMETimer;
 import org.knime.core.util.ThreadPool;
 
-
 /**
- * 
+ *
  * @author cebron, University of Konstanz
  */
-public class SVMLearnerNodeModel extends NodeModel {
+public class SVMLearnerNodeModel extends GenericNodeModel {
 
     /**
      * Key to store the parameter c in the NodeSettings.
@@ -79,7 +86,7 @@ public class SVMLearnerNodeModel extends NodeModel {
      * Key to store the class column in the NodeSettings.
      */
     public static final String CFG_CLASSCOL = "classcol";
-    
+
     /**
      * Key to store kernel parameters in the NodeSettings ATTENTION: this key
      * name is used together with an index. So the i'th parameter will be in
@@ -91,16 +98,15 @@ public class SVMLearnerNodeModel extends NodeModel {
      * Key to store the kernel type in the NodeSettings.
      */
     public static final String CFG_KERNELTYPE = "kernel_type";
-    
+
     /** Keys under which to save the parameters. */
-    public static final String KEY_CATEG_COUNT = "Category count"; 
-    
+    public static final String KEY_CATEG_COUNT = "Category count";
+
     /** key to save the DataTableSpec .*/
-    public static final String KEY_SPEC = "DataTableSpec"; 
-    
+    public static final String KEY_SPEC = "DataTableSpec";
+
     /** Key to save the DataTableSpec .*/
-    public static final String KEY_CLASSCOL = "classcol"; 
-   
+    public static final String KEY_CLASSCOL = "classcol";
 
     /** Default c parameter. */
     public static final double DEFAULT_PARAMC = 1.0;
@@ -110,50 +116,52 @@ public class SVMLearnerNodeModel extends NodeModel {
      */
     private SettingsModelDouble m_paramC =
             new SettingsModelDouble(CFG_PARAMC, DEFAULT_PARAMC);
-    
+
     /*
      * Class column
      */
     private SettingsModelString m_classcol =
             new SettingsModelString(CFG_CLASSCOL, "");
-    
+
     /*
      * Position of class column
      */
     private int m_classpos;
-    
+
     /*
      * The chosen kernel
      */
-    private String m_kernelType = KernelFactory.getDefaultKernelType();
+    private KernelType m_kernelType = KernelFactory.getDefaultKernelType();
 
-    private HashMap<String, Vector<SettingsModelDouble>> m_kernelParameters;
+    private HashMap<KernelType, Vector<SettingsModelDouble>> m_kernelParameters;
 
     /*
      * For each category, a BinarySvm that splits the category from the others.
      */
     private Svm[] m_svms;
-    
+
     /*
      * The DataTableSpec we have learned with
      */
     private DataTableSpec m_spec;
-    
+
     /*
      * String containing info about the trained SVM's
      */
     private String m_svmInfo = "";
-    
-   /**
-    * creates the kernel parameter SettingsModels.
-    * @return HashMap containing the kernel and its assigned SettingsModels.
-    */
-    static HashMap<String, Vector<SettingsModelDouble>>
-                    createKernelParams() {
-        HashMap<String, Vector<SettingsModelDouble>> kernelParameters =
-                new HashMap<String, Vector<SettingsModelDouble>>();
-        for (String kernelname : KernelFactory.getKernelNames()) {
-            Kernel kernel = KernelFactory.getKernel(kernelname);
+
+    /**
+     * creates the kernel parameter SettingsModels.
+     *
+     * @return HashMap containing the kernel and its assigned SettingsModels.
+     */
+    static LinkedHashMap<KernelType, Vector<SettingsModelDouble>>
+    createKernelParams() {
+        LinkedHashMap<KernelType, Vector<SettingsModelDouble>>
+        kernelParameters =
+                new LinkedHashMap<KernelType, Vector<SettingsModelDouble>>();
+        for (KernelType kerneltype : KernelType.values()) {
+            Kernel kernel = KernelFactory.getKernel(kerneltype);
             Vector<SettingsModelDouble> settings =
                     new Vector<SettingsModelDouble>();
             for (int i = 0; i < kernel.getNumberParameters(); i++) {
@@ -161,16 +169,17 @@ public class SVMLearnerNodeModel extends NodeModel {
                         + kernel.getParameterName(i), kernel
                         .getDefaultParameter(i)));
             }
-            kernelParameters.put(kernelname, settings);
+            kernelParameters.put(kerneltype, settings);
         }
         return kernelParameters;
     }
 
     /**
-     * 
+     *
      */
     public SVMLearnerNodeModel() {
-        super(1, 0, 0, 1);
+        super(new PortType[]{BufferedDataTable.TYPE},
+                new PortType[]{PMMLSVMPortObject.TYPE});
         m_kernelParameters = createKernelParams();
     }
 
@@ -178,10 +187,12 @@ public class SVMLearnerNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        DataTableSpec myspec = inSpecs[0];
+        DataTableSpec myspec = (DataTableSpec)inSpecs[0];
         StringBuilder errormessage = new StringBuilder();
+        DataColumnSpec targetcol = null;
+        Set<DataColumnSpec> validCols = new HashSet<DataColumnSpec>();
         if (myspec.getNumColumns() > 0) {
             if (m_classcol.getStringValue().equals("")) {
                 throw new InvalidSettingsException("Class column not set");
@@ -190,20 +201,20 @@ public class SVMLearnerNodeModel extends NodeModel {
                 boolean found = false;
                 for (DataColumnSpec colspec : myspec) {
                     if (colspec.getName().equals(m_classcol.getStringValue())) {
-                        found = true;
-                        if (!colspec.getType().isCompatible(
-                                NominalValue.class)) {
+                      if (!colspec.getType().isCompatible(NominalValue.class)) {
                             throw new InvalidSettingsException("Target column "
                                     + colspec.getName() + " must be nominal.");
                         }
+                      found = true;
+                      targetcol = colspec;
                         m_classpos =
                                 myspec.findColumnIndex(m_classcol
                                         .getStringValue());
                     } else {
-                        if (!colspec.getType().isCompatible(
-                                DoubleValue.class)) {
+                      if (!colspec.getType().isCompatible(DoubleValue.class)) {
                             errormessage.append(colspec.getName() + ",");
                         } else {
+                            validCols.add(colspec);
                             validColumns++;
                         }
                     }
@@ -221,26 +232,29 @@ public class SVMLearnerNodeModel extends NodeModel {
                     // remove last ','
                     int pos = errormessage.length();
                     errormessage.replace(pos - 1, pos, " ");
-                    errormessage
-                            .append(": incompatible type."
-                                    + " Will be ignored.");
+                    errormessage.append(": incompatible type."
+                            + " Will be ignored.");
                     setWarningMessage(errormessage.toString());
                 }
             }
         }
-        return new DataTableSpec[]{};
+        PMMLPortObjectSpecCreator pmmlcreate =
+                new PMMLPortObjectSpecCreator(myspec);
+        pmmlcreate.setTargetCol(targetcol);
+        pmmlcreate.setLearningCols(validCols);
+        return new PortObjectSpec[]{pmmlcreate.createSpec()};
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        BufferedDataTable traintable = inData[0];
+        BufferedDataTable traintable = (BufferedDataTable)inData[0];
         // Clean input data...
         StringBuilder errormessage = new StringBuilder();
-        DataTableSpec inputSpec = inData[0].getDataTableSpec();
+        DataTableSpec inputSpec = traintable.getDataTableSpec();
         Vector<Integer> excludeVector = new Vector<Integer>();
         for (int i = 0; i < inputSpec.getNumColumns(); i++) {
             DataColumnSpec colspec = inputSpec.getColumnSpec(i);
@@ -256,11 +270,11 @@ public class SVMLearnerNodeModel extends NodeModel {
             for (int e = 0; e < exclude.length; e++) {
                 exclude[e] = excludeVector.get(e);
             }
-            ColumnRearranger colre = new ColumnRearranger(
-                    inData[0].getDataTableSpec());
+            ColumnRearranger colre =
+                    new ColumnRearranger(traintable.getDataTableSpec());
             colre.remove(exclude);
             traintable =
-                    exec.createColumnRearrangeTable(inData[0], colre, exec);
+                    exec.createColumnRearrangeTable(traintable, colre, exec);
         }
         m_spec = traintable.getDataTableSpec();
         m_classpos = m_spec.findColumnIndex(m_classcol.getStringValue());
@@ -289,7 +303,7 @@ public class SVMLearnerNodeModel extends NodeModel {
                 }
             }
             if (add) {
-                inputData.add(new DoubleVector(values, classvalue
+                inputData.add(new DoubleVector(row.getKey(), values, classvalue
                         .getStringValue()));
             }
         }
@@ -336,7 +350,6 @@ public class SVMLearnerNodeModel extends NodeModel {
             fut[i] = pool.enqueue(bst[i]);
         }
 
-        
         boolean alldone = false;
         while (!alldone) {
             alldone = true;
@@ -356,7 +369,15 @@ public class SVMLearnerNodeModel extends NodeModel {
             errormessage.append(": incompatible type. Ignored.");
             setWarningMessage(errormessage.toString());
         }
-        return new BufferedDataTable[]{};
+
+        PMMLPortObjectSpecCreator pmmlcreate =
+                new PMMLPortObjectSpecCreator(traintable.getDataTableSpec());
+        pmmlcreate.setTargetCol(m_spec.getColumnSpec(m_classcol
+                .getStringValue()));
+        PMMLPortObjectSpec pmmlspec = pmmlcreate.createSpec();
+        PMMLSVMPortObject pmml =
+                new PMMLSVMPortObject(pmmlspec, kernel, m_svms);
+        return new PortObject[]{pmml};
     }
 
     /**
@@ -371,7 +392,7 @@ public class SVMLearnerNodeModel extends NodeModel {
         StringBuffer sb = new StringBuffer();
         char c;
         while (in.ready()) {
-            c = (char)in.read(); 
+            c = (char)in.read();
             sb.append(c);
         }
         m_svmInfo = sb.toString();
@@ -387,10 +408,12 @@ public class SVMLearnerNodeModel extends NodeModel {
         m_paramC.loadSettingsFrom(settings);
         m_classcol.loadSettingsFrom(settings);
         if (settings.containsKey(CFG_KERNELTYPE)) {
-            m_kernelType = settings.getString(CFG_KERNELTYPE);
+            m_kernelType =
+                    KernelType.valueOf(settings.getString(CFG_KERNELTYPE));
         }
-        for (Map.Entry<String, Vector<SettingsModelDouble>> entry 
-                            : m_kernelParameters.entrySet()) {
+        for (Map.Entry<KernelType, Vector<SettingsModelDouble>>
+        entry : m_kernelParameters
+                .entrySet()) {
             Vector<SettingsModelDouble> kernelsettings = entry.getValue();
             for (SettingsModelDouble smd : kernelsettings) {
                 smd.loadSettingsFrom(settings);
@@ -419,7 +442,7 @@ public class SVMLearnerNodeModel extends NodeModel {
         out.write(m_svmInfo);
         out.close();
     }
-    
+
     /**
      * @return a string containing all SVM infos in HTML for the view.
      */
@@ -451,35 +474,17 @@ public class SVMLearnerNodeModel extends NodeModel {
         m_svmInfo = sb.toString();
         return m_svmInfo;
     }
-    
-     /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveModelContent(final int index,
-            final ModelContentWO predParams) throws InvalidSettingsException {
-        assert index == 0;
-        predParams.addInt(KEY_CATEG_COUNT, m_svms.length);
-        for (int i = 0; i < m_svms.length; ++i) {
-            m_svms[i].saveToPredictorParams(predParams, 
-                                        new Integer(i).toString() + "SVM");
-        }
-        Config specconf = predParams.addConfig(KEY_SPEC);
-        m_spec.save(specconf);
-        predParams.addString(KEY_CLASSCOL, m_classcol.getStringValue());
-    }
-    
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        settings.addString(CFG_KERNELTYPE, m_kernelType);
+        settings.addString(CFG_KERNELTYPE, m_kernelType.toString());
         m_paramC.saveSettingsTo(settings);
         m_classcol.saveSettingsTo(settings);
-        for (Map.Entry<String, Vector<SettingsModelDouble>> entry 
-                : m_kernelParameters
+        for (Map.Entry<KernelType, Vector<SettingsModelDouble>>
+        entry : m_kernelParameters
                 .entrySet()) {
             Vector<SettingsModelDouble> kernelsettings = entry.getValue();
             for (SettingsModelDouble smd : kernelsettings) {
@@ -508,8 +513,9 @@ public class SVMLearnerNodeModel extends NodeModel {
             }
 
         }
-        for (Map.Entry<String, Vector<SettingsModelDouble>> entry 
-                : m_kernelParameters.entrySet()) {
+        for (Map.Entry<KernelType, Vector<SettingsModelDouble>>
+        entry : m_kernelParameters
+                .entrySet()) {
             Vector<SettingsModelDouble> kernelsettings = entry.getValue();
             for (SettingsModelDouble smd : kernelsettings) {
                 smd.validateSettings(settings);

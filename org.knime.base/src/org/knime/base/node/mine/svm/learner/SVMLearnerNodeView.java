@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   07.10.2007 (cebron): created
  */
@@ -29,27 +29,27 @@ import java.awt.Dimension;
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * The SVM view provides information about all SVM'S trained for
  * each class with their corresponding support vectors.
- * 
+ *
  * @author cebron, University of Konstanz
  */
-public class SVMLearnerNodeView extends NodeView {
+public class SVMLearnerNodeView extends GenericNodeView<SVMLearnerNodeModel> {
 
     /*
      * Output is printed in a JEditorPane
      */
     private JEditorPane m_output;
-    
+
     /**
-     * Constructor. 
+     * Constructor.
      * @param model the underlying {@link NodeModel}.
      */
-    public SVMLearnerNodeView(final NodeModel model) {
+    public SVMLearnerNodeView(final SVMLearnerNodeModel model) {
         super(model);
         m_output = new JEditorPane("text/html", "");
         m_output.setEditable(false);
@@ -62,7 +62,7 @@ public class SVMLearnerNodeView extends NodeView {
      */
     @Override
     protected void modelChanged() {
-        String text = ((SVMLearnerNodeModel)getNodeModel()).getSVMInfos();
+        String text = (getNodeModel()).getSVMInfos();
         m_output.setText(text);
 
     }

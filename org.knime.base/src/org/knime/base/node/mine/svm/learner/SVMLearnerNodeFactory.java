@@ -18,23 +18,22 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   27.09.2007 (cebron): created
  */
 package org.knime.base.node.mine.svm.learner;
 
+import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * NodeFactory for the SVM Learner Node.
- * 
+ *
  * @author cebron, University of Konstanz
  */
-public class SVMLearnerNodeFactory extends NodeFactory {
+public class SVMLearnerNodeFactory extends
+        GenericNodeFactory<SVMLearnerNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -48,7 +47,7 @@ public class SVMLearnerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public SVMLearnerNodeModel createNodeModel() {
         return new SVMLearnerNodeModel();
     }
 
@@ -56,8 +55,8 @@ public class SVMLearnerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public SVMLearnerNodeView createNodeView(final int viewIndex,
+            final SVMLearnerNodeModel nodeModel) {
         return new SVMLearnerNodeView(nodeModel);
     }
 
