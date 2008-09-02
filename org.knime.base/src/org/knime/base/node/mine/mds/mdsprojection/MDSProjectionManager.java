@@ -35,7 +35,11 @@ import org.knime.base.node.mine.mds.DataPoint;
 import org.knime.base.node.mine.mds.MDSManager;
 import org.knime.base.node.mine.mds.distances.DistanceManager;
 import org.knime.base.node.mine.mds.distances.DistanceManagerFactory;
+import org.knime.base.node.preproc.filter.row.RowFilterTable;
+import org.knime.base.node.preproc.filter.row.rowfilter.MissingCellRowFilter;
+import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTable;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
@@ -83,11 +87,11 @@ public class MDSProjectionManager {
 
     protected DistanceManager m_euclideanDistMan;
 
-    protected BufferedDataTable m_inData;
+    protected DataTable m_inData;
 
     protected Hashtable<RowKey, DataPoint> m_points;
 
-    protected BufferedDataTable m_fixedDataPoints;
+    protected DataTable m_fixedDataPoints;
     
     protected Hashtable<RowKey, DataPoint> m_fixedPoints;
 
@@ -120,7 +124,7 @@ public class MDSProjectionManager {
      * @param distance The distance metric to use.
      * @param fuzzy <code>true</code> if the in data is fuzzy valued data.
      * @param inData The in data to use.
-     * @param subProgMonitor The <code>ExecutionMonitor</code> to monitor the 
+     * @param exec The <code>ExecutionContext</code> to monitor the 
      * progress.
      * @param fixedDataPoints The fixed data points to project the in data at.
      * @param fixedDataMdsIndices Array, containing the indices of the
@@ -134,7 +138,7 @@ public class MDSProjectionManager {
             final boolean fuzzy, final BufferedDataTable inData,
             final BufferedDataTable fixedDataPoints, 
             final int[] fixedDataMdsIndices, 
-            final ExecutionContext subProgMonitor) 
+            final ExecutionContext exec) 
     throws IllegalArgumentException, CanceledExecutionException {
         if (dimension <= 0) {
             throw new IllegalArgumentException(
@@ -160,21 +164,21 @@ public class MDSProjectionManager {
         m_dimension = dimension;
         m_distMan = DistanceManagerFactory.createDistanceManager(distance, 
                 fuzzy, true);
-        
         m_euclideanDistMan = DistanceManagerFactory.createDistanceManager(
                 DistanceManagerFactory.EUCLIDEAN_DIST, fuzzy);
-        m_inData = inData;
-        m_points = new Hashtable<RowKey, DataPoint>(m_inData.getRowCount());
-        m_exec = subProgMonitor;
+        m_exec = exec;
         
         // handle data table with fixed data
         m_fixedDataPoints = fixedDataPoints;
-        m_fixedPoints = new Hashtable<RowKey, DataPoint>(
-                m_fixedDataPoints.getRowCount());
+        m_fixedPoints = new Hashtable<RowKey, DataPoint>();
         preprocFixedDataPoints(fixedDataMdsIndices);
-        m_fixedDataPoints = m_exec.createBufferedDataTable(
-                new FilterColumnTable(m_fixedDataPoints, false, 
-                        fixedDataMdsIndices), m_exec);
+        m_fixedDataPoints = new FilterColumnTable(m_fixedDataPoints, false, 
+                        fixedDataMdsIndices);
+        
+        RowFilter rf = new MissingCellRowFilter();
+        m_inData = new RowFilterTable(inData, rf);
+        
+        m_points = new Hashtable<RowKey, DataPoint>();
     }
     
     protected void preprocFixedDataPoints(final int[] fixedDataMdsIndices) 
@@ -213,8 +217,6 @@ public class MDSProjectionManager {
 
         // init all data points
         RowIterator it = m_inData.iterator();
-        int currRow = 1;
-        int maxRows = m_inData.getRowCount();
         while (it.hasNext()) {
             exec.checkCanceled();
 
@@ -225,9 +227,7 @@ public class MDSProjectionManager {
             }
             m_points.put(row.getKey(), p);
 
-            double prog = (double)currRow / (double)maxRows;
-            exec.setProgress(prog, "Initialising data points.");
-            currRow++;
+            exec.setProgress("Initialising data points.");
         }
     }
 
@@ -251,8 +251,8 @@ public class MDSProjectionManager {
         m_learningrate = learningrate;
         m_initialLearningrate = learningrate;
         m_epochs = epochs;
+        exec.setMessage("Start training");
         for (int e = 1; e <= epochs; e++) {
-            exec.setMessage("Start training");
             exec.checkCanceled();
             doEpoch(e, exec);
 
@@ -325,10 +325,23 @@ public class MDSProjectionManager {
         }
     }    
     
+    /**
+     * Computes the disparity value for the given distance value.
+     * @param distance The distance value to compute the disparity value for.
+     * @return The disparity value according to the given distance value.
+     */
     protected double disparityTransformation(final double distance) {
         return distance;
     }
 
+    /**
+     * Adjusts learning rate according to the given epoch. The learning rate
+     * is decreased over time.
+     * 
+     * @param epoch The epoch for which the learning rate has to be computed.
+     * The higher the given epoch (according to the maximum epochs) the more
+     * is the learning rate decreased.
+     */
     protected void adjustLearningRate(final int epoch) {
         m_learningrate = m_initialLearningrate * Math.pow(
                 (m_finalLearningRate / m_initialLearningrate),

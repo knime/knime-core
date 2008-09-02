@@ -105,13 +105,7 @@ public class MDSProjectionNodeModel extends NodeModel {
     
     private List<String> m_includeList;
     
-    private boolean m_fuzzy = false;
-    
-    /**
-     * The maximum value of the output dimension.
-     */
-    public static int maxOutputDims = 3;
-    
+    private boolean m_fuzzy = false;    
     
     /**
      * The index of the data table containing the fixed data.
@@ -231,18 +225,6 @@ public class MDSProjectionNodeModel extends NodeModel {
         // if buffer throw exception
         if (buffer.length() > 0) {
             throw new InvalidSettingsException(buffer.toString());
-        }
-
-        maxOutputDims = numberCells - 1;
-        if (m_fuzzy) {
-            maxOutputDims = fuzzyCells - 1;
-        }
-        if (maxOutputDims < 1) {
-            maxOutputDims = 1;
-        }
-        
-        if (maxOutputDims > fixedColInlucdeList.size()) {
-            maxOutputDims = fixedColInlucdeList.size();
         }
         
         return new DataTableSpec[]{null};

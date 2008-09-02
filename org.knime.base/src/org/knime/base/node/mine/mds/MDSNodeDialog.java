@@ -103,7 +103,7 @@ public class MDSNodeDialog extends DefaultNodeSettingsPane {
     public static SettingsModelIntegerBounded getOutputDimModel() {
         return new SettingsModelIntegerBounded(
                 MDSConfigKeys.CFGKEY_OUTDIMS, MDSNodeModel.DEF_OUTPUTDIMS,
-                MDSNodeModel.MIN_OUTPUTDIMS, MDSNodeModel.maxOutputDims);
+                MDSNodeModel.MIN_OUTPUTDIMS, MDSNodeModel.MAX_OUTPUTDIMS);
     }
     
     /**

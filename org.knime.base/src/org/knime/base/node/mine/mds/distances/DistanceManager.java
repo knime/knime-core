@@ -57,10 +57,11 @@ public interface DistanceManager {
      * @return The type of the <code>DistanceManager</code>. See
      *         <code>DistanceManagerFactory</code> for valid types.
      * 
-     * @see org.knime.base.node.som.distances.DistanceManagerFactory#COS_DIST
-     * @see org.knime.base.node.som.distances.DistanceManagerFactory#
+     * @see org.knime.base.node.mine.mds.distances.DistanceManagerFactory#
+     *      COS_DIST
+     * @see org.knime.base.node.mine.mds.distances.DistanceManagerFactory#
      *      EUCLIDEAN_DIST
-     * @see org.knime.base.node.som.distances.DistanceManagerFactory#
+     * @see org.knime.base.node.mine.mds.distances.DistanceManagerFactory#
      *      MANHATTAN_DIST
      */
     public String getType();

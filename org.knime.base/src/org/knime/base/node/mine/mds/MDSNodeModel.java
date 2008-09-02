@@ -126,7 +126,7 @@ public class MDSNodeModel extends NodeModel {
     /**
      * The maximum value of the output dimension.
      */
-    public static int maxOutputDims = 3;
+    public static final int MAX_OUTPUTDIMS = Integer.MAX_VALUE;
     
     /**
      * The default value of the distance to use.
@@ -225,13 +225,6 @@ public class MDSNodeModel extends NodeModel {
             throw new InvalidSettingsException(buffer.toString());
         }
 
-        maxOutputDims = numberCells - 1;
-        if (m_fuzzy) {
-            maxOutputDims = fuzzyCells - 1;
-        }
-        if (maxOutputDims < 1) {
-            maxOutputDims = 1;
-        }
         return new DataTableSpec[]{null};
     }
 
@@ -274,8 +267,7 @@ public class MDSNodeModel extends NodeModel {
         
         // create MDS manager, init and train stuff
         m_manager = new MDSManager(m_outputDimModel.getIntValue(),
-                m_distModel.getStringValue(), m_fuzzy, dataTableToUse,
-                exec.createSubProgress(0.9));
+                m_distModel.getStringValue(), m_fuzzy, dataTableToUse, exec);
         m_manager.init(m_seedModel.getIntValue());
         m_manager.train(m_epochsModel.getIntValue(),
                 m_learnrateModel.getDoubleValue());
@@ -422,5 +414,5 @@ public class MDSNodeModel extends NodeModel {
         } else {
             m_rowsModel.setEnabled(true);
         }
-    }    
+    }
 }

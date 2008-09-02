@@ -29,11 +29,16 @@ import java.util.Random;
 
 import org.knime.base.node.mine.mds.distances.DistanceManager;
 import org.knime.base.node.mine.mds.distances.DistanceManagerFactory;
+import org.knime.base.node.preproc.filter.row.RowFilterTable;
+import org.knime.base.node.preproc.filter.row.rowfilter.MissingCellRowFilter;
+import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTable;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
@@ -76,7 +81,7 @@ public class MDSManager {
     
     private DistanceManager m_euclideanDistMan;
     
-    private BufferedDataTable m_inData;
+    private DataTable m_inData;
     
     private Hashtable<RowKey, DataPoint> m_points;
     
@@ -90,7 +95,7 @@ public class MDSManager {
     
     private boolean m_isInit = false;
     
-    private ExecutionMonitor m_progMon;
+    private ExecutionMonitor m_exec;
     
     /**
      * Creates a new instance of <code>MDSManager</code> with the given
@@ -102,14 +107,14 @@ public class MDSManager {
      * @param distance The distance metric to use.
      * @param fuzzy <code>true</code> if the in data is fuzzy valued data.
      * @param inData The in data to use.
-     * @param subProgMonitor The <code>ExecutionMonitor</code> to monitor the 
+     * @param exec The <code>ExecutionContext</code> to monitor the 
      * progress.
      * @throws IllegalArgumentException if the specified dimension is less or 
      * equals zero.
      */
     public MDSManager(final int dimension, final String distance, 
             final boolean fuzzy, final BufferedDataTable inData,
-            final ExecutionMonitor subProgMonitor) 
+            final ExecutionContext exec) 
     throws IllegalArgumentException {
         if (dimension <= 0) {
             throw new IllegalArgumentException(
@@ -120,9 +125,13 @@ public class MDSManager {
                 fuzzy);
         m_euclideanDistMan = DistanceManagerFactory.createDistanceManager(
                 DistanceManagerFactory.EUCLIDEAN_DIST, fuzzy);
-        m_inData = inData;
-        m_points = new Hashtable<RowKey, DataPoint>(m_inData.getRowCount());
-        m_progMon = subProgMonitor;
+        
+        
+        RowFilter rf = new MissingCellRowFilter();
+        m_inData = new RowFilterTable(inData, rf);
+        m_exec = exec.createSubExecutionContext(0.9);
+        
+        m_points = new Hashtable<RowKey, DataPoint>();
     }
     
     /**
@@ -135,12 +144,10 @@ public class MDSManager {
         m_isInit = true;
         Random rand = new Random(seed);
      
-        ExecutionMonitor exec = m_progMon.createSubProgress(0.1);
+        ExecutionMonitor exec = m_exec.createSubProgress(0.1);
         
         // init all data points
         RowIterator it = m_inData.iterator();
-        int currRow = 1;
-        int maxRows = m_inData.getRowCount();
         while (it.hasNext()) {
             exec.checkCanceled();
             
@@ -151,9 +158,7 @@ public class MDSManager {
             }
             m_points.put(row.getKey(), p);
             
-            double prog = (double)currRow / (double)maxRows;
-            exec.setProgress(prog, "Initialising data points.");
-            currRow++;
+            exec.setProgress("Initialising data points.");
         }
     }
     
@@ -172,7 +177,7 @@ public class MDSManager {
             init(DEFAULT_SEED);
         }
         
-        ExecutionMonitor exec = m_progMon.createSubProgress(0.9);
+        ExecutionMonitor exec = m_exec.createSubProgress(0.9);
         
         m_learningrate = learningrate;
         m_initialLearningrate = learningrate; 
