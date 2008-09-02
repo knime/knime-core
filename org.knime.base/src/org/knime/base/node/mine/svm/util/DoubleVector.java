@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.mine.svm.util;
 
@@ -33,30 +33,30 @@ import org.knime.core.node.ModelContentWO;
 /**
  * This class is used to represent a vector (in the sense of
  * input data sample). A vector contains double values and the class
- * value. 
- * 
+ * value.
+ *
  * @author Stefan, University of Konstanz
  * @author Nicolas Cebron, University of Konstanz
  */
 public class DoubleVector {
-   
+
     /* keys for memorizing a vector into a ModelContent. */
     private static final String KEY_CATEGORY = "Result";
     private static final String KEY_POINTS = "Points";
 
-    
+
     // Values
     private double[] m_values;
 
     // the class value
     private String m_classValue;
-    
+
     // RowKey
     private RowKey m_key;
 
     /**
      * Default constructor.
-     * 
+     *
      * @param key the RowKey of the row associated with this vector.
      * @param values the double values of the vector.
      * @param classvalue the class value.
@@ -70,10 +70,10 @@ public class DoubleVector {
         }
         m_classValue = classvalue;
     }
-    
+
     /**
      * Default constructor with no associated {@link RowKey}.
-     * 
+     *
      * @param values the double values of the vector.
      * @param classvalue the class value.
      */
@@ -81,7 +81,7 @@ public class DoubleVector {
             final String classvalue) {
         this(null, values, classvalue);
     }
-    
+
     /**
      * @return the RowKey of the row associated with this vector.
      * Can be <code>null</code>.
@@ -99,21 +99,21 @@ public class DoubleVector {
 
     /**
      * return the i'th value in the vector.
-     * 
+     *
      * @param i the index of the value to return
      * @return the value at this index
      */
     public double getValue(final int i) {
         return m_values[i];
     }
-    
+
     /**
      * @return the number of values.
      */
     public int getNumberValues() {
         return m_values.length;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -132,7 +132,7 @@ public class DoubleVector {
         return result;
     }
 
-  
+
     /**
      * Save the vector to a ModelContent object.
      * @param predParams where to save the vector
@@ -142,16 +142,24 @@ public class DoubleVector {
         predParams.addString(id + KEY_CATEGORY, m_classValue);
         predParams.addDoubleArray(id + KEY_POINTS, m_values);
     }
-    
+
     /**
      * Loads a vector from a predParams object.
      * @param predParams from where to load
      * @param id used to identify this vector uniquely
      * @throws InvalidSettingsException if a key is not found
      */
-    public DoubleVector(final ModelContentRO predParams, final String id) 
+    public DoubleVector(final ModelContentRO predParams, final String id)
             throws InvalidSettingsException {
         m_classValue = predParams.getString(id + KEY_CATEGORY);
         m_values = predParams.getDoubleArray(id + KEY_POINTS);
+    }
+
+    /**
+     * Sets the class value of the {@link DoubleVector}.
+     * @param value the new class value.
+     */
+    public void setClassValue(final String value) {
+        m_classValue = value;
     }
 }
