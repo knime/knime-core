@@ -286,6 +286,9 @@ public class PMMLClusterPortObject extends PMMLPortObject {
             AttributesImpl atts = new AttributesImpl();
             atts.addAttribute(null, null, "name", CDATA, 
                     "normalized-" + colSpec.getName());
+            atts.addAttribute(null, null, "optype", CDATA, "continuous");
+            atts.addAttribute(null, null, "dataType", CDATA, 
+                    PMMLPortObjectSpec.getDataType(colSpec));
             handler.startElement(null, null, "DerivedField", atts);
             // NormContinuous field="[columnName]"
                 atts = new AttributesImpl();
