@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$
- * $Revision$ $Date$ $Author$
- *
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -26,17 +24,12 @@
  */
 package org.knime.workbench.core;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.IPluginDescriptor;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.eclipseUtil.ClassCreator;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleException;
 /**
  * Class creator, used inside Eclipse to load classes for the KNIME core. We
  * need this to lookup classes from the contributing plugins.
@@ -50,43 +43,6 @@ import org.osgi.framework.BundleException;
  * @author Florian Georg, University of Konstanz
  */
 public class EclipseClassCreator implements ClassCreator {
-//    private static final NodeLogger LOGGER =
-//            NodeLogger.getLogger(EclipseClassCreator.class);
-
-    private static final List<Bundle> DEPRECATED_PLUGINS =
-            new ArrayList<Bundle>();
-
-    /**
-     * Try to load a deprecated plugin, so that its classes are loadable.
-     *
-     * @param pluginID the plugin's ID
-     *
-     * @throws NoSuchPluginException if the plugin cannot be found
-     * @throws BundleException if an error
-     */
-    public static void addDeprecatedPlugin(final String pluginID)
-            throws NoSuchPluginException, BundleException {
-        Bundle b = Platform.getBundle(pluginID);
-        if (b != null) {
-            b.start();
-            DEPRECATED_PLUGINS.add(b);
-        } else {
-            throw new NoSuchPluginException(pluginID);
-        }
-    }
-
-//    static {
-//        try {
-//            addDeprecatedPlugin("org.knime.deprecated");
-//        } catch (NoSuchPluginException ex) {
-//            LOGGER.warn("Plugin org.knime.deprecated not found, the "
-//                    + "old nodes will not be available", ex);
-//        } catch (BundleException ex) {
-//            LOGGER.warn("Plugin org.knime.deprecated could not be "
-//                    + "started, the old nodes will not be available", ex);
-//        }
-//    }
-
     private IExtension[] m_extensions;
 
     /**
@@ -112,9 +68,8 @@ public class EclipseClassCreator implements ClassCreator {
      * @param className The class to lookup
      * @return class, or <code>null</code>
      */
-    public Class createClass(final String className) {
-
-        Class clazz = null;
+    public Class<?> createClass(final String className) {
+        Class<?> clazz = null;
 
         // first, try the core and editor
         try {
@@ -136,7 +91,7 @@ public class EclipseClassCreator implements ClassCreator {
          */
         for (int i = 0; i < m_extensions.length && clazz == null; i++) {
             IExtension ext = m_extensions[i];
-            String pluginID = ext.getNamespace();
+            String pluginID = ext.getNamespaceIdentifier();
             try {
                 // workaround for a bug that occurs when deserializing array
                 // objects. The bundle class loader is not able to resolve
@@ -148,34 +103,14 @@ public class EclipseClassCreator implements ClassCreator {
                 // no chance to get a proper class loader from the Bundle.
                 // NOTE: all that is obsolete. It will be removed by the buddy
                 // class loading concept in later versions.
-                IPluginDescriptor pluginDesc =
-                        ext.getDeclaringPluginDescriptor();
-                if (pluginDesc != null) {
-                    ClassLoader l = pluginDesc.getPluginClassLoader();
-                    clazz = Class.forName(className, false, l);
-                } else {
-                    Bundle p = Platform.getBundle(pluginID);
-                    clazz = p.loadClass(className);
+                Bundle bundle = Platform.getBundle(pluginID);
+                if (bundle != null) {
+                    clazz = bundle.loadClass(className);
                 }
             } catch (Exception e) {
                 // ignore
             }
         }
-
-        if (clazz == null) {
-            for (Bundle b : DEPRECATED_PLUGINS) {
-                // also check the deprecated plugin; this is not contained
-                // in the extensions and thus not covered by the above loop
-                try {
-                    clazz = b.loadClass(className);
-                    return clazz;
-
-                } catch (ClassNotFoundException cnfe) {
-                    // clazz just stays null
-                }
-            }
-        }
-
         return clazz;
     }
 
