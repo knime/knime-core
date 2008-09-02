@@ -47,6 +47,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -336,7 +337,7 @@ final class DBReaderConnection implements DataTable {
             }
             m_end = end();
             m_rowCnt++;
-            return new DefaultRow("Row_" + rowId, cells);
+            return new DefaultRow(RowKey.createRowKey(rowId), cells);
         }
 
         private boolean end() {
