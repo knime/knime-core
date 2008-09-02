@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   01.10.2007 (cebron): created
  */
@@ -28,37 +28,31 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Vector;
 
+import org.knime.base.node.mine.svm.PMMLSVMPortObject;
 import org.knime.base.node.mine.svm.Svm;
-import org.knime.base.node.mine.svm.learner.SVMLearnerNodeModel;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 /**
  * NodeModel of the SVM Predictor Node.
  * @author cebron, University of Konstanz
  */
-public class SVMPredictorNodeModel extends NodeModel {
-
-     /*
-     * DataTableSpec of the training data.
-     */
-    private DataTableSpec m_trainingSpec;
-
-    /*
-     * The class column of the training table.
-     */
-    private String m_classcol;
+public class SVMPredictorNodeModel extends GenericNodeModel {
 
     /*
      * The extracted Support Vector Machines.
@@ -74,37 +68,24 @@ public class SVMPredictorNodeModel extends NodeModel {
      * Constructor, one model and data input, one (classified) data output.
      */
     public SVMPredictorNodeModel() {
-        super(1, 1, 1, 0);
-    }
-
-    /*
-     * Extracts the model parameters from m_predParams.
-     */
-    private void extractModelParams(final ModelContentRO predParams)
-            throws InvalidSettingsException {
-        Integer count = predParams.getInt(SVMLearnerNodeModel.KEY_CATEG_COUNT);
-        m_svms = new Svm[count.intValue()];
-        for (int i = 0; i < m_svms.length; ++i) {
-            m_svms[i] = new Svm(predParams, new Integer(i).toString() + "SVM");
-        }
-        ConfigRO specconf = predParams.getConfig(SVMLearnerNodeModel.KEY_SPEC);
-        m_trainingSpec = DataTableSpec.load(specconf);
-        m_classcol = predParams.getString(SVMLearnerNodeModel.KEY_CLASSCOL);
+        super(new PortType[] {PMMLSVMPortObject.TYPE, BufferedDataTable.TYPE },
+                new PortType[] {
+                BufferedDataTable.TYPE});
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_svms != null && m_trainingSpec != null && m_classcol != null) {
-            DataTableSpec testspec = inSpecs[0];
+            DataTableSpec testSpec = (DataTableSpec) inSpecs[1];
+            PMMLPortObjectSpec trainingSpec = (PMMLPortObjectSpec) inSpecs[0];
             // try to find all columns (except the class column)
             Vector<Integer> colindices = new Vector<Integer>();
-            for (DataColumnSpec colspec : m_trainingSpec) {
-                if (!colspec.getName().equals(m_classcol)) {
-                    int colindex = testspec.findColumnIndex(colspec.getName());
+            for (DataColumnSpec colspec : trainingSpec.getLearningCols()) {
+                if (colspec.getType().isCompatible(DoubleValue.class)) {
+                    int colindex = testSpec.findColumnIndex(colspec.getName());
                     if (colindex < 0) {
                         throw new InvalidSettingsException("Column " + "\'"
                                 + colspec.getName() + "\' not found"
@@ -118,28 +99,46 @@ public class SVMPredictorNodeModel extends NodeModel {
                 m_colindices[i] = colindices.get(i);
             }
             SVMPredictor svmpredict = new SVMPredictor(m_svms, m_colindices);
-            ColumnRearranger colre = new ColumnRearranger(testspec);
+            ColumnRearranger colre = new ColumnRearranger(testSpec);
             colre.append(svmpredict);
             return new DataTableSpec[]{colre.createSpec()};
-        }
-        throw new InvalidSettingsException("Model content not available.");
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        if (m_svms == null) {
-            throw new Exception("Model content not available!");
+        m_svms = ((PMMLSVMPortObject)inData[0]).getSvms();
+        DataTableSpec testSpec =
+                ((BufferedDataTable)inData[1]).getDataTableSpec();
+        DataTableSpec trainingSpec =
+                ((PMMLPortObject)inData[0]).getSpec().getDataTableSpec();
+        // try to find all columns (except the class column)
+        Vector<Integer> colindices = new Vector<Integer>();
+        for (DataColumnSpec colspec : trainingSpec) {
+            if (colspec.getType().isCompatible(DoubleValue.class)) {
+                int colindex = testSpec.findColumnIndex(colspec.getName());
+                if (colindex < 0) {
+                    throw new InvalidSettingsException("Column " + "\'"
+                            + colspec.getName() + "\' not found"
+                            + " in test data");
+                }
+                colindices.add(colindex);
+            }
+        }
+        m_colindices = new int[colindices.size()];
+        for (int i = 0; i < m_colindices.length; i++) {
+            m_colindices[i] = colindices.get(i);
         }
         SVMPredictor svmpredict = new SVMPredictor(m_svms, m_colindices);
+        BufferedDataTable testData = (BufferedDataTable) inData[1];
         ColumnRearranger colre =
-                new ColumnRearranger(inData[0].getDataTableSpec());
+                new ColumnRearranger(testData.getDataTableSpec());
         colre.append(svmpredict);
         BufferedDataTable result =
-                exec.createColumnRearrangeTable(inData[0], colre, exec);
+                exec.createColumnRearrangeTable(testData, colre, exec);
         return new BufferedDataTable[]{result};
     }
 
@@ -150,7 +149,7 @@ public class SVMPredictorNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-
+        //
     }
 
     /**
@@ -159,6 +158,7 @@ public class SVMPredictorNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+            //
     }
 
     /**
@@ -166,6 +166,7 @@ public class SVMPredictorNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
+        //
     }
 
     /**
@@ -175,32 +176,16 @@ public class SVMPredictorNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        //
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadModelContent(final int index,
-            final ModelContentRO predParams) throws InvalidSettingsException {
-        if (index == 0) {
-            if (predParams == null) {
-                // reset 
-                m_svms = null;
-                m_classcol = null;
-                m_trainingSpec = null;
-            } else {
-                extractModelParams(predParams);
-            }
-            
-        }
-    }
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        //
     }
 
     /**
@@ -209,6 +194,7 @@ public class SVMPredictorNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        //
     }
 
 }

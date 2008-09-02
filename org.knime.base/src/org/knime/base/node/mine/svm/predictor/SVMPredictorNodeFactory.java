@@ -18,23 +18,23 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   03.10.2007 (cebron): created
  */
 package org.knime.base.node.mine.svm.predictor;
 
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * SVMPredictor NodeFactory.
- * 
+ *
  * @author cebron, University of Konstanz
  */
-public class SVMPredictorNodeFactory extends NodeFactory {
+public class SVMPredictorNodeFactory extends
+        GenericNodeFactory<SVMPredictorNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -48,7 +48,7 @@ public class SVMPredictorNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public SVMPredictorNodeModel createNodeModel() {
         return new SVMPredictorNodeModel();
     }
 
@@ -56,8 +56,8 @@ public class SVMPredictorNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public GenericNodeView<SVMPredictorNodeModel> createNodeView(
+            final int viewIndex, final SVMPredictorNodeModel nodeModel) {
         return null;
     }
 
