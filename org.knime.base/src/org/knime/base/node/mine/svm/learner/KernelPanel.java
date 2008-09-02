@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   06.10.2007 (cebron): created
  */
@@ -34,15 +34,20 @@ import org.knime.core.node.defaultnodesettings.DialogComponent;
 /**
  * Panel for kernel parameter values. Allows for enabling/disabling
  * the components on the panel.
- * 
+ *
  * @author cebron, University of Konstanz
  */
 public class KernelPanel extends JPanel {
+    /**
+     *
+     */
+    private static final long serialVersionUID = -5032637076823894980L;
+
     /*
      * DialogComponents in the panel.
      */
     private ArrayList<DialogComponent> m_components;
-    
+
     /**
      * Constructor.
      */
@@ -51,7 +56,7 @@ public class KernelPanel extends JPanel {
         super.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         m_components = new ArrayList<DialogComponent>();
     }
-    
+
     /**
      * @param comp {@link DialogComponent} to add  to the panel.
      */
@@ -59,9 +64,9 @@ public class KernelPanel extends JPanel {
         m_components.add(comp);
         super.add(comp.getComponentPanel());
     }
-    
+
     /**
-     * Sets all components in the panel in the enabled state. 
+     * Sets all components in the panel in the enabled state.
      * @param enabled the state to set.
      */
     void setAllEnabled(final boolean enabled) {
