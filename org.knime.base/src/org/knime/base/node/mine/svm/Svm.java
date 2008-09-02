@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,12 +18,13 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.mine.svm;
 
 import org.knime.base.node.mine.svm.kernel.Kernel;
 import org.knime.base.node.mine.svm.kernel.KernelFactory;
+import org.knime.base.node.mine.svm.kernel.KernelFactory.KernelType;
 import org.knime.base.node.mine.svm.util.DoubleVector;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
@@ -33,12 +34,12 @@ import org.knime.core.node.ModelContentWO;
  * This class represents a (binary) support vector machine.
  * It works by remembering the support vectors and the
  * corresponding alpha values.
- * 
+ *
  * @author Stefan, University of Konstanz
  * @author cebron, University of Konstanz
  */
 public class Svm {
-    
+
     /* the keys under which we save the parameters. */
     private static final String KEY_CATEGORY = "Category";
     private static final String KEY_THRESHOLD = "Threshold";
@@ -47,29 +48,29 @@ public class Svm {
     private static final String KEY_SV = "Support vector";
     private static final String KEY_KERNELTYPE = "Kernel type";
     private static final String KEY_KERNELPARAMS = "Kernel parameters";
-    
+
     /* the support vectors. */
     private final DoubleVector[] m_supportVectors;
-    
+
     /* the corresponding alpha values. */
     private final double [] m_alpha;
-    
+
     /*
      * the 'positive' class. objects of this class are
      * classified as 1, other objects as -1
      */
     private final String m_positive;
-    
+
     /*
      * the threshold.
      */
     private double m_b;
-    
+
     /*
      * the kernel type to use.
      */
-    private String m_kernelType;
-    
+    private KernelType m_kernelType;
+
     /*
      * the actual kernel.
      */
@@ -77,7 +78,7 @@ public class Svm {
 
     /**
      * Constructor.
-     * 
+     *
      * @param supportVectors the support vectors that define the SVM
      * @param alpha the corresponding Lagrange coefficients
      * @param positive the class for which SVM should yield 1
@@ -110,7 +111,7 @@ public class Svm {
         m_kernel = kernel;
         m_kernelType = KernelFactory.getType(m_kernel);
     }
-    
+
     /**
      * Determines the output for the support vector at the given index.
      * @param i the index of the support vector
@@ -123,7 +124,7 @@ public class Svm {
             return -1;
         }
     }
-    
+
     /**
      * Computes the distance from the hyperplane in the kernel induced
      * hyperspace.
@@ -153,7 +154,7 @@ public class Svm {
             return 1;
         }
     }
-    
+
     /**
      * The margin of a SVM is the minimum distance from all support
      * vectors to the decision hyperplane.
@@ -167,14 +168,14 @@ public class Svm {
         return margin;
     }
 
-    
+
 
     /**
      * Save the Support Vector Machine for later use.
      * @param predParams where the SVM will be saved.
      * @param id unique identifier for this SVM.
      */
-    public void saveToPredictorParams(final ModelContentWO predParams, 
+    public void saveToPredictorParams(final ModelContentWO predParams,
             final String id) {
         predParams.addString(id + KEY_CATEGORY, m_positive);
         predParams.addDouble(id + KEY_THRESHOLD, m_b);
@@ -183,7 +184,7 @@ public class Svm {
         for (int i = 0; i < m_supportVectors.length; ++i) {
             m_supportVectors[i].saveTo(predParams, id + KEY_SV + i);
         }
-        predParams.addString(id + KEY_KERNELTYPE, m_kernelType);
+        predParams.addString(id + KEY_KERNELTYPE, m_kernelType.toString());
         int count = m_kernel.getNumberParameters();
         double [] kernelParams = new double [ count ];
         for (int i = 0; i < count; ++i) {
@@ -209,7 +210,8 @@ public class Svm {
             m_supportVectors[i] = new DoubleVector(predParams, id + KEY_SV + i);
         }
 
-        m_kernelType = predParams.getString(id + KEY_KERNELTYPE);
+        m_kernelType =
+                KernelType.valueOf(predParams.getString(id + KEY_KERNELTYPE));
         m_kernel = KernelFactory.getKernel(m_kernelType);
         int count = m_kernel.getNumberParameters();
         double[] kernelParams =
@@ -219,7 +221,7 @@ public class Svm {
             m_kernel.setParameter(i, kernelParams[i]);
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -227,12 +229,12 @@ public class Svm {
     public String toString() {
         String result = "Support vectors (bias = " + m_b + "):\n";
         for (int i = 0; i < m_supportVectors.length; ++i) {
-            result = result + m_supportVectors[i].toString() 
+            result = result + m_supportVectors[i].toString()
                         + " (alpha: " + m_alpha[i] + ")\n";
         }
         return result;
     }
-    
+
     /**
      * @return the "positive" class value.
      */
@@ -246,6 +248,19 @@ public class Svm {
     public DoubleVector[] getSupportVectors() {
         return m_supportVectors;
     }
-    
-    
+
+    /**
+     * @return the alpha coefficients of the SVM.
+     */
+    public double[] getAlphas() {
+        return m_alpha;
+    }
+
+    /**
+     * @return the threshold value b of the SVM.s
+     */
+    public double getThreshold() {
+        return m_b;
+    }
+
 }
