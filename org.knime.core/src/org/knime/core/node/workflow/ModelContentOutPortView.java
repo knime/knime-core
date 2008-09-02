@@ -43,8 +43,8 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeModel.ModelContentWrapper;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -125,7 +125,7 @@ final class ModelContentOutPortView extends NodeOutPortView {
         });
         Container cont = getContentPane();
         cont.setLayout(new BorderLayout());
-        cont.setBackground(NodeView.COLOR_BACKGROUND);
+        cont.setBackground(GenericNodeView.COLOR_BACKGROUND);
         cont.add(new JScrollPane(m_tree), BorderLayout.CENTER);
     }
 
@@ -166,11 +166,20 @@ final class ModelContentOutPortView extends NodeOutPortView {
             m_tree.setModel(new DefaultTreeModel(NO_TEXT));
         } else {
             //String text = predParams.toString();
-            ModelContentRO cont = 
+            ModelContentRO cont =
                 ((ModelContentWrapper) predParams).getModelContent();
             m_tree.setModel(new DefaultTreeModel(cont));
         }
         super.updatePortView();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void dispose() {
+        super.dispose();
+        m_tree.removeAll();
+        m_tree.setModel(null);
+    }
 }

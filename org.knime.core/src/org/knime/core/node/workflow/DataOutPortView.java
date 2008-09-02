@@ -20,7 +20,7 @@
  * --------------------------------------------------------------------- *
  * History
  *   03.08.2005 (ohl): created
- *   08.05.2006(sieb, ohl): reviewed 
+ *   08.05.2006(sieb, ohl): reviewed
  */
 package org.knime.core.node.workflow;
 
@@ -49,8 +49,8 @@ import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.tableview.TableView;
@@ -58,13 +58,13 @@ import org.knime.core.node.tableview.TableView;
 /**
  * Implements a view to inspect the data, table spec and other stuff currently
  * stored in an output port.
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 class DataOutPortView extends NodeOutPortView {
-    
-    private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(DataOutPortView.class); 
+
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(DataOutPortView.class);
 
     private final JTabbedPane m_tabs;
 
@@ -73,7 +73,7 @@ class DataOutPortView extends NodeOutPortView {
     private final TableView m_dataView;
 
     private final TableView m_propsView;
-    
+
     private final JLabel m_busyLabel;
 
     private final String m_nodeName;
@@ -81,35 +81,35 @@ class DataOutPortView extends NodeOutPortView {
     private final String m_portName;
 
     private DataTable m_table;
-    
+
     private DataTableSpec m_tableSpec;
-    
+
     /** Updates are synchronized on this object. Declaring the methods
      * as synchronized (i.e. using "this" as mutex) does not work as swing
      * also acquires locks on this graphical object.
      */
     private final Object m_updateLock = new Object();
-    
+
     /**
      * A view showing the data stored in the specified output port.
-     * 
+     *
      * @param nodeName The name of the node the inspected port belongs to
      * @param portName The name of the port to view data from. Will appear in
      *            the title of the frame.
-     * 
+     *
      */
     DataOutPortView(final String nodeName, final String portName) {
         super(createWindowTitle(nodeName, portName, null, null, null));
 
         m_table = null;
         m_tableSpec = null;
-        
+
         m_nodeName = nodeName;
         m_portName = portName;
 
         Container cont = getContentPane();
         cont.setLayout(new BorderLayout());
-        cont.setBackground(NodeView.COLOR_BACKGROUND);
+        cont.setBackground(GenericNodeView.COLOR_BACKGROUND);
 
         m_tabs = new JTabbedPane();
         m_specView = new TableView();
@@ -128,22 +128,22 @@ class DataOutPortView extends NodeOutPortView {
         m_tabs.addTab("DataTableSpec", m_specView);
         m_tabs.addTab("DataColumnProperties", m_propsView);
 
-        m_tabs.setBackground(NodeView.COLOR_BACKGROUND);
-        
+        m_tabs.setBackground(GenericNodeView.COLOR_BACKGROUND);
+
         m_busyLabel = new JLabel("Fetching data ...");
         cont.add(m_tabs, BorderLayout.CENTER);
     }
-    
+
 
     /**
      * {@inheritDoc}
      */
     @Override
     void update(final PortObject table, final PortObjectSpec spec) {
-        this.update((DataTable) table, (DataTableSpec) spec); 
+        this.update((DataTable) table, (DataTableSpec) spec);
     }
-    
-    /** 
+
+    /**
      * Updates table and spec. This is executed in a newly created thread to
      * allow the view to pop up quickly. The view will show a label that
      * the data is being loaded while the set process is executing.
@@ -154,14 +154,14 @@ class DataOutPortView extends NodeOutPortView {
         synchronized (m_updateLock) {
             m_table = table;
             m_tableSpec = spec;
-            
+
             if (isVisible()) {
                 showComponent(m_busyLabel);
                 updateAll();
             }
         }
     }
-    
+
     private void showComponent(final JComponent p) {
         Runnable run = new Runnable() {
             public void run() {
@@ -186,42 +186,42 @@ class DataOutPortView extends NodeOutPortView {
 
     /**
      * Sets a new DataTable to display.
-     * 
+     *
      * @param newDataTable The new data table (or null) to display in the view.
      */
     private void updateDataTable(final DataTable newDataTable) {
         synchronized (m_updateLock) {
             m_dataView.setDataTable(newDataTable);
             // display the number of rows in the upper left corner
-            
+
             if (newDataTable instanceof BufferedDataTable) {
                 // only BufferedTables have the row count set.
                 BufferedDataTable bTable = (BufferedDataTable)newDataTable;
                 int colCount = bTable.getDataTableSpec().getNumColumns();
                 int rowCount = bTable.getRowCount();
-                
+
                 String header =
                     "" + rowCount + " Row" + (rowCount != 1 ? "s" : "") + ", "
                     + colCount + " Col" + (colCount != 1 ? "s" : "");
                 m_dataView.getHeaderTable().setColumnName(header);
-                // display the row count in the window title, too. 
-                setTitle(createWindowTitle(m_nodeName, m_portName, 
-                        newDataTable.getDataTableSpec().getName(), 
-                        newDataTable.getDataTableSpec().getNumColumns(), 
+                // display the row count in the window title, too.
+                setTitle(createWindowTitle(m_nodeName, m_portName,
+                        newDataTable.getDataTableSpec().getName(),
+                        newDataTable.getDataTableSpec().getNumColumns(),
                         bTable.getRowCount()));
-                
+
             } else {
                 m_dataView.getHeaderTable().setColumnName("");
                 setTitle(createWindowTitle(
                         m_nodeName, m_portName, null, null, null));
-                
+
             }
         }
     }
 
     /**
      * Sets a new DataTableSpec to display.
-     * 
+     *
      * @param newTableSpec The new data table spec (or null) to display in the
      *            view.
      */
@@ -232,7 +232,7 @@ class DataOutPortView extends NodeOutPortView {
             // display the number of columns in the upper left corner
             if (newTableSpec != null) {
                 int numOfCols = newTableSpec.getNumColumns();
-                m_specView.getHeaderTable().setColumnName("" + numOfCols 
+                m_specView.getHeaderTable().setColumnName("" + numOfCols
                         + " Column" + (numOfCols > 1 ? "s" : ""));
                 m_propsView.getHeaderTable().setColumnName("Property Key");
                 setTitle(createWindowTitle(m_nodeName, m_portName, newTableSpec
@@ -240,7 +240,7 @@ class DataOutPortView extends NodeOutPortView {
             } else {
                 m_specView.getHeaderTable().setColumnName("");
                 m_propsView.getHeaderTable().setColumnName("");
-                setTitle(createWindowTitle(m_nodeName, m_portName, null, null, 
+                setTitle(createWindowTitle(m_nodeName, m_portName, null, null,
                         null));
             }
         }
@@ -349,9 +349,9 @@ class DataOutPortView extends NodeOutPortView {
 //        }
 //        result.addRowToTable(new DefaultRow(new StringCell("<html><b>Name"),
 //                cols));
-        
+
         DataCell[] cols;
-        
+
         // 2nd row: displays type of column
         cols = new DataCell[numCols];
         for (int c = 0; c < numCols; c++) {
@@ -360,15 +360,15 @@ class DataOutPortView extends NodeOutPortView {
         }
         result.addRowToTable(new DefaultRow("Column Type", cols));
 
-        
-        // 1st row: show the column number 
+
+        // 1st row: show the column number
         cols = new DataCell[numCols];
         for (int c = 0; c < numCols; c++) {
             cols[c] = new StringCell("" + c);
         }
         result.addRowToTable(new DefaultRow("Column Index", cols));
-        
-        
+
+
         // 3rd row: shows who has a color handler set
         cols = new DataCell[numCols];
         for (int c = 0; c < numCols; c++) {
@@ -502,7 +502,7 @@ class DataOutPortView extends NodeOutPortView {
         }
         return result.toString();
     }
-    
+
     private void updateAll() {
         /* Thread that executes the setDataTable method in the TableView.
          * The reason for that is that setting the table may require some
@@ -519,7 +519,7 @@ class DataOutPortView extends NodeOutPortView {
                             // although a data table is by definition is
                             // read only, the buffered data table may be clear
                             // when the node is reset; we acquire a lock here
-                            // to block the intermediate clear() 
+                            // to block the intermediate clear()
                             synchronized (m_table) {
                                 updateDataTable(m_table);
                                 updateDataTableSpec(m_tableSpec);
@@ -528,7 +528,7 @@ class DataOutPortView extends NodeOutPortView {
                         } else {
                             updateDataTable(null);
                             updateDataTableSpec(m_tableSpec);
-                            showComponent(m_tabs);                        
+                            showComponent(m_tabs);
                         }
                     }
                 } catch (Exception ite) {
@@ -540,9 +540,9 @@ class DataOutPortView extends NodeOutPortView {
             }
         };
 
-        // this updates the table view and table spec view in a background 
+        // this updates the table view and table spec view in a background
         // process and replaces the busy label with the table views.
-        updateThread.start();        
+        updateThread.start();
     }
 
     /**
@@ -555,6 +555,19 @@ class DataOutPortView extends NodeOutPortView {
             showComponent(m_busyLabel);
             updateAll();
         }
-        
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void dispose() {
+        super.dispose();
+        m_table = null;
+        m_tableSpec = null;
+        m_dataView.setDataTable(null);
+        m_specView.setDataTable(null);
+        m_propsView.setDataTable(null);
     }
 }
