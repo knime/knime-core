@@ -32,7 +32,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -57,6 +57,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.util.MutableInteger;
 
 /**
  * This class is the model for the enrichment plotter node. It does the
@@ -302,7 +303,8 @@ public class EnrichmentPlotterModel extends NodeModel {
             double y = 0, area = 0;
             int nextHitRatePoint = 0;
             final double[] hitRateValues = new double[DISCRATE_POINTS.length];
-            final HashSet<DataCell> clusters = new HashSet<DataCell>();
+            final HashMap<DataCell, MutableInteger> clusters =
+                new HashMap<DataCell, MutableInteger>();
 
             for (k = 1; k <= maxK; k++) {
                 final Helper h = curve[k - 1];
@@ -315,7 +317,14 @@ public class EnrichmentPlotterModel extends NodeModel {
                         y++;
                     }
                 } else if (!h.b.isMissing()) {
-                    y += clusters.add(h.b) ? 1 : 0;
+                    MutableInteger count = clusters.get(h.b);
+                    if (count == null) {
+                        count = new MutableInteger(0);
+                        clusters.put(h.b, count);
+                    }
+                    if (count.inc() == m_settings.minClusterMembers()) {
+                        y++;
+                    }
                 }
                 area += y / maxK;
 

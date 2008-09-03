@@ -39,7 +39,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
 import javax.swing.ListSelectionModel;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.border.Border;
 
 import org.knime.base.node.viz.enrichment.EnrichmentPlotterSettings.PlotMode;
@@ -146,6 +148,9 @@ public class EnrichmentPlotterDialog extends NodeDialogPane {
     private final JFormattedTextField m_hitThreshold =
             new JFormattedTextField(new DecimalFormat("###0.0##"));
 
+    private final JSpinner m_minClusterMembers =
+        new JSpinner(new SpinnerNumberModel(1, 1, 1000, 1));
+
     private final JLabel m_hitClusterLabel = new JLabel("Activity column");
 
     /**
@@ -180,13 +185,23 @@ public class EnrichmentPlotterDialog extends NodeDialogPane {
         p.add(p2, c);
 
         c.gridy++;
-        c.insets = new Insets(0, 0, 10, 0);
+        c.insets = new Insets(0, 2, 0, 2);
         p.add(m_plotClusters, c);
+
+
+        c.gridy++;
+        p2 = new JPanel();
+        p2.add(new JLabel("    Minimum molecules per cluster"));
+        p2.add(m_minClusterMembers);
+        c.insets = new Insets(2, 2, 6, 2);
+        p.add(p2, c);
+
         c.insets = new Insets(2, 2, 2, 2);
 
         ActionListener al = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_hitThreshold.setEnabled(m_plotHits.isSelected());
+                m_minClusterMembers.setEnabled(m_plotClusters.isSelected());
                 if (m_plotClusters.isSelected()) {
                     m_hitClusterLabel.setText("Cluster column");
                 } else {
@@ -266,8 +281,11 @@ public class EnrichmentPlotterDialog extends NodeDialogPane {
                 PlotMode.PlotClusters));
         m_hitThreshold.setEnabled(m_settings.plotMode().equals(
                 PlotMode.PlotHits));
+        m_minClusterMembers.setEnabled(m_settings.plotMode().equals(
+                PlotMode.PlotClusters));
 
         m_hitThreshold.setText(Double.toString(m_settings.hitThreshold()));
+        m_minClusterMembers.setValue(m_settings.minClusterMembers());
     }
 
     /**
@@ -285,6 +303,8 @@ public class EnrichmentPlotterDialog extends NodeDialogPane {
         }
         m_settings.hitThreshold(((Number)m_hitThreshold.getValue())
                 .doubleValue());
+        m_settings.minClusterMembers(((Number)m_minClusterMembers.getValue())
+                .intValue());
         m_settings.saveSettings(settings);
     }
 }

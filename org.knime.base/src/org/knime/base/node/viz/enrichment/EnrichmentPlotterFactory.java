@@ -17,22 +17,22 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.base.node.viz.enrichment;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
  * This factory creates all necessary components for the enrichment plotter
  * node.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class EnrichmentPlotterFactory extends NodeFactory {
+public class EnrichmentPlotterFactory extends
+    NodeFactory<EnrichmentPlotterModel> {
     /**
      * {@inheritDoc}
      */
@@ -45,7 +45,7 @@ public class EnrichmentPlotterFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public EnrichmentPlotterModel createNodeModel() {
         return new EnrichmentPlotterModel();
     }
 
@@ -53,9 +53,9 @@ public class EnrichmentPlotterFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
-        return new EnrichmentPlotterView((EnrichmentPlotterModel)nodeModel);
+    public NodeView<EnrichmentPlotterModel> createNodeView(final int viewIndex,
+            final EnrichmentPlotterModel nodeModel) {
+        return new EnrichmentPlotterView(nodeModel);
     }
 
     /**

@@ -147,6 +147,8 @@ public class EnrichmentPlotterSettings {
 
     private double m_hitThreshold = 5.5;
 
+    private int m_minClusterMembers = 1;
+
     /**
      * Adds a new curve to the settings.
      *
@@ -213,6 +215,7 @@ public class EnrichmentPlotterSettings {
 
         settings.addString("plotMode", m_plotMode.name());
         settings.addDouble("hitThreshold", m_hitThreshold);
+        settings.addInt("minClusterMembers", m_minClusterMembers);
     }
 
     /**
@@ -251,6 +254,7 @@ public class EnrichmentPlotterSettings {
                 m_plotMode = PlotMode.PlotHits;
             }
         }
+        m_minClusterMembers = settings.getInt("minClusterMembers", 1);
     }
 
     /**
@@ -275,6 +279,7 @@ public class EnrichmentPlotterSettings {
         }
 
         m_hitThreshold = settings.getDouble("hitThreshold", 5.5);
+        m_minClusterMembers = settings.getInt("minClusterMembers", 1);
         m_plotMode =
                 PlotMode.valueOf(settings.getString("plotMode",
                         PlotMode.PlotHits.name()));
@@ -318,5 +323,26 @@ public class EnrichmentPlotterSettings {
      */
     public void hitThreshold(final double thres) {
         m_hitThreshold = thres;
+    }
+
+
+    /**
+     * Returns the minimum number of molecules from the same cluster that have
+     * to be found so that a cluster is declared to be found.
+     *
+     * @return the minimum number of cluster members
+     */
+    public int minClusterMembers() {
+        return m_minClusterMembers;
+    }
+
+    /**
+     * Sets the minimum number of molecules from the same cluster that have to
+     * be found so that a cluster is declared to be found.
+     *
+     * @param min the minimum number of cluster members
+     */
+    public void minClusterMembers(final int min) {
+        m_minClusterMembers = min;
     }
 }
