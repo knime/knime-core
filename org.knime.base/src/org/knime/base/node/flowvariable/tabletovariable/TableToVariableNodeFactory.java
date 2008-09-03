@@ -24,9 +24,12 @@
  */
 package org.knime.base.node.flowvariable.tabletovariable;
 
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.port.PortType;
+
 
 /**
  * 
@@ -34,6 +37,24 @@ import org.knime.core.node.NodeDialogPane;
  */
 public class TableToVariableNodeFactory 
     extends GenericNodeFactory<TableToVariableNodeModel> {
+    
+    private final PortType m_inOutType;
+    
+    /** Creates factory for {@link BufferedDataTable} type ports. */
+    public TableToVariableNodeFactory() {
+        this(BufferedDataTable.TYPE);
+    }
+    
+    /** Create factory, that instantiates nodes, whose first input and the
+     * only output port are typed to the argument.
+     * @param inOutType The type of the (passed through) port.
+     */
+    public TableToVariableNodeFactory(final PortType inOutType) {
+        if (inOutType == null) {
+            throw new NullPointerException("PortType must not be null");
+        }
+        m_inOutType = inOutType;
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -44,7 +65,7 @@ public class TableToVariableNodeFactory
     /** {@inheritDoc} */
     @Override
     public TableToVariableNodeModel createNodeModel() {
-        return new TableToVariableNodeModel();
+        return new TableToVariableNodeModel(m_inOutType);
     }
 
     /** {@inheritDoc} */

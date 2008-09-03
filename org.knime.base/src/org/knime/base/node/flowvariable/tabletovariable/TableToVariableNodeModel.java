@@ -58,11 +58,11 @@ import org.knime.core.node.port.PortType;
  */
 public class TableToVariableNodeModel extends GenericNodeModel {
 
-    /** Two inputs, one output..  */
-    protected TableToVariableNodeModel() {
-        super(new PortType[]{
-                new PortType(PortObject.class), BufferedDataTable.TYPE},
-                new PortType[]{new PortType(PortObject.class)});
+    /** Two inputs, one output.
+     * @param inOutType Type of first input and the outport. */
+    protected TableToVariableNodeModel(final PortType inOutType) {
+        super(new PortType[]{inOutType, BufferedDataTable.TYPE},
+                new PortType[]{inOutType});
     }
 
     /** {@inheritDoc} */
@@ -73,6 +73,10 @@ public class TableToVariableNodeModel extends GenericNodeModel {
         return new PortObjectSpec[]{inSpecs[0]};
     }
     
+    /** Pushes the variable as given by the row argument onto the stack. 
+     * @param variablesSpec The spec (for names and types)
+     * @param currentVariables The values of the variables.
+     */
     protected void pushVariables(final DataTableSpec variablesSpec,
             final DataRow currentVariables) {
         int colCount = variablesSpec.getNumColumns();
