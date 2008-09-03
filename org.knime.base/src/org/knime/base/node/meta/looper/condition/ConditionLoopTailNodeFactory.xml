@@ -22,10 +22,14 @@
             loop is stopped. If you de-select this option, the rows from the last iteration are not added to the output
             table.
         </option>
+        <option name="Collect rows from last iteration only">
+            If only the rows from the very last iteration should be collected, you have to enable this option.
+        </option>
     </fullDescription>
 
     <ports>
         <dataIn index="0" name="Any datatable">Any datatable</dataIn>
         <dataOut index="0" name="Collected results">Collected results from the loop body</dataOut>
+        <dataOut index="0" name="Variable values">The selected flow variable's values in each iteration</dataOut>
     </ports>
 </knimeNode>

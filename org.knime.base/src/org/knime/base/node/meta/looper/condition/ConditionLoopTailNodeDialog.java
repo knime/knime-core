@@ -26,19 +26,17 @@ package org.knime.base.node.meta.looper.condition;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
-import javax.swing.BorderFactory;
-import javax.swing.DefaultListModel;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import org.knime.base.node.meta.looper.condition.ConditionLoopTailSettings.Operator;
 import org.knime.base.util.scopevariable.ScopeVariableListCellRenderer;
@@ -59,18 +57,18 @@ import org.knime.core.node.workflow.ScopeVariable.Type;
  */
 public class ConditionLoopTailNodeDialog extends GenericNodeDialogPane {
     private static final Object[] NUMERIC_OPERATORS =
-            {Operator.EQ, Operator.LE, Operator.LT, Operator.GE,
-                    Operator.GT, Operator.NE};
+            {Operator.EQ, Operator.LE, Operator.LT, Operator.GE, Operator.GT,
+                    Operator.NE};
 
-    private static final Object[] STRING_OPERATORS =
-            {Operator.EQ, Operator.NE};
+    private static final Object[] STRING_OPERATORS = {Operator.EQ, Operator.NE};
 
     private final ConditionLoopTailSettings m_settings =
             new ConditionLoopTailSettings();
 
-    private final DefaultListModel m_variablesModel = new DefaultListModel();
+    private final DefaultComboBoxModel m_variablesModel =
+            new DefaultComboBoxModel();
 
-    private final JList m_variables = new JList(m_variablesModel);
+    private final JComboBox m_variables = new JComboBox(m_variablesModel);
 
     private final JComboBox m_operator = new JComboBox(NUMERIC_OPERATORS);
 
@@ -81,6 +79,9 @@ public class ConditionLoopTailNodeDialog extends GenericNodeDialogPane {
     private final JCheckBox m_addLastRows =
             new JCheckBox("Collect rows from last iteration");
 
+    private final JCheckBox m_addLastRowsOnly =
+            new JCheckBox("Collect rows from last iteration only");
+
     /**
      * Creates a new dialog.
      */
@@ -90,18 +91,19 @@ public class ConditionLoopTailNodeDialog extends GenericNodeDialogPane {
         GridBagConstraints c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 0;
-        c.gridwidth = 3;
-        c.fill = GridBagConstraints.BOTH;
-        m_variables.setCellRenderer(new ScopeVariableListCellRenderer());
-        m_variables.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        m_variables.addListSelectionListener(new ListSelectionListener() {
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(2, 3, 2, 3);
+        p.add(new JLabel("Available flow variables   "), c);
+
+        c.gridx = 1;
+        c.gridwidth = 2;
+        m_variables.setRenderer(new ScopeVariableListCellRenderer());
+        m_variables.addItemListener(new ItemListener() {
             @Override
-            public void valueChanged(final ListSelectionEvent e) {
-                if (!e.getValueIsAdjusting()
-                        && m_variables.getSelectedIndex() >= 0) {
+            public void itemStateChanged(final ItemEvent e) {
+                if (m_variables.getSelectedIndex() >= 0) {
                     ScopeVariable v =
-                            (ScopeVariable)m_variablesModel.get(m_variables
-                                    .getSelectedIndex());
+                            (ScopeVariable)m_variablesModel.getSelectedItem();
                     m_operator.removeAllItems();
                     if (v.getType().equals(Type.STRING)) {
                         for (Object o : STRING_OPERATORS) {
@@ -117,15 +119,12 @@ public class ConditionLoopTailNodeDialog extends GenericNodeDialogPane {
                 }
             }
         });
-
-        JScrollPane sp = new JScrollPane(m_variables);
-        sp.setBorder(BorderFactory.createTitledBorder("Available variables"));
-        p.add(sp, c);
+        p.add(m_variables, c);
 
         c.fill = GridBagConstraints.NONE;
         c.anchor = GridBagConstraints.WEST;
-        c.insets = new Insets(2, 3, 2, 3);
         c.gridwidth = 1;
+        c.gridx = 0;
         c.gridy++;
         p.add(new JLabel("Finish loop if selected variable is "), c);
 
@@ -143,6 +142,20 @@ public class ConditionLoopTailNodeDialog extends GenericNodeDialogPane {
 
         p.add(m_addLastRows, c);
 
+        c.gridy++;
+        p.add(m_addLastRowsOnly, c);
+        m_addLastRowsOnly.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                if (m_addLastRowsOnly.isSelected()) {
+                    m_addLastRows.setSelected(true);
+                    m_addLastRows.setEnabled(false);
+                } else {
+                    m_addLastRows.setEnabled(true);
+                }
+            }
+        });
+
         addTab("Default settings", p);
     }
 
@@ -154,17 +167,20 @@ public class ConditionLoopTailNodeDialog extends GenericNodeDialogPane {
             final PortObjectSpec[] specs) throws NotConfigurableException {
         m_settings.loadSettingsForDialog(settings);
 
-        m_variablesModel.clear();
+        m_variablesModel.removeAllElements();
         for (ScopeVariable v : getAvailableScopeVariables().values()) {
             m_variablesModel.addElement(v);
             if (v.getName().equals(m_settings.variableName())) {
-                m_variables.setSelectedValue(v, true);
+                m_variables.setSelectedItem(v);
             }
         }
 
         m_operator.setSelectedItem(m_settings.operator());
         m_value.setText(m_settings.value());
-        m_addLastRows.setSelected(m_settings.addLastRows());
+        m_addLastRows.setSelected(m_settings.addLastRows()
+                || m_settings.addLastRowsOnly());
+        m_addLastRowsOnly.setSelected(m_settings.addLastRowsOnly());
+        m_addLastRows.setEnabled(!m_settings.addLastRowsOnly());
     }
 
     /**
@@ -173,7 +189,7 @@ public class ConditionLoopTailNodeDialog extends GenericNodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        Object sel = m_variables.getSelectedValue();
+        Object sel = m_variables.getSelectedItem();
         if (sel == null) {
             m_settings.variable(null);
         } else {
@@ -183,6 +199,7 @@ public class ConditionLoopTailNodeDialog extends GenericNodeDialogPane {
         m_settings.operator((Operator)m_operator.getSelectedItem());
         m_settings.value(m_value.getText());
         m_settings.addLastRows(m_addLastRows.isSelected());
+        m_settings.addLastRowsOnly(m_addLastRowsOnly.isSelected());
 
         m_settings.saveSettings(settings);
     }

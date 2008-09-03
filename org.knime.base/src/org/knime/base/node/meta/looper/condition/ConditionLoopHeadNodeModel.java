@@ -26,16 +26,15 @@ package org.knime.base.node.meta.looper.condition;
 import java.io.File;
 import java.io.IOException;
 
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.LoopStartNode;
 
 /**
@@ -44,7 +43,7 @@ import org.knime.core.node.workflow.LoopStartNode;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ConditionLoopHeadNodeModel extends GenericNodeModel implements
+public class ConditionLoopHeadNodeModel extends NodeModel implements
         LoopStartNode {
     private int m_iteration;
 
@@ -52,15 +51,14 @@ public class ConditionLoopHeadNodeModel extends GenericNodeModel implements
      * Creates a new model.
      */
     public ConditionLoopHeadNodeModel() {
-        super(new PortType[]{new PortType(PortObject.class)},
-                new PortType[]{new PortType(PortObject.class)});
+        super(1, 1);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         assert m_iteration == 0;
         pushScopeVariableInt("currentIteration", m_iteration);
@@ -71,7 +69,7 @@ public class ConditionLoopHeadNodeModel extends GenericNodeModel implements
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData,
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         // let's see if we have access to the tail: if we do, it's not the
         // first time we are doing this...

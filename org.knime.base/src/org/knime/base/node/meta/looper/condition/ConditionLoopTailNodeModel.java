@@ -32,9 +32,12 @@ import org.knime.base.node.meta.looper.condition.ConditionLoopTailSettings.Opera
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -60,9 +63,11 @@ public class ConditionLoopTailNodeModel extends NodeModel implements
     private final ConditionLoopTailSettings m_settings =
             new ConditionLoopTailSettings();
 
-    private BufferedDataContainer m_resultContainer;
+    private BufferedDataContainer m_collectContainer;
 
-    private static DataTableSpec createSpec(final DataTableSpec inSpec) {
+    private BufferedDataContainer m_variableContainer;
+
+    private static DataTableSpec createSpec1(final DataTableSpec inSpec) {
         DataColumnSpecCreator crea =
                 new DataColumnSpecCreator(DataTableSpec.getUniqueColumnName(
                         inSpec, "Iteration"), IntCell.TYPE);
@@ -71,11 +76,26 @@ public class ConditionLoopTailNodeModel extends NodeModel implements
         return new DataTableSpec(inSpec, newSpec);
     }
 
+    private DataTableSpec createSpec2() {
+        DataType type;
+        if (m_settings.variableType() == Type.DOUBLE) {
+            type = DoubleCell.TYPE;
+        } else if (m_settings.variableType() == Type.INTEGER) {
+            type = IntCell.TYPE;
+        } else {
+            type = StringCell.TYPE;
+        }
+
+        DataColumnSpecCreator crea =
+                new DataColumnSpecCreator("Variable value", type);
+        return new DataTableSpec(crea.createSpec());
+    }
+
     /**
      * Creates a new node model.
      */
     public ConditionLoopTailNodeModel() {
-        super(1, 1);
+        super(1, 2);
     }
 
     /**
@@ -99,7 +119,7 @@ public class ConditionLoopTailNodeModel extends NodeModel implements
                     Integer.parseInt(m_settings.value());
                 } catch (NumberFormatException ex) {
                     throw new InvalidSettingsException("Given value '"
-                            + m_settings + "' is not an integer");
+                            + m_settings.value() + "' is not an integer");
                 }
             } else if (m_settings.variableType() == ScopeVariable.Type.DOUBLE) {
                 peekScopeVariableDouble(m_settings.variableName());
@@ -107,7 +127,7 @@ public class ConditionLoopTailNodeModel extends NodeModel implements
                     Double.parseDouble(m_settings.value());
                 } catch (NumberFormatException ex) {
                     throw new InvalidSettingsException("Given value '"
-                            + m_settings + "' is not an number");
+                            + m_settings.value() + "' is not an number");
                 }
             } else {
                 peekScopeVariableString(m_settings.variableName());
@@ -119,7 +139,7 @@ public class ConditionLoopTailNodeModel extends NodeModel implements
                     + " found");
         }
 
-        return new DataTableSpec[]{createSpec(inSpecs[0])};
+        return new DataTableSpec[]{createSpec1(inSpecs[0]), createSpec2()};
     }
 
     /**
@@ -136,14 +156,31 @@ public class ConditionLoopTailNodeModel extends NodeModel implements
         exec.setMessage("Iteration " + count);
         if (count == 0) {
             // first time we are getting to this: open container
-            m_resultContainer =
-                    exec.createDataContainer(createSpec(inData[0]
+            m_collectContainer =
+                    exec.createDataContainer(createSpec1(inData[0]
                             .getDataTableSpec()));
+            m_variableContainer = exec.createDataContainer(createSpec2());
+        }
+
+        RowKey rk = new RowKey(Integer.toString(count));
+        if (m_settings.variableType() == Type.DOUBLE) {
+            m_variableContainer.addRowToTable(new DefaultRow(rk,
+                    new DoubleCell(peekScopeVariableDouble(m_settings
+                            .variableName()))));
+        } else if (m_settings.variableType() == Type.INTEGER) {
+            m_variableContainer.addRowToTable(new DefaultRow(rk, new IntCell(
+                    peekScopeVariableInt(m_settings.variableName()))));
+        } else {
+            m_variableContainer.addRowToTable(new DefaultRow(rk,
+                    new StringCell(peekScopeVariableString(m_settings
+                            .variableName()))));
         }
 
         boolean stop = checkCondition();
 
-        if (!stop || m_settings.addLastRows()) {
+        if ((m_settings.addLastRows() && !m_settings.addLastRowsOnly())
+                || ((stop == m_settings.addLastRows())
+                        && (stop == m_settings.addLastRowsOnly()))) {
             exec.setMessage("Collecting rows from current iteration");
             int k = 0;
             final double max = inData[0].getRowCount();
@@ -157,16 +194,18 @@ public class ConditionLoopTailNodeModel extends NodeModel implements
                         new AppendedColumnRow(new DefaultRow(new RowKey(row
                                 .getKey()
                                 + "#" + count), row), currIterCell);
-                m_resultContainer.addRowToTable(newRow);
+                m_collectContainer.addRowToTable(newRow);
             }
         }
 
         if (stop) {
-            m_resultContainer.close();
-            return new BufferedDataTable[]{m_resultContainer.getTable()};
+            m_collectContainer.close();
+            m_variableContainer.close();
+            return new BufferedDataTable[]{m_collectContainer.getTable(),
+                    m_variableContainer.getTable()};
         } else {
             continueLoop();
-            return new BufferedDataTable[1];
+            return new BufferedDataTable[2];
         }
     }
 
@@ -235,7 +274,7 @@ public class ConditionLoopTailNodeModel extends NodeModel implements
      */
     @Override
     protected void reset() {
-        m_resultContainer = null;
+        m_collectContainer = null;
     }
 
     /**

@@ -81,7 +81,9 @@ public class ConditionLoopTailSettings {
 
     private String m_value;
 
-    private boolean m_addLastRows = false;
+    private boolean m_addLastRows = true;
+
+    private boolean m_addLastRowsOnly = false;
 
     /**
      * Returns if the rows from the loop's last iteration should be added to the
@@ -92,6 +94,28 @@ public class ConditionLoopTailSettings {
      */
     public boolean addLastRows() {
         return m_addLastRows;
+    }
+
+    /**
+     * Sets if only the rows from the loop's last iteration should be added
+     * to the output table or not.
+     *
+     * @param b <code>true</code> if the only the last rows should be added,
+     *         <code>false</code> otherwise
+     */
+    public void addLastRowsOnly(final boolean b) {
+        m_addLastRowsOnly = b;
+    }
+
+    /**
+     * Returns if only the rows from the loop's last iteration should be added
+     * to the output table or not.
+     *
+     * @return <code>true</code> if the only the last rows should be added,
+     *         <code>false</code> otherwise
+     */
+    public boolean addLastRowsOnly() {
+        return m_addLastRowsOnly;
     }
 
     /**
@@ -169,8 +193,8 @@ public class ConditionLoopTailSettings {
     }
 
     /**
-     * Sets the value the flow variable should be compared with. It can
-     * either be a number or a string, depending on the flow variables type.
+     * Sets the value the flow variable should be compared with. It can either
+     * be a number or a string, depending on the flow variables type.
      *
      * @param s the value
      */
@@ -203,6 +227,7 @@ public class ConditionLoopTailSettings {
         }
 
         m_addLastRows = settings.getBoolean("addLastRows");
+        m_addLastRowsOnly = settings.getBoolean("addLastRowsOnly");
     }
 
     /**
@@ -228,7 +253,8 @@ public class ConditionLoopTailSettings {
             m_operator = Operator.valueOf(s);
         }
 
-        m_addLastRows = settings.getBoolean("addLastRows", false);
+        m_addLastRows = settings.getBoolean("addLastRows", true);
+        m_addLastRowsOnly = settings.getBoolean("addLastRowsOnly", false);
     }
 
     /**
@@ -250,5 +276,6 @@ public class ConditionLoopTailSettings {
             settings.addString("operator", m_operator.name());
         }
         settings.addBoolean("addLastRows", m_addLastRows);
+        settings.addBoolean("addLastRowsOnly", m_addLastRowsOnly);
     }
 }
