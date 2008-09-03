@@ -27,10 +27,10 @@ import java.util.Arrays;
 /**
  * Stores Zeros and Ones in a vector, i.e. with fixed positions. The vector has
  * a fixed length. <br />
- * Implementation stores the bits in a collection of longs. Thus it can be used
- * for well populated vectors. Its length is restricted to
- * {@link Integer#MAX_VALUE} - 1(i.e. 2147483646, in which case it uses around
- * 4GigaByte of memory).<br />
+ * Implementation stores the bits in a collection of longs (64 bit words). Thus
+ * it can be used for well populated vectors. Its length is restricted to ({@link Integer#MAX_VALUE} -
+ * 1) * 64 (i.e. 137438953344, in which case it uses around 16GigaByte of
+ * memory).<br />
  * The implementation is not thread-safe.
  *
  * @author ohl, University of Konstanz
@@ -56,7 +56,7 @@ public class DenseBitVector {
      * could be different from the actual storage length if some bits are left
      * unused "at the end".
      */
-    private final int m_length;
+    private final long m_length;
 
     // lazy hashcode
     private int m_hash;
@@ -66,19 +66,21 @@ public class DenseBitVector {
      *
      * @param length the length of the new bit vector.
      */
-    public DenseBitVector(final int length) {
+    public DenseBitVector(final long length) {
         if (length < 0) {
             throw new IllegalArgumentException(
                     "Length of a BitVector can't be negative.");
         }
-        if (length == Integer.MAX_VALUE) {
+        if (length >= (long)(Integer.MAX_VALUE - 1) * (long)STORAGE_BITS) {
             // we need MAX_VALUE internally!
             throw new IllegalArgumentException(
                     "Can't create a vector that big!");
         }
         m_length = length;
+        assert ((m_length - 1) >> STORAGE_ADDRBITS) + 1 < Integer.MAX_VALUE;
+
         // shift with sign extension for length zero
-        m_storage = new long[((m_length - 1) >> STORAGE_ADDRBITS) + 1];
+        m_storage = new long[(int)(((m_length - 1) >> STORAGE_ADDRBITS) + 1)];
         m_firstAddr = -1;
         m_lastAddr = Integer.MAX_VALUE;
 
@@ -100,18 +102,19 @@ public class DenseBitVector {
      *             &gt;&gt; 6) + 1
      *
      */
-    public DenseBitVector(final long[] bits, final int length) {
+    public DenseBitVector(final long[] bits, final long length) {
         if (length < 0) {
             throw new IllegalArgumentException(
                     "Length of a BitVector can't be negative.");
         }
-        if (length == Integer.MAX_VALUE) {
+        if (length >= (long)(Integer.MAX_VALUE - 1) * (long)STORAGE_BITS) {
             // we need MAX_VALUE internally!
             throw new IllegalArgumentException(
                     "Can't create a vector that big!");
         }
 
-        int arrayLength = ((length - 1) >> STORAGE_ADDRBITS) + 1;
+        long arrayLength = ((length - 1) >> STORAGE_ADDRBITS) + 1;
+        assert arrayLength < Integer.MAX_VALUE;
 
         if (bits.length < arrayLength) {
             throw new IllegalArgumentException(
@@ -119,7 +122,7 @@ public class DenseBitVector {
                             + ") to hold " + length + " bits.");
         }
 
-        m_storage = Arrays.copyOf(bits, arrayLength);
+        m_storage = Arrays.copyOf(bits, (int)arrayLength);
         m_length = length;
         // mask off bits beyond m_length
         maskOffBitsAfterEndOfVector();
@@ -132,11 +135,86 @@ public class DenseBitVector {
     }
 
     /**
+     * Initializes the created bit vector from the hex representation in the
+     * passed string. Only characters <code>'0' - '9'</code> and
+     * <code>'A' - 'F'</code> (or <code>'a' to 'f'</code>) are allowed. The
+     * character at string position <code>(length - 1)</code> represents the
+     * bits with index 0 to 3 in the vector. The character at position 0
+     * represents the bits with the highest indices. The length of the created
+     * vector is the length of the string times 4 (as each character represents
+     * four bits).
+     *
+     * @param hexString containing the hex value to initialize the vector
+     * @throws IllegalArgumentException if <code>hexString</code> contains
+     *             characters other then the hex characters (i.e.
+     *             <code>0 - 9, A - F, a - f</code>)
+     */
+    public DenseBitVector(final String hexString) {
+        this(hexString.length() << 2); // four bits for each character
+
+        int maxAddr = ((hexString.length() - 1) << 2) >> STORAGE_ADDRBITS;
+
+        /*
+         * take chunks of 16 character and store them in one storage qword.
+         */
+        for (int i = 0; i <= maxAddr; i += 16) {
+            long value = 0;
+            for (int n = 0; n < 16; n++) {
+                if ((i * 16) + n >= hexString.length()) {
+                    // the string is not a multiple of 16 characters.
+                    // we leave the high-bits zero/cleared
+                    break;
+                }
+                long cVal =
+                        Character.toUpperCase(hexString.charAt((i * 16) + n));
+                if (cVal < '0' || cVal > 'F' || (cVal > '9' && cVal < 'A')) {
+                    throw new IllegalArgumentException(
+                            "Invalid character in hex" + " number ('"
+                                    + hexString.charAt(i + n) + "')");
+                }
+                if (cVal > '9') {
+                    cVal -= 'A' - 10;
+                } else {
+                    cVal -= '0';
+                }
+                // cVal must only use the lower four bits
+                assert (cVal & 0xFFFFFFFFFFFFFFF0L) == 0L;
+                // shift the value in its nibble position
+                cVal <<= (n << 2);
+                // OR it onto the previous nibbles
+                value |= cVal;
+
+            }
+            m_storage[i] = value;
+        }
+        assert checkConsistency() == null;
+    }
+
+    /**
+     * Creates a new instance as copy of the passed argument.
+     *
+     * @param clone the vector to copy into the new instance
+     */
+    public DenseBitVector(final DenseBitVector clone) {
+        if (clone == null) {
+            throw new NullPointerException(
+                    "Can't initialize from a null vector");
+        }
+        assert clone.checkConsistency() == null;
+        m_storage = Arrays.copyOf(clone.m_storage, clone.m_storage.length);
+        m_length = clone.m_length;
+        m_firstAddr = clone.m_firstAddr;
+        m_lastAddr = clone.m_lastAddr;
+        m_hash = clone.m_hash;
+        assert checkConsistency() == null;
+    }
+
+    /**
      * Returns the number of bits stored in this vector.
      *
      * @return the length of the vector.
      */
-    public int length() {
+    public long length() {
         return m_length;
     }
 
@@ -192,7 +270,7 @@ public class DenseBitVector {
      * @throws ArrayIndexOutOfBoundsException if the index is negative or larger
      *             than the size of the vector
      */
-    public void set(final int bitIdx, final boolean value) {
+    public void set(final long bitIdx, final boolean value) {
         if (value) {
             set(bitIdx);
         } else {
@@ -207,14 +285,15 @@ public class DenseBitVector {
      * @throws ArrayIndexOutOfBoundsException if the index is negative or larger
      *             than the size of the vector
      */
-    public void set(final int bitIdx) {
+    public void set(final long bitIdx) {
         assert (checkConsistency() == null);
         if (bitIdx >= m_length) {
             throw new ArrayIndexOutOfBoundsException("Index ('" + bitIdx
                     + "') too large for vector of length " + m_length);
         }
-        int storageAddr = bitIdx >> STORAGE_ADDRBITS;
-        int storageIdx = bitIdx % STORAGE_BITS;
+        assert bitIdx >> STORAGE_ADDRBITS < Integer.MAX_VALUE;
+        int storageAddr = (int)(bitIdx >> STORAGE_ADDRBITS);
+        int storageIdx = (int)(bitIdx % STORAGE_BITS);
 
         m_storage[storageAddr] = m_storage[storageAddr] | (1L << storageIdx);
 
@@ -237,7 +316,7 @@ public class DenseBitVector {
      * @param endIdx the index of the last bit to set to the new value
      * @param value if set to true the bits are set to one, otherwise to zero
      */
-    public void set(final int startIdx, final int endIdx, final boolean value) {
+    public void set(final long startIdx, final long endIdx, final boolean value) {
         if (value) {
             set(startIdx, endIdx);
         } else {
@@ -253,7 +332,7 @@ public class DenseBitVector {
      * @param startIdx the index of the first bit to set to one
      * @param endIdx the index of the last bit to set to one
      */
-    public void set(final int startIdx, final int endIdx) {
+    public void set(final long startIdx, final long endIdx) {
         assert (checkConsistency() == null);
         if (endIdx < startIdx) {
             throw new IllegalArgumentException("The end index can't be smaller"
@@ -266,9 +345,12 @@ public class DenseBitVector {
         if (endIdx == startIdx) {
             return;
         }
-        int storageStartAddr = startIdx >> STORAGE_ADDRBITS;
+        assert startIdx >> STORAGE_ADDRBITS < Integer.MAX_VALUE;
+        assert endIdx - 1 >> STORAGE_ADDRBITS < Integer.MAX_VALUE;
+
+        int storageStartAddr = (int)(startIdx >> STORAGE_ADDRBITS);
         // endIdx is not supposed to be changed
-        int storageEndAddr = endIdx - 1 >> STORAGE_ADDRBITS;
+        int storageEndAddr = (int)(endIdx - 1 >> STORAGE_ADDRBITS);
 
         long firstMask = -1L << startIdx;
         long lastMask = ~(-1L << endIdx);
@@ -313,14 +395,16 @@ public class DenseBitVector {
      * @throws ArrayIndexOutOfBoundsException if the index is negative or larger
      *             than the size of the vector
      */
-    public void clear(final int bitIdx) {
+    public void clear(final long bitIdx) {
         assert (checkConsistency() == null);
         if (bitIdx >= m_length) {
             throw new ArrayIndexOutOfBoundsException("Index ('" + bitIdx
                     + "') too large for vector of length " + m_length);
         }
-        int storageAddr = bitIdx >> STORAGE_ADDRBITS;
-        int storageIdx = bitIdx % STORAGE_BITS;
+
+        assert bitIdx >> STORAGE_ADDRBITS < Integer.MAX_VALUE;
+        int storageAddr = (int)(bitIdx >> STORAGE_ADDRBITS);
+        int storageIdx = (int)(bitIdx % STORAGE_BITS);
         m_storage[storageAddr] = m_storage[storageAddr] & (~(1L << storageIdx));
 
         if (storageAddr == m_firstAddr && m_storage[storageAddr] == 0) {
@@ -343,7 +427,7 @@ public class DenseBitVector {
      * @param startIdx the index of the first bit to set to zero
      * @param endIdx the index of the last bit to set to zero
      */
-    public void clear(final int startIdx, final int endIdx) {
+    public void clear(final long startIdx, final long endIdx) {
         assert (checkConsistency() == null);
         if (endIdx < startIdx) {
             throw new IllegalArgumentException("The end index can't be smaller"
@@ -356,9 +440,12 @@ public class DenseBitVector {
         if (endIdx == startIdx) {
             return;
         }
-        int storageStartAddr = startIdx >> STORAGE_ADDRBITS;
+
+        assert startIdx >> STORAGE_ADDRBITS < Integer.MAX_VALUE;
+        assert endIdx - 1 >> STORAGE_ADDRBITS < Integer.MAX_VALUE;
+        int storageStartAddr = (int)(startIdx >> STORAGE_ADDRBITS);
         // last index is not supposed to be changed
-        int storageEndAddr = endIdx - 1 >> STORAGE_ADDRBITS;
+        int storageEndAddr = (int)(endIdx - 1 >> STORAGE_ADDRBITS);
 
         long firstMask = -1L << startIdx;
         long lastMask = ~(-1L << endIdx);
@@ -456,14 +543,15 @@ public class DenseBitVector {
      * @throws ArrayIndexOutOfBoundsException if the index is larger than the
      *             length of the vector
      */
-    public boolean get(final int bitIdx) {
+    public boolean get(final long bitIdx) {
         assert (checkConsistency() == null);
         if (bitIdx >= m_length) {
             throw new ArrayIndexOutOfBoundsException("Index ('" + bitIdx
                     + "') too large for vector of length " + m_length);
         }
-        int storageAddr = bitIdx >> STORAGE_ADDRBITS;
-        int storageIdx = bitIdx % STORAGE_BITS;
+        assert bitIdx >> STORAGE_ADDRBITS < Integer.MAX_VALUE;
+        int storageAddr = (int)(bitIdx >> STORAGE_ADDRBITS);
+        int storageIdx = (int)(bitIdx % STORAGE_BITS);
         return (m_storage[storageAddr] & (1L << storageIdx)) != 0;
     }
 
@@ -480,7 +568,7 @@ public class DenseBitVector {
      * @throws ArrayIndexOutOfBoundsException if the specified startIdx is
      *             negative
      */
-    public int nextSetBit(final int startIdx) {
+    public long nextSetBit(final long startIdx) {
         assert (checkConsistency() == null);
         if (startIdx >= m_length) {
             return -1;
@@ -495,11 +583,12 @@ public class DenseBitVector {
             return -1;
         }
 
-        int storageAddr = startIdx >> STORAGE_ADDRBITS;
+        assert startIdx >> STORAGE_ADDRBITS < Integer.MAX_VALUE;
+        int storageAddr = (int)(startIdx >> STORAGE_ADDRBITS);
         int storageIdx;
 
         if (storageAddr >= m_firstAddr) {
-            storageIdx = startIdx % STORAGE_BITS;
+            storageIdx = (int)(startIdx % STORAGE_BITS);
         } else {
             // lets start with the first used storage object
             storageAddr = m_firstAddr;
@@ -511,7 +600,7 @@ public class DenseBitVector {
 
         while (true) {
             if (bits != 0) {
-                return (STORAGE_BITS * storageAddr)
+                return ((long)STORAGE_BITS * (long)storageAddr)
                         + Long.numberOfTrailingZeros(bits);
             }
             storageAddr++;
@@ -536,7 +625,7 @@ public class DenseBitVector {
      *         provided startIdx. Or -1 if the vector contains no zero anymore.
      * @throws ArrayIndexOutOfBoundsException if the specified startIdx negative
      */
-    public int nextClearBit(final int startIdx) {
+    public long nextClearBit(final long startIdx) {
         assert (checkConsistency() == null);
         if (startIdx >= m_length) {
             return -1;
@@ -546,8 +635,9 @@ public class DenseBitVector {
                     "Starting index can't be negative.");
         }
 
-        int storageAddr = startIdx >> STORAGE_ADDRBITS;
-        int storageIdx = startIdx % STORAGE_BITS;
+        assert startIdx >> STORAGE_ADDRBITS < Integer.MAX_VALUE;
+        int storageAddr = (int)(startIdx >> STORAGE_ADDRBITS);
+        int storageIdx = (int)(startIdx % STORAGE_BITS);
 
         if (m_firstAddr == -1 || storageAddr < m_firstAddr
                 || storageAddr > m_lastAddr) {
@@ -568,7 +658,7 @@ public class DenseBitVector {
 
         while (m_lastAddr > storageAddr) {
             if (bits != 0) {
-                return (STORAGE_BITS * storageAddr)
+                return ((long)STORAGE_BITS * (long)storageAddr)
                         + Long.numberOfTrailingZeros(bits);
             }
             bits = ~m_storage[++storageAddr];
@@ -577,8 +667,9 @@ public class DenseBitVector {
         // bits contains the last used storage object.
         // (note, if it is fully set 'bits' will be zero and
         // numberOfTrailingZeros returns 64 - which is fine.)
-        int result =
-                (STORAGE_BITS * storageAddr) + Long.numberOfTrailingZeros(bits);
+        long result =
+                ((long)STORAGE_BITS * (long)storageAddr)
+                        + Long.numberOfTrailingZeros(bits);
         if (result >= m_length) {
             return -1;
         } else {
@@ -818,7 +909,7 @@ public class DenseBitVector {
         }
 
         // cut a piece from bv's storage that fills the "rest" of our storage
-        int leftover = m_length % STORAGE_BITS;
+        int leftover = (int)(m_length % STORAGE_BITS);
 
         int resultAddr = m_storage.length - 1;
         int bvAddr = 0;
@@ -890,21 +981,21 @@ public class DenseBitVector {
     /**
      * Returns a string containing (comma separated) indices of the bits set in
      * this vector. The number of bit indices added to the string is limited to
-     * 30000. If the output is truncated, the string ends on &quot;... }&quot;
+     * 300000. If the output is truncated, the string ends on &quot;... }&quot;
      *
-     * @return a string containing (comma separated) indices of the bits
-     *         set in this vector.
+     * @return a string containing (comma separated) indices of the bits set in
+     *         this vector.
      */
     @Override
     public String toString() {
         assert (checkConsistency() == null);
         long ones = cardinality();
 
-        int use = (int)Math.min(ones, 30000);
+        int use = (int)Math.min(ones, 300000);
 
         StringBuilder result = new StringBuilder(use * 7);
         result.append('{');
-        for (int i = nextSetBit(0); i > -1; i = nextSetBit(++i)) {
+        for (long i = nextSetBit(0); i > -1; i = nextSetBit(++i)) {
             result.append(i).append(", ");
         }
         if (use < ones) {
@@ -914,6 +1005,66 @@ public class DenseBitVector {
         }
         result.append('}');
         return result.toString();
+    }
+
+    /**
+     * Returns the hex representation of the bits in this vector. Each character
+     * in the result represents 4 bits (with the characters <code>'0'</code> -
+     * <code>'9'</code> and <code>'A'</code> - <code>'F'</code>). The
+     * character at string position <code>(length - 1)</code> holds the lowest
+     * bits (bit 0 to 3), the character at position 0 represents the bits with
+     * the largest index in the vector. If the length of the vector is larger
+     * than ({@link Integer#MAX_VALUE} - 1) * 4 (i.e. 8589934584), the result is
+     * truncated (and ends with ...).
+     *
+     * @return the hex representation of this bit vector.
+     */
+    public String toHexString() {
+        // the number of bits we store in the string
+        long max = (int)Math.min(m_length, (Integer.MAX_VALUE - 1) << 2);
+
+        // 4 bits are combined to one character
+        StringBuilder result = new StringBuilder((int)(max >> 2));
+
+        // the last storage might not be fully used
+        int leftOver = (int)(m_length % STORAGE_BITS);
+
+        // start with the highest bits
+
+        int storageAddr = (int)((max - 1) >> STORAGE_ADDRBITS);
+        assert storageAddr <= m_storage.length;
+
+        int nibbleIdx;
+        if (leftOver == 0) {
+            nibbleIdx = 15;
+        } else {
+            nibbleIdx = leftOver >> 2;
+        }
+        while (storageAddr >= 0) {
+
+            while (nibbleIdx >= 0) {
+                int value = (int)(m_storage[storageAddr] >>> (nibbleIdx << 2));
+                value &= 0x0f;
+
+                value += '0';
+                if (value > '9') {
+                    value += ('A' - ('9' + 1));
+                }
+                // add character to string
+                result.append((char)(value));
+
+                nibbleIdx--;
+            }
+            // a 64bit word stores 16 nibbles
+            nibbleIdx = 15;
+            storageAddr--;
+        }
+
+        if (max < m_length) {
+            result.append("...");
+        }
+        return result.toString();
+
     }
 
     /**
@@ -934,7 +1085,8 @@ public class DenseBitVector {
         }
 
         if (m_length > 0) {
-            int highestIdx = (m_length - 1) >> STORAGE_ADDRBITS;
+            assert (m_length - 1) >> STORAGE_ADDRBITS < Integer.MAX_VALUE;
+            int highestIdx = (int)((m_length - 1) >> STORAGE_ADDRBITS);
             if (m_storage.length <= highestIdx) {
                 return "Storage array is too short";
             }
@@ -943,8 +1095,9 @@ public class DenseBitVector {
                 return "Storage array is too long";
             }
             // make sure there are no bits set "above" m_length
-            int addr = m_length >> STORAGE_ADDRBITS;
-            int idx = m_length % STORAGE_BITS;
+            assert m_length >> STORAGE_ADDRBITS < Integer.MAX_VALUE;
+            int addr = (int)(m_length >> STORAGE_ADDRBITS);
+            int idx = (int)(m_length % STORAGE_BITS);
             while (addr < m_storage.length) {
                 if ((m_storage[addr] & (1L << idx)) != 0) {
                     return "A bit is set outside the vector's length";
@@ -1007,4 +1160,5 @@ public class DenseBitVector {
         }
         return result.toString();
     }
+
 }

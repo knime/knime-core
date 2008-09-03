@@ -137,6 +137,24 @@ public class SparseBitVector {
     }
 
     /**
+     * Creates a new instance as copy of the passed argument.
+     *
+     * @param clone the vector to copy into the new instance
+     */
+    public SparseBitVector(final SparseBitVector clone) {
+        if (clone == null) {
+            throw new NullPointerException(
+                    "Can't initialize from a null vector");
+        }
+        assert clone.checkConsistency() == null;
+        m_idxStorage =
+                Arrays.copyOf(clone.m_idxStorage, clone.m_idxStorage.length);
+        m_length = clone.m_length;
+        m_lastIdx = clone.m_lastIdx;
+
+    }
+
+    /**
      * Returns the number of bits stored in this vector.
      *
      * @return the length of the vector.
@@ -376,7 +394,7 @@ public class SparseBitVector {
      * @throws ArrayIndexOutOfBoundsException if the specified startIdx is
      *             negative
      */
-    public long nextSetBit(final int startIdx) {
+    public long nextSetBit(final long startIdx) {
         if (startIdx < 0) {
             throw new ArrayIndexOutOfBoundsException("Starting index"
                     + " can't be negative");
@@ -417,7 +435,7 @@ public class SparseBitVector {
      *         provided startIdx. Or -1 if the vector contains no zero anymore.
      * @throws ArrayIndexOutOfBoundsException if the specified startIdx negative
      */
-    public long nextClearBit(final int startIdx) {
+    public long nextClearBit(final long startIdx) {
         if (startIdx < 0) {
             throw new ArrayIndexOutOfBoundsException("Starting index"
                     + " can't be negative");
@@ -679,6 +697,53 @@ public class SparseBitVector {
         }
         result.append('}');
         return result.toString();
+    }
+
+    /**
+     * Returns the hex representation of the bits in this vector. Each character
+     * in the result represents 4 bits (with the characters <code>'0'</code> -
+     * <code>'9'</code> and <code>'A'</code> - <code>'F'</code>). The
+     * character at string position <code>(length - 1)</code> holds the lowest
+     * bits (bit 0 to 3), the character at position 0 represents the bits with
+     * the largest index in the vector. If the length of the vector is larger
+     * than ({@link Integer#MAX_VALUE} - 1) * 4 (i.e. 8589934584), the result
+     * is truncated (and ends with ...).
+     *
+     * @return the hex representation of this bit vector.
+     */
+    public String toHexString() {
+        // TODO: needs to be optimized. No need to call get() for each bit.
+        // the number of bits we store in the string
+        long max = (int)Math.min(m_length, (Integer.MAX_VALUE - 1) << 2);
+        // compute number of hex characters, which come in blocks of 4!
+        final int nrHexChars = (int)(((max / 4 + 1) / 8 + 1) * 8);
+        assert (nrHexChars % 8 == 0);
+        assert (nrHexChars > (max / 4 + 1));
+        // reserve space for resulting string
+        final StringBuffer buf = new StringBuffer(nrHexChars);
+        for (long b = 0; b < max; b += 32) {
+            // process bits in chunks of 32 (= 8 chars)
+            for (int blockId = 7; blockId >= 0; blockId--) {
+                // go through the 8 blocks backwards
+                // convert block of 4 bits to one hex character
+                int i = 0;
+                for (int k = 0; k < 4; k++) {
+                    long bitIndex = b + k + (blockId * 4);
+                    if (bitIndex < max) {
+                        i += (1 << k) * (get(bitIndex) ? 1 : 0);
+                    }
+                }
+                assert (i >= 0 && i < 16);
+                int charI = i + '0';
+                if (charI > '9') {
+                    charI += ('A' - ('9' + 1));
+                }
+                // add character to string
+                buf.append((char)(charI));
+            }
+        }
+        // done, return hex representation
+        return buf.toString();
     }
 
     /**

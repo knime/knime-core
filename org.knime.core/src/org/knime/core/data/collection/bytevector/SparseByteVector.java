@@ -161,6 +161,19 @@ public class SparseByteVector {
     }
 
     /**
+     * Creates a clone of the passed vector.
+     *
+     * @param byteVector the vector to clone.
+     */
+    public SparseByteVector(final SparseByteVector byteVector) {
+        m_count = byteVector.m_count;
+        m_idxStorage = byteVector.m_idxStorage;
+        m_lastIdx = byteVector.m_lastIdx;
+        m_length = byteVector.m_length;
+        assert checkConsistency() == null;
+    }
+
+    /**
      * Returns the number of numbers stored in this vector.
      *
      * @return the length of the vector.
@@ -313,18 +326,18 @@ public class SparseByteVector {
     }
 
     /**
-     * Number of bits set in this bit vector.
+     * Returns the number of counts larger than zero stored in this vector.
      *
-     * @return the number of ones in this vector
+     * @return the number of elements not equal to zero in this vector.
      */
     public int cardinality() {
         return m_lastIdx + 1;
     }
 
     /**
-     * Returns true if no bits are set in this bit vector.
+     * Checks all counts and returns true if they are all zero.
      *
-     * @return true if no bits are set in this bit vector.
+     * @return true if all counts are zero.
      */
     public boolean isEmpty() {
         return m_lastIdx == -1;
@@ -452,6 +465,157 @@ public class SparseByteVector {
         // all numbers from startAddr are continuously stored
         assert (idx == m_idxStorage[m_lastIdx]);
         return idx++;
+    }
+
+    /**
+     * Calculates the checksum, the sum of all counts stored.
+     *
+     * @return the sum of all counts in this vector.
+     */
+    public long sumOfAllCounts() {
+        long result = 0;
+        for (int i = 0; i < m_lastIdx; i++) {
+            result += m_count[i] & 0x0FF; // avoid sign extension
+        }
+        return result;
+    }
+
+    /**
+     * Returns a new vector with the sum of the counts at each position. The
+     * result's length is the maximum of this' and the argument's length. The
+     * value at position i in the result is the sum of the counts in this' and
+     * the arguments vector at position i.
+     *
+     * @param bv the vector to add to this one (position-wise).
+     * @param remainder if true and the result of the addition is larger than
+     *            255, the value in the result vector will be set to the
+     *            remainder when divided by 255 - if false, the result vector is
+     *            set to 255 if the sum is larger than 255. (Setting it to true
+     *            performs slightly better.)
+     * @return a new instance holding at each position the sum of the counts.
+     */
+    public SparseByteVector add(final SparseByteVector bv,
+            final boolean remainder) {
+        SparseByteVector result =
+                new SparseByteVector(Math.max(m_length, bv.m_length), Math.max(
+                        cardinality(), bv.cardinality()));
+
+        int thisIdx = 0;
+        int bvIdx = 0;
+        while (thisIdx < m_lastIdx && bvIdx < bv.m_lastIdx) {
+            // the set method is pretty fast, if we add sorted indices
+            if (m_idxStorage[thisIdx] == bv.m_idxStorage[bvIdx]) {
+                if (remainder) {
+                    result.set(m_idxStorage[thisIdx], m_count[thisIdx]
+                            + bv.m_count[bvIdx]);
+                } else {
+                    result.set(m_idxStorage[thisIdx], Math.min(255,
+                            m_count[thisIdx] + bv.m_count[bvIdx]));
+                }
+                thisIdx++;
+                bvIdx++;
+            } else if (m_idxStorage[thisIdx] < bv.m_idxStorage[bvIdx]) {
+                result.set(m_idxStorage[thisIdx], m_count[thisIdx]);
+                thisIdx++;
+            } else {
+                result.set(bv.m_idxStorage[bvIdx], bv.m_count[bvIdx]);
+                bvIdx++;
+            }
+        }
+        // copy the longer vector into the result - only one while loop executes
+        while (thisIdx < m_lastIdx) {
+            result.set(m_idxStorage[thisIdx], m_count[thisIdx]);
+            thisIdx++;
+        }
+        while (bvIdx < bv.m_lastIdx) {
+            result.set(bv.m_idxStorage[bvIdx], bv.m_count[bvIdx]);
+            bvIdx++;
+        }
+
+        assert result.checkConsistency() == null;
+        return result;
+    }
+
+    /**
+     * Returns a new vector with the minimum of the counts at each position. The
+     * result's length is the maximum of this' and the argument's length. The
+     * value at position i in the result is the minimum of the counts in this'
+     * and the arguments vector at position i.
+     *
+     * @param bv the vector to compute the minimum of (position-wise).
+     * @return a new instance holding at each position the minimum of the
+     *         counts.
+     */
+    public SparseByteVector min(final SparseByteVector bv) {
+        SparseByteVector result =
+                new SparseByteVector(Math.max(m_length, bv.m_length), Math.min(
+                        cardinality(), bv.cardinality()));
+
+        int thisIdx = 0;
+        int bvIdx = 0;
+        while (thisIdx < m_lastIdx && bvIdx < bv.m_lastIdx) {
+            // the set method is pretty fast, if we add sorted indices
+            if (m_idxStorage[thisIdx] == bv.m_idxStorage[bvIdx]) {
+                result.set(m_idxStorage[thisIdx], Math.min(m_count[thisIdx],
+                        bv.m_count[bvIdx]));
+                thisIdx++;
+                bvIdx++;
+            } else if (m_idxStorage[thisIdx] < bv.m_idxStorage[bvIdx]) {
+                thisIdx++;
+            } else {
+                bvIdx++;
+            }
+        }
+        // the other indices are zero
+
+        assert result.checkConsistency() == null;
+        return result;
+    }
+
+    /**
+     * Returns a new vector with the maximum of the counts at each position. The
+     * result's length is the maximum of this' and the argument's length. The
+     * value at position i in the result is the maximum of the counts in this'
+     * and the arguments vector at position i.
+     *
+     * @param bv the vector to compute the maximum of (position-wise).
+     * @return a new instance holding at each position the maximum of the
+     *         counts.
+     */
+    public SparseByteVector max(final SparseByteVector bv) {
+        SparseByteVector result =
+                new SparseByteVector(Math.max(m_length, bv.m_length), Math.max(
+                        cardinality(), bv.cardinality()));
+
+        int thisIdx = 0;
+        int bvIdx = 0;
+        while (thisIdx < m_lastIdx && bvIdx < bv.m_lastIdx) {
+            // the set method is pretty fast, if we add sorted indices
+            if (m_idxStorage[thisIdx] == bv.m_idxStorage[bvIdx]) {
+                result.set(m_idxStorage[thisIdx], Math.max(m_count[thisIdx],
+                        bv.m_count[bvIdx]));
+                thisIdx++;
+                bvIdx++;
+            } else if (m_idxStorage[thisIdx] < bv.m_idxStorage[bvIdx]) {
+                result.set(m_idxStorage[thisIdx], m_count[thisIdx]);
+                thisIdx++;
+            } else {
+                result.set(bv.m_idxStorage[bvIdx], bv.m_count[bvIdx]);
+                bvIdx++;
+            }
+        }
+        // copy the longer vector into the result - only one loop executes
+        while (thisIdx < m_lastIdx) {
+            result.set(m_idxStorage[thisIdx], m_count[thisIdx]);
+            thisIdx++;
+        }
+        while (bvIdx < bv.m_lastIdx) {
+            result.set(bv.m_idxStorage[bvIdx], bv.m_count[bvIdx]);
+            bvIdx++;
+        }
+
+        assert result.checkConsistency() == null;
+        return result;
     }
 
     /**

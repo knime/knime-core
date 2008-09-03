@@ -72,6 +72,16 @@ public class DenseByteVector {
     }
 
     /**
+     * Creates a new vector initialized by the passed vector. The created vector
+     * is an identical copy.
+     *
+     * @param byteVector the byte vector to clone.
+     */
+    DenseByteVector(final DenseByteVector byteVector) {
+        m_storage = byteVector.m_storage.clone();
+    }
+
+    /**
      * Returns the length of the vector.
      *
      * @return the length of the vector.
