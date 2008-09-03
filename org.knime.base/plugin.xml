@@ -742,6 +742,16 @@
             factory-class="org.knime.base.node.preproc.regexsplit.RegexSplitNodeFactory"
             id="org.knime.base.node.preproc.regexsplit.RegexSplitNodeFactory">
       </node>
+      <node
+            category-path="/meta"
+            factory-class="org.knime.base.node.meta.looper.condition.ConditionLoopHeadNodeFactory"
+            id="org.knime.base.node.meta.looper.condition.ConditionLoopHeadNodeFactory">
+      </node>
+      <node
+            category-path="/meta"
+            factory-class="org.knime.base.node.meta.looper.condition.ConditionLoopTailNodeFactory"
+            id="org.knime.base.node.meta.looper.condition.ConditionLoopTailNodeFactory">
+      </node>
    </extension>
       <extension
          point="org.knime.base.pmmlports">

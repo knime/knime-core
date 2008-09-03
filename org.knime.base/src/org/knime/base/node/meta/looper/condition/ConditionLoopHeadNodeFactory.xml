@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="condlooper.png" type="LoopStart">
+    <name>Variable Condition Loop (Start)</name>
+
+    <shortDescription>Loop start node for a variable condition loop</shortDescription>
+
+    <fullDescription>
+        <intro>
+            In combination with a "Variable Condition Loop (End)" node, you can build a loop whise body is executed
+            until a certain condition on one of the flow variables is met. The condition must be set in the loop's end
+            node.
+        </intro>
+    </fullDescription>
+
+    <ports>
+        <dataIn index="0" name="Any port object">Port object being passed on to output port</dataIn>
+        <dataOut index="0" name="Unaltered input">The unaltered input connection object (first input port)</dataOut>
+    </ports>
+</knimeNode>
