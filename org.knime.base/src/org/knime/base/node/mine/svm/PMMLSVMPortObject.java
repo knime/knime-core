@@ -151,37 +151,13 @@ public class PMMLSVMPortObject extends PMMLPortObject {
         atts.addAttribute(null, null, "svmRepresentation", CDATA,
                 "SupportVectors");
         handler.startElement(null, null, "SupportVectorMachineModel", atts);
-        addMiningSchema(handler, getSpec().getLearningFields());
+        PMMLPortObjectSpec.writeMiningSchema(getSpec(), handler);
         addTargets(handler, getSpec().getTargetFields().iterator().next(),
                 m_targetValues);
         addKernel(handler, m_kernel);
         addVectorDictionary(handler, m_svms, getSpec().getLearningFields());
         addSVMs(handler, m_svms);
         handler.endElement(null, null, "SupportVectorMachineModel");
-    }
-
-    /**
-     * Writes the used columns as PMML mining schema.
-     *
-     * @param handler to write to
-     * @param colNames names of the used columns
-     * @throws SAXException if something goes wrong
-     */
-    protected void addMiningSchema(final TransformerHandler handler,
-            final Set<String> colNames) throws SAXException {
-        // open mining schema
-        handler.startElement(null, null, "MiningSchema", null);
-
-        // for each column add it as a mining field
-        for (String colname : colNames) {
-            // add mining field name
-            AttributesImpl atts = new AttributesImpl();
-            atts.addAttribute(null, null, "name", CDATA, colname);
-            handler.startElement(null, null, "MiningField", atts);
-            handler.endElement(null, null, "MiningField");
-        }
-        // close mining schema
-        handler.endElement(null, null, "MiningSchema");
     }
 
     /**
