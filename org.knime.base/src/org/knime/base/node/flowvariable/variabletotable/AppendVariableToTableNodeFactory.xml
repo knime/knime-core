@@ -1,20 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./variable2table.png" type="Other">
-	<name>Variable To Table</name>
-	
+	<name>Append Variable To Table</name>
+
 	<shortDescription>
-	    Extracts scope variables and puts them into a single row table.
+		Extracts scope variables and appends them to an input table.
 	</shortDescription>
-	
+
 	<fullDescription>
-		<intro>		
-	    Extracts scope variables and puts them into a single row table.
+		<intro>
+			Extracts scope variables that are carried along the flow and appends
+			them to an input table.
 		</intro>
+        <option name="Variable Selection">
+            Select the variables that should be provided in the output table.
+        </option>
 	</fullDescription>
-	
+
 	<ports>
 		<dataIn index="0" name="Any data">Any data</dataIn>
-		<dataOut index="0" name="Variable table">Table containing single row with current values of scope variables</dataOut>
-	</ports>	
+		<dataOut index="0" name="Input table with additional columns">
+		  The input table with additional columns, one for each selected 
+		  variable. All values in the new column will be the same.
+		</dataOut>
+	</ports>
 </knimeNode>
