@@ -49,6 +49,8 @@ public abstract class NodeDialogPane extends GenericNodeDialogPane {
     private PortObjectSpec[] m_latestInSpecs;
     private PortType[] m_lastestInTypes;
     
+    private static final DataTableSpec EMPTY_SPEC = new DataTableSpec();
+    
     /** {@inheritDoc} */
     @Override
     void internalLoadSettingsFrom(final NodeSettingsRO settings,
@@ -79,7 +81,11 @@ public abstract class NodeDialogPane extends GenericNodeDialogPane {
         for (int i = 0; i < m_lastestInTypes.length; i++) {
             if (m_lastestInTypes[i].getPortObjectSpecClass().equals(
                     DataTableSpec.class)) {
-                dataSpecList.add((DataTableSpec)specs[i]);
+                DataTableSpec s = (DataTableSpec)specs[i];
+                if (s == null) {
+                    s = EMPTY_SPEC;
+                }
+                dataSpecList.add(s);
             }
         }
         DataTableSpec[] dataSpecs = dataSpecList.toArray(
