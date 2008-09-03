@@ -40,7 +40,7 @@ import org.knime.core.util.Pair;
  * 
  * @author wiswedel, University of Konstanz
  */
-final class VariableToTableSettings {
+final class AppendVariableToTableSettings {
     
     private final List<Pair<String, ScopeVariable.Type>> m_variablesOfInterest
         = new ArrayList<Pair<String, ScopeVariable.Type>>();

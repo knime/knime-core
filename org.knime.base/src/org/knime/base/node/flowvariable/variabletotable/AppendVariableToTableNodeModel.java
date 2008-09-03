@@ -58,15 +58,15 @@ import org.knime.core.util.Pair;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class VariableToTableNodeModel extends GenericNodeModel {
+public class AppendVariableToTableNodeModel extends GenericNodeModel {
 
-    private final VariableToTableSettings m_settings;
+    private final AppendVariableToTableSettings m_settings;
     
     /** One input, one output. */
-    public VariableToTableNodeModel() {
+    public AppendVariableToTableNodeModel() {
         super(new PortType[]{new PortType(PortObject.class)},
               new PortType[]{BufferedDataTable.TYPE});
-        m_settings = new VariableToTableSettings();
+        m_settings = new AppendVariableToTableSettings();
     }
 
     /** {@inheritDoc} */
@@ -176,7 +176,7 @@ public class VariableToTableNodeModel extends GenericNodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        new VariableToTableSettings().loadSettingsFrom(settings);
+        new AppendVariableToTableSettings().loadSettingsFrom(settings);
     }
 
     /** {@inheritDoc} */

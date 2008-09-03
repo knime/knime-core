@@ -31,25 +31,25 @@ import org.knime.core.node.GenericNodeView;
  * 
  * @author wiswedel, University of Konstanz
  */
-public class VariableToTableNodeFactory extends
-        GenericNodeFactory<VariableToTableNodeModel> {
+public class AppendVariableToTableNodeFactory extends
+        GenericNodeFactory<AppendVariableToTableNodeModel> {
 
     /** {@inheritDoc} */
     @Override
-    protected VariableToTableNodeDialogPane createNodeDialogPane() {
-        return new VariableToTableNodeDialogPane();
+    protected AppendToTableNodeDialogPane createNodeDialogPane() {
+        return new AppendToTableNodeDialogPane();
     }
 
     /** {@inheritDoc} */
     @Override
-    public VariableToTableNodeModel createNodeModel() {
-        return new VariableToTableNodeModel();
+    public AppendVariableToTableNodeModel createNodeModel() {
+        return new AppendVariableToTableNodeModel();
     }
 
     /** {@inheritDoc} */
     @Override
-    public GenericNodeView<VariableToTableNodeModel> 
-        createNodeView(final int index, final VariableToTableNodeModel model) {
+    public GenericNodeView<AppendVariableToTableNodeModel> 
+        createNodeView(final int index, final AppendVariableToTableNodeModel model) {
         return null;
     }
 

@@ -697,8 +697,8 @@
       </node>
        <node
              category-path="/misc"
-             factory-class="org.knime.base.node.flowvariable.variabletotable.VariableToTableNodeFactory"
-             id="org.knime.base.node.flowvariable.variabletotable.VariableToTableNodeFactory">
+             factory-class="org.knime.base.node.flowvariable.variabletotable.AppendVariableToTableNodeFactory"
+             id="org.knime.base.node.flowvariable.variabletotable.AppendVariableToTableNodeFactory">
        </node>
        <node
              category-path="/misc"

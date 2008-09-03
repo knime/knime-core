@@ -46,12 +46,12 @@ import org.knime.core.util.Pair;
  * 
  * @author wiswedel, University of Konstanz
  */
-class VariableToTableNodeDialogPane extends GenericNodeDialogPane {
+class AppendToTableNodeDialogPane extends GenericNodeDialogPane {
 
     private final JList m_list;
 
     /** Inits components. */
-    public VariableToTableNodeDialogPane() {
+    public AppendToTableNodeDialogPane() {
         m_list = new JList(new DefaultListModel());
         m_list.setCellRenderer(new ScopeVariableListCellRenderer());
         m_list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -63,7 +63,7 @@ class VariableToTableNodeDialogPane extends GenericNodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
         Map<String, ScopeVariable> scopeVars = getAvailableScopeVariables();
-        VariableToTableSettings sets = new VariableToTableSettings();
+        AppendVariableToTableSettings sets = new AppendVariableToTableSettings();
         sets.loadSettingsFrom(settings, scopeVars);
         DefaultListModel model = (DefaultListModel)m_list.getModel();
         model.removeAllElements();
@@ -89,7 +89,7 @@ class VariableToTableNodeDialogPane extends GenericNodeDialogPane {
         Object[] sels = m_list.getSelectedValues();
         ScopeVariable[] svSels = new ScopeVariable[sels.length];
         System.arraycopy(sels, 0, svSels, 0, sels.length);
-        VariableToTableSettings sets = new VariableToTableSettings();
+        AppendVariableToTableSettings sets = new AppendVariableToTableSettings();
         sets.setVariablesOfInterest(svSels);
         sets.saveSettingsTo(settings);
     }
