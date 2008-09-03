@@ -24,9 +24,11 @@
  */
 package org.knime.base.node.meta.looper.variable;
 
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.port.PortType;
 
 /**
  * 
@@ -34,6 +36,24 @@ import org.knime.core.node.NodeDialogPane;
  */
 public class IterateVariablesLoopHeadNodeFactory 
     extends GenericNodeFactory<IterateVariablesLoopHeadNodeModel> {
+    
+    private final PortType m_inOutType;
+    
+    /** Default node with {@link BufferedDataTable} pass-through. */
+    public IterateVariablesLoopHeadNodeFactory() {
+        this(BufferedDataTable.TYPE);
+    }
+    
+    /** Creates factory, which will pass through port objects of the
+     * argument type.
+     * @param inOutType Type being passed through.
+     */
+    public IterateVariablesLoopHeadNodeFactory(final PortType inOutType) {
+        if (inOutType == null) {
+            throw new NullPointerException("PortType arg must not be null");
+        }
+        m_inOutType = inOutType;
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -44,7 +64,7 @@ public class IterateVariablesLoopHeadNodeFactory
     /** {@inheritDoc} */
     @Override
     public IterateVariablesLoopHeadNodeModel createNodeModel() {
-        return new IterateVariablesLoopHeadNodeModel();
+        return new IterateVariablesLoopHeadNodeModel(m_inOutType);
     }
 
     /** {@inheritDoc} */

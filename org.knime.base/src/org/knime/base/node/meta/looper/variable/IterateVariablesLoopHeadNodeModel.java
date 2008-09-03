@@ -31,6 +31,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.LoopStartNode;
 
 /**
@@ -45,14 +46,17 @@ public class IterateVariablesLoopHeadNodeModel extends TableToVariableNodeModel
     private RowIterator m_variablesIterator;
     private DataRow m_currentVariables;
     
-    /** Two inputs, one output..  */
-    public IterateVariablesLoopHeadNodeModel() {
+    /** Two inputs, one output.
+     * @param inOutType The type of in- and output port that passes 
+     * the data through */
+    public IterateVariablesLoopHeadNodeModel(final PortType inOutType) {
+        super(inOutType);
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void pushVariables(DataTableSpec variablesSpec,
-            DataRow currentVariables) {
+    protected void pushVariables(final DataTableSpec variablesSpec,
+            final DataRow currentVariables) {
         super.pushVariables(variablesSpec, currentVariables);
         pushScopeVariableInt("currentIteration", m_iteration);
         pushScopeVariableInt("maxIterations", m_maxIterations);
