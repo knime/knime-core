@@ -360,7 +360,7 @@ public class CSVWriterNodeModel extends NodeModel {
          * check file access
          */
         String fileName = m_settings.getFileName();
-        if (fileName == null) {
+        if (fileName == null || fileName.length() == 0) {
             throw new InvalidSettingsException("No output file specified.");
         }
         File file = new File(fileName);
