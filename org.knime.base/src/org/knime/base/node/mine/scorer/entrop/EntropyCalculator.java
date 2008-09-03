@@ -335,10 +335,10 @@ public final class EntropyCalculator {
     }
 
     private static final String[] NAMES = new String[]{"Size", "Entropy",
-            "Normalized Entropy"};
+            "Normalized Entropy", "Quality"};
 
     private static final DataType[] TYPES = new DataType[]{IntCell.TYPE,
-            DoubleCell.TYPE, DoubleCell.TYPE};
+            DoubleCell.TYPE, DoubleCell.TYPE, DoubleCell.TYPE};
 
     private static DataTable createScoreTable(
             final Map<RowKey, RowKey> referenceMap,
@@ -350,14 +350,18 @@ public final class EntropyCalculator {
                 .values())).size();
         double normalization = Math.log(clusterCardinalityInReference)
                 / Math.log(2.0);
+        int totalSize = 0;
         for (Map.Entry<RowKey, Set<RowKey>> e : clusteringMap.entrySet()) {
-            DataCell size = new IntCell(e.getValue().size());
+            int size = e.getValue().size();
+            DataCell sizeCell = new IntCell(size);
+            totalSize += size;
             double entropy = entropy(referenceMap, e.getValue());
             DataCell entropyCell = new DoubleCell(entropy);
             DataCell normEntropy = new DoubleCell(entropy / normalization);
+            DataCell quality = DataType.getMissingCell();
             RowKey clusterID = e.getKey();
-            DefaultRow row = new DefaultRow(clusterID, size, entropyCell,
-                    normEntropy);
+            DefaultRow row = new DefaultRow(clusterID, sizeCell, entropyCell,
+                    normEntropy, quality);
             sortedRows.add(row);
         }
         Collections.sort(sortedRows, new Comparator<DefaultRow>() {
@@ -373,6 +377,22 @@ public final class EntropyCalculator {
         for (DataRow r : rows) {
             container.addRowToTable(r);
         }
+        // last row contains overall quality values
+        double entropy = getEntropy(referenceMap, clusteringMap);
+        double quality = getQuality(referenceMap, clusteringMap);
+        DataCell entropyCell = new DoubleCell(entropy);
+        DataCell normEntropy = new DoubleCell(entropy / normalization);
+        DataCell qualityCell = new DoubleCell(quality);
+        DataCell size = new IntCell(totalSize);
+        RowKey clusterID = new RowKey("Overall");
+        int uniquifier = 1;
+        while (clusteringMap.containsKey(clusterID)) {
+            clusterID = new RowKey("Overall (#" + (uniquifier++) + ")");
+        }
+        
+        DefaultRow row = new DefaultRow(clusterID, size, entropyCell,
+                normEntropy, qualityCell);
+        container.addRowToTable(row);
         container.close();
         return container.getTable();
     }
