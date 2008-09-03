@@ -34,13 +34,13 @@ import org.knime.core.node.port.PortType;
  * 
  * @author wiswedel, University of Konstanz
  */
-public class IterateVariablesLoopHeadNodeFactory 
-    extends GenericNodeFactory<IterateVariablesLoopHeadNodeModel> {
+public class VariablesLoopHeadNodeFactory 
+    extends GenericNodeFactory<VariablesLoopHeadNodeModel> {
     
     private final PortType m_inOutType;
     
     /** Default node with {@link BufferedDataTable} pass-through. */
-    public IterateVariablesLoopHeadNodeFactory() {
+    public VariablesLoopHeadNodeFactory() {
         this(BufferedDataTable.TYPE);
     }
     
@@ -48,7 +48,7 @@ public class IterateVariablesLoopHeadNodeFactory
      * argument type.
      * @param inOutType Type being passed through.
      */
-    public IterateVariablesLoopHeadNodeFactory(final PortType inOutType) {
+    public VariablesLoopHeadNodeFactory(final PortType inOutType) {
         if (inOutType == null) {
             throw new NullPointerException("PortType arg must not be null");
         }
@@ -63,14 +63,14 @@ public class IterateVariablesLoopHeadNodeFactory
 
     /** {@inheritDoc} */
     @Override
-    public IterateVariablesLoopHeadNodeModel createNodeModel() {
-        return new IterateVariablesLoopHeadNodeModel(m_inOutType);
+    public VariablesLoopHeadNodeModel createNodeModel() {
+        return new VariablesLoopHeadNodeModel(m_inOutType);
     }
 
     /** {@inheritDoc} */
     @Override
-    public GenericNodeView<IterateVariablesLoopHeadNodeModel> createNodeView(
-            final int index, final IterateVariablesLoopHeadNodeModel model) {
+    public GenericNodeView<VariablesLoopHeadNodeModel> createNodeView(
+            final int index, final VariablesLoopHeadNodeModel model) {
         return null;
     }
 

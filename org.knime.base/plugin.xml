@@ -651,8 +651,8 @@
             id="org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeFactory"/>
       <node
             category-path="/meta"
-            factory-class="org.knime.base.node.meta.looper.variable.IterateVariablesLoopHeadNodeFactory"
-            id="org.knime.base.node.meta.looper.variable.IterateVariablesLoopHeadNodeFactory">
+            factory-class="org.knime.base.node.meta.looper.variable.VariablesLoopHeadNodeFactory"
+            id="org.knime.base.node.meta.looper.variable.VariablesLoopHeadNodeFactory">
       </node>
       <node
             category-path="/manipulation/column"

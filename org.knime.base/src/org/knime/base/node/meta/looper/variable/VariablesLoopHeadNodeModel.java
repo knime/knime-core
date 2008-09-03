@@ -38,7 +38,7 @@ import org.knime.core.node.workflow.LoopStartNode;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class IterateVariablesLoopHeadNodeModel extends TableToVariableNodeModel
+public class VariablesLoopHeadNodeModel extends TableToVariableNodeModel
     implements LoopStartNode {
 
     private int m_iteration;
@@ -49,7 +49,7 @@ public class IterateVariablesLoopHeadNodeModel extends TableToVariableNodeModel
     /** Two inputs, one output.
      * @param inOutType The type of in- and output port that passes 
      * the data through */
-    public IterateVariablesLoopHeadNodeModel(final PortType inOutType) {
+    public VariablesLoopHeadNodeModel(final PortType inOutType) {
         super(inOutType);
     }
 
