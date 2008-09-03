@@ -655,6 +655,11 @@
             id="org.knime.base.node.meta.looper.variable.VariablesLoopHeadNodeFactory">
       </node>
       <node
+            category-path="/meta"
+            factory-class="org.knime.base.node.meta.looper.variable.VariablesLoopDBHeadNodeFactory"
+            id="org.knime.base.node.meta.looper.variable.VariablesLoopDBHeadNodeFactory">
+      </node>
+      <node
             category-path="/manipulation/column"
             factory-class="org.knime.base.node.preproc.filter.columnref.ColumnFilterRefNodeFactory"
             id="org.knime.base.node.preproc.filter.columnref.ColumnFilterRefNodeFactory">
@@ -726,6 +731,11 @@
             category-path="/misc"
             factory-class="org.knime.base.node.flowvariable.tabletovariable.TableToVariableNodeFactory"
             id="org.knime.base.node.flowvariable.tabletovariable.TableToVariableNodeFactory">
+      </node>
+      <node
+            category-path="/misc"
+            factory-class="org.knime.base.node.flowvariable.tabletovariable.TableToVariableDBNodeFactory"
+            id="org.knime.base.node.flowvariable.tabletovariable.TableToVariableDBNodeFactory">
       </node>
       <node
             category-path="/manipulation/column"

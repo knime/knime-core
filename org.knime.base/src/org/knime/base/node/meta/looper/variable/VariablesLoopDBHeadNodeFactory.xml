@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="../looper.png" type="LoopStart">
-	<name>Variables Looper (Start)</name>
+	<name>Variables Looper DB (Start)</name>
 
 	<shortDescription>
-		Start node of a variables iterator loop for ordinary tables.
+		Start node of a variables iterator loop for database connections.
 	</shortDescription>
 
 	<fullDescription>
@@ -21,15 +21,15 @@
 	</fullDescription>
 
 	<ports>
-		<dataIn index="0" name="Any table - passed-through to output">
-			Table passed on to output port.
+		<dataIn index="0" name="Any DB connection object">
+			DB connection object passed on to output port.
 		</dataIn>
 		<dataIn index="1" name="Parameters table">
 			The table whose rows will constitute the variables' values,
 			each row representing one iteration.
 		</dataIn>
-		<dataOut index="0" name="Passed-through input table">
-			The unaltered input table (first input port)
+		<dataOut index="0" name="Passed-through input object">
+			The unaltered database connection input (first input port)
 		</dataOut>
 	</ports>
 </knimeNode>
