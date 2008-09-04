@@ -116,8 +116,8 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
     
     public void checkTargetField(final String targetFieldName) {
         if (!getTargetField().equals(targetFieldName)) {
-            LOGGER.warn("Non matching target field name or no target " +
-            		"field in mining schema");
+            LOGGER.warn("Non matching target field name or no target " 
+                    + "field in mining schema");
         }
     }
 
@@ -165,7 +165,6 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
             a.addAttribute("", "", "algorithmName", "CDATA", m_algorithmName);
         }
         a.addAttribute("", "", "targetFieldName", "CDATA", getTargetField());
-        a.addAttribute("", "", "normalizationMethod", "CDATA", "none");
         h.startElement("", "", "RegressionModel", a);
         PMMLPortObjectSpec.writeMiningSchema(m_spec, h);
         addRegressionTable(h);
@@ -267,7 +266,7 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
                 || "LocalTransformations".equals(name)
                 || "ModelVerification".equals(name)
                 || "Extension".equals(name)) {
-            LOGGER.debug("Skipping unknown element" + name);
+            LOGGER.warn("Skipping unknown element" + name);
         }
     }
     
