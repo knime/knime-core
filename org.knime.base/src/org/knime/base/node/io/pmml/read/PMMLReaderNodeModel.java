@@ -114,7 +114,6 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
         try {
             parser.parse(f, masterHandler);
         } catch (Exception e) {
-            e.printStackTrace();
             LOGGER.error("Error parsing file" + m_file.getStringValue(), e);
         }
         m_type = modelTypeHdl.getModelType();

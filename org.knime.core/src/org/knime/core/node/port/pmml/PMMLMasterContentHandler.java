@@ -129,7 +129,6 @@ public class PMMLMasterContentHandler extends PMMLContentHandler {
      */
     @Override
     public void error(final SAXParseException exception) throws SAXException {
-        exception.printStackTrace();
         LOGGER.error("Error during validation of PMML port object: ", 
                 exception);
         throw exception;
