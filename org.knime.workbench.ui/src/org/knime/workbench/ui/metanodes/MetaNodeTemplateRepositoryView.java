@@ -56,14 +56,22 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
     
     /**
      * 
-     * @return singleton instance with the 
-     *  {@link MetaNodeTemplateRepositoryManager} loaded and set
+     * @return singleton instance - might be null, if newInstance was 
+     *  never called
      */
     public static MetaNodeTemplateRepositoryView getInstance() {
         if (instance == null) {
             instance = new MetaNodeTemplateRepositoryView();
         }
-        return instance;
+        return instance; 
+    }
+    
+    /**
+     * 
+     * @return true if singleton instance not <code>null</code>, false otherwise
+     */
+    public static boolean wasInitialized() {
+        return instance != null;
     }
     
     /**

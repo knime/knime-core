@@ -239,7 +239,9 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
         for (int i = 0; i < APPENDERS.size(); i++) {
             removeAppender(APPENDERS.get(i));
         }
-        MetaNodeTemplateRepositoryView.getInstance().dispose();
+        if (MetaNodeTemplateRepositoryView.wasInitialized()) {
+            MetaNodeTemplateRepositoryView.getInstance().dispose();
+        }
         super.stop(context);
         plugin = null;
         m_resourceBundle = null;
