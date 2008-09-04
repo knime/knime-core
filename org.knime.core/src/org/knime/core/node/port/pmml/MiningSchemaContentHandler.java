@@ -18,7 +18,7 @@
  */
 package org.knime.core.node.port.pmml;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.xml.sax.Attributes;
@@ -41,9 +41,9 @@ public class MiningSchemaContentHandler extends PMMLContentHandler {
      * 
      */
     public MiningSchemaContentHandler() {
-        m_learningFields = new HashSet<String>();
-        m_ignoredFields = new HashSet<String>();
-        m_targetFields = new HashSet<String>();
+        m_learningFields = new LinkedHashSet<String>();
+        m_ignoredFields = new LinkedHashSet<String>();
+        m_targetFields = new LinkedHashSet<String>();
     }
     
     /**
