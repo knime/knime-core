@@ -179,8 +179,8 @@ public class ConditionLoopTailNodeModel extends NodeModel implements
         boolean stop = checkCondition();
 
         if ((m_settings.addLastRows() && !m_settings.addLastRowsOnly())
-                || ((stop == m_settings.addLastRows())
-                        && (stop == m_settings.addLastRowsOnly()))) {
+                || ((stop == m_settings.addLastRows()) && (stop == m_settings
+                        .addLastRowsOnly()))) {
             exec.setMessage("Collecting rows from current iteration");
             int k = 0;
             final double max = inData[0].getRowCount();
@@ -302,5 +302,14 @@ public class ConditionLoopTailNodeModel extends NodeModel implements
             throws InvalidSettingsException {
         ConditionLoopTailSettings s = new ConditionLoopTailSettings();
         s.loadSettings(settings);
+
+        if (s.operator() == null) {
+            throw new InvalidSettingsException(
+                    "No comparison operator selected");
+        }
+        if ((s.variableType() != Type.STRING) && ((s.value() == null)
+                || (s.value().length() < 1))) {
+            throw new InvalidSettingsException("No comparison value given");
+        }
     }
 }
