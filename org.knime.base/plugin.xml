@@ -763,5 +763,9 @@
             PMMLPortObject="org.knime.base.node.mine.svm.PMMLSVMPortObject"
             modeltype="SupportVectorMachineModel">
       </PMMLModel>
+      <PMMLModel
+            PMMLPortObject="org.knime.base.node.mine.regression.PMMLRegressionPortObject"
+            modeltype="RegressionModel">
+      </PMMLModel>
    </extension>
 </plugin>
