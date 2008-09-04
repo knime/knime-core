@@ -32,6 +32,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
@@ -160,10 +161,22 @@ public class DataDictionaryContentHandler extends PMMLContentHandler {
                 domainCreator.setValues(values);
             } 
             if (!Double.isNaN(m_currentMin)) {
-                domainCreator.setLowerBound(new DoubleCell(m_currentMin));
+                DataCell lowerBound;
+                if (m_currentType.isCompatible(IntValue.class)) {
+                    lowerBound = new IntCell((int)m_currentMin);    
+                } else {
+                    lowerBound = new DoubleCell(m_currentMin);
+                }
+                domainCreator.setLowerBound(lowerBound);
             } 
             if (!Double.isNaN(m_currentMax)) {
-                domainCreator.setUpperBound(new DoubleCell(m_currentMax));
+                DataCell upperBound;
+                if (m_currentType.isCompatible(IntValue.class)) {
+                    upperBound = new IntCell((int)m_currentMax);
+                } else {
+                    upperBound = new DoubleCell(m_currentMax);
+                }
+                domainCreator.setUpperBound(upperBound);
             }
             creator.setDomain(domainCreator.createDomain());
             m_colSpecs.add(creator.createSpec());
