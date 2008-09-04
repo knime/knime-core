@@ -148,8 +148,14 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * @return the workflow manager
      */
     protected WorkflowManager getManager() {
+        // should be no problem to return null
+        // but avoid NullPointerException by calling methods on null object
+        if (getParent() != null 
+                && getParent().getParent() != null) {
         return ((WorkflowRootEditPart) getParent().getParent())
                 .getWorkflowManager();
+        }
+        return null;
     }
 
     /**
