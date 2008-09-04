@@ -159,10 +159,10 @@ public class DataDictionaryContentHandler extends PMMLContentHandler {
                 }
                 domainCreator.setValues(values);
             } 
-            if (m_currentMin != Double.NaN) {
+            if (!Double.isNaN(m_currentMin)) {
                 domainCreator.setLowerBound(new DoubleCell(m_currentMin));
             } 
-            if (m_currentMax != Double.NaN) {
+            if (!Double.isNaN(m_currentMax)) {
                 domainCreator.setUpperBound(new DoubleCell(m_currentMax));
             }
             creator.setDomain(domainCreator.createDomain());
@@ -184,10 +184,10 @@ public class DataDictionaryContentHandler extends PMMLContentHandler {
     
     private void validateValues(final DataType type) {
         if (type.isCompatible(DoubleValue.class)) {
-            double min = m_currentMin 
-                != Double.NaN ? m_currentMin : Double.POSITIVE_INFINITY;
-            double max = m_currentMax 
-                != Double.NaN ? m_currentMax : Double.NEGATIVE_INFINITY;
+            double min = !Double.isNaN(m_currentMin) ? m_currentMin 
+                    : Double.NaN;
+            double max = !Double.isNaN(m_currentMax) ? m_currentMax 
+                    : Double.NaN;
             Collections.sort(m_currentValues);
             try {
                 min = Double.parseDouble(m_currentValues.get(0));
