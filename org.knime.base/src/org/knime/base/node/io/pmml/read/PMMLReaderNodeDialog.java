@@ -163,7 +163,6 @@ public class PMMLReaderNodeDialog extends DefaultNodeSettingsPane {
         try {
             parser.parse(f, masterHandler);
         } catch (Exception e) {
-            e.printStackTrace();
             LOGGER.error("Error parsing file" + fileName, e);
         } 
         return modelTypeHdl.getModelType().name();
