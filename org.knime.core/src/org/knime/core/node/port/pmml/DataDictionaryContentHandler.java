@@ -184,8 +184,10 @@ public class DataDictionaryContentHandler extends PMMLContentHandler {
     
     private void validateValues(final DataType type) {
         if (type.isCompatible(DoubleValue.class)) {
-            double min = Double.NEGATIVE_INFINITY;
-            double max = Double.POSITIVE_INFINITY;
+            double min = m_currentMin 
+                != Double.NaN ? m_currentMin : Double.POSITIVE_INFINITY;
+            double max = m_currentMax 
+                != Double.NaN ? m_currentMax : Double.NEGATIVE_INFINITY;
             Collections.sort(m_currentValues);
             try {
                 min = Double.parseDouble(m_currentValues.get(0));
