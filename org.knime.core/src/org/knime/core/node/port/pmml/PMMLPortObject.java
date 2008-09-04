@@ -38,7 +38,6 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortType;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -78,13 +77,6 @@ public abstract class PMMLPortObject implements PortObject {
         }
         return serializer;
     }
-    
-
-
-    /**
-     * Type of this port.
-     */
-    public static final PortType TYPE = new PortType(PMMLPortObject.class);
     
     /**
      * Default constructor necessary for loading. Derived classes also 
