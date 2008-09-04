@@ -361,8 +361,10 @@ public final class BufferedDataTable implements DataTable, PortObject {
             ConfigRO c = NodeSettings.loadFromXML(new BufferedInputStream(
                     new FileInputStream(specFile)));
             return DataTableSpec.load(c);
+        } else {
+            throw new IOException("No such file \"" 
+                    + specFile.getAbsolutePath() + "\"");
         }
-        return null;
     }
     
     /** Factory method to restore a table that has been written using
