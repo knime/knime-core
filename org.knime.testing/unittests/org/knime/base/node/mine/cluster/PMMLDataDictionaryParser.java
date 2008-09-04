@@ -25,6 +25,7 @@ import javax.xml.parsers.SAXParserFactory;
 
 import junit.framework.TestCase;
 
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
@@ -52,6 +53,57 @@ public class PMMLDataDictionaryParser extends TestCase {
     }
     
     
+    public void testOwnClusterModel() throws Exception {
+        File f = new File(getClass().getResource(
+                "files/model.pmml").toURI());
+        m_parser.parse(f, m_handler);
+        DataTableSpec spec = m_handler.getDataTableSpec();
+        assertEquals(5, spec.getNumColumns());
+        assertEquals(0, spec.findColumnIndex("sepal length"));
+        assertEquals(1, spec.findColumnIndex("sepal width"));
+        assertEquals(2, spec.findColumnIndex("petal length"));
+        assertEquals(3, spec.findColumnIndex("petal width"));
+        assertEquals(4, spec.findColumnIndex("class"));
+        DataColumnSpec sepalLength = spec.getColumnSpec(0);
+        assertEquals("sepal length", sepalLength.getName());
+        assertEquals(4.3, ((DoubleValue)sepalLength.getDomain()
+                .getLowerBound()).getDoubleValue());
+        assertEquals(7.9, ((DoubleValue)sepalLength.getDomain()
+                .getUpperBound()).getDoubleValue());
+        
+        DataColumnSpec sepalWidth = spec.getColumnSpec(1);
+        assertEquals("sepal width", sepalWidth.getName());
+        assertEquals(2.0, ((DoubleValue)sepalWidth.getDomain()
+                .getLowerBound()).getDoubleValue());
+        assertEquals(4.4, ((DoubleValue)sepalWidth.getDomain()
+                .getUpperBound()).getDoubleValue());
+
+        DataColumnSpec petalLength = spec.getColumnSpec(2);
+        assertEquals("petal length", petalLength.getName());
+        assertEquals(1.0, ((DoubleValue)petalLength.getDomain()
+                .getLowerBound()).getDoubleValue());
+        assertEquals(6.9, ((DoubleValue)petalLength.getDomain()
+                .getUpperBound()).getDoubleValue());
+        
+        
+        DataColumnSpec petalWidth = spec.getColumnSpec(3);
+        assertEquals("petal width", petalWidth.getName());
+        assertEquals(0.1, ((DoubleValue)petalWidth.getDomain()
+                .getLowerBound()).getDoubleValue());
+        assertEquals(2.5, ((DoubleValue)petalWidth.getDomain()
+                .getUpperBound()).getDoubleValue());
+
+        DataColumnSpec clazz = spec.getColumnSpec(4);
+        assertEquals("class", clazz.getName());
+        assertEquals(3, clazz.getDomain()
+                .getValues().size());
+        assertTrue(clazz.getDomain().getValues().contains(
+                new StringCell("Iris-setosa")));
+        assertTrue(clazz.getDomain().getValues().contains(
+                new StringCell("Iris-versicolor")));
+        assertTrue(clazz.getDomain().getValues().contains(
+                new StringCell("Iris-virginica")));
+        }
 
     public void testAssociationruleModelFile() throws Exception {
         File f = new File(getClass().getResource(
