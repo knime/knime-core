@@ -162,7 +162,7 @@ public class ConditionLoopTailNodeModel extends NodeModel implements
             m_variableContainer = exec.createDataContainer(createSpec2());
         }
 
-        RowKey rk = new RowKey(Integer.toString(count));
+        RowKey rk = new RowKey("Iteration " + count);
         if (m_settings.variableType() == Type.DOUBLE) {
             m_variableContainer.addRowToTable(new DefaultRow(rk,
                     new DoubleCell(peekScopeVariableDouble(m_settings
