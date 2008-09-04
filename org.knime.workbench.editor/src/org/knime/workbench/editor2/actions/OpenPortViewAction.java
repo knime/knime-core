@@ -28,9 +28,9 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodePort;
+import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.editor2.ImageRepository;
 
 /**
@@ -94,7 +94,7 @@ public class OpenPortViewAction extends Action {
         if (m_nodeContainer.getOutPort(m_index).getPortType().equals(
                 BufferedDataTable.TYPE)) {
             name = "Data Outport " + m_index;
-        } else if (PMMLPortObject.TYPE.isSuperTypeOf(
+        } else if (KNIMEEditorPlugin.PMML_PORT_TYPE.isSuperTypeOf(
                 m_nodeContainer.getOutPort(m_index).getPortType())) {
             name = "PMML Model Outport " + m_index;
         } else {

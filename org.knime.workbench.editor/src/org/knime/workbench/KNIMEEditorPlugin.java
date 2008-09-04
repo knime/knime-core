@@ -28,6 +28,8 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -45,6 +47,12 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
 
     // Resource bundle.
     private ResourceBundle m_resourceBundle;
+    
+    
+    /**
+     * Type of this port.
+     */
+    public static final PortType PMML_PORT_TYPE = new PortType(PMMLPortObject.class);
 
     /**
      * The constructor.

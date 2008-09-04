@@ -27,7 +27,7 @@ package org.knime.workbench.editor2.meta;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabasePortObject;
-import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.workbench.KNIMEEditorPlugin;
 
 /**
  * Helper class to represent a port with name and type.
@@ -74,7 +74,7 @@ public class Port {
     public String toString() {
         if (m_type.equals(BufferedDataTable.TYPE)) {
             return m_name + "(Data)";
-        } else if (PMMLPortObject.TYPE.isSuperTypeOf(m_type)) {
+        } else if (KNIMEEditorPlugin.PMML_PORT_TYPE.isSuperTypeOf(m_type)) {
             return m_name + "(PMML)";
         } else if (m_type.equals(DatabasePortObject.TYPE)) {
             return m_name + "(Data base)";

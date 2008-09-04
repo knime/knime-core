@@ -36,7 +36,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.AbstractSimplePortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabasePortObject;
-import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.workbench.KNIMEEditorPlugin;
 
 
 /**
@@ -98,7 +98,7 @@ public abstract class AbstractPortFigure extends Shape {
     @Override
     public Color getBackgroundColor() {
         Color color = Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);
-        if (PMMLPortObject.TYPE.isSuperTypeOf(getType())) {
+        if (KNIMEEditorPlugin.PMML_PORT_TYPE.isSuperTypeOf(getType())) {
             // model
             color = Display.getCurrent().getSystemColor(SWT.COLOR_BLUE);
         } else if (AbstractSimplePortObject.class.isAssignableFrom(

@@ -48,7 +48,7 @@ import org.eclipse.swt.widgets.Text;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.database.DatabasePortObject;
-import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
 
@@ -135,7 +135,7 @@ public class AddMetaNodePage extends WizardPage {
                                 left - PORT_SIZE, y,
                                 left, y + (PORT_SIZE / 2),
                                 left - PORT_SIZE, y + PORT_SIZE});
-                    } else if (PMMLPortObject.TYPE.isSuperTypeOf(
+                    } else if (KNIMEEditorPlugin.PMML_PORT_TYPE.isSuperTypeOf(
                             inPort.getType())) {
                         gc.setBackground(ColorConstants.blue);
                         gc.fillRectangle(
@@ -167,7 +167,7 @@ public class AddMetaNodePage extends WizardPage {
                                 right, y,
                                 right + PORT_SIZE, y + (PORT_SIZE / 2),
                                 right, y + PORT_SIZE});
-                    } else if (PMMLPortObject.TYPE.isSuperTypeOf(
+                    } else if (KNIMEEditorPlugin.PMML_PORT_TYPE.isSuperTypeOf(
                             inPort.getType())) {
                         gc.setBackground(ColorConstants.blue);
                         gc.fillRectangle(right, y, PORT_SIZE, PORT_SIZE);
