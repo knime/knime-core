@@ -415,8 +415,7 @@ public abstract class GenericNodeModel {
         }
         // check meaningfulness of result and warn,
         // - only if the execute didn't issue a warning already
-        if ((m_warningMessage == null)
-                || (m_warningMessage.length() == 0)) {
+        if ((m_warningMessage == null) || (m_warningMessage.length() == 0)) {
             boolean hasData = false;
             boolean hasDataPorts = false;
             for (int i = 0; i < outData.length; i++) {
