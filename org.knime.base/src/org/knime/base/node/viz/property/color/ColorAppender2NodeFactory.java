@@ -24,23 +24,23 @@
  */
 package org.knime.base.node.viz.property.color;
 
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * Factory to create <i>Color Appender</i> node.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class ColorAppender2NodeFactory extends NodeFactory {
+public class ColorAppender2NodeFactory 
+    extends GenericNodeFactory<ColorAppender2NodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
-        return new ColorAppender2NodeModel(1, 1, 1, 0);
+    public ColorAppender2NodeModel createNodeModel() {
+        return new ColorAppender2NodeModel();
     }
 
     /**
@@ -55,7 +55,8 @@ public class ColorAppender2NodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex, final NodeModel nm) {
+    public GenericNodeView<ColorAppender2NodeModel> 
+        createNodeView(final int viewIndex, final ColorAppender2NodeModel nm) {
         assert false;
         return null;
     }

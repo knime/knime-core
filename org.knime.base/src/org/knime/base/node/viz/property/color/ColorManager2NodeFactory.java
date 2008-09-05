@@ -21,10 +21,9 @@
  */
 package org.knime.base.node.viz.property.color;
 
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * The color manager factory which creates a
@@ -35,14 +34,15 @@ import org.knime.core.node.NodeView;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class ColorManager2NodeFactory extends NodeFactory {
+public class ColorManager2NodeFactory extends 
+    GenericNodeFactory<ColorManager2NodeModel> {
     
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
-        return new ColorManager2NodeModel(1, 1, 0, 1);
+    public ColorManager2NodeModel createNodeModel() {
+        return new ColorManager2NodeModel();
     }
 
     /**
@@ -73,7 +73,8 @@ public class ColorManager2NodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int index, final NodeModel nodeModel) {
+    public GenericNodeView<ColorManager2NodeModel> createNodeView(
+            final int index, final ColorManager2NodeModel nodeModel) {
         throw new IllegalStateException();
     }
 }
