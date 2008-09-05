@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.testing.algorithms;
 
@@ -38,7 +38,7 @@ import org.knime.base.util.kdtree.NearestNeighbour;
 
 /**
  * This testcase checks if the k-d tree implementation is correct.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class KDTreeTest extends TestCase {
@@ -76,7 +76,7 @@ public class KDTreeTest extends TestCase {
         /**
          * {@inheritDoc}
          */
-        public int compareTo(Helper o) {
+        public int compareTo(final Helper o) {
             return (int)Math.signum(this.m_dist - o.m_dist);
         }
 
@@ -87,12 +87,12 @@ public class KDTreeTest extends TestCase {
 
     }
 
-    private static class Helper2 {
+    private static class Helper2<T> {
         public final double[] data;
 
-        public final Integer value;
+        public final T value;
 
-        public Helper2(final double[] data, final Integer value) {
+        public Helper2(final double[] data, final T value) {
             this.data = data;
             this.value = value;
         }
@@ -225,7 +225,7 @@ public class KDTreeTest extends TestCase {
                                         + "/KDTreeTest.csv")));
 
         KDTreeBuilder<Integer> builder = new KDTreeBuilder<Integer>(20);
-        ArrayList<Helper2> list = new ArrayList<Helper2>();
+        ArrayList<Helper2<Integer>> list = new ArrayList<Helper2<Integer>>();
         ArrayList<double[]> queries = new ArrayList<double[]>();
 
         String line;
@@ -239,42 +239,95 @@ public class KDTreeTest extends TestCase {
             Integer v = new Integer(parts[0].replaceAll("\"", ""));
 
             builder.addPattern(data, v);
-            list.add(new Helper2(data, v));
+            list.add(new Helper2<Integer>(data, v));
             queries.add(data);
         }
 
         KDTree<Integer> tree = builder.buildTree();
 
         for (final double[] q : queries) {
-            Collections.sort(list, new Comparator<Helper2>() {
-                public int compare(Helper2 o1, Helper2 o2) {
+            Collections.sort(list, new Comparator<Helper2<Integer>>() {
+                public int compare(final Helper2<Integer> o1, final Helper2<Integer> o2) {
                     return (int)Math.signum(o1.dist(q) - o2.dist(q));
                 }
             });
 
             List<NearestNeighbour<Integer>> neighbours =
                     tree.getKNearestNeighbours(q, 3);
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < neighbours.size(); i++) {
                 Integer v1 = neighbours.get(i).getData();
                 Integer v2 = list.get(i).value;
-                
+
                 assertEquals(v2, v1);
             }
         }
 
     }
 
+
+    public void testFromFile2() throws IOException {
+        BufferedReader in =
+                new BufferedReader(new InputStreamReader(getClass()
+                        .getClassLoader().getResourceAsStream(
+                                KDTreeTest.class.getPackage().getName()
+                                        .replace('.', '/')
+                                        + "/knnprob.txt")));
+
+        KDTreeBuilder<String> builder = new KDTreeBuilder<String>(19);
+        ArrayList<Helper2<String>> list = new ArrayList<Helper2<String>>();
+        ArrayList<double[]> queries = new ArrayList<double[]>();
+
+        String line;
+        while ((line = in.readLine()) != null) {
+            String[] parts = line.split(",");
+            double[] data = new double[parts.length - 1];
+            for (int i = 1; i < parts.length; i++) {
+                data[i - 1] = Double.parseDouble(parts[i]);
+            }
+
+            list.add(new Helper2<String>(data, parts[0]));
+        }
+
+        for (int i = 0; i < list.size() - 1; i++) {
+            builder.addPattern(list.get(i).data, list.get(i).value);
+        }
+        queries.add(list.remove(list.size() - 1).data);
+
+
+        KDTree<String> tree = builder.buildTree();
+
+        for (final double[] q : queries) {
+            Collections.sort(list, new Comparator<Helper2<String>>() {
+                public int compare(final Helper2<String> o1, final Helper2<String> o2) {
+                    return (int)Math.signum(o1.dist(q) - o2.dist(q));
+                }
+            });
+
+            List<NearestNeighbour<String>> neighbours =
+                    tree.getKNearestNeighbours(q, 5);
+            for (int i = 0; i < neighbours.size(); i++) {
+                String v1 = neighbours.get(i).getData();
+                String v2 = list.get(i).value;
+
+                assertEquals(v2, v1);
+            }
+        }
+
+    }
+
+
     /**
      * Well...
-     * 
+     *
      * @param args not used
      * @throws IOException bum
      */
     public static void main(final String[] args) throws IOException {
-//        for (int i = 0; i < 10; i++) {
-//            singleSpeedTest(1000, 10, 10, 10000);
-//        }
+        for (int i = 0; i < 10; i++) {
+            singleSpeedTest(1000, 10, 10, 10000);
+        }
         KDTreeTest t = new KDTreeTest();
         t.testFromFile();
+        t.testFromFile2();
     }
 }
