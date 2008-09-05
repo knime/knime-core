@@ -696,17 +696,24 @@ public final class Node implements NodeModelWarningListener {
             PortType thisType = m_model.getOutPortType(i);
             assert newOutData[i] != null || continuesLoop
                 : "Null output from non-loopterminate node";
-            if ((newOutData[i] != null) && !thisType.getPortObjectClass().
-                    isInstance(newOutData[i])) {
-                // TODO: is this redundant double checking?
-                createErrorMessageAndNotify("Connection Error: Mismatch"
-                                    + " of output port types (port " + i
-                                    + ").");
-                m_logger.error("  (Wanted: "
-                        + thisType.getPortObjectClass().getName()
-                        + ", " + "actual: "
-                        + newOutData[i].getClass().getName() + ")");
-                return false;
+            if (newOutData[i] != null) {
+                if (!thisType.getPortObjectClass().isInstance(newOutData[i])) {
+                    // TODO: is this redundant double checking?
+                    createErrorMessageAndNotify("Connection Error: Mismatch"
+                            + " of output port types (port " + i + ").");
+                    m_logger.error("  (Wanted: "
+                            + thisType.getPortObjectClass().getName()
+                            + ", " + "actual: "
+                            + newOutData[i].getClass().getName() + ")");
+                    return false;
+                }
+                if (newOutData[i].getSpec() == null) {
+                    createErrorMessageAndNotify("Implementation Error: " 
+                            + "PortObject \""
+                            + newOutData[i].getClass().getName() + "\" must not"
+                            + " have null spec (output port " + i + ").");
+                    return false;
+                }
             }
         }
 
@@ -732,6 +739,7 @@ public final class Node implements NodeModelWarningListener {
                 m_outputs[p].spec = newPortSpec;
             } else {
                 // TODO save them, don't simply hand them over!
+                // TODO check spec equality (configure & execute)
                 m_outputs[p].object = newOutData[p];
                 if (newOutData[p] != null) {
                     assert !continuesLoop;
