@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.base.util.kdtree;
 
@@ -30,11 +30,11 @@ import java.util.PriorityQueue;
  * Jerome H; Bentley, Jon Louis; Finkel, Raphael Ari: <i>An Algorithm for
  * Finding Best Matches in Logarithmic Expected Time</i>; ACM Transactions on
  * Mathematical Software; 1997, 3(3), pages 209-226 </div>
- * 
+ *
  * For creating a k-d tree use the {@link KDTreeBuilder}.
- * 
+ *
  * @param <T> the type of the data that is to be stored in the tree
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class KDTree<T> {
@@ -47,7 +47,7 @@ public class KDTree<T> {
     /**
      * Creates a new optimized k-d tree. This constructor is called by the
      * {@link KDTreeBuilder}.
-     * 
+     *
      * @param k the number of dimensions of the patterns
      * @param rootNode the root node of the tree
      * @param size the size of the tree
@@ -61,7 +61,7 @@ public class KDTree<T> {
     /**
      * Returns the tree's size, i.e. the number of stored patterns. The number
      * of nodes inside the tree is approximately twice the size.
-     * 
+     *
      * @return the tree's size
      */
     public int size() {
@@ -72,7 +72,7 @@ public class KDTree<T> {
      * Searches for the <code>k</code> nearest neigbours of the
      * <code>query</code> pattern. The returned list is sorted by the distance
      * to the query pattern in increasing order.
-     * 
+     *
      * @param query the query pattern, must have the same dimensionality as the
      *            patterns inside the tree
      * @param k the number of nearest neighbours to retrieve
@@ -88,7 +88,7 @@ public class KDTree<T> {
             throw new IllegalArgumentException("The tree contains only "
                     + m_size + " elements, but " + k + " were requested");
         }
-        
+
         PriorityQueue<NearestNeighbour<T>> pq =
                 new PriorityQueue<NearestNeighbour<T>>(k);
         for (int i = 0; i < k; i++) {
@@ -118,14 +118,14 @@ public class KDTree<T> {
         return results;
     }
 
-    
-    
-    
+
+
+
     /**
      * Searches for all neighbours of the <code>query</code> pattern that are
      * not more than <code>maxDist</code> away from it. The returned list is
      * sorted by the distance to the query pattern in increasing order.
-     * 
+     *
      * @param query the query pattern, must have the same dimensionality as the
      *            patterns inside the tree
      * @param maxDist the maximum distance the patterns may have (exclusive)
@@ -168,7 +168,7 @@ public class KDTree<T> {
         return results;
     }
 
-    
+
     /**
      * Adds a new nearest neighbour to the candidate list, of the passed
      * terminal node is nearer to the query pattern than the currently farthest
@@ -178,14 +178,14 @@ public class KDTree<T> {
      * <code>false</code>. Second during a search for all patterns up to a
      * maximum distance from the query pattern, if <code>maxDistanceMode</code>
      * is set to <code>true</code>.
-     * 
+     *
      * @param tn the terminal node under consideration
      * @param pq the list of nearest neighbours
      * @param query the query pattern
      * @param maxDistanceMode <code>true</code> if all nodes up to a maximal
      *            distance should be added, <code>false</code> if the k
      *            nearest neighbours should be found
-     * 
+     *
      * @return <code>true</code> if a new nearest neighbour has been found,
      *         <code>false</code> otherwise
      */
@@ -214,7 +214,7 @@ public class KDTree<T> {
      * set to <code>false</code>. Second during a search for all patterns up
      * to a maximum distance from the query pattern, if
      * <code>maxDistanceMode</code> is set to <code>true</code>.
-     * 
+     *
      * @param node the current node under consideration
      * @param query the query pattern
      * @param pq the priority queue of the currently nearest neighbours
@@ -223,7 +223,7 @@ public class KDTree<T> {
      * @param maxDistanceMode <code>true</code> if all nodes up to a maximal
      *            distance should be added, <code>false</code> if the k
      *            nearest neighbours should be found
-     * 
+     *
      * @return <code>true</code> if the search can be aborted,
      *         <code>false</code> if it should be continued
      */
@@ -313,14 +313,14 @@ public class KDTree<T> {
      * current non-terminal node overlaps with the ball around the query pattern
      * with radius equal to the distance of the currently farthest away nearest
      * pattern.
-     * 
+     *
      * @param query the query pattern
      * @param farthestDist the currently farthest distance of the nearest node
      * @param lowerBounds the lower bounds for the attributes of the nodes
      *            "below" the current node
      * @param upperBounds the upper bounds for the attributes of the nodes
      *            "below" the current node
-     * 
+     *
      * @return <code>true</code> if the ball and the region overlap,
      *         <code>false</code> otherwise
      */
@@ -331,13 +331,13 @@ public class KDTree<T> {
 
         for (int i = 0; i < m_k; i++) {
             if (query[i] < lowerBounds[i]) {
-                double dist = Math.abs(query[i] - lowerBounds[i]);
+                double dist = query[i] - lowerBounds[i];
                 sum += dist * dist;
                 if (sum > farthestDist) {
                     return false;
                 }
             } else if (query[i] > upperBounds[i]) {
-                double dist = Math.abs(query[i] - upperBounds[i]);
+                double dist = query[i] - upperBounds[i];
                 sum += dist * dist;
                 if (sum > farthestDist) {
                     return false;
@@ -353,7 +353,7 @@ public class KDTree<T> {
      * currently farthest away neighbour is entirely within the region covered
      * by the current non-terminal node under consideration. This region is
      * given by the upper and lower bounds arrays.
-     * 
+     *
      * @param query the query pattern
      * @param farthestDist the distance of the currently farthest away pattern
      *            in the list of nearest patterns
@@ -361,7 +361,7 @@ public class KDTree<T> {
      *            "below" the current node
      * @param upperBounds the upper bounds for the attributes of the nodes
      *            "below" the current node
-     * 
+     *
      * @return <code>true</code> if the ball is completely within the bounds,
      *         <code>false</code> otherwise
      */
@@ -369,8 +369,13 @@ public class KDTree<T> {
             final double farthestDist, final double[] lowerBounds,
             final double[] upperBounds) {
         for (int i = 0; i < m_k; i++) {
-            if ((Math.abs(query[i] - lowerBounds[i]) <= farthestDist)
-                    || (Math.abs(query[i] - upperBounds[i]) <= farthestDist)) {
+            double x = query[i] - lowerBounds[i];
+            if (x * x <= farthestDist) {
+                return false;
+            }
+
+            x = query[i] - upperBounds[i];
+            if (x * x <= farthestDist) {
                 return false;
             }
         }
@@ -382,7 +387,7 @@ public class KDTree<T> {
      * Returns the number of tested patterns during the last call to
      * {@link #getKNearestNeighbours(double[], int)}. The lower the number the
      * better the k-d tree could prune the search.
-     * 
+     *
      * @return the number of tested patterns
      */
     public int getTestedPatterns() {

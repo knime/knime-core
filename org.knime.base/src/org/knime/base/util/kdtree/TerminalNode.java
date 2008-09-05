@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.base.util.kdtree;
 
@@ -26,7 +26,7 @@ import java.util.Arrays;
 /**
  * This class represents a terminal node inside a k-d tree. The terminal nodes
  * store the pattern and an optional data object associated with the pattern.
- * 
+ *
  * @param <T> the type of the data object object associated with the pattern
  * @author Thorsten Meinl, University of Konstanz
  */
@@ -37,7 +37,7 @@ final class TerminalNode<T> implements Node {
 
     /**
      * Creates a new terminal node.
-     * 
+     *
      * @param pattern the pattern
      * @param data an optional data object
      */
@@ -48,7 +48,7 @@ final class TerminalNode<T> implements Node {
 
     /**
      * Returns the optional data object. Can be <code>null</code>.
-     * 
+     *
      * @return the data object
      */
     public T getData() {
@@ -57,7 +57,7 @@ final class TerminalNode<T> implements Node {
 
     /**
      * Returns the pattern stored in the terminal node.
-     * 
+     *
      * @return the pattern
      */
     public double[] getPattern() {
@@ -65,9 +65,9 @@ final class TerminalNode<T> implements Node {
     }
 
     /**
-     * Returns the (euclidean) distance to a query pattern. The query pattern
-     * must have the same dimension as the pattern inside this node.
-     * 
+     * Returns the (squared euclidean) distance to a query pattern. The query
+     * pattern must have the same dimension as the pattern inside this node.
+     *
      * @param query a query pattern.
      * @return the distance
      */
