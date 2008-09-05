@@ -26,6 +26,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.knime.base.node.io.pmml.write.PMMLWriterNodeModel;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -72,7 +73,8 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
      * 
      */
     public PMMLReaderNodeModel() {
-        super(new PortType[] {}, new PortType[] {PMMLPortObject.TYPE});
+        super(new PortType[] {}, 
+                new PortType[] {PMMLWriterNodeModel.PMML_PORTTYPE});
     }
     
     /**
