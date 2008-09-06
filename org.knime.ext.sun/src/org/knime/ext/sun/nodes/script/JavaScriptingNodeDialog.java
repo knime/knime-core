@@ -242,17 +242,14 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        String exp = settings.getString(JavaScriptingNodeModel.CFG_EXPRESSION,
-                "");
-        String rType = settings.getString(
-                JavaScriptingNodeModel.CFG_RETURN_TYPE, Double.class.getName());
+        JavaScriptingSettings s = new JavaScriptingSettings();
+        s.loadSettingsInDialog(settings, specs[0]);
+        String exp = s.getExpression();
+        String rType = s.getReturnType().getName();
         String defaultColName = "new column";
-        String newColName = settings.getString(
-                JavaScriptingNodeModel.CFG_COLUMN_NAME, defaultColName);
-        boolean isReplace = settings.getBoolean(
-                JavaScriptingNodeModel.CFG_IS_REPLACE, false);
-        boolean isTestCompilation = settings.getBoolean(
-                JavaScriptingNodeModel.CFG_TEST_COMPILATION, true);
+        String newColName = s.getColName();
+        boolean isReplace = s.isReplace();
+        boolean isTestCompilation = s.isTestCompilationOnDialogClose();
         m_newColNameField.setText("");
         // will select newColName only if it is in the spec list
         m_replaceCombo.update(specs[0], newColName);
@@ -304,6 +301,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
+        JavaScriptingSettings s = new JavaScriptingSettings();
         String newColName = null;
         boolean isReplace = m_replaceRadio.isSelected();
         if (isReplace) {
@@ -311,15 +309,14 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         } else {
             newColName = m_newColNameField.getText();
         }
-        settings.addBoolean(JavaScriptingNodeModel.CFG_IS_REPLACE, isReplace);
-        settings.addString(JavaScriptingNodeModel.CFG_COLUMN_NAME, newColName);
+        s.setReplace(isReplace);
+        s.setColName(newColName);
         String type = m_returnTypeButtonGroup.getSelection().getActionCommand();
-        settings.addString(JavaScriptingNodeModel.CFG_RETURN_TYPE, type);
+        s.setReturnType(type);
         String exp = m_expEdit.getText();
-        settings.addString(JavaScriptingNodeModel.CFG_EXPRESSION, exp);
+        s.setExpression(exp);
         boolean isTestCompilation = m_compileOnCloseChecker.isSelected();
-        settings.addBoolean(
-                JavaScriptingNodeModel.CFG_TEST_COMPILATION, isTestCompilation);
+        s.setTestCompilationOnDialogClose(isTestCompilation);
         if (isTestCompilation && m_currenteSpec != null) {
             File tempFile = null;
             File classFile = null;
@@ -327,8 +324,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
                 tempFile = JavaScriptingNodeModel.createTempFile();
                 classFile = 
                     JavaScriptingNodeModel.getAccompanyingClassFile(tempFile);
-                Class<?> rType = 
-                    JavaScriptingNodeModel.getClassForReturnType(type);
+                Class<?> rType = s.getReturnType();
                 JavaScriptingNodeModel.compile(exp, m_currenteSpec, rType,
                         tempFile);
             } catch (CompilationFailedException cfe) {
@@ -345,6 +341,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
                 }
             }
         }
+        s.saveSettingsTo(settings);
     }
 
     private JPanel createPanel() {

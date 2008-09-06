@@ -59,27 +59,11 @@ import org.knime.ext.sun.nodes.script.expression.Expression.InputField;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class JavaScriptingNodeModel extends NodeModel {
+
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(JavaScriptingNodeModel.class);
 
-    /** NodeSettings key for the expression. */
-    protected static final String CFG_EXPRESSION = "expression";
-
-    /** NodeSettings key which column is to be replaced or appended. */
-    protected static final String CFG_COLUMN_NAME = "replaced_column";
-
-    /** NodeSettings key is replace or append column? */
-    protected static final String CFG_IS_REPLACE = "append_column";
-
-    /** NodeSettings key for the return type of the expression. */
-    protected static final String CFG_RETURN_TYPE = "return_type";
-
-    /** NodeSettings key whether to check for compilation problems when
-     * dialog closes (not used in the nodemodel, though). */
-    protected static final String CFG_TEST_COMPILATION =
-        "test_compilation_on_dialog_close";
-
-    private String m_expression;
+    private JavaScriptingSettings m_settings;
 
     /* the compiled version is stored because it is expensive to create it. Do
      * not rely on its existence!
@@ -89,16 +73,6 @@ public class JavaScriptingNodeModel extends NodeModel {
    /* The input table spec at the time the above expression was compiled
     */
     private DataTableSpec m_inputSpec = null;
-
-    private Class<?> m_returnType;
-
-    private String m_colName;
-
-    private boolean m_isReplace;
-
-    /** Only important for dialog: Test the syntax of the snippet code
-     * when the dialog closes, bug fix #1229. */
-    private boolean m_isTestCompilationOnDialogClose = true;
 
     private File m_tempFile;
 
@@ -112,13 +86,9 @@ public class JavaScriptingNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        settings.addString(CFG_EXPRESSION, m_expression);
-        settings.addString(CFG_COLUMN_NAME, m_colName);
-        settings.addBoolean(CFG_IS_REPLACE, m_isReplace);
-        String rType = m_returnType != null ? m_returnType.getName() : null;
-        settings.addBoolean(
-                CFG_TEST_COMPILATION, m_isTestCompilationOnDialogClose);
-        settings.addString(CFG_RETURN_TYPE, rType);
+        if (m_settings != null) {
+            m_settings.saveSettingsTo(settings);
+        }
     }
 
     /**
@@ -127,11 +97,7 @@ public class JavaScriptingNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        settings.getString(CFG_EXPRESSION);
-        settings.getString(CFG_COLUMN_NAME);
-        settings.getBoolean(CFG_IS_REPLACE);
-        String returnType = settings.getString(CFG_RETURN_TYPE);
-        getClassForReturnType(returnType);
+        new JavaScriptingSettings().loadSettingsInModel(settings);
     }
 
     /**
@@ -140,18 +106,12 @@ public class JavaScriptingNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_expression = settings.getString(CFG_EXPRESSION);
         // after we got a new expression delete the compiled version of it.
         m_compiledExpression = null;
         m_inputSpec = null;
-
-        m_colName = settings.getString(CFG_COLUMN_NAME);
-        m_isReplace = settings.getBoolean(CFG_IS_REPLACE);
-        String returnType = settings.getString(CFG_RETURN_TYPE);
-        m_returnType = getClassForReturnType(returnType);
-        // this setting is not available in 1.2.x
-        m_isTestCompilationOnDialogClose =
-            settings.getBoolean(CFG_TEST_COMPILATION, true);
+        JavaScriptingSettings s = new JavaScriptingSettings();
+        s.loadSettingsInModel(settings);
+        m_settings = s;
     }
 
     /**
@@ -198,15 +158,19 @@ public class JavaScriptingNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_expression == null) {
-            throw new InvalidSettingsException("No expression has been set.");
-        }
         ColumnRearranger c = createColumnRearranger(inSpecs[0]);
         return new DataTableSpec[]{c.createSpec()};
     }
 
     private ColumnRearranger createColumnRearranger(final DataTableSpec spec)
             throws InvalidSettingsException {
+        if (m_settings == null) {
+            throw new InvalidSettingsException("No expression has been set.");
+        }
+        String expression = m_settings.getExpression();
+        Class<?> returnType = m_settings.getReturnType();
+        boolean isReplace = m_settings.isReplace();
+        String colName = m_settings.getColName();
         try {
             if ((m_compiledExpression == null)
                     || (!m_inputSpec.equalStructure(spec))) {
@@ -215,15 +179,15 @@ public class JavaScriptingNodeModel extends NodeModel {
                     m_tempFile = createTempFile();
                 }
                 m_compiledExpression =
-                    compile(m_expression, spec, m_returnType, m_tempFile);
+                    compile(expression, spec, returnType, m_tempFile);
                 m_inputSpec = spec;
             }
             assert m_inputSpec != null;
             DataColumnSpec newColSpec = getNewColSpec();
             ColumnCalculator cc = new ColumnCalculator(this, newColSpec);
             ColumnRearranger result = new ColumnRearranger(spec);
-            if (m_isReplace) {
-                result.replace(cc, m_colName);
+            if (isReplace) {
+                result.replace(cc, colName);
             } else {
                 result.append(cc);
             }
@@ -255,7 +219,7 @@ public class JavaScriptingNodeModel extends NodeModel {
      * @return the returnType
      */
     Class<?> getReturnType() {
-        return m_returnType;
+        return m_settings.getReturnType();
     }
 
     /**
@@ -311,40 +275,21 @@ public class JavaScriptingNodeModel extends NodeModel {
     }
 
     private DataColumnSpec getNewColSpec() throws InvalidSettingsException {
+        Class<?> returnType = m_settings.getReturnType();
+        String colName = m_settings.getColName();
         DataType cellReturnType;
-        if (m_returnType.equals(Integer.class)) {
+        if (returnType.equals(Integer.class)) {
             cellReturnType = IntCell.TYPE;
-        } else if (m_returnType.equals(Double.class)) {
+        } else if (returnType.equals(Double.class)) {
             cellReturnType = DoubleCell.TYPE;
-        } else if (m_returnType.equals(String.class)) {
+        } else if (returnType.equals(String.class)) {
             cellReturnType = StringCell.TYPE;
         } else {
             throw new InvalidSettingsException("Illegal return type: "
-                    + m_returnType.getName());
+                    + returnType.getName());
         }
-        return new DataColumnSpecCreator(m_colName, cellReturnType)
+        return new DataColumnSpecCreator(colName, cellReturnType)
                 .createSpec();
-    }
-
-    /**
-     * Get the class associated with returnType.
-     *
-     * @param returnType <code>Double.class.getName()</code>
-     * @return the associated class
-     * @throws InvalidSettingsException if the argument is invalid
-     */
-    static Class<?> getClassForReturnType(final String returnType)
-            throws InvalidSettingsException {
-        if (Integer.class.getName().equals(returnType)) {
-            return Integer.class;
-        } else if (Double.class.getName().equals(returnType)) {
-            return Double.class;
-        } else if (String.class.getName().equals(returnType)) {
-            return String.class;
-        } else {
-            throw new InvalidSettingsException("Not a valid return type: "
-                    + returnType);
-        }
     }
 
     /**
