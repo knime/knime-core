@@ -32,23 +32,29 @@ import org.knime.core.node.NodeSettingsWO;
  * Settings proxy used by dialog and model implementation. 
  * @author Bernd Wwiswedel, University of Konstanz
  */
-final class JavaScriptingSettings {
+public final class JavaScriptingSettings {
+    
+    static final int VERSION_1X = 1;
+    static final int VERSION_2X = 2;
 
     /** NodeSettings key for the expression. */
-    protected static final String CFG_EXPRESSION = "expression";
+    private static final String CFG_EXPRESSION = "expression";
 
+    /** NodeSettings key for the expression. */
+    private static final String CFG_EXPRESSION_VERSION = "expression_version";
+    
     /** NodeSettings key which column is to be replaced or appended. */
-    protected static final String CFG_COLUMN_NAME = "replaced_column";
+    private static final String CFG_COLUMN_NAME = "replaced_column";
 
     /** NodeSettings key is replace or append column? */
-    protected static final String CFG_IS_REPLACE = "append_column";
+    private static final String CFG_IS_REPLACE = "append_column";
 
     /** NodeSettings key for the return type of the expression. */
-    protected static final String CFG_RETURN_TYPE = "return_type";
+    private static final String CFG_RETURN_TYPE = "return_type";
 
     /** NodeSettings key whether to check for compilation problems when
      * dialog closes (not used in the nodemodel, though). */
-    protected static final String CFG_TEST_COMPILATION =
+    private static final String CFG_TEST_COMPILATION =
         "test_compilation_on_dialog_close";
 
     private String m_expression;
@@ -58,6 +64,7 @@ final class JavaScriptingSettings {
     /** Only important for dialog: Test the syntax of the snippet code
      * when the dialog closes, bug fix #1229. */
     private boolean m_isTestCompilationOnDialogClose = true;
+    private int m_expressionVersion = VERSION_2X;
 
     /** Saves current parameters to settings object. 
      * @param settings To save to.
@@ -70,6 +77,7 @@ final class JavaScriptingSettings {
         settings.addBoolean(
                 CFG_TEST_COMPILATION, m_isTestCompilationOnDialogClose);
         settings.addString(CFG_RETURN_TYPE, rType);
+        settings.addInt(CFG_EXPRESSION_VERSION, m_expressionVersion);
     }
 
     /** Loads parameters in NodeModel. 
@@ -86,6 +94,8 @@ final class JavaScriptingSettings {
         // this setting is not available in 1.2.x
         m_isTestCompilationOnDialogClose =
             settings.getBoolean(CFG_TEST_COMPILATION, true);
+        m_expressionVersion = settings.getInt(
+                CFG_EXPRESSION_VERSION, VERSION_1X);
     }
     
     /** Loads parameters in Dialog.
@@ -106,12 +116,13 @@ final class JavaScriptingSettings {
         m_isReplace = settings.getBoolean(CFG_IS_REPLACE, false);
         m_isTestCompilationOnDialogClose = 
             settings.getBoolean(CFG_TEST_COMPILATION, true);
+        m_expressionVersion = settings.getInt(CFG_EXPRESSION_VERSION, 1);
     }
 
     /**
      * @return the expression
      */
-    String getExpression() {
+    public String getExpression() {
         return m_expression;
     }
 
@@ -125,7 +136,7 @@ final class JavaScriptingSettings {
     /**
      * @return the returnType
      */
-    Class<?> getReturnType() {
+    public Class<?> getReturnType() {
         return m_returnType;
     }
 
@@ -141,7 +152,7 @@ final class JavaScriptingSettings {
     /**
      * @return the colName
      */
-    String getColName() {
+    public String getColName() {
         return m_colName;
     }
 
@@ -155,7 +166,7 @@ final class JavaScriptingSettings {
     /**
      * @return the isReplace
      */
-    boolean isReplace() {
+    public boolean isReplace() {
         return m_isReplace;
     }
 
@@ -169,7 +180,7 @@ final class JavaScriptingSettings {
     /**
      * @return the isTestCompilationOnDialogClose
      */
-    boolean isTestCompilationOnDialogClose() {
+    public boolean isTestCompilationOnDialogClose() {
         return m_isTestCompilationOnDialogClose;
     }
 
@@ -179,6 +190,20 @@ final class JavaScriptingSettings {
     void setTestCompilationOnDialogClose(
             final boolean isTestCompilationOnDialogClose) {
         m_isTestCompilationOnDialogClose = isTestCompilationOnDialogClose;
+    }
+    
+    /**
+     * @return the expressionVersion
+     */
+    public int getExpressionVersion() {
+        return m_expressionVersion;
+    }
+    
+    /**
+     * @param expressionVersion the expressionVersion to set
+     */
+    void setExpressionVersion(final int expressionVersion) {
+        m_expressionVersion = expressionVersion;
     }
 
     /**

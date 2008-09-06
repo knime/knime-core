@@ -66,12 +66,19 @@ import org.knime.core.node.util.ColumnSelectionPanel;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 import org.knime.core.node.workflow.ScopeVariable;
 import org.knime.ext.sun.nodes.script.expression.CompilationFailedException;
+import org.knime.ext.sun.nodes.script.expression.Expression;
 
 /**
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class JavaScriptingNodeDialog extends NodeDialogPane {
+    
+    private static final String COMMENT_ON_RETURN_STATEMENT = 
+          "/* Please note that as of KNIME 2.0\n"
+        + " * you must use the \"return\" keyword\n" 
+        + " * to specify the return value.\n" 
+        + " */\n";
 
     private final JList m_colList;
     
@@ -92,6 +99,8 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
     private final JCheckBox m_compileOnCloseChecker;
 
     private DataTableSpec m_currenteSpec = null;
+    
+    private int m_currentVersion;
 
     /** Inits GUI. */
     @SuppressWarnings("unchecked")
@@ -245,11 +254,18 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         JavaScriptingSettings s = new JavaScriptingSettings();
         s.loadSettingsInDialog(settings, specs[0]);
         String exp = s.getExpression();
+        
         String rType = s.getReturnType().getName();
         String defaultColName = "new column";
         String newColName = s.getColName();
         boolean isReplace = s.isReplace();
         boolean isTestCompilation = s.isTestCompilationOnDialogClose();
+        m_currentVersion = s.getExpressionVersion();
+        if (m_currentVersion == JavaScriptingSettings.VERSION_2X) {
+            if (exp == null || exp.length() == 0) {
+                exp = COMMENT_ON_RETURN_STATEMENT;
+            }
+        }
         m_newColNameField.setText("");
         // will select newColName only if it is in the spec list
         m_replaceCombo.update(specs[0], newColName);
@@ -280,8 +296,8 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         }
         DefaultListModel listModel = (DefaultListModel)m_colList.getModel();
         listModel.removeAllElements();
-        listModel.addElement(ColumnCalculator.ROWKEY);
-        listModel.addElement(ColumnCalculator.ROWINDEX);
+        listModel.addElement(Expression.ROWKEY);
+        listModel.addElement(Expression.ROWINDEX);
         for (int i = 0; i < specs[0].getNumColumns(); i++) {
             DataColumnSpec colSpec = specs[0].getColumnSpec(i);
             listModel.addElement(colSpec);
@@ -315,6 +331,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         s.setReturnType(type);
         String exp = m_expEdit.getText();
         s.setExpression(exp);
+        s.setExpressionVersion(m_currentVersion);
         boolean isTestCompilation = m_compileOnCloseChecker.isSelected();
         s.setTestCompilationOnDialogClose(isTestCompilation);
         if (isTestCompilation && m_currenteSpec != null) {
@@ -324,9 +341,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
                 tempFile = JavaScriptingNodeModel.createTempFile();
                 classFile = 
                     JavaScriptingNodeModel.getAccompanyingClassFile(tempFile);
-                Class<?> rType = s.getReturnType();
-                JavaScriptingNodeModel.compile(exp, m_currenteSpec, rType,
-                        tempFile);
+                Expression.compile(s, m_currenteSpec, tempFile);
             } catch (CompilationFailedException cfe) {
                 throw new InvalidSettingsException(cfe.getMessage());
             } catch (IOException ioe) {

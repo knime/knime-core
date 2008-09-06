@@ -43,6 +43,7 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.ext.sun.nodes.script.expression.EvaluationFailedException;
+import org.knime.ext.sun.nodes.script.expression.Expression;
 import org.knime.ext.sun.nodes.script.expression.ExpressionInstance;
 import org.knime.ext.sun.nodes.script.expression.IllegalPropertyException;
 import org.knime.ext.sun.nodes.script.expression.Expression.ExpressionField;
@@ -58,18 +59,6 @@ import org.knime.ext.sun.nodes.script.expression.Expression.InputField;
 class ColumnCalculator implements CellFactory {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(ColumnCalculator.class);
-
-    /**
-     * Snippet code may contain the row number as parameter, it will be written
-     * as "$$ROWNUMBER$$" (quotes excluded).
-     */
-    static final String ROWINDEX = "ROWNUMBER";
-
-    /**
-     * Snippet code may contain the row key as parameter, it will be written as
-     * "$$ROWKEY$$" (quotes excluded).
-     */
-    static final String ROWKEY = "ROWKEY";
 
     private final ExpressionInstance m_expression;
     
@@ -149,10 +138,10 @@ class ColumnCalculator implements CellFactory {
         Class<?> returnType = m_model.getReturnType();
         Map<InputField, Object> nameValueMap = 
             new HashMap<InputField, Object>();
-        nameValueMap.put(new InputField(ROWINDEX, FieldType.TableConstant), 
-                m_lastProcessedRow);
-        nameValueMap.put(new InputField(ROWKEY, FieldType.TableConstant), 
-                row.getKey().getString());
+        nameValueMap.put(new InputField(Expression.ROWINDEX, 
+                FieldType.TableConstant), m_lastProcessedRow);
+        nameValueMap.put(new InputField(Expression.ROWKEY, 
+                FieldType.TableConstant), row.getKey().getString());
         nameValueMap.putAll(m_scopeVarAssignmentMap);
         for (int i = 0; i < row.getNumCells(); i++) {
             DataColumnSpec columnSpec = spec.getColumnSpec(i);
@@ -249,16 +238,6 @@ class ColumnCalculator implements CellFactory {
         return result;
     }
 
-    /**
-     * Get name of the field as it is used in the temp-java file.
-     * 
-     * @param col the number of the column
-     * @return "col" + col
-     */
-    static String createColField(final int col) {
-        return "col" + col;
-    }
-    
     private static int[] asIntArray(final CollectionDataValue cellValue) {
         int[] result = new int[cellValue.size()];
         int i = 0;

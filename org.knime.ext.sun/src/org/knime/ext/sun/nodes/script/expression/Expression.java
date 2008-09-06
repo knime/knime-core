@@ -28,15 +28,24 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
+import java.io.StreamTokenizer;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.ext.sun.nodes.script.JavaScriptingSettings;
 
 import com.sun.tools.javac.Main;
 
@@ -60,6 +69,18 @@ public class Expression implements Serializable {
         /** Represents a table column, e.g. total row count. */
         TableConstant
     }
+
+    /**
+     * Snippet code may contain the row number as parameter, it will be written
+     * as "$$ROWNUMBER$$" (quotes excluded).
+     */
+    public static final String ROWINDEX = "ROWNUMBER";
+
+    /**
+     * Snippet code may contain the row key as parameter, it will be written as
+     * "$$ROWKEY$$" (quotes excluded).
+     */
+    public static final String ROWKEY = "ROWKEY";
 
     /** These imports are put in the import section of the source file. */
     private static final Collection<String> IMPORTS = Arrays
@@ -257,6 +278,194 @@ public class Expression implements Serializable {
         buffer.append('}');
         buffer.append("\n");
         return buffer.toString();
+    }
+    
+    /**
+     * Get name of the field as it is used in the temp-java file.
+     * 
+     * @param col the number of the column
+     * @return "col" + col
+     */
+    public static String createColField(final int col) {
+        return "col" + col;
+    }
+
+    /**
+     * Tries to compile the given expression as entered in the dialog with the
+     * current spec.
+     *
+     * @param expression the expression from dialog or settings
+     * @param spec the spec
+     * @param rType the return type, e.g. <code>Integer.class</code>
+     * @param tempFile the file to use
+     * @return the java expression
+     * @throws CompilationFailedException if that fails
+     * @throws InvalidSettingsException if settings are missing
+     */
+    public static Expression compile(final JavaScriptingSettings settings,
+            final DataTableSpec spec, final File tempFile)
+            throws CompilationFailedException, InvalidSettingsException {
+        String expression = settings.getExpression();
+        Class<?> rType = settings.getReturnType();
+        Map<InputField, ExpressionField> nameValueMap = 
+            new HashMap<InputField, ExpressionField>();
+        StringBuffer correctedExp = new StringBuffer();
+        StreamTokenizer t = new StreamTokenizer(new StringReader(expression));
+        t.resetSyntax();
+        t.wordChars(0, 0xFF);
+        t.ordinaryChar('/');
+        t.eolIsSignificant(false);
+        t.slashSlashComments(true);
+        t.slashStarComments(true);
+        t.quoteChar('\'');
+        t.quoteChar('"');
+        t.quoteChar('$');
+        int tokType;
+        int variableIndex = 0;
+        boolean isNextTokenSpecial = false;
+        try {
+            while ((tokType = t.nextToken()) != StreamTokenizer.TT_EOF) {
+                final String expFieldName;
+                final Class<?> expFieldClass;
+                final FieldType inputFieldType;
+                final String inputFieldName;
+                switch (tokType) {
+                case StreamTokenizer.TT_WORD:
+                    String s = t.sval;
+                    if (isNextTokenSpecial) {
+                        if (ROWINDEX.equals(s)) {
+                            expFieldName = ROWINDEX;
+                            expFieldClass = Integer.class;
+                            inputFieldName = ROWINDEX;
+                            inputFieldType = FieldType.TableConstant;
+                        } else if (ROWKEY.equals(s)) {
+                            expFieldName = ROWKEY;
+                            expFieldClass = String.class;
+                            inputFieldName = ROWKEY;
+                            inputFieldType = FieldType.TableConstant;
+                        } else if (s.startsWith("{") && s.endsWith("}")) {
+                            String var = s.substring(1, s.length() - 1);
+                            if (var.length() == 0) {
+                                throw new InvalidSettingsException(
+                                        "Empty variable string at line "
+                                        + t.lineno());
+                            }
+                            switch (var.charAt(0)) {
+                            case 'I': expFieldClass = Integer.class; break;
+                            case 'D': expFieldClass = Double.class; break;
+                            case 'S': expFieldClass = String.class; break;
+                            default:
+                                throw new InvalidSettingsException(
+                                        "Invalid type identifier for variable "
+                                        + "in line " + t.lineno() + ": " 
+                                        + var.charAt(0));
+                            }
+                            var = var.substring(1);
+                            if (var.length() == 0) {
+                                throw new InvalidSettingsException(
+                                        "Empty variable identifier in line " 
+                                        + t.lineno());
+                            }
+                            expFieldName = "variable_" + (variableIndex++);
+                            inputFieldName = var;
+                            inputFieldType = FieldType.Variable;
+                        } else {
+                            throw new InvalidSettingsException(
+                                    "Invalid special identifier: " + s
+                                    + " (at line " + t.lineno() + ")");
+                        }
+                        InputField inputField = 
+                            new InputField(inputFieldName, inputFieldType);
+                        ExpressionField expField =
+                            new ExpressionField(expFieldName, expFieldClass);
+                        nameValueMap.put(inputField, expField);
+                        correctedExp.append(expFieldName);
+                    } else {
+                        correctedExp.append(s);
+                    }
+                    break;
+                case '/':
+                    correctedExp.append((char)tokType);
+                    break;
+                case '\'':
+                case '"':
+                    if (isNextTokenSpecial) {
+                        throw new InvalidSettingsException(
+                                "Invalid special identifier: " + t.sval
+                                + " (at line " + t.lineno() + ")");
+                    }
+                    correctedExp.append((char)tokType);
+                    s = t.sval.replace(Character.toString('\\'), "\\\\");
+                    s = s.replace(Character.toString('\n'), "\\n");
+                    s = s.replace(Character.toString('\r'), "\\r");
+                    // escape quote characters
+                    s = s.replace(Character.toString((char)tokType),
+                            "\\" + (char)tokType);
+                    correctedExp.append(s);
+                    correctedExp.append((char)tokType);
+                    break;
+                case '$':
+                    if ("".equals(t.sval)) {
+                        isNextTokenSpecial = !isNextTokenSpecial;
+                    } else {
+                        s = t.sval;
+                        int colIndex = spec.findColumnIndex(s);
+                        if (colIndex < 0) {
+                            throw new InvalidSettingsException(
+                                    "No such column: "
+                                    + s + " (at line " + t.lineno() + ")");
+                        }
+                        inputFieldName = s;
+                        inputFieldType = FieldType.Column;
+                        expFieldName = createColField(colIndex);
+                        DataType colType =
+                            spec.getColumnSpec(colIndex).getType();
+                        correctedExp.append(expFieldName);
+                        boolean isArray = colType.isCollectionType();
+                        if (isArray) {
+                            colType = colType.getCollectionElementType();
+                        }
+                        if (colType.isCompatible(IntValue.class)) {
+                            if (isArray) {
+                                expFieldClass = int[].class;
+                            } else {
+                                expFieldClass = Integer.class;
+                                correctedExp.append(".intValue()");
+                            }
+                        } else if (colType.isCompatible(DoubleValue.class)) {
+                            if (isArray) {
+                                expFieldClass = double[].class;
+                            } else {
+                                expFieldClass = Double.class;
+                                correctedExp.append(".doubleValue()");
+                            }
+                        } else {
+                            if (isArray) {
+                                expFieldClass = String[].class;
+                            } else {
+                                expFieldClass = String.class;
+                            }
+                        }
+                        InputField inputField = 
+                            new InputField(inputFieldName, inputFieldType);
+                        ExpressionField expField =
+                            new ExpressionField(expFieldName, expFieldClass);
+                        nameValueMap.put(inputField, expField);
+                    }
+                    break;
+                default:
+                    throw new IllegalStateException(
+                            "Unexpected type in tokenizer: "
+                            + tokType + " (at line " + t.lineno() + ")");
+                }
+            }
+        } catch (IOException e) {
+            throw new InvalidSettingsException(
+                    "Unable to tokenize expression string", e);
+
+        }
+        return new Expression(correctedExp.toString(), nameValueMap, rType,
+                tempFile);
     }
     
     /** Object that pairs the name of the field used in the temporarily created
