@@ -26,19 +26,19 @@ package org.knime.ext.sun.nodes.script;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class JavaScriptingNodeFactory extends NodeFactory {
+public class JavaScriptingNodeFactory 
+    extends NodeFactory<JavaScriptingNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public JavaScriptingNodeModel createNodeModel() {
         return new JavaScriptingNodeModel();
     }
 
@@ -54,8 +54,8 @@ public class JavaScriptingNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public NodeView<JavaScriptingNodeModel> createNodeView(final int viewIndex,
+            final JavaScriptingNodeModel nodeModel) {
         throw new IndexOutOfBoundsException();
     }
 
