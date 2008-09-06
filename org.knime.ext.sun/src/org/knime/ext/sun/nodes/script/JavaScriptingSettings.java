@@ -27,6 +27,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.ext.sun.nodes.script.expression.Expression;
 
 /**
  * Settings proxy used by dialog and model implementation. 
@@ -34,9 +35,6 @@ import org.knime.core.node.NodeSettingsWO;
  */
 public final class JavaScriptingSettings {
     
-    static final int VERSION_1X = 1;
-    static final int VERSION_2X = 2;
-
     /** NodeSettings key for the expression. */
     private static final String CFG_EXPRESSION = "expression";
 
@@ -64,7 +62,7 @@ public final class JavaScriptingSettings {
     /** Only important for dialog: Test the syntax of the snippet code
      * when the dialog closes, bug fix #1229. */
     private boolean m_isTestCompilationOnDialogClose = true;
-    private int m_expressionVersion = VERSION_2X;
+    private int m_expressionVersion = Expression.VERSION_2X;
 
     /** Saves current parameters to settings object. 
      * @param settings To save to.
@@ -95,7 +93,7 @@ public final class JavaScriptingSettings {
         m_isTestCompilationOnDialogClose =
             settings.getBoolean(CFG_TEST_COMPILATION, true);
         m_expressionVersion = settings.getInt(
-                CFG_EXPRESSION_VERSION, VERSION_1X);
+                CFG_EXPRESSION_VERSION, Expression.VERSION_1X);
     }
     
     /** Loads parameters in Dialog.

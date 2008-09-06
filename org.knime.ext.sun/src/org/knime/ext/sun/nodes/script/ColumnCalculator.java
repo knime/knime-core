@@ -140,8 +140,10 @@ class ColumnCalculator implements CellFactory {
             new HashMap<InputField, Object>();
         nameValueMap.put(new InputField(Expression.ROWINDEX, 
                 FieldType.TableConstant), m_lastProcessedRow);
-        nameValueMap.put(new InputField(Expression.ROWKEY, 
+        nameValueMap.put(new InputField(Expression.ROWID, 
                 FieldType.TableConstant), row.getKey().getString());
+        nameValueMap.put(new InputField(Expression.ROWCOUNT, 
+                FieldType.TableConstant), m_model.getRowCount());
         nameValueMap.putAll(m_scopeVarAssignmentMap);
         for (int i = 0; i < row.getNumCells(); i++) {
             DataColumnSpec columnSpec = spec.getColumnSpec(i);

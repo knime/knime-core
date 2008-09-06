@@ -27,7 +27,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Serializable;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -56,7 +55,7 @@ import com.sun.tools.javac.Main;
  * using the {@link #getInstance()} method on which calculations can be carried
  * out.
  */
-public class Expression implements Serializable {
+public final class Expression {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(Expression.class);
     
@@ -70,17 +69,26 @@ public class Expression implements Serializable {
         TableConstant
     }
 
-    /**
-     * Snippet code may contain the row number as parameter, it will be written
-     * as "$$ROWNUMBER$$" (quotes excluded).
-     */
-    public static final String ROWINDEX = "ROWNUMBER";
+    /** Version "1" of the expression, used in KNIME 1.xx (no "return" 
+     * statement). */
+    public static final int VERSION_1X = 1;
+    /** Version "2" of the expression, used in KNIME 2.0 (with "return" 
+     * statement). */
+    public static final int VERSION_2X = 2;
 
-    /**
-     * Snippet code may contain the row key as parameter, it will be written as
-     * "$$ROWKEY$$" (quotes excluded).
-     */
+    /** Identifier for row index (starting with 0), since 2.0. */
+    public static final String ROWINDEX = "ROWINDEX";
+    /** Identifier for row index (starting with 0), deprecated as of 2.0. */
+    public static final String ROWNUMBER = "ROWNUMBER";
+
+    /** Identifier for row ID, since 2.0. */
+    public static final String ROWID = "ROWID";
+    /** Identifier for row ID, deprecated as of 2.0. */
     public static final String ROWKEY = "ROWKEY";
+    
+    /** Identifier for row count. */
+    public static final String ROWCOUNT = "ROWCOUNT";
+    
 
     /** These imports are put in the import section of the source file. */
     private static final Collection<String> IMPORTS = Arrays
@@ -111,14 +119,16 @@ public class Expression implements Serializable {
      * @param rType the return type of the expression (i.e. Integer.class,
      *            Double.class, String.class)
      * @param tempFile the temp file to write the java source to
+     * @param version The version, used to determine whether a virtual "return"
+     *        must be inserted.
      * @throws CompilationFailedException when the expression couldn't be
      *             compiled
      * @throws IllegalArgumentException if the map contains <code>null</code>
      *             elements
      */
-    public Expression(final String body, 
+    private Expression(final String body, 
             final Map<InputField, ExpressionField> fieldMap,
-            final Class<?> rType, final File tempFile)
+            final Class<?> rType, final File tempFile, final int version)
             throws CompilationFailedException {
         if (!tempFile.getName().endsWith(".java")) {
             throw new IllegalArgumentException("No java file: "
@@ -126,11 +136,12 @@ public class Expression implements Serializable {
         }
         m_javaFile = tempFile;
         m_fieldMap = fieldMap;
-        m_compiled = createClass(body, rType);
+        m_compiled = createClass(body, rType, version);
     }
 
     /* Called from the constructor. */
-    private Class<?> createClass(final String body, final Class<?> rType)
+    private Class<?> createClass(final String body, final Class<?> rType, 
+            final int version)
             throws CompilationFailedException {
 
         String javaAbsoluteName;
@@ -141,7 +152,18 @@ public class Expression implements Serializable {
             javaClassName = name.substring(0, name.length() - ".java".length());
             javaAbsoluteName = m_javaFile.getAbsolutePath();
             // Generate the well known source of the Expression
-            String source = generateSource(javaClassName, body, rType);
+            String source;
+            switch (version) {
+            case VERSION_1X:
+                source = generateSourceVersion1(javaClassName, body, rType);
+                break;
+            case VERSION_2X:
+                source = generateSourceVersion2(javaClassName, body, rType);
+                break;
+            default:
+                throw new CompilationFailedException(
+                        "Unknown snippet version number: " + version);
+            }
             BufferedWriter w = new BufferedWriter(new FileWriter(m_javaFile));
             w.write(source);
             w.close();
@@ -220,9 +242,71 @@ public class Expression implements Serializable {
     /*
      * Creates the source for given expression classname, body & properties.
      */
-    private String generateSource(final String filename, final String body,
-            final Class<?> rType) {
+    private String generateSourceVersion1(final String filename, 
+            final String body, final Class<?> rType) {
         String copy = body;
+        StringBuilder buffer = new StringBuilder(4096);
+    
+        /* Generate header */
+        // Here comes the class
+        for (String imp : IMPORTS) {
+            buffer.append("import ");
+            buffer.append(imp);
+            buffer.append(";");
+            buffer.append("\n");
+        }
+    
+        buffer.append("public class " + filename + " {");
+        buffer.append("\n");
+        buffer.append("\n");
+    
+        /* Add the source fields */
+        for (ExpressionField type : m_fieldMap.values()) {
+            buffer.append("  public ");
+            buffer.append(type.getFieldClass().getSimpleName());
+            buffer.append(" " + type.getExpressionFieldName() + ";");
+            buffer.append("\n");
+        }
+        buffer.append("\n");
+    
+        /* Add body */
+        String cast;
+        if (rType.equals(Double.class)) {
+            cast = "(double)(";
+        } else if (rType.equals(Integer.class)) {
+            cast = "(int)(";
+        } else if (rType.equals(String.class)) {
+            cast = "\"\" + (";
+        } else {
+            cast = "(" + rType.getName() + ")(";
+        }
+    
+        // And the evaluation method
+        buffer.append("  public Object internalEvaluate() {");
+        buffer.append("\n");
+    
+        int instructions = copy.lastIndexOf(';');
+        if (instructions >= 0) {
+            buffer.append("    " + copy.substring(0, instructions + 1));
+            copy = copy.substring(instructions + 1);
+        }
+        // .. and the (last and final) expression which is 'objectified'
+        buffer.append("\n");
+        buffer.append("    return objectify(" + cast + copy + "));\n");
+        buffer.append("  }\n\n");
+        buffer.append(OBJECTIVER);
+    
+        /* Add footer */
+        buffer.append('}');
+        buffer.append("\n");
+        return buffer.toString();
+    }
+
+    /*
+     * Creates the source for given expression classname, body & properties.
+     */
+    private String generateSourceVersion2(final String filename, 
+            final String body, final Class<?> rType) {
         StringBuilder buffer = new StringBuilder(4096);
 
         /* Generate header */
@@ -248,31 +332,16 @@ public class Expression implements Serializable {
         buffer.append("\n");
 
         /* Add body */
-        String cast;
-        if (rType.equals(Double.class)) {
-            cast = "(double)(";
-        } else if (rType.equals(Integer.class)) {
-            cast = "(int)(";
-        } else if (rType.equals(String.class)) {
-            cast = "\"\" + (";
-        } else {
-            cast = "(" + rType.getName() + ")(";
-        }
-
         // And the evaluation method
-        buffer.append("  public Object internalEvaluate() {");
+        buffer.append("  public ");
+        buffer.append(rType.getName());
+        buffer.append(" internalEvaluate() {");
         buffer.append("\n");
 
-        int instructions = copy.lastIndexOf(';');
-        if (instructions >= 0) {
-            buffer.append("    " + copy.substring(0, instructions + 1));
-            copy = copy.substring(instructions + 1);
-        }
-        // .. and the (last and final) expression which is 'objectified'
+        buffer.append(body);
+
         buffer.append("\n");
-        buffer.append("    return objectify(" + cast + copy + "));\n");
         buffer.append("  }\n\n");
-        buffer.append(OBJECTIVER);
 
         /* Add footer */
         buffer.append('}');
@@ -294,9 +363,8 @@ public class Expression implements Serializable {
      * Tries to compile the given expression as entered in the dialog with the
      * current spec.
      *
-     * @param expression the expression from dialog or settings
+     * @param settings Contains node model settings, e.g. expression
      * @param spec the spec
-     * @param rType the return type, e.g. <code>Integer.class</code>
      * @param tempFile the file to use
      * @return the java expression
      * @throws CompilationFailedException if that fails
@@ -306,6 +374,7 @@ public class Expression implements Serializable {
             final DataTableSpec spec, final File tempFile)
             throws CompilationFailedException, InvalidSettingsException {
         String expression = settings.getExpression();
+        int ver = settings.getExpressionVersion();
         Class<?> rType = settings.getReturnType();
         Map<InputField, ExpressionField> nameValueMap = 
             new HashMap<InputField, ExpressionField>();
@@ -333,15 +402,22 @@ public class Expression implements Serializable {
                 case StreamTokenizer.TT_WORD:
                     String s = t.sval;
                     if (isNextTokenSpecial) {
-                        if (ROWINDEX.equals(s)) {
+                        if (ROWNUMBER.equals(s) && ver == VERSION_1X
+                                || ROWINDEX.equals(s) && ver != VERSION_1X) {
                             expFieldName = ROWINDEX;
                             expFieldClass = Integer.class;
                             inputFieldName = ROWINDEX;
                             inputFieldType = FieldType.TableConstant;
-                        } else if (ROWKEY.equals(s)) {
-                            expFieldName = ROWKEY;
+                        } else if (ROWKEY.equals(s) && ver == VERSION_1X
+                                || ROWID.equals(s) && ver != VERSION_1X) {
+                            expFieldName = ROWID;
                             expFieldClass = String.class;
-                            inputFieldName = ROWKEY;
+                            inputFieldName = ROWID;
+                            inputFieldType = FieldType.TableConstant;
+                        } else if (ROWCOUNT.equals(s)) {
+                            expFieldName = ROWCOUNT;
+                            expFieldClass = Integer.class;
+                            inputFieldName = ROWCOUNT;
                             inputFieldType = FieldType.TableConstant;
                         } else if (s.startsWith("{") && s.endsWith("}")) {
                             String var = s.substring(1, s.length() - 1);
@@ -464,8 +540,8 @@ public class Expression implements Serializable {
                     "Unable to tokenize expression string", e);
 
         }
-        return new Expression(correctedExp.toString(), nameValueMap, rType,
-                tempFile);
+        String body = correctedExp.toString();
+        return new Expression(body, nameValueMap, rType, tempFile, ver);
     }
     
     /** Object that pairs the name of the field used in the temporarily created

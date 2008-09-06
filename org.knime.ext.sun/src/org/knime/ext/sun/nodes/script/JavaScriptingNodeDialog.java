@@ -261,7 +261,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         boolean isReplace = s.isReplace();
         boolean isTestCompilation = s.isTestCompilationOnDialogClose();
         m_currentVersion = s.getExpressionVersion();
-        if (m_currentVersion == JavaScriptingSettings.VERSION_2X) {
+        if (m_currentVersion == Expression.VERSION_2X) {
             if (exp == null || exp.length() == 0) {
                 exp = COMMENT_ON_RETURN_STATEMENT;
             }
@@ -296,8 +296,14 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         }
         DefaultListModel listModel = (DefaultListModel)m_colList.getModel();
         listModel.removeAllElements();
-        listModel.addElement(Expression.ROWKEY);
-        listModel.addElement(Expression.ROWINDEX);
+        if (m_currentVersion == Expression.VERSION_1X) {
+            listModel.addElement(Expression.ROWKEY);
+            listModel.addElement(Expression.ROWNUMBER);
+        } else {
+            listModel.addElement(Expression.ROWID);
+            listModel.addElement(Expression.ROWINDEX);
+            listModel.addElement(Expression.ROWCOUNT);
+        }
         for (int i = 0; i < specs[0].getNumColumns(); i++) {
             DataColumnSpec colSpec = specs[0].getColumnSpec(i);
             listModel.addElement(colSpec);

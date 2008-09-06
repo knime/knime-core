@@ -55,14 +55,15 @@ public class JavaScriptingNodeModel extends NodeModel {
 
     private final JavaScriptingSettings m_settings;
 
-    /* the compiled version is stored because it is expensive to create it. Do
-     * not rely on its existence!
-     */
+    /** The compiled version is stored because it is expensive to create it. Do
+     * not rely on its existence! */
     private Expression m_compiledExpression = null;
 
-   /* The input table spec at the time the above expression was compiled
-    */
+   /** The input table spec at the time the above expression was compiled. */
     private DataTableSpec m_inputSpec = null;
+    
+    /** The current row count or -1 if not in execute(). */
+    private int m_rowCount = -1;
 
     private File m_tempFile;
 
@@ -109,9 +110,14 @@ public class JavaScriptingNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         DataTableSpec inSpec = inData[0].getDataTableSpec();
         ColumnRearranger c = createColumnRearranger(inSpec);
-        BufferedDataTable o = exec.createColumnRearrangeTable(
-                inData[0], c, exec);
-        return new BufferedDataTable[]{o};
+        m_rowCount = inData[0].getRowCount();
+        try {
+            BufferedDataTable o = exec.createColumnRearrangeTable(
+                    inData[0], c, exec);
+            return new BufferedDataTable[]{o};
+        } finally {
+            m_rowCount = -1;
+        }
     }
 
     /**
@@ -119,6 +125,7 @@ public class JavaScriptingNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
+        m_rowCount = -1;
     }
 
     /**
@@ -149,8 +156,8 @@ public class JavaScriptingNodeModel extends NodeModel {
         return new DataTableSpec[]{c.createSpec()};
     }
 
-    private ColumnRearranger createColumnRearranger(final DataTableSpec spec)
-            throws InvalidSettingsException {
+    private ColumnRearranger createColumnRearranger(final DataTableSpec spec) 
+        throws InvalidSettingsException {
         if (m_settings == null) {
             throw new InvalidSettingsException("No expression has been set.");
         }
@@ -168,8 +175,7 @@ public class JavaScriptingNodeModel extends NodeModel {
                 m_inputSpec = spec;
             }
             assert m_inputSpec != null;
-            DataColumnSpec newColSpec = getNewColSpec();
-            ColumnCalculator cc = new ColumnCalculator(this, newColSpec);
+            ColumnCalculator cc = new ColumnCalculator(this, getNewColSpec());
             ColumnRearranger result = new ColumnRearranger(spec);
             if (isReplace) {
                 result.replace(cc, colName);
@@ -219,6 +225,11 @@ public class JavaScriptingNodeModel extends NodeModel {
      */
     DataTableSpec getInputSpec() {
         return m_inputSpec;
+    }
+    
+    /** @return the row count of the BDT being processed, otherwise -1. */
+    int getRowCount() {
+        return m_rowCount;
     }
     
     /** Creates an returns a temp java file, for which no .class file exists
