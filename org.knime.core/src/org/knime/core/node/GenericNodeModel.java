@@ -356,7 +356,7 @@ public abstract class GenericNodeModel {
         throws Exception {
         assert (data != null && data.length == getNrInPorts());
         assert (exec != null);
-
+        m_warningMessage = null;
         // TODO: check ingoing types! (in Node!)
 
         // temporary storage for result of derived model.
@@ -517,6 +517,7 @@ public abstract class GenericNodeModel {
     final void resetModel() {
         try {
             // reset in derived model
+            m_warningMessage = null;
             reset();
         } catch (Throwable t) {
             String name = t.getClass().getSimpleName();
@@ -715,15 +716,13 @@ public abstract class GenericNodeModel {
      */
     final PortObjectSpec[] configureModel(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-
+        m_warningMessage = null;
         assert inSpecs.length == getNrInPorts();
 
         PortObjectSpec[] copyInSpecs = new PortObjectSpec[getNrInPorts()];
         PortObjectSpec[] newOutSpecs;
 
-        if (inSpecs != null) {
-            System.arraycopy(inSpecs, 0, copyInSpecs, 0, inSpecs.length);
-        }
+        System.arraycopy(inSpecs, 0, copyInSpecs, 0, inSpecs.length);
         // make sure we conveniently have TableSpecs.
         // Rather empty ones than null
         for (int i = 0; i < copyInSpecs.length; i++) {
