@@ -41,7 +41,7 @@ public class ColorAppenderNodeFactory extends NodeFactory {
      */
     @Override
     public NodeModel createNodeModel() {
-        return new ColorAppender2NodeModel(1, 1, 1, 0);
+        return new ColorAppenderNodeModel(1, 1, 1, 0);
     }
 
     /**
