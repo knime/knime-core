@@ -22,8 +22,8 @@
  */
 package org.knime.base.node.preproc.partition;
 
-import org.knime.base.node.preproc.filter.row.RowFilterIterator;
-import org.knime.base.node.preproc.filter.row.rowfilter.NegRowFilter;
+import org.knime.base.node.preproc.filter.row.rowfilter.EndOfTableException;
+import org.knime.base.node.preproc.filter.row.rowfilter.IncludeFromNowOn;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.base.node.preproc.sample.AbstractSamplingNodeModel;
 import org.knime.base.node.preproc.sample.StratifiedSamplingRowFilter;
@@ -33,7 +33,6 @@ import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 
 /**
@@ -63,48 +62,56 @@ public class PartitionNodeModel extends AbstractSamplingNodeModel {
             Exception {
         BufferedDataTable in = inData[0];
         BufferedDataTable[] outs = new BufferedDataTable[2];
-        RowFilter filterTrain = getSamplingRowFilter(in, exec);
-        RowFilter filterTest = new NegRowFilter((RowFilter)filterTrain.clone());
-        RowFilter[] filters = new RowFilter[]{filterTrain, filterTest};
-        String[] partitionNames = {"first", "second"};
-        for (int i = 0; i < outs.length; i++) {
-            ExecutionMonitor subExec = exec.createSubProgress(0.5);
-            BufferedDataContainer container = exec.createDataContainer(in
-                    .getDataTableSpec());
-            try {
-                int count = 0;
-                RowFilterIterator it = new RowFilterIterator(in, filters[i],
-                        subExec);
-                while (it.hasNext()) {
-                    DataRow row = it.next();
-                    StringBuilder b = new StringBuilder("Creating ");
-                    b.append(partitionNames[i]);
-                    b.append(" partition: ");
-                    b.append("Adding row ");
-                    b.append(count);
-                    b.append(" (\"");
-                    b.append(row.getKey().toString());
-                    b.append("\")");
-                    subExec.setMessage(b.toString());
-                    count++;
-                    container.addRowToTable(row);
+        RowFilter filter = getSamplingRowFilter(in, exec);
+        BufferedDataContainer firstOutCont = 
+            exec.createDataContainer(in.getDataTableSpec());
+        BufferedDataContainer secondOutCont = 
+            exec.createDataContainer(in.getDataTableSpec());
+        double rowCount = in.getRowCount(); // floating point op. below
+        // one of the flags will be set if one of the exceptions below
+        // is thrown.
+        boolean putRestInOut1 = false;
+        boolean putRestInOut2 = false;
+        try {
+            int count = 0;
+            for (DataRow row : in) {
+                boolean matches = putRestInOut1;
+                try {
+                    // conditional check, will call "matches" only if necessary
+                    matches |= (!putRestInOut2
+                            && filter.matches(row, count));
+                } catch (IncludeFromNowOn icf) {
+                    assert !putRestInOut2;
+                    putRestInOut1 = true;
+                    matches = true;
+                } catch (EndOfTableException ete) {
+                    assert !putRestInOut1;
+                    putRestInOut2 = true;
+                    matches = false;
                 }
-            } catch (RowFilterIterator.RuntimeCanceledExecutionException rce) {
-                throw rce.getCause();
-            } finally {
-                container.close();
+                if (matches) {
+                    firstOutCont.addRowToTable(row);
+                } else {
+                    secondOutCont.addRowToTable(row);
+                }
+                exec.setProgress(count / rowCount, "Processed row " + count
+                        + " (\"" + row.getKey() + "\")");
+                exec.checkCanceled();
+                count++;
             }
-            subExec.setProgress(1.0);
-            outs[i] = container.getTable();
-            if (filters[i] instanceof StratifiedSamplingRowFilter) {
-                int classCount =
-                        ((StratifiedSamplingRowFilter)filters[i])
-                                .getClassCount();
-                if (classCount > outs[i].getRowCount()) {
-                    setWarningMessage("Class column contains more classes ("
-                            + classCount + ") than sampled rows ("
-                            + outs[i].getRowCount() + ")");
-                }
+        } finally {
+            firstOutCont.close();
+            secondOutCont.close();
+        }
+        outs[0] = firstOutCont.getTable();
+        outs[1] = secondOutCont.getTable();
+        if (filter instanceof StratifiedSamplingRowFilter) {
+            int classCount = 
+                ((StratifiedSamplingRowFilter)filter).getClassCount();
+            if (classCount > outs[0].getRowCount()) {
+                setWarningMessage("Class column contains more classes ("
+                        + classCount + ") than sampled rows ("
+                        + outs[0].getRowCount() + ")");
             }
         }
         return outs;
