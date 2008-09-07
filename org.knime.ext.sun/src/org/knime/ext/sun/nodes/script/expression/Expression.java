@@ -33,6 +33,7 @@ import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -116,11 +117,8 @@ public final class Expression {
      * @param body the expression body (Java)
      * @param fieldMap the property-names mapped to types, i.e. class name of
      *             the field that is available to the evaluated expression
-     * @param rType the return type of the expression (i.e. Integer.class,
-     *            Double.class, String.class)
      * @param tempFile the temp file to write the java source to
-     * @param version The version, used to determine whether a virtual "return"
-     *        must be inserted.
+     * @param settings To get information from, e.g. desired return type
      * @throws CompilationFailedException when the expression couldn't be
      *             compiled
      * @throws IllegalArgumentException if the map contains <code>null</code>
@@ -128,7 +126,7 @@ public final class Expression {
      */
     private Expression(final String body, 
             final Map<InputField, ExpressionField> fieldMap,
-            final Class<?> rType, final File tempFile, final int version)
+            final File tempFile, final JavaScriptingSettings settings)
             throws CompilationFailedException {
         if (!tempFile.getName().endsWith(".java")) {
             throw new IllegalArgumentException("No java file: "
@@ -136,14 +134,15 @@ public final class Expression {
         }
         m_javaFile = tempFile;
         m_fieldMap = fieldMap;
-        m_compiled = createClass(body, rType, version);
+        m_compiled = createClass(body, settings);
     }
 
     /* Called from the constructor. */
-    private Class<?> createClass(final String body, final Class<?> rType, 
-            final int version)
+    private Class<?> createClass(final String body, 
+            final JavaScriptingSettings settings) 
             throws CompilationFailedException {
-
+        Class<?> rType = settings.getReturnType();
+        int version = settings.getExpressionVersion();
         String javaAbsoluteName;
         String javaClassName;
         String classAbsoluteName;
@@ -175,8 +174,39 @@ public final class Expression {
         }
         final StringWriter logString = new StringWriter();
         final PrintWriter log = new PrintWriter(logString);
+        ArrayList<String> compileArgs = new ArrayList<String>();
+        String[] additionalJars = settings.getJarFiles();
+        // first url is reserved for resulting class file
+        URL[] classPath = new URL[additionalJars.length + 1];
+        if (additionalJars.length > 0) {
+            compileArgs.add("-classpath");
+            StringBuilder b = new StringBuilder();
+            for (int i = 0; i < additionalJars.length; i++) {
+                b.append(i > 0 ? ":"  : "");
+                b.append(additionalJars[i]);
+                File toFile = new File(additionalJars[i]);
+                if (!toFile.exists()) {
+                    throw new CompilationFailedException("Can't read file \""
+                            + additionalJars[i] + "\"; invalid class path");
+                }
+                URL url;
+                try {
+                    url = toFile.toURI().toURL();
+                } catch (MalformedURLException e) {
+                    CompilationFailedException c = 
+                        new CompilationFailedException("Can't convert class "
+                            + "path file \"" + additionalJars[i] + "\" to URL");
+                    c.initCause(e);
+                    throw c;
+                }
+                classPath[i + 1] = url;
+            }
+            compileArgs.add(b.toString());
+        }
+        compileArgs.add(javaAbsoluteName);
+        String[] compArgsArrays = compileArgs.toArray(new String[0]);
         // compile the classes
-        if (Main.compile(new String[]{javaAbsoluteName}, log) != 0) {
+        if (Main.compile(compArgsArrays, log) != 0) {
             throw new CompilationFailedException("Unable to compile \"" + body
                     + "\":\n" + logString.toString());
         }
@@ -187,8 +217,9 @@ public final class Expression {
         m_classFile.deleteOnExit();
         Class<?> compiled;
         try {
-            URL[] urls = new URL[]{m_classFile.getParentFile().toURI().toURL()};
-            ClassLoader load = URLClassLoader.newInstance(urls);
+            URL url = m_classFile.getParentFile().toURI().toURL();
+            classPath[0] = url;
+            ClassLoader load = URLClassLoader.newInstance(classPath);
             compiled = load.loadClass(javaClassName);
         } catch (MalformedURLException mue) {
             CompilationFailedException c = new CompilationFailedException(
@@ -375,7 +406,6 @@ public final class Expression {
             throws CompilationFailedException, InvalidSettingsException {
         String expression = settings.getExpression();
         int ver = settings.getExpressionVersion();
-        Class<?> rType = settings.getReturnType();
         Map<InputField, ExpressionField> nameValueMap = 
             new HashMap<InputField, ExpressionField>();
         StringBuffer correctedExp = new StringBuffer();
@@ -541,7 +571,7 @@ public final class Expression {
 
         }
         String body = correctedExp.toString();
-        return new Expression(body, nameValueMap, rType, tempFile, ver);
+        return new Expression(body, nameValueMap, tempFile, settings);
     }
     
     /** Object that pairs the name of the field used in the temporarily created

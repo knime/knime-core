@@ -12,8 +12,7 @@
 				use <tt>$name_of_col$</tt>. For instance, the sum of the first two 
 				columns is <tt>$col_1$ + $col_2$</tt> (replace col_1 and col_2 by the 
 				name of the columns). Please also specify the return type with one 
-				of the radio buttons. The final value will be the result of your
-		        last statement (<b>after</b> last ';'). You can also use more complex 
+				of the radio buttons. You can also use more complex 
 		        statements such as <i>if-else</i> switches. For instance, to bin a numeric
 		        column you could enter code as follows and check the String return type:
 	        </p>
@@ -29,20 +28,33 @@
     bin  = "Large";
   } else {
     bin  = "Very Large";
-  };
-  bin 
+  }
+  return bin; 
 </pre>
-             <p>
-               It is advisable to use a designated return variable (<tt>bin</tt> in the example) that
-               gets assigned the actual return value. Note also that the last closing '}' character is followed
-               by an explicit ';'!
-             </p>
 		     <p>
 		        You can also use static methods of java utility classes, e.g. to get a 
 		        column with random values, simply enter <tt>Math.random()</tt> and 
 		        check the double return type.
 	        </p>
+	        <p>
+	           It is also possible to use external java libraries (that is, 
+	           libraries that are not part of java boot classpath). In order
+	           to include such external jar or zip files, add their location
+	           in the "Additional Libraries" tab using the control buttons.  
+	        </p>
 		</intro>
+		<option name="Column List">
+		  The list contains the column that are available in the input table.
+		  Double click any of the column names to insert the respective field
+		  in the expression editor. It will replace your current selection or
+		  simply insert at the current caret position.
+		</option>
+		<option name="Flow Variable List">
+		  The list contains the flow variables that are currently available at
+		  the node input. Double clicking any of the entries will insert the
+		  respective identifier at the current cursor postion (replacing the
+		  selection, if any).
+		</option>
 		<option name="Text Area">
 		  Enter your java code here (the entire source will be wrapped in a 
 		  method), do not add the <b>return</b> keyword though but only the

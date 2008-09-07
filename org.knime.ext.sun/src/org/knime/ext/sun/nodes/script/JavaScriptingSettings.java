@@ -23,6 +23,8 @@
  */
 package org.knime.ext.sun.nodes.script;
 
+import java.io.File;
+
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -50,6 +52,9 @@ public final class JavaScriptingSettings {
     /** NodeSettings key for the return type of the expression. */
     private static final String CFG_RETURN_TYPE = "return_type";
 
+    /** NodeSettings key for additional jar/zip files. */
+    private static final String CFG_JAR_FILES = "java_libraries";
+    
     /** NodeSettings key whether to check for compilation problems when
      * dialog closes (not used in the nodemodel, though). */
     private static final String CFG_TEST_COMPILATION =
@@ -62,6 +67,7 @@ public final class JavaScriptingSettings {
     /** Only important for dialog: Test the syntax of the snippet code
      * when the dialog closes, bug fix #1229. */
     private boolean m_isTestCompilationOnDialogClose = true;
+    private String[] m_jarFiles;
     private int m_expressionVersion = Expression.VERSION_2X;
 
     /** Saves current parameters to settings object. 
@@ -75,6 +81,7 @@ public final class JavaScriptingSettings {
         settings.addBoolean(
                 CFG_TEST_COMPILATION, m_isTestCompilationOnDialogClose);
         settings.addString(CFG_RETURN_TYPE, rType);
+        settings.addStringArray(CFG_JAR_FILES, m_jarFiles);
         settings.addInt(CFG_EXPRESSION_VERSION, m_expressionVersion);
     }
 
@@ -92,6 +99,13 @@ public final class JavaScriptingSettings {
         // this setting is not available in 1.2.x
         m_isTestCompilationOnDialogClose =
             settings.getBoolean(CFG_TEST_COMPILATION, true);
+        m_jarFiles = settings.getStringArray(CFG_JAR_FILES, (String[])null);
+        for (String s : getJarFiles()) {
+            if (!new File(s).isFile()) {
+                throw new InvalidSettingsException("No such java library file: "
+                        + s);
+            }
+        }
         m_expressionVersion = settings.getInt(
                 CFG_EXPRESSION_VERSION, Expression.VERSION_1X);
     }
@@ -114,6 +128,7 @@ public final class JavaScriptingSettings {
         m_isReplace = settings.getBoolean(CFG_IS_REPLACE, false);
         m_isTestCompilationOnDialogClose = 
             settings.getBoolean(CFG_TEST_COMPILATION, true);
+        m_jarFiles = settings.getStringArray(CFG_JAR_FILES, (String[])null);
         m_expressionVersion = settings.getInt(CFG_EXPRESSION_VERSION, 1);
     }
 
@@ -202,6 +217,20 @@ public final class JavaScriptingSettings {
      */
     void setExpressionVersion(final int expressionVersion) {
         m_expressionVersion = expressionVersion;
+    }
+
+    /**
+     * @return the jarFiles, never null
+     */
+    public String[] getJarFiles() {
+        return m_jarFiles == null ? new String[0] : m_jarFiles; 
+    }
+
+    /**
+     * @param jarFiles the jarFiles to set
+     */
+    void setJarFiles(final String[] jarFiles) {
+        m_jarFiles = jarFiles;
     }
 
     /**

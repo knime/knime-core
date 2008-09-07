@@ -36,14 +36,19 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.ButtonModel;
 import javax.swing.DefaultListModel;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JEditorPane;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -52,6 +57,8 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import org.knime.base.util.scopevariable.ScopeVariableListCellRenderer;
 import org.knime.core.data.DataColumnSpec;
@@ -63,8 +70,11 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionPanel;
+import org.knime.core.node.util.ConvenientComboBoxRenderer;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
+import org.knime.core.node.util.StringHistory;
 import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.util.SimpleFileFilter;
 import org.knime.ext.sun.nodes.script.expression.CompilationFailedException;
 import org.knime.ext.sun.nodes.script.expression.Expression;
 
@@ -97,6 +107,8 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
     private final ButtonGroup m_returnTypeButtonGroup;
     
     private final JCheckBox m_compileOnCloseChecker;
+    
+    private final JList m_addJarList;
 
     private DataTableSpec m_currenteSpec = null;
     
@@ -201,8 +213,22 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         m_returnTypeButtonGroup.add(intReturnRadio);
         m_returnTypeButtonGroup.add(doubleReturnRadio);
         m_returnTypeButtonGroup.add(stringReturnRadio);
+        
+        m_addJarList = new JList(new DefaultListModel()) {
+            /** {@inheritDoc} */
+            @Override
+            protected void processComponentKeyEvent(final KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_A && e.isControlDown()) {
+                    int end = getModel().getSize() - 1;
+                    getSelectionModel().setSelectionInterval(0, end);
+                } else if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+                    onJarRemove();
+                }
+            }
+        };
 
-        addTab("Java Scripting", createPanel());
+        addTab("Java Snippet", createPanel());
+        addTab("Additional Libraries", createJarPanel());
     }
     
     private void onSelectionInColumnList(final Object selected) {
@@ -245,6 +271,145 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         }
     }
 
+    private JPanel createPanel() {
+        JPanel finalPanel = new JPanel(new BorderLayout());
+        final JSplitPane varSplitPane = 
+            new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        JScrollPane pane = new JScrollPane(m_colList);
+        pane.setBorder(BorderFactory.createTitledBorder(" Column List "));
+        varSplitPane.setTopComponent(pane);
+        pane = new JScrollPane(m_scopeVarsList);
+        pane.setBorder(BorderFactory.createTitledBorder(
+                " Flow Variable List "));
+        varSplitPane.setBottomComponent(pane);
+        varSplitPane.setOneTouchExpandable(true);
+        varSplitPane.setResizeWeight(0.9);
+    
+        JPanel centerPanel = new JPanel(new GridLayout(0, 1));
+        JSplitPane mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        mainSplitPane.setLeftComponent(varSplitPane);
+        mainSplitPane.setRightComponent(new JScrollPane(m_expEdit));
+        centerPanel.add(mainSplitPane);
+    
+        JPanel southPanel = new JPanel(new GridLayout(0, 2));
+        JPanel replaceOrAppend = new JPanel(new GridLayout(0, 2));
+        replaceOrAppend.setBorder(BorderFactory
+                .createTitledBorder("Replace or append result"));
+        replaceOrAppend.add(m_appendRadio);
+        replaceOrAppend.add(m_newColNameField);
+        replaceOrAppend.add(m_replaceRadio);
+        replaceOrAppend.add(m_replaceCombo);
+        southPanel.add(replaceOrAppend);
+    
+        JPanel returnTypeAndCompilation = new JPanel(new BorderLayout());
+        JPanel compilationPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        compilationPanel.add(m_compileOnCloseChecker);
+        returnTypeAndCompilation.add(compilationPanel, BorderLayout.NORTH);
+        
+        JPanel returnType = new JPanel(new GridLayout(0, 2));
+        returnType.setBorder(BorderFactory.createTitledBorder("Return type"));
+        for (Enumeration<?> e = m_returnTypeButtonGroup.getElements(); e
+                .hasMoreElements();) {
+            returnType.add((AbstractButton)e.nextElement());
+        }
+        returnTypeAndCompilation.add(returnType, BorderLayout.CENTER);
+        
+        southPanel.add(returnTypeAndCompilation);
+        finalPanel.add(centerPanel, BorderLayout.CENTER);
+        finalPanel.add(southPanel, BorderLayout.SOUTH);
+        return finalPanel;
+    }
+
+    private JPanel createJarPanel() {
+        m_addJarList.setCellRenderer(new ConvenientComboBoxRenderer());
+        JPanel p = new JPanel(new BorderLayout());
+        p.add(new JScrollPane(m_addJarList), BorderLayout.CENTER);
+        JPanel southP = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        JButton addButton = new JButton("Add...");
+        addButton.addActionListener(new ActionListener() {
+            /** {@inheritDoc} */
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                onJarAdd();
+            }
+        });
+        final JButton removeButton = new JButton("Remove");
+        removeButton.addActionListener(new ActionListener() {
+            /** {@inheritDoc} */
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                onJarRemove();
+            } 
+        });
+        m_addJarList.addListSelectionListener(new ListSelectionListener() {
+            /** {@inheritDoc} */
+            @Override
+            public void valueChanged(final ListSelectionEvent e) {
+                removeButton.setEnabled(!m_addJarList.isSelectionEmpty());
+            }
+        });
+        removeButton.setEnabled(!m_addJarList.isSelectionEmpty());
+        southP.add(addButton);
+        southP.add(removeButton);
+        p.add(southP, BorderLayout.SOUTH);
+        
+        JPanel northP = new JPanel(new FlowLayout());
+        JLabel label = new JLabel("<html><body>Specify additional jar files " 
+                + "that are necessary for the snippet to run</body></html>");
+        northP.add(label);
+        p.add(northP, BorderLayout.NORTH);
+        return p;
+    }
+
+    private JFileChooser m_jarFileChooser;
+
+    private void onJarAdd() {
+        DefaultListModel model = (DefaultListModel)m_addJarList.getModel();
+        Set<Object> hash = new HashSet<Object>();
+        for (Enumeration<?> e = model.elements(); e.hasMoreElements();) {
+            hash.add(e.nextElement());
+        }
+        StringHistory history = 
+            StringHistory.getInstance("java_snippet_jar_dirs");
+        if (m_jarFileChooser == null) {
+            File dir = null;
+            for (String h : history.getHistory()) {
+                File temp = new File(h);
+                if (temp.isDirectory()) {
+                    dir = temp;
+                    break;
+                }
+            }
+            m_jarFileChooser = new JFileChooser(dir);
+            m_jarFileChooser.setFileFilter(
+                    new SimpleFileFilter(".zip", ".jar"));
+            m_jarFileChooser.setMultiSelectionEnabled(true);
+        }
+        int result = m_jarFileChooser.showDialog(m_addJarList, "Select");
+        
+        if (result == JFileChooser.APPROVE_OPTION) {
+            for (File f : m_jarFileChooser.getSelectedFiles()) {
+                String s = f.getAbsolutePath();
+                if (hash.add(s)) {
+                    model.addElement(s);
+                }
+            }
+            history.add(
+                    m_jarFileChooser.getCurrentDirectory().getAbsolutePath());
+        }
+    }
+
+    private void onJarRemove() {
+        DefaultListModel model = (DefaultListModel)m_addJarList.getModel();
+        int[] sels = m_addJarList.getSelectedIndices();
+        int last = Integer.MAX_VALUE;
+        // traverse backwards (editing list in loop body) 
+        for (int i = sels.length - 1; i >= 0; i--) {
+            assert sels[i] < last : "Selection list not ordered";
+            model.remove(sels[i]);
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -259,6 +424,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         String defaultColName = "new column";
         String newColName = s.getColName();
         boolean isReplace = s.isReplace();
+        String[] jarFiles = s.getJarFiles();
         boolean isTestCompilation = s.isTestCompilationOnDialogClose();
         m_currentVersion = s.getExpressionVersion();
         if (m_currentVersion == Expression.VERSION_2X) {
@@ -280,6 +446,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         }
         m_replaceRadio.setEnabled(m_replaceCombo.getNrItemsInList() > 0);
         m_expEdit.setText(exp);
+        m_expEdit.requestFocus();
         ButtonModel firstButton = null;
         for (Enumeration<?> e = m_returnTypeButtonGroup.getElements(); e
                 .hasMoreElements();) {
@@ -315,6 +482,12 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
             svListModel.addElement(v);
         }
         m_compileOnCloseChecker.setSelected(isTestCompilation);
+        DefaultListModel jarListModel = 
+            (DefaultListModel)m_addJarList.getModel();
+        jarListModel.removeAllElements();
+        for (String jarFile : jarFiles) {
+            jarListModel.addElement(jarFile);
+        }
     }
 
     /**
@@ -340,6 +513,13 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         s.setExpressionVersion(m_currentVersion);
         boolean isTestCompilation = m_compileOnCloseChecker.isSelected();
         s.setTestCompilationOnDialogClose(isTestCompilation);
+        DefaultListModel jarListModel = 
+            (DefaultListModel)m_addJarList.getModel();
+        if (jarListModel.getSize() > 0) {
+            String[] copy = new String[jarListModel.getSize()];
+            jarListModel.copyInto(copy);
+            s.setJarFiles(copy);
+        }
         if (isTestCompilation && m_currenteSpec != null) {
             File tempFile = null;
             File classFile = null;
@@ -363,55 +543,6 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
             }
         }
         s.saveSettingsTo(settings);
-    }
-
-    private JPanel createPanel() {
-        JPanel finalPanel = new JPanel(new BorderLayout());
-        final JSplitPane varSplitPane = 
-            new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        JScrollPane pane = new JScrollPane(m_colList);
-        pane.setBorder(BorderFactory.createTitledBorder(" Column List "));
-        varSplitPane.setTopComponent(pane);
-        pane = new JScrollPane(m_scopeVarsList);
-        pane.setBorder(BorderFactory.createTitledBorder(
-                " Flow Variable List "));
-        varSplitPane.setBottomComponent(pane);
-        varSplitPane.setOneTouchExpandable(true);
-        varSplitPane.setResizeWeight(0.9);
-
-        JPanel centerPanel = new JPanel(new GridLayout(0, 1));
-        JSplitPane mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        mainSplitPane.setLeftComponent(varSplitPane);
-        mainSplitPane.setRightComponent(new JScrollPane(m_expEdit));
-        centerPanel.add(mainSplitPane);
-
-        JPanel southPanel = new JPanel(new GridLayout(0, 2));
-        JPanel replaceOrAppend = new JPanel(new GridLayout(0, 2));
-        replaceOrAppend.setBorder(BorderFactory
-                .createTitledBorder("Replace or append result"));
-        replaceOrAppend.add(m_appendRadio);
-        replaceOrAppend.add(m_newColNameField);
-        replaceOrAppend.add(m_replaceRadio);
-        replaceOrAppend.add(m_replaceCombo);
-        southPanel.add(replaceOrAppend);
-
-        JPanel returnTypeAndCompilation = new JPanel(new BorderLayout());
-        JPanel compilationPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        compilationPanel.add(m_compileOnCloseChecker);
-        returnTypeAndCompilation.add(compilationPanel, BorderLayout.NORTH);
-        
-        JPanel returnType = new JPanel(new GridLayout(0, 2));
-        returnType.setBorder(BorderFactory.createTitledBorder("Return type"));
-        for (Enumeration<?> e = m_returnTypeButtonGroup.getElements(); e
-                .hasMoreElements();) {
-            returnType.add((AbstractButton)e.nextElement());
-        }
-        returnTypeAndCompilation.add(returnType, BorderLayout.CENTER);
-        
-        southPanel.add(returnTypeAndCompilation);
-        finalPanel.add(centerPanel, BorderLayout.CENTER);
-        finalPanel.add(southPanel, BorderLayout.SOUTH);
-        return finalPanel;
     }
 
     /**
