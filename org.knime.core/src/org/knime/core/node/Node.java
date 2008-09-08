@@ -24,6 +24,8 @@
  */
 package org.knime.core.node;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.zip.ZipEntry;
 
 import javax.swing.UIManager;
 
@@ -49,6 +52,10 @@ import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortObjectSpecZipInputStream;
+import org.knime.core.node.port.PortObjectSpecZipOutputStream;
+import org.knime.core.node.port.PortObjectZipInputStream;
+import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.StringFormat;
@@ -616,13 +623,12 @@ public final class Node implements NodeModelWarningListener {
      * connected node.
      *
      * @param exec The execution monitor.
-     * @param inData the datatables from the successors.
+     * @param data the data from the predecessor.
      * @return <code>true</code> if execution was successful otherwise
      *         <code>false</code>.
-     * @see NodeModel#isConfigured()
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
-    public boolean execute(final PortObject[] inData,
+    public boolean execute(final PortObject[] data,
             final ExecutionContext exec) {
         // start message and keep start time
         final long time = System.currentTimeMillis();
@@ -634,13 +640,11 @@ public final class Node implements NodeModelWarningListener {
         // notifyStateListeners(new NodeStateChangedEvent(
         // NodeStateChangedEvent.Type.START_EXECUTE));
 
-        //
-        // EXECUTE the underlying node's model
-        //
+        PortObject[] inData = new PortObject[data.length];
         // check for existence of all input tables
         // TODO allow for optional inputs
-        for (int i = 0; i < inData.length; i++) {
-            if (inData[i] == null) {
+        for (int i = 0; i < data.length; i++) {
+            if (data[i] == null) {
                 m_logger.error("execute failed, input contains null");
                 // TODO NEWWFM state event
                 // TODO: also notify message/progress listeners
@@ -649,6 +653,22 @@ public final class Node implements NodeModelWarningListener {
                         + i + ").");
                 // notifyStateListeners(new NodeStateChangedEvent.EndExecute());
                 return false;
+            }
+            if (data[i] instanceof BufferedDataTable) {
+                inData[i] = data[i];
+            } else {
+                exec.setMessage("Copying input object at port " +  i);
+                ExecutionMonitor subExec = exec.createSubProgress(0.0);
+                try {
+                    inData[i] = copyPortObject(data[i], subExec);
+                } catch (CanceledExecutionException e) {
+                    createWarningMessageAndNotify("Execution canceled");
+                    return false;
+                } catch (Throwable e) {
+                    createErrorMessageAndNotify(
+                            "Unable to clone input data at port " + i, e);
+                    return false;
+                }
             }
         }
 
@@ -782,6 +802,54 @@ public final class Node implements NodeModelWarningListener {
         m_logger.info("End execute (" + elapsed + ")");
         return true;
     } // executeNode(ExecutionMonitor)
+    
+    /** Copies the PortObject so that the copy can be given to the node model
+     * implementation (and potentially modified). */
+    private PortObject copyPortObject(final PortObject portObject, 
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        assert !(portObject instanceof BufferedDataTable) : "Must not copy BDT";
+        
+        // first copy the spec, then copy the object
+        final PortObjectSpec s = portObject.getSpec();
+        PortObjectSpec.PortObjectSpecSerializer ser = 
+            NodePersistorVersion200.getPortObjectSpecSerializer(
+                    s.getClass());
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream(10 * 1024);
+        PortObjectSpecZipOutputStream specOut = 
+            new PortObjectSpecZipOutputStream(byteOut);
+        specOut.putNextEntry(new ZipEntry("portSpec.file"));
+        specOut.setLevel(0);
+        ser.savePortObjectSpec(s, specOut);
+        specOut.close();
+        ByteArrayInputStream byteIn = 
+            new ByteArrayInputStream(byteOut.toByteArray());
+        PortObjectSpecZipInputStream specIn = 
+            new PortObjectSpecZipInputStream(byteIn);
+        specIn.getNextEntry();
+        PortObjectSpec specCopy = ser.loadPortObjectSpec(specIn);
+        specIn.close();
+        
+        PortObject.PortObjectSerializer obSer =
+            NodePersistorVersion200.getPortObjectSerializer(
+                    portObject.getClass());
+        byteOut.reset();
+        PortObjectZipOutputStream objOut = 
+            new PortObjectZipOutputStream(byteOut);
+        objOut.putNextEntry(new ZipEntry("portObject.file"));
+        specOut.setLevel(0);
+        obSer.savePortObject(portObject, objOut, exec);
+        objOut.close();
+        
+        byteIn = new ByteArrayInputStream(byteOut.toByteArray());
+        PortObjectZipInputStream objIn = 
+            new PortObjectZipInputStream(byteIn);
+        objIn.getNextEntry();
+        PortObject result = obSer.loadPortObject(
+                objIn, specCopy, exec);
+        objIn.close();
+        return result;
+    }
 
 
     /**
