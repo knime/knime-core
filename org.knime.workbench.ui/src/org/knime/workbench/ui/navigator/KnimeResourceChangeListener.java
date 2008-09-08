@@ -49,6 +49,7 @@ public class KnimeResourceChangeListener implements IResourceChangeListener {
      */
     public KnimeResourceChangeListener(final ResourceNavigator navigator) {
         m_visitor = new IResourceDeltaVisitor() {
+            
              private void doRefresh(final Object node) {
                  
                  Display.getDefault().asyncExec(new Runnable() {
@@ -74,7 +75,10 @@ public class KnimeResourceChangeListener implements IResourceChangeListener {
                 Display.getDefault().asyncExec(new Runnable() {
 
                     public void run() {
-                        if (!navigator.getViewSite().getShell().isDisposed()) {
+                        if (navigator != null && navigator.getViewSite() != null
+                                && navigator.getViewSite().getShell() != null 
+                                && !navigator.getViewSite().getShell()
+                                .isDisposed()) {
                             navigator.getViewer().remove(node);
                         }
                     }
@@ -94,12 +98,6 @@ public class KnimeResourceChangeListener implements IResourceChangeListener {
                         doRemove(res);
                         break;
                     case IResourceDelta.CHANGED:
-                        
-                        //
-                        // Look for changes to molecule file stores 
-                        // (regular files of molecules that are treated like a 
-                        // mini-database).
-                        // 
                         // TODO: look for .knime file name
                         if (res instanceof IFile) {
                             doRefresh(res);
