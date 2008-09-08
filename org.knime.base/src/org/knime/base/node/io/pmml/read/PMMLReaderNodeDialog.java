@@ -19,12 +19,8 @@
 package org.knime.base.node.io.pmml.read;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -36,10 +32,14 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.InvalidRegistryObjectException;
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
-import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.pmml.ExtractModelTypeHandler;
 import org.knime.core.node.port.pmml.PMMLMasterContentHandler;
@@ -55,17 +55,19 @@ public class PMMLReaderNodeDialog extends DefaultNodeSettingsPane {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             PMMLReaderNodeDialog.class);
     
-    private static final 
-        Map<String, Set<Class<? extends PMMLPortObject>>>REGISTRY 
-            = new HashMap<String, Set<Class<? extends PMMLPortObject>>>();
+    /** Config key for the port object implementation class name. */
+    static final String PORT_OBJECT_KEY = "pmml.reader.porttype_selection";
     
-    private static List<String>EMPTY_LIST = new ArrayList<String>();
+    private static final 
+        Map<String, Class<? extends PMMLPortObject>>REGISTRY 
+            = new HashMap<String, Class<? extends PMMLPortObject>>();
+    
+    private String m_selectedPortType;
     
     
     // TODO: only one PortObject per ModelType!!!
     
     static {
-        EMPTY_LIST.add("No valid PortObject found for this selected model!");
         IExtensionRegistry registry = Platform.getExtensionRegistry();
         for (IConfigurationElement element : registry
                     .getConfigurationElementsFor("org.knime.base.pmmlports")) {
@@ -75,15 +77,9 @@ public class PMMLReaderNodeDialog extends DefaultNodeSettingsPane {
                     = (Class<?extends PMMLPortObject>)Class.forName(element
                             .getAttribute("PMMLPortObject"));
                 if (REGISTRY.get(modelType) == null) {
-                    // add set
-                    Set<Class<? extends PMMLPortObject>>ports 
-                    = new HashSet<Class<? extends PMMLPortObject>>();
-                    ports.add(clazz);
-                    REGISTRY.put(modelType, ports);
-                } else {
-                    // add to set
-                    REGISTRY.get(modelType).add(clazz);
-                }
+                    // add class
+                    REGISTRY.put(modelType, clazz);
+                } // else already registered -> first come first serve
             } catch (InvalidRegistryObjectException e) {
                 throw new IllegalArgumentException(e);
             } catch (ClassNotFoundException e) {
@@ -91,9 +87,9 @@ public class PMMLReaderNodeDialog extends DefaultNodeSettingsPane {
             }
             for (String key : REGISTRY.keySet()) {
                 LOGGER.debug("model type: " + key);
-                for (Class<? extends PMMLPortObject>clazz : REGISTRY.get(key)) {
-                    LOGGER.debug("port object: " + clazz.getSimpleName());
-                }
+                    LOGGER.debug("port object: " 
+                            + REGISTRY.get(key).getSimpleName());
+                
             }
         }
     }
@@ -105,12 +101,6 @@ public class PMMLReaderNodeDialog extends DefaultNodeSettingsPane {
      */
     public PMMLReaderNodeDialog() {
         final SettingsModelString fileNameModel = createFileChooserModel();
-        final SettingsModelString portObjectSelectionModel 
-            = createPortObjectSelectionModel();
-        final DialogComponentStringSelection portObjSelection = 
-            new DialogComponentStringSelection(
-                    portObjectSelectionModel, "Select desired target port", 
-                    EMPTY_LIST);
         
         fileNameModel.addChangeListener(new ChangeListener() {
 
@@ -121,19 +111,12 @@ public class PMMLReaderNodeDialog extends DefaultNodeSettingsPane {
                         String modelType = extractType(
                                 fileNameModel.getStringValue());
                         // go into registry
-                        Set<Class<? extends PMMLPortObject>>portObjects 
+                        Class<? extends PMMLPortObject>portObject 
                             = REGISTRY.get(modelType); 
-                        if (portObjects == null) {
-                            portObjSelection.replaceListItems(
-                                    EMPTY_LIST, null);
+                        if (portObject == null) {
+                            m_selectedPortType = null;
                         } else {
-                            // set values to port tpye select box model
-                            List<String>classNames = new ArrayList<String>();
-                            for (Class<? extends PMMLPortObject>clazz 
-                                        : portObjects) {
-                                classNames.add(clazz.getName());
-                            }
-                            portObjSelection.replaceListItems(classNames, null);
+                            m_selectedPortType = portObject.getName();
                         }
                     } catch (ParserConfigurationException e) {
                         LOGGER.error("Error parsing file " 
@@ -150,7 +133,6 @@ public class PMMLReaderNodeDialog extends DefaultNodeSettingsPane {
         
         addDialogComponent(new DialogComponentFileChooser(
                 fileNameModel, "pmml.reader", ".xml", ".pmml"));
-        addDialogComponent(portObjSelection);
     }
     
     private String extractType(final String fileName) 
@@ -170,14 +152,31 @@ public class PMMLReaderNodeDialog extends DefaultNodeSettingsPane {
         return modelTypeHdl.getModelType().name();
     }
     
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public void saveAdditionalSettingsTo(final NodeSettingsWO settings)
+            throws InvalidSettingsException {
+        // adding the specific port object class name. 
+        settings.addString(PORT_OBJECT_KEY, m_selectedPortType);
+        super.saveAdditionalSettingsTo(settings);
+    }
     
     /**
      * 
-     * @return model for the port type selection
+     * {@inheritDoc}
      */
-    static SettingsModelString createPortObjectSelectionModel() {
-        return new SettingsModelString("pmml.reader.porttype_selection", "");
+    @Override
+    public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
+            final DataTableSpec[] specs) throws NotConfigurableException {
+        // loading the specific port obejct class name
+        m_selectedPortType = settings.getString(PORT_OBJECT_KEY, "");
+        super.loadAdditionalSettingsFrom(settings, specs);
     }
+    
+    
 
     /**
      * 

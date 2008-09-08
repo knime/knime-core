@@ -67,28 +67,11 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(PMMLReaderNodeModel.class);
-
-//    private static final String PMML_3_0 = "/schemata/pmml-3-0.xsd";
-//
-//    private static final String PMML_3_1 = "/schemata/pmml-3-1.xsd";
-//
-//    private static final String PMML_3_2 = "/schemata/pmml-3-2.xsd";
-//    
-//    private static final Map<String, String> version_schema_map 
-//        = new HashMap<String, String>();
-//
-//    
-//    static {
-//        version_schema_map.put("3.0", PMML_3_0);
-//        version_schema_map.put("3.1", PMML_3_1);
-//        version_schema_map.put("3.2", PMML_3_2);
-//    }
     
     private SettingsModelString m_file =
             PMMLReaderNodeDialog.createFileChooserModel();
 
-    private SettingsModelString m_portObjectClassName =
-            PMMLReaderNodeDialog.createPortObjectSelectionModel();
+    private String m_portObjectClassName = null;
 
     private PMMLModelType m_type;
 
@@ -261,10 +244,10 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
         // TODO: this instantiation has to be done differently
         // (without the necessity of a default contructor)
         // retrieve selected PortObject class -> instantiate and load it
-        LOGGER.debug("class name: " + m_portObjectClassName.getStringValue());
+        LOGGER.debug("class name: " + m_portObjectClassName);
         Class<? extends PMMLPortObject> clazz =
                 (Class<? extends PMMLPortObject>)Class
-                        .forName(m_portObjectClassName.getStringValue());
+                        .forName(m_portObjectClassName);
         PMMLPortObject portObject = clazz.newInstance();
         m_spec = dataDictionaryToDataTableSpec();
         portObject.loadFrom(m_spec, new FileInputStream(new File(m_file
@@ -282,7 +265,8 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_file.loadSettingsFrom(settings);
-        m_portObjectClassName.loadSettingsFrom(settings);
+        m_portObjectClassName = settings.getString(
+                PMMLReaderNodeDialog.PORT_OBJECT_KEY);
     }
 
     /**
@@ -299,7 +283,8 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_file.saveSettingsTo(settings);
-        m_portObjectClassName.saveSettingsTo(settings);
+        settings.addString(PMMLReaderNodeDialog.PORT_OBJECT_KEY,
+                m_portObjectClassName);
     }
 
     /**
@@ -309,7 +294,12 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_file.validateSettings(settings);
-        m_portObjectClassName.validateSettings(settings);
+        String portObjClassName = settings.getString(
+                PMMLReaderNodeDialog.PORT_OBJECT_KEY);
+        if (portObjClassName == null || portObjClassName.isEmpty()) {
+            throw new InvalidSettingsException(
+                    "Model not supported!");
+        }
     }
 
     /**
