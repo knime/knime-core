@@ -641,12 +641,12 @@ public final class Node implements NodeModelWarningListener {
         // TODO allow for optional inputs
         for (int i = 0; i < inData.length; i++) {
             if (inData[i] == null) {
-                m_logger.error("failed execute");
+                m_logger.error("execute failed, input contains null");
                 // TODO NEWWFM state event
                 // TODO: also notify message/progress listeners
                 createErrorMessageAndNotify(
-                        "Couldn't get data from predecessor (Port No."
-                        + i + "). Is it executed?");
+                        "Couldn't get data from predecessor (Port No." 
+                        + i + ").");
                 // notifyStateListeners(new NodeStateChangedEvent.EndExecute());
                 return false;
             }
@@ -662,7 +662,7 @@ public final class Node implements NodeModelWarningListener {
                 m_logger.error("  (Wanted: "
                         + thisType.getPortObjectClass().getName() + ", "
                         + "actual: " + inData[i].getClass().getName() + ")");
-                // TODO: return here???
+                return false;
             }
         }
 
