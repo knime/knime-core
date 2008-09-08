@@ -173,6 +173,8 @@ public class PMMLClusterHandler extends PMMLContentHandler {
     public void startElement(final String uri, final String localName, 
             final String name,
             final Attributes atts) throws SAXException {
+        //TODO: -> ensure to throw exception on method distribution/kohonen/etc.
+        
         // if Array -> open buffer
         if (name.equals("Array") && m_elementStack.peek().equals("Cluster")) {
             m_buffer = new StringBuffer();

@@ -41,11 +41,6 @@ import org.knime.core.node.port.pmml.PMMLPortObject;
  */
 public class PMMLWriterNodeModel extends GenericNodeModel {
     
-    /** Generic port type of pmml port. Should not be used elsewhere as this
-     * field is subject to change. */
-    public static final PortType PMML_PORTTYPE = 
-        new PortType(PMMLPortObject.class);
-    
     
     private final SettingsModelString m_outfile 
         = PMMLWriterNodeDialog.createFileModel();
@@ -54,7 +49,8 @@ public class PMMLWriterNodeModel extends GenericNodeModel {
      * 
      */
     public PMMLWriterNodeModel() {
-        super(new PortType[] {PMML_PORTTYPE}, new PortType[] {});
+        super(new PortType[] {new PortType(PMMLPortObject.class)}, 
+                new PortType[] {});
     }
 
     /**

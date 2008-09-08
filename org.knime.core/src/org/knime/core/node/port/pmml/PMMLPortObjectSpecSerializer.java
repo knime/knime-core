@@ -67,34 +67,5 @@ public class PMMLPortObjectSpecSerializer
         portObjectSpec.saveTo(out);
         
     }
-    
-
-    /*
-    private void init(final File file)
-            throws TransformerConfigurationException, SAXException,
-            FileNotFoundException {
-        SAXTransformerFactory fac =
-                (SAXTransformerFactory)TransformerFactory.newInstance();
-        m_handler = fac.newTransformerHandler();
-
-        Transformer t = m_handler.getTransformer();
-        t.setOutputProperty(OutputKeys.METHOD, "xml");
-        t.setOutputProperty(OutputKeys.INDENT, "yes");
-
-        m_fos = new FileOutputStream(file);
-        m_handler.setResult(new StreamResult(m_fos));
-
-        // PMML root element, namespace declaration, etc.
-        m_handler.startDocument();
-        AttributesImpl attr = new AttributesImpl();
-        attr.addAttribute(null, null, "version", PMMLPortObjectSpec.CDATA, 
-                "3.1");
-        attr.addAttribute(null, null, "xmlns", PMMLPortObjectSpec.CDATA,
-                "http://www.dmg.org/PMML-3_1");
-        attr.addAttribute(null, null, "xmlns:xsi", PMMLPortObjectSpec.CDATA,
-                "http://www.w3.org/2001/XMLSchema-instance");
-        m_handler.startElement(null, null, "PMML", attr);
-    }
-    */
 
 }

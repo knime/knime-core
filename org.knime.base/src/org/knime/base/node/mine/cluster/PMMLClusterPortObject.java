@@ -365,11 +365,11 @@ public class PMMLClusterPortObject extends PMMLPortObject {
     /** {@inheritDoc} */
     @Override
     public void loadFrom(final PMMLPortObjectSpec spec, 
-            final InputStream in) 
+            final InputStream in, final String version) 
         throws ParserConfigurationException, SAXException, IOException {
         PMMLClusterHandler hdl = new PMMLClusterHandler();
         super.addPMMLContentHandler("clusterModel", hdl);
-        super.loadFrom(spec, in);
+        super.loadFrom(spec, in, version);
         hdl = (PMMLClusterHandler)super.getPMMLContentHandler(
                 "clusterModel");
         if (hdl.getClusterCoverage() != null) {
@@ -394,6 +394,9 @@ public class PMMLClusterPortObject extends PMMLPortObject {
     @Override
     public String getSummary() {
         String labels = "";
+        if (m_labels == null) {
+            return "ClusteringModel";
+        }
         for (int i = 0; i < m_labels.length; i++) {
             if (i < m_labels.length - 1) {
                 labels += m_labels[i] + ", ";

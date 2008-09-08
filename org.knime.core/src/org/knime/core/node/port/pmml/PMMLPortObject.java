@@ -21,6 +21,8 @@ package org.knime.core.node.port.pmml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.ParserConfigurationException;
@@ -30,10 +32,10 @@ import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
@@ -57,6 +59,25 @@ public abstract class PMMLPortObject implements PortObject {
     /** Constant for Value. */
     protected static final String VALUE = "Value";
     
+    private static final String PMML_3_0 = "/schemata/pmml-3-0.xsd";
+
+    private static final String PMML_3_1 = "/schemata/pmml-3-1.xsd";
+
+    private static final String PMML_3_2 = "/schemata/pmml-3-2.xsd";
+    
+    private static final Map<String, String> version_schema_map 
+        = new HashMap<String, String>();
+
+    public static String getLocalSchemaLocation(final String version) {
+        return version_schema_map.get(version);
+    }
+    
+    static {
+        version_schema_map.put("3.0", PMML_3_0);
+        version_schema_map.put("3.1", PMML_3_1);
+        version_schema_map.put("3.2", PMML_3_2);
+    }
+    
     private TransformerHandler m_handler;
     
     private PMMLPortObjectSpec m_spec;
@@ -77,6 +98,7 @@ public abstract class PMMLPortObject implements PortObject {
         }
         return serializer;
     }
+    
     
     /**
      * Default constructor necessary for loading. Derived classes also 
@@ -182,51 +204,46 @@ public abstract class PMMLPortObject implements PortObject {
     @Override
     public abstract String getSummary();
     
-    /**
-     * Loads the port object by reading the file and setting the member 
-     * variables, subclasses must override this method in order to register a 
-     * specific content handler to the master content handler.
-     * @see #addPMMLContentHandler(String, PMMLContentHandler)
-     *  
-     * @param spec the referring port object spec 
-     * @param stream the streamed file containing the PMML
-     * @throws ParserConfigurationException if parser cannot be instantiated
-     * @throws SAXException if something goes wrong during parsing
-     * @throws IOException if the file cannot be found or read
-     */
-    public void loadFrom(final PMMLPortObjectSpec spec, 
-            final InputStream stream) 
-            throws ParserConfigurationException, SAXException, IOException {
+    
+    public void loadFrom(final PMMLPortObjectSpec spec, final InputStream in, 
+            final String version) 
+            throws SAXException, ParserConfigurationException, IOException {
         SAXParserFactory fac = SAXParserFactory.newInstance();
+        
         SchemaFactory schemaFac = SchemaFactory.newInstance(
                 XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        Schema schema = schemaFac.newSchema(new SAXSource(new InputSource(
-                getSchemaInputStream())));
+        Schema schema = schemaFac.newSchema(new StreamSource(
+                getSchemaInputStream(version)));
         fac.setSchema(schema);
         fac.setNamespaceAware(true);
-
-        SAXParser parser = fac.newSAXParser();  
+        
+        SAXParser parser = fac.newSAXParser(); 
+        // TODO: remove all X- elements!!!
+        
+        XFilter filter = new XFilter(version);
+        filter.setParent(parser.getXMLReader());
+        
         ExtractModelTypeHandler modelTypeHdl = new ExtractModelTypeHandler();
         
         m_masterHandler.addContentHandler(ExtractModelTypeHandler.ID, 
                 modelTypeHdl);
-        parser.parse(stream, m_masterHandler);
+        filter.setContentHandler(m_masterHandler);
+        filter.parse(new InputSource(in));
         ExtractModelTypeHandler hdl = (ExtractModelTypeHandler)m_masterHandler
             .getDefaultHandler(ExtractModelTypeHandler.ID);
         m_modelType = hdl.getModelType();
-        m_spec = spec;
+        m_spec = spec;        
     }
     
     
-    private InputStream getSchemaInputStream() {
+    private InputStream getSchemaInputStream(final String version) {
         ClassLoader loader = PMMLPortObject.class.getClassLoader();
         String packagePath =
                 PMMLPortObject.class.getPackage().getName().replace('.', '/');
-        String correctedPath = "/schemata/pmml-3-1.xsd";
         return loader.getResourceAsStream(
-                packagePath + correctedPath);
+                packagePath + version_schema_map.get(version));
     }
-
+    
     
     /**
      * 

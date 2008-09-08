@@ -408,11 +408,12 @@ public class PMMLSVMPortObject extends PMMLPortObject {
 
     /** {@inheritDoc} */
     @Override
-    public void loadFrom(final PMMLPortObjectSpec spec, final InputStream in)
+    public void loadFrom(final PMMLPortObjectSpec spec, final InputStream in,
+            final String version)
             throws ParserConfigurationException, SAXException, IOException {
         PMMLSVMHandler hdl = new PMMLSVMHandler();
         super.addPMMLContentHandler("SVM", hdl);
-        super.loadFrom(spec, in);
+        super.loadFrom(spec, in, version);
         hdl = (PMMLSVMHandler)super.getPMMLContentHandler("SVM");
         ArrayList<Svm> svmlist = hdl.getSVMs();
         m_svms = new Svm[svmlist.size()];

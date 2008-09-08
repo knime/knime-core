@@ -62,6 +62,8 @@ public class PMMLReaderNodeDialog extends DefaultNodeSettingsPane {
     private static List<String>EMPTY_LIST = new ArrayList<String>();
     
     
+    // TODO: only one PortObject per ModelType!!!
+    
     static {
         EMPTY_LIST.add("No valid PortObject found for this selected model!");
         IExtensionRegistry registry = Platform.getExtensionRegistry();

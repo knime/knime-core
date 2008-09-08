@@ -39,6 +39,16 @@ public class PMMLMasterContentHandler extends PMMLContentHandler {
     private Map<String, PMMLContentHandler>m_registeredHandlers 
         = new HashMap<String, PMMLContentHandler>();
     
+    private String m_version;
+    
+    /**
+     * 
+     * @return the version of the parsed PMML file
+     */
+    public String getVersion() {
+        return m_version;
+    }
+    
     /**
      * Adds a default PMML content handler, that is able to extract the 
      * newcessary information from the PMML file for the referring model.
@@ -117,6 +127,11 @@ public class PMMLMasterContentHandler extends PMMLContentHandler {
     @Override
     public void startElement(final String uri, final String localName, 
             final String name, final Attributes atts) throws SAXException {
+        if ("PMML".equals(name)) {
+            if (atts != null) {
+                m_version = atts.getValue("version");
+            }
+        }
         for (ContentHandler hdl : m_registeredHandlers.values()) {
             hdl.startElement(uri, localName, name, atts);
         }        
@@ -131,7 +146,7 @@ public class PMMLMasterContentHandler extends PMMLContentHandler {
     public void error(final SAXParseException exception) throws SAXException {
         LOGGER.error("Error during validation of PMML port object: ", 
                 exception);
-        throw exception;
+//        throw exception;
     }
 
     /**
@@ -143,7 +158,7 @@ public class PMMLMasterContentHandler extends PMMLContentHandler {
             throws SAXException {
         LOGGER.fatal("Error during validation of PMML port object: ", 
                 exception);
-        throw exception;
+//        throw exception;
     }
 
     /**
@@ -155,7 +170,7 @@ public class PMMLMasterContentHandler extends PMMLContentHandler {
             throws SAXException {
         LOGGER.warn("Error during validation of PMML port object: ", 
                 exception);
-        throw exception;
+//        throw exception;
     }
 
 

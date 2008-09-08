@@ -80,7 +80,7 @@ public final class PMMLPortObjectSerializer
                         "Found unexpected zip entry " + entryName 
                         + "! Expected " + FILE_NAME);
             }
-            portObj.loadFrom((PMMLPortObjectSpec)spec, in);
+            portObj.loadFrom((PMMLPortObjectSpec)spec, in, "3.1");
             return (PMMLPortObject)portObj;
         } catch (Exception e) {
             throw new IOException(e);

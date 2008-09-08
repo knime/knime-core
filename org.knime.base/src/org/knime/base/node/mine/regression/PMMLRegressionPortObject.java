@@ -81,12 +81,12 @@ public final class PMMLRegressionPortObject extends PMMLPortObject {
     /** {@inheritDoc} */
     @Override
     public void loadFrom(final PMMLPortObjectSpec spec, 
-            final InputStream stream) 
+            final InputStream stream, final String version) 
         throws ParserConfigurationException, SAXException, IOException {
         PMMLRegressionContentHandler hdl = 
             new PMMLRegressionContentHandler(spec);
         super.addPMMLContentHandler("RegressionModel", hdl);
-        super.loadFrom(spec, stream);
+        super.loadFrom(spec, stream, version);
         try {
             hdl.checkValidity();
         } catch (IllegalStateException e) {

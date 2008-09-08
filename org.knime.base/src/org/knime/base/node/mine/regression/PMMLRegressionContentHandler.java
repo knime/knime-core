@@ -266,7 +266,7 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
                 || "LocalTransformations".equals(name)
                 || "ModelVerification".equals(name)
                 || "Extension".equals(name)) {
-            LOGGER.warn("Skipping unknown element" + name);
+            LOGGER.warn("Skipping unknown element " + name);
         }
     }
     
