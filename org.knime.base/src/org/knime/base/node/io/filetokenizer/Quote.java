@@ -39,11 +39,11 @@ public class Quote {
 
     private final String m_right;
 
-    private char m_escape;
+    private final char m_escape;
 
-    private boolean m_hasEscape;
+    private final boolean m_hasEscape;
     
-    private boolean m_dontRemove;
+    private final boolean m_dontRemove;
 
     /* keys used to store parameters in a config object */
     private static final String CFGKEY_LEFT = "left";
@@ -226,11 +226,11 @@ public class Quote {
      * Returns "[left]...[right], '[esc]'", with ", [esc]" only printed when an
      * escape char is defined.
      * 
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         result.append(getLeft());
         result.append("...");
         result.append(getRight());
@@ -272,4 +272,12 @@ public class Quote {
         return false;
     }
     
-} // Quote
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return getLeft().hashCode() ^ getRight().hashCode();
+    }
+    
+}

@@ -179,7 +179,7 @@ public class Comment {
      * "indcludeInToken" is set, and 'r' only printed when flag
      * "returnAsSeparateToken is set.
      * 
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
