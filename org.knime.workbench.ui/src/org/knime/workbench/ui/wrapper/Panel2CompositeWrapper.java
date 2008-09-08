@@ -122,7 +122,7 @@ public class Panel2CompositeWrapper extends Composite {
     
     /**
      * Workaround for https://bugs.eclipse.org/bugs/show_bug.cgi?id=171432
-     * (comment #15)
+     * (comment #15).
      */
     private static void initX11ErrorHandlerFix() {
         assert EventQueue.isDispatchThread();
@@ -164,7 +164,7 @@ public class Panel2CompositeWrapper extends Composite {
             // to XLibWrapper.ToolkitErrorHandler, which indicates the start of
             // the trouble
             Timer timer = new Timer(200, new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
+                public void actionPerformed(final ActionEvent e) {
                     try {
                         Object savedErrorHandler =
                                 savedErrorHandlerField.get(null);
