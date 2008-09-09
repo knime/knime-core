@@ -138,6 +138,31 @@ public class Prototype {
      * Ignores all DataCells that are not compatible to DoubleValue.
      * 
      * @param row to compare.
+     * @param indices to use.
+     * @return distance value.
+     */
+    public double getSquaredEuclideanDistance(final DataRow row, 
+            final int[] indices) {
+        //TODO: Allow arbitrary distance objects as parameter
+        double[] values = new double[indices.length];
+        for (int i = 0; i < values.length; i++) {
+            DataCell cell = row.getCell(indices[i]);
+            if (cell.isMissing()) {
+                return -1;
+            }
+            if (cell.getType().isCompatible(DoubleValue.class)) {
+                values[i] = ((DoubleValue) cell).getDoubleValue();
+            }
+        }
+        Distance dist = Distance.getInstance();
+        return dist.computeSquaredEuclidean(m_values, values);
+    }
+    
+    /**
+     * Computes the distance between this prototype and a given {@link DataRow}.
+     * Ignores all DataCells that are not compatible to DoubleValue.
+     * 
+     * @param row to compare.
      * @return distance value.
      */
     public double getDistance(final DataRow row) {

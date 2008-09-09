@@ -18,12 +18,14 @@
  */
 package org.knime.base.node.mine.cluster;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import org.knime.base.node.mine.cluster.kmeans.LinearNorm;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLContentHandler;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -40,14 +42,29 @@ public class PMMLClusterHandler extends PMMLContentHandler {
     // String[] usedColumns <ClusteringField field="">
     // int[] clusterCoverage -> <Cluster size=""> 
     
+    private final static NodeLogger LOGGER = NodeLogger.getLogger(
+            PMMLClusterHandler.class);
+    
+    /* 
+     * Conformance:
+     * ComparisonMeasure -> euclidean although only squaredEuclidean is in core
+     * 
+     * Compare function -> absDiff (absolute distance)
+     */
+    
+    static final String COMPARISON_MEASURE = "squaredEuclidean";
     
     private static final Set<String>notSupportedElements 
+        = new LinkedHashSet<String>();
+    
+    private static final Set<String>ignoredElements 
         = new LinkedHashSet<String>();
     
     static {
         notSupportedElements.add("KohonenMap");
         notSupportedElements.add("Covariances");
-        notSupportedElements.add(" ");
+        
+        ignoredElements.add("MissingValueWeights");
     }
     
     private int m_nrOfClusters;
@@ -61,11 +78,11 @@ public class PMMLClusterHandler extends PMMLContentHandler {
     
     private Stack<String>m_elementStack = new Stack<String>(); 
     
-    private Map<String, double[]>m_normValues = new HashMap<String, double[]>();
     private String m_lastDerivedField;
     
-    private double[] m_mins;
-    private double[] m_maxs;
+    private Map<String, LinearNorm>m_linearNorms;
+    private LinearNorm m_currentLinearNorm;
+    
     
     /**
      * 
@@ -130,27 +147,23 @@ public class PMMLClusterHandler extends PMMLContentHandler {
         m_buffer = null;
         m_currentCluster = 0;
         m_lastDerivedField = null;
-        m_mins = new double[m_usedColumns.size()];
-        m_maxs = new double[m_usedColumns.size()];
-        int i = 0;
-        for (String col : m_usedColumns) {
-            double[] vals = m_normValues.get(col);
-            if (vals != null) {
-                // only columns with left and right margin 
-                // or columns of type double and values 
-                // have min and max values
-                m_mins[i] = vals[0];
-                m_maxs[i] = vals[1];
-            } else {
-                // fields can not be normalized
-                // then we put Double.NaN in order to signalize the predictor
-                // that unnormalization is not necessary
-                m_mins[i] = Double.NaN;
-                m_maxs[i] = Double.NaN;             
+        if (m_linearNorms != null) {
+            for (int clusterNr = 0; clusterNr < m_prototypes.length; 
+                clusterNr++) {
+                int columnIndex = 0;
+                // if there are some normalized columns - unnormalize them
+                for (String col : m_usedColumns) {
+                    LinearNorm linearNorm = m_linearNorms.get(col);
+                    if (linearNorm != null) {
+                        // normalize
+                        m_prototypes[clusterNr][columnIndex] =
+                                linearNorm.unnormalize(
+                                        m_prototypes[clusterNr][columnIndex]);
+                    } // else leave prototype as is
+                    columnIndex++;
+                }
             }
-            i++;
         }
-        m_normValues.clear();
     }
 
     /**
@@ -184,7 +197,13 @@ public class PMMLClusterHandler extends PMMLContentHandler {
             final String name,
             final Attributes atts) throws SAXException {
         //TODO: -> ensure to throw exception on method distribution/kohonen/etc.
-        
+        if (notSupportedElements.contains(name)) {
+            throw new IllegalArgumentException(
+                    "Element " + name + " is not supported!");
+        }
+        if (ignoredElements.contains(name)) {
+            LOGGER.warn("Element " + name + " is ignored.");
+        }
         // if Array -> open buffer
         if (name.equals("Array") && m_elementStack.peek().equals("Cluster")) {
             m_buffer = new StringBuffer();
@@ -234,42 +253,48 @@ public class PMMLClusterHandler extends PMMLContentHandler {
                 m_usedColumns.add(atts.getValue("name"));
             }            
         } else if (name.equals("NormContinuous")) {
-            m_lastDerivedField = atts.getValue("field");
+            String fieldName = atts.getValue("field");
+            m_lastDerivedField = fieldName;
         } else if (name.equals("LinearNorm")) {
+            if (m_currentLinearNorm == null) {
+                m_currentLinearNorm = new LinearNorm(m_lastDerivedField);
+            }
+            if (!m_currentLinearNorm.getName().equals(m_lastDerivedField)) {
+                // initialize only when necessary
+                if (m_linearNorms == null) {
+                    m_linearNorms = new LinkedHashMap<String, LinearNorm>();
+                }
+                m_linearNorms.put(m_currentLinearNorm.getName(), 
+                        m_currentLinearNorm);
+                m_currentLinearNorm = new LinearNorm(m_lastDerivedField);
+            }
             double val = Double.parseDouble(atts.getValue("orig"));
-            boolean min = Double.parseDouble(atts.getValue("norm")) == 0;
-            double[] vals = m_normValues.get(m_lastDerivedField);
-            if (vals == null) {
-                vals = new double[2];
-                vals[0] = Double.NaN;
-                vals[1] = Double.NaN;
+            double norm = Double.parseDouble(atts.getValue("norm"));
+            m_currentLinearNorm.addInterval(val, norm);
+        } else if (name.equals("ComparisonMeasure")) {
+            // only absolute difference as compare function is supported
+            String compareFunction = atts.getValue("compareFunction");
+            // set default values here - because we do not validate against 
+            // schema
+            if (compareFunction == null) {
+               compareFunction = "absDiff"; 
             }
-            if (min) {
-                vals[0] = val;
-            } else {
-                vals[1] = val;
+            if (!compareFunction.equals("absDiff")) {
+                throw new IllegalArgumentException(
+                        "Only the absolute difference (\"absDiff\") as " 
+                        + "compare function is supported!");
             }
-            m_normValues.put(m_lastDerivedField, vals);
+        } else if (!m_elementStack.isEmpty() 
+                && m_elementStack.peek().equals("ComparisonMeasure")) {
+            if (!name.equals(COMPARISON_MEASURE)) {
+                throw new IllegalArgumentException(
+                        "\"" + COMPARISON_MEASURE 
+                        + "\" is the only supported comparison " 
+                        + "measure! Found " + name + ".");
+            }
+            
         }
         m_elementStack.push(name);
     }
-
-    /**
-     * 
-     * @return the minima for each derived fields
-     */
-    public double[] getMins() {
-        return m_mins;
-    }
-
-    /**
-     * 
-     * @return the maxima of each derived field
-     */
-    public double[] getMaxs() {
-        return m_maxs;
-    }
-
-
 
 }

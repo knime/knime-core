@@ -188,6 +188,39 @@ public final class Distance {
      * Computes the Euclidean distance between two normalized vectors.
      * 
      * @param x an array of doubles
+     * @param y an array of doubles
+     * @return the Euclidean distance between <code>x</code> and
+     *         <code>y</code>.
+     * @throws NullPointerException if one of the given arrays is
+     *             <code>null</code>
+     */
+    public final double computeSquaredEuclidean(final double[] x, 
+            final double[] y) {
+        assert (x.length == y.length);
+        final int length = x.length;
+        double result = 0.0;
+        for (int i = 0; i < length; i++) {
+            double xd = x[i];
+            if (Double.isNaN(xd)) {
+                continue;
+            }
+            double yd = y[i];
+            if (Double.isNaN(yd)) {
+                continue;
+            }
+            double diff = xd - yd;
+            result += (diff * diff);
+        }
+        assert result >= 0.0 : "result=" + result;
+        return result;
+    }    
+    
+    
+    
+    /**
+     * Computes the Euclidean distance between two normalized vectors.
+     * 
+     * @param x an array of doubles
      * @param y an array of DoubleValues
      * @return the Euclidean distance between <code>x</code> and
      *         <code>y</code>

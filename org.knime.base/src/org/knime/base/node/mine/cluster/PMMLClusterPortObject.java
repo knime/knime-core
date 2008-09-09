@@ -50,8 +50,7 @@ public class PMMLClusterPortObject extends PMMLPortObject {
     private int m_nrOfClusters;
     private int[] m_clusterCoverage;
     private String[] m_labels;
-    private double[] m_mins;
-    private double[] m_maxs;
+    
     
     /**
      * PMML Cluster port type.
@@ -70,16 +69,12 @@ public class PMMLClusterPortObject extends PMMLPortObject {
      * 
      * @param prototypes the unnormalized prototypes of clusters
      * @param nrOfClusters number of clusters
-     * @param mins minima of the used column domains
-     * @param maxs maxima of the used column domains
      * @param portSpec the {@link PMMLPortObjectSpec} holding information of the
      *  PMML DataDictionary and the PMML MiningSchema
      */
     public PMMLClusterPortObject(
             final double[][] prototypes,
             final int nrOfClusters, 
-            final double[] mins,
-            final double[] maxs,
             final PMMLPortObjectSpec portSpec) {
         super(portSpec);
         m_nrOfClusters = nrOfClusters;
@@ -126,37 +121,7 @@ public class PMMLClusterPortObject extends PMMLPortObject {
         m_clusterCoverage = clusterCoverage;
     }
     
-    /**
-     * 
-     * @param mins domain minima of used columns
-     */
-    public void setMinima(final double[] mins) {
-        m_mins = mins;
-    }
-    
-    /**
-     * 
-     * @return minima for cloumn domains
-     */
-    public double[] getMinima() {
-        return m_mins;
-    }
-    
-    /**
-     * 
-     * @param maxs maxima for column domains
-     */
-    public void setMaxima(final double[] maxs) {
-        m_maxs = maxs;
-    }
-    
-    /**
-     * 
-     * @return maxima for used column domains
-     */
-    public double[] getMaxima() {
-        return m_maxs;
-    }
+
     
 
     /**
@@ -226,7 +191,6 @@ public class PMMLClusterPortObject extends PMMLPortObject {
             PMMLPortObjectSpec.writeMiningSchema(getSpec(), handler);
             addUsedDistanceMeasure(handler);
             addClusteringFields(handler, m_usedColumns);
-//            addCenterFields(handler, m_usedColumns);
             addClusters(handler, m_prototypes);
         }
         handler.endElement(null, null, "ClusteringModel");
@@ -244,8 +208,9 @@ public class PMMLClusterPortObject extends PMMLPortObject {
         atts.addAttribute(null, null, "kind", CDATA, "distance");
         handler.startElement(null, null, "ComparisonMeasure", atts);
         // for now hard-coded squared euclidean
-        handler.startElement(null, null, "squaredEuclidean", null);
-        handler.endElement(null, null, "squaredEuclidean");
+        handler.startElement(null, null, 
+                PMMLClusterHandler.COMPARISON_MEASURE, null);
+        handler.endElement(null, null, PMMLClusterHandler.COMPARISON_MEASURE);
         handler.endElement(null, null, "ComparisonMeasure");
     }
     
@@ -267,13 +232,13 @@ public class PMMLClusterPortObject extends PMMLPortObject {
         }
     }
     
-    /**
+    /*
      * Writes the center fields (name, minimum, and maximum).
      * 
      * @param handler to write to
      * @param colSpecs used columns in correct order
      * @throws SAXException if something goes wrong
-     */
+     *
     protected void addCenterFields(final TransformerHandler handler,
             final Set<DataColumnSpec> colSpecs) throws SAXException {
         handler.startElement(null, null, "CenterFields", null);
@@ -313,6 +278,7 @@ public class PMMLClusterPortObject extends PMMLPortObject {
         }
         handler.endElement(null, null, "CenterFields");
     }
+    */
     
     /**
      * Writes the actual cluster prototypes.
@@ -378,8 +344,6 @@ public class PMMLClusterPortObject extends PMMLPortObject {
         m_prototypes = hdl.getPrototypes();
         m_labels = hdl.getLabels();
         
-        m_mins = hdl.getMins();
-        m_maxs = hdl.getMaxs();
         m_usedColumns = getColumnSpecsFor(spec.getLearningFields(), 
                 spec.getDataTableSpec()); 
         LOGGER.info("loaded cluster port object");

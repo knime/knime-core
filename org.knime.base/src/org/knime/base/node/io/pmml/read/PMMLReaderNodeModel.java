@@ -93,7 +93,6 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        try {
             // read the data dictionary and the mining schema and create a
             // PMMLPortObjectSpec
             if (m_file.getStringValue() == null 
@@ -101,7 +100,13 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
                 throw new InvalidSettingsException(
                         "Please select a PMML file!");
             }
-            m_spec = dataDictionaryToDataTableSpec();
+            try {
+                m_spec = dataDictionaryToDataTableSpec();
+            } catch (ParserConfigurationException e1) {
+                throw new InvalidSettingsException(e1);
+            } catch (SAXException e) {
+                throw new InvalidSettingsException(e);
+            }
 
             // TODO: do also the validation here
             // TODO: remove all "x-" elements
@@ -119,14 +124,16 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
                 setWarningMessage(
                         "File seems to be not a vaild PMML file. " 
                         + "Try it anyway..");
+                throw new InvalidSettingsException(e);
+            } catch(IOException io) {
+                throw new InvalidSettingsException(io);
+            } catch (ParserConfigurationException pce) {
+                throw new InvalidSettingsException(pce);
             }
 
             LOGGER.debug("model type: " + m_type.name());
 
             return new PortObjectSpec[]{m_spec};
-        } catch (Exception e) {
-            throw new InvalidSettingsException(e);
-        }
     }
 
     /*
@@ -170,7 +177,8 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
     }
     
     
-    public void validateSchema() throws Exception {
+    public void validateSchema() throws SAXException, IOException, 
+        ParserConfigurationException {
         LOGGER.debug("Validating PMML file " + m_file.getStringValue() 
                 + ". Version = " + m_version);
         SchemaFactory schemaFac =
@@ -179,14 +187,14 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
         fac.setNamespaceAware(true);
         Schema schema = null;
         if (m_version == null) {
-            throw new InvalidSettingsException(
+            throw new SAXException(
                     "Input file is not a valid PMML file. "
                             + "Attribute \"version\" is missing");
         }
         String schemaLocation = PMMLPortObject.getLocalSchemaLocation(
                 m_version);
         if (schemaLocation == null) {
-            throw new InvalidSettingsException(
+            throw new SAXException(
                     "Version " + m_version + " is not supported!");
         }
         
