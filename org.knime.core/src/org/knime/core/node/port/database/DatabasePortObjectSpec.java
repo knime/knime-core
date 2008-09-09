@@ -113,7 +113,6 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
         }
         ModelContentRO conn = ModelContent.loadFromXML(
                 new NonClosableInputStream.Zip(is));
-        is.getNextEntry();
         ze = is.getNextEntry();
         if (!ze.getName().equals(KEY_SPEC)) {
             throw new IOException("Key \"" + ze.getName() + "\" does not "
