@@ -58,16 +58,6 @@ public class PMMLClusteringModelsParser extends TestCase {
         assertEquals("1", m_handler.getLabels()[0]);
         assertEquals("2", m_handler.getLabels()[1]);
         assertEquals("3", m_handler.getLabels()[2]);
-        // max values
-        assertEquals(6.9, m_handler.getMaxs()[0]);
-        assertEquals(2.5, m_handler.getMaxs()[1]);
-        assertEquals(7.9, m_handler.getMaxs()[2]);
-        assertEquals(4.4, m_handler.getMaxs()[3]);
-        // min values
-        assertEquals(1.0, m_handler.getMins()[0]);
-        assertEquals(0.1, m_handler.getMins()[1]);
-        assertEquals(4.3, m_handler.getMins()[2]);
-        assertEquals(2.0, m_handler.getMins()[3]);
 
         // prototypes
         assertEquals(0.0786441, m_handler.getPrototypes()[0][0]);
@@ -126,15 +116,7 @@ public class PMMLClusteringModelsParser extends TestCase {
         assertTrue(Arrays.equals(
                 new double[] {0.652542, 0.708333, 0.347222, 0.208333, 1},
                 m_handler.getPrototypes()[5]));        
-        // check min & max
-        assertEquals(10.0, m_handler.getMins()[0]);
-        assertEquals(69.0, m_handler.getMaxs()[0]);
-        assertEquals(1.0, m_handler.getMins()[1]);
-        assertEquals(25.0, m_handler.getMaxs()[1]);
-        assertEquals(43.0, m_handler.getMins()[2]);
-        assertEquals(79.0, m_handler.getMaxs()[2]);
-        assertEquals(20.0, m_handler.getMins()[3]);
-        assertEquals(44.0, m_handler.getMaxs()[3]);
+
         // check used columns
         assertTrue(m_handler.getUsedColumns().contains("PETALLEN"));
         assertTrue(m_handler.getUsedColumns().contains("PETALWID"));
@@ -167,12 +149,6 @@ public class PMMLClusteringModelsParser extends TestCase {
         assertTrue(Arrays.equals(
                 new double[] {0.69946, 0.419037, 0.591226},
                 m_handler.getPrototypes()[1]));
-        // check min & max
-        // column 0 is marital status -> nominal column
-        assertEquals(45.0, m_handler.getMins()[1]);
-        assertEquals(105.0, m_handler.getMaxs()[1]);
-        assertEquals(39000.0, m_handler.getMins()[2]);
-        assertEquals(41000.0, m_handler.getMaxs()[2]);
         // check used columns
         assertTrue(m_handler.getUsedColumns().contains("marital status"));
         assertTrue(m_handler.getUsedColumns().contains("age"));
