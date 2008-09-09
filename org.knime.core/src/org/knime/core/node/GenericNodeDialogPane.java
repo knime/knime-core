@@ -32,6 +32,9 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -124,6 +127,16 @@ public abstract class GenericNodeDialogPane {
     /** The scope object stack, it's also used when the variables tab get's 
      * activated. */
     private ScopeObjectStack m_scopeObjectStack;
+    
+    /** The specs that were provided to the most recent internalLoadSettingsFrom
+     * invocation. Ideally this member should not be kept as field but we need
+     * it when the wrapped node dialog pane calls loadSettings on user request
+     * (from the menu). */
+    private PortObjectSpec[] m_specs;
+    
+    /** The port types that were provided to the most recent 
+     * internalLoadSettingsFrom invocation. See m_specs field for details. */
+    private PortType[] m_portTypes;
 
     /** The underlying panel which keeps all the tabs. */
     private final JPanel m_panel;
@@ -230,6 +243,8 @@ public abstract class GenericNodeDialogPane {
         NodeSettings modelSettings = null;
         MemoryPolicy memoryPolicy = null;
         m_scopeObjectStack = scopeStack;
+        m_portTypes = portTypes;
+        m_specs = specs;
         try {
             SettingsLoaderAndWriter l = SettingsLoaderAndWriter.load(settings);
             modelSettings = l.getModelSettings();
@@ -353,6 +368,9 @@ public abstract class GenericNodeDialogPane {
      * commitJSpinners method (which traverses all components and commits
      * them if they are instance of JSpinner) and finally call
      * <code>saveSettingsTo(settings)</code>.
+     * 
+     * <p>Derived classes should not be required to call this method. It may
+     * change in future versions without prior notice. 
      * @param settings The settings object to write into.
      * @throws InvalidSettingsException If the settings are not applicable to
      *             the model.
@@ -363,7 +381,46 @@ public abstract class GenericNodeDialogPane {
         commitComponentsRecursively(getPanel());
         internalSaveSettingsTo(settings);
     }
-
+    
+    
+    /** Saves current settings to an output stream (in xml format). 
+     * 
+     * <p>Derived classes should not be required to call this method. It may
+     * change in future versions without prior notice. 
+     * @param out To save to.
+     * @throws InvalidSettingsException If the settings can't be save since
+     *         they are invalid
+     * @throws IOException If problems writing to the stream occur.
+     * @see #loadSettingsFrom(InputStream)
+     */
+    public final void saveSettingsTo(final OutputStream out) 
+        throws InvalidSettingsException, IOException {
+        NodeSettings settings = new NodeSettings("dialog");
+        finishEditingAndSaveSettingsTo(settings);
+        settings.saveToXML(out);
+    }
+    
+    /** Loads settings from an input stream (in xml format). 
+     * 
+     * <p>Derived classes should not be required to call this method. It may
+     * change in future versions without prior notice. 
+     * @param in to load from.
+     * @throws NotConfigurableException If settings can't be loaded since the
+     * most recent input spec does not match the settings (or is not available)
+     * @throws IOException If problems reading the stream occur.
+     * @see #saveSettingsTo(OutputStream)
+     */
+    public final void loadSettingsFrom(final InputStream in)
+        throws NotConfigurableException, IOException {
+        NodeSettingsRO settings = NodeSettings.loadFromXML(in);
+        if (m_portTypes == null) {
+            throw new NotConfigurableException("No information on incoming " 
+                    + "ports availabe");
+        }
+        internalLoadSettingsFrom(
+                settings, m_portTypes, m_specs, m_scopeObjectStack);
+    }
+    
     /**
      * JSpinner seem to have the "feature" that their value is not committed
      * when* they are being edited (by hand, not with the arrows) and someone

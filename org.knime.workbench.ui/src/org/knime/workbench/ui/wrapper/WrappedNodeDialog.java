@@ -24,6 +24,10 @@
  */
 package org.knime.workbench.ui.wrapper;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 import javax.swing.JPanel;
 
 import org.eclipse.jface.dialogs.Dialog;
@@ -44,6 +48,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
@@ -116,8 +121,8 @@ public class WrappedNodeDialog extends Dialog {
         rootItem.setAccelerator(SWT.CTRL | 'F');
         rootItem.setMenu(menu);
 
-//        final FileDialog openDialog = new FileDialog(newShell, SWT.OPEN);
-//        final FileDialog saveDialog = new FileDialog(newShell, SWT.SAVE);
+        final FileDialog openDialog = new FileDialog(newShell, SWT.OPEN);
+        final FileDialog saveDialog = new FileDialog(newShell, SWT.SAVE);
 
         MenuItem itemLoad = new MenuItem(menu, SWT.PUSH);
         itemLoad.setText("Load Settings");
@@ -125,14 +130,11 @@ public class WrappedNodeDialog extends Dialog {
         itemLoad.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
-                // TODO: functionality disabled (dialog menu item)
-                /*
                 String file = openDialog.open();
                 if (file != null) {
                     try {
-                        m_dialogPane.loadSettings(new FileInputStream(file));
-                    } catch (FileNotFoundException fnfe) {
-                        showErrorMessage(fnfe.getMessage());
+                        m_dialogPane.loadSettingsFrom(
+                                new FileInputStream(file));
                     } catch (IOException ioe) {
                         showErrorMessage(ioe.getMessage());
                     } catch (NotConfigurableException ex) {
@@ -147,23 +149,17 @@ public class WrappedNodeDialog extends Dialog {
         itemSave.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
-                // TODO : functionality disabled (dialog menu item)
-                /*
                 String file = saveDialog.open();
                 if (file != null) {
                     try {
-                        m_dialogPane.saveSettings(new FileOutputStream(file),
-                                file);
-                    } catch (FileNotFoundException fnfe) {
-                        showErrorMessage(fnfe.getMessage());
-                    } catch (InvalidSettingsException ise) {
-                        showErrorMessage("Invalid Settings\n"
-                                + ise.getMessage());
+                        m_dialogPane.saveSettingsTo(new FileOutputStream(file));
                     } catch (IOException ioe) {
                         showErrorMessage(ioe.getMessage());
+                    } catch (InvalidSettingsException ise) {
+                        showErrorMessage("Invalid Settings\n" 
+                                + ise.getMessage());
                     }
                 }
-                */
             }
         });
 
