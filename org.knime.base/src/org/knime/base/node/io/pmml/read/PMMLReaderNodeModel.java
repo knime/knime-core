@@ -96,6 +96,11 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
         try {
             // read the data dictionary and the mining schema and create a
             // PMMLPortObjectSpec
+            if (m_file.getStringValue() == null 
+                    || m_file.getStringValue().isEmpty()) {
+                throw new InvalidSettingsException(
+                        "Please select a PMML file!");
+            }
             m_spec = dataDictionaryToDataTableSpec();
 
             // TODO: do also the validation here

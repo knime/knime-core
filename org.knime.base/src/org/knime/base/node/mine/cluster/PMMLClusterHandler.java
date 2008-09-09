@@ -40,6 +40,16 @@ public class PMMLClusterHandler extends PMMLContentHandler {
     // String[] usedColumns <ClusteringField field="">
     // int[] clusterCoverage -> <Cluster size=""> 
     
+    
+    private static final Set<String>notSupportedElements 
+        = new LinkedHashSet<String>();
+    
+    static {
+        notSupportedElements.add("KohonenMap");
+        notSupportedElements.add("Covariances");
+        notSupportedElements.add(" ");
+    }
+    
     private int m_nrOfClusters;
     private double[][] m_prototypes;
     private String[] m_labels;
@@ -179,6 +189,15 @@ public class PMMLClusterHandler extends PMMLContentHandler {
         if (name.equals("Array") && m_elementStack.peek().equals("Cluster")) {
             m_buffer = new StringBuffer();
         } else if (name.equals("ClusteringModel")) {
+            // only center-based is supported
+            String modelClass = atts.getValue("modelClass");
+            if (!modelClass.equals(
+                    "centerBased")) {
+                throw new IllegalArgumentException(
+                        "Only centerBased clustering models are supported!"
+                        + " Found modelClass " + modelClass);
+            }
+            // check if the compare function is euclidean
             // if ClusterModel -> retrieve number of clusters
             m_nrOfClusters = Integer.parseInt(
                     atts.getValue("numberOfClusters"));

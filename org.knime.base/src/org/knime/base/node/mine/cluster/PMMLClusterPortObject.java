@@ -89,11 +89,9 @@ public class PMMLClusterPortObject extends PMMLPortObject {
         for (int i = 0; i < m_nrOfClusters; i++) {
             m_labels[i] = "cluster_" + i;
         }
-        // PMMLCLusterPortObject holds only normalized prototypes
         m_prototypes = prototypes;
         for (int i = 0; i < prototypes.length; i++) {
-            m_prototypes[i] = normalizePrototype(prototypes[i], 
-                    mins[i], maxs[i]);
+            m_prototypes[i] = prototypes[i]; 
         }
     }
     
@@ -228,7 +226,7 @@ public class PMMLClusterPortObject extends PMMLPortObject {
             PMMLPortObjectSpec.writeMiningSchema(getSpec(), handler);
             addUsedDistanceMeasure(handler);
             addClusteringFields(handler, m_usedColumns);
-            addCenterFields(handler, m_usedColumns);
+//            addCenterFields(handler, m_usedColumns);
             addClusters(handler, m_prototypes);
         }
         handler.endElement(null, null, "ClusteringModel");
@@ -352,6 +350,7 @@ public class PMMLClusterPortObject extends PMMLPortObject {
         }
     }
 
+    /*
     private double[] normalizePrototype(final double[] prototype, 
             final double min, final double max) {
         double[] normalized = new double[prototype.length];
@@ -360,7 +359,7 @@ public class PMMLClusterPortObject extends PMMLPortObject {
         }
         return normalized;
     }
-    
+    */
     
     /** {@inheritDoc} */
     @Override

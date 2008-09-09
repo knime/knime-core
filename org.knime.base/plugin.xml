@@ -752,6 +752,11 @@
             factory-class="org.knime.base.node.meta.looper.condition.ConditionLoopTailNodeFactory"
             id="org.knime.base.node.meta.looper.condition.ConditionLoopTailNodeFactory">
       </node>
+      <node
+            category-path="/io/write"
+            factory-class="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory"
+            id="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory">
+      </node>
    </extension>
       <extension
          point="org.knime.base.pmmlports">
