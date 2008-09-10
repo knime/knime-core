@@ -18,7 +18,6 @@
  */
 package org.knime.base.node.mine.cluster;
 
-import org.knime.base.node.mine.cluster.kmeans.LinearNorm;
 
 import junit.framework.TestCase;
 
