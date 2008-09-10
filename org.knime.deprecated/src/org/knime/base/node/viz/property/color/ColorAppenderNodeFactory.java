@@ -24,10 +24,9 @@
  */
 package org.knime.base.node.viz.property.color;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 
 /**
  * Factory to create <i>Color Appender</i> node.
@@ -35,13 +34,13 @@ import org.knime.core.node.NodeView;
  * @author Thomas Gabriel, University of Konstanz
  */
 @Deprecated
-public class ColorAppenderNodeFactory extends NodeFactory {
+public class ColorAppenderNodeFactory extends GenericNodeFactory<ColorAppender2NodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
-        return new ColorAppenderNodeModel(1, 1, 1, 0);
+    public ColorAppender2NodeModel createNodeModel() {
+        return new ColorAppender2NodeModel();
     }
 
     /**
@@ -56,8 +55,8 @@ public class ColorAppenderNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex, final NodeModel nm) {
-        assert false;
+    public GenericNodeView<ColorAppender2NodeModel> createNodeView(
+            final int viewIndex, final ColorAppender2NodeModel nm) {
         return null;
     }
 
@@ -73,7 +72,7 @@ public class ColorAppenderNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
+    protected GenericNodeDialogPane createNodeDialogPane() {
         return new ColorAppender2NodeDialogPane();
     }
 }

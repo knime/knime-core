@@ -24,20 +24,18 @@
  */
 package org.knime.base.node.viz.property.size;
 
-import org.knime.core.data.DoubleValue;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
-import org.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
-import org.knime.core.node.defaultnodedialog.DialogComponentColumnSelection;
+import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 
 /**
  * 
- * @author Michael Berthold, University of Konstanz
+ * @author Thomas Gabriel, University of Konstanz
  */
 @Deprecated
-public class SizeManagerNodeFactory extends NodeFactory {
+public class SizeManagerNodeFactory 
+        extends GenericNodeFactory<SizeManager2NodeModel> {
+    
     /**
      * Empty default constructor.
      */
@@ -49,8 +47,8 @@ public class SizeManagerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
-        return new SizeManagerNodeModel();
+    public SizeManager2NodeModel createNodeModel() {
+        return new SizeManager2NodeModel();
     }
 
     /**
@@ -65,16 +63,8 @@ public class SizeManagerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new DefaultNodeDialogPane() {
-            {
-                this.addDialogComponent(new DialogComponentColumnSelection(
-                /* config-name: */SizeManagerNodeModel.SELECTED_COLUMN,
-                /* label: */"Column to use for size settings ",
-                /* specIndex: */0,
-                /* classes... */DoubleValue.class));
-            }
-        };
+    public GenericNodeDialogPane createNodeDialogPane() {
+        return new SizeManager2NodeDialogPane();
     }
 
     /**
@@ -89,7 +79,8 @@ public class SizeManagerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int index, final NodeModel nodeModel) {
-        throw new IllegalStateException();
+    public GenericNodeView<SizeManager2NodeModel> createNodeView(
+            final int index, final SizeManager2NodeModel nodeModel) {
+        return null;
     }
 }

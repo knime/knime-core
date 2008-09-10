@@ -24,22 +24,23 @@
  */
 package org.knime.base.node.viz.property.size;
 
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * Factory to create <i>Size Appender</i> node.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class SizeAppenderNodeFactory extends NodeFactory {
+public class SizeAppenderNodeFactory 
+        extends GenericNodeFactory<SizeAppenderNodeModel> {
+    
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public SizeAppenderNodeModel createNodeModel() {
         return new SizeAppenderNodeModel();
     }
 
@@ -55,8 +56,8 @@ public class SizeAppenderNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex, final NodeModel nm) {
-        assert false;
+    public GenericNodeView<SizeAppenderNodeModel> createNodeView(
+            final int viewIndex, final SizeAppenderNodeModel nm) {
         return null;
     }
 

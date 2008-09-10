@@ -21,22 +21,23 @@
  */
 package org.knime.base.node.viz.property.color;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 
 /**
  * The color manager factory which creates a
- * {@link org.knime.base.node.viz.property.color.ColorManagerNodeDialogPane}.
+ * {@link org.knime.base.node.viz.property.color.ColorManager2NodeDialogPane}.
  * 
- * @see ColorManagerNodeModel
- * @see ColorManagerNodeDialogPane
+ * @see ColorManager2NodeModel
+ * @see ColorManager2NodeDialogPane
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 @Deprecated
-public class ColorManagerNodeFactory extends NodeFactory {
+public class ColorManagerNodeFactory 
+        extends GenericNodeFactory<ColorManager2NodeModel> {
+    
     /**
      * Empty default constructor.
      */
@@ -48,8 +49,8 @@ public class ColorManagerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
-        return new ColorManagerNodeModel(1, 1, 0, 1);
+    public ColorManager2NodeModel createNodeModel() {
+        return new ColorManager2NodeModel();
     }
 
     /**
@@ -64,8 +65,8 @@ public class ColorManagerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new ColorManagerNodeDialogPane();
+    public GenericNodeDialogPane createNodeDialogPane() {
+        return new ColorManager2NodeDialogPane();
     }
 
     /**
@@ -80,7 +81,8 @@ public class ColorManagerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int index, final NodeModel nodeModel) {
-        throw new IllegalStateException();
+    public GenericNodeView<ColorManager2NodeModel> createNodeView(
+            final int index, final ColorManager2NodeModel nodeModel) {
+        return null;
     }
 }

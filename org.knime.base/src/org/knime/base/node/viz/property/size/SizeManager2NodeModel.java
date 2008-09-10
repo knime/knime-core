@@ -37,24 +37,25 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.viewproperty.SizeHandlerPortObject;
 
 /**
  * A node model for setting sizes using the double values of a column specified
  * using the <code>SizeManagerNodeDialog</code>.
  * 
- * @author Michael Berthold, University of Konstanz
+ * @author Thomas Gabriel, University of Konstanz
  */
-public class SizeManager2NodeModel extends NodeModel {
-    
-    /** SizeHandler generated during executed and save into the model port. */
-    private SizeHandler m_sizeHandler;
+public class SizeManager2NodeModel extends GenericNodeModel {
     
     /** The selected column. */
     private final SettingsModelString m_column = 
@@ -77,7 +78,8 @@ public class SizeManager2NodeModel extends NodeModel {
      * output.
      */
     SizeManager2NodeModel() {
-        super(1, 1, 0, 1);
+        super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{
+                BufferedDataTable.TYPE, SizeHandlerPortObject.TYPE});
     }
 
     /**
@@ -92,18 +94,22 @@ public class SizeManager2NodeModel extends NodeModel {
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] data,
+    protected PortObject[] execute(final PortObject[] data,
             final ExecutionContext exec) throws CanceledExecutionException {
-        final DataTableSpec inSpec = data[INPORT].getDataTableSpec();
+        final DataTableSpec inSpec = (DataTableSpec) data[INPORT].getSpec();
         final String columnName = m_column.getStringValue();
         final DataColumnSpec cspec = inSpec.getColumnSpec(columnName);
-        m_sizeHandler = createSizeHandler(cspec);
+        SizeHandler sizeHandler = createSizeHandler(cspec);
         final DataTableSpec newSpec = appendSizeHandler(inSpec, 
-                columnName, m_sizeHandler);
+                columnName, sizeHandler);
         BufferedDataTable changedSpecTable = exec.createSpecReplacerTable(
-                data[INPORT], newSpec);
-        // return original table with SizeHandler
-        return new BufferedDataTable[]{changedSpecTable};
+                (BufferedDataTable) data[INPORT], newSpec);
+        DataTableSpec modelSpec = new DataTableSpec(
+                newSpec.getColumnSpec(m_column.getStringValue()));
+        SizeHandlerPortObject viewPort = new SizeHandlerPortObject(modelSpec, 
+                sizeHandler.toString() + " based on column \"" 
+                + m_column.getStringValue() + "\"");
+        return new PortObject[]{changedSpecTable, viewPort};
     }
     
     /**
@@ -138,7 +144,7 @@ public class SizeManager2NodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_sizeHandler = null;
+
     }
 
     /**
@@ -148,26 +154,28 @@ public class SizeManager2NodeModel extends NodeModel {
      * @throws InvalidSettingsException if a column is not available
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         final String column = m_column.getStringValue();
-        if (column == null || !inSpecs[INPORT].containsName(column)) {
+        DataTableSpec inSpec = (DataTableSpec) inSpecs[INPORT];
+        if (column == null || !inSpec.containsName(column)) {
             throw new InvalidSettingsException("Column " + column
                     + " not found.");
         }
-        DataColumnSpec cspec = inSpecs[INPORT].getColumnSpec(column);
+        DataColumnSpec cspec = inSpec.getColumnSpec(column);
         if (!cspec.getDomain().hasBounds()) {
             throw new InvalidSettingsException("No bounds defined for column: "
                     + column);
         }
         SizeHandler sizeHandler = createSizeHandler(cspec);
-        DataTableSpec outSpec = appendSizeHandler(inSpecs[0], 
+        DataTableSpec outSpec = appendSizeHandler(inSpec, 
                 m_column.getStringValue(), sizeHandler);
-        // return original spec with SizeHandler
-        return new DataTableSpec[]{outSpec};
+        DataTableSpec modelSpec = new DataTableSpec(
+                outSpec.getColumnSpec(m_column.getStringValue()));
+        return new DataTableSpec[]{outSpec, modelSpec};
     }
     
-    /*
+    /**
      * Create SizeHandler based on given DataColumnSpec. 
      * @param cspec spec with minimum and maximum bound
      * @return SizeHandler
@@ -181,17 +189,6 @@ public class SizeManager2NodeModel extends NodeModel {
         return new SizeHandler(new SizeModelDouble(minimum, maximum, 
                 m_factor.getDoubleValue(),
                 SizeModelDouble.Mapping.valueOf(m_mapping.getStringValue())));
-    }
-    
-    /**
-     * Saves the size settings to <code>ModelContent</code> object.
-     * 
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveModelContent(final int index,
-            final ModelContentWO predParams) throws InvalidSettingsException {
-        m_sizeHandler.save(predParams);
     }
 
     /**

@@ -46,9 +46,10 @@ public class ShapeAppenderNodeDialogPane extends DefaultNodeSettingsPane {
     /**
      * Create new shape appender dialog.
      */
+    @SuppressWarnings("unchecked")
     public ShapeAppenderNodeDialogPane() {
         addDialogComponent(new DialogComponentColumnNameSelection(
                 createColumnModel(), 
-                "Append shapes to ", 0, DataValue.class));
+                "Append shapes to ", 1, DataValue.class));
     }
 }

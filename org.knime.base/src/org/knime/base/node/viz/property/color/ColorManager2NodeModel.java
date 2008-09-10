@@ -52,7 +52,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.viewproperty.ViewPropertyPortObject;
+import org.knime.core.node.port.viewproperty.ColorHandlerPortObject;
 
 /**
  * Model used to set colors either based on the nominal values or ranges
@@ -112,7 +112,7 @@ class ColorManager2NodeModel extends GenericNodeModel {
      */
     public ColorManager2NodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{
-                BufferedDataTable.TYPE, ViewPropertyPortObject.TYPE});
+                BufferedDataTable.TYPE, ColorHandlerPortObject.TYPE});
         m_map = new LinkedHashMap<DataCell, ColorAttr>();
     }
 
@@ -148,18 +148,17 @@ class ColorManager2NodeModel extends GenericNodeModel {
                 exec.createSpecReplacerTable(in, newSpec);
             DataTableSpec modelSpec = 
                 new DataTableSpec(newSpec.getColumnSpec(column));
-            ViewPropertyPortObject viewModel = new ViewPropertyPortObject(
-                    modelSpec, "Discrete Coloring on \"" + column + "\"");
+            ColorHandlerPortObject viewModel = new ColorHandlerPortObject(
+                    modelSpec, colorHandler.toString() 
+                    + " based on column \"" + m_column + "\"");
             return new PortObject[]{changedSpecTable, viewModel};
         }
         // find column index
         int columnIndex = inSpec.findColumnIndex(m_column);
         // create new column spec based on color settings
         DataColumnSpec cspec = inSpec.getColumnSpec(m_column);
-        String summary;
         if (m_isNominal) {
             colorHandler = createNominalColorHandler(m_map);
-            summary = "Discrete Coloring on \"" + m_column + "\"";
         } else {
             DataColumnDomain dom = cspec.getDomain();
             DataCell lower, upper;
@@ -172,7 +171,6 @@ class ColorManager2NodeModel extends GenericNodeModel {
                 upper = stat.getMax(columnIndex);
             }
             colorHandler = createRangeColorHandler(lower, upper, m_map);
-            summary = "Color Range on \"" + m_column + "\"";
         }
         DataTableSpec newSpec =
             getOutSpec(inSpec, m_column, colorHandler);
@@ -180,8 +178,9 @@ class ColorManager2NodeModel extends GenericNodeModel {
             new DataTableSpec(newSpec.getColumnSpec(m_column));
         BufferedDataTable changedSpecTable = 
             exec.createSpecReplacerTable(in, newSpec);
-        ViewPropertyPortObject viewModel = new ViewPropertyPortObject(
-                modelSpec, summary);
+        ColorHandlerPortObject viewModel = new ColorHandlerPortObject(
+                modelSpec, colorHandler.toString() 
+                + " based on column \"" + m_column + "\"");
         return new PortObject[]{changedSpecTable, viewModel};
     }
     
@@ -246,8 +245,8 @@ class ColorManager2NodeModel extends GenericNodeModel {
         }
         // check column in spec
         if (!spec.containsName(m_column)) {
-            throw new InvalidSettingsException("Column " + m_column
-                    + " not found.");
+            throw new InvalidSettingsException("Column \"" + m_column
+                    + "\" not found.");
         }
         // get domain
         DataColumnDomain domain = spec.getColumnSpec(m_column).getDomain();

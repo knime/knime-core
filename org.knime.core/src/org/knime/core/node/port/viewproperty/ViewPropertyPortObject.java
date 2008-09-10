@@ -31,7 +31,6 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.port.AbstractSimplePortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
 
 /**
  * PortObject used to represent visual properties such as color, shape and
@@ -39,11 +38,7 @@ import org.knime.core.node.port.PortType;
  * the accompanying {@link DataTableSpec}.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class ViewPropertyPortObject extends AbstractSimplePortObject {
-    
-    /** Convenience access method for port type. */
-    public static final PortType TYPE = 
-        new PortType(ViewPropertyPortObject.class);
+public abstract class ViewPropertyPortObject extends AbstractSimplePortObject {
     
     private DataTableSpec m_spec;
     private String m_summary;
@@ -51,7 +46,7 @@ public class ViewPropertyPortObject extends AbstractSimplePortObject {
     /** Public no arg constructor required by super class. 
      * <p>
      * <b>This constructor should only be used by the framework.</b> */
-    public ViewPropertyPortObject() {
+    protected ViewPropertyPortObject() {
     }
     
     /** Constructor used to instantiate this object during a node's execute
@@ -61,7 +56,7 @@ public class ViewPropertyPortObject extends AbstractSimplePortObject {
      * method.
      * @throws NullPointerException If spec argument is <code>null</code>.
      */
-    public ViewPropertyPortObject(final DataTableSpec spec, 
+    protected ViewPropertyPortObject(final DataTableSpec spec, 
             final String portSummary) {
         if (spec == null) {
             throw new NullPointerException("Spec must not be null");
@@ -88,13 +83,13 @@ public class ViewPropertyPortObject extends AbstractSimplePortObject {
 
     /** {@inheritDoc} */
     @Override
-    public DataTableSpec getSpec() {
+    public final DataTableSpec getSpec() {
         return m_spec;
     }
 
     /** {@inheritDoc} */
     @Override
-    public String getSummary() {
+    public final String getSummary() {
         return m_summary;
     }
 

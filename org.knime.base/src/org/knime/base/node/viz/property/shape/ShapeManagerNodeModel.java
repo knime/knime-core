@@ -38,12 +38,16 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.viewproperty.ShapeHandlerPortObject;
 
 /**
  * Model used to set shapes by nominal values retrieved from the 
@@ -56,10 +60,7 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class ShapeManagerNodeModel extends NodeModel {
-    
-    /** ShapeHandler generated during executed and save into the model port. */
-    private ShapeHandler m_shapeHandler;
+class ShapeManagerNodeModel extends GenericNodeModel {
     
     /** Logger for this package. */
     static final NodeLogger LOGGER = NodeLogger.getLogger("Shape Manager");
@@ -84,15 +85,10 @@ class ShapeManagerNodeModel extends NodeModel {
 
     /**
      * Creates a new model for mapping shapes.
-     * 
-     * @param dataIns number of data ins
-     * @param dataOuts number of data outs
-     * @param modelIns number of model ins
-     * @param modelOuts number of model outs
      */
-    ShapeManagerNodeModel(final int dataIns, final int dataOuts,
-            final int modelIns, final int modelOuts) {
-        super(dataIns, dataOuts, modelIns, modelOuts);
+    ShapeManagerNodeModel() {
+        super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{
+                BufferedDataTable.TYPE, ShapeHandlerPortObject.TYPE});
         m_map = new LinkedHashMap<DataCell, Shape>();
     }
 
@@ -107,16 +103,21 @@ class ShapeManagerNodeModel extends NodeModel {
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] data,
+    protected PortObject[] execute(final PortObject[] data,
             final ExecutionContext exec) throws CanceledExecutionException {
-        final DataTableSpec inSpec = data[INPORT].getDataTableSpec();
-        m_shapeHandler = new ShapeHandler(new ShapeModelNominal(m_map));
-        final DataTableSpec newSpec = appendShapeHandler(inSpec, m_column, 
-                m_shapeHandler);
+        BufferedDataTable inData = (BufferedDataTable) data[INPORT];
+        ShapeHandler shapeHandler = 
+            new ShapeHandler(new ShapeModelNominal(m_map));
+        final DataTableSpec newSpec = appendShapeHandler(
+                inData.getSpec(), m_column, shapeHandler);
         BufferedDataTable changedSpecTable = exec.createSpecReplacerTable(
-                data[INPORT], newSpec);
-        // return original table with ShapeHandler
-        return new BufferedDataTable[]{changedSpecTable};
+                inData, newSpec);
+        DataTableSpec modelSpec = new DataTableSpec(
+                newSpec.getColumnSpec(m_column));
+        ShapeHandlerPortObject viewPort = new ShapeHandlerPortObject(
+                modelSpec, shapeHandler.toString() + " based on column \""
+                + m_column + "\"");
+        return new PortObject[]{changedSpecTable, viewPort};
     }
     
     /**
@@ -147,24 +148,11 @@ class ShapeManagerNodeModel extends NodeModel {
     }
 
     /**
-     * Saves the shape settings to <code>ModelContent</code> object.
-     * 
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveModelContent(final int index,
-            final ModelContentWO predParams) throws InvalidSettingsException {
-        m_shapeHandler.save(predParams);
-    }
-
-
-
-    /**
      * {@inheritDoc}
      */
     @Override
     protected void reset() {
-        m_shapeHandler = null;
+        
     }
 
     /**
@@ -188,21 +176,18 @@ class ShapeManagerNodeModel extends NodeModel {
     }
 
     /**
-     * @param inSpecs the input specs passed to the output port
-     * @return the same as the input spec
-     * 
-     * @throws InvalidSettingsException if a column is not available
+     * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inPorts)
             throws InvalidSettingsException {
-        assert (inSpecs.length == 1);
         // check null column
         if (m_column == null) {
             throw new InvalidSettingsException("No column selected.");
         }
         // check column in spec
-        if (!inSpecs[INPORT].containsName(m_column)) {
+        DataTableSpec inSpec = (DataTableSpec) inPorts[INPORT];
+        if (!inSpec.containsName(m_column)) {
             throw new InvalidSettingsException("Column " + m_column
                     + " not found.");
         }
@@ -211,9 +196,11 @@ class ShapeManagerNodeModel extends NodeModel {
         }
         ShapeHandler shapeHandler = 
             new ShapeHandler(new ShapeModelNominal(m_map));
-        DataTableSpec outSpec = appendShapeHandler(inSpecs[INPORT], m_column, 
+        DataTableSpec outSpec = appendShapeHandler(inSpec, m_column, 
                 shapeHandler);
-        return new DataTableSpec[]{outSpec};
+        DataTableSpec modelSpec = new DataTableSpec(
+                outSpec.getColumnSpec(m_column));
+        return new DataTableSpec[]{outSpec, modelSpec};
     }
 
     /**

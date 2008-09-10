@@ -46,9 +46,10 @@ public class SizeAppenderNodeDialogPane extends DefaultNodeSettingsPane {
     /**
      * Create new size appender dialog.
      */
+    @SuppressWarnings("unchecked")
     public SizeAppenderNodeDialogPane() {
         addDialogComponent(new DialogComponentColumnNameSelection(
                 createColumnModel(), 
-                "Append sizes to ", 0, DataValue.class));
+                "Append sizes to ", 1, DataValue.class));
     }
 }

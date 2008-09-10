@@ -27,27 +27,30 @@ package org.knime.base.node.viz.property.shape;
 import java.io.File;
 import java.io.IOException;
 
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.viewproperty.ShapeHandlerPortObject;
+import org.knime.core.node.port.viewproperty.ViewPropertyPortObject;
 
 /**
  * Node model to append shape settings to a (new) column selected in the dialog.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class ShapeAppenderNodeModel extends NodeModel {
-    
-    private ShapeHandler m_shapeHandler = null;
+public class ShapeAppenderNodeModel extends GenericNodeModel {
     
     private final SettingsModelString m_column = 
         ShapeAppenderNodeDialogPane.createColumnModel();
@@ -57,37 +60,66 @@ public class ShapeAppenderNodeModel extends NodeModel {
      * one model out-port.
      */
     public ShapeAppenderNodeModel() {
-        super(1, 1, 1, 0);
+        super(new PortType[]{
+                ShapeHandlerPortObject.TYPE, BufferedDataTable.TYPE},
+                new PortType[]{BufferedDataTable.TYPE});
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (!inSpecs[0].containsName(m_column.getStringValue())) {
-            throw new InvalidSettingsException("Column not available.");
-        }
-        if (m_shapeHandler == null) {
-            throw new InvalidSettingsException("Shape model not available.");
-        }
-        DataTableSpec spec = ShapeManagerNodeModel.appendShapeHandler(
-                inSpecs[0], m_column.getStringValue(), m_shapeHandler);
-        return new DataTableSpec[]{spec};
+        DataTableSpec modelSpec = (DataTableSpec)inSpecs[0];
+        DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
+        DataTableSpec out = createOutputSpec(modelSpec, dataSpec);
+        return new DataTableSpec[]{out};
     }
     
     /**
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        DataTableSpec spec = ShapeManagerNodeModel.appendShapeHandler(
-                inData[0].getDataTableSpec(), m_column.getStringValue(), 
-                m_shapeHandler);
-        BufferedDataTable table = exec.createSpecReplacerTable(inData[0], spec);
+        DataTableSpec modelSpec = ((ViewPropertyPortObject)inData[0]).getSpec();
+        DataTableSpec dataSpec = ((BufferedDataTable)inData[1]).getSpec();
+        DataTableSpec outSpec = createOutputSpec(modelSpec, dataSpec);
+        BufferedDataTable table = exec.createSpecReplacerTable(
+                (BufferedDataTable)inData[1], outSpec);
         return new BufferedDataTable[]{table};
+    }
+    
+    private DataTableSpec createOutputSpec(final DataTableSpec modelSpec, 
+            final DataTableSpec dataSpec) throws InvalidSettingsException {
+        if (modelSpec == null || dataSpec == null) {
+            throw new InvalidSettingsException("Invalid input.");
+        }
+        if (modelSpec.getNumColumns() < 1) {
+            throw new InvalidSettingsException("No shape information in input");
+        }
+        DataColumnSpec col = modelSpec.getColumnSpec(0);
+        ShapeHandler shapeHandler = col.getShapeHandler();
+        if (col.getShapeHandler() == null) {
+            throw new InvalidSettingsException("No shape information in input");
+        }
+        String column = m_column.getStringValue();
+        if (column == null) { // auto-configuration/guessing
+            if (dataSpec.containsName(col.getName())) {
+                column = col.getName();
+            }
+        }
+        if (column == null) {
+            throw new InvalidSettingsException("Not configured.");
+        }
+        if (!dataSpec.containsName(column)) {
+            throw new InvalidSettingsException("Column \"" + column 
+                    + "\" not available.");
+        }
+        DataTableSpec spec = ShapeManagerNodeModel.appendShapeHandler(
+                dataSpec, m_column.getStringValue(), shapeHandler);
+        return spec;
     }
 
     /**
@@ -142,20 +174,6 @@ public class ShapeAppenderNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_column.validateSettings(settings);
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadModelContent(final int index, 
-            final ModelContentRO predParams)
-            throws InvalidSettingsException {
-        if (predParams != null) {
-            m_shapeHandler = ShapeHandler.load(predParams);
-        } else {
-            m_shapeHandler = null;
-        }
     }
 
 }

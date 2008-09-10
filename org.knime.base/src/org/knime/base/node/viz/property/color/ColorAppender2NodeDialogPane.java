@@ -46,9 +46,10 @@ public class ColorAppender2NodeDialogPane extends DefaultNodeSettingsPane {
     /**
      * Create new color appender dialog.
      */
+    @SuppressWarnings("unchecked")
     public ColorAppender2NodeDialogPane() {
         addDialogComponent(new DialogComponentColumnNameSelection(
                 createColumnModel(), 
-                "Append colors to ", 0, DataValue.class));
+                "Append colors to ", 1, DataValue.class));
     }
 }

@@ -42,6 +42,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.viewproperty.ColorHandlerPortObject;
 import org.knime.core.node.port.viewproperty.ViewPropertyPortObject;
 
 /**
@@ -59,7 +60,7 @@ public class ColorAppender2NodeModel extends GenericNodeModel {
      */
     public ColorAppender2NodeModel() {
         super(new PortType[]{
-                ViewPropertyPortObject.TYPE, BufferedDataTable.TYPE},
+                ColorHandlerPortObject.TYPE, BufferedDataTable.TYPE},
                 new PortType[]{BufferedDataTable.TYPE});
     }
 

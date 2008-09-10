@@ -21,10 +21,9 @@
  */
 package org.knime.base.node.viz.property.shape;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 
 /**
  * The shape manager factory which creates a
@@ -35,7 +34,8 @@ import org.knime.core.node.NodeView;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class ShapeManagerNodeFactory extends NodeFactory {
+public class ShapeManagerNodeFactory 
+        extends GenericNodeFactory<ShapeManagerNodeModel> {
     
     /**
      * Empty default constructor.
@@ -48,8 +48,8 @@ public class ShapeManagerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
-        return new ShapeManagerNodeModel(1, 1, 0, 1);
+    public ShapeManagerNodeModel createNodeModel() {
+        return new ShapeManagerNodeModel();
     }
 
     /**
@@ -64,7 +64,7 @@ public class ShapeManagerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeDialogPane createNodeDialogPane() {
+    public GenericNodeDialogPane createNodeDialogPane() {
         return new ShapeManagerNodeDialogPane();
     }
 
@@ -80,7 +80,8 @@ public class ShapeManagerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int index, final NodeModel nodeModel) {
-        throw new IllegalStateException();
+    public GenericNodeView<ShapeManagerNodeModel> createNodeView(
+            final int index, final ShapeManagerNodeModel nodeModel) {
+        return null;
     }
 }
