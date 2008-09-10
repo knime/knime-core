@@ -51,6 +51,18 @@ public class PMMLClusterPortObject extends PMMLPortObject {
     private int[] m_clusterCoverage;
     private String[] m_labels;
     
+    /**
+     * Constants indicating whether the squared euclidean or the euclidean 
+     * comparison measure should be used.
+     * 
+     * @author Fabian Dill, University of Konstanz
+     */
+    public enum ComparisonMeasure {
+        squaredEuclidean,
+        euclidean
+    }
+    
+    private ComparisonMeasure m_measure = ComparisonMeasure.squaredEuclidean;
     
     /**
      * PMML Cluster port type.
@@ -122,7 +134,21 @@ public class PMMLClusterPortObject extends PMMLPortObject {
     }
     
 
+    /**
+     * 
+     * @param measure the used comparison measure
+     */
+    public void setComparisonMeasure(final ComparisonMeasure measure) {
+        m_measure = measure;
+    }
     
+    /**
+     * 
+     * @return the used comparison measure
+     */
+    public ComparisonMeasure getComparisonMeasure() {
+        return m_measure;
+    }
 
     /**
      * 
@@ -209,8 +235,8 @@ public class PMMLClusterPortObject extends PMMLPortObject {
         handler.startElement(null, null, "ComparisonMeasure", atts);
         // for now hard-coded squared euclidean
         handler.startElement(null, null, 
-                PMMLClusterHandler.COMPARISON_MEASURE, null);
-        handler.endElement(null, null, PMMLClusterHandler.COMPARISON_MEASURE);
+                m_measure.name(), null);
+        handler.endElement(null, null, m_measure.name());
         handler.endElement(null, null, "ComparisonMeasure");
     }
     
@@ -343,7 +369,7 @@ public class PMMLClusterPortObject extends PMMLPortObject {
         m_nrOfClusters = hdl.getNrOfClusters();
         m_prototypes = hdl.getPrototypes();
         m_labels = hdl.getLabels();
-        
+        m_measure = hdl.getComparisonMeasure();
         m_usedColumns = getColumnSpecsFor(spec.getLearningFields(), 
                 spec.getDataTableSpec()); 
         LOGGER.info("loaded cluster port object");

@@ -16,7 +16,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  */
-package org.knime.base.node.mine.cluster.kmeans;
+package org.knime.base.node.mine.cluster;
 
 import java.util.ArrayList;
 import java.util.List;

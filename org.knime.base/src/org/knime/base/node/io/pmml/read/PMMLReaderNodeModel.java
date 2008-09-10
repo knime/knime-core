@@ -102,30 +102,20 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
             }
             try {
                 m_spec = dataDictionaryToDataTableSpec();
-            } catch (ParserConfigurationException e1) {
-                throw new InvalidSettingsException(e1);
-            } catch (SAXException e) {
-                throw new InvalidSettingsException(e);
-            }
-
-            // TODO: do also the validation here
-            // TODO: remove all "x-" elements
-            try {
                 if (m_version.startsWith("3.")) {
                     validateSchema();
                 } else {
                     throw new SAXNotSupportedException(
-                            "Only PMML versions 3.0, 3.1, 3.2 are supported");
+                            "Only PMML versions 3.0, 3.1, 3.2 are supported.");
                 }
 //                validate();
             } catch (SAXException e) {
                 LOGGER.error("PMML file is not valid", e);
 //                throw new InvalidSettingsException(e);
                 setWarningMessage(
-                        "File seems to be not a vaild PMML file. " 
-                        + "Try it anyway..");
+                        "File seems to be not a vaild PMML file.");
                 throw new InvalidSettingsException(e);
-            } catch(IOException io) {
+            } catch (IOException io) {
                 throw new InvalidSettingsException(io);
             } catch (ParserConfigurationException pce) {
                 throw new InvalidSettingsException(pce);

@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.Vector;
 
 import org.knime.base.node.mine.cluster.PMMLClusterPortObject;
+import org.knime.base.node.mine.cluster.PMMLClusterPortObject.ComparisonMeasure;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -63,6 +64,8 @@ public class PMMLClusterAssignerNodeModel extends GenericNodeModel {
    private DataTableSpec m_clusterSpec;
    
    private List<Prototype> m_prototypes;
+   
+   private ComparisonMeasure m_measure = ComparisonMeasure.euclidean;
    
    private static final int PMML_PORT = 0;
    private static final int DATA_PORT = 1;
@@ -140,7 +143,7 @@ public class PMMLClusterAssignerNodeModel extends GenericNodeModel {
             final PortObjectSpec spec)
             throws InvalidSettingsException {
         m_clusterSpec = ((PMMLPortObjectSpec)spec).getDataTableSpec();
-
+        m_measure = model.getComparisonMeasure();
         m_prototypes = new ArrayList<Prototype>();
         String[] labels = model.getLabels();
         double[][] protos = model.getPrototypes();
@@ -233,8 +236,14 @@ public class PMMLClusterAssignerNodeModel extends GenericNodeModel {
             double mindistance = Double.MAX_VALUE;
             DataCell winnercell = DataType.getMissingCell();
             for (Prototype proto : m_prototypes) {
-                if (proto.getDistance(row, m_colIndices) < mindistance) {
-                    mindistance = proto.getDistance(row, m_colIndices);
+                double dist;
+                if (m_measure.equals(ComparisonMeasure.squaredEuclidean)) {
+                    dist = proto.getSquaredEuclideanDistance(row, m_colIndices);
+                } else {
+                    dist = proto.getDistance(row, m_colIndices);
+                }
+                if (dist < mindistance) {
+                    mindistance = dist;
                     if (mindistance > 0) {
                         winnercell = proto.getLabel();
                     }

@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import org.knime.base.node.mine.cluster.kmeans.LinearNorm;
+import org.knime.base.node.mine.cluster.PMMLClusterPortObject.ComparisonMeasure;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLContentHandler;
 import org.xml.sax.Attributes;
@@ -42,7 +42,7 @@ public class PMMLClusterHandler extends PMMLContentHandler {
     // String[] usedColumns <ClusteringField field="">
     // int[] clusterCoverage -> <Cluster size=""> 
     
-    private final static NodeLogger LOGGER = NodeLogger.getLogger(
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
             PMMLClusterHandler.class);
     
     /* 
@@ -52,19 +52,30 @@ public class PMMLClusterHandler extends PMMLContentHandler {
      * Compare function -> absDiff (absolute distance)
      */
     
-    static final String COMPARISON_MEASURE = "squaredEuclidean";
+    private ComparisonMeasure m_measure;
     
-    private static final Set<String>notSupportedElements 
+    private static final Set<String>UNSUPPORTED 
         = new LinkedHashSet<String>();
     
-    private static final Set<String>ignoredElements 
+    private static final Set<String>IGNORED 
         = new LinkedHashSet<String>();
+    
+    private static final Set<String>KNOWN = new LinkedHashSet<String>();
     
     static {
-        notSupportedElements.add("KohonenMap");
-        notSupportedElements.add("Covariances");
+        UNSUPPORTED.add("KohonenMap");
+        UNSUPPORTED.add("Covariances");
         
-        ignoredElements.add("MissingValueWeights");
+        IGNORED.add("MissingValueWeights");
+        
+        KNOWN.add("PMML");
+        KNOWN.add("Header");
+        KNOWN.add("Application");
+        KNOWN.add("DataDictionary");
+        KNOWN.add("DataField");
+        KNOWN.add("MiningSchema");
+        KNOWN.add("Value");
+        KNOWN.add("Interval");
     }
     
     private int m_nrOfClusters;
@@ -82,6 +93,7 @@ public class PMMLClusterHandler extends PMMLContentHandler {
     
     private Map<String, LinearNorm>m_linearNorms;
     private LinearNorm m_currentLinearNorm;
+    
     
     
     /**
@@ -122,6 +134,14 @@ public class PMMLClusterHandler extends PMMLContentHandler {
      */
     public Set<String> getUsedColumns() {
         return m_usedColumns;
+    }
+    
+    /**
+     * 
+     * @return the used comparison measure
+     */
+    public ComparisonMeasure getComparisonMeasure() {
+        return m_measure;
     }
 
     /**
@@ -196,12 +216,12 @@ public class PMMLClusterHandler extends PMMLContentHandler {
     public void startElement(final String uri, final String localName, 
             final String name,
             final Attributes atts) throws SAXException {
-        //TODO: -> ensure to throw exception on method distribution/kohonen/etc.
-        if (notSupportedElements.contains(name)) {
+        // ensure to throw exception on method distribution/kohonen/etc.
+        if (UNSUPPORTED.contains(name)) {
             throw new IllegalArgumentException(
                     "Element " + name + " is not supported!");
         }
-        if (ignoredElements.contains(name)) {
+        if (IGNORED.contains(name)) {
             LOGGER.warn("Element " + name + " is ignored.");
         }
         // if Array -> open buffer
@@ -286,13 +306,22 @@ public class PMMLClusterHandler extends PMMLContentHandler {
             }
         } else if (!m_elementStack.isEmpty() 
                 && m_elementStack.peek().equals("ComparisonMeasure")) {
-            if (!name.equals(COMPARISON_MEASURE)) {
+            if (!name.trim().equals(
+                    ComparisonMeasure.euclidean.name())
+                    && !name.trim().equals(
+                            ComparisonMeasure.squaredEuclidean.name())) {
                 throw new IllegalArgumentException(
-                        "\"" + COMPARISON_MEASURE 
-                        + "\" is the only supported comparison " 
-                        + "measure! Found " + name + ".");
+                        "\"" + ComparisonMeasure.euclidean
+                        + "\" and \""
+                        + ComparisonMeasure.squaredEuclidean
+                        + "\" are the only supported comparison " 
+                        + "measures! Found " + name + ".");
+            } else {
+                m_measure = ComparisonMeasure.valueOf(name);
             }
             
+        } else if (!KNOWN.contains(name)) {
+            LOGGER.warn("Skipping unknown element " + name);
         }
         m_elementStack.push(name);
     }
