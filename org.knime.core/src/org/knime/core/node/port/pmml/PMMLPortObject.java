@@ -218,8 +218,8 @@ public abstract class PMMLPortObject implements PortObject {
         fac.setNamespaceAware(true);
         
         SAXParser parser = fac.newSAXParser(); 
-        // TODO: remove all X- elements!!!
-        
+        // removes all X- elements!!!
+        // and inserts namespace
         XFilter filter = new XFilter(version);
         filter.setParent(parser.getXMLReader());
         
@@ -228,6 +228,7 @@ public abstract class PMMLPortObject implements PortObject {
         m_masterHandler.addContentHandler(ExtractModelTypeHandler.ID, 
                 modelTypeHdl);
         filter.setContentHandler(m_masterHandler);
+        filter.setErrorHandler(m_masterHandler);
         filter.parse(new InputSource(in));
         ExtractModelTypeHandler hdl = (ExtractModelTypeHandler)m_masterHandler
             .getDefaultHandler(ExtractModelTypeHandler.ID);
