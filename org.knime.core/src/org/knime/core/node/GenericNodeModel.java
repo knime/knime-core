@@ -679,7 +679,14 @@ public abstract class GenericNodeModel {
             }
             return m_inHiLiteHdls[0];
         }
-        return getInHiLiteHandler(0);
+        int firstBDTPort = 0;
+        for (int i = 0; i < getNrInPorts(); i++) {
+            if (getInPortType(i).equals(BufferedDataTable.TYPE)) {
+                firstBDTPort = i;
+                break;
+            }
+        }
+        return getInHiLiteHandler(firstBDTPort);
     }
 
     /**
