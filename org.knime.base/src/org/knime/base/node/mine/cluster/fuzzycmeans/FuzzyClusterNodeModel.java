@@ -29,8 +29,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
-import org.knime.base.node.mine.cluster.assign.Prototype;
+import org.knime.base.node.mine.cluster.PMMLClusterPortObject;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -43,21 +45,24 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentWO;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 /**
  * Generate a fuzzy c-means clustering using a fixed number of cluster centers.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  * @author Nicolas Cebron, University of Konstanz
  */
 
-public class FuzzyClusterNodeModel extends NodeModel {
-    
+public class FuzzyClusterNodeModel extends GenericNodeModel {
+
     /**
      * Key for the Cluster Columns in the output DataTable.
      */
@@ -102,13 +107,13 @@ public class FuzzyClusterNodeModel extends NodeModel {
      * Key to store the lambda value in the config.
      */
     public static final String LAMBDAVALUE_KEY = "lambda";
-    
+
     /**
      * Key to store whether the clustering should be performed in memory
      * in the PredParams.
      */
     public static final String MEMORY_KEY = "memory";
-    
+
     /**
      * Key to store whether cluster quality measures should be calculated.
      */
@@ -184,7 +189,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
      * WithinClustusterVariations
      */
     private double[] m_withinClusterVariation = null;
-    
+
     /*
      * Fuzzy Hypervolumnes
      */
@@ -213,12 +218,12 @@ public class FuzzyClusterNodeModel extends NodeModel {
      * The underlying fuzzy c-means algorithm.
      */
     private FCMAlgorithm m_fcmAlgo;
-    
+
     /*
-     * Object to calculate cluster quality measures 
+     * Object to calculate cluster quality measures
      */
     private FCMQualityMeasures m_fcmmeasures;
-    
+
     /*
      * Flag indicating whether the clustering should be performed in memory.
      */
@@ -229,16 +234,12 @@ public class FuzzyClusterNodeModel extends NodeModel {
      */
     private boolean m_measures;
 
-    /*
-     * DataTableSpec of table used for clustering.
-     */
-    private DataTableSpec m_clusterSpec;
-    
     /**
      * Constructor, remember parent and initialize status.
      */
     public FuzzyClusterNodeModel() {
-        super(1, 1, 0, 1); // specify one input, two outputs, one model output.
+        super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{
+                BufferedDataTable.TYPE, PMMLClusterPortObject.TYPE});
 
         m_nrClusters = INITIAL_NR_CLUSTERS;
         m_maxNrIterations = INITIAL_MAX_ITERATIONS;
@@ -255,12 +256,13 @@ public class FuzzyClusterNodeModel extends NodeModel {
      * clusters. In the output table, you will find the datarow with
      * supplementary information about the membership to each cluster center.
      * OUTPORT = original datarows with cluster membership information
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
+        BufferedDataTable indata = (BufferedDataTable) inData[0];
         m_clusters = null;
         m_betweenClusterVariation = Double.NaN;
         m_withinClusterVariation = null;
@@ -290,27 +292,37 @@ public class FuzzyClusterNodeModel extends NodeModel {
             }
         }
 
-        int nrRows = inData[INPORT].getRowCount();
-        m_spec = inData[0].getDataTableSpec();
+        int nrRows = indata.getRowCount();
+        m_spec = indata.getDataTableSpec();
         int nrCols = m_spec.getNumColumns();
 
+        Set<String> learningCols = new HashSet<String>();
+        Set<String> ignoreCols = new HashSet<String>();
+        Set<String> targetCols = new HashSet<String>();
         // counter for included columns
         int z = 0;
         final int[] columns = new int[m_list.size()];
         for (int i = 0; i < nrCols; i++) {
             // if include does contain current column name
-            if (m_list.contains(m_spec.getColumnSpec(i).getName())) {
+            String colname = m_spec.getColumnSpec(i).getName();
+            if (m_list.contains(colname)) {
                 columns[z] = i;
                 z++;
+                learningCols.add(colname);
+            } else {
+                ignoreCols.add(colname);
             }
         }
+        PMMLPortObjectSpec pmmlspec =
+                new PMMLPortObjectSpec(m_spec, learningCols, ignoreCols,
+                        targetCols);
         ColumnRearranger colre = new ColumnRearranger(m_spec);
         colre.keepOnly(columns);
-        m_clusterSpec = colre.createSpec();
+
         BufferedDataTable filteredtable =
-                exec.createColumnRearrangeTable(inData[INPORT], colre, exec);
-        
-        
+                exec.createColumnRearrangeTable(indata, colre, exec);
+
+
         // get dimension of feature space
         int dimension = filteredtable.getDataTableSpec().getNumColumns();
         m_fcmAlgo.init(nrRows, dimension, filteredtable);
@@ -318,13 +330,13 @@ public class FuzzyClusterNodeModel extends NodeModel {
         // main loop - until clusters stop changing or maxNrIterations reached
         int currentIteration = 0;
         double totalchange = Double.MAX_VALUE;
-        while ((totalchange > 1e-7) 
+        while ((totalchange > 1e-7)
                 && (currentIteration < m_maxNrIterations)) {
             if (exec != null) {
                 exec.checkCanceled();
                 exec.setProgress((double)currentIteration
                         / (double)m_maxNrIterations, "Iteration "
-                        + currentIteration 
+                        + currentIteration
                         + " Total change of prototypes: " + totalchange);
             }
             totalchange = m_fcmAlgo.doOneIteration(exec);
@@ -356,13 +368,28 @@ public class FuzzyClusterNodeModel extends NodeModel {
                     new FCMQualityMeasures(m_fcmAlgo.getClusterCentres(),
                             m_fcmAlgo.getweightMatrix(), data, m_fuzzifier);
         }
-        
+
         ColumnRearranger colRearranger = new ColumnRearranger(m_spec);
         CellFactory membershipFac = new ClusterMembershipFactory(m_fcmAlgo);
         colRearranger.append(membershipFac);
-        return new BufferedDataTable[]{exec.createColumnRearrangeTable(
-                inData[0], colRearranger, exec)};
+        BufferedDataTable result =
+                exec.createColumnRearrangeTable(indata, colRearranger, exec);
 
+        // don't write out the noise cluster!
+        double[][] clustercentres = m_fcmAlgo.getClusterCentres();
+        if (m_noise) {
+            double[][] cleaned = new double[clustercentres.length - 1][];
+            for (int i = 0; i < cleaned.length; i++) {
+                cleaned[i] = new double[clustercentres[i].length];
+                System.arraycopy(clustercentres[i], 0, cleaned[i], 0,
+                        clustercentres[i].length);
+            }
+            clustercentres = cleaned;
+        }
+        PMMLClusterPortObject pmmlcluster =
+                new PMMLClusterPortObject(clustercentres, m_nrClusters,
+                        pmmlspec);
+        return new PortObject[]{result, pmmlcluster};
     } // end execute()
 
     /**
@@ -384,7 +411,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
     /**
      * Saves the number of Clusters and the maximum number of iterations in the
      * settings.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -413,7 +440,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
     /**
      * Validates the number of Clusters and the maximum number of iterations in
      * the settings.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -441,8 +468,8 @@ public class FuzzyClusterNodeModel extends NodeModel {
             // get list of included columns
             String[] columns = settings.getStringArray(INCLUDELIST_KEY);
             if (columns.length < 1) {
-                throw new InvalidSettingsException("No attributes set to work" 
-                      + " on. Please check the second tab " 
+                throw new InvalidSettingsException("No attributes set to work"
+                      + " on. Please check the second tab "
                           + "\'Used Attributes\' in the dialog");
             }
         }
@@ -451,7 +478,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
     /**
      * Loads the number of clusters and the maximum number of iterations from
      * the settings.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -500,15 +527,16 @@ public class FuzzyClusterNodeModel extends NodeModel {
 
     /**
      * Number of columns in the output table is not deterministic.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+        DataTableSpec inspec = (DataTableSpec) inSpecs[0];
         if (m_list == null) {
             m_list = new ArrayList<String>();
-            for (DataColumnSpec colspec : inSpecs[INPORT]) {
+            for (DataColumnSpec colspec : inspec) {
                 if (colspec.getType().isCompatible(DoubleValue.class)) {
                     m_list.add(colspec.getName());
                 }
@@ -516,6 +544,22 @@ public class FuzzyClusterNodeModel extends NodeModel {
             setWarningMessage("List of columns to use has been set"
                     + " automatically, please check it in the dialog.");
         }
+        Set<String> learningCols = new HashSet<String>();
+        Set<String> ignoreCols = new HashSet<String>();
+        Set<String> targetCols = new HashSet<String>();
+        // counter for included columns
+        for (int i = 0; i < inspec.getNumColumns(); i++) {
+            // if include does contain current column name
+            String colname = inspec.getColumnSpec(i).getName();
+            if (m_list.contains(colname)) {
+                learningCols.add(colname);
+            } else {
+                ignoreCols.add(colname);
+            }
+        }
+        PMMLPortObjectSpec pmmlspec =
+                new PMMLPortObjectSpec(inspec, learningCols, ignoreCols,
+                        targetCols);
 
         int nrCols = m_nrClusters + 1; // number of clusters + winner cluster
         if (m_noise) {
@@ -538,8 +582,8 @@ public class FuzzyClusterNodeModel extends NodeModel {
         newSpec[newSpec.length - 1] = new DataColumnSpecCreator(
                 "Winner Cluster", StringCell.TYPE).createSpec();
         DataTableSpec newspec = new DataTableSpec(newSpec);
-        DataTableSpec returnspec = new DataTableSpec(inSpecs[INPORT], newspec);
-        return new DataTableSpec[]{returnspec};
+        DataTableSpec returnspec = new DataTableSpec(inspec, newspec);
+        return new PortObjectSpec[]{returnspec, pmmlspec};
     }
 
     /**
@@ -567,7 +611,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
 
     /**
      * Calculates the Between-Cluster Variation.
-     * 
+     *
      * @return the between cluster variation
      */
     public double getBetweenClusterVariation() {
@@ -579,10 +623,10 @@ public class FuzzyClusterNodeModel extends NodeModel {
         }
         return Double.NaN;
     }
-    
+
     /**
      * Calculates the partition coefficient.
-     * 
+     *
      * @return the partition coefficient
      */
     public double getPartitionCoefficient() {
@@ -594,10 +638,10 @@ public class FuzzyClusterNodeModel extends NodeModel {
         }
         return Double.NaN;
     }
-    
+
     /**
      * Calculates the partition entropy.
-     * 
+     *
      * @return the partition entropy
      */
     public double getPartitionEntropy() {
@@ -609,10 +653,10 @@ public class FuzzyClusterNodeModel extends NodeModel {
         }
         return Double.NaN;
     }
-    
+
     /**
      * Calculates the Xie Beni Index.
-     * 
+     *
      * @return the Xie Beni Index
      */
     public double getXieBeniIndex() {
@@ -624,13 +668,13 @@ public class FuzzyClusterNodeModel extends NodeModel {
         }
         return Double.NaN;
     }
-    
+
 
     /**
      * Calculates the Within-Cluster Variation for each cluster. We take 'crisp'
      * cluster centers to determine the membership from a datarow to a cluster
      * center.
-     * 
+     *
      * @return withinClusterVariations
      */
     public double[] getWithinClusterVariations() {
@@ -642,10 +686,10 @@ public class FuzzyClusterNodeModel extends NodeModel {
         }
         return null;
     }
-    
+
     /**
      * Calculates the fuzzy hypervolumnes for each cluster.
-     * 
+     *
      * @return fuzzy hypervolumnes of all clusters
      */
     public double[] getFuzzyHyperVolumes() {
@@ -667,42 +711,6 @@ public class FuzzyClusterNodeModel extends NodeModel {
      */
     public boolean noiseClustering() {
         return m_noise;
-    }
-
-    /**
-     * Saves a model of the clustering. It contains the cluster prototypes and
-     * their names and the columns used.
-     * 
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveModelContent(final int index,
-            final ModelContentWO predParams) throws InvalidSettingsException {
-        /*
-         * Determine the columns that have been used for clustering.
-         */
-        ModelContentWO specWO =
-                predParams.addModelContent(Prototype.CFG_COLUMNSUSED);
-        m_clusterSpec.save(specWO);
-
-        /*
-         * Store all clusters in the predParams.
-         */
-        double[][] clusters = m_fcmAlgo.getClusterCentres();
-        int nrclusters = clusters.length;
-        if (m_noise) {
-            nrclusters -= 1;
-        }
-        ModelContentWO protos =
-                predParams.addModelContent(Prototype.CFG_PROTOTYPE);
-        for (int c = 0; c < nrclusters; c++) {
-            double[] cluster = clusters[c];
-            ModelContentWO protoWO = protos.addModelContent(CLUSTER_KEY + c);
-            Prototype proto =
-                    new Prototype(cluster, new StringCell(CLUSTER_KEY + c));
-            proto.save(protoWO);
-        }
-
     }
 
     /**
@@ -781,8 +789,9 @@ public class FuzzyClusterNodeModel extends NodeModel {
             }
         }
         if (getWithinClusterVariations() != null) {
-            for (int c = 0; c < nrClusters; c++) {
-                out.writeDouble(getWithinClusterVariations()[c]);
+            double[] withinClusterVar = getWithinClusterVariations();
+            for (int c = 0; c < withinClusterVar.length; c++) {
+                out.writeDouble(withinClusterVar[c]);
             }
         }
         if (!Double.isNaN(getBetweenClusterVariation())) {
@@ -798,8 +807,9 @@ public class FuzzyClusterNodeModel extends NodeModel {
             out.writeDouble(getXieBeniIndex());
         }
         if (getFuzzyHyperVolumes() != null) {
-            for (int c = 0; c < nrClusters; c++) {
-                out.writeDouble(getFuzzyHyperVolumes()[c]);
+            double[] fuzzyHyperVol = getFuzzyHyperVolumes();
+            for (int c = 0; c < fuzzyHyperVol.length; c++) {
+                out.writeDouble(fuzzyHyperVol[c]);
             }
         }
         out.close();

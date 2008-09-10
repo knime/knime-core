@@ -21,24 +21,23 @@
  */
 package org.knime.base.node.mine.cluster.fuzzycmeans;
 
+import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * Create classes for fuzzy c-means Clustering NodeModel, NodeView and
  * NodeDialogPane.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  * @author Nicolas Cebron, University of Konstanz
  */
-public class FuzzyClusterNodeFactory extends NodeFactory {
+public class FuzzyClusterNodeFactory extends
+        GenericNodeFactory<FuzzyClusterNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public FuzzyClusterNodeModel createNodeModel() {
         return new FuzzyClusterNodeModel();
     }
 
@@ -54,7 +53,8 @@ public class FuzzyClusterNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int i, final NodeModel nodeModel) {
+    public FuzzyClusterNodeView createNodeView(final int i,
+            final FuzzyClusterNodeModel nodeModel) {
         if (i == 0) {
             return new FuzzyClusterNodeView(nodeModel);
         } else {

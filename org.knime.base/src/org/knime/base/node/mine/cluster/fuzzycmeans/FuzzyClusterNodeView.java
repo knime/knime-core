@@ -27,8 +27,7 @@ package org.knime.base.node.mine.cluster.fuzzycmeans;
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.GenericNodeView;
 
 /**
  * The FuzzyClusterNodeView provides the user with information about the quality
@@ -36,7 +35,8 @@ import org.knime.core.node.NodeView;
  *
  * @author Nicolas Cebron, University of Konstanz
  */
-public class FuzzyClusterNodeView extends NodeView {
+public class FuzzyClusterNodeView extends
+        GenericNodeView<FuzzyClusterNodeModel> {
     /*
      * The underlying FuzzyClusterNodeModel
      */
@@ -52,9 +52,9 @@ public class FuzzyClusterNodeView extends NodeView {
      * @param nodeModel the underlying NodeModel
      * @see FuzzyClusterNodeView#modelChanged()
      */
-    FuzzyClusterNodeView(final NodeModel nodeModel) {
+    FuzzyClusterNodeView(final FuzzyClusterNodeModel nodeModel) {
         super(nodeModel);
-        m_model = (FuzzyClusterNodeModel)nodeModel;
+        m_model = nodeModel;
         m_output = new JEditorPane("text/html", "");
         m_output.setEditable(false);
         JScrollPane scroller = new JScrollPane(m_output);
@@ -70,7 +70,7 @@ public class FuzzyClusterNodeView extends NodeView {
      * <li>Clustering Quality (BCV / WCV)</li>
      * </ul>
      *
-     * @see NodeView#modelChanged()
+     * {@inheritDoc}
      */
     @Override
     protected void modelChanged() {
