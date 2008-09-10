@@ -26,45 +26,66 @@ package org.knime.base.node.preproc.normalize;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.knime.base.data.normalize.AffineTransTable;
+import org.knime.base.data.normalize.Normalizer;
+import org.knime.base.data.normalize.NormalizerPortObject;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
-public class NormalizerApplyNodeModel extends NodeModel {
+public class NormalizerApplyNodeModel extends GenericNodeModel {
 
-    private ModelContentRO m_content;
-    
     /**
      * Constructor.
      */
     public NormalizerApplyNodeModel() {
-        super(1, 1, 1, 0);
+        super(new PortType[]{NormalizerPortObject.TYPE, BufferedDataTable.TYPE},
+                new PortType[]{BufferedDataTable.TYPE});
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_content == null) {
-            // if the model is not available yet, we still are ready.
-            return new DataTableSpec[1];
+        DataTableSpec modelSpec = (DataTableSpec)inSpecs[0];
+        DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
+        List<String> unknownCols = new ArrayList<String>();
+        List<String> knownCols = new ArrayList<String>(); 
+        for (DataColumnSpec c : modelSpec) {
+            DataColumnSpec inDataCol = dataSpec.getColumnSpec(c.getName());
+            if (inDataCol == null) {
+                unknownCols.add(c.getName());
+            } else if (!inDataCol.getType().isCompatible(DoubleValue.class)) {
+                throw new InvalidSettingsException("Column \"" + c.getName() 
+                        + "\" is to be normalized, but is not numeric");
+            }
         }
-        DataTableSpec s = AffineTransTable.createSpec(inSpecs[0], m_content);
+        if (!unknownCols.isEmpty()) {
+            setWarningMessage("Some column(s) as specified by the model is not "
+                    + "present in the data: " + unknownCols);
+        }
+        String[] ar = knownCols.toArray(new String[knownCols.size()]);
+        DataTableSpec s = Normalizer.generateNewSpec(dataSpec, ar);
         return new DataTableSpec[]{s};
     }
 
@@ -72,9 +93,12 @@ public class NormalizerApplyNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        AffineTransTable t = AffineTransTable.load(inData[0], m_content);
+        NormalizerPortObject model = (NormalizerPortObject)inData[0];
+        BufferedDataTable table = (BufferedDataTable)inData[1];
+        AffineTransTable t = new AffineTransTable(
+                table, model.getConfiguration());
         BufferedDataTable bdt = exec.createBufferedDataTable(t, exec);
         if (t.getErrorMessage() != null) {
             setWarningMessage(t.getErrorMessage());
@@ -82,21 +106,6 @@ public class NormalizerApplyNodeModel extends NodeModel {
         return new BufferedDataTable[]{bdt};
     }
     
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadModelContent(
-            final int index, final ModelContentRO predParams) 
-        throws InvalidSettingsException {
-        if (predParams == null) {
-            m_content = null;
-        } else {
-            m_content = predParams.getModelContent(
-                    NormalizerNodeModel.CFG_MODEL_NAME);
-        }
-    }
-
     /**
      * {@inheritDoc}
      */

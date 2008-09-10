@@ -42,12 +42,13 @@ import javax.swing.JTextField;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ColumnFilterPanel;
 
 
@@ -57,7 +58,7 @@ import org.knime.core.node.util.ColumnFilterPanel;
  *
  * @author Nicolas Cebron, University of Konstanz
  */
-public class NormalizerNodeDialog extends NodeDialogPane {
+public class NormalizerNodeDialog extends GenericNodeDialogPane {
 
     /** The node logger fot this class. */
     private static final NodeLogger LOGGER = NodeLogger
@@ -226,8 +227,12 @@ public class NormalizerNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
-        m_spec = specs[0];
+            final PortObjectSpec[] specs) throws NotConfigurableException {
+        m_spec = (DataTableSpec)specs[0];
+        // TODO remove this check.
+        if (m_spec == null) {
+            throw new NotConfigurableException("No input available");
+        }
         if (settings.containsKey(NormalizerNodeModel.MODE_KEY)) {
             try {
                 int mode = settings.getInt(NormalizerNodeModel.MODE_KEY);

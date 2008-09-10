@@ -24,59 +24,18 @@
  */
 package org.knime.base.node.preproc.normalize;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * This class has been replaced by the 
  * {@link org.knime.base.node.preproc.normalize.NormalizerNodeFactory}.
  * 
+ * <p>As of 2.0 this class extends the new NormalizerNodeFactory class. That 
+ * means old flows containing instances of this node will magically load a 
+ * normalizer node that has a model outport.
  * @author Nicolas Cebron, University of Konstanz
  * @deprecated use 
  * {@link org.knime.base.node.preproc.normalize.NormalizerNodeFactory}
  */
 @Deprecated 
-public class NormalizeNodeFactory extends NodeFactory {
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new NormalizerNodeDialog();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeModel createNodeModel() {
-        return new NormalizerNodeModel(1, 1, 0, 0);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
+public class NormalizeNodeFactory extends NormalizerNodeFactory {
 }

@@ -27,6 +27,7 @@ package org.knime.base.data.normalize;
 import java.util.Arrays;
 
 import org.knime.base.data.statistics.StatisticsTable;
+import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -226,8 +227,13 @@ public final class Normalizer {
             }
         }
         String[] includes = getNames();
-        return new AffineTransTable(m_table, includes, scales, transforms,
-                mins, maxs);
+        String minS = DoubleFormat.formatDouble(newmin);
+        String maxS = DoubleFormat.formatDouble(newmax);
+        String summary = "Min/Max (" + minS + ", " + maxS + ") normalization "
+        + "on " + includes.length + " column(s)";
+        AffineTransConfiguration configuration = new AffineTransConfiguration(
+                includes, scales, transforms, mins, maxs, summary);
+        return new AffineTransTable(m_table, configuration);
     }
 
     /**
@@ -270,8 +276,11 @@ public final class Normalizer {
         }
         
         String[] includes = getNames();
-        return new AffineTransTable(m_table, includes, scales, transforms,
-                mins, maxs);
+        String summary = "Z-Score (Gaussian) normalization on " 
+            + includes.length + " column(s)";
+        AffineTransConfiguration configuration = new AffineTransConfiguration(
+                includes, scales, transforms, mins, maxs, summary);
+        return new AffineTransTable(m_table, configuration);
     }
 
     /**
@@ -312,8 +321,11 @@ public final class Normalizer {
             mins[i] = -1.0;
             maxs[i] = 1.0;
         }
-        return new AffineTransTable(m_table, includes, scales, transforms,
-                mins, maxs);
+        String summary = "Decimal Scaling normalization on " 
+            + includes.length + " column(s)";
+        AffineTransConfiguration configuration = new AffineTransConfiguration(
+                includes, scales, transforms, mins, maxs, summary);
+        return new AffineTransTable(m_table, configuration);
     }
 
     /* Get the names for all included columns. */

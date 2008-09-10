@@ -29,8 +29,11 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Vector;
 
+import org.knime.base.data.filter.column.FilterColumnTable;
+import org.knime.base.data.normalize.AffineTransConfiguration;
 import org.knime.base.data.normalize.AffineTransTable;
 import org.knime.base.data.normalize.Normalizer;
+import org.knime.base.data.normalize.NormalizerPortObject;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -39,13 +42,13 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContent;
-import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.ModelContentWO;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 
 /**
  * The NormalizeNodeModel uses the Normalizer to normalize the input DataTable.
@@ -53,7 +56,7 @@ import org.knime.core.node.NodeSettingsWO;
  * @see Normalizer
  * @author Nicolas Cebron, University of Konstanz
  */
-public class NormalizerNodeModel extends NodeModel {
+public class NormalizerNodeModel extends GenericNodeModel {
 
     /** Key to store the new minimum value (in min/max mode). */
     public static final String NEWMIN_KEY = "newmin";
@@ -97,23 +100,17 @@ public class NormalizerNodeModel extends NodeModel {
     /** All numeric columns are used for normalization. */
     private boolean m_allNumericColumns;
 
-    /** The model content. */
-    private ModelContentRO m_content;
-
     /** The config key under which the model is stored. */
     static final String CFG_MODEL_NAME = "normalize";
 
     /**
-     * Creates an new normalizer using the given number of in- and output data
-     * and model ports.
-     * @param dataIns number data input ports
-     * @param dataOuts number data output ports
-     * @param modelIns number model input ports
-     * @param modelOuts number model output ports
+     * Creates an new normalizer. One input, two outputs (one of which is the
+     * model).
      */
-    public NormalizerNodeModel(final int dataIns, final int dataOuts,
-            final int modelIns, final int modelOuts) {
-        super(dataIns, dataOuts, modelIns, modelOuts);
+    public NormalizerNodeModel() {
+        super(new PortType[]{BufferedDataTable.TYPE}, 
+                new PortType[]{BufferedDataTable.TYPE, 
+                NormalizerPortObject.TYPE});
     }
 
     /**
@@ -123,15 +120,18 @@ public class NormalizerNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        final DataTableSpec spec = inSpecs[0];
-        if (spec.getNumColumns() == 0) {
-            return new DataTableSpec[]{spec};
-        }
+        DataTableSpec spec = (DataTableSpec)inSpecs[0];
         // extract selected numeric columns
         m_columns = numericColumnSelection(spec);
-        return new DataTableSpec[]{Normalizer.generateNewSpec(spec, m_columns)};
+        if (m_mode == NONORM_MODE) {
+            return new PortObjectSpec[]{spec, new DataTableSpec()};
+        }
+        DataTableSpec modelSpec = 
+            FilterColumnTable.createFilterTableSpec(spec, m_columns);
+        return new PortObjectSpec[]{
+                Normalizer.generateNewSpec(spec, m_columns), modelSpec};
     }
 
     private String[] numericColumnSelection(final DataTableSpec spec)
@@ -196,25 +196,22 @@ public class NormalizerNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        DataTableSpec inSpec = inData[0].getDataTableSpec();
-        m_content = new ModelContent(CFG_MODEL_NAME);
-        if (inSpec.getNumColumns() == 0 || m_columns == null
-                || m_columns.length == 0) {
-            setWarningMessage("No columns for normalization.");
-            return new BufferedDataTable[]{inData[0]};
-        }
+        BufferedDataTable inTable = (BufferedDataTable)inData[0];
+        DataTableSpec inSpec = inTable.getSpec();
         // extract selected numeric columns
         m_columns = numericColumnSelection(inSpec);
-        Normalizer ntable = new Normalizer(inData[0], m_columns);
-        int rowcount = inData[0].getRowCount();
+        Normalizer ntable = new Normalizer(inTable, m_columns);
+        int rowcount = inTable.getRowCount();
         ExecutionMonitor prepareExec = exec.createSubProgress(0.3);
         AffineTransTable outTable;
 
         switch (m_mode) {
         case NONORM_MODE:
-            return inData;
+            NormalizerPortObject p = new NormalizerPortObject(
+                    new DataTableSpec(), new AffineTransConfiguration());
+            return new PortObject[]{inTable, p};
         case MINMAX_MODE:
             outTable = ntable.doMinMaxNorm(m_max, m_min, prepareExec);
             break;
@@ -231,7 +228,11 @@ public class NormalizerNodeModel extends NodeModel {
             // something went wrong, report and throw an exception
             throw new Exception(outTable.getErrorMessage());
         }
-        outTable.save((ModelContent)m_content);
+        DataTableSpec modelSpec = 
+            FilterColumnTable.createFilterTableSpec(inSpec, m_columns);
+        AffineTransConfiguration configuration = outTable.getConfiguration();
+        NormalizerPortObject modelPO = 
+            new NormalizerPortObject(modelSpec, configuration);
 
         ExecutionMonitor normExec = exec.createSubProgress(.7);
         BufferedDataContainer container =
@@ -239,24 +240,14 @@ public class NormalizerNodeModel extends NodeModel {
         int count = 1;
         for (DataRow row : outTable) {
             normExec.checkCanceled();
-            normExec.setProgress((double)count / (double)rowcount,
+            normExec.setProgress(count / (double)rowcount, 
                     "Normalizing row no. " + count + " of " + rowcount
-                        + " (\"" + row.getKey() + "\")");
+                    + " (\"" + row.getKey() + "\")");
             container.addRowToTable(row);
             count++;
         }
         container.close();
-        return new BufferedDataTable[]{container.getTable()};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveModelContent(final int index,
-            final ModelContentWO predParams) throws InvalidSettingsException {
-        ModelContentWO sub = predParams.addModelContent(CFG_MODEL_NAME);
-        m_content.copyTo(sub);
+        return new PortObject[]{container.getTable(), modelPO};
     }
 
     /**
@@ -297,7 +288,6 @@ public class NormalizerNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_content = null;
     }
 
     /**

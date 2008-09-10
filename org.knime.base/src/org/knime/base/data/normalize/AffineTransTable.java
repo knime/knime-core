@@ -23,6 +23,7 @@
 package org.knime.base.data.normalize;
 
 import java.util.Arrays;
+import java.util.HashMap;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
@@ -52,26 +53,17 @@ import org.knime.core.node.ModelContentWO;
  */
 public class AffineTransTable implements DataTable {
     
-    /**
-     * A very small number.
-     */
+    /** A very small number. */
     public static final double VERY_SMALL = 1E-10;
     
     private final DataTable m_table;
 
     private final DataTableSpec m_spec;
 
-    private final double[] m_scales;
-
-    private final double[] m_translations;
-    
-    private final String[] m_includeNames;
-    
-    private final double[] m_min;
-    
-    private final double[] m_max;
-    
     private String m_errormessage;
+    
+    private final AffineTransConfiguration m_configuration;
+    private final int[] m_indicesInConfiguration;
 
     /**
      * Creates new table given the following parameters.
@@ -93,64 +85,79 @@ public class AffineTransTable implements DataTable {
      *             length, the names are not contained in the spec, the double
      *             arrays of scales and translations contain NaN, the target
      *             columns are not {@link DoubleValue} compatible
+     * @deprecated Create {@link AffineTransConfiguration} object and then
+     * use the constructor 
+     * {@link #AffineTransTable(DataTable, AffineTransConfiguration)}. 
      */
+    @Deprecated
     public AffineTransTable(final DataTable table, final String[] names,
             final double[] scales, final double[] translations,
             final double[] min, final double[] max) {
-        final DataTableSpec spec = table.getDataTableSpec();
-        if (names.length != scales.length
-                || names.length != translations.length) {
-            throw new IllegalArgumentException("Lengths must match: "
-                    + names.length + " vs. " + scales.length + " vs. "
-                    + translations.length);
-        }
-        for (int i = 0; i < scales.length; i++) {
-            if (Double.isNaN(scales[i]) || Double.isNaN(translations[i])) {
-                throw new IllegalArgumentException("Cannot transform with NaN");
-            }
-        }
-        double[] myScales = new double[spec.getNumColumns()];
-        double[] myTrans = new double[spec.getNumColumns()];
-        double[] myMin = new double[spec.getNumColumns()];
-        double[] myMax = new double[spec.getNumColumns()];
-        String[] myIncludes = new String[spec.getNumColumns()];
-        Arrays.fill(myScales, Double.NaN);
-        Arrays.fill(myTrans, Double.NaN);
-        Arrays.fill(myMin, Double.NaN);
-        Arrays.fill(myMax, Double.NaN);
-        for (int i = 0; i < names.length; i++) {
-            int index = spec.findColumnIndex(names[i]);
-            if (index < 0) {
-                throw new IllegalArgumentException("No such column: "
-                        + names[i]);
-            }
-            DataType type = spec.getColumnSpec(index).getType();
-            // do we need to support IntValue also?
-            if (!type.isCompatible(DoubleValue.class)) {
-                throw new IllegalArgumentException("Not supported: " + type);
-            }
-            myScales[index] = scales[i];
-            myTrans[index] = translations[i];
-            myMin[index] = min[i];
-            myMax[index] = max[i];
-            myIncludes[index] = names[i];
-        }
-        m_includeNames = myIncludes;
-        m_table = table;
-        m_scales = myScales;
-        m_translations = myTrans;
-        m_min = myMin;
-        m_max = myMax;
-        m_spec = generateNewSpec(table.getDataTableSpec(), m_scales,
-                        m_translations, m_min, m_max);
-        m_errormessage = null;
+        this(table, new AffineTransConfiguration(
+                names, scales, translations, min, max, null));
     }
-
+    
+    /** Creates new table, normalizing <code>table</code> with the configuration
+     * given by <code>configuration</code>.
+     * @param table To be normalized
+     * @param configuration Normalization parameters.
+     * @throws NullPointerException If either arg is null.
+     * @throws IllegalArgumentException If target cols in table are not
+     * numeric.
+     */
+    public AffineTransTable(final DataTable table, 
+            final AffineTransConfiguration configuration) {
+        DataTableSpec spec = table.getDataTableSpec();
+        m_configuration = configuration;
+        m_indicesInConfiguration = new int[spec.getNumColumns()];
+        Arrays.fill(m_indicesInConfiguration, -1);
+        String[] names = configuration.getNames();
+        HashMap<String, Integer> hash = new HashMap<String, Integer>();
+        for (int i = 0; i < names.length; i++) {
+            hash.put(names[i], i);
+        }
+        for (int i = 0; i < spec.getNumColumns(); i++) {
+            DataColumnSpec col = spec.getColumnSpec(i);
+            Integer index = hash.remove(col.getName());
+            if (index != null) {
+                DataType type = col.getType();
+                // do we need to support IntValue also?
+                if (!type.isCompatible(DoubleValue.class)) {
+                    throw new IllegalArgumentException(
+                            "Not supported: " + type);
+                }
+                m_indicesInConfiguration[i] = index;
+            }
+        }
+        if (!hash.isEmpty()) {
+            int size = hash.size();
+            setErrorMessage("Normalization was not applied to " + size 
+                    + " column(s) as they do not exist in the table: " 
+                    + Arrays.toString(hash.keySet().toArray()));
+        }
+        m_spec = generateNewSpec(spec, m_configuration);
+        m_table = table;
+    }
+    
     /**
      * {@inheritDoc}
      */
     public DataTableSpec getDataTableSpec() {
         return m_spec;
+    }
+    
+    /**
+     * @return the configuration
+     */
+    public AffineTransConfiguration getConfiguration() {
+        return m_configuration;
+    }
+    
+    /**
+     * @return the indicesInConfiguration
+     */
+    int[] getIndicesInConfiguration() {
+        return m_indicesInConfiguration;
     }
 
     /**
@@ -165,30 +172,53 @@ public class AffineTransTable implements DataTable {
      * DoubleType, the domain is adjusted.
      */
     private static DataTableSpec generateNewSpec(
-            final DataTableSpec tabSpec, 
-            final double[] scales,
-            final double[] translations,
-            final double[] newmin,
-            final double[] newmax) {
-        DataColumnSpec[] specs = new DataColumnSpec[tabSpec.getNumColumns()];
-        for (int i = 0; i < scales.length; i++) {
-            DataColumnSpec colSpec = tabSpec.getColumnSpec(i);
-            DataColumnDomain colDomain = tabSpec.getColumnSpec(i).getDomain();
-            if (Double.isNaN(scales[i])) {
+            final DataTableSpec spec, 
+            final AffineTransConfiguration configuration) {
+        String[] names = configuration.getNames();
+        HashMap<String, Integer> hash = new HashMap<String, Integer>();
+        for (int i = 0; i < names.length; i++) {
+            hash.put(names[i], i);
+        }
+        for (int i = 0; i < spec.getNumColumns(); i++) {
+            DataColumnSpec col = spec.getColumnSpec(i);
+            Integer index = hash.get(col.getName());
+            if (index != null) {
+                DataType type = col.getType();
+                // do we need to support IntValue also?
+                if (!type.isCompatible(DoubleValue.class)) {
+                    throw new IllegalArgumentException(
+                            "Not supported: " + type);
+                }
+            }
+        }
+        
+        DataColumnSpec[] specs = new DataColumnSpec[spec.getNumColumns()];
+        double[] newmin = configuration.getMin();
+        double[] newmax = configuration.getMax();
+        double[] scales = configuration.getScales();
+        double[] translations = configuration.getTranslations();
+        for (int i = 0; i < specs.length; i++) {
+            DataColumnSpec colSpec = spec.getColumnSpec(i);
+            DataColumnDomain colDomain = colSpec.getDomain();
+            Integer indexObject = hash.get(colSpec.getName()); 
+            if (indexObject == null) {
                 specs[i] = colSpec;
             } else {
+                int index = indexObject.intValue();
+                assert !Double.isNaN(scales[index]);
                 // determine domain
-                double interval = newmax[i] - newmin[i];
+                double interval = newmax[index] - newmin[index];
                 DataCell up = null;
                 DataCell oldUp = colDomain.getUpperBound();
                 if (oldUp != null && !oldUp.isMissing()) {
                     double oldVal = ((DoubleValue)oldUp).getDoubleValue();
-                    double newVal = scales[i] * oldVal + translations[i];
-                    if (!Double.isNaN(newmax[i])) {
-                        if (newVal > newmax[i]
-                                && ((newVal - newmax[i]) 
+                    double newVal = 
+                        scales[index] * oldVal + translations[index];
+                    if (!Double.isNaN(newmax[index])) {
+                        if (newVal > newmax[index]
+                                && ((newVal - newmax[index]) 
                                         / interval) < VERY_SMALL) {
-                            newVal = newmax[i];
+                            newVal = newmax[index];
                         }
                     }
                     up = new DoubleCell(newVal);
@@ -197,12 +227,13 @@ public class AffineTransTable implements DataTable {
                 DataCell oldLow = colDomain.getLowerBound();
                 if (oldLow != null && !oldLow.isMissing()) {
                     double oldVal = ((DoubleValue)oldLow).getDoubleValue();
-                    double newVal = scales[i] * oldVal + translations[i];
-                    if (!Double.isNaN(newmin[i])) {
-                        if (newVal < newmin[i]
-                                && ((newmin[i] - newVal) 
+                    double newVal = 
+                        scales[index] * oldVal + translations[index];
+                    if (!Double.isNaN(newmin[index])) {
+                        if (newVal < newmin[index]
+                                && ((newmin[index] - newVal) 
                                         / interval) < VERY_SMALL) {
-                            newVal = newmin[i];
+                            newVal = newmin[index];
                         }
                     }
                     low = new DoubleCell(newVal);
@@ -220,16 +251,6 @@ public class AffineTransTable implements DataTable {
         return new DataTableSpec(specs);
     }
 
-    private static final String CFG_NAME = "column_name";
-
-    private static final String CFG_SCALE = "column_scale";
-
-    private static final String CFG_TRANSLATE = "column_translate";
-
-    private static final String CFG_MIN = "column_min";
-
-    private static final String CFG_MAX = "column_max";
-
     /**
      * Saves internals to the argument settings object. This object is supposed
      * to be the only one writing to this (sub)setting object.
@@ -237,68 +258,22 @@ public class AffineTransTable implements DataTable {
      * @param settings To write to.
      */
     public void save(final ModelContentWO settings) {
-        for (int i = 0; i < m_includeNames.length; i++) {
-            String name = m_includeNames[i];
-            double scale = m_scales[i];
-            double transl = m_translations[i];
-            double min = m_min[i];
-            double max = m_max[i];
-            if (name == null) {
-                assert Double.isNaN(scale) && Double.isNaN(transl);
-                continue;
-            }
-            ModelContentWO sub = settings.addModelContent(name);
-            sub.addString(CFG_NAME, name);
-            sub.addDouble(CFG_SCALE, scale);
-            sub.addDouble(CFG_TRANSLATE, transl);
-            sub.addDouble(CFG_MIN, min);
-            sub.addDouble(CFG_MAX, max);
-        }
+        m_configuration.save(settings);
     }
     
     /** Reads the meta information from the settings object and constructs
      * a AffineTransTable based on this information and the given DataTable.
      * @param table The table to which the normalization is applied.
-     * @param settings The normalization information.
+     * @param sets The normalization information.
      * @return A new table wrapping <code>table</code> but normalized according
      * to <code>settings</code>.
      * @throws InvalidSettingsException If the settings are incomplete 
      * or cannot be applied to spec.
      */
     public static AffineTransTable load(final DataTable table,
-            final ModelContentRO settings) throws InvalidSettingsException {
-        /*
-         * Note: this is not very nice here. I copied code from the createSpec
-         * method. A better way would be to have a object containing the scales,
-         * translations, etc. information.
-         */
-        int colCount = settings.keySet().size();
-        double[] scales = new double[colCount];
-        double[] translations = new double[colCount];
-        double[] mins = new double[colCount];
-        double[] maxs = new double[colCount];
-        Arrays.fill(scales, Double.NaN);
-        Arrays.fill(translations, Double.NaN);
-        Arrays.fill(mins, Double.NaN);
-        Arrays.fill(maxs, Double.NaN);
-        String[] names = new String[colCount];
-        int index = 0;
-        for (String key : settings.keySet()) {
-            ModelContentRO sub = settings.getModelContent(key);
-            String name = sub.getString(CFG_NAME);
-            double scale = sub.getDouble(CFG_SCALE);
-            double trans = sub.getDouble(CFG_TRANSLATE);
-            double min = sub.getDouble(CFG_MIN);
-            mins[index] = min;
-            double max = sub.getDouble(CFG_MAX);
-            maxs[index] = max;
-            scales[index] = scale;
-            translations[index] = trans;
-            names[index] = name;
-            index++;
-        }
-        return new AffineTransTable(table, names, scales, translations, mins,
-                maxs);
+            final ModelContentRO sets) throws InvalidSettingsException {
+        AffineTransConfiguration config = AffineTransConfiguration.load(sets);
+        return new AffineTransTable(table, config);
     }
     
     /** Reads the meta information from the settings object and constructs
@@ -312,67 +287,9 @@ public class AffineTransTable implements DataTable {
      */
     public static DataTableSpec createSpec(final DataTableSpec spec, 
             final ModelContentRO settings) throws InvalidSettingsException {
-        double[] scales = new double[spec.getNumColumns()];
-        double[] translations = new double[spec.getNumColumns()];
-        double[] mins = new double[spec.getNumColumns()];
-        double[] maxs = new double[spec.getNumColumns()];
-        Arrays.fill(scales, Double.NaN);
-        Arrays.fill(translations, Double.NaN);
-        Arrays.fill(mins, Double.NaN);
-        Arrays.fill(maxs, Double.NaN);
-        for (String key : settings.keySet()) {
-            ModelContentRO sub = settings.getModelContent(key);
-            String name = sub.getString(CFG_NAME);
-            int index = spec.findColumnIndex(name);
-            if (index < 0) {
-                throw new InvalidSettingsException("Can't apply setting to " 
-                        + "input table spec, no such column: " + name);
-            }
-            DataColumnSpec old = spec.getColumnSpec(index);
-            if (!old.getType().isCompatible(DoubleValue.class)) {
-                throw new InvalidSettingsException("Can't apply setting to " 
-                        + "input table spec, column '" + name 
-                        + "' is not double compatible.");
-            }
-            double scale = sub.getDouble(CFG_SCALE);
-            double trans = sub.getDouble(CFG_TRANSLATE);
-            double min = sub.getDouble(CFG_MIN);
-            double max = sub.getDouble(CFG_MAX);
-            scales[index] = scale;
-            translations[index] = trans;
-            mins[index] = min;
-            maxs[index] = max;
-        }
-        return generateNewSpec(spec, scales, translations, mins, maxs);
+        return generateNewSpec(spec, AffineTransConfiguration.load(settings));
     }
     
-    /**
-     * @return maximum values for each column.
-     */
-    double[] getMax() {
-        return m_max;
-    }
-
-    /**
-     * @return minimum values for each column.
-     */
-    double[] getMin() {
-        return m_min;
-    }
-
-    /**
-     * @return scales for each column.
-     */
-    double[] getScales() {
-        return m_scales;
-    }
-
-    /**
-     * @return translations for each column.
-     */
-    double[] getTranslations() {
-        return m_translations;
-    }
     
     /**
      * Sets an error message, if something went wrong during normalization. 

@@ -46,14 +46,6 @@ public class AffineTransRowIterator extends RowIterator {
     
     private final RowIterator m_it;
     
-    private final double[] m_min;
-    
-    private final double[] m_max;
-    
-    private double[] m_scales;
-    
-    private double[] m_translations;
-    
      /**
      * Creates new row iterator given an AffineTransTable with its informations.
      * 
@@ -63,15 +55,11 @@ public class AffineTransRowIterator extends RowIterator {
      */
     AffineTransRowIterator(final DataTable originalTable,
             final AffineTransTable table) {
-        if (table == null || table == null) {
+        if (originalTable == null || table == null) {
             throw new NullPointerException("Arguments must not be null.");
         }
-       m_transtable = table;
-       m_min = m_transtable.getMin();
-       m_max = m_transtable.getMax();
-       m_scales = m_transtable.getScales();
-       m_translations = m_transtable.getTranslations();
-       m_it = originalTable.iterator();
+        m_it = originalTable.iterator();
+        m_transtable = table;
     }
 
     /**
@@ -87,21 +75,29 @@ public class AffineTransRowIterator extends RowIterator {
      */
     @Override
     public DataRow next() {
+        AffineTransConfiguration config = m_transtable.getConfiguration();
+        int[] indices = m_transtable.getIndicesInConfiguration();
+        double[] scales = config.getScales();
+        double[] translations = config.getTranslations();
+        double[] min = config.getMin();
+        double[] max = config.getMax();
         final DataRow in = m_it.next();
         final DataCell[] cells = new DataCell[in.getNumCells()];
         for (int i = 0; i < cells.length; i++) {
             final DataCell oldCell = in.getCell(i);
-            if (oldCell.isMissing() || Double.isNaN(m_scales[i])) {
+            if (oldCell.isMissing() || indices[i] == -1) {
                 cells[i] = oldCell;
             } else {
-                double interval = m_max[i] - m_min[i];
+                int index = indices[i];
+                double interval = max[index] - min[index];
                 double oldDouble = ((DoubleValue)oldCell).getDoubleValue();
-                double newDouble = m_scales[i] * oldDouble + m_translations[i];
-                if (!Double.isNaN(m_min[i])) {
-                    if (newDouble < m_min[i]) {
-                        if ((m_min[i] - newDouble) 
+                double newDouble =  
+                    scales[index] * oldDouble + translations[index];
+                if (!Double.isNaN(min[index])) {
+                    if (newDouble < min[index]) {
+                        if ((min[index] - newDouble) 
                                 / interval < AffineTransTable.VERY_SMALL) {
-                            newDouble = m_min[i];
+                            newDouble = min[index];
                         } else {
                             m_transtable
                                     .setErrorMessage(
@@ -111,15 +107,15 @@ public class AffineTransRowIterator extends RowIterator {
                                             + " Transformed value: "
                                             + newDouble
                                             + " Lower Bound: "
-                                            + m_min[i]);
+                                            + min[index]);
                         }
                     }
                 }
-                if (!Double.isNaN(m_max[i])) {
-                    if (newDouble > m_max[i]) {
-                        if ((newDouble - m_max[i]) 
+                if (!Double.isNaN(max[index])) {
+                    if (newDouble > max[index]) {
+                        if ((newDouble - max[index]) 
                                 / interval < AffineTransTable.VERY_SMALL) {
-                            newDouble = m_max[i];
+                            newDouble = max[index];
                         } else {
                             m_transtable.setErrorMessage(
                                     "Normalized value is out of bounds."
@@ -128,7 +124,7 @@ public class AffineTransRowIterator extends RowIterator {
                                             + " Transformed value: "
                                             + newDouble
                                             + " Upper Bound: "
-                                            + m_max[i]);
+                                            + max[index]);
                         }
                     }
                 }

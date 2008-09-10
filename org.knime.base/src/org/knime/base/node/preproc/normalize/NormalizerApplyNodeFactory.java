@@ -24,22 +24,22 @@
  */
 package org.knime.base.node.preproc.normalize;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
-public class NormalizerApplyNodeFactory extends NodeFactory {
+public class NormalizerApplyNodeFactory 
+extends GenericNodeFactory<NormalizerApplyNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
+    protected GenericNodeDialogPane createNodeDialogPane() {
         return null;
     }
 
@@ -47,7 +47,7 @@ public class NormalizerApplyNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public NormalizerApplyNodeModel createNodeModel() {
         return new NormalizerApplyNodeModel();
     }
 
@@ -55,8 +55,8 @@ public class NormalizerApplyNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(
-            final int viewIndex, final NodeModel nodeModel) {
+    public GenericNodeView<NormalizerApplyNodeModel> createNodeView(
+            final int viewIndex, final NormalizerApplyNodeModel nodeModel) {
         return null;
     }
 
