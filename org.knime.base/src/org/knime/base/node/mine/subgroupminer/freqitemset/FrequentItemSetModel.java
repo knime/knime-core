@@ -82,6 +82,7 @@ public class FrequentItemSetModel {
         // throw new IllegalArgumentException("Model input is not "
         // + "a frequent itemset model!");
         // }
+        int idCounter = 0;
         m_itemSets = new ArrayList<FrequentItemSet>();
         ModelContentRO itemsetsModel = model.getModelContent(ITEMSET_MODEL);
         String[] nameMapping = itemsetsModel.getStringArray(NAME_MAPPING);
@@ -104,7 +105,8 @@ public class FrequentItemSetModel {
                 }
                 items.add(pos);
             }
-            FrequentItemSet freqSet = new FrequentItemSet(items, support);
+            FrequentItemSet freqSet = new FrequentItemSet(
+                    "" + idCounter++, items, support);
             m_itemSets.add(freqSet);
         }
     }

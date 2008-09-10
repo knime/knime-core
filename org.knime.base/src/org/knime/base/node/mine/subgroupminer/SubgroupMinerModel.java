@@ -42,9 +42,7 @@ import org.knime.base.data.bitvector.BitVectorValue;
 import org.knime.base.node.mine.subgroupminer.apriori.AprioriAlgorithm;
 import org.knime.base.node.mine.subgroupminer.apriori.AprioriAlgorithmFactory;
 import org.knime.base.node.mine.subgroupminer.freqitemset.AssociationRule;
-import org.knime.base.node.mine.subgroupminer.freqitemset.AssociationRuleModel;
 import org.knime.base.node.mine.subgroupminer.freqitemset.FrequentItemSet;
-import org.knime.base.node.mine.subgroupminer.freqitemset.FrequentItemSetModel;
 import org.knime.base.node.mine.subgroupminer.freqitemset.FrequentItemSetRow;
 import org.knime.base.node.mine.subgroupminer.freqitemset.FrequentItemSetTable;
 import org.knime.core.data.DataCell;
@@ -65,16 +63,19 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.knime.core.node.property.hilite.HiLiteMapper;
 
 /**
@@ -83,7 +84,7 @@ import org.knime.core.node.property.hilite.HiLiteMapper;
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
+public class SubgroupMinerModel extends GenericNodeModel implements HiLiteMapper {
     /* ------------the input -------------------- */
     /** Config key for the column containing the transactions as bitvectors. */
     public static final String CFG_BITVECTOR_COL = "BITVECTOR_COLUMN";
@@ -170,7 +171,9 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
      * Creates an instance of the SubgroubMinerModel.
      */
     public SubgroupMinerModel() {
-        super(1, 1, 0, 1);
+        super(new PortType[] {BufferedDataTable.TYPE}, 
+                new PortType[] {BufferedDataTable.TYPE, 
+                PMMLAssociationRulePortObject.TYPE});
     }
 
     /**
@@ -256,9 +259,9 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        DataTable input = inData[0];
+        DataTable input = (BufferedDataTable)inData[0];
         ExecutionMonitor exec1 = exec.createSubProgress(0.5);
         ExecutionMonitor exec2 = exec.createSubProgress(0.5);
         List<BitSet> transactions = preprocess(input, exec1);
@@ -281,7 +284,8 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
         LOGGER.debug("ended apriori: " + new Date());
         m_itemSetTable = createOutputTable(exec);
 
-        return new BufferedDataTable[]{m_itemSetTable};
+        return new PortObject[]{m_itemSetTable, createPortObject(
+                (DataTableSpec)inData[0].getSpec())};
     }
 
     /**
@@ -381,9 +385,9 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
         return exec.createBufferedDataTable(result, exec);
     }
 
-    /**
+    /*
      * {@inheritDoc}
-     */
+     *
     @Override
     protected void saveModelContent(final int index,
             final ModelContentWO predParams) throws InvalidSettingsException {
@@ -428,37 +432,41 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
             // get the confidence
             double confidence = r.getConfidence();
             // get the antecedence (which is one item) -> cell
-            List<Integer> antecedent = r.getAntecedent();
+            FrequentItemSet antecedent = r.getAntecedent();
             // get the consequence
-            Integer consequent = r.getConsequent();
+            FrequentItemSet consequent = r.getConsequent();
 
             DataCell[] allCells 
                 = new DataCell[m_maxItemSetLength.getIntValue() + 4];
             allCells[0] = new DoubleCell(support);
             allCells[1] = new DoubleCell(confidence);
-            if (m_nameMapping != null && m_nameMapping.size() > consequent) {
-                allCells[2] = new StringCell(m_nameMapping.get(consequent));
+            // consequent is alsways only one item -> access with get(0) ok
+            if (m_nameMapping != null 
+                    && m_nameMapping.size() > consequent.getItems().get(0)) {
+                allCells[2] = new StringCell(m_nameMapping.get(
+                        consequent.getItems().get(0)));
             } else {
-                allCells[2] = new StringCell("Item" + consequent);
+                allCells[2] = new StringCell(
+                        "Item" + consequent.getItems().get(0));
             }
             allCells[3] = new StringCell("<---");
-            for (int i = 0; i < antecedent.size() 
+            for (int i = 0; i < antecedent.getItems().size() 
                 && i < m_maxItemSetLength.getIntValue() + 4; i++) {
                 if (m_nameMapping != null 
-                        && m_nameMapping.size() > antecedent.get(i)) {
+                        && m_nameMapping.size() > antecedent.getItems().get(i)) {
                     allCells[i + 4] = new StringCell(m_nameMapping
-                            .get(antecedent.get(i)));
+                            .get(antecedent.getItems().get(i)));
                 } else {
                     allCells[i + 4] = new StringCell(
-                            "Item" + antecedent.get(i));
+                            "Item" + antecedent.getItems().get(i));
                 }
             }
-            int start = Math.min(antecedent.size() + 4, 
+            int start = Math.min(antecedent.getItems().size() + 4, 
                     m_maxItemSetLength.getIntValue() + 4);
             for (int i = start; i < m_maxItemSetLength.getIntValue() + 4; i++) {
                 allCells[i] = DataType.getMissingCell();
             }
-            if (antecedent.size() > 0) {
+            if (antecedent.getItems().size() > 0) {
                 DataRow row = new DefaultRow("rule"
                         + rowKeyCounter++, allCells);
                 ruleRows.addRowToTable(row);
@@ -474,19 +482,46 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
     @Override
     protected void reset() {
     }
+    
+    private PMMLAssociationRulePortObject createPortObject(
+            final DataTableSpec spec) {
+        PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
+                spec);
+        Set<String>learningCols = new HashSet<String>();
+        learningCols.add(m_bitVectorColumn.getStringValue());
+        creator.setLearningColsNames(learningCols);
+        if (m_associationRules.getBooleanValue()) {
+        PMMLAssociationRulePortObject portObj 
+            = new PMMLAssociationRulePortObject(
+                    creator.createSpec(),
+                    m_apriori.getAssociationRules(
+                            m_confidence.getDoubleValue()),
+                    m_minSupport.getDoubleValue(),
+                    m_confidence.getDoubleValue(),
+                    m_nrOfRows, m_maxBitsetLength
+                    );
+            if (m_nameMapping != null && !m_nameMapping.isEmpty()) {
+                portObj.setNameMapping(m_nameMapping);
+            }
+            return portObj;
+        } else {
+            return null;
+        }
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         // check if there is at least one BitVector column
         boolean hasBitVectorColumn = false;
         boolean autoguessed = false;
         boolean autoconfigured = false;
-        for (int i = 0; i < inSpecs[0].getNumColumns(); i++) {
-            if (inSpecs[0].getColumnSpec(i).getType().isCompatible(
+        DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
+        for (int i = 0; i < tableSpec.getNumColumns(); i++) {
+            if (tableSpec.getColumnSpec(i).getType().isCompatible(
                     BitVectorValue.class)) {
                 hasBitVectorColumn = true;
                 if (autoconfigured) {
@@ -495,7 +530,7 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
                 }
                 if (m_bitVectorColumn.getStringValue().equals("")) {
                     m_bitVectorColumn.setStringValue(
-                            inSpecs[0].getColumnSpec(i).getName());
+                            tableSpec.getColumnSpec(i).getName());
                     autoconfigured = true;
                 }
             }
@@ -509,7 +544,7 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
                     + m_bitVectorColumn.getStringValue());
         }
         if (m_bitVectorColumn.getStringValue().equals("")
-                || !inSpecs[0].containsName(
+                || !tableSpec.containsName(
                         m_bitVectorColumn.getStringValue())) {
             throw new InvalidSettingsException(
                     "Set the column with the bit vectors");
@@ -520,7 +555,7 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
         } else {
             outputSpec = createItemsetOutputSpec();
         }
-        return new DataTableSpec[]{outputSpec};
+        return new PortObjectSpec[]{outputSpec};
     }
 
     private DataTableSpec createItemsetOutputSpec() {

@@ -24,9 +24,8 @@
  */
 package org.knime.base.node.mine.subgroupminer;
 
+import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
@@ -34,12 +33,12 @@ import org.knime.core.node.NodeView;
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class SubgroupMinerFactory extends NodeFactory {
+public class SubgroupMinerFactory extends GenericNodeFactory<SubgroupMinerModel> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public SubgroupMinerModel createNodeModel() {
         return new SubgroupMinerModel();
     }
 
@@ -56,7 +55,7 @@ public class SubgroupMinerFactory extends NodeFactory {
      */
     @Override
     public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+            final SubgroupMinerModel nodeModel) {
         return null; // new SubgroupMinerView((SubgroupMinerModel)nodeModel);
     }
 

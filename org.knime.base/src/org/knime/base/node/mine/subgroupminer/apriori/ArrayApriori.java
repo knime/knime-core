@@ -75,6 +75,8 @@ public class ArrayApriori implements AprioriAlgorithm {
     private int m_compressedLength;
 
     private List<Integer> m_alwaysFrequentItems;
+    
+    private int m_idCounter;
 
     /**
      * Creates an ArrayApriori instance with the bitset length, corresponding to
@@ -86,6 +88,7 @@ public class ArrayApriori implements AprioriAlgorithm {
     public ArrayApriori(final int bitSetLength, final int dbsize) {
         m_bitSetLength = bitSetLength;
         m_dbsize = dbsize;
+        m_idCounter = 0;
     }
 
     /**
@@ -299,8 +302,15 @@ public class ArrayApriori implements AprioriAlgorithm {
             List<Integer> withoutI = new ArrayList<Integer>(
                     m_alwaysFrequentItems);
             withoutI.remove(i);
+            List<Integer>iList = new ArrayList<Integer>(1);
+            iList.add(i);
+//            AssociationRule rule = new AssociationRule(
+//                    i, withoutI, 1, m_dbsize);
             AssociationRule rule = new AssociationRule(
-                    i, withoutI, 1, m_dbsize);
+                    new FrequentItemSet("" + m_idCounter++, withoutI, 1.0),
+                    new FrequentItemSet("" + m_idCounter++,
+                            iList, 1.0),
+                    1.0, 1.0);
             associationRules.add(rule);
         }
         // for each itemset s in frequentitemsets
@@ -320,8 +330,19 @@ public class ArrayApriori implements AprioriAlgorithm {
                     if (c >= confidence) {
                         // create association rule (i, s', counterFor(s),
                         // confidence)
-                        AssociationRule rule = new AssociationRule(i,
-                                sWithoutI, c, supportS);
+//                        AssociationRule rule = new AssociationRule(i,
+//                                sWithoutI, c, supportS);
+                        List<Integer>iList = new ArrayList<Integer>();
+                        iList.add(i);
+                        AssociationRule rule = new AssociationRule(
+                                new FrequentItemSet(
+                                        "" + m_idCounter++, 
+                                        sWithoutI, newSupport),
+                                new FrequentItemSet(
+                                        "" + m_idCounter++, iList, 
+                                        getSupportFor(iList)),
+                                        s.getSupport(), c
+                                );
                         associationRules.add(rule);
                         // logger.debug("found association rule: " + rule);
                     }
@@ -349,10 +370,11 @@ public class ArrayApriori implements AprioriAlgorithm {
         for (Integer i : m_alwaysFrequentItems) {
             List<Integer> id = new ArrayList<Integer>();
             id.add(i);
-            FrequentItemSet set = new FrequentItemSet(id, 1);
+            FrequentItemSet set = new FrequentItemSet(
+                    "" + m_idCounter++, id, 1);
             list.add(set);
         }
-        FrequentItemSet initialSet = new FrequentItemSet();
+        FrequentItemSet initialSet = new FrequentItemSet("" + m_idCounter++);
         getFrequentItemSets(m_root, list, initialSet, 0);
         if (type.equals(FrequentItemSet.Type.CLOSED)) {
             List<FrequentItemSet> resultList = filterClosedItemsets(list);
@@ -398,6 +420,7 @@ public class ArrayApriori implements AprioriAlgorithm {
             if (((double)root.getCounterFor(i) / (double)m_dbsize) 
                     >= m_minSupport) {
                 FrequentItemSet newSet = new FrequentItemSet(
+                        "" + m_idCounter++,
                         currSet.getItems(), ((double)root.getCounterFor(i) 
                                 / (double)m_dbsize));
                 newSet.add(m_backwardMapping[i]);

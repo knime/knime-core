@@ -35,13 +35,15 @@ public class TIDFrequentItemSet extends FrequentItemSet {
 
     /**
      * 
+     * @param id the id of this itemset
      * @param itemIds the item ids
      * @param support the support (abs)
      * @param tids the transaction ids
      */
-    public TIDFrequentItemSet(final List<Integer> itemIds, final double support,
+    public TIDFrequentItemSet(final String id, 
+            final List<Integer> itemIds, final double support,
             final List<Integer> tids) {
-        super(itemIds, support);
+        super(id, itemIds, support);
         m_tids = tids;
     }
 

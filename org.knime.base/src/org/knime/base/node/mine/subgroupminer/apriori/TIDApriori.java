@@ -65,6 +65,8 @@ public class TIDApriori implements AprioriAlgorithm {
     private FrequentItemSet.Type m_type;
 
     private TIDPrefixTreeNode m_prefixTree;
+    
+    private int m_idCounter = 0;
 
     /**
      * Identify those items which occure in a sufficient, that is the minimum
@@ -187,7 +189,8 @@ public class TIDApriori implements AprioriAlgorithm {
 
     private void findFrequentItemsDepthFirst(final ExecutionMonitor exec)
             throws CanceledExecutionException {
-        TIDItemSet emptySet = TIDItemSet.createEmptyTIDItemSet(m_dbsize);
+        TIDItemSet emptySet = TIDItemSet.createEmptyTIDItemSet(
+                "" + m_idCounter++, m_dbsize);
         m_prefixTree = new TIDPrefixTreeNode(emptySet);
         expandDepthFirstTree(m_prefixTree, 0, exec);
     }
@@ -252,7 +255,9 @@ public class TIDApriori implements AprioriAlgorithm {
         for (TIDItem i : m_alwaysFrequentItems) {
             List<Integer> id = new ArrayList<Integer>();
             id.add(i.getId());
-            TIDFrequentItemSet freqSet = new TIDFrequentItemSet(id, m_dbsize,
+            TIDFrequentItemSet freqSet = new TIDFrequentItemSet(
+                    "" + m_idCounter++,
+                    id, m_dbsize,
                     tids);
             freqSets.add(freqSet);
         }
@@ -333,8 +338,14 @@ public class TIDApriori implements AprioriAlgorithm {
             // support = dbsize, confidence = 1
             List<Integer> rest = new ArrayList<Integer>(alwaysFrequentIds);
             rest.remove(new Integer(item.getId()));
-            AssociationRule rule = new AssociationRule(item.getId(), rest, 1,
-                    m_dbsize);
+//            AssociationRule rule = new AssociationRule(item.getId(), rest, 1,
+//                    m_dbsize);
+            List<Integer>itemList = new ArrayList<Integer>();
+            itemList.add(item.getId());
+            AssociationRule rule = new AssociationRule(
+                    new FrequentItemSet("" + m_idCounter++, rest, 1.0), 
+                    new FrequentItemSet("" + m_idCounter++, itemList, 1.0),
+                    1.0, 1.0);
             associationRules.add(rule);
         }
         // for each itemset
@@ -348,7 +359,7 @@ public class TIDApriori implements AprioriAlgorithm {
                     sWithoutI.remove(i);
                     // create an empty TIDItemSet
                     TIDItemSet itemSet = TIDItemSet
-                            .createEmptyTIDItemSet(m_dbsize);
+                            .createEmptyTIDItemSet("" + m_idCounter, m_dbsize);
                     for (Integer item : sWithoutI) {
                         int index = m_frequentItems.indexOf(new TIDItem(item));
                         TIDItem tidItem = m_frequentItems.get(index);
@@ -362,8 +373,25 @@ public class TIDApriori implements AprioriAlgorithm {
                     double oldSupport = s.getSupport();
                     double c = oldSupport / newSupport;
                     if (c >= confidence) {
-                        AssociationRule rule = new AssociationRule(i,
-                                sWithoutI, c, s.getSupport());
+//                        AssociationRule rule = new AssociationRule(i,
+//                                sWithoutI, c, s.getSupport());
+                        List<Integer>iList = new ArrayList<Integer>();
+                        iList.add(i);
+                        int index = m_frequentItems.indexOf(new TIDItem(i));
+                        TIDItem tidItem = m_frequentItems.get(index);
+                        if (tidItem == null) {
+                            // TODO: what if ???
+                        }
+                        AssociationRule rule = new AssociationRule(
+                                new FrequentItemSet(
+                                        "" + m_idCounter++, 
+                                        sWithoutI, newSupport),
+                                new FrequentItemSet(
+                                        "" + m_idCounter++,
+                                        iList, 
+                                        // TODO: support of single item
+                                        tidItem.getSupport()),
+                                s.getSupport(), c);
                         associationRules.add(rule);
                     }
                 }

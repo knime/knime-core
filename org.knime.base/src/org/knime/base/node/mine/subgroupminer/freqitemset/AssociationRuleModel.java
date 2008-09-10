@@ -24,8 +24,6 @@
  */
 package org.knime.base.node.mine.subgroupminer.freqitemset;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -43,11 +41,11 @@ public class AssociationRuleModel {
 
     private static final String ASSOCIATION_RULE = "associationRule";
 
-    private static final String CONSEQUENT = "consequent";
+//    private static final String CONSEQUENT = "consequent";
 
     private static final String ANTECEDENT = "antecedent";
 
-    private static final String ANTECEDENT_SIZE = "antecedent size";
+//    private static final String ANTECEDENT_SIZE = "antecedent size";
 
     private static final String CONFIDENCE = "confidence";
 
@@ -72,6 +70,7 @@ public class AssociationRuleModel {
      */
     public void loadFromModelContent(final ModelContentRO model)
             throws InvalidSettingsException {
+        /*
         String type = model.getString(TYPE, "");
         if (!type.equals(ASSOCIATION_RULES)) {
             throw new InvalidSettingsException("Model is not of type "
@@ -111,7 +110,7 @@ public class AssociationRuleModel {
                     confidence, support);
             m_rules.add(rule);
         }
-
+    */
     }
 
     /**
@@ -134,17 +133,19 @@ public class AssociationRuleModel {
             ruleModel.addDouble(SUPPORT, rule.getSupport());
             ruleModel.addDouble(CONFIDENCE, rule.getConfidence());
             String name;
+            /*
             if (m_nameMapping != null 
                     && m_nameMapping.size() > rule.getConsequent()) {
                 name = m_nameMapping.get(rule.getConsequent());
             } else {
                 name = "item" + rule.getConsequent();
             }
-            ruleModel.addString(CONSEQUENT, name);
-            int antecedentSize = rule.getAntecedent().size();
+            */
+//            ruleModel.addString(CONSEQUENT, name);
+//            int antecedentSize = rule.getAntecedent().size();
             ModelContentWO antecedentModel = ruleModel
                     .addModelContent(ANTECEDENT);
-            antecedentModel.addInt(ANTECEDENT_SIZE, antecedentSize);
+//            antecedentModel.addInt(ANTECEDENT_SIZE, antecedentSize);
             int itemCounter = 0;
             for (Integer item : rule.getAntecedent()) {
                 if (m_nameMapping != null && m_nameMapping.size() > item) {

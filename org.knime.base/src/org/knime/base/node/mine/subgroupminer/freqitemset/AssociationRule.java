@@ -24,7 +24,6 @@
  */
 package org.knime.base.node.mine.subgroupminer.freqitemset;
 
-import java.util.List;
 
 /**
  * A data structure to encapsulate an association rule.
@@ -32,15 +31,19 @@ import java.util.List;
  * @author Fabian Dill, University of Konstanz
  */
 public class AssociationRule {
-    private Integer m_consequent;
-
-    private List<Integer> m_antecedent;
+//    private Integer m_consequent;
+//
+//    private List<Integer> m_antecedent;
 
     private double m_confidence;
 
     private double m_support;
+    
+    private final FrequentItemSet m_antecedent;
+    
+    private final FrequentItemSet m_consequent;
 
-    /**
+    /*
      * Creates an association rule with the list of ids of the antecedent and an
      * id as the consequent of this rule.
      * 
@@ -48,7 +51,7 @@ public class AssociationRule {
      * @param antecendent the antecedent of the rule
      * @param confidence the confidence of the rule
      * @param support the support of the rule
-     */
+     *
     public AssociationRule(final Integer consequent,
             final List<Integer> antecendent, final double confidence,
             final double support) {
@@ -57,7 +60,21 @@ public class AssociationRule {
         m_confidence = confidence;
         m_support = support;
     }
+    */
 
+    // TODO: rewrite to have a FrequentItem antecedent
+    // and a FrequentItemSet as consequent
+    
+    public AssociationRule(final FrequentItemSet antecedent, 
+            final FrequentItemSet consequent, final double support,
+            final double confidence) {
+        m_antecedent = antecedent;
+        m_consequent = consequent;
+        m_support = support;
+        m_confidence = confidence;
+    }
+    
+    
     /**
      * @return the support of the rule.
      */
@@ -82,30 +99,18 @@ public class AssociationRule {
     /**
      * @return the antecedent
      */
-    public List<Integer> getAntecedent() {
+    public FrequentItemSet getAntecedent() {
         return m_antecedent;
     }
 
-    /**
-     * @param antecedent he antecedent to set
-     */
-    public void setAntecedent(final List<Integer> antecedent) {
-        m_antecedent = antecedent;
-    }
 
     /**
      * @return the consequent
      */
-    public Integer getConsequent() {
+    public FrequentItemSet getConsequent() {
         return m_consequent;
     }
 
-    /**
-     * @param consequent the consequent to set
-     */
-    public void setConsequent(final Integer consequent) {
-        m_consequent = consequent;
-    }
 
     /**
      * {@inheritDoc}
@@ -113,7 +118,7 @@ public class AssociationRule {
     @Override
     public String toString() {
         return "support: " + m_support + " confidence: " + m_confidence
-                + " antecedent: " + m_antecedent + " consequent: "
-                + m_consequent;
+                + " antecedent: " + m_antecedent.getId() + " consequent: "
+                + m_consequent.getId();
     }
 }

@@ -65,6 +65,7 @@ public class PMMLClusterHandler extends PMMLContentHandler {
     static {
         UNSUPPORTED.add("KohonenMap");
         UNSUPPORTED.add("Covariances");
+        UNSUPPORTED.add("LocalTransformations");
         
         IGNORED.add("MissingValueWeights");
         

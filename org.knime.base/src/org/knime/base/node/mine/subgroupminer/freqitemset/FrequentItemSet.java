@@ -62,7 +62,7 @@ public class FrequentItemSet implements Iterable<Integer> {
          * @return the enum fields as a String list of their names
          */
         public static List<String> asStringList() {
-            Enum[] values = values();
+            Enum<Type>[] values = values();
             List<String> list = new ArrayList<String>();
             for (int i = 0; i < values.length; i++) {
                 list.add(values[i].name());
@@ -78,44 +78,40 @@ public class FrequentItemSet implements Iterable<Integer> {
     private boolean m_isClosed;
 
     private boolean m_isMaximal;
+    
+    private final String m_id;
 
     /**
      * Creates an empty frequent itemset with no items, support = 0 and neither
      * closed nor maximal.
-     * 
+     * @param id - the id of the itemset
      */
-    public FrequentItemSet() {
-        m_items = new LinkedList<Integer>();
-        m_support = 0;
-        m_isClosed = false;
-        m_isMaximal = false;
+    public FrequentItemSet(final String id) {
+        this(id, new LinkedList<Integer>(), 0, false, false);
     }
 
     /**
      * Creates frequent itemset with the passed items, support = 0 and neither
      * closed nor maximal.
      * 
+     * @param id the id of this itemset
      * @param items the items constituting this set
      */
-    public FrequentItemSet(final List<Integer> items) {
-        m_items = new LinkedList<Integer>(items);
-        m_support = 0;
-        m_isClosed = false;
-        m_isMaximal = false;
+    public FrequentItemSet(final String id, final List<Integer> items) {
+        this(id, items, 0, false, false);
     }
 
     /**
      * Creates a fequent itemset with the passed items and the given support.
      * Neither closed nor maximal.
      * 
+     * @param id the id of this itemset
      * @param items the items constituting this set
      * @param support the support of this itemset
      */
-    public FrequentItemSet(final List<Integer> items, final double support) {
-        m_items = new LinkedList<Integer>(items);
-        m_support = support;
-        m_isClosed = false;
-        m_isMaximal = false;
+    public FrequentItemSet(final String id, 
+            final List<Integer> items, final double support) {
+        this(id, items, support, false, false);
     }
 
     /**
@@ -123,6 +119,7 @@ public class FrequentItemSet implements Iterable<Integer> {
      * whether it is closed or maximal. If both, closed and maximal are
      * <code>false</code> it is considered to be free.
      * 
+     * @param id the id of this itemset
      * @param items the items consituting this itemset.
      * @param support the support of this itemset.
      * @param isClosed <code>true</code>, if this itemset is closed,
@@ -130,12 +127,14 @@ public class FrequentItemSet implements Iterable<Integer> {
      * @param isMaximal <code>true</code> if this itemset is maximal,
      *            <code>false</code> otherwise
      */
-    public FrequentItemSet(final List<Integer> items, final double support,
+    public FrequentItemSet(final String id, final List<Integer> items, 
+            final double support,
             final boolean isClosed, final boolean isMaximal) {
         m_items = new LinkedList<Integer>(items);
         m_support = support;
         m_isClosed = isClosed;
         m_isMaximal = isMaximal;
+        m_id = id;
     }
 
     /**
@@ -150,6 +149,14 @@ public class FrequentItemSet implements Iterable<Integer> {
         return s2.getItems().containsAll(m_items);
     }
 
+    /**
+     * 
+     * @return the id of this itemset
+     */
+    public String getId() {
+        return m_id;
+    }
+    
     /**
      * Adds the passed item to the set.
      * 
