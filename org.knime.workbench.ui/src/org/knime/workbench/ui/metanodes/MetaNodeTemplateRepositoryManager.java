@@ -23,9 +23,16 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.WorkbenchException;
 import org.eclipse.ui.XMLMemento;
@@ -34,6 +41,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -47,6 +55,9 @@ public final class MetaNodeTemplateRepositoryManager {
     
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             MetaNodeTemplateRepositoryManager.class); 
+    
+    private static final String EXTENSOIN_POINT_ID 
+        = "org.knime.workbench.ui.metanode"; 
     
     private List<MetaNodeTemplateRepositoryItem>m_items;
     
@@ -188,9 +199,60 @@ public final class MetaNodeTemplateRepositoryManager {
                     +  getMetaNodeTemplateStore().getPath());
         } catch (WorkbenchException we) {
             LOGGER.error("Error during load of meta node templates: ", we);
-        } 
+        }
+        
+        loadPreinstalledMetaNodes();
     }
     
+    private void loadPreinstalledMetaNodes() {
+        IExtensionRegistry reg = Platform.getExtensionRegistry();
+        IExtensionPoint p = reg.getExtensionPoint(EXTENSOIN_POINT_ID);
+        if (p != null) {
+            IConfigurationElement[] elems = p.getConfigurationElements();
+            for (IConfigurationElement elem : elems) {
+                String path = elem.getAttribute("workflowDir");
+                LOGGER.debug("found pre-installed template " + path);
+                URL url = FileLocator.find(
+                        KNIMEUIPlugin.getDefault().getBundle(),
+                        new Path(path), null);
+                
+                if (url != null) {
+                    try {
+                        LOGGER.debug("found pre-installed template " 
+                                + FileLocator.toFileURL(url));
+                        File f = new File(FileLocator.toFileURL(url).getFile());
+                        WorkflowManager metaNode = WorkflowManager.load(f, 
+                                new ExecutionMonitor()).getWorkflowManager();
+                        NodeID[] nodes 
+                            = new NodeID[metaNode
+                                     .getNodeContainers().size()];
+                        int i = 0;
+                        for (NodeContainer node : metaNode
+                                .getNodeContainers()) {
+                            nodes[i++] = node.getID();
+                        }
+                        workflowmanager.copy(
+                                metaNode, nodes);
+                        MetaNodeTemplateRepositoryItem preItem 
+                            = new MetaNodeTemplateRepositoryItem(f.getName(), 
+                                    metaNode.getID());
+                        preItem.updateNodeID(workflowmanager.getID());
+                        m_items.add(preItem);
+                    } catch (CanceledExecutionException cee) {
+                        // ignore -> cannot happen
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (InvalidSettingsException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }
+                
+            }
+        }
+    }
+
     /**
      * Saves the workflowManager to the directory specified by 
      *  {@link #METANODE_TEMPLATE_REPOSITORY} and all 

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+<entry key="name" type="xstring" value="Column Filter"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<config key="exclude">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+</config>
+<entry key="hasContent" type="xboolean" value="false"/>
+<config key="ports">
+<config key="port_0">
+<entry key="index" type="xint" value="0"/>
+<entry key="port_dir_location" type="xstring" isnull="true" value=""/>
+</config>
+</config>
+</config>

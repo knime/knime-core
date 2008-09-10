@@ -34,6 +34,9 @@ import org.eclipse.core.runtime.CoreException;
  * @author Florian Georg, University of Konstanz
  */
 public class KNIMEProjectNature implements IProjectNature {
+    
+    public static final String ID = "org.knime.workbench.ui.KNIMEProjectNature";
+    
     private IProject m_project;
 
     /**

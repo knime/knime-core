@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.0"?>
 <plugin>
+   <extension-point id="metanode" name="MetaNode" schema="schema/metanode.exsd"/>
 
 <extension
          point="org.eclipse.ui.views">
@@ -196,7 +197,7 @@
       </builder>
    </extension>
    <extension
-         id="KNIMEProjectNature"
+         id="org.knime.workbench.ui.KNIMEProjectNature"
          name="KNIME project nature"
          point="org.eclipse.core.resources.natures">
       <runtime>
@@ -323,6 +324,12 @@
                 tooltip="Remove selected meta node template">
           </action>
        </viewContribution>
+    </extension>
+    <extension
+          point="org.knime.workbench.ui.metanode">
+       <PersistedMetaNode
+             workflowDir="metanode_templates/Preprocessing/">
+       </PersistedMetaNode>
     </extension>
    
 
