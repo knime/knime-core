@@ -162,7 +162,8 @@ public abstract class AbstractSimplePortObject implements PortObject {
         /** {@inheritDoc} */
         @Override
         public void savePortObject(final AbstractSimplePortObject portObject,
-                final PortObjectZipOutputStream out, final ExecutionMonitor exec)
+                final PortObjectZipOutputStream out, 
+                final ExecutionMonitor exec)
                 throws IOException, CanceledExecutionException {
             // this is going to throw a runtime exception in case...
             ModelContent model = new ModelContent("model.xml");
