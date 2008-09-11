@@ -21,10 +21,7 @@
  */
 package org.knime.base.node.mine.regression.polynomial.predictor;
 
-import org.knime.base.node.mine.regression.predict.RegressionPredictorNodeModel;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
-import org.knime.core.node.NodeDialogPane;
+import org.knime.base.node.mine.regression.predict.RegressionPredictorNodeFactory;
 
 /**
  * This factory creates all necessary object for the polynomial regression
@@ -32,46 +29,6 @@ import org.knime.core.node.NodeDialogPane;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class PolyRegPredictorNodeFactory extends
-        GenericNodeFactory<RegressionPredictorNodeModel> {
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public RegressionPredictorNodeModel createNodeModel() {
-        return new RegressionPredictorNodeModel();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public GenericNodeView<RegressionPredictorNodeModel> createNodeView(
-            final int viewIndex, final RegressionPredictorNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return false;
-    }
+public class PolyRegPredictorNodeFactory extends 
+RegressionPredictorNodeFactory {
 }
