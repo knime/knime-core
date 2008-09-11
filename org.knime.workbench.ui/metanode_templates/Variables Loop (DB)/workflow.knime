@@ -1,36 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
-<config key="workflow.knime">
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" key="workflow.knime">
 <entry key="version" type="xstring" value="2.0.0"/>
-<entry key="name" type="xstring" value="MetaNode"/>
+<entry key="name" type="xstring" value="Variables Loop (DB)"/>
+<entry key="customName" type="xstring" isnull="true" value=""/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="state" type="xstring" value="IDLE"/>
 <config key="nodes">
 <config key="node_1">
 <entry key="id" type="xint" value="1"/>
-<entry key="node_settings_file" type="xstring" value="Column Filter (#1)/settings.xml"/>
+<entry key="node_settings_file" type="xstring" value="Variables Looper DB _Start_ (#1)/settings.xml"/>
 <entry key="node_is_meta" type="xboolean" value="false"/>
 <entry key="ui_classname" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
 <config key="ui_settings">
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="237"/>
-<entry key="1" type="xint" value="180"/>
-<entry key="2" type="xint" value="-1"/>
-<entry key="3" type="xint" value="-1"/>
+<entry key="0" type="xint" value="124"/>
+<entry key="1" type="xint" value="169"/>
+<entry key="2" type="xint" value="109"/>
+<entry key="3" type="xint" value="110"/>
 </config>
 </config>
 </config>
 <config key="node_2">
 <entry key="id" type="xint" value="2"/>
-<entry key="node_settings_file" type="xstring" value="Rename (#2)/settings.xml"/>
+<entry key="node_settings_file" type="xstring" value="LoopEnd (#2)/settings.xml"/>
 <entry key="node_is_meta" type="xboolean" value="false"/>
 <entry key="ui_classname" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
 <config key="ui_settings">
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="371"/>
-<entry key="1" type="xint" value="181"/>
-<entry key="2" type="xint" value="-1"/>
-<entry key="3" type="xint" value="-1"/>
+<entry key="0" type="xint" value="514"/>
+<entry key="1" type="xint" value="183"/>
+<entry key="2" type="xint" value="80"/>
+<entry key="3" type="xint" value="110"/>
 </config>
 </config>
 </config>
@@ -43,10 +45,10 @@
 <entry key="destPort" type="xint" value="0"/>
 </config>
 <config key="connection_1">
-<entry key="sourceID" type="xint" value="1"/>
-<entry key="destID" type="xint" value="2"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="destPort" type="xint" value="0"/>
+<entry key="sourceID" type="xint" value="-1"/>
+<entry key="destID" type="xint" value="1"/>
+<entry key="sourcePort" type="xint" value="1"/>
+<entry key="destPort" type="xint" value="1"/>
 </config>
 <config key="connection_2">
 <entry key="sourceID" type="xint" value="2"/>
@@ -61,6 +63,13 @@
 <config key="inport_0">
 <entry key="index" type="xint" value="0"/>
 <entry key="name" type="xstring" value="Inport 0"/>
+<config key="type">
+<entry key="object_class" type="xstring" value="org.knime.core.node.port.database.DatabasePortObject"/>
+</config>
+</config>
+<config key="inport_1">
+<entry key="index" type="xint" value="1"/>
+<entry key="name" type="xstring" value="Inport 1"/>
 <config key="type">
 <entry key="object_class" type="xstring" value="org.knime.core.node.BufferedDataTable"/>
 </config>

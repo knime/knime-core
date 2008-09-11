@@ -328,10 +328,13 @@
     <extension
           point="org.knime.workbench.ui.metanode">
        <PersistedMetaNode
-             workflowDir="metanode_templates/Preprocessing/">
+             workflowDir="metanode_templates/Cross Validation/">
        </PersistedMetaNode>
        <PersistedMetaNode
-             workflowDir="metanode_templates/Cross Validation/">
+             workflowDir="metanode_templates/Variables Loop/">
+       </PersistedMetaNode>
+       <PersistedMetaNode
+             workflowDir="metanode_templates/Variables Loop (DB)/">
        </PersistedMetaNode>
     </extension>
    
