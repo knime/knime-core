@@ -18,10 +18,16 @@
  */
 package org.knime.base.node.io.pmml.read;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.ParserConfigurationException;
@@ -56,7 +62,6 @@ import org.knime.core.node.port.pmml.XFilter;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.xml.sax.SAXNotSupportedException;
 import org.xml.sax.SAXParseException;
 
 /**
@@ -74,10 +79,21 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
     private String m_portObjectClassName = null;
 
     private PMMLModelType m_type;
+    
+    private boolean m_hasNamespace;
 
     private PMMLPortObjectSpec m_spec;
 
     private String m_version;
+    
+    private static final Map<String, String>NS_MAP 
+        = new HashMap<String, String>();
+    
+    static {
+        NS_MAP.put("3.0", "http://www.dmg.org/PMML-3_0");
+        NS_MAP.put("3.1", "http://www.dmg.org/PMML-3_1");
+        NS_MAP.put("3.2", "http://www.dmg.org/PMML-3_2");
+    }
 
     /**
      * 
@@ -101,17 +117,16 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
                         "Please select a PMML file!");
             }
             try {
-                m_spec = dataDictionaryToDataTableSpec();
+                m_spec = dataDictionaryToDataTableSpec(
+                        new File(m_file.getStringValue()));
                 if (m_version.startsWith("3.")) {
                     validateSchema();
                 } else {
-                    throw new SAXNotSupportedException(
+                    throw new InvalidSettingsException(
                             "Only PMML versions 3.0, 3.1, 3.2 are supported.");
                 }
-//                validate();
             } catch (SAXException e) {
                 LOGGER.error("PMML file is not valid", e);
-//                throw new InvalidSettingsException(e);
                 setWarningMessage(
                         "File seems to be not a vaild PMML file.");
                 throw new InvalidSettingsException(e);
@@ -119,10 +134,8 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
                 throw new InvalidSettingsException(io);
             } catch (ParserConfigurationException pce) {
                 throw new InvalidSettingsException(pce);
-            }
-
+            } 
             LOGGER.debug("model type: " + m_type.name());
-
             return new PortObjectSpec[]{m_spec};
     }
 
@@ -167,7 +180,7 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
     }
     
     
-    public void validateSchema() throws SAXException, IOException, 
+    private void validateSchema() throws SAXException, IOException, 
         ParserConfigurationException {
         LOGGER.debug("Validating PMML file " + m_file.getStringValue() 
                 + ". Version = " + m_version);
@@ -175,6 +188,7 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
                 SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         SAXParserFactory fac = SAXParserFactory.newInstance();
         fac.setNamespaceAware(true);
+        
         Schema schema = null;
         if (m_version == null) {
             throw new SAXException(
@@ -187,12 +201,10 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
             throw new SAXException(
                     "Version " + m_version + " is not supported!");
         }
-        
         schema =
             schemaFac
                     .newSchema(new SAXSource(new InputSource(
                             getSchemaInputStream(schemaLocation))));
-    
         File f = new File(m_file.getStringValue());
         FileInputStream fis = new FileInputStream(f);
         XFilter filter = new XFilter(m_version);
@@ -205,9 +217,8 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
 
     }
 
-    private PMMLPortObjectSpec dataDictionaryToDataTableSpec()
-            throws ParserConfigurationException, SAXException {
-        File f = new File(m_file.getStringValue());
+    private PMMLPortObjectSpec dataDictionaryToDataTableSpec(final File file)
+            throws ParserConfigurationException, SAXException, IOException {
         SAXParserFactory fac = SAXParserFactory.newInstance();
         SAXParser parser = fac.newSAXParser();
         PMMLMasterContentHandler masterHandler = new PMMLMasterContentHandler();
@@ -222,21 +233,19 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
                 new MiningSchemaContentHandler();
         masterHandler.addContentHandler(MiningSchemaContentHandler.ID,
                 miningSchemaHdl);
-        try {
-            parser.parse(f, masterHandler);
-        } catch (Exception e) {
-            LOGGER.error("Error parsing file" + m_file.getStringValue(), e);
-        }
+        parser.parse(file, masterHandler);
         m_version = masterHandler.getVersion();
         m_type = modelTypeHdl.getModelType();
+        m_hasNamespace = modelTypeHdl.hasNamespace();
         PMMLPortObjectSpecCreator creator =
-                new PMMLPortObjectSpecCreator(ddHandler.getDataTableSpec());
+            new PMMLPortObjectSpecCreator(ddHandler.getDataTableSpec());
         creator.setIgnoredColsNames(miningSchemaHdl.getIgnoredFields());
         creator.setLearningColsNames(miningSchemaHdl.getLearningFields());
         creator.setTargetColsNames(miningSchemaHdl.getTargetFields());
         m_spec = creator.createSpec();
         return m_spec;
     }
+    
 
     /**
      * {@inheritDoc}
@@ -244,22 +253,57 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        // TODO: this instantiation has to be done differently
-        // (without the necessity of a default contructor)
         // retrieve selected PortObject class -> instantiate and load it
         LOGGER.debug("class name: " + m_portObjectClassName);
         Class<? extends PMMLPortObject> clazz =
                 (Class<? extends PMMLPortObject>)Class
                         .forName(m_portObjectClassName);
         PMMLPortObject portObject = clazz.newInstance();
-        m_spec = dataDictionaryToDataTableSpec();
-        portObject.loadFrom(m_spec, new FileInputStream(new File(m_file
-                .getStringValue())), m_version);
-        //TODO: 
-        // provide additional method in PortObject with version parameter
-        // 
+        // TODO: create the PMMLPortObjectSpec while parsing the file 
+        // now the dataDictionaryToDataTableSpec parses the whole file
+        // TODO: check if namespace is available in configure
+        if (!m_hasNamespace) {
+            LOGGER.debug("adding namespace");
+            File f = File.createTempFile("ns_added", ".xml");
+            f.deleteOnExit();
+            BufferedReader reader = new BufferedReader(
+                    new FileReader(m_file.getStringValue()));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(f));
+            String line = reader.readLine();
+            boolean tagOpen = false; 
+            while (line != null) {
+                if (line.startsWith("<PMML")) {
+                    tagOpen = true;
+                }
+                if (tagOpen && line.endsWith(">")) {
+                    tagOpen = false;
+                    // add namespace declaration
+                    line = "<PMML version=\"" + m_version 
+                    + "\" xmlns=\"" + NS_MAP.get(m_version) + "\" xmlns:xsi=" 
+                    + "\"http://www.w3.org/2001/XMLSchema-instance\">";
+                    LOGGER.debug(line);
+                }
+                if (!tagOpen) {
+                    writer.write(line + "\n");
+                }
+                line = reader.readLine();
+            }
+            reader.close();
+            writer.close();
+            m_spec = dataDictionaryToDataTableSpec(f);
+            portObject.loadFrom(m_spec, new FileInputStream(f), m_version);
+            f.delete();
+        } else {
+            m_spec = dataDictionaryToDataTableSpec(
+                    new File(m_file.getStringValue()));
+            portObject.loadFrom(m_spec, 
+                    new FileInputStream(m_file.getStringValue()), m_version);
+        }
         return new PortObject[]{portObject};
     }
+    
+    
+
 
     /**
      * {@inheritDoc}
@@ -324,6 +368,11 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
             CanceledExecutionException {
     }
     
+    /**
+     * Error handler that throws an exception if an error occurs.
+     * 
+     * @author Fabian Dill, University of Konstanz
+     */
     public static class LoggingErrorHandler implements ErrorHandler {
         
         /**
@@ -355,8 +404,7 @@ public class PMMLReaderNodeModel extends GenericNodeModel {
         @Override
         public void warning(final SAXParseException saxe) 
             throws SAXException {
-            LOGGER.error("Invalid PMML file: ", saxe);
-            throw saxe;
+            LOGGER.warn("Invalid PMML file: ", saxe);
         }
 
     }
