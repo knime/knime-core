@@ -27,6 +27,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
@@ -41,6 +42,9 @@ import org.knime.core.node.port.pmml.PMMLPortObject;
  */
 public class PMMLWriterNodeModel extends GenericNodeModel {
     
+    
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            PMMLWriterNodeModel.class);
     
     private final SettingsModelString m_outfile 
         = PMMLWriterNodeDialog.createFileModel();
@@ -59,7 +63,7 @@ public class PMMLWriterNodeModel extends GenericNodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        // TODO Auto-generated method stub
+        checkFileLocation(m_outfile.getStringValue());
         return new PortObjectSpec[] {};
     }
 
@@ -120,6 +124,19 @@ public class PMMLWriterNodeModel extends GenericNodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_outfile.saveSettingsTo(settings);
     }
+    
+    private void checkFileLocation(final String fileName) 
+        throws InvalidSettingsException {
+    LOGGER.debug("file name: " + fileName);
+    File f = new File(fileName);
+    if ((f.exists() && !f.canWrite()) 
+            || (!f.exists() && !f.getParentFile().canWrite())) {
+        LOGGER.error("Invalid file name: " + fileName);
+        throw new InvalidSettingsException("File name "
+                + fileName + " is not valid. "
+                + "Please enter a valid file name");
+    }
+    }
 
     /**
      * {@inheritDoc}
@@ -128,6 +145,10 @@ public class PMMLWriterNodeModel extends GenericNodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_outfile.validateSettings(settings);
+        String fileName 
+        = ((SettingsModelString)m_outfile.createCloneWithValidatedValue(
+                settings)).getStringValue();
+        checkFileLocation(fileName);
     }
 
 }
