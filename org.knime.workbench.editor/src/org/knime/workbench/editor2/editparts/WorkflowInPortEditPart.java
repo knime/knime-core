@@ -209,7 +209,9 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
      */
     @Override
     public List<ConnectionContainer> getModelSourceConnections() {
-
+        if (getManager() == null) {
+            return EMPTY_LIST;
+        }
         Set<ConnectionContainer> containers =
                 getManager().getOutgoingConnectionsFor(
                         getNodeContainer().getID(),

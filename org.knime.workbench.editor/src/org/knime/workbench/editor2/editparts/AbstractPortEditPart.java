@@ -167,7 +167,9 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     @Override
     public void activate() {
         super.activate();
-        getManager().addListener(this);
+        if (getManager() != null) {
+            getManager().addListener(this);
+        }
 //      // register as zoom listener to adapt the line width
         ZoomManager zoomManager =
                 (ZoomManager) getRoot().getViewer().getProperty(
@@ -184,7 +186,9 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     @Override
     public void deactivate() {
         super.deactivate();
-        getManager().removeListener(this);
+        if (getManager() != null) {
+            getManager().removeListener(this);
+        }
     }
 
     /**

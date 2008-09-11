@@ -78,6 +78,9 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
      */
     @Override
     public List<ConnectionContainer> getModelTargetConnections() {
+        if (getManager() == null) {
+            return EMPTY_LIST;
+        }
         ConnectionContainer container = getManager().getIncomingConnectionFor(
                 getNodeContainer().getID(), getIndex());
 
