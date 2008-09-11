@@ -26,11 +26,10 @@ package org.knime.base.node.mine.neural.mlp;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Set;
 
-import org.knime.base.data.neural.Layer;
 import org.knime.base.data.neural.MultiLayerPerceptron;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
@@ -43,6 +42,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.StringValue;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DoubleCell;
@@ -53,20 +53,23 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 /**
  * The Neural Net Predictor takes as input a
- * {@link org.knime.core.data.DataTable} with the data that has to be
- * classified and the trained Neural Network.
+ * {@link org.knime.core.data.DataTable} with the data that has to be classified
+ * and the trained Neural Network.
  *
  * @author Nicolas Cebron, University of Konstanz
  */
-public class MLPPredictorNodeModel extends NodeModel {
+public class MLPPredictorNodeModel extends GenericNodeModel {
     /*
      * The trained neural network to use for prediction.
      */
@@ -76,8 +79,6 @@ public class MLPPredictorNodeModel extends NodeModel {
      * Tehe number of possible values in the class column.
      */
     private int m_nrPossValues;
-
-    private ModelContentRO m_predParams;
 
     /*
      * The columns to work on.
@@ -90,7 +91,8 @@ public class MLPPredictorNodeModel extends NodeModel {
      *
      */
     public MLPPredictorNodeModel() {
-        super(1, 1, 1, 0);
+        super(new PortType[]{PMMLNeuralNetworkPortObject.TYPE,
+              BufferedDataTable.TYPE}, new PortType[]{BufferedDataTable.TYPE});
     }
 
     /**
@@ -101,81 +103,89 @@ public class MLPPredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_predParams != null) {
-            /*
-             * Check consistency between model and inputs, find columns to work
-             * on.
-             */
-            m_mlp = MultiLayerPerceptron.loadPredictorParams(m_predParams);
-            HashMap<String, Integer> inputmap = m_mlp.getInputMapping();
-            Set<String> inputcols = inputmap.keySet();
-            m_columns = new int[inputcols.size()];
-            for (String incol : inputcols) {
-                if (!inSpecs[0].containsName(incol)) {
-                    throw new InvalidSettingsException("Could not" + " find "
-                            + incol.toString() + " in inputspec");
-                } else {
-                    m_columns[inputmap.get(incol)] =
-                            inSpecs[0].findColumnIndex(incol);
-                }
+        PMMLPortObjectSpec modelspec = (PMMLPortObjectSpec)inSpecs[0];
+        DataTableSpec testSpec = (DataTableSpec)inSpecs[1];
+        /*
+         * Check consistency between model and inputs, find columns to work on.
+         */
+        for (String incol : modelspec.getLearningFields()) {
+            if (!testSpec.containsName(incol)) {
+                throw new InvalidSettingsException("Could not find " + incol
+                        + " in inputspec");
             }
-
-            MLPClassificationFactory mymlp;
-            /*
-             * Regression
-             */
-            if (m_mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
-
-                mymlp = new MLPClassificationFactory(true, m_columns);
-            } else if (m_mlp.getMode()
-                    == MultiLayerPerceptron.CLASSIFICATION_MODE) {
-                /*
-                 * Classification
-                 */
-                mymlp = new MLPClassificationFactory(false, m_columns);
-            } else {
-                throw new InvalidSettingsException("Unsupported Mode: "
-                        + m_mlp.getMode());
-            }
-            ColumnRearranger colre = new ColumnRearranger(inSpecs[0]);
-            colre.append(mymlp);
-            return new DataTableSpec[]{colre.createSpec()};
         }
-        throw new InvalidSettingsException("No model content "
-                + "available for configuration");
+        m_columns = getLearningColumnIndices(testSpec, modelspec);
+        MLPClassificationFactory mymlp;
+        DataColumnSpec targetCol = modelspec.getTargetCols().iterator().next();
+        // Regression
+        if (targetCol.getType().isCompatible(DoubleValue.class)) {
+            mymlp = new MLPClassificationFactory(true, m_columns, targetCol);
+        } else {
+            // Classification
+            mymlp = new MLPClassificationFactory(false, m_columns, targetCol);
+        }
+        ColumnRearranger colre = new ColumnRearranger(testSpec);
+        colre.append(mymlp);
+        return new DataTableSpec[]{colre.createSpec()};
+    }
+
+    private int[] getLearningColumnIndices(final DataTableSpec testspec,
+            final PMMLPortObjectSpec portspec) throws InvalidSettingsException {
+        Set<String> learnfields = portspec.getLearningFields();
+        int[] indices = new int[learnfields.size()];
+        int counter = 0;
+        for (String s : learnfields) {
+            int pos = testspec.findColumnIndex(s);
+            if (pos < 0) {
+                throw new InvalidSettingsException("Could not find column " + s
+                        + " in input data.");
+            }
+            indices[counter] = pos;
+            counter++;
+        }
+        Arrays.sort(indices);
+        return indices;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        m_mlp = MultiLayerPerceptron.loadPredictorParams(m_predParams);
+        BufferedDataTable testdata = (BufferedDataTable)inData[1];
+        PMMLNeuralNetworkPortObject pmmlMLP =
+                (PMMLNeuralNetworkPortObject)inData[0];
+        m_columns =
+                getLearningColumnIndices(testdata.getDataTableSpec(), pmmlMLP
+                        .getSpec());
+        DataColumnSpec targetCol =
+                pmmlMLP.getSpec().getTargetCols().iterator().next();
+        m_mlp = pmmlMLP.getMLP();
         MLPClassificationFactory mymlp;
         /*
          * Regression
          */
         if (m_mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
 
-            mymlp = new MLPClassificationFactory(true, m_columns);
+            mymlp = new MLPClassificationFactory(true, m_columns, targetCol);
         } else if (m_mlp.getMode()
                 == MultiLayerPerceptron.CLASSIFICATION_MODE) {
             /*
              * Classification
              */
-            mymlp = new MLPClassificationFactory(false, m_columns);
+            mymlp = new MLPClassificationFactory(false, m_columns, targetCol);
         } else {
             throw new Exception("Unsupported Mode: " + m_mlp.getMode());
         }
 
         ColumnRearranger colre =
-                new ColumnRearranger(inData[0].getDataTableSpec());
+                new ColumnRearranger(testdata.getDataTableSpec());
         colre.append(mymlp);
         BufferedDataTable bdt =
-                exec.createColumnRearrangeTable(inData[0], colre, exec);
+                exec.createColumnRearrangeTable(testdata, colre, exec);
         return new BufferedDataTable[]{bdt};
     }
 
@@ -201,7 +211,7 @@ public class MLPPredictorNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-     // does nothing.
+        // does nothing.
     }
 
     /**
@@ -210,20 +220,7 @@ public class MLPPredictorNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-     // does nothing.
-    }
-
-    /**
-     * Loads a MLP from a ModelContent object.
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadModelContent(final int index,
-            final ModelContentRO predParams) throws InvalidSettingsException {
-        if (index == 0 && predParams != null) {
-            m_predParams = predParams;
-        }
+        // does nothing.
     }
 
     /**
@@ -244,17 +241,21 @@ public class MLPPredictorNodeModel extends NodeModel {
          */
         private int[] m_faccolumns;
 
+        private DataColumnSpec m_classcolspec;
+
         /**
          * A new AppendedColumnFactory that uses a MultiLayerPerceptron to
-         * classify new instaces.
+         * classify new instances.
          *
          * @param regression indicates whether a regression should take place.
          * @param columns to work on.
+         * @param classcolspec DataColumnSpec with target column.
          */
-        MLPClassificationFactory(final boolean regression,
-                final int[] columns) {
+        MLPClassificationFactory(final boolean regression, final int[] columns,
+                final DataColumnSpec classcolspec) {
             m_regression = regression;
             m_faccolumns = columns;
+            m_classcolspec = classcolspec;
         }
 
         /**
@@ -294,7 +295,7 @@ public class MLPPredictorNodeModel extends NodeModel {
         public DataColumnSpec[] getColumnSpecs() {
             String name = "PredClass";
             DataType type;
-            if (m_mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
+            if (m_regression) {
                 type = DoubleCell.TYPE;
             } else {
                 type = StringCell.TYPE;
@@ -306,7 +307,7 @@ public class MLPPredictorNodeModel extends NodeModel {
             /*
              * Regression
              */
-            if (m_mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
+            if (m_regression) {
                 allappSpec = new DataColumnSpec[1];
                 allappSpec[0] = appendSpec;
 
@@ -314,32 +315,34 @@ public class MLPPredictorNodeModel extends NodeModel {
                 /*
                  * Classification
                  */
-                m_nrPossValues = m_mlp.getArchitecture().getNrOutputNeurons();
-
-                allappSpec = new DataColumnSpec[m_nrPossValues + 1];
+                Set<DataCell> classvalues =
+                        m_classcolspec.getDomain().getValues();
+                m_nrPossValues = classvalues.size();
+                allappSpec = new DataColumnSpec[classvalues.size() + 1];
                 allappSpec[0] = appendSpec;
-                Layer outputlayer = m_mlp.getLayer(m_mlp.getNrLayers() - 1);
                 int index = 1;
                 DataColumnDomainCreator domaincreator =
                         new DataColumnDomainCreator();
                 domaincreator.setLowerBound(new DoubleCell(0));
                 domaincreator.setUpperBound(new DoubleCell(1));
                 DataColumnDomain domain = domaincreator.createDomain();
-                for (int i = 0; i < m_nrPossValues; i++) {
+                int counter = 0;
+                for (DataCell nomValue : classvalues) {
                     name =
-                            outputlayer.getPerceptron(i).getClassValue()
-                                    + " (Neuron " + i + ")";
+                            ((StringValue)nomValue).getStringValue()
+                                    + " (Neuron " + counter + ")";
                     type = DoubleCell.TYPE;
                     DataColumnSpecCreator colspeccreator =
                             new DataColumnSpecCreator(name, type);
                     colspeccreator
                             .setProperties(new DataColumnProperties(
                                     Collections.singletonMap(
-                                 DataValueRenderer.PROPERTY_PREFERRED_RENDERER,
-                                 DoubleBarRenderer.DESCRIPTION)));
+                              DataValueRenderer.PROPERTY_PREFERRED_RENDERER,
+                              DoubleBarRenderer.DESCRIPTION)));
                     colspeccreator.setDomain(domain);
                     allappSpec[index] = colspeccreator.createSpec();
                     index++;
+                    counter++;
                 }
             }
             return allappSpec;
@@ -361,6 +364,7 @@ public class MLPPredictorNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // nothing.
     }
 
     /**
@@ -370,5 +374,6 @@ public class MLPPredictorNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // nothing.
     }
 }

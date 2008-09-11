@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   14.12.2005 (cebron): created
  */
@@ -28,23 +28,22 @@ import java.awt.Color;
 
 import org.knime.base.node.viz.plotter.basic.BasicPlotter;
 import org.knime.base.node.viz.plotter.basic.BasicPlotterImpl;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.GenericNodeView;
 
 
 /**
  * NodeView of the RProp Node. Provides an error plot.
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
  */
-public class RPropNodeView extends NodeView {
+public class RPropNodeView extends GenericNodeView<RPropNodeModel> {
 
     private BasicPlotter m_errorplotter;
 
     /**
      * @param model Underlying NodeModel
      */
-    public RPropNodeView(final NodeModel model) {
+    public RPropNodeView(final RPropNodeModel model) {
         super(model);
         m_errorplotter = new BasicPlotterImpl();
         setComponent(m_errorplotter);
@@ -55,7 +54,7 @@ public class RPropNodeView extends NodeView {
      */
     @Override
     protected void modelChanged() {
-        RPropNodeModel model = (RPropNodeModel)getNodeModel();
+        RPropNodeModel model = getNodeModel();
         if (model.getErrors() != null) {
             m_errorplotter.reset();
             double[] errors = model.getErrors();
@@ -68,6 +67,7 @@ public class RPropNodeView extends NodeView {
      */
     @Override
     protected void onClose() {
+        // empty.
     }
 
     /**
@@ -75,5 +75,6 @@ public class RPropNodeView extends NodeView {
      */
     @Override
     protected void onOpen() {
+        // empty.
     }
 }

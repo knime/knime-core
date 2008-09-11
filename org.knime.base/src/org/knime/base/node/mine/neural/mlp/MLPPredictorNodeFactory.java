@@ -18,24 +18,24 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   28.10.2005 (cebron): created
  */
 package org.knime.base.node.mine.neural.mlp;
 
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * The Factory for the NeuralNet PredictorNode. This node reads a neural network
  * and computes the outputs.
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
  */
-public class MLPPredictorNodeFactory extends NodeFactory {
+public class MLPPredictorNodeFactory extends
+        GenericNodeFactory<MLPPredictorNodeModel> {
     /**
      * {@inheritDoc}
      */
@@ -48,7 +48,7 @@ public class MLPPredictorNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public MLPPredictorNodeModel createNodeModel() {
         return new MLPPredictorNodeModel();
     }
 
@@ -56,8 +56,8 @@ public class MLPPredictorNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public GenericNodeView<MLPPredictorNodeModel> createNodeView(
+            final int viewIndex, final MLPPredictorNodeModel nodeModel) {
         return null;
     }
 

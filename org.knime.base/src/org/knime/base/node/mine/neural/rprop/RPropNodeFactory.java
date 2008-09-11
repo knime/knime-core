@@ -18,24 +18,22 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   26.10.2005 (cebron): created
  */
 package org.knime.base.node.mine.neural.rprop;
 
+import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * Factory for the RProp Node, a MultiLayerPerceptron with resilient
  * backpropagation.
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
  */
-public class RPropNodeFactory extends NodeFactory {
+public class RPropNodeFactory extends GenericNodeFactory<RPropNodeModel> {
     /**
      * {@inheritDoc}
      */
@@ -48,7 +46,7 @@ public class RPropNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public RPropNodeModel createNodeModel() {
         return new RPropNodeModel();
     }
 
@@ -56,8 +54,8 @@ public class RPropNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public RPropNodeView createNodeView(final int viewIndex,
+            final RPropNodeModel nodeModel) {
         return new RPropNodeView(nodeModel);
     }
 
