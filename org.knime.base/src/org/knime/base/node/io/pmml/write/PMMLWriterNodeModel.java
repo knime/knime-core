@@ -125,17 +125,16 @@ public class PMMLWriterNodeModel extends GenericNodeModel {
         m_outfile.saveSettingsTo(settings);
     }
     
-    private void checkFileLocation(final String fileName) 
-        throws InvalidSettingsException {
-    LOGGER.debug("file name: " + fileName);
-    File f = new File(fileName);
-    if ((f.exists() && !f.canWrite()) 
-            || (!f.exists() && !f.getParentFile().canWrite())) {
-        LOGGER.error("Invalid file name: " + fileName);
-        throw new InvalidSettingsException("File name "
-                + fileName + " is not valid. "
-                + "Please enter a valid file name");
-    }
+    private void checkFileLocation(final String fileName)
+            throws InvalidSettingsException {
+        LOGGER.debug("file name: " + fileName);
+        File f = new File(fileName);
+        if ((f.exists() && !f.canWrite())
+                || (!f.exists() && !f.getParentFile().canWrite())) {
+            LOGGER.error("Invalid file name: " + fileName);
+            throw new InvalidSettingsException("File name " + fileName
+                    + " is not valid. " + "Please enter a valid file name");
+        }
     }
 
     /**

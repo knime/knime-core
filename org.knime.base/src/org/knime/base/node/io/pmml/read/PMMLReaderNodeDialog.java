@@ -19,12 +19,10 @@
 package org.knime.base.node.io.pmml.read;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
@@ -44,7 +42,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.pmml.ExtractModelTypeHandler;
 import org.knime.core.node.port.pmml.PMMLMasterContentHandler;
 import org.knime.core.node.port.pmml.PMMLPortObject;
-import org.xml.sax.SAXException;
 
 /**
  * 
@@ -64,6 +61,7 @@ public class PMMLReaderNodeDialog extends DefaultNodeSettingsPane {
     
     private String m_selectedPortType;
     
+    private final SettingsModelString m_fileNameModel;
     
     // TODO: only one PortObject per ModelType!!!
     
@@ -100,57 +98,11 @@ public class PMMLReaderNodeDialog extends DefaultNodeSettingsPane {
      * 
      */
     public PMMLReaderNodeDialog() {
-        final SettingsModelString fileNameModel = createFileChooserModel();
-        
-        fileNameModel.addChangeListener(new ChangeListener() {
-
-            @Override
-            public void stateChanged(final ChangeEvent arg0) {
-                if (fileNameModel.getStringValue() != "") {
-                    try {
-                        String modelType = extractType(
-                                fileNameModel.getStringValue());
-                        // go into registry
-                        Class<? extends PMMLPortObject>portObject 
-                            = REGISTRY.get(modelType); 
-                        if (portObject == null) {
-                            m_selectedPortType = null;
-                        } else {
-                            m_selectedPortType = portObject.getName();
-                        }
-                    } catch (ParserConfigurationException e) {
-                        LOGGER.error("Error parsing file " 
-                                + fileNameModel.getStringValue(), e);
-                    } catch (SAXException e) {
-                        LOGGER.error("Error parsing file " 
-                                + fileNameModel.getStringValue(), e);
-                    }
-                }
-            }
-
-            
-        });
-        
+        m_fileNameModel = createFileChooserModel();
         addDialogComponent(new DialogComponentFileChooser(
-                fileNameModel, "pmml.reader", ".xml", ".pmml"));
+                m_fileNameModel, "pmml.reader", ".xml", ".pmml"));
     }
     
-    private String extractType(final String fileName) 
-        throws ParserConfigurationException, SAXException {
-        File f = new File(fileName);
-        SAXParserFactory fac = SAXParserFactory.newInstance();
-        SAXParser parser = fac.newSAXParser();
-        PMMLMasterContentHandler masterHandler = new PMMLMasterContentHandler();
-        ExtractModelTypeHandler modelTypeHdl = new ExtractModelTypeHandler();
-        masterHandler.addContentHandler(ExtractModelTypeHandler.ID, 
-                modelTypeHdl);
-        try {
-            parser.parse(f, masterHandler);
-        } catch (Exception e) {
-            LOGGER.error("Error parsing file" + fileName, e);
-        } 
-        return modelTypeHdl.getModelType().name();
-    }
     
     /**
      * 
@@ -160,6 +112,7 @@ public class PMMLReaderNodeDialog extends DefaultNodeSettingsPane {
     public void saveAdditionalSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         // adding the specific port object class name. 
+        preParseFile(m_fileNameModel);
         settings.addString(PORT_OBJECT_KEY, m_selectedPortType);
         super.saveAdditionalSettingsTo(settings);
     }
@@ -187,16 +140,43 @@ public class PMMLReaderNodeDialog extends DefaultNodeSettingsPane {
 
     }
     
-    
-    // TODO:
-    /*
-     * if file selected 
-     * - parse it
-     * - detect model type
-     * - scan extension points whether one or more PMMLPortObject are registered
-     * if one is registered -> select it
-     * if several are selected 
-     *  -> set WarningMessage and provide them to be chosen 
-     */
+    private void preParseFile(final SettingsModelString fileNameModel)
+            throws InvalidSettingsException {
+        if (fileNameModel.getStringValue() != "") {
+            String modelType = extractType(fileNameModel.getStringValue());
+            // go into registry
+            Class<? extends PMMLPortObject> portObject =
+                    REGISTRY.get(modelType);
+            if (portObject == null) {
+                m_selectedPortType = null;
+                throw new InvalidSettingsException(
+                        "Model type: " + modelType + " not supported yet.");
+            } else {
+                m_selectedPortType = portObject.getName();
+            }
+        }
+    }
+
+    private String extractType(final String fileName)
+            throws InvalidSettingsException {
+        try {
+            File f = new File(fileName);
+            SAXParserFactory fac = SAXParserFactory.newInstance();
+            SAXParser parser = fac.newSAXParser();
+            PMMLMasterContentHandler masterHandler =
+                    new PMMLMasterContentHandler();
+            ExtractModelTypeHandler modelTypeHdl =
+                    new ExtractModelTypeHandler();
+            masterHandler.addContentHandler(ExtractModelTypeHandler.ID,
+                    modelTypeHdl);
+            parser.parse(f, masterHandler);
+            return modelTypeHdl.getModelType().name();
+        } catch (IOException io) {
+            throw new InvalidSettingsException("File name " + fileName
+                    + " is not valid. " + "Please enter a valid file name");
+        } catch (Exception e) {
+            throw new InvalidSettingsException(e);
+        }
+    }
 
 }

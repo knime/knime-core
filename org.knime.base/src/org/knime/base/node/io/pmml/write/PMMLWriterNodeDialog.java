@@ -36,7 +36,7 @@ public class PMMLWriterNodeDialog extends DefaultNodeSettingsPane {
     public PMMLWriterNodeDialog() {
         addDialogComponent(new DialogComponentFileChooser(
                 createFileModel(), "pmml.writer.history", 
-                JFileChooser.SAVE_DIALOG, "pmml", "xml"));
+                JFileChooser.SAVE_DIALOG, ".pmml", ".xml"));
     }
     
     /**
