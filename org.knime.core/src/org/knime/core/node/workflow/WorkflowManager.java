@@ -1414,6 +1414,14 @@ public final class WorkflowManager extends NodeContainer {
                 currNode.addWaitingLoop(slc);
                 return;
             }
+            if (currNode.getState().equals(State.CONFIGURED)) {
+                // we missed some nodes during the initial marking - most
+                // likely because these are in an untouched branch. Mark
+                // them now and return for now.
+                this.markAndQueueIfPossible(id, true);
+                currNode.addWaitingLoop(slc);
+                return;
+            }
         }
         // (3) reset the nodes in the body (only those -
         //     make sure end of loop is NOT reset)
@@ -1465,7 +1473,7 @@ public final class WorkflowManager extends NodeContainer {
         if (startNode.equals(endNode)) {
             // silly case
             return matchingNodes;
-                }
+        }
         matchingNodes.add(startNode);
         int currIndex = 0;
         while (currIndex < matchingNodes.size()) {
@@ -1477,16 +1485,9 @@ public final class WorkflowManager extends NodeContainer {
                     // if any branch leaves this WFM, complain!
                     throw new IllegalContextStackObjectException(
                             "Loops are not permitted to leave workflows!");
-            }
+                }
                 if ((!succID.equals(endNode))
                         && (!matchingNodes.contains(succID))) {
-                    NodeContainer succNode = m_nodes.get(succID);
-                    if (!(succNode.getState().equals(State.EXECUTED))
-                            && !(succNode.getState().executionInProgress())) {
-                        // nodes in loop must be either executing or done!
-                        throw new IllegalContextStackObjectException(
-                                "Nodes within loop is not executing or done!");
-            }
                     matchingNodes.add(succID);
                 }
             }
