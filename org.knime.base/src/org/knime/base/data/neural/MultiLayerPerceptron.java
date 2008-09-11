@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   26.10.2005 (cebron): created
  */
@@ -38,7 +38,7 @@ import org.knime.core.node.ModelContentWO;
 /**
  * Representation of a MultiLayer Perceptron, a neural net with one or more
  * hidden layers.
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
  */
 public class MultiLayerPerceptron {
@@ -110,7 +110,7 @@ public class MultiLayerPerceptron {
 
     /**
      * Constructs a net with the given layers.
-     * 
+     *
      * @param layers layers for the new net
      */
     public MultiLayerPerceptron(final Layer[] layers) {
@@ -122,7 +122,7 @@ public class MultiLayerPerceptron {
 
     /**
      * Constructs a net with a given architecture.
-     * 
+     *
      * @param a architecture for the new net
      */
     public MultiLayerPerceptron(final Architecture a) {
@@ -141,11 +141,12 @@ public class MultiLayerPerceptron {
      * Constructor for an empty Neural Net.
      */
     public MultiLayerPerceptron() {
+        // empty.
     }
 
     /**
      * Allows for setting the class mapping from output neurons to class values.
-     * 
+     *
      * @param map a HashMap containing the mapping.
      */
     public void setClassMapping(final HashMap<DataCell, Integer> map) {
@@ -162,7 +163,7 @@ public class MultiLayerPerceptron {
 
     /**
      * Allows for setting the input mapping from input neurons to class values.
-     * 
+     *
      * @param map a HashMap containing the mapping
      */
     public void setInputMapping(final HashMap<String, Integer> map) {
@@ -176,7 +177,7 @@ public class MultiLayerPerceptron {
 
     /**
      * Allows to get the class mapping from output neurons to class values.
-     * 
+     *
      * @return a HashMap containing the mapping.
      */
     public HashMap<DataCell, Integer> getClassMapping() {
@@ -185,7 +186,7 @@ public class MultiLayerPerceptron {
 
     /**
      * Allows to get the input mapping from input neurons to columns.
-     * 
+     *
      * @return a HashMap containing the mapping
      */
     public HashMap<String, Integer> getInputMapping() {
@@ -201,7 +202,7 @@ public class MultiLayerPerceptron {
 
     /**
      * Returns layer at a given position.
-     * 
+     *
      * @param i position
      * @return layer at position <code>i</code>
      */
@@ -212,7 +213,7 @@ public class MultiLayerPerceptron {
             return m_layers[i];
         }
     }
-    
+
     /**
      * @return number of Layers in MLP.
      */
@@ -222,7 +223,7 @@ public class MultiLayerPerceptron {
 
     /**
      * Sets all layers.
-     * 
+     *
      * @param layers new layers for the net
      */
     public void setLayers(final Layer[] layers) {
@@ -236,7 +237,7 @@ public class MultiLayerPerceptron {
 
     /**
      * Sets the layer at a given position.
-     * 
+     *
      * @param i position
      * @param layer new layer for position <code>i</code>
      */
@@ -250,7 +251,7 @@ public class MultiLayerPerceptron {
 
     /**
      * Evaluates input and returns output of output neurons.
-     * 
+     *
      * @param in input for the mlp
      * @return output of the output neurons after having processed a forward
      *         wave through the net
@@ -291,7 +292,7 @@ public class MultiLayerPerceptron {
 
     /**
      * Computes the output for given input.
-     * 
+     *
      * @param in the input values
      * @return output values of MLP.
      */
@@ -305,7 +306,7 @@ public class MultiLayerPerceptron {
 
     /**
      * Finds the winner and returns its class output value.
-     * 
+     *
      * @param in input for the mlp
      * @return class value
      */
@@ -336,7 +337,7 @@ public class MultiLayerPerceptron {
 
     /**
      * Sets the architecture.
-     * 
+     *
      * @param architecture Architecture for the net
      */
     public void setArchitecture(final Architecture architecture) {
@@ -345,7 +346,7 @@ public class MultiLayerPerceptron {
 
     /**
      * Stores this MLP model to config.
-     * 
+     *
      * @param predParams ModelContent to write into.
      */
     public void savePredictorParams(final ModelContentWO predParams) {
@@ -397,7 +398,7 @@ public class MultiLayerPerceptron {
     /**
      * Sets the mode of the MLP. This can either be CLASSIFICATION_MODE or
      * REGRESSION_MODE, other values are ignored.
-     * 
+     *
      * @param mode the mode of the MLP
      * @see #CLASSIFICATION_MODE
      * @see #REGRESSION_MODE
@@ -409,7 +410,7 @@ public class MultiLayerPerceptron {
     }
 
     /**
-     * 
+     *
      * @param predParams the ConfigObject containing the model of the mlp
      * @return a new MultiLayerPerceptron based on the config
      * @throws InvalidSettingsException if settings are incorrect

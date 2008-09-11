@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   26.10.2005 (cebron): created
  */
@@ -26,7 +26,7 @@ package org.knime.base.data.neural;
 
 /**
  * Abstract class defining the behaviour of a perceptron in a neural network.
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
  */
 public abstract class Perceptron {
@@ -48,7 +48,7 @@ public abstract class Perceptron {
     /**
      * Construct a perceptron with given number of weights. Weights and
      * threshold are randomly initialized.
-     * 
+     *
      * @param nrInputs number of inputs for the new perceptron
      */
     public Perceptron(final int nrInputs) {
@@ -68,11 +68,12 @@ public abstract class Perceptron {
      * are set).
      */
     public Perceptron() {
+        // empty.
     }
 
     /**
      * Construct a perceptron with given weights.
-     * 
+     *
      * @param weights weights for the new perceptron
      */
     public Perceptron(final double[] weights) {
@@ -93,7 +94,7 @@ public abstract class Perceptron {
 
     /**
      * Get weight at given position.
-     * 
+     *
      * @param i position
      * @return weight at position <code>i</code>
      */
@@ -103,7 +104,7 @@ public abstract class Perceptron {
 
     /**
      * Set all new weights.
-     * 
+     *
      * @param weights new weights to set
      */
     public void setWeights(final double[] weights) {
@@ -116,7 +117,7 @@ public abstract class Perceptron {
 
     /**
      * Sets weight at given position.
-     * 
+     *
      * @param i position
      * @param weight new value for weight at position <code>i</code>
      */
@@ -131,7 +132,7 @@ public abstract class Perceptron {
     /**
      * Activation function. Implement it to create the desired behaviour for the
      * perceptron.
-     * 
+     *
      * @param in input value
      * @return output value for activation
      */
@@ -139,7 +140,7 @@ public abstract class Perceptron {
 
     /**
      * Evaluates a given input for the perceptron.
-     * 
+     *
      * @param in input to evaluate
      * @return activation function applied to the weighted sum of the inputs
      */
@@ -153,7 +154,7 @@ public abstract class Perceptron {
 
     /**
      * Used to get the output from all input neurons.
-     * 
+     *
      * @return activation function applied to the weighted sum of all inputs,
      *         which are taken from the input neurons
      */
@@ -161,7 +162,7 @@ public abstract class Perceptron {
 
     /**
      * Returns the threshold.
-     * 
+     *
      * @return threshold of the neutron
      */
     public double getThreshold() {
@@ -170,7 +171,7 @@ public abstract class Perceptron {
 
     /**
      * Sets the threshold.
-     * 
+     *
      * @param threshold The threshold to set
      */
     public void setThreshold(final double threshold) {
@@ -179,7 +180,7 @@ public abstract class Perceptron {
 
     /**
      * Allows to set a class value for a perceptron (optional).
-     * 
+     *
      * @param classval the class value to set.
      */
     public void setClassValue(final String classval) {
@@ -195,7 +196,7 @@ public abstract class Perceptron {
 
     /**
      * Returns a randomly chosen double between -1 and 1.
-     * 
+     *
      * @return random double number between -1 and 1
      */
     public static double random() {
@@ -206,7 +207,7 @@ public abstract class Perceptron {
 
     /**
      * Computes the scalar Product of two vectors, represented as double arrays.
-     * 
+     *
      * @param x first array
      * @param y second array
      * @return scalar product of <code>x</code> and <code>y</code>
