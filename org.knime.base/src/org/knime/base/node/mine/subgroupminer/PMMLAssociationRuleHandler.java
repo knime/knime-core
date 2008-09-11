@@ -132,7 +132,7 @@ public class PMMLAssociationRuleHandler extends PMMLContentHandler {
                 m_itemsets.add(m_currentItemSet);
                 m_currentItemSet = new FrequentItemSet(id);
             }
-            if (atts.getValue("support)") != null) {
+            if (atts.getValue("support") != null) {
                 m_currentItemSet.setSupport(Double.parseDouble(
                         atts.getValue("support")));
             }
