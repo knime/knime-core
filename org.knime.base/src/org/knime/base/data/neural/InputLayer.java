@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   26.10.2005 (cebron): created
  */
@@ -26,23 +26,23 @@ package org.knime.base.data.neural;
 
 /**
  * A special layer holding the input perceptrons.
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
  */
 public class InputLayer extends Layer {
     /**
      * Constructs an input layer with given input perceptrons.
-     * 
+     *
      * @param inputs input neurons for the layer
      */
-    public InputLayer(final InputPerceptron[] inputs) {
+    public InputLayer(final Perceptron[] inputs) {
         setPerceptrons(inputs);
     }
 
     /**
      * Constructs an input layer with given number of input neurons, input set
      * to zero.
-     * 
+     *
      * @param nrInputs number of input neurons for the layer
      */
     public InputLayer(final int nrInputs) {
