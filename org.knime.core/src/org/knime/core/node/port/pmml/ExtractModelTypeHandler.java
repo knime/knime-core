@@ -26,7 +26,7 @@ import org.xml.sax.SAXException;
  * @author Fabian Dill, University of Konstanz
  */
 public class ExtractModelTypeHandler extends PMMLContentHandler {
-    
+    /** Public ID .*/
     public static final String ID = "ExtractModel";
     
     private PMMLModelType m_type = null;
@@ -90,6 +90,10 @@ public class ExtractModelTypeHandler extends PMMLContentHandler {
         }
     }
     
+    /**
+     * 
+     * @return true if there is a PMML namespace declaration
+     */
     public boolean hasNamespace() {
         return m_hasNamespace;
     }
