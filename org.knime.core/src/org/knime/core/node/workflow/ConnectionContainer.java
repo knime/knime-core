@@ -36,6 +36,7 @@ public class ConnectionContainer {
     private final int m_sourcePort;
     private final NodeID m_dest;
     private final int m_destPort;
+    private boolean m_isDeletable = true;
     private UIInformation m_uiInfo;
     
     enum ConnectionType { STD, WFMIN, WFMOUT, WFMTHROUGH;
@@ -61,7 +62,7 @@ public class ConnectionContainer {
      * @param type of connection
      */
     public ConnectionContainer(final NodeID src, final int srcPort,
-            final NodeID dest, final int destPort, final ConnectionType type) {
+            final NodeID dest, final int destPort, final ConnectionType type) { 
         if (src == null || dest == null || type == null) {
             throw new NullPointerException("Arguments must not be null.");
         }
@@ -114,6 +115,20 @@ public class ConnectionContainer {
      */
     public int getSourcePort() {
         return m_sourcePort;
+    }
+    
+    /**
+     * @return the isDeletable
+     */
+    public boolean isDeletable() {
+        return m_isDeletable;
+    }
+    
+    /**
+     * @param isDeletable the isDeletable to set
+     */
+    void setDeletable(final boolean isDeletable) {
+        m_isDeletable = isDeletable;
     }
 
     /**

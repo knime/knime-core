@@ -90,15 +90,17 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         private final int m_destSuffix;
         // not final, may be fixed later (puzzling port IDs in 1.x.x)
         private int m_destPort;
+        private final boolean m_isDeletable;
         private final UIInformation m_uiInfo;
         
         ConnectionContainerTemplate(final int source, final int sourcePort, 
-                final int dest, final int destPort, 
+                final int dest, final int destPort, final boolean isDeletable,
                 final UIInformation uiInfo) {
             m_sourceSuffix = source;
             m_sourcePort = sourcePort;
             m_destSuffix = dest;
             m_destPort = destPort;
+            m_isDeletable = isDeletable;
             m_uiInfo = uiInfo;
         }
         
@@ -127,6 +129,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             default:
                 throw new InternalError("Unknown type " + original.getType());
             }
+            m_isDeletable = original.isDeletable();
             UIInformation origUIInfo = original.getUIInfo();
             m_uiInfo = origUIInfo == null ? null : origUIInfo.clone();
         }
@@ -151,8 +154,15 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             return m_destPort;
         }
         
+        /**
+         * @return the isDeletable
+         */
+        boolean isDeletable() {
+            return m_isDeletable;
+        }
+        
         /** @param destPort the destPort to set */
-        public void setDestPort(int destPort) {
+        public void setDestPort(final int destPort) {
             m_destPort = destPort;
         }
 

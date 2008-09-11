@@ -341,7 +341,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
                     + "between nodes " + sourceID + " and " + destID, t);
         }
         return new ConnectionContainerTemplate(sourceID, sourcePort, destID,
-                destPort, uiInfo);
+                destPort, /*isDeletable*/true, uiInfo);
     }
     
     private static boolean doesAnyArrayContain(final int value, 

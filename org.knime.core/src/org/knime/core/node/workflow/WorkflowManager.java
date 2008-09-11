@@ -328,6 +328,16 @@ public final class WorkflowManager extends NodeContainer {
             if (!nc.isDeletable()) {
                 return false;
             }
+            for (ConnectionContainer c : m_connectionsByDest.get(nodeID)) {
+                if (!c.isDeletable()) {
+                    return false;
+                }
+            }
+            for (ConnectionContainer c : m_connectionsBySource.get(nodeID)) {
+                if (!c.isDeletable()) {
+                    return false;
+                }
+            }
         }
         return true;
     }
@@ -1055,7 +1065,7 @@ public final class WorkflowManager extends NodeContainer {
     public void executeUpToHere(final NodeID... ids) {
         synchronized (m_workflowMutex) {
             for (NodeID id : ids) {
-                NodeContainer nc = getNodeContainer(id);
+        NodeContainer nc = getNodeContainer(id);
                 if (State.CONFIGURED.equals(nc.getState())) {
                     markAndQueueIfPossible(id, true);
                 }

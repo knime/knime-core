@@ -746,6 +746,8 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         int destID = loadConnectionDestID(settings);
         int sourcePort = settings.getInt("sourcePort");
         int destPort = loadConnectionDestPort(settings);
+        // this attribute is in most cases not present (not saved)
+        boolean isDeletable = settings.getBoolean("isDeletable", true);
         if (sourceID != -1 && sourceID == destID) {
             throw new InvalidSettingsException("Source and Destination must "
                     + "not be equal, id is " + sourceID);
@@ -765,7 +767,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     + "between nodes " + sourceID + " and " + destID, t);
         }
         return new ConnectionContainerTemplate(sourceID, sourcePort, destID,
-                destPort, uiInfo);
+                destPort, isDeletable, uiInfo);
     }
     
     protected int loadConnectionDestID(final NodeSettingsRO settings) 
