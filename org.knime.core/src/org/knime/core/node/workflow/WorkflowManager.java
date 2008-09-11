@@ -705,6 +705,9 @@ public final class WorkflowManager extends NodeContainer {
      * @return true if connection cc is removable.
      */
     public boolean canRemoveConnection(final ConnectionContainer cc) {
+        if (!cc.isDeletable()) {
+            return false;
+        }
         // make sure both nodes (well, their connection lists) exist
         if (m_connectionsByDest.get(cc.getDest()) == null) {
             return false;
@@ -2927,6 +2930,7 @@ public final class WorkflowManager extends NodeContainer {
             ConnectionContainer cc = addConnection(
                     source, c.getSourcePort(), dest, c.getDestPort(), false);
             cc.setUIInfo(c.getUiInfo());
+            cc.setDeletable(c.isDeletable());
             assert cc.getType().equals(type);
         }
         return translationMap;

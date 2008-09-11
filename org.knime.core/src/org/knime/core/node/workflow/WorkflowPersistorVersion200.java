@@ -507,6 +507,9 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             saveUIInfoClassName(settings, uiInfo);
             saveUIInfoSettings(settings, uiInfo);
         }
+        if (!connection.isDeletable()) {
+            settings.addBoolean("isDeletable", false);
+        }
     }
 
     
