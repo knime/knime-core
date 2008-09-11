@@ -147,7 +147,7 @@ public class KnimeTestCase extends TestCase {
             logger.debug("Loading workflow ----------------------------"
                     + "--------------");
 
-            WorkflowLoadResult loadRes = WorkflowManager.load(
+            WorkflowLoadResult loadRes = WorkflowManager.loadProject(
                     m_knimeWorkFlow.getParentFile(),
                     new ExecutionMonitor());
             if (loadRes.hasErrors()) {
