@@ -772,5 +772,9 @@
             PMMLPortObject="org.knime.base.node.mine.regression.PMMLRegressionPortObject"
             modeltype="RegressionModel">
       </PMMLModel>
+      <PMMLModel
+            PMMLPortObject="org.knime.base.node.mine.neural.mlp.PMMLNeuralNetworkPortObject"
+            modeltype="NeuralNetwork">
+      </PMMLModel>
    </extension>
 </plugin>
