@@ -31,6 +31,8 @@ public class ExtractModelTypeHandler extends PMMLContentHandler {
     
     private PMMLModelType m_type = null;
     
+    private boolean m_hasNamespace = false;
+    
     /**
      * 
      * @return the type of valid PMML models (v2.1)
@@ -79,6 +81,15 @@ public class ExtractModelTypeHandler extends PMMLContentHandler {
     public void startElement(final String uri, final String localName, 
             final String name, final Attributes atts) throws SAXException {
         // leave empty -> we are only searching for the model type
+        if (name.equals("PMML")) {
+            if (atts.getValue("xmlns") != null) {
+                m_hasNamespace = true;
+            }
+        }
+    }
+    
+    public boolean hasNamespace() {
+        return m_hasNamespace;
     }
 
 }
