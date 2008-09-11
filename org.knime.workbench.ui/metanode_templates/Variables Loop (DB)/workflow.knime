@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" key="workflow.knime">
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="workflow.knime">
 <entry key="version" type="xstring" value="2.0.0"/>
 <entry key="name" type="xstring" value="Variables Loop (DB)"/>
 <entry key="customName" type="xstring" isnull="true" value=""/>
@@ -43,18 +44,21 @@
 <entry key="destID" type="xint" value="1"/>
 <entry key="sourcePort" type="xint" value="0"/>
 <entry key="destPort" type="xint" value="0"/>
+<entry key="isDeletable" type="xboolean" value="false"/>
 </config>
 <config key="connection_1">
 <entry key="sourceID" type="xint" value="-1"/>
 <entry key="destID" type="xint" value="1"/>
 <entry key="sourcePort" type="xint" value="1"/>
 <entry key="destPort" type="xint" value="1"/>
+<entry key="isDeletable" type="xboolean" value="false"/>
 </config>
 <config key="connection_2">
 <entry key="sourceID" type="xint" value="2"/>
 <entry key="destID" type="xint" value="-1"/>
 <entry key="sourcePort" type="xint" value="0"/>
 <entry key="destPort" type="xint" value="0"/>
+<entry key="isDeletable" type="xboolean" value="false"/>
 </config>
 </config>
 <config key="meta_in_ports">
