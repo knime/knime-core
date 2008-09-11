@@ -1198,36 +1198,9 @@ public final class WorkflowManager extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     boolean configureAsNodeContainer(final PortObjectSpec[] specs) {
-        // TODO review: do we need to reset our internals here? (otherwise
-        // executed nodes (which are contained in this WFM) will complain
-        // that they can't be configured without prior reset)
-        // however, triggering reset here will reset the MARK-status?
-//        resetSuccessors(getID());
-        // remember old specs
-//        PortObjectSpec[] prevSpecs =
-//                new PortObjectSpec[getNrOutPorts()];
-//        for (int i = 0; i < prevSpecs.length; i++) {
-//            prevSpecs[i] = getOutPort(i).getPortObjectSpec();
-//        }
         // configure all nodes inside this WFM (this is configure called
         // on the WFM acting as a NodeContainer inside a workflow!)
         configureNodeAndSuccessors(this.getID(), false, false);
-        // compare old and new specs
-//        boolean specsChanged = false;
-//        // TODO check also Stack and HiLiteHandlers!!!!!!!
-//        for (int i = 0; i < prevSpecs.length; i++) {
-//            PortObjectSpec newSpec =
-//                    getOutPort(i).getPortObjectSpec();
-//            if (newSpec != null) {
-//                if (!newSpec.equals(prevSpecs[i])) {
-//                    specsChanged = true;
-//                    break;
-//                }
-//            } else if (prevSpecs[i] != null) {
-//                specsChanged = true;
-//                break;
-//            }
-//        }
         // make sure we reflect any state changes inside this workflow also
         // in our own state:
         checkForNodeStateChanges(true);
@@ -1432,7 +1405,7 @@ public final class WorkflowManager extends NodeContainer {
         // (1) find all intermediate node, the loop's "body"
         List<NodeID> loopBodyNodes = findAllNodesConnectedToLoopBody(
                 headNode.getID(), tailNode.getID());
-        // (2) check if any of those nodes is still waiting to be
+        // (2) check if any of those nodes are still waiting to be
         //     executed or currently executing
         for (NodeID id : loopBodyNodes) {
             NodeContainer currNode = m_nodes.get(id);
