@@ -63,19 +63,15 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.knime.core.node.property.hilite.HiLiteMapper;
 
 /**
@@ -84,7 +80,7 @@ import org.knime.core.node.property.hilite.HiLiteMapper;
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class SubgroupMinerModel extends GenericNodeModel implements HiLiteMapper {
+public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
     /* ------------the input -------------------- */
     /** Config key for the column containing the transactions as bitvectors. */
     public static final String CFG_BITVECTOR_COL = "BITVECTOR_COLUMN";
@@ -171,9 +167,7 @@ public class SubgroupMinerModel extends GenericNodeModel implements HiLiteMapper
      * Creates an instance of the SubgroubMinerModel.
      */
     public SubgroupMinerModel() {
-        super(new PortType[] {BufferedDataTable.TYPE}, 
-                new PortType[] {BufferedDataTable.TYPE, 
-                PMMLAssociationRulePortObject.TYPE});
+        super(1, 1);
     }
 
     /**
@@ -259,7 +253,7 @@ public class SubgroupMinerModel extends GenericNodeModel implements HiLiteMapper
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData,
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         DataTable input = (BufferedDataTable)inData[0];
         ExecutionMonitor exec1 = exec.createSubProgress(0.5);
@@ -284,8 +278,7 @@ public class SubgroupMinerModel extends GenericNodeModel implements HiLiteMapper
         LOGGER.debug("ended apriori: " + new Date());
         m_itemSetTable = createOutputTable(exec);
 
-        return new PortObject[]{m_itemSetTable, createPortObject(
-                (DataTableSpec)inData[0].getSpec())};
+        return new BufferedDataTable[]{m_itemSetTable};
     }
 
     /**
@@ -482,7 +475,8 @@ public class SubgroupMinerModel extends GenericNodeModel implements HiLiteMapper
     @Override
     protected void reset() {
     }
-    
+    /*
+     * TODO: activate later (switch to PMML)
     private PMMLAssociationRulePortObject createPortObject(
             final DataTableSpec spec) {
         PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
@@ -508,18 +502,19 @@ public class SubgroupMinerModel extends GenericNodeModel implements HiLiteMapper
             return null;
         }
     }
+    */
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         // check if there is at least one BitVector column
         boolean hasBitVectorColumn = false;
         boolean autoguessed = false;
         boolean autoconfigured = false;
-        DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
+        DataTableSpec tableSpec = inSpecs[0];
         for (int i = 0; i < tableSpec.getNumColumns(); i++) {
             if (tableSpec.getColumnSpec(i).getType().isCompatible(
                     BitVectorValue.class)) {
@@ -555,7 +550,7 @@ public class SubgroupMinerModel extends GenericNodeModel implements HiLiteMapper
         } else {
             outputSpec = createItemsetOutputSpec();
         }
-        return new PortObjectSpec[]{outputSpec};
+        return new DataTableSpec[]{outputSpec};
     }
 
     private DataTableSpec createItemsetOutputSpec() {
