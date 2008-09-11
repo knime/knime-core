@@ -330,6 +330,9 @@
        <PersistedMetaNode
              workflowDir="metanode_templates/Preprocessing/">
        </PersistedMetaNode>
+       <PersistedMetaNode
+             workflowDir="metanode_templates/Cross Validation/">
+       </PersistedMetaNode>
     </extension>
    
 

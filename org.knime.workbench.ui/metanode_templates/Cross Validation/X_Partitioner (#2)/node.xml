@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" key="settings.xml">
+<entry key="name" type="xstring" value="X-Partitioner"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="validations" type="xshort" value="10"/>
+<entry key="randomSampling" type="xboolean" value="true"/>
+<entry key="leaveOneOut" type="xboolean" value="false"/>
+</config>
+<entry key="hasContent" type="xboolean" value="false"/>
+<config key="ports">
+<config key="port_0">
+<entry key="index" type="xint" value="0"/>
+<entry key="port_dir_location" type="xstring" isnull="true" value=""/>
+</config>
+<config key="port_1">
+<entry key="index" type="xint" value="1"/>
+<entry key="port_dir_location" type="xstring" isnull="true" value=""/>
+</config>
+</config>
+</config>

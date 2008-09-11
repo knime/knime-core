@@ -41,7 +41,6 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -221,31 +220,18 @@ public final class MetaNodeTemplateRepositoryManager {
                         LOGGER.debug("found pre-installed template " 
                                 + FileLocator.toFileURL(url));
                         File f = new File(FileLocator.toFileURL(url).getFile());
-                        WorkflowManager metaNode = WorkflowManager.load(f, 
+                        WorkflowManager metaNode = workflowmanager.load(f, 
                                 new ExecutionMonitor()).getWorkflowManager();
-                        NodeID[] nodes 
-                            = new NodeID[metaNode
-                                     .getNodeContainers().size()];
-                        int i = 0;
-                        for (NodeContainer node : metaNode
-                                .getNodeContainers()) {
-                            nodes[i++] = node.getID();
-                        }
-                        workflowmanager.copy(
-                                metaNode, nodes);
                         MetaNodeTemplateRepositoryItem preItem 
                             = new MetaNodeTemplateRepositoryItem(f.getName(), 
                                     metaNode.getID());
-                        preItem.updateNodeID(workflowmanager.getID());
                         m_items.add(preItem);
                     } catch (CanceledExecutionException cee) {
-                        // ignore -> cannot happen
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    } catch (InvalidSettingsException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
+                        LOGGER.error("Unexpected canceled execution exception", 
+                                cee);
+                    } catch (Exception e) {
+                        LOGGER.error(
+                                "Failed to load meta workflow repository", e);
                     }
                 }
                 
@@ -282,7 +268,7 @@ public final class MetaNodeTemplateRepositoryManager {
     
     private WorkflowManager loadWorkflowManager() {
         try {
-            WorkflowManager wfm = WorkflowManager.load(
+            WorkflowManager wfm = WorkflowManager.loadProject(
                     new File(METANODE_TEMPLATE_REPOSITORY), 
                     new ExecutionMonitor()).getWorkflowManager();
             return wfm;

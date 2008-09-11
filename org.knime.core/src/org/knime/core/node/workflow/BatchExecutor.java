@@ -247,7 +247,7 @@ public final class BatchExecutor {
             workflowDir = input;
         }
 
-        WorkflowLoadResult loadResult = WorkflowManager.load(
+        WorkflowLoadResult loadResult = WorkflowManager.loadProject(
                 workflowDir, new ExecutionMonitor());
         WorkflowManager wfm = loadResult.getWorkflowManager();
 

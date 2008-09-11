@@ -2602,10 +2602,15 @@ public final class WorkflowManager extends NodeContainer {
     /** Workflow version. */
     static final String CFG_VERSION = "version";
 
-
-    public static WorkflowLoadResult load(File directory,
+    public static WorkflowLoadResult loadProject(File directory,
             final ExecutionMonitor exec) throws IOException,
             InvalidSettingsException, CanceledExecutionException {
+        return ROOT.load(directory, exec);
+    }
+
+    public WorkflowLoadResult load(File directory, final ExecutionMonitor exec) 
+        throws IOException, InvalidSettingsException, 
+        CanceledExecutionException {
         if (directory == null || exec == null) {
             throw new NullPointerException("Arguments must not be null.");
         }
@@ -2673,10 +2678,10 @@ public final class WorkflowManager extends NodeContainer {
         WorkflowManager manager;
         exec.setMessage("Creating workflow instance");
         boolean fixDataLoadProblems = false;
-        synchronized (ROOT.m_workflowMutex) {
-            NodeID newID = ROOT.createUniqueID();
-            manager = ROOT.createSubWorkflow(persistor, newID);
-            ROOT.addNodeContainer(manager, false);
+        synchronized (m_workflowMutex) {
+            NodeID newID = createUniqueID();
+            manager = createSubWorkflow(persistor, newID);
+            addNodeContainer(manager, false);
             synchronized (manager.m_workflowMutex) {
                 result.addError(manager.loadContent(
                         persistor, tblRep, null, loadExec));
