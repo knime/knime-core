@@ -1046,19 +1046,21 @@ public final class WorkflowManager extends NodeContainer {
         }
     }
 
-    /** mark this node and all not-yet-executed predecessors for execution.
+    /** mark these nodes and all not-yet-executed predecessors for execution.
      * They will be marked first, queued when all inputs are available and
      * finally executed.
      *
-     * @param id node id
+     * @param ids node ids to mark
      */
-    public void executeUpToHere(final NodeID id) {
-        NodeContainer nc = getNodeContainer(id);
-        if (!State.CONFIGURED.equals(nc.getState())) {
-            throw new IllegalStateException("Can't execute " + getNodeString(nc)
-                    + ", not in configured state, but " + nc.getState());
+    public void executeUpToHere(final NodeID... ids) {
+        synchronized (m_workflowMutex) {
+            for (NodeID id : ids) {
+                NodeContainer nc = getNodeContainer(id);
+                if (State.CONFIGURED.equals(nc.getState())) {
+                    markAndQueueIfPossible(id, true);
+                }
+            }
         }
-        markAndQueueIfPossible(id, true);
     }
 
     /** Recursively iterates the predecessors and marks them for execution.
@@ -1183,14 +1185,6 @@ public final class WorkflowManager extends NodeContainer {
             }
         }
         return false;
-    }
-
-    /** Returns a description of a node container,
-     * e.g. '"File Reader" (id "2.3.4")'.
-     * @return Such a string to be used in error messages.
-     */
-    private String getNodeString(final NodeContainer nc) {
-        return "\"" + nc.getName() + "\" (id \"" + nc.getID() + "\"";
     }
 
     /* -------------- State changing actions and testers ----------- */
