@@ -78,11 +78,13 @@ public class ExtractModelTypeHandler extends PMMLContentHandler {
      * {@inheritDoc}
      */
     @Override
-    public void startElement(final String uri, final String localName, 
+    public void startElement(final String uri, final String localName,
             final String name, final Attributes atts) throws SAXException {
         // leave empty -> we are only searching for the model type
         if (name.equals("PMML")) {
-            if (atts.getValue("xmlns") != null) {
+            if (atts.getValue("xmlns") != null
+                    && atts.getValue("xmlns").startsWith(
+                            "http://www.dmg.org/PMML-3")) {
                 m_hasNamespace = true;
             }
         }
