@@ -40,6 +40,7 @@ class NodeContainerMetaPersistorVersion200 extends
         NodeContainerMetaPersistorVersion1xx {
     
     private static final String CFG_STATE = "state";
+    private static final String CFG_IS_DELETABLE = "isDeletable";
     
     /** @param baseDir The node container directory (only important while load)
      */
@@ -62,12 +63,19 @@ class NodeContainerMetaPersistorVersion200 extends
                     + stateString + "\"");
         }
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected boolean loadIsDeletable(final NodeSettingsRO settings) {
+        return settings.getBoolean(CFG_IS_DELETABLE, true);
+    }
 
     public void save(final NodeContainer nc, final NodeSettingsWO settings)
         throws IOException {
         saveCustomName(settings, nc);
         saveCustomDescription(settings, nc);
         saveState(settings, nc);
+        saveIsDeletable(settings, nc);
     }
 
     protected void saveState(final NodeSettingsWO settings,
@@ -95,6 +103,13 @@ class NodeContainerMetaPersistorVersion200 extends
     protected void saveCustomDescription(final NodeSettingsWO settings,
             final NodeContainer nc) {
         settings.addString(KEY_CUSTOM_DESCRIPTION, nc.getCustomDescription());
+    }
+    
+    protected void saveIsDeletable(final NodeSettingsWO settings, 
+            final NodeContainer nc) {
+        if (!nc.isDeletable()) {
+            settings.addBoolean(CFG_IS_DELETABLE, false);
+        }
     }
 
 }

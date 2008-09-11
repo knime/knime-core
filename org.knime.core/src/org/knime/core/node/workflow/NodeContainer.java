@@ -95,6 +95,8 @@ public abstract class NodeContainer {
     private final WorkflowManager m_parent;
 
     private JobExecutor m_jobExecutor;
+    
+    private boolean m_isDeletable;
 
     /** this list will hold ScopeObjects of loops in the pipeline which can not
      * be executed before this one is not done - usually these are loops
@@ -151,6 +153,7 @@ public abstract class NodeContainer {
         }
         m_id = id;
         m_state = State.IDLE;
+        m_isDeletable = true;
     }
 
     NodeContainer(final WorkflowManager parent, final NodeID id,
@@ -162,6 +165,7 @@ public abstract class NodeContainer {
         m_customDescription = persistor.getCustomDescription();
         m_customName = persistor.getCustomName();
         m_uiInformation = persistor.getUIInfo();
+        m_isDeletable = persistor.isDeletable();
         m_nodeContainerDirectory = persistor.getNodeContainerDirectory();
     }
 
@@ -634,6 +638,13 @@ public abstract class NodeContainer {
             notifyUIListeners(new NodeUIInformationEvent(m_id, m_uiInformation,
                     m_customName, m_customDescription));
         }
+    }
+    
+    /**
+     * @return the isDeletable
+     */
+    public boolean isDeletable() {
+        return m_isDeletable;
     }
     
     /** Method that's called when the node is discarded. The single node 

@@ -325,6 +325,9 @@ public final class WorkflowManager extends NodeContainer {
             if (nc.getState().executionInProgress()) {
                 return false;
             }
+            if (!nc.isDeletable()) {
+                return false;
+            }
         }
         return true;
     }

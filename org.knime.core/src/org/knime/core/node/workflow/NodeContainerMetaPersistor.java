@@ -54,8 +54,11 @@ interface NodeContainerMetaPersistor {
 
     UIInformation getUIInfo();
     
+    boolean isDeletable();
+    
     void setUIInfo(final UIInformation uiInfo);
     
     LoadResult load(final NodeSettingsRO settings) 
         throws IOException, CanceledExecutionException;
+    
 }

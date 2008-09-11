@@ -52,6 +52,8 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
 
     private State m_state = State.IDLE;
     
+    private boolean m_isDeletable = true;
+    
     private final ReferencedFile m_nodeContainerDirectory;
     
     /** @param baseDir The node container directory (only important while load)
@@ -93,6 +95,12 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     /** {@inheritDoc} */
     public State getState() {
         return m_state;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public boolean isDeletable() {
+        return m_isDeletable;
     }
     
     /** Sets the state. This is needed to load workflows written in 1.x.x as
@@ -140,6 +148,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             LOGGER.debug(error, e);
             m_state = State.IDLE;
         }
+        m_isDeletable = loadIsDeletable(settings);
         return loadResult;
     }
     
@@ -166,4 +175,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
         return State.IDLE;
     }
     
+    protected boolean loadIsDeletable(final NodeSettingsRO settings) {
+        return true;
+    }
 }

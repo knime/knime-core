@@ -92,6 +92,12 @@ final class CopyNodeContainerMetaPersistor implements
         }
         return null;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public boolean isDeletable() {
+        return m_original.isDeletable();
+    }
 
     /** {@inheritDoc} */
     @Override
