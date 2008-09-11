@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Aug 22, 2008 (wiswedel): created
  */
@@ -39,23 +39,24 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.xml.sax.SAXException;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class PMMLRegressionPortObject extends PMMLPortObject {
-    
-    public static final PortType TYPE = 
-        new PortType(PMMLRegressionPortObject.class);
-    
+
+    public static final PortType TYPE =
+            new PortType(PMMLRegressionPortObject.class);
+
     /** */
     public PMMLRegressionPortObject() {
     }
-    
+
     private RegressionTable m_regressionTable;
+
     private String m_modelName;
-    
+
     /**
-     * 
+     *
      */
     public PMMLRegressionPortObject(final PMMLPortObjectSpec spec,
             final PMMLRegressionContentHandler p) {
@@ -63,40 +64,40 @@ public final class PMMLRegressionPortObject extends PMMLPortObject {
         try {
             p.checkValidity();
         } catch (IllegalStateException e) {
-            throw new IllegalArgumentException("Content handler ist not " 
+            throw new IllegalArgumentException("Content handler ist not "
                     + "fully setup: " + e.getMessage(), e);
         }
         m_regressionTable = p.getRegressionTable();
         m_modelName = p.getModelName();
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    protected void writePMMLModel(final TransformerHandler handler) 
-        throws SAXException {
-        new PMMLRegressionContentHandler(
-                this).writePMMLRegressionModel(handler);
+    protected void writePMMLModel(final TransformerHandler handler)
+            throws SAXException {
+        new PMMLRegressionContentHandler(this)
+                .writePMMLRegressionModel(handler);
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    public void loadFrom(final PMMLPortObjectSpec spec, 
-            final InputStream stream, final String version) 
-        throws ParserConfigurationException, SAXException, IOException {
-        PMMLRegressionContentHandler hdl = 
-            new PMMLRegressionContentHandler(spec);
+    public void loadFrom(final PMMLPortObjectSpec spec,
+            final InputStream stream, final String version)
+            throws ParserConfigurationException, SAXException, IOException {
+        PMMLRegressionContentHandler hdl =
+                new PMMLRegressionContentHandler(spec);
         super.addPMMLContentHandler("RegressionModel", hdl);
         super.loadFrom(spec, stream, version);
         try {
             hdl.checkValidity();
         } catch (IllegalStateException e) {
-            throw new SAXException(
-                    "Incomplete regression model: " + e.getMessage());
+            throw new SAXException("Incomplete regression model: "
+                    + e.getMessage());
         }
         m_modelName = hdl.getModelName();
         m_regressionTable = hdl.getRegressionTable();
     }
-    
+
     /**
      * @return the targetVariableName
      */
@@ -113,7 +114,7 @@ public final class PMMLRegressionPortObject extends PMMLPortObject {
     public RegressionTable getRegressionTable() {
         return m_regressionTable;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public String getSummary() {
@@ -123,18 +124,22 @@ public final class PMMLRegressionPortObject extends PMMLPortObject {
         }
         StringBuilder b = new StringBuilder();
         switch (highestPolynom) {
-        case 0: b.append("Constant "); break;
-        case 1: b.append("Linear "); break;
-        default: 
-            b.append("Polynomial (max degree ");
-            b.append(highestPolynom);
-            b.append(") ");
-            break;
+            case 0:
+                b.append("Constant ");
+                break;
+            case 1:
+                b.append("Linear ");
+                break;
+            default:
+                b.append("Polynomial (max degree ");
+                b.append(highestPolynom);
+                b.append(") ");
+                break;
         }
         b.append(" Regression on \"");
         b.append(getTargetVariableName());
         b.append("\"");
-        return b.toString(); 
+        return b.toString();
     }
 
     /**
@@ -143,50 +148,58 @@ public final class PMMLRegressionPortObject extends PMMLPortObject {
     public String getModelName() {
         return m_modelName;
     }
-    
+
     public static final class NumericPredictor {
         private final String m_name;
+
         private final int m_exponent;
-        private final double m_value;
-        public NumericPredictor(final String name, 
-                final int exponent, final double value) {
+
+        private final double m_coefficient;
+
+        public NumericPredictor(final String name, final int exponent,
+                final double coefficient) {
             m_name = name;
             m_exponent = exponent;
-            m_value = value;
+            m_coefficient = coefficient;
         }
+
         /** @return the name */
         public String getName() {
             return m_name;
         }
+
         /** @return the exponent */
         public int getExponent() {
             return m_exponent;
         }
+
         /** @return the value */
-        public double getValue() {
-            return m_value;
+        public double getCoefficient() {
+            return m_coefficient;
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public String toString() {
-            return m_name + " (val = " + DoubleFormat.formatDouble(m_value)
-                + ", exponent = " + m_exponent + ")";
+            return m_name + " (coefficient = "
+                    + DoubleFormat.formatDouble(m_coefficient)
+                    + ", exponent = " + m_exponent + ")";
         }
     }
-    
+
     public static final class RegressionTable {
         private final double m_intercept;
+
         private final List<NumericPredictor> m_variables;
-        
+
         /**
-         * 
+         *
          */
-        public RegressionTable(final double intercept, 
+        public RegressionTable(final double intercept,
                 final NumericPredictor[] variables) {
             m_intercept = intercept;
-            m_variables = Collections.unmodifiableList(
-                    Arrays.asList(variables));
+            m_variables =
+                    Collections.unmodifiableList(Arrays.asList(variables));
         }
 
         /** @return the intercept */
@@ -198,12 +211,12 @@ public final class PMMLRegressionPortObject extends PMMLPortObject {
         public List<NumericPredictor> getVariables() {
             return m_variables;
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public String toString() {
             return "RegressionTable: " + m_variables.size() + " variables";
         }
     }
-    
+
 }

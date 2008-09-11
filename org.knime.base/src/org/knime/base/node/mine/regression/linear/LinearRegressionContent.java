@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 23, 2006 (wiswedel): created
  */
@@ -49,11 +49,11 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 /**
  * Utility class that carries out the loading and saving of linear regression
  * models. It is used by the learner node model and the predictor node model.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class LinearRegressionContent {
-    
+
     private static final String CFG_OFFSET = "offset";
     private static final String CFG_MULTIPLIER = "multipliers";
     private static final String CFG_MEANS = "means";
@@ -61,7 +61,7 @@ public final class LinearRegressionContent {
 
     /** Offset value. */
     private double m_offset;
-    
+
     /** Multipliers for regression evaluation. */
     private double[] m_multipliers;
     /** Mean values of all included columns used for visualization. (The view
@@ -69,16 +69,16 @@ public final class LinearRegressionContent {
      * values of the remaining variables to determine the two points that define
      * the regression line.) */
     private double[] m_means;
-    
+
     private DataTableSpec m_spec;
-    
+
     /** Public no arg constructor as required by super class. */
     public LinearRegressionContent() {
     }
 
     /**
      * Create new object with the given parameters.
-     * 
+     *
      * @param spec The table spec of the variables
      * @param offset The fixed (constant) offset
      * @param multipliers multiplier values
@@ -98,7 +98,7 @@ public final class LinearRegressionContent {
         }
         if (expectedLength != multipliers.length) {
             throw new IllegalArgumentException(
-                    "Confusing array length: " + multipliers.length 
+                    "Confusing array length: " + multipliers.length
                     + ", expected " + expectedLength);
         }
         m_offset = offset;
@@ -106,7 +106,7 @@ public final class LinearRegressionContent {
         m_means = means;
         m_spec = spec;
     }
-    
+
     public PMMLRegressionPortObject createPortObject() {
         PMMLPortObjectSpec spec = createPortObjectSpec(m_spec);
         PMMLRegressionContentHandler c = new PMMLRegressionContentHandler(spec);
@@ -120,7 +120,17 @@ public final class LinearRegressionContent {
         c.setRegressionTable(new RegressionTable(m_offset, nps));
         return new PMMLRegressionPortObject(spec, c);
     }
-    
+
+    /**
+     * Creates a PMML port object spec based on all columns in the given data
+     * table spec. <b>The target column must be the last column in the table
+     * spec!</b>
+     *
+     * @param spec the data table spec with which the regression model was
+     *            created.
+     *
+     * @return a PMML port object spec
+     */
     public static PMMLPortObjectSpec createPortObjectSpec(
             final DataTableSpec spec) {
         PMMLPortObjectSpecCreator c = new PMMLPortObjectSpecCreator(spec);
@@ -131,18 +141,18 @@ public final class LinearRegressionContent {
 
     /**
      * Get the name of the response column, i.e. the prediction column.
-     * 
+     *
      * @return the name of the response column
      */
     public String getTargetColumnName() {
         return m_spec.getColumnSpec(m_spec.getNumColumns() - 1).getName();
     }
-    
+
     /** @return the offset */
     public double getOffset() {
         return m_offset;
     }
-    
+
     /** @return the multipliers */
     public double[] getMultipliers() {
         return m_multipliers;
@@ -151,7 +161,7 @@ public final class LinearRegressionContent {
     /**
      * Does a prediction when the given variable has the value v and all other
      * variables have their mean value. Used to determine the line in a 2D plot.
-     * 
+     *
      * @param variable the variable currently shown on x
      * @param v its value
      * @return the value of the linear regression line
@@ -176,7 +186,7 @@ public final class LinearRegressionContent {
         }
         return sum;
     }
-    
+
     /**
      * @return the spec
      */
@@ -196,14 +206,14 @@ public final class LinearRegressionContent {
         }
         return new DoubleCell(sum);
     }
-    
+
     public void save(final ModelContentWO par, final ExecutionMonitor exec)
             throws CanceledExecutionException {
         par.addDouble(CFG_OFFSET, m_offset);
         par.addDoubleArray(CFG_MULTIPLIER, m_multipliers);
         par.addDoubleArray(CFG_MEANS, m_means);
     }
-    
+
     protected void load(final ModelContentRO par, final PortObjectSpec spec,
             final ExecutionMonitor exec) throws InvalidSettingsException {
         m_offset = par.getDouble(CFG_OFFSET);
@@ -221,7 +231,7 @@ public final class LinearRegressionContent {
                     + m_multipliers.length + ", expected " + expLength);
         }
     }
-    
+
     public static LinearRegressionContent instantiateAndLoad(
             final ModelContentRO par, final PortObjectSpec spec,
             final ExecutionMonitor exec) throws InvalidSettingsException {

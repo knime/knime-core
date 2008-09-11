@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 23, 2006 (wiswedel): created
  */
@@ -26,10 +26,9 @@ package org.knime.base.node.mine.regression.predict;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.knime.base.data.filter.column.FilterColumnRow;
 import org.knime.base.node.mine.regression.PMMLRegressionPortObject;
 import org.knime.base.node.mine.regression.PMMLRegressionPortObject.NumericPredictor;
 import org.knime.base.node.mine.regression.PMMLRegressionPortObject.RegressionTable;
@@ -58,16 +57,15 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 /**
  * Node model for the linear regression predictor.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class RegressionPredictorNodeModel extends GenericNodeModel {
 
     /** Initialization with 1 data input, 1 model input and 1 data output. */
     public RegressionPredictorNodeModel() {
-        super(new PortType[]{PMMLRegressionPortObject.TYPE, 
-                BufferedDataTable.TYPE},
-                new PortType[]{BufferedDataTable.TYPE});
+        super(new PortType[]{PMMLRegressionPortObject.TYPE,
+                BufferedDataTable.TYPE}, new PortType[]{BufferedDataTable.TYPE});
     }
 
     /**
@@ -100,12 +98,11 @@ public class RegressionPredictorNodeModel extends GenericNodeModel {
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
         PMMLRegressionPortObject regModel = (PMMLRegressionPortObject)inData[0];
-        BufferedDataTable data = (BufferedDataTable)inData[1]; 
+        BufferedDataTable data = (BufferedDataTable)inData[1];
         DataTableSpec spec = data.getDataTableSpec();
-        ColumnRearranger c = createRearranger(
-                spec, regModel.getSpec(), regModel);
-        BufferedDataTable out = 
-            exec.createColumnRearrangeTable(data, c, exec);
+        ColumnRearranger c =
+                createRearranger(spec, regModel.getSpec(), regModel);
+        BufferedDataTable out = exec.createColumnRearrangeTable(data, c, exec);
         return new BufferedDataTable[]{out};
     }
 
@@ -116,81 +113,86 @@ public class RegressionPredictorNodeModel extends GenericNodeModel {
     protected void reset() {
     }
 
-     /** {@inheritDoc} */
+    /** {@inheritDoc} */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        PMMLPortObjectSpec regModelSpec = 
-            (PMMLPortObjectSpec)inSpecs[0];
+        PMMLPortObjectSpec regModelSpec = (PMMLPortObjectSpec)inSpecs[0];
         DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
         if (dataSpec == null || regModelSpec == null) {
             throw new InvalidSettingsException(
                     "No input specification available");
         }
-        ColumnRearranger rearranger = 
-            createRearranger(dataSpec, regModelSpec, null);
+        ColumnRearranger rearranger =
+                createRearranger(dataSpec, regModelSpec, null);
         DataTableSpec outSpec = rearranger.createSpec();
         return new DataTableSpec[]{outSpec};
     }
 
-    private ColumnRearranger createRearranger(final DataTableSpec inSpec, 
-            final PMMLPortObjectSpec regModelSpec, 
-            final PMMLRegressionPortObject regModel) 
-        throws InvalidSettingsException {
+    private ColumnRearranger createRearranger(final DataTableSpec inSpec,
+            final PMMLPortObjectSpec regModelSpec,
+            final PMMLRegressionPortObject regModel)
+            throws InvalidSettingsException {
         if (regModelSpec == null) {
             throw new InvalidSettingsException("No input");
         }
+
         // exclude last (response column)
         String targetCol = "Response";
         for (String s : regModelSpec.getTargetFields()) {
             targetCol = s;
             break;
         }
-        final Set<String> learnFields;
+
+        final List<String> learnFields;
         if (regModel != null) {
-            learnFields = new LinkedHashSet<String>();
-            for (NumericPredictor p : 
-                regModel.getRegressionTable().getVariables()) {
+            RegressionTable regTable = regModel.getRegressionTable();
+            learnFields = new ArrayList<String>();
+            for (NumericPredictor p : regTable.getVariables()) {
                 learnFields.add(p.getName());
             }
         } else {
-            learnFields = regModelSpec.getLearningFields();
+            learnFields =
+                    new ArrayList<String>(regModelSpec.getLearningFields());
         }
-        final int[] varsIndices = new int[learnFields.size()];
-        int i = 0;
+
+        final int[] colIndices = new int[learnFields.size()];
+        int k = 0;
         for (String learnCol : learnFields) {
             int index = inSpec.findColumnIndex(learnCol);
             if (index < 0) {
-                throw new InvalidSettingsException("Missing column for " 
+                throw new InvalidSettingsException("Missing column for "
                         + "regressor variable : \"" + learnCol + "\"");
             }
             DataColumnSpec regressor = inSpec.getColumnSpec(index);
             String name = regressor.getName();
             DataColumnSpec col = inSpec.getColumnSpec(index);
             if (!col.getType().isCompatible(DoubleValue.class)) {
-                throw new InvalidSettingsException("Incompatible type of " 
+                throw new InvalidSettingsException("Incompatible type of "
                         + "column \"" + name + "\": " + col.getType());
             }
-            varsIndices[i++] = index;
+
+            colIndices[k++] = index;
         }
         // try to use some smart naming scheme for the append column
-        String oldName = targetCol; 
-        if (inSpec.containsName(oldName) 
+        String oldName = targetCol;
+        if (inSpec.containsName(oldName)
                 && !oldName.toLowerCase().endsWith("(prediction)")) {
             oldName = oldName + " (prediction)";
         }
-        String newColName = DataTableSpec.getUniqueColumnName(inSpec, oldName); 
-        DataColumnSpec newCol = 
-            new DataColumnSpecCreator(newColName, DoubleCell.TYPE).createSpec();
+        String newColName = DataTableSpec.getUniqueColumnName(inSpec, oldName);
+        DataColumnSpec newCol =
+                new DataColumnSpecCreator(newColName, DoubleCell.TYPE)
+                        .createSpec();
+
         SingleCellFactory fac = new SingleCellFactory(newCol) {
             @Override
             public DataCell getCell(final DataRow row) {
-                FilterColumnRow reduced = new FilterColumnRow(row, varsIndices);
                 RegressionTable t = regModel.getRegressionTable();
                 int j = 0;
                 double result = t.getIntercept();
                 for (NumericPredictor p : t.getVariables()) {
-                    DataCell c = reduced.getCell(j);
+                    DataCell c = row.getCell(colIndices[j++]);
                     if (c.isMissing()) {
                         return DataType.getMissingCell();
                     }
@@ -198,8 +200,7 @@ public class RegressionPredictorNodeModel extends GenericNodeModel {
                     if (p.getExponent() != 1) {
                         v = Math.pow(v, p.getExponent());
                     }
-                    result += p.getValue() * v;
-                    j++;
+                    result += p.getCoefficient() * v;
                 }
                 return new DoubleCell(result);
             }

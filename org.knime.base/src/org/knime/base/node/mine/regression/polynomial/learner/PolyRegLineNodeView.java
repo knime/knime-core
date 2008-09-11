@@ -1,4 +1,4 @@
-/*  
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,27 +18,28 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 30, 2006 (wiswedel): created
  */
 package org.knime.base.node.mine.regression.polynomial.learner;
 
-import org.knime.core.node.NodeView;
+import org.knime.core.node.GenericNodeView;
 
 /**
  * This class shows a view with one attribute on the x-axis, its values on the
  * y-axis and the regression curve.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class PolyRegLineNodeView extends NodeView {
+public class PolyRegLineNodeView extends
+        GenericNodeView<PolyRegLearnerNodeModel> {
     // the scoll and drawing pane
     private final PolyRegLineScatterPlotter m_plot;
 
     /**
      * Create new view.
-     * 
+     *
      * @param nodeModel the model to look at
      */
     public PolyRegLineNodeView(final PolyRegLearnerNodeModel nodeModel) {

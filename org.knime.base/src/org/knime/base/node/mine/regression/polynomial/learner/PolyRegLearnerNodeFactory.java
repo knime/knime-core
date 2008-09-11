@@ -17,22 +17,22 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.base.node.mine.regression.polynomial.learner;
 
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * This factory creates all necessary objects for the polynomial regression
  * learner node.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class PolyRegLearnerNodeFactory extends NodeFactory {
+public class PolyRegLearnerNodeFactory extends
+        GenericNodeFactory<PolyRegLearnerNodeModel> {
     /**
      * {@inheritDoc}
      */
@@ -45,7 +45,7 @@ public class PolyRegLearnerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public PolyRegLearnerNodeModel createNodeModel() {
         return new PolyRegLearnerNodeModel();
     }
 
@@ -53,13 +53,12 @@ public class PolyRegLearnerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public GenericNodeView<PolyRegLearnerNodeModel> createNodeView(
+            final int viewIndex, final PolyRegLearnerNodeModel nodeModel) {
         if (viewIndex == 0) {
-            return new PolyRegCoefficientView(
-                    (PolyRegLearnerNodeModel)nodeModel);
+            return new PolyRegCoefficientView(nodeModel);
         } else if (viewIndex == 1) {
-            return new PolyRegLineNodeView((PolyRegLearnerNodeModel)nodeModel);
+            return new PolyRegLineNodeView(nodeModel);
         } else {
             return null;
         }

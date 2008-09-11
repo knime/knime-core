@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Aug 22, 2008 (wiswedel): created
  */
@@ -40,23 +40,23 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class PMMLRegressionContentHandler extends PMMLContentHandler {
-    
-    private static final NodeLogger LOGGER = 
+
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(PMMLRegressionContentHandler.class);
-    
-    private Stack<PMMLContentHandler> m_contentHandlerStack = 
+
+    private Stack<PMMLContentHandler> m_contentHandlerStack =
         new Stack<PMMLContentHandler>();
     private RegressionTable m_regressionTable;
     private PMMLPortObjectSpec m_spec;
     private String m_modelName;
     private String m_algorithmName;
-    
+
     /**
-     * 
+     *
      */
     public PMMLRegressionContentHandler(final PMMLPortObjectSpec spec) {
         if (spec == null) {
@@ -64,13 +64,13 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         }
         m_spec = spec;
     }
-    
-    public PMMLRegressionContentHandler(PMMLRegressionPortObject po) {
+
+    public PMMLRegressionContentHandler(final PMMLRegressionPortObject po) {
         m_modelName = po.getModelName();
         m_regressionTable = po.getRegressionTable();
         m_spec = po.getSpec();
     }
-    
+
     public void checkValidity() {
         if (m_regressionTable == null) {
             throw new IllegalStateException("No regression table set");
@@ -81,7 +81,7 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
             }
         }
     }
-    
+
     /**
      * @return the modelName
      */
@@ -102,7 +102,7 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
     public final RegressionTable getRegressionTable() {
         return m_regressionTable;
     }
-    
+
     /** Get the response column name as said in the spec or "Response" if none
      * is set.
      * @return target field name.
@@ -113,10 +113,10 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         }
         return "Response";
     }
-    
+
     public void checkTargetField(final String targetFieldName) {
         if (!getTargetField().equals(targetFieldName)) {
-            LOGGER.warn("Non matching target field name or no target " 
+            LOGGER.warn("Non matching target field name or no target "
                     + "field in mining schema");
         }
     }
@@ -129,14 +129,14 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         m_regressionTable = regressionTable;
         List<NumericPredictor> preds = m_regressionTable.getVariables();
         Set<String> regressorCols = m_spec.getLearningFields();
-        if (regressorCols.size() != preds.size()) {
-            LOGGER.warn("Non matching variables in Spec and " 
-                    + "RegressionTable");
-            return;
+        for (NumericPredictor p : preds) {
+            if (!regressorCols.contains(p.getName())) {
+                LOGGER.warn("Regression column not found in spec");
+            }
         }
         for (NumericPredictor p : preds) {
             if (!regressorCols.contains(p.getName())) {
-                LOGGER.warn("Non matching variables in Spec and " 
+                LOGGER.warn("Non matching variables in Spec and "
                         + "RegressionTable");
                 return;
             }
@@ -157,7 +157,7 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         m_algorithmName = algorithmName;
     }
 
-    public void writePMMLRegressionModel(final TransformerHandler h) 
+    public void writePMMLRegressionModel(final TransformerHandler h)
         throws SAXException {
         AttributesImpl a = new AttributesImpl();
         a.addAttribute("", "", "functionName", "CDATA", "regression");
@@ -170,8 +170,8 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         addRegressionTable(h);
         h.endElement("", "", "RegressionModel");
     }
-    
-    private void addRegressionTable(final TransformerHandler h) 
+
+    private void addRegressionTable(final TransformerHandler h)
     throws SAXException {
         AttributesImpl a = new AttributesImpl();
         String interceptS = Double.toString(m_regressionTable.getIntercept());
@@ -184,14 +184,14 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
                 String exponentS = Integer.toString(p.getExponent());
                 a.addAttribute("", "", "exponent", "CDATA", exponentS);
             }
-            String coefficientS = Double.toString(p.getValue());
+            String coefficientS = Double.toString(p.getCoefficient());
             a.addAttribute("", "", "coefficient", "CDATA", coefficientS);
             h.startElement("", "", "NumericPredictor", a);
             h.endElement("", "", "NumericPredictor");
         }
         h.endElement("", "", "RegressionTable");
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void characters(final char[] ch, final int start, final int length)
@@ -201,7 +201,7 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
     /** {@inheritDoc} */
     @Override
     public void endDocument() throws SAXException {
-        
+
     }
 
     /** {@inheritDoc} */
@@ -229,7 +229,7 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
 
     /** {@inheritDoc} */
     @Override
-    public void startElement(final String uri, final String localName, 
+    public void startElement(final String uri, final String localName,
             final String name, final Attributes atts) throws SAXException {
         if (!m_contentHandlerStack.isEmpty()) {
             m_contentHandlerStack.peek().startElement(
@@ -248,7 +248,7 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
             }
             String targetFieldName = atts.getValue("targetFieldName");
             checkTargetField(targetFieldName);
-            String normalizationMethod = 
+            String normalizationMethod =
                 getValue(atts, "normalizationMethod", "RegressionModel");
             if (!"none".equals(normalizationMethod)) {
                 LOGGER.warn("Normalization currently not supported, skipping");
@@ -269,14 +269,14 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
             LOGGER.warn("Skipping unknown element " + name);
         }
     }
-    
-    private static final class PMMLMiningSchemaHandler 
+
+    private static final class PMMLMiningSchemaHandler
         extends PMMLContentHandler {
-        
+
         private final Stack<PMMLContentHandler> m_contentHandlerStack;
-        
+
         /**
-         * 
+         *
          */
         public PMMLMiningSchemaHandler(
                 final Stack<PMMLContentHandler> contentHandlerStack) {
@@ -296,7 +296,7 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
 
         /** {@inheritDoc} */
         @Override
-        public void endElement(final String uri, final String localName, 
+        public void endElement(final String uri, final String localName,
                 final String name) throws SAXException {
             if ("MiningSchema".equals(name)) {
                 // this element ends
@@ -306,21 +306,21 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
 
         /** {@inheritDoc} */
         @Override
-        public void startElement(final String uri, final String localName, 
+        public void startElement(final String uri, final String localName,
                 final String name, final Attributes atts) throws SAXException {
         }
     } // class PMMLMiningSchemaHandler
-    
+
     private static final class PMMLRegressionTableHandler
         extends PMMLContentHandler {
-        
+
         private final Stack<PMMLContentHandler> m_contentHandlerStack;
         private final PMMLRegressionContentHandler m_parent;
         private final double m_intercept;
         private final ArrayList<NumericPredictor> m_numPredictorList;
-        
+
         /**
-         * 
+         *
          */
         public PMMLRegressionTableHandler(
                 final PMMLRegressionContentHandler parent,
@@ -337,27 +337,27 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
                         + "in RegressionTable: " + interceptS, e);
             }
         }
-        
+
         public void addNumericPredictor(final NumericPredictor np) {
             m_numPredictorList.add(np);
         }
 
         /** {@inheritDoc} */
         @Override
-        public void characters(final char[] ch, final int start, 
+        public void characters(final char[] ch, final int start,
                 final int length) throws SAXException {
-            
+
         }
 
         /** {@inheritDoc} */
         @Override
         public void endDocument() throws SAXException {
-            
+
         }
 
         /** {@inheritDoc} */
         @Override
-        public void endElement(final String uri, final String localName, 
+        public void endElement(final String uri, final String localName,
                 final String name) throws SAXException {
             if ("Extension".equals(name)) {
                 // unknown sub element, ignore
@@ -376,7 +376,7 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
 
         /** {@inheritDoc} */
         @Override
-        public void startElement(final String uri, final String localName, 
+        public void startElement(final String uri, final String localName,
                 final String name, final Attributes atts) throws SAXException {
             if ("Extension".equals(name)) {
                 LOGGER.debug("Skipping unknown extension in RegressionTable: "
@@ -394,19 +394,19 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
                 throw new SAXException(
                         "Unknown xml element in RegressionTable: " + name);
             }
-            
+
         }
     } // class PMMLRegressionTableContentHandler
-    
-    private static final class PMMLNumericPredictorContentHandler 
+
+    private static final class PMMLNumericPredictorContentHandler
         extends PMMLContentHandler {
-        
+
         private final PMMLRegressionTableHandler m_parent;
         private final Stack<PMMLContentHandler> m_contentHandlerStack;
         private final NumericPredictor m_numPredictor;
-        
+
         /**
-         * 
+         *
          */
         public PMMLNumericPredictorContentHandler(
                 final PMMLRegressionTableHandler parent,
@@ -439,9 +439,9 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
 
         /** {@inheritDoc} */
         @Override
-        public void characters(final char[] ch, final int start, 
+        public void characters(final char[] ch, final int start,
                 final int length) throws SAXException {
-            
+
         }
 
         /** {@inheritDoc} */
@@ -451,7 +451,7 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
 
         /** {@inheritDoc} */
         @Override
-        public void endElement(final String uri, final String localName, 
+        public void endElement(final String uri, final String localName,
                 final String name) throws SAXException {
             if ("Extension".equals(name)) {
                 // sub element, ignore
@@ -472,14 +472,14 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
                 LOGGER.debug("Skipping unknown extension in numeric predictor: "
                         + name);
             } else {
-                throw new SAXException("NumericPredictor must not have " 
+                throw new SAXException("NumericPredictor must not have "
                         + "child xml element: " + name);
             }
         }
-        
+
     } // class NumericPredictorContentHandler
-    
-    
+
+
     private static final String getValue(final Attributes atts,
             final String attName, final String elementName)
         throws SAXException {

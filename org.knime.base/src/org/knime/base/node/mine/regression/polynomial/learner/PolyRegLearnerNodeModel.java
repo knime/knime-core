@@ -31,6 +31,10 @@ import java.io.IOException;
 
 import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.base.data.filter.column.FilterColumnTable;
+import org.knime.base.node.mine.regression.PMMLRegressionContentHandler;
+import org.knime.base.node.mine.regression.PMMLRegressionPortObject;
+import org.knime.base.node.mine.regression.PMMLRegressionPortObject.NumericPredictor;
+import org.knime.base.node.mine.regression.PMMLRegressionPortObject.RegressionTable;
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.util.DefaultDataArray;
 import org.knime.base.node.viz.plotter.DataProvider;
@@ -51,12 +55,16 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentWO;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 
 /**
  * This node performs polynomial regression on an input table with numeric-only
@@ -65,9 +73,10 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
+public class PolyRegLearnerNodeModel extends GenericNodeModel implements
+        DataProvider {
     private final PolyRegLearnerSettings m_settings =
-        new PolyRegLearnerSettings();
+            new PolyRegLearnerSettings();
 
     private double[] m_betas;
 
@@ -85,17 +94,20 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
      * Creates a new model for the polynomial regression learner node.
      */
     public PolyRegLearnerNodeModel() {
-        super(1, 1, 0, 1);
+        super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{
+                BufferedDataTable.TYPE, PMMLRegressionPortObject.TYPE});
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+        DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
+
         for (String colName : m_settings.selectedColumns()) {
-            DataColumnSpec dcs = inSpecs[0].getColumnSpec(colName);
+            DataColumnSpec dcs = tableSpec.getColumnSpec(colName);
             if (dcs == null) {
                 throw new InvalidSettingsException("Selected column '"
                         + colName + "' does not exist in input table");
@@ -111,47 +123,71 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
         if (m_settings.getTargetColumn() == null) {
             throw new InvalidSettingsException("No target column selected");
         }
-        if (inSpecs[0].findColumnIndex(m_settings.getTargetColumn()) == -1) {
+        if (tableSpec.findColumnIndex(m_settings.getTargetColumn()) == -1) {
             throw new InvalidSettingsException("Target column '"
                     + m_settings.getTargetColumn() + "' does not exist.");
         }
 
-        DataColumnSpecCreator crea = new DataColumnSpecCreator(
-                "PolyReg prediction", DoubleCell.TYPE);
+        DataColumnSpecCreator crea =
+                new DataColumnSpecCreator("PolyReg prediction", DoubleCell.TYPE);
         DataColumnSpec col1 = crea.createSpec();
 
         crea = new DataColumnSpecCreator("Prediction Error", DoubleCell.TYPE);
         DataColumnSpec col2 = crea.createSpec();
 
-        return new DataTableSpec[]{AppendedColumnTable.getTableSpec(inSpecs[0],
-                col1, col2)};
+        return new PortObjectSpec[]{
+                AppendedColumnTable.getTableSpec(tableSpec, col1, col2),
+                createModelSpec(tableSpec)};
+    }
+
+    private PMMLPortObjectSpec createModelSpec(final DataTableSpec inSpec) {
+        DataColumnSpec[] usedColumns =
+                new DataColumnSpec[m_settings.selectedColumns().size() + 1];
+        int k = 0;
+        for (DataColumnSpec dcs : inSpec) {
+            if (m_settings.selectedColumns().contains(dcs.getName())) {
+                usedColumns[k++] = dcs;
+            }
+        }
+
+        usedColumns[k++] = inSpec.getColumnSpec(m_settings.getTargetColumn());
+
+        PMMLPortObjectSpecCreator crea =
+                new PMMLPortObjectSpecCreator(new DataTableSpec(usedColumns));
+        crea.setTargetCol(usedColumns[k - 1]);
+        return crea.createSpec();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        final int colCount = inData[0].getDataTableSpec().getNumColumns();
+        BufferedDataTable inTable = (BufferedDataTable)inData[0];
+
+        final int colCount = inTable.getDataTableSpec().getNumColumns();
         m_colSelected = new boolean[colCount];
         for (int i = 0; i < colCount; i++) {
-            m_colSelected[i] = m_settings.selectedColumns().contains(
-                    inData[0].getDataTableSpec().getColumnSpec(i).getName());
+            m_colSelected[i] =
+                    m_settings.selectedColumns().contains(
+                            inTable.getDataTableSpec().getColumnSpec(i)
+                                    .getName());
         }
 
-        final int rowCount = inData[0].getRowCount();
+        final int rowCount = inTable.getRowCount();
         final int independentVariables = m_settings.selectedColumns().size();
         final int degree = m_settings.getDegree();
-        final int dependentIndex = inData[0].getDataTableSpec()
-                .findColumnIndex(m_settings.getTargetColumn());
+        final int dependentIndex =
+                inTable.getDataTableSpec().findColumnIndex(
+                        m_settings.getTargetColumn());
 
-        double[][] xMat = new double[rowCount][1 + independentVariables
-                * degree];
+        double[][] xMat =
+                new double[rowCount][1 + independentVariables * degree];
         double[][] yMat = new double[rowCount][1];
 
         int rowIndex = 0;
-        for (DataRow row : inData[0]) {
+        for (DataRow row : inTable) {
             exec.checkCanceled();
             exec.setProgress(0.2 * rowIndex / rowCount);
             xMat[rowIndex][0] = 1;
@@ -223,21 +259,22 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
         String[] temp = new String[m_columnNames.length + 1];
         System.arraycopy(m_columnNames, 0, temp, 0, m_columnNames.length);
         temp[temp.length - 1] = m_settings.getTargetColumn();
-        FilterColumnTable filteredTable =
-            new FilterColumnTable(inData[0], temp);
+        FilterColumnTable filteredTable = new FilterColumnTable(inTable, temp);
 
-        m_rowContainer = new DefaultDataArray(filteredTable, 1, m_settings
-                .getMaxRowsForView());
-        int ignore = m_rowContainer.getDataTableSpec().findColumnIndex(
-                m_settings.getTargetColumn());
+        m_rowContainer =
+                new DefaultDataArray(filteredTable, 1, m_settings
+                        .getMaxRowsForView());
+        int ignore =
+                m_rowContainer.getDataTableSpec().findColumnIndex(
+                        m_settings.getTargetColumn());
 
         m_meanValues = new double[independentVariables];
         for (DataRow row : m_rowContainer) {
             int k = 0;
             for (int i = 0; i < row.getNumCells(); i++) {
                 if (i != ignore) {
-                    m_meanValues[k++] += ((DoubleValue)row.getCell(i))
-                            .getDoubleValue();
+                    m_meanValues[k++] +=
+                            ((DoubleValue)row.getCell(i)).getDoubleValue();
                 }
             }
         }
@@ -245,16 +282,43 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
             m_meanValues[i] /= m_rowContainer.size();
         }
 
-        ColumnRearranger crea = new ColumnRearranger(inData[0]
-                .getDataTableSpec());
-        crea.append(getCellFactory(inData[0].getDataTableSpec()
-                .findColumnIndex(m_settings.getTargetColumn())));
+        ColumnRearranger crea =
+                new ColumnRearranger(inTable.getDataTableSpec());
+        crea.append(getCellFactory(inTable.getDataTableSpec().findColumnIndex(
+                m_settings.getTargetColumn())));
 
-        BufferedDataTable[] bdt = new BufferedDataTable[]{exec
-                .createColumnRearrangeTable(inData[0], crea, exec
-                        .createSubProgress(0.6))};
+        PortObject[] bdt =
+                new PortObject[]{
+                        exec.createColumnRearrangeTable(inTable, crea, exec
+                                .createSubProgress(0.6)),
+                        createPMMLModel(inTable.getDataTableSpec())};
         m_squaredError /= rowCount;
         return bdt;
+    }
+
+    private PMMLRegressionPortObject createPMMLModel(final DataTableSpec inSpec) {
+        NumericPredictor[] preds = new NumericPredictor[m_betas.length - 1];
+
+        int deg = m_settings.getDegree();
+        for (int i = 0; i < m_columnNames.length; i++) {
+            for (int k = 0; k < deg; k++) {
+                preds[i * deg + k] =
+                        new NumericPredictor(m_columnNames[i], k + 1, m_betas[i
+                                * deg + k + 1]);
+            }
+        }
+
+        RegressionTable tab =
+                new RegressionTable(m_betas[0], preds);
+
+        PMMLPortObjectSpec spec = createModelSpec(inSpec);
+        PMMLRegressionContentHandler ch =
+                new PMMLRegressionContentHandler(spec);
+        ch.setRegressionTable(tab);
+        ch.setAlgorithmName("PolynomialRegression");
+        ch.setModelName("KNIME Polynomial Regression");
+
+        return new PMMLRegressionPortObject(spec, ch);
     }
 
     private CellFactory getCellFactory(final int dependentIndex) {
@@ -267,8 +331,9 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
                 double y = 0;
                 for (int col = 0; col < row.getNumCells(); col++) {
                     if ((col != dependentIndex) && m_colSelected[col]) {
-                        final double value = ((DoubleValue)row.getCell(col))
-                                .getDoubleValue();
+                        final double value =
+                                ((DoubleValue)row.getCell(col))
+                                        .getDoubleValue();
                         double poly = 1;
                         for (int d = 1; d <= degree; d++) {
                             poly *= value;
@@ -286,12 +351,14 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
             }
 
             public DataColumnSpec[] getColumnSpecs() {
-                DataColumnSpecCreator crea = new DataColumnSpecCreator(
-                        "PolyReg prediction", DoubleCell.TYPE);
+                DataColumnSpecCreator crea =
+                        new DataColumnSpecCreator("PolyReg prediction",
+                                DoubleCell.TYPE);
                 DataColumnSpec col1 = crea.createSpec();
 
-                crea = new DataColumnSpecCreator("Prediction Error",
-                        DoubleCell.TYPE);
+                crea =
+                        new DataColumnSpecCreator("Prediction Error",
+                                DoubleCell.TYPE);
                 DataColumnSpec col2 = crea.createSpec();
                 return new DataColumnSpec[]{col1, col2};
             }
@@ -312,8 +379,9 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
             CanceledExecutionException {
         File f = new File(nodeInternDir, "internals.xml");
         if (f.exists()) {
-            NodeSettingsRO internals = NodeSettings.loadFromXML(
-                            new BufferedInputStream(new FileInputStream(f)));
+            NodeSettingsRO internals =
+                    NodeSettings.loadFromXML(new BufferedInputStream(
+                            new FileInputStream(f)));
             try {
                 m_betas = internals.getDoubleArray("betas");
                 m_columnNames = internals.getStringArray("columnNames");
@@ -400,18 +468,6 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
         if (s.getTargetColumn() == null) {
             throw new InvalidSettingsException("No target column selected");
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveModelContent(final int index,
-            final ModelContentWO predParams) throws InvalidSettingsException {
-        predParams.addInt("degree", m_settings.getDegree());
-        predParams.addStringArray("columnNames", m_columnNames);
-        predParams.addDoubleArray("betas", m_betas);
-        predParams.addDouble("squaredErrorPerRow", m_squaredError);
     }
 
     /**

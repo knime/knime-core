@@ -17,30 +17,31 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.base.node.mine.regression.polynomial.learner;
 
-import org.knime.core.node.NodeView;
+import org.knime.core.node.GenericNodeView;
 
 /**
  * This view show a simple table with all the coefficients for each attributed
  * in the dataset.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class PolyRegCoefficientView extends NodeView {
+public class PolyRegCoefficientView extends
+        GenericNodeView<PolyRegLearnerNodeModel> {
     private final CoefficientTable m_coeffTable;
-    
+
     /**
      * Creates a new new view for showing the learned coefficients.
-     * 
+     *
      * @param nodeModel the node model
      */
     public PolyRegCoefficientView(final PolyRegLearnerNodeModel nodeModel) {
         super(nodeModel);
         m_coeffTable = new CoefficientTable(nodeModel);
-        
+
         m_coeffTable.update();
         setComponent(m_coeffTable);
     }
