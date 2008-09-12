@@ -27,7 +27,6 @@ package org.knime.workbench.repository.model;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.GenericNodeModel;
@@ -86,10 +85,6 @@ public class NodeTemplate extends AbstractSimpleObject {
 
     private Class<GenericNodeFactory<? extends GenericNodeModel>> m_factory;
 
-    private Image m_icon;
-
-    private String m_categoryPath;
-
     private String m_type;
     
     private String m_pluginID;
@@ -122,36 +117,6 @@ public class NodeTemplate extends AbstractSimpleObject {
         m_factory = factory;
     }
 
-    /**
-     * @return Returns the categoryPath.
-     */
-    public String getCategoryPath() {
-        return m_categoryPath;
-    }
-
-    /**
-     * @param categoryPath The categoryPath to set.
-     */
-    public void setCategoryPath(final String categoryPath) {
-        m_categoryPath = categoryPath;
-    }
-
-
-
-
-    /**
-     * @return Returns the icon.
-     */
-    public Image getIcon() {
-        return m_icon;
-    }
-
-    /**
-     * @param icon The icon to set.
-     */
-    public void setIcon(final Image icon) {
-        m_icon = icon;
-    }
 
     /**
      * {@inheritDoc}
@@ -195,6 +160,10 @@ public class NodeTemplate extends AbstractSimpleObject {
         m_pluginID = pluginID;
     }
     
+    /**
+     * 
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         if (m_factory == null) {

@@ -137,8 +137,8 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
         for (AbstractRepositoryObject object : children) {
             if (object instanceof Category) {
                 categoryChildren.add((Category)object);
-            } else if (object instanceof NodeTemplate) {
-                nodeChildren.add((NodeTemplate)object);
+            } else if (object instanceof AbstractSimpleObject) {
+                nodeChildren.add((AbstractSimpleObject)object);
             }
         }
 

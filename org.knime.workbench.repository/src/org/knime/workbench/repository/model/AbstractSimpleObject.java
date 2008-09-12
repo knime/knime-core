@@ -24,6 +24,8 @@
  */
 package org.knime.workbench.repository.model;
 
+import org.eclipse.swt.graphics.Image;
+
 /**
  * Abstract base class of "leaf" objects (that is, objects without children).
  * 
@@ -31,5 +33,37 @@ package org.knime.workbench.repository.model;
  */
 public abstract class AbstractSimpleObject extends AbstractRepositoryObject
         implements ISimpleObject {
+    
+    private Image m_icon;
+    
+    private String m_categoryPath;
+    
+    /**
+     * @return Returns the icon.
+     */
+    public Image getIcon() {
+        return m_icon;
+    }
 
+    /**
+     * @param icon The icon to set.
+     */
+    public void setIcon(final Image icon) {
+        m_icon = icon;
+    }
+    
+    /**
+     * @return Returns the categoryPath.
+     */
+    public String getCategoryPath() {
+        return m_categoryPath;
+    }
+
+    /**
+     * @param categoryPath The categoryPath to set.
+     */
+    public void setCategoryPath(final String categoryPath) {
+        m_categoryPath = categoryPath;
+    }
+    
 }

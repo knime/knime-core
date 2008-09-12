@@ -24,13 +24,23 @@
  */
 package org.knime.workbench.repository;
 
+import java.io.File;
+import java.net.URL;
+
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.swt.graphics.Image;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IContainerObject;
 import org.knime.workbench.repository.model.IRepositoryObject;
+import org.knime.workbench.repository.model.MetaNodeTemplate;
 import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.repository.model.Root;
 
@@ -44,6 +54,20 @@ public final class RepositoryFactory {
     private RepositoryFactory() {
         // hidden constructor (utility class)
     }
+    
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            RepositoryFactory.class); 
+    
+    /** 
+     * Workflow manager instance loading and administering 
+     * the predefined meta nodes. 
+     */
+    public static final WorkflowManager ROOT 
+        = WorkflowManager.ROOT.createAndAddProject(); 
+    
+    // FIXME: this is copied from GenericNodeFactory -> move it here? 
+//    private static final Pattern ICON_PATH_PATTERN =
+//        Pattern.compile("[^\\./]+/\\.\\./");
 
     /**
      * Creates a new node repository object. Throws an exception, if this fails
@@ -107,7 +131,72 @@ public final class RepositoryFactory {
 
         return node;
     }
+    
+    /**
+     * 
+     * @param configuration content of the extension 
+     * @return a meta node template
+     */
+    public static MetaNodeTemplate createMetaNode(
+            final IConfigurationElement configuration) {
+        String id = configuration.getAttribute("id");
+        String name = configuration.getAttribute("name");
+        String workflowDir = configuration.getAttribute("workflowDir");
+        String after = configuration.getAttribute("after");
+        String iconPath = configuration.getAttribute("icon");
+        WorkflowManager manager = loadMetaNode(workflowDir);
+        if (manager == null) {
+            LOGGER.error("MetaNode  " + name + " could not be loaded. " 
+                    + "Skipped.");
+        }
+        MetaNodeTemplate template = new MetaNodeTemplate(
+                id, name, manager);
+        if (after != null && !after.isEmpty()) {
+            template.setAfterID(after);
+        }
+        if (!Boolean.valueOf(
+                System.getProperty("java.awt.headless", "false"))) {
+            // Load images from declaring plugin
+            Image icon = ImageRepository.getImage(iconPath);
+            // get default image if null
+            if (icon == null) {
+                icon = ImageRepository.getScaledImage(
+                        GenericNodeFactory.getDefaultIcon(), 16, 16);
+            }
+            // FIXME dispose this somewhere !!
+            template.setIcon(icon);
+        }
+        return template;
+    }
 
+
+    private static WorkflowManager loadMetaNode(final String workflowDir) {
+        LOGGER.debug("found pre-installed template " + workflowDir);
+        URL url = FileLocator.find(
+                KNIMERepositoryPlugin.getDefault().getBundle(),
+                new Path(workflowDir), null);
+        
+        if (url != null) {
+            try {
+                LOGGER.debug("found pre-installed template " 
+                        + FileLocator.toFileURL(url));
+                File f = new File(FileLocator.toFileURL(url).getFile());
+                WorkflowManager metaNode = ROOT.load(f, 
+                        new ExecutionMonitor()).getWorkflowManager();
+                return metaNode;
+            } catch (CanceledExecutionException cee) {
+                LOGGER.error("Unexpected canceled execution exception", 
+                        cee);
+            } catch (Exception e) {
+                LOGGER.error(
+                        "Failed to load meta workflow repository", e);
+            }
+        }
+        return null;
+    }
+    
+    
+    
     /**
      * Creates a new category object. Throws an exception, if this fails
      * 
@@ -214,4 +303,41 @@ public final class RepositoryFactory {
     private static String str(final String s, final String defaultString) {
         return s == null ? defaultString : s;
     }
+    
+    
+    // FIXME: this is copied from GenericNodeFactory -> move it here?
+    /**
+     * Reads the icon tag from the xml and returns the icon. If not available or
+     * the icon is not readable, an default icon is returned. This method is
+     * called from the constructor.
+     * <p>
+     * This method does not return null as the icon is optional, i.e. it doesn't
+     * hurt if it is missing.
+     *
+     * @return The icon as given in the xml attribute <i>icon</i>.
+     *
+    private static URL loadIconFromPath(final String rawImagePath) {
+        String imagePath = rawImagePath;
+        imagePath = imagePath.replaceAll("//", "/");
+
+        if (imagePath.startsWith("./")) {
+            imagePath = imagePath.substring("./".length());
+        }
+        if (!imagePath.startsWith("/")) {
+            imagePath = RepositoryFactory.class.getPackage().getName().replace(
+                    '.', '/') + "/" + imagePath;
+
+            Matcher m = ICON_PATH_PATTERN.matcher(imagePath);
+            while (m.find()) {
+                imagePath = imagePath.replaceAll("[^./]+/../", "");
+                m = ICON_PATH_PATTERN.matcher(imagePath);
+            }
+        }
+
+        URL iconURL = RepositoryFactory.class.getClassLoader().getResource(
+                imagePath);
+
+        return iconURL;
+    }
+    */
 }

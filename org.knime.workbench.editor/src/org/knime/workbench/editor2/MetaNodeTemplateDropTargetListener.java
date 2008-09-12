@@ -28,7 +28,10 @@ import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
+import org.knime.workbench.repository.RepositoryFactory;
+import org.knime.workbench.repository.model.MetaNodeTemplate;
 import org.knime.workbench.ui.metanodes.MetaNodeTemplateRepositoryItem;
 import org.knime.workbench.ui.metanodes.MetaNodeTemplateRepositoryManager;
 
@@ -96,15 +99,28 @@ public class MetaNodeTemplateDropTargetListener
      * {@inheritDoc}
      */
     @Override
-    public void drop(DropTargetEvent event) {
+    public void drop(final DropTargetEvent event) {
         LocalSelectionTransfer transfer = LocalSelectionTransfer.getTransfer();
-        MetaNodeTemplateRepositoryItem item = (MetaNodeTemplateRepositoryItem)
-            ((IStructuredSelection)transfer.getSelection()).getFirstElement();
+        
+        // check instanceof  
+        NodeID id = null;
+        WorkflowManager sourceManager = null;
+        Object selection = ((IStructuredSelection)transfer.getSelection())
+            .getFirstElement(); 
+        if (selection instanceof MetaNodeTemplateRepositoryItem) {
+            id = ((MetaNodeTemplateRepositoryItem)selection).getNodeID();
+            sourceManager = MetaNodeTemplateRepositoryManager.getInstance()
+                .getWorkflowManager(); 
+        } else if (selection instanceof MetaNodeTemplate) {
+            id = ((MetaNodeTemplate)selection).getManager().getID();
+            sourceManager = RepositoryFactory.ROOT;
+        }
+        if (id == null || sourceManager == null) {
+            return;
+        }
         NodeID[] copied = m_editor.getWorkflowManager().copy(
-                // TODO: use WFM from MetaNodeTemplateRepositoryManager
-                MetaNodeTemplateRepositoryManager.getInstance()
-                .getWorkflowManager(), 
-                new NodeID[] {item.getNodeID()});
+                sourceManager, 
+                new NodeID[] {id});
         // create UI info
         NodeContainer newNode = m_editor.getWorkflowManager().getNodeContainer(
                 copied[0]);

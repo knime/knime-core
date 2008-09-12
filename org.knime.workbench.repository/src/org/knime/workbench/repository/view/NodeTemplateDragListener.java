@@ -30,6 +30,7 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSourceEvent;
 import org.eclipse.swt.dnd.DragSourceListener;
+import org.knime.workbench.repository.model.MetaNodeTemplate;
 import org.knime.workbench.repository.model.NodeTemplate;
 
 /**
@@ -67,7 +68,8 @@ public class NodeTemplateDragListener implements DragSourceListener {
         LocalSelectionTransfer.getTransfer().setSelection(sel);
         // cancel event, if not an NodeTemplate, or not exactly one element
         // selected
-        if (!(sel.getFirstElement() instanceof NodeTemplate)
+        if (!(sel.getFirstElement() instanceof NodeTemplate
+                || sel.getFirstElement() instanceof MetaNodeTemplate)
                 || (sel.size() != 1)) {
             event.doit = false;
         } else {

@@ -26,9 +26,9 @@ package org.knime.workbench.repository.view;
 
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-
+import org.knime.workbench.repository.model.AbstractRepositoryObject;
+import org.knime.workbench.repository.model.AbstractSimpleObject;
 import org.knime.workbench.repository.model.Category;
-import org.knime.workbench.repository.model.NodeTemplate;
 
 /**
  * LabelProvider, provides Text and images for viewers that display the
@@ -42,11 +42,8 @@ public class RepositoryLabelProvider extends LabelProvider {
      */
     @Override
     public String getText(final Object element) {
-        if (element instanceof NodeTemplate) {
-            return ((NodeTemplate) element).getName();
-        }
-        if (element instanceof Category) {
-            return ((Category) element).getName();
+        if (element instanceof AbstractRepositoryObject) {
+            return ((AbstractRepositoryObject) element).getName();
         }
         return super.getText(element);
     }
@@ -56,13 +53,12 @@ public class RepositoryLabelProvider extends LabelProvider {
      */
     @Override
     public Image getImage(final Object element) {
-        if (element instanceof NodeTemplate) {
-            return ((NodeTemplate) element).getIcon();
+        if (element instanceof AbstractSimpleObject) {
+            return ((AbstractSimpleObject) element).getIcon();
         }
         if (element instanceof Category) {
             return ((Category) element).getIcon();
         }
-
         return super.getImage(element);
     }
 }

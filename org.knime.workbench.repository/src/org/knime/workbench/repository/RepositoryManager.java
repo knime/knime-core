@@ -45,6 +45,7 @@ import org.knime.workbench.core.EclipseClassCreator;
 import org.knime.workbench.core.WorkbenchErrorLogger;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IContainerObject;
+import org.knime.workbench.repository.model.MetaNodeTemplate;
 import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.repository.model.Root;
 
@@ -70,6 +71,9 @@ public final class RepositoryManager {
     // ID of "category" extension point
     private static final String ID_CATEGORY = "org.knime.workbench."
             + "repository.categories";
+    
+    private static final String ID_META_NODE 
+        = "org.knime.workbench.repository.metanode";
 
     // set the eclipse class creator into the static global class creator class
     static {
@@ -157,6 +161,7 @@ public final class RepositoryManager {
             }
         }
     }
+    
 
     /**
      * Creates the repository model. This instantiates all contributed
@@ -174,6 +179,7 @@ public final class RepositoryManager {
         IExtension[] nodeExtensions = this.getExtensions(ID_NODE);
         IExtension[] categoryExtensions = this.getExtensions(ID_CATEGORY);
 
+        IExtension[] metanodeExtensions = getExtensions(ID_META_NODE);
         //
         // First, process the contributed categories
         //
@@ -308,7 +314,35 @@ public final class RepositoryManager {
                     errorString.append(message + "\n");
                 }
 
-            } // for
+            } // for configuration elements            
+        } // for node extensions
+        
+        // iterate over the meta node config elements
+        // and create meta node templates
+        for (IExtension mnExt : metanodeExtensions) {
+            IConfigurationElement[] mnConfigElems =
+                mnExt.getConfigurationElements();
+            for (IConfigurationElement mnConfig : mnConfigElems) {
+                MetaNodeTemplate metaNode =
+                    RepositoryFactory.createMetaNode(mnConfig);
+                IContainerObject parentContainer =
+                    m_root.findContainer(metaNode.getCategoryPath());
+                
+                // If parent category is illegal, log an error and append
+                // the node to the repository root.
+                if (parentContainer == null) {
+                    WorkbenchErrorLogger
+                    .warning("Invalid category-path for node "
+                            + "contribution: '"
+                            + metaNode.getCategoryPath()
+                            + "' - adding to root instead");
+                    m_root.addChild(metaNode);
+                } else {
+                    // everything is fine, add the node to its parent
+                    // category
+                    parentContainer.addChild(metaNode);
+                }
+            }
         }
         
         m_lock.release();

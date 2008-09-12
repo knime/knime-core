@@ -30,19 +30,19 @@ a data &quot;workflow&quot;
     <extension
           point="org.knime.workbench.repository.metanode">
        <PersistedMetaNode
-             icon="icons/meta/metanode_template.png"
+             icon="icons/meta_nodes/cross_validation.png"
              id="cross_validation"
              name="CrossValidation"
              workflowDir="metanode_templates/Cross Validation/">
        </PersistedMetaNode>
        <PersistedMetaNode
-             icon="icons/view.png"
+             icon="icons/meta_nodes/looper.png"
              id="variables_loop"
              name="Variables Loop"
              workflowDir="metanode_templates/Variables Loop/">
        </PersistedMetaNode>
        <PersistedMetaNode
-             icon="icons/project_basic.png"
+             icon="icons/meta_nodes/looper_db.png"
              id="variables_loop_db"
              name="Variables Loop (DB)"
              workflowDir="metanode_templates/Variables Loop (DB)/">
