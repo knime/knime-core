@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!-- Schema file written by PDE -->
-<schema targetNamespace="org.knime.workbench.ui">
+<schema targetNamespace="org.knime.workbench.repository">
 <annotation>
       <appInfo>
-         <meta.schema plugin="org.knime.workbench.ui" id="metanode" name="MetaNode"/>
+         <meta.schema plugin="org.knime.workbench.repository" id="metanode" name="MetaNode"/>
       </appInfo>
       <documentation>
          [Enter description of this extension point.]

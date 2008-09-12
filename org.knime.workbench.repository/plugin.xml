@@ -4,7 +4,8 @@
 
      <extension-point id="nodes" name="Node" schema="schema/Node.exsd"/>
    <extension-point id="categories" name="Category" schema="schema/Category.exsd"/>
-
+   <extension-point id="metanode" name="MetaNode" schema="schema/metanode.exsd"/>
+   
    <extension
          point="org.eclipse.ui.views">
       <view
@@ -25,5 +26,27 @@ a data &quot;workflow&quot;
             class="org.knime.workbench.preferences.HeadlessPreferencesInitializer">
       </initializer>
    </extension>
+
+    <extension
+          point="org.knime.workbench.repository.metanode">
+       <PersistedMetaNode
+             icon="icons/meta/metanode_template.png"
+             id="cross_validation"
+             name="CrossValidation"
+             workflowDir="metanode_templates/Cross Validation/">
+       </PersistedMetaNode>
+       <PersistedMetaNode
+             icon="icons/view.png"
+             id="variables_loop"
+             name="Variables Loop"
+             workflowDir="metanode_templates/Variables Loop/">
+       </PersistedMetaNode>
+       <PersistedMetaNode
+             icon="icons/project_basic.png"
+             id="variables_loop_db"
+             name="Variables Loop (DB)"
+             workflowDir="metanode_templates/Variables Loop (DB)/">
+       </PersistedMetaNode>
+    </extension>
 
 </plugin>
