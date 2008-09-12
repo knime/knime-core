@@ -70,7 +70,7 @@ import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 import org.knime.core.data.renderer.DoubleGrayValueRenderer;
 import org.knime.core.data.renderer.DoubleValueRenderer;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.tableview.TableContentModel;
 import org.knime.core.node.tableview.TableContentView;
 import org.knime.core.node.tableview.TableView;
@@ -79,7 +79,7 @@ import org.knime.core.node.tableview.TableView;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class PMCCNodeView extends NodeView {
+public class PMCCNodeView extends GenericNodeView<PMCCNodeModel> {
 
     private final TableView m_tableView;
     private String m_currentRendererID = ColorRender.DESCRIPTION;
@@ -105,12 +105,6 @@ public class PMCCNodeView extends NodeView {
         getJMenuBar().add(getJMenu());
     }
     
-    /** {@inheritDoc} */
-    @Override
-    protected PMCCNodeModel getNodeModel() {
-        return (PMCCNodeModel)super.getNodeModel();
-    }
-
     /** {@inheritDoc} */
     @Override
     protected void modelChanged() {
@@ -265,10 +259,7 @@ public class PMCCNodeView extends NodeView {
     
     private static class ColorRender extends DoubleGrayValueRenderer {
         
-        private static final String DESCRIPTION = "Correlation Coloring";
-        
-        /** 
-         * Passes argument to super constructor.
+        /** Passes argument to super constructor.
          * @param spec The spec for the column.
          */
         public ColorRender(final DataColumnSpec spec) {
@@ -285,7 +276,7 @@ public class PMCCNodeView extends NodeView {
         /** {@inheritDoc} */
         @Override
         public String getDescription() {
-            return DESCRIPTION;
+            return "Correlation Coloring";
         }
         
         /** {@inheritDoc} */

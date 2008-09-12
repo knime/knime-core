@@ -24,11 +24,7 @@
  */
 package org.knime.base.node.preproc.correlation.pmcc;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,36 +47,39 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.BufferedDataTableHolder;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContent;
-import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
-public class PMCCNodeModel extends NodeModel {
+public class PMCCNodeModel extends GenericNodeModel 
+    implements BufferedDataTableHolder {
     
     private final SettingsModelFilterString m_columnIncludesList;
     private final SettingsModelIntegerBounded m_maxPossValueCountModel;
     
-    private PMCCModel m_pmccModel;
-    private DataTable m_correlationTable;
+    private BufferedDataTable m_correlationTable;
 
     /** One input, one output.
      */
     public PMCCNodeModel() {
-        super(1, 1, 0, 1);
+        super(new PortType[]{BufferedDataTable.TYPE},
+                new PortType[]{BufferedDataTable.TYPE, 
+                PMCCPortObjectAndSpec.TYPE});
         m_columnIncludesList = createNewSettingsObject();
         m_maxPossValueCountModel = createNewPossValueCounterModel();
     }
@@ -89,9 +88,9 @@ public class PMCCNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        final BufferedDataTable in = inData[0];
+        final BufferedDataTable in = (BufferedDataTable)inData[0];
         final double rC = in.getRowCount(); // floating point operation
         int[] includes = getIncludes(in.getDataTableSpec());
         String[] includeNames = m_columnIncludesList.getIncludeList().toArray(
@@ -170,11 +169,12 @@ public class PMCCNodeModel extends NodeModel {
                 if (ti.isCompatible(DoubleValue.class) 
                         && tj.isCompatible(DoubleValue.class)) {
                     // one of the two columns contains only one value
-                    if (statTable.getVariance(i) < PMCCModel.ROUND_ERROR_OK) {
+                    if (statTable.getVariance(i) 
+                            < PMCCPortObjectAndSpec.ROUND_ERROR_OK) {
                         constantColumns.add(colSpecI.getName());
                         nominatorMatrix.set(i, j, Double.NaN);
                     } else if (statTable.getVariance(j) 
-                            < PMCCModel.ROUND_ERROR_OK) {
+                            < PMCCPortObjectAndSpec.ROUND_ERROR_OK) {
                         constantColumns.add(colSpecJ.getName());
                         nominatorMatrix.set(i, j, Double.NaN);
                     } else {
@@ -276,11 +276,12 @@ public class PMCCNodeModel extends NodeModel {
             }
         }
         normProg.setProgress(progDetermine);
-        m_pmccModel = new PMCCModel(includeNames, nominatorMatrix);
+        PMCCPortObjectAndSpec pmccModel = 
+            new PMCCPortObjectAndSpec(includeNames, nominatorMatrix);
         ExecutionContext subExec = exec.createSubExecutionContext(progFinish);
-        BufferedDataTable out = m_pmccModel.createCorrelationMatrix(subExec);
+        BufferedDataTable out = pmccModel.createCorrelationMatrix(subExec);
         m_correlationTable = out;
-        return new BufferedDataTable[]{out};
+        return new PortObject[]{out, pmccModel};
     }
     
     /** Get for each included column the corresponding index. */
@@ -373,16 +374,15 @@ public class PMCCNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_pmccModel = null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        DataTableSpec in = inSpecs[0];
+        DataTableSpec in = (DataTableSpec)inSpecs[0];
         if (!in.containsCompatibleType(DoubleValue.class) 
                 && !in.containsCompatibleType(NominalValue.class)) {
             throw new InvalidSettingsException(
@@ -417,7 +417,8 @@ public class PMCCNodeModel extends NodeModel {
             }
         }
         String[] toArray = includes.toArray(new String[includes.size()]);
-        return new DataTableSpec[]{PMCCModel.createOutSpec(toArray)};
+        return new PortObjectSpec[]{PMCCPortObjectAndSpec.createOutSpec(
+                toArray), new PMCCPortObjectAndSpec(toArray)};
     }
     
     /**
@@ -454,26 +455,6 @@ public class PMCCNodeModel extends NodeModel {
     }
     
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveModelContent(final int index, 
-            final ModelContentWO predParams) throws InvalidSettingsException {
-        assert index == 0 : "Invalid model index: " + index;
-        if (m_pmccModel != null) {
-            m_pmccModel.save(predParams);
-        }
-    }
-    
-    /**
-     * Getter for the "learned" model. (null if not executed.)
-     * @return the pmccModel
-     */
-    PMCCModel getPmccModel() {
-        return m_pmccModel;
-    }
-    
-    /**
      * Getter for correlation table to display. <code>null</code> if not
      * executed.
      * @return the correlationTable
@@ -489,22 +470,6 @@ public class PMCCNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir, 
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-        File f = new File(nodeInternDir, "model.xml.gz");
-        ModelContentRO m = ModelContent.loadFromXML(
-                new BufferedInputStream(new FileInputStream(f)));
-        try {
-            m_pmccModel = PMCCModel.load(m);
-            m_correlationTable = m_pmccModel.createCorrelationMatrix(exec);
-        } catch (InvalidSettingsException ise) {
-            String mes = ise.getMessage();
-            String detMesage = mes != null && mes.length() > 0 
-                ? mes : "unknown reason";
-            IOException ioe = new IOException(
-                    "Unable to read internals from file \"" 
-                    + f.getAbsolutePath() + "\" (" + detMesage + ")");
-            ioe.initCause(ise);
-            throw ioe;
-        }
     }
 
     /**
@@ -514,10 +479,6 @@ public class PMCCNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir, 
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-        File f = new File(nodeInternDir, "model.xml.gz");
-        ModelContent m = new ModelContent("model");
-        m_pmccModel.save(m);
-        m.saveToXML(new BufferedOutputStream(new FileOutputStream(f)));
     }
     
     /** Factory method to instantiate a default settings object, used
@@ -537,6 +498,18 @@ public class PMCCNodeModel extends NodeModel {
     static SettingsModelIntegerBounded createNewPossValueCounterModel() {
         return new SettingsModelIntegerBounded(
                 "possibleValuesCount", 50, 2, Integer.MAX_VALUE);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public BufferedDataTable[] getInternalTables() {
+        return new BufferedDataTable[]{m_correlationTable};
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setInternalTables(final BufferedDataTable[] tables) {
+        m_correlationTable = tables[0];
     }
 
 }

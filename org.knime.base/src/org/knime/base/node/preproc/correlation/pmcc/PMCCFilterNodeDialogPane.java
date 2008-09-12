@@ -60,18 +60,19 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
+import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class PMCCFilterNodeDialogPane extends NodeDialogPane {
+public class PMCCFilterNodeDialogPane extends GenericNodeDialogPane {
     
     private static final NumberFormat FORMAT = new DecimalFormat("#.#######");
     
@@ -81,11 +82,12 @@ public class PMCCFilterNodeDialogPane extends NodeDialogPane {
     private final JLabel m_includeLabel;
     private final JLabel m_excludeLabel;
     private final JLabel m_totalLabel;
-    private final JButton m_applyButton;
+    private final JButton m_calcButton;
+    private final JLabel m_errorLabel;
     
     private double m_lastCommittedValue;
     
-    private PMCCModel m_model;
+    private PMCCPortObjectAndSpec m_model;
 
     /** Creates GUI. */
     public PMCCFilterNodeDialogPane() {
@@ -103,8 +105,8 @@ public class PMCCFilterNodeDialogPane extends NodeDialogPane {
         formatter.setMinimum(0.00);
         formatter.setMaximum(1.0);
         m_lastCommittedValue = -1.0;
-        m_applyButton = new JButton("Calculate");
-        m_applyButton.addActionListener(new ActionListener() {
+        m_calcButton = new JButton("Calculate");
+        m_calcButton.addActionListener(new ActionListener() {
            public void actionPerformed(final ActionEvent e) {
                 onCalculate();
            } 
@@ -134,19 +136,20 @@ public class PMCCFilterNodeDialogPane extends NodeDialogPane {
                 Number value = (Number)evt.getNewValue();
                 if (value != null) {
                     m_slider.setValue((int)(1000 * value.doubleValue()));
-                    m_applyButton.setEnabled(value.doubleValue() 
-                            != m_lastCommittedValue);
+                    m_calcButton.setEnabled(m_model.hasData() 
+                            && value.doubleValue() != m_lastCommittedValue);
                 }
             }
         });
         m_slider.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
                 JSlider source = (JSlider)e.getSource();
-                int val = (int)source.getValue();
+                int val = source.getValue();
                 double valDbl = val / 1000.0;
                 if (!source.getValueIsAdjusting()) {
                     m_textField.setValue(valDbl); //update field
-                    m_applyButton.setEnabled(valDbl != m_lastCommittedValue);
+                    m_calcButton.setEnabled(m_model.hasData() 
+                            && valDbl != m_lastCommittedValue);
                 } else { //value is adjusting; just set the text
                     String valString = FORMAT.format(valDbl);
                     m_textField.setText(valString);
@@ -163,6 +166,7 @@ public class PMCCFilterNodeDialogPane extends NodeDialogPane {
         m_includeLabel = new JLabel("########################");
         m_excludeLabel = new JLabel("########################");
         m_totalLabel = new JLabel("########################");
+        m_errorLabel = new JLabel("########################");
         setLabels(-1, -1);
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -222,12 +226,23 @@ public class PMCCFilterNodeDialogPane extends NodeDialogPane {
         
         gbc.gridy++;
         gbc.anchor = GridBagConstraints.EAST;
-        p.add(m_applyButton, gbc);
+        p.add(m_calcButton, gbc);
+        
+        gbc.gridx = 0;
+        gbc.gridwidth = 3;
+        gbc.gridy++;
+        p.add(m_errorLabel, gbc);
         
         addTab("Settings", p);
     }
     
     private void onCalculate() {
+        if (!m_model.hasData()) {
+            // can enter here from an event fired by the slider, silently ignore
+            assert !m_calcButton.isEnabled() : "No data for preview";
+            m_calcButton.setEnabled(false);  
+            return;
+        }
         double val = ((Number)m_textField.getValue()).doubleValue(); 
         if (val == m_lastCommittedValue) {
             return;
@@ -250,7 +265,7 @@ public class PMCCFilterNodeDialogPane extends NodeDialogPane {
         setLabels(includes.length, model.size());
         m_slider.requestFocus();
         m_lastCommittedValue = val;
-        m_applyButton.setEnabled(false);
+        m_calcButton.setEnabled(false);
     }
 
     /**
@@ -258,14 +273,11 @@ public class PMCCFilterNodeDialogPane extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
-        NodeSettingsRO subSet;
-        try {
-            subSet = 
-                settings.getNodeSettings(PMCCFilterNodeModel.CFG_MODEL);
-            m_model = PMCCModel.load(subSet);
-        } catch (InvalidSettingsException ise) {
-            throw new NotConfigurableException("No model available.");
+            final PortObjectSpec[] specs) throws NotConfigurableException {
+        m_model = (PMCCPortObjectAndSpec)specs[0];
+        DataTableSpec spec = (DataTableSpec)specs[1];
+        if (m_model == null || spec == null) {
+            throw new NotConfigurableException("No input available");
         }
         // check if all columns in the model are also present in the spec
         HashSet<String> allColsInModel = new HashSet<String>(
@@ -275,7 +287,7 @@ public class PMCCFilterNodeDialogPane extends NodeDialogPane {
         DefaultListModel m = (DefaultListModel)m_list.getModel();
         m.removeAllElements();
         int totalCount = 0;
-        for (DataColumnSpec s : specs[0]) {
+        for (DataColumnSpec s : spec) {
             if (s.getType().isCompatible(NominalValue.class)
                     || s.getType().isCompatible(DoubleValue.class)) {
                 if (allColsInModel.remove(s.getName())) {
@@ -290,7 +302,13 @@ public class PMCCFilterNodeDialogPane extends NodeDialogPane {
                     + allColsInModel.iterator().next());
         }
         m_lastCommittedValue = -1.0;
-        m_applyButton.setEnabled(true);
+        if (m_model.hasData()) {
+            m_errorLabel.setText(" ");
+            m_calcButton.setEnabled(true);
+        } else {
+            m_errorLabel.setText("No correlation in input available");
+            m_calcButton.setEnabled(false);
+        }
         setLabels(-1, totalCount);
     }
     

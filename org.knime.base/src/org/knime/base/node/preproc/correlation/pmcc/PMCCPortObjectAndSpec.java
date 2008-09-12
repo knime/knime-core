@@ -24,6 +24,7 @@
  */
 package org.knime.base.node.preproc.correlation.pmcc;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 
@@ -45,15 +46,84 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContent;
+import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortObjectSpecZipInputStream;
+import org.knime.core.node.port.PortObjectSpecZipOutputStream;
+import org.knime.core.node.port.PortObjectZipInputStream;
+import org.knime.core.node.port.PortObjectZipOutputStream;
+import org.knime.core.node.port.PortType;
 
 /**
- * 
+ * PortObject and PortObjectSpec of the model that's passed between the 
+ * correlation nodes.
  * @author Bernd Wiswedel, University of Konstanz
  */
-final class PMCCModel  {
+public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
 
+    /** Serializer required by the {@link PortObject} interface.
+     * @return Such a serializer.
+     */
+    public static PortObjectSerializer<PMCCPortObjectAndSpec> 
+        getPortObjectSerializer() {
+        return new PortObjectSerializer<PMCCPortObjectAndSpec>() {
+
+            @Override
+            public PMCCPortObjectAndSpec loadPortObject(
+                    final PortObjectZipInputStream in, 
+                    final PortObjectSpec spec,
+                    final ExecutionMonitor exec) throws IOException,
+                    CanceledExecutionException {
+                return (PMCCPortObjectAndSpec)spec;
+            }
+
+            @Override
+            public void savePortObject(final PMCCPortObjectAndSpec portObject,
+                    final PortObjectZipOutputStream out, 
+                    final ExecutionMonitor exec)
+                    throws IOException, CanceledExecutionException {
+            }
+        };
+    }
+    
+    /** Serializer required by the {@link PortObjectSpec} interface.
+     * @return Such a serializer.
+     */
+    public static PortObjectSpecSerializer<PMCCPortObjectAndSpec> 
+        getPortObjectSpecSerializer() {
+        return new PortObjectSpecSerializer<PMCCPortObjectAndSpec>() {
+
+            @Override
+            public PMCCPortObjectAndSpec loadPortObjectSpec(
+                    final PortObjectSpecZipInputStream in) throws IOException {
+                ModelContentRO cont = ModelContent.loadFromXML(in);
+                try {
+                    return load(cont);
+                } catch (InvalidSettingsException e) {
+                    throw new IOException("Can't parse content", e);
+                }
+            }
+
+            @Override
+            public void savePortObjectSpec(
+                    final PMCCPortObjectAndSpec portObjectSpec,
+                    final PortObjectSpecZipOutputStream out) 
+                throws IOException {
+                ModelContent cont = new ModelContent("correlation");
+                portObjectSpec.save(cont);
+                cont.saveToXML(out);
+            }
+            
+        };
+    }
+    
+    /** Convenience access field for the port type. */
+    static final PortType TYPE = new PortType(PMCCPortObjectAndSpec.class);
+    
     private final String[] m_colNames;
     private final HalfDoubleMatrix m_correlations;
     
@@ -61,7 +131,25 @@ final class PMCCModel  {
      * round-off errors. */
     static final double ROUND_ERROR_OK = 1e-8; 
     
-    PMCCModel(final String[] includes, final HalfDoubleMatrix cors) 
+    /** Creates new object, whereby no correlation values are available.
+     * @param includes The columns being analyzed.
+     */
+    PMCCPortObjectAndSpec(final String[] includes) {
+        if (includes == null || Arrays.asList(includes).contains(null)) {
+            throw new NullPointerException("Arg must not be null or " 
+                    + "contain null elements");
+        }
+        m_colNames = includes;
+        m_correlations = null;
+    }
+    
+    /** Creates new object with content. Used in the execute method.
+     * @param includes The names of the columns.
+     * @param cors The correlation values
+     * @throws InvalidSettingsException If cor-values don't match the columns
+     * or are out of range.
+     */
+    PMCCPortObjectAndSpec(final String[] includes, final HalfDoubleMatrix cors) 
         throws InvalidSettingsException {
         final int l = includes.length;
         if (cors.getRowCount() != l) {
@@ -92,7 +180,33 @@ final class PMCCModel  {
         m_correlations = cors;
     }
     
+    /** {@inheritDoc} */
+    @Override
+    public PortObjectSpec getSpec() {
+        return this;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public String getSummary() {
+        return "Correlation values on " + m_colNames.length + " columns";
+    }
+    
+    /** @return If correlation values are available. */
+    boolean hasData() {
+        return m_correlations != null;
+    }
+    
+    /**
+     * Get set of column names that would be in the output table if a given
+     * correlation threshold is applied. 
+     * @param threshold The threshold, in [0, 1]
+     * @return The set of string suggested as "survivors"
+     */
     String[] getReducedSet(final double threshold) {
+        if (!hasData()) {
+            throw new IllegalStateException("No data available");
+        }
         final int l = m_colNames.length;
         boolean[] hideFlags = new boolean[l];
         int[] countsAboveThreshold = new int[l];
@@ -158,13 +272,13 @@ final class PMCCModel  {
         }
         return result;
     }
-    
-    DataTable createCorrelationMatrix(ExecutionMonitor mon) 
-        throws CanceledExecutionException {
-        DataContainer cont = new DataContainer(createOutSpec(m_colNames), true);
-        return createCorrelationMatrix(cont, mon);
-    }
-    
+
+    /**
+     * Creates the correlation table, used in the view and as output table.
+     * @param con For progress info/cancelation
+     * @return The correlation table
+     * @throws CanceledExecutionException If canceled.
+     */
     BufferedDataTable createCorrelationMatrix(final ExecutionContext con) 
         throws CanceledExecutionException {
         BufferedDataContainer cont = 
@@ -176,6 +290,9 @@ final class PMCCModel  {
     private DataTable createCorrelationMatrix(final DataContainer cont, 
             final ExecutionMonitor mon) 
         throws CanceledExecutionException {
+        if (!hasData()) {
+            throw new IllegalStateException("No data available");
+        }
         final int l = m_colNames.length;
         for (int i = 0; i < l; i++) {
             RowKey key = new RowKey(m_colNames[i]);
@@ -203,6 +320,10 @@ final class PMCCModel  {
     private static final DataCell MIN_VALUE_CELL = new DoubleCell(-1.0);
     private static final DataCell MAX_VALUE_CELL = new DoubleCell(1.0);
     
+    /** Creates output spec for correlation table.
+     * @param names the column names being analyzed.
+     * @return The new output spec.
+     */
     static DataTableSpec createOutSpec(final String[] names) {
         DataColumnSpec[] colSpecs = new DataColumnSpec[names.length];
         for (int i = 0; i < colSpecs.length; i++) {
@@ -218,23 +339,39 @@ final class PMCCModel  {
     private static final String CFG_INTERNAL = "pmcc_model";
     private static final String CFG_NAMES = "names";
     private static final String CFG_VALUES = "correlation_values";
-    
+    private static final String CFG_CONTAINS_VALUES = "contains_values";
+
+    /** Saves this object to a config.
+     * @param m To save to.
+     */
     public void save(final ConfigWO m) {
         ConfigWO sub = m.addConfig(CFG_INTERNAL);
         sub.addStringArray(CFG_NAMES, m_colNames);
-        m_correlations.save(sub.addConfig(CFG_VALUES));
+        sub.addBoolean(CFG_CONTAINS_VALUES, m_correlations != null);
+        if (m_correlations != null) {
+            m_correlations.save(sub.addConfig(CFG_VALUES));
+        }
     }
     
-    public static PMCCModel load(final ConfigRO m) 
+    /** Factory method to load from config. 
+     * @param m to load from.
+     * @return new object loaded from argument
+     * @throws InvalidSettingsException If that fails.
+     */
+    public static PMCCPortObjectAndSpec load(final ConfigRO m) 
         throws InvalidSettingsException {
         ConfigRO sub = m.getConfig(CFG_INTERNAL);
         String[] names = sub.getStringArray(CFG_NAMES);
         if (names == null) {
             throw new InvalidSettingsException("Column names array is null.");
         }
-        HalfDoubleMatrix corrMatrix = 
-            new HalfDoubleMatrix(sub.getConfig(CFG_VALUES));
-        return new PMCCModel(names, corrMatrix);
+        if (sub.getBoolean(CFG_CONTAINS_VALUES)) {
+            HalfDoubleMatrix corrMatrix = 
+                new HalfDoubleMatrix(sub.getConfig(CFG_VALUES));
+            return new PMCCPortObjectAndSpec(names, corrMatrix);
+        } else {
+            return new PMCCPortObjectAndSpec(names);
+        }
     }
 
     /**

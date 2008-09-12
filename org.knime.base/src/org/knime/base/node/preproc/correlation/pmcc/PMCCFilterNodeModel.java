@@ -39,65 +39,78 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
-public class PMCCFilterNodeModel extends NodeModel {
+public class PMCCFilterNodeModel extends GenericNodeModel {
     
+    /** Config key for threshold. */
     static final String CFG_THRESHOLD = "correlation_threshold";
-    static final String CFG_MODEL = "correlation_model";
     
-    private PMCCModel m_pmccModel;
     private double m_threshold = 1.0;
     
+    /** Empty constructor, 2 ins, 1 out. */
     public PMCCFilterNodeModel() {
-        super(1, 1, 1, 0);
+        super(new PortType[]{PMCCPortObjectAndSpec.TYPE, 
+                BufferedDataTable.TYPE},
+                new PortType[]{BufferedDataTable.TYPE});
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        ColumnRearranger arranger = 
-            createColumnRearranger(inData[0].getDataTableSpec());
-        BufferedDataTable out = exec.createColumnRearrangeTable(inData[0], 
-                arranger, exec);
+        PMCCPortObjectAndSpec model = (PMCCPortObjectAndSpec)inData[0];
+        BufferedDataTable in = (BufferedDataTable)inData[1];
+        ColumnRearranger arranger = createColumnRearranger(in.getSpec(), model);
+        BufferedDataTable out = exec.createColumnRearrangeTable(
+                in, arranger, exec);
         return new BufferedDataTable[]{out};
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_pmccModel == null) {
-            throw new InvalidSettingsException("No model available");
-        }
+        PMCCPortObjectAndSpec modelS = (PMCCPortObjectAndSpec)inSpecs[0];
+        DataTableSpec dataS = (DataTableSpec)inSpecs[1];
         if (m_threshold < 0.0 || m_threshold > 1.0) {
             throw new IllegalArgumentException(
                     "No valid threshold: " + m_threshold);
         }
-        ColumnRearranger arranger = createColumnRearranger(inSpecs[0]);
+        ColumnRearranger arranger = createColumnRearranger(dataS, modelS);
+        if (arranger == null) {
+            return null;
+        }
         return new DataTableSpec[]{arranger.createSpec()};
     }
     
-    private ColumnRearranger createColumnRearranger(final DataTableSpec spec) 
+    private ColumnRearranger createColumnRearranger(
+            final DataTableSpec spec, final PMCCPortObjectAndSpec pmccModel) 
         throws InvalidSettingsException {
-        String[] includes = m_pmccModel.getReducedSet(m_threshold);
+        for (String c : pmccModel.getColNames()) {
+            if (!spec.containsName(c)) {
+                throw new InvalidSettingsException("No such column in input " 
+                        + "table: " + c);
+            }
+        }
+        if (!pmccModel.hasData()) { // settings ok but can't determine output 
+            return null;
+        }
+        String[] includes = pmccModel.getReducedSet(m_threshold);
         HashSet<String> hash = new HashSet<String>(Arrays.asList(includes));
         ArrayList<String> includeList = new ArrayList<String>();
         HashSet<String> allColsInModel = new HashSet<String>(
-                Arrays.asList(m_pmccModel.getColNames())); 
+                Arrays.asList(pmccModel.getColNames())); 
         ArrayList<String> allColsInSpec = new ArrayList<String>();
         for (DataColumnSpec s : spec) {
             String name = s.getName();
@@ -136,20 +149,6 @@ public class PMCCFilterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadModelContent(final int index, 
-            final ModelContentRO predParams) throws InvalidSettingsException {
-        assert index == 0 : "Invalid model index: " + index;
-        if (predParams == null) {
-            m_pmccModel = null;
-        } else {
-            m_pmccModel = PMCCModel.load(predParams);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_threshold = settings.getDouble(CFG_THRESHOLD);
@@ -161,10 +160,6 @@ public class PMCCFilterNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addDouble(CFG_THRESHOLD, m_threshold);
-        if (m_pmccModel != null) {
-            NodeSettingsWO modelSet = settings.addNodeSettings(CFG_MODEL);
-            m_pmccModel.save(modelSet);
-        }
     }
 
     /**
