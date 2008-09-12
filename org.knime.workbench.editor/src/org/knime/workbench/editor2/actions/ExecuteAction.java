@@ -27,6 +27,7 @@ package org.knime.workbench.editor2.actions;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -131,15 +132,14 @@ public class ExecuteAction extends AbstractNodeAction {
         LOGGER.debug("Creating execution job for " + nodeParts.length
                 + " node(s)...");
         WorkflowManager manager = getManager();
-
-        for (NodeContainerEditPart p : nodeParts) {
-            manager.executeUpToHere(p.getNodeContainer().getID());
+        NodeID[] ids = new NodeID[nodeParts.length];
+        for (int i = 0; i < nodeParts.length; i++) {
+            ids[i] = nodeParts[i].getNodeContainer().getID();
         }
-
+        manager.executeUpToHere(ids);
         try {
 //            Workbench.getInstance().getActiveWorkbenchWindow().getActivePage()
 //                    .showView("org.eclipse.ui.views.ProgressView");
-
             // Give focus to the editor again. Otherwise the actions (selection)
             // is not updated correctly.
             getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
