@@ -103,26 +103,6 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     }
 
     /**
-     * Constructs a NodeModel with the desired in- and outports, and model in-
-     * and outports. State is paused, waiting for an intial event to start
-     * executing. Be sure to override load/save ModelContent in your derived
-     * NodeModel.
-     * 
-     * @param nrInPorts - the desired number of inports.
-     * @param nrOutPorts - the desired number of outports.
-     * @param nrPredParamsIns The number of <code>ModelContent</code> elements
-     *            available as inputs.
-     * @param nrPredParamsOuts The number of <code>ModelContent</code> objects
-     *            available at the output.
-     */
-    public InterruptibleNodeModel(final int nrInPorts, final int nrOutPorts,
-            final int nrPredParamsIns, final int nrPredParamsOuts) {
-        super(nrInPorts, nrOutPorts, nrPredParamsIns, nrPredParamsOuts);
-        m_pause = true;
-        m_finished = false;
-    }
-
-    /**
      * Returns the number of processed iterations so far.
      * 
      * @return - the number of processed iterations so far.
