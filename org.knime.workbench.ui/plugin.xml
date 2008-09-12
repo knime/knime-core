@@ -328,12 +328,21 @@
     <extension
           point="org.knime.workbench.ui.metanode">
        <PersistedMetaNode
+             icon="icons/meta/metanode_template.png"
+             id="cross_validation"
+             name="CrossValidation"
              workflowDir="metanode_templates/Cross Validation/">
        </PersistedMetaNode>
        <PersistedMetaNode
+             icon="icons/view.png"
+             id="variables_loop"
+             name="Variables Loop"
              workflowDir="metanode_templates/Variables Loop/">
        </PersistedMetaNode>
        <PersistedMetaNode
+             icon="icons/project_basic.png"
+             id="variables_loop_db"
+             name="Variables Loop (DB)"
              workflowDir="metanode_templates/Variables Loop (DB)/">
        </PersistedMetaNode>
     </extension>
