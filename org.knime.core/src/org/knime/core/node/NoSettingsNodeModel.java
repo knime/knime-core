@@ -44,30 +44,6 @@ public abstract class NoSettingsNodeModel extends NodeModel {
     }
 
     /**
-     * Creates a new model with the given number of data, and predictor in- and
-     * outputs.
-     *
-     * @param nrDataIns The number of <code>DataTable</code> elements expected
-     *            as inputs.
-     * @param nrDataOuts The number of <code>DataTable</code> objects expected
-     *            at the output.
-     * @param nrPredParamsIns The number of <code>ModelContent</code>
-     *            elements available as inputs.
-     * @param nrPredParamsOuts The number of <code>ModelContent</code>
-     *            objects available at the output.
-     * @throws NegativeArraySizeException If the number of in- or outputs is
-     *             smaller than zero.
-     *
-     * @deprecated Please use the {@link GenericNodeModel} instead of this
-     * constructor if you want to have model ports
-     */
-    @Deprecated
-    protected NoSettingsNodeModel(final int nrDataIns, final int nrDataOuts,
-            final int nrPredParamsIns, final int nrPredParamsOuts) {
-        super(nrDataIns, nrDataOuts, nrPredParamsIns, nrPredParamsOuts);
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
