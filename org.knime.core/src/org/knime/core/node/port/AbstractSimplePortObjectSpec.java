@@ -29,80 +29,61 @@ import java.util.zip.ZipEntry;
 
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 
 /**
- * Abstract implementation of basic port objects that save and load themselves
- * from {@link ModelContentRO} objects. This class should be used in cases where
- * the content of a model can be easily broke up into basic types (such as
- * String, int, double, ...) and array of those.
+ * Abstract implementation of basic port object specs that save and load
+ * themselves from {@link ModelContentRO} objects. This class should be used in
+ * cases where the content of a model can be easily broke up into basic types
+ * (such as String, int, double, ...) and array of those.
  * 
  * <p>
  * Subclasses <b>must</b> provide an empty no-arg constructor with public scope
- * (which will be used to restore the content). They are encouraged to also
- * provide a convenience access member such as
- * 
- * <pre>
- * public static final PortType TYPE = new PortType(FooModelPortObject.class);
- * </pre>
- * 
- * and to narrow the return type of the {@link PortObject#getSpec() getSpec()}
- * method (most commonly used are specs of type
- * {@link org.knime.core.data.DataTableSpec} or
- * {@link AbstractSimplePortObjectSpec}, whereby the columns reflect the
- * required input attributes of a model). Derived classes don't need to provide
- * a static serializer method as required by the interface {@link PortObject}.
+ * (which will be used to restore the content). The do not need to provide a
+ * static serializer method as required by the interface {@link PortObjectSpec}.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public abstract class AbstractSimplePortObject implements PortObject {
+public abstract class AbstractSimplePortObjectSpec implements PortObjectSpec {
 
-    /** Abstract serializer method as required by interface {@link PortObject}.
+    /**
+     * Abstract serializer method as required by interface
+     * {@link PortObjectSpec}.
+     * 
      * @return A serializer that reads/writes any implementation of this class.
      */
-    public static final PortObjectSerializer<AbstractSimplePortObject> 
-    getPortObjectSerializer() {
+    public static final PortObjectSpecSerializer<AbstractSimplePortObjectSpec> 
+    getPortObjectSpecSerializer() {
         return MyPortObjectSerializer.INSTANCE;
     }
     
     /** Public no-arg constructor. Subclasses must also provide such a
      * constructor in order to allow the serializer to instantiate them using
      * reflection. */
-    public AbstractSimplePortObject() {
+    public AbstractSimplePortObjectSpec() {
     }
     
     /** Saves this object to model content object. 
      * @param model To save to.
-     * @param exec For progress/cancelation.
-     * @throws CanceledExecutionException If canceled.
      */
-    protected abstract void save(final ModelContentWO model, 
-            final ExecutionMonitor exec) 
-    throws CanceledExecutionException;
+    protected abstract void save(final ModelContentWO model);
     
     /** Loads the content into the freshly instantiated object. This method
      * is called at most once in the life time of the object 
      * (after the serializer has created a new object using the public no-arg
      * constructor.)
      * @param model To load from.
-     * @param spec The accompanying spec (which can be safely cast to the 
-     * expected class).
-     * @param exec For progress/cancelation.
      * @throws InvalidSettingsException If settings are incomplete/deficient.
-     * @throws CanceledExecutionException If canceled.
      */
-    protected abstract void load(final ModelContentRO model, 
-            final PortObjectSpec spec, final ExecutionMonitor exec)
-    throws InvalidSettingsException, CanceledExecutionException;
+    protected abstract void load(final ModelContentRO model)
+        throws InvalidSettingsException;
     
     /** Final implementation of the serializer. */
     private static final class MyPortObjectSerializer extends
-            PortObjectSerializer<AbstractSimplePortObject> {
+            PortObjectSpecSerializer<AbstractSimplePortObjectSpec> {
 
         /** Instance to be used. */
         static final MyPortObjectSerializer INSTANCE =
@@ -113,10 +94,8 @@ public abstract class AbstractSimplePortObject implements PortObject {
 
         /** {@inheritDoc} */
         @Override
-        public AbstractSimplePortObject loadPortObject(
-                final PortObjectZipInputStream in,
-                final PortObjectSpec spec, final ExecutionMonitor exec)
-                throws IOException, CanceledExecutionException {
+        public AbstractSimplePortObjectSpec loadPortObjectSpec(
+                final PortObjectSpecZipInputStream in) throws IOException {
             ZipEntry entry = in.getNextEntry();
             if (!"content.xml".equals(entry.getName())) {
                 throw new IOException("Expected zip entry content.xml, got "
@@ -137,14 +116,14 @@ public abstract class AbstractSimplePortObject implements PortObject {
                 throw new RuntimeException(
                         "Unable to load class " + className, e);
             }
-            if (!AbstractSimplePortObject.class.isAssignableFrom(cl)) {
+            if (!AbstractSimplePortObjectSpec.class.isAssignableFrom(cl)) {
                 throw new RuntimeException(
                         "Class \"" + className + "\" is not of type " 
-                        + AbstractSimplePortObject.class.getSimpleName());
+                        + AbstractSimplePortObjectSpec.class.getSimpleName());
             }
-            Class<? extends AbstractSimplePortObject> acl = 
-                cl.asSubclass(AbstractSimplePortObject.class);
-            AbstractSimplePortObject result;
+            Class<? extends AbstractSimplePortObjectSpec> acl = 
+                cl.asSubclass(AbstractSimplePortObjectSpec.class);
+            AbstractSimplePortObjectSpec result;
             try {
                 result = acl.newInstance();
             } catch (Exception e) {
@@ -155,7 +134,7 @@ public abstract class AbstractSimplePortObject implements PortObject {
             }
             try {
                 ModelContentRO subModel = model.getModelContent("model");
-                result.load(subModel, spec, exec);
+                result.load(subModel);
                 return result;
             } catch (InvalidSettingsException e) {
                 throw new IOException("Unable to load model content into \""
@@ -165,16 +144,15 @@ public abstract class AbstractSimplePortObject implements PortObject {
 
         /** {@inheritDoc} */
         @Override
-        public void savePortObject(final AbstractSimplePortObject portObject,
-                final PortObjectZipOutputStream out, 
-                final ExecutionMonitor exec)
-                throws IOException, CanceledExecutionException {
+        public void savePortObjectSpec(
+                final AbstractSimplePortObjectSpec portObject,
+                final PortObjectSpecZipOutputStream out) throws IOException {
             // this is going to throw a runtime exception in case...
             ModelContent model = new ModelContent("model.xml");
             model.addInt("version", 1);
             model.addString("class_name", portObject.getClass().getName());
             ModelContentWO subModel = model.addModelContent("model");
-            portObject.save(subModel, exec);
+            portObject.save(subModel);
             out.putNextEntry(new ZipEntry("content.xml"));
             model.saveToXML(out);
         }
