@@ -16,7 +16,7 @@
  * History
  *   Nov 13, 2007 (schweize): created
  */
-package org.knime.base.node.colsort;
+package org.knime.base.node.preproc.colsort;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,26 +73,35 @@ public class ColumnResorterNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        // check if ordered columns == input columns
-        // input columns.removeAll(ordered) -> size == 0
-        Set<String>incoming = new LinkedHashSet<String>();
-        for (DataColumnSpec colSpec : inSpecs[0]) {
-            incoming.add(colSpec.getName());
+        // not configured yet -> simply add incoming columns as is
+        if (m_newOrder.length == 0) {
+            m_newOrder = new String[inSpecs[0].getNumColumns()];
+            for (int i = 0; i < inSpecs[0].getNumColumns(); i++) {
+                m_newOrder[i] = inSpecs[0].getColumnSpec(i).getName();
+                
+            }
+            setWarningMessage("All columns stay in same order.");
+        } else {
+            // check if ordered columns == input columns
+            // input columns.removeAll(ordered) -> size == 0
+            Set<String>incoming = new LinkedHashSet<String>();
+            for (DataColumnSpec colSpec : inSpecs[0]) {
+                incoming.add(colSpec.getName());
+            }
+            Set<String>ordered = new LinkedHashSet<String>();
+            for (String c : m_newOrder) {
+                ordered.add(c);
+            }
+            // ordered.containsall incoming
+            if (!ordered.containsAll(incoming)) {
+                incoming.removeAll(ordered);
+                throw new InvalidSettingsException(
+                        "Incoming table contains other columns "
+                        + " than configured in the dialog! "
+                        + incoming.toString()
+                        + " Please re-configure the node.");
+            }
         }
-        Set<String>ordered = new LinkedHashSet<String>();
-        for (String c : m_newOrder) {
-            ordered.add(c);
-        }
-        // ordered.containsall incoming
-        if (!ordered.containsAll(incoming)) {
-            incoming.removeAll(ordered);
-            throw new InvalidSettingsException(
-                    "Incoming table contains other columns "
-                    + " than configured in the dialog! "
-                    + incoming.toString()
-                    + " Please re-configure the node.");
-        }
-        
         DataTableSpec inSpec = inSpecs[0];
         ColumnRearranger r = null;
         try {
@@ -151,7 +160,7 @@ public class ColumnResorterNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        // TODO Auto-generated method stub
+        
     }
 
     /**

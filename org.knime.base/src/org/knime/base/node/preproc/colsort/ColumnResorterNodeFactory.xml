@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./default.png" type="Manipulator">
+<knimeNode icon="./column_resorter.png" type="Manipulator">
     <name>Column Resorter</name>
     <shortDescription>Resorts the order of the columns based on user input</shortDescription>
     <fullDescription>

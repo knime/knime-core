@@ -16,7 +16,7 @@
  * History
  *   Nov 13, 2007 (schweize): created
  */
-package org.knime.base.node.colsort;
+package org.knime.base.node.preproc.colsort;
 
 import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.GenericNodeView;

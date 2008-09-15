@@ -16,7 +16,7 @@
  * History
  *   Nov 23, 2007 (schweize): creaed
  */
-package org.knime.base.node.colsort;
+package org.knime.base.node.preproc.colsort;
 
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
