@@ -753,6 +753,11 @@
             factory-class="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory"
             id="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory">
       </node>
+      <node
+            category-path="manipulation/column"
+            factory-class="org.knime.base.node.preproc.colsort.ColumnResorterNodeFactory"
+            id="org.knime.base.node.preproc.colsort.ColumnResorterNodeFactory">
+      </node>
    </extension>
       <extension
          point="org.knime.base.pmmlports">
