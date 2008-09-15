@@ -137,17 +137,16 @@ public class DenseBitVector {
     /**
      * Initializes the created bit vector from the hex representation in the
      * passed string. Only characters <code>'0' - '9'</code> and
-     * <code>'A' - 'F'</code> (or <code>'a' to 'f'</code>) are allowed. The
-     * character at string position <code>(length - 1)</code> represents the
-     * bits with index 0 to 3 in the vector. The character at position 0
-     * represents the bits with the highest indices. The length of the created
-     * vector is the length of the string times 4 (as each character represents
-     * four bits).
+     * <code>'A' - 'F'</code> are allowed. The character at string position
+     * <code>(length - 1)</code> represents the bits with index 0 to 3 in the
+     * vector. The character at position 0 represents the bits with the highest
+     * indices. The length of the vector created is the length of the string
+     * times 4 (as each character represents four bits).
      *
-     * @param hexString containing the hex value to initialize the vector
+     * @param hexString containing the hex value to initialize the vector with
      * @throws IllegalArgumentException if <code>hexString</code> contains
      *             characters other then the hex characters (i.e.
-     *             <code>0 - 9, A - F, a - f</code>)
+     *             <code>0 - 9, A - F</code>)
      */
     public DenseBitVector(final String hexString) {
         this(hexString.length() << 2); // four bits for each character
@@ -165,8 +164,7 @@ public class DenseBitVector {
                     // we leave the high-bits zero/cleared
                     break;
                 }
-                long cVal =
-                        Character.toUpperCase(hexString.charAt((i * 16) + n));
+                long cVal = hexString.charAt((i * 16) + n);
                 if (cVal < '0' || cVal > 'F' || (cVal > '9' && cVal < 'A')) {
                     throw new IllegalArgumentException(
                             "Invalid character in hex" + " number ('"
@@ -679,6 +677,75 @@ public class DenseBitVector {
     }
 
     /**
+     * Creates and returns a new bit vector that contains a subsequence of this
+     * vector, beginning with the bit at index <code>startIdx</code> and with
+     * its last bit being this' bit at position <code>endIdx - 1</code>. The
+     * length of the result vector is <code>endIdx - startIdx</code>. If
+     * <code>startIdx</code> equals <code>endIdx</code> a vector of length
+     * zero is returned.
+     *
+     * @param startIdx the startIdx of the subsequence
+     * @param endIdx the first bit in this vector after startIdx that is not
+     *            included in the result sequence.
+     * @return a new vector of length <code>endIdx - startIdx</code>
+     *         containing the subsequence of this vector from
+     *         <code>startIdx</code> (included) to <code>endIdx</code> (not
+     *         included anymore).
+     */
+    public DenseBitVector subSequence(final long startIdx, final long endIdx) {
+
+        if (startIdx < 0 || endIdx > m_length || endIdx < startIdx) {
+            throw new IllegalArgumentException("Illegal range for subsequense."
+                    + "(startIdx=" + startIdx + ", endIdx=" + endIdx
+                    + ", length = " + m_length + ")");
+        }
+
+        DenseBitVector result = new DenseBitVector(endIdx - startIdx);
+
+        int startAddr = (int)(startIdx >> STORAGE_ADDRBITS);
+        int addrCount = (int)((endIdx - startIdx - 1) >> STORAGE_ADDRBITS) + 1;
+        if (startIdx == endIdx || startAddr > m_lastAddr
+                || (endIdx - 1) >> STORAGE_ADDRBITS < m_firstAddr) {
+            // if the range is null, or no bits are in the range
+            return result;
+        }
+
+        long storageMask = STORAGE_BITS - 1;
+
+        boolean aligned = ((startIdx % STORAGE_BITS) == 0);
+
+        // Process all words but the last word
+        for (int i = 0; i < addrCount - 1; i++, startAddr++) {
+            if (aligned) {
+                result.m_storage[i] = m_storage[startAddr];
+            } else {
+                result.m_storage[i] =
+                        (m_storage[startAddr] >>> startIdx)
+                                | (m_storage[startAddr + 1] << -startIdx);
+
+            }
+        }
+        // Process the last word
+        long lastWordMask = -1L >>> -endIdx;
+        if (((endIdx - 1) & storageMask) < (startIdx & storageMask)) {
+            result.m_storage[addrCount - 1] =
+                    (m_storage[startAddr] >>> startIdx)
+                            | (m_storage[startAddr + 1] & lastWordMask) << -startIdx;
+        } else {
+            result.m_storage[addrCount - 1] =
+                    ((m_storage[startAddr] & lastWordMask) >>> startIdx);
+        }
+
+        // Set wordsInUse correctly
+        result.m_firstAddr = result.findFirstBitAddress();
+        result.m_lastAddr = result.findLastBitAddress();
+        assert result.checkConsistency() == null;
+
+        return result;
+
+    }
+
+    /**
      * Creates and returns a new bit vector whose bits are set at positions
      * where both, this and the argument vector have their bits set. The length
      * of the new vector is the maximum of the length of this and the argument.
@@ -1014,8 +1081,8 @@ public class DenseBitVector {
      * character at string position <code>(length - 1)</code> holds the lowest
      * bits (bit 0 to 3), the character at position 0 represents the bits with
      * the largest index in the vector. If the length of the vector is larger
-     * than ({@link Integer#MAX_VALUE} - 1) * 4 (i.e. 8589934584), the result is
-     * truncated (and ends with ...).
+     * than ({@link Integer#MAX_VALUE} - 1) * 4 (i.e. 8589934584), the result
+     * is truncated (and ends with ...).
      *
      * @return the hex representation of this bit vector.
      */

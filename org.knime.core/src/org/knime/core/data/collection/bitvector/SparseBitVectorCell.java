@@ -124,6 +124,15 @@ public class SparseBitVectorCell extends DataCell implements BitVectorValue {
     }
 
     /**
+     * Returns a clone of the internal dense bit vector.
+     *
+     * @return a copy of the internal dense bit vector.
+     */
+    public SparseBitVector getBitVectorCopy() {
+        return new SparseBitVector(m_bitVector);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

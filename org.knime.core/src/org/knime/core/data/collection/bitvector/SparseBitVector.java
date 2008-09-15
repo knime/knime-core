@@ -155,6 +155,78 @@ public class SparseBitVector {
     }
 
     /**
+     * Initializes the created bit vector from the hex representation in the
+     * passed string. Only characters <code>'0' - '9'</code> and
+     * <code>'A' - 'F'</code> are allowed. The character at string position
+     * <code>(length - 1)</code> represents the bits with index 0 to 3 in the
+     * vector. The character at position 0 represents the bits with the highest
+     * indices. The length of the vector created is the length of the string
+     * times 4 (as each character represents four bits).
+     *
+     * @param hexString containing the hex value to initialize the vector with
+     * @throws IllegalArgumentException if <code>hexString</code> contains
+     *             characters other then the hex characters (i.e.
+     *             <code>0 - 9, A - F</code>)
+     */
+    public SparseBitVector(final String hexString) {
+        // capacity must be at least 4 so that doubling it creates 4 new spaces
+        this(hexString.length() * 4, 64);
+
+        long bitIdx = 0;
+
+        for (int c = hexString.length() - 1; c >= 0; c--) {
+            int cVal = hexString.charAt(c);
+            if (cVal < '0' || cVal > 'F' || (cVal > '9' && cVal < 'A')) {
+                throw new IllegalArgumentException(
+                        "Invalid character in hex number ('"
+                                + hexString.charAt(c) + "')");
+            }
+            if (cVal > '9') {
+                cVal -= 'A' - 10;
+            } else {
+                cVal -= '0';
+            }
+            // cVal must only use the lower four bits
+            assert (cVal & 0xFFFFFFF0L) == 0L;
+
+            // ensure capacity
+            if (m_idxStorage.length < bitIdx + 4) {
+                if (m_idxStorage.length == Integer.MAX_VALUE) {
+                    throw new IllegalArgumentException(
+                            "The capacity of the sparce bit vector is exceeded."
+                                    + " Too many bits are set.");
+                }
+                assert m_idxStorage.length > 0;
+                m_idxStorage =
+                        Arrays.copyOf(m_idxStorage, m_idxStorage.length << 1);
+                assert m_idxStorage.length >= bitIdx + 4;
+            }
+
+            if (cVal > 0) {
+                if ((cVal & 0x01) != 0) {
+                    set(bitIdx);
+                }
+                bitIdx++;
+                if ((cVal & 0x02) != 0) {
+                    set(bitIdx);
+                }
+                bitIdx++;
+                if ((cVal & 0x04) != 0) {
+                    set(bitIdx);
+                }
+                bitIdx++;
+                if ((cVal & 0x08) != 0) {
+                    set(bitIdx);
+                }
+                bitIdx++;
+            } else {
+                bitIdx += 4;
+            }
+        }
+
+    }
+
+    /**
      * Returns the number of bits stored in this vector.
      *
      * @return the length of the vector.
@@ -468,6 +540,55 @@ public class SparseBitVector {
         // all numbers from startAddr are continuously stored (i.e. set to one)
         assert (idx == m_idxStorage[m_lastIdx]);
         return idx++;
+    }
+
+    /**
+     * Creates and returns a new bit vector that contains a subsequence of this
+     * vector, beginning with the bit at index <code>startIdx</code> and with
+     * its last bit being this' bit at position <code>endIdx - 1</code>. The
+     * length of the result vector is <code>endIdx - startIdx</code>. If
+     * <code>startIdx</code> equals <code>endIdx</code> a vector of length
+     * zero is returned.
+     *
+     * @param startIdx the startIdx of the subsequence
+     * @param endIdx the first bit in this vector after startIdx that is not
+     *            included in the result sequence.
+     * @return a new vector of length <code>endIdx - startIdx</code>
+     *         containing the subsequence of this vector from
+     *         <code>startIdx</code> (included) to <code>endIdx</code> (not
+     *         included anymore).
+     */
+    public SparseBitVector subSequence(final long startIdx, final long endIdx) {
+
+        if (startIdx < 0 || endIdx > m_length || endIdx < startIdx) {
+            throw new IllegalArgumentException("Illegal range for subsequense."
+                    + "(startIdx=" + startIdx + ", endIdx=" + endIdx
+                    + ", length = " + m_length + ")");
+        }
+
+        SparseBitVector result = new SparseBitVector(endIdx - startIdx);
+
+        if (m_lastIdx < 0 || startIdx == endIdx || m_idxStorage[0] >= endIdx
+                || m_idxStorage[m_lastIdx] < startIdx) {
+            // no bits set, or not in the specified range - or range is null
+            return result;
+        }
+
+        // find the address to start copying
+        int storageIdx =
+                Arrays.binarySearch(m_idxStorage, 0, m_lastIdx + 1, startIdx);
+        if (storageIdx < 0) {
+            // it points to the next index in the array
+            storageIdx = -(storageIdx + 1);
+        }
+        // copy the indexes
+        while (storageIdx < m_lastIdx && m_idxStorage[storageIdx] < endIdx) {
+            result.set(m_idxStorage[storageIdx]);
+            storageIdx++;
+        }
+
+        assert result.checkConsistency() == null;
+        return result;
     }
 
     /**

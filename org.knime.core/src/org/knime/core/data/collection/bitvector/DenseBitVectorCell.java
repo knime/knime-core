@@ -35,9 +35,9 @@ import org.knime.core.data.DataValue;
  * Stores Zeros and Ones in a vector, i.e. with fixed positions. The vector has
  * a fixed length. <br />
  * Implementation stores the bits in a collection of longs (64 bit words). Thus
- * it can be used for well populated vectors. Its length is restricted to
- * ({@link Integer#MAX_VALUE} - 1) * 64 (i.e. 137438953344, in which case it
- * uses around 16GigaByte of memory).<br />
+ * it can be used for well populated vectors. Its length is restricted to ({@link Integer#MAX_VALUE} -
+ * 1) * 64 (i.e. 137438953344, in which case it uses around 16GigaByte of
+ * memory).<br />
  *
  * @author ohl, University of Konstanz
  */
@@ -119,6 +119,15 @@ public class DenseBitVectorCell extends DataCell implements BitVectorValue {
     @Override
     public String toHexString() {
         return m_bitVector.toHexString();
+    }
+
+    /**
+     * Returns a clone of the internal dense bit vector.
+     *
+     * @return a copy of the internal dense bit vector.
+     */
+    public DenseBitVector getBitVectorCopy() {
+        return new DenseBitVector(m_bitVector);
     }
 
     /**
