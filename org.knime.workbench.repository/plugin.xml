@@ -30,6 +30,7 @@ a data &quot;workflow&quot;
     <extension
           point="org.knime.workbench.repository.metanode">
        <PersistedMetaNode
+             description="Provides a skeleton of nodes necessary for cross validation"
              icon="icons/meta_nodes/cross_validation.png"
              id="cross_validation"
              name="CrossValidation"

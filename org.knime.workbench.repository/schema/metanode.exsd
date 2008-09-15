@@ -6,7 +6,31 @@
          <meta.schema plugin="org.knime.workbench.repository" id="metanode" name="MetaNode"/>
       </appInfo>
       <documentation>
-         [Enter description of this extension point.]
+         This description point allows to provide meta node templates in the node repository. In order to create a meta node template do the following:
+&lt;ol&gt;
+&lt;li&gt;Create a meta node within KNIME&lt;/li&gt;
+&lt;li&gt;Copy the referring directory from the runtime workspace&lt;/li&gt;
+&lt;li&gt;Paste it into your plug-in directory&lt;/li&gt;
+&lt;li&gt;Add the extension &quot;org.knime.workbench.repository.metanode&quot;&lt;/li&gt;
+&lt;li&gt;Fill out the attributes:
+&lt;dl&gt;
+&lt;dt&gt;workflowDir:&lt;/dt&gt;
+&lt;dd&gt;point to the directory containing the meta node&lt;/dd&gt;
+&lt;dt&gt;name:&lt;/dt&gt;
+&lt;dd&gt;The name is displayed as the name for your meta node template in the node repository&lt;/dd&gt;
+&lt;dt&gt;id:&lt;/dt&gt;
+&lt;dd&gt;For internal maintainance&lt;/dd&gt;
+&lt;dt&gt;category-path:&lt;/dt&gt;
+&lt;dd&gt;The path to the category where it is placed within the node repository&lt;/dd&gt;
+&lt;dt&gt;after:&lt;/dd&gt;
+&lt;dt&gt;Optionally specifiy a node after which the meta node template should appear&lt;/dd&gt;
+&lt;dt&gt;icon:&lt;/dt&gt;
+&lt;dd&gt;The icon is displayed in the node repository&lt;/dd&gt;
+&lt;dt&gt;description:&lt;/dt&gt;
+&lt;dd&gt;describe what your node template does. It is displayed in the node description, when your meta node template is selected&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
       </documentation>
    </annotation>
 
@@ -73,14 +97,14 @@
                </documentation>
             </annotation>
          </attribute>
-         <attribute name="after" type="string">
+         <attribute name="category-path" type="string">
             <annotation>
                <documentation>
                   
                </documentation>
             </annotation>
          </attribute>
-         <attribute name="category-path" type="string">
+         <attribute name="after" type="string">
             <annotation>
                <documentation>
                   
@@ -97,6 +121,13 @@
                </appInfo>
             </annotation>
          </attribute>
+         <attribute name="description" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 
@@ -105,7 +136,7 @@
          <meta.section type="since"/>
       </appInfo>
       <documentation>
-         [Enter the first release in which this extension point appears.]
+         2.0
       </documentation>
    </annotation>
 
@@ -114,7 +145,14 @@
          <meta.section type="examples"/>
       </appInfo>
       <documentation>
-         [Enter extension point usage example here.]
+         &lt;extension point=&quot;org.knime.workbench.repository.metanode&quot;&gt;
+	&lt;PersistedMetaNode
+             icon=&quot;icons/meta_nodes/cross_validation.png&quot;
+             id=&quot;cross_validation&quot;
+             name=&quot;CrossValidation&quot;
+             workflowDir=&quot;metanode_templates/Cross Validation/&quot;&gt;
+    &lt;/PersistedMetaNode&gt;
+&lt;/extension&gt;
       </documentation>
    </annotation>
 

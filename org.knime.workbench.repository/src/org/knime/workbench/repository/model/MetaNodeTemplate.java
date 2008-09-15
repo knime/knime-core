@@ -27,6 +27,9 @@ import org.knime.core.node.workflow.WorkflowManager;
 public class MetaNodeTemplate extends AbstractSimpleObject {
 
     private final WorkflowManager m_manager;
+    
+    private String m_description;
+    
     /**
      * 
      * @param workflowDir the directory containing the workflow files
@@ -46,11 +49,25 @@ public class MetaNodeTemplate extends AbstractSimpleObject {
     
     
     public String getCategoryPath() {
+        if (super.getCategoryPath() != null) {
+            return super.getCategoryPath();
+        }
         return "/meta";
     }
     
     public String getDescription() {
+        if (m_description != null) {
+            return m_manager.getName() + ": " + m_description; 
+        }
         return m_manager.getName() + ": " + m_manager.getCustomDescription();
+    }
+
+    /**
+     * 
+     * @param description description of the meta node
+     */
+    public void setDescription(final String description) {
+        m_description = description;
     }
 
     
