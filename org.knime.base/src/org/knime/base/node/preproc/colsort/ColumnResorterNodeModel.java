@@ -58,7 +58,7 @@ public class ColumnResorterNodeModel extends NodeModel {
     
     private String[] m_newOrder = new String[] {};
     
-    
+    private boolean m_doNothing = false;
     
     /**
      * Creates a new ColumnResorterNodeModel.
@@ -75,13 +75,10 @@ public class ColumnResorterNodeModel extends NodeModel {
             throws InvalidSettingsException {
         // not configured yet -> simply add incoming columns as is
         if (m_newOrder.length == 0) {
-            m_newOrder = new String[inSpecs[0].getNumColumns()];
-            for (int i = 0; i < inSpecs[0].getNumColumns(); i++) {
-                m_newOrder[i] = inSpecs[0].getColumnSpec(i).getName();
-                
-            }
+            m_doNothing = true;
             setWarningMessage("All columns stay in same order.");
         } else {
+            m_doNothing = false;
             // check if ordered columns == input columns
             // input columns.removeAll(ordered) -> size == 0
             Set<String>incoming = new LinkedHashSet<String>();
@@ -100,6 +97,16 @@ public class ColumnResorterNodeModel extends NodeModel {
                         + " than configured in the dialog! "
                         + incoming.toString()
                         + " Please re-configure the node.");
+            } else if (incoming.size() < ordered.size()) {
+                // check if in orderer are more columns than in incoming
+                String[] newOrder = new String[incoming.size()];
+                // remove them
+                for (int i = 0, j = 0; i < m_newOrder.length; i++) {
+                    if (incoming.contains(m_newOrder[i])) {
+                        newOrder[j++] = m_newOrder[i];
+                    }
+                }
+                m_newOrder = newOrder;
             }
         }
         DataTableSpec inSpec = inSpecs[0];
@@ -119,6 +126,10 @@ public class ColumnResorterNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
+
+        if (m_doNothing) {
+            return new BufferedDataTable[] {inData[0]};
+        }
         
         //get the original spec and create a rearranger object
         BufferedDataTable in = inData[0];
@@ -142,7 +153,6 @@ public class ColumnResorterNodeModel extends NodeModel {
     protected void loadInternals(
             final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-        // TODO Auto-generated method stub
 
     }
 
