@@ -758,6 +758,11 @@
             factory-class="org.knime.base.node.preproc.colsort.ColumnResorterNodeFactory"
             id="org.knime.base.node.preproc.colsort.ColumnResorterNodeFactory">
       </node>
+      <node
+            category-path="/view"
+            factory-class="org.knime.base.node.viz.liftchart.LiftChartNodeFactory"
+            id="org.knime.base.node.viz.liftchart.LiftChartNodeFactory">
+      </node>
    </extension>
       <extension
          point="org.knime.base.pmmlports">
