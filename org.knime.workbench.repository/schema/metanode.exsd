@@ -22,7 +22,7 @@
 &lt;dd&gt;For internal maintainance&lt;/dd&gt;
 &lt;dt&gt;category-path:&lt;/dt&gt;
 &lt;dd&gt;The path to the category where it is placed within the node repository&lt;/dd&gt;
-&lt;dt&gt;after:&lt;/dd&gt;
+&lt;dt&gt;after:&lt;/dt&gt;
 &lt;dt&gt;Optionally specifiy a node after which the meta node template should appear&lt;/dd&gt;
 &lt;dt&gt;icon:&lt;/dt&gt;
 &lt;dd&gt;The icon is displayed in the node repository&lt;/dd&gt;
@@ -146,7 +146,7 @@
       </appInfo>
       <documentation>
          &lt;extension point=&quot;org.knime.workbench.repository.metanode&quot;&gt;
-	&lt;PersistedMetaNode
+ &lt;PersistedMetaNode
              icon=&quot;icons/meta_nodes/cross_validation.png&quot;
              id=&quot;cross_validation&quot;
              name=&quot;CrossValidation&quot;
