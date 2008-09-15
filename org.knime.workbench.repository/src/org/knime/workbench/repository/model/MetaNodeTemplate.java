@@ -57,9 +57,11 @@ public class MetaNodeTemplate extends AbstractSimpleObject {
     
     public String getDescription() {
         if (m_description != null) {
-            return m_manager.getName() + ": " + m_description; 
+            return m_description; 
         }
-        return m_manager.getName() + ": " + m_manager.getCustomDescription();
+        return m_manager.getName() + ": " 
+            + m_manager.getCustomDescription() != null 
+            ? m_manager.getCustomDescription() : "";
     }
 
     /**
@@ -67,7 +69,20 @@ public class MetaNodeTemplate extends AbstractSimpleObject {
      * @param description description of the meta node
      */
     public void setDescription(final String description) {
+        /*
+         * If we have a description in the extension but no custome description
+         * in the meta node -> set description also as custom description
+         * If we have a custom description -> add the description found
+         * in the extension.  
+         */
         m_description = description;
+        if (m_manager != null && m_manager.getCustomDescription() == null) {
+            m_manager.setCustomDescription(m_description);
+        } else if (m_manager != null 
+                && m_manager.getCustomDescription() != null) {
+            m_manager.setCustomDescription(m_manager.getCustomDescription() 
+                    + " " + m_description);
+        }
     }
 
     
