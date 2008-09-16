@@ -123,11 +123,11 @@ public class NonClosableInputStream extends InputStream {
      */
     public static final class Zip extends NonClosableInputStream {
 
-        /** Wraps a given zip output stream.
-         * @param zipOut The stream to wrap.
+        /** Wraps a given zip input stream.
+         * @param zipIn The stream to wrap.
          */
-        public Zip(final ZipInputStream zipOut) {
-            super(zipOut);
+        public Zip(final ZipInputStream zipIn) {
+            super(zipIn);
         }
         
         /** Closes the currently open zip entry.
