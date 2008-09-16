@@ -36,6 +36,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
@@ -254,7 +255,7 @@ public class SampleDataNodeModel extends NodeModel {
                 double[] d = fill(rand, centers);
                 DataCell cl = (overallClusterCount > 0 
                         ? colNames[c] : DataType.getMissingCell());
-                DataRow r = createRow("Row_" + pattern, d, cl);
+                DataRow r = createRow(RowKey.createRowKey(pattern), d, cl);
                 container.addRowToTable(r);
                 exec.setProgress(pattern / totalCount, "Added row " + pattern);
                 exec.checkCanceled();
@@ -269,7 +270,7 @@ public class SampleDataNodeModel extends NodeModel {
             int index = i + pattern;
             double[] d = fill(rand, noiseCenter);
             DataCell cl = colNames[colNames.length - 1];
-            DataRow r = createRow("Row_" + index, d, cl);
+            DataRow r = createRow(RowKey.createRowKey(index), d, cl);
             container.addRowToTable(r);
             exec.setProgress(index / totalCount, "Added row " + index);
             exec.checkCanceled();
@@ -279,7 +280,7 @@ public class SampleDataNodeModel extends NodeModel {
         return new BufferedDataTable[]{outTable, out2};
     } // execute(DataTable[])
     
-    private static DataRow createRow(final String key, final double[] d,
+    private static DataRow createRow(final RowKey key, final double[] d,
             final DataCell cl) {
         DataCell[] cells = new DataCell[d.length + 1];
         for (int i = 0; i < d.length; i++) {
