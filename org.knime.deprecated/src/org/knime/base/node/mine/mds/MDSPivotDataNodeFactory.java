@@ -24,10 +24,11 @@
  */
 package org.knime.base.node.mine.mds;
 
+import org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeDialog;
+import org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeModel;
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * 
@@ -35,30 +36,32 @@ import org.knime.core.node.NodeView;
  * @author Thomas Gabriel, University of Konstanz
  * @deprecated replace by completely new implementation
  */
-public class MDSPivotDataNodeFactory extends NodeFactory {
+public class MDSPivotDataNodeFactory 
+        extends GenericNodeFactory<MDSProjectionNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new MDSPivotDataNodeDialogPane();
+        return new MDSProjectionNodeDialog();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
-        return new MDSPivotDataNodeModel(2, 2);
+    public MDSProjectionNodeModel createNodeModel() {
+        return new MDSProjectionNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex, 
-            final NodeModel nodeModel) {
+    public GenericNodeView<MDSProjectionNodeModel> createNodeView(
+            final int viewIndex,
+            final MDSProjectionNodeModel nodeModel) {
         return null;
     }
 
