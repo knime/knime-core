@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Source">
+	<name>PortObject Reader</name>
+	
+	<shortDescription>
+		Reads generic port objects from a file.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>Reads generic port objects that were written with the PortObject 
+		writer node.
+		</intro>
+        <option name="Selected File">The file containing the port object.</option>
+	</fullDescription>
+	
+	<ports>
+		<modelOut index="0" name="Object">The object just read.</modelOut>
+	</ports>	
+</knimeNode>

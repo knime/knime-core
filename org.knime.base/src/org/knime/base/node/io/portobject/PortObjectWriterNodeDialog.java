@@ -22,7 +22,7 @@
  * History
  *   29.10.2005 (mb): created
  */
-package org.knime.base.node.io.predictor;
+package org.knime.base.node.io.portobject;
 
 import javax.swing.JFileChooser;
 
@@ -36,15 +36,15 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * 
  * @author M. Berthold, University of Konstanz
  */
-public class PredictorWriterNodeDialog extends DefaultNodeSettingsPane {
+public class PortObjectWriterNodeDialog extends DefaultNodeSettingsPane {
 
     /** Constructor: create NodeDialog with just one default component,
      * the file chooser entry.
      */
-    public PredictorWriterNodeDialog() {
+    public PortObjectWriterNodeDialog() {
         addDialogComponent(new DialogComponentFileChooser(
-                new SettingsModelString(PredictorWriterNodeModel.FILENAME, ""),
-                PredictorWriterNodeDialog.class.getName(),
+                new SettingsModelString(PortObjectWriterNodeModel.FILENAME, ""),
+                PortObjectWriterNodeDialog.class.getName(),
                 JFileChooser.SAVE_DIALOG, ".zip"));
     }
     

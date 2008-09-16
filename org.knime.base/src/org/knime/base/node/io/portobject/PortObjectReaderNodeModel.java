@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,11 +18,11 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
- *   29.10.2005 (mb): created
+ *   30.10.2005 (mb): created
  */
-package org.knime.base.node.io.predictor;
+package org.knime.base.node.io.portobject;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,25 +40,25 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortUtil;
 
-
 /**
- * Write ModelContent object into file.
- * 
+ * Read ModelContent object from file.
+ *
  * @author M. Berthold, University of Konstanz
  */
-public class PredictorWriterNodeModel extends GenericNodeModel {
+class PortObjectReaderNodeModel extends GenericNodeModel {
 
     /** key for filename entry in config object. */
     static final String FILENAME = "filename";
 
-    private final SettingsModelString m_fileName = 
-        new SettingsModelString(FILENAME, null);
-
+    private final SettingsModelString m_fileName =
+            new SettingsModelString(FILENAME, null);
+    
     /**
      * Constructor: Create new NodeModel with only one Model Input Port.
+     * @param type Type of output
      */
-    public PredictorWriterNodeModel() {
-        super(new PortType[]{new PortType(PortObject.class)}, new PortType[0]);
+    PortObjectReaderNodeModel(final PortType type) {
+        super(new PortType[0], new PortType[]{type});
     }
 
     /**
@@ -75,9 +75,7 @@ public class PredictorWriterNodeModel extends GenericNodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        SettingsModelString fileName = 
-            m_fileName.createCloneWithValidatedValue(settings);
-        checkFileAccess(fileName.getStringValue());
+        m_fileName.validateSettings(settings);
     }
 
     /**
@@ -90,70 +88,65 @@ public class PredictorWriterNodeModel extends GenericNodeModel {
     }
 
     /**
-     * Writes model as ModelContent to file.
-     * 
+     * Execute does nothing - the reading of the file and writing to the
+     * NodeSettings object has already happened during savePredictorParams.
+     *
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] portObject,
+    protected PortObject[] execute(final PortObject[] data,
             final ExecutionContext exec) throws Exception {
-        File realFile = new File(m_fileName.getStringValue());
-        if (realFile.exists()) {
-            realFile.delete();
-        }
-        try {
-            PortUtil.writeObjectToFile(portObject[0], realFile, exec);
-        } catch (Exception e) {
-            realFile.delete();
-            throw e;
-        }
-        return new PortObject[0];
+        String fileName = m_fileName.getStringValue();
+        checkFileAccess(fileName);
+        PortObject po = PortUtil.readObjectFromFile(new File(fileName), exec);
+        return new PortObject[]{po};
     }
-    
-    /**
-     * {@inheritDoc}
-     */
+
+    /** {@inheritDoc} */
     @Override
     protected void reset() {
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        String fileName = m_fileName.getStringValue();
-        checkFileAccess(fileName);
-        if (new File(fileName).exists()) {
-            // here it exists and we can write it: warn user!
-            setWarningMessage("Selected output file \"" + fileName + "\"" 
-                    + " exists and will be overwritten!");
+        checkFileAccess(m_fileName.getStringValue());
+        try {
+            return new PortObjectSpec[]{PortUtil.readObjectSpecFromFile(
+                    new File(m_fileName.getStringValue()))};
+        } catch (IOException ioe) {
+            throw new InvalidSettingsException("Failed to parse file \""
+                    + m_fileName.getStringValue() + "\": " 
+                    + ioe.getMessage(), ioe);
         }
-        return new PortObjectSpec[0];
     }
 
     /**
      * Helper that checks some properties for the file argument.
-     * 
-     * @param fileName The file to check
-     * @throws InvalidSettingsException If that fails.
+     *
+     * @param fileName The file to check @throws InvalidSettingsException If
+     * that fails.
      */
     private void checkFileAccess(final String fileName)
             throws InvalidSettingsException {
         if (fileName == null) {
-            throw new InvalidSettingsException("No output file specified.");
+            throw new InvalidSettingsException("No file set.");
         }
         File file = new File(fileName);
         if (file.isDirectory()) {
             throw new InvalidSettingsException("\"" + file.getAbsolutePath()
-                    + "\" is a directory.");
+                    + "\" is a directory, but must be a file.");
         }
-        if (file.exists()) {
-            if (!file.canWrite()) {
-                throw new InvalidSettingsException("Cannot write to file \""
+        if (!file.exists()) {
+            throw new InvalidSettingsException(
+                    "File \"" + file.getAbsolutePath() + "\""
+                        + " does not exist.");
+        }
+        // check read access to file
+        if (!file.canRead()) {
+            throw new InvalidSettingsException("Cannot read from file \""
                     + file.getAbsolutePath() + "\".");
-            }
         }
     }
 
@@ -161,8 +154,8 @@ public class PredictorWriterNodeModel extends GenericNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) throws IOException, 
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         // nothing to do here
     }
@@ -171,10 +164,10 @@ public class PredictorWriterNodeModel extends GenericNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) throws IOException, 
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         // nothing to do here
     }
- 
+
 }

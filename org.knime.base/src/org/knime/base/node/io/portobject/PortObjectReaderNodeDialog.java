@@ -22,7 +22,7 @@
  * History
  *   30.10.2005 (mb): created
  */
-package org.knime.base.node.io.predictor;
+package org.knime.base.node.io.portobject;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
@@ -34,15 +34,15 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * 
  * @author M. Berthold, University of Konstanz
  */
-public class PredictorReaderNodeDialog extends DefaultNodeSettingsPane {
+public class PortObjectReaderNodeDialog extends DefaultNodeSettingsPane {
     /**
      * Constructor: create NodeDialog with just one default component, the file
      * chooser entry.
      */
-    public PredictorReaderNodeDialog() {
+    public PortObjectReaderNodeDialog() {
         addDialogComponent(new DialogComponentFileChooser(
-                new SettingsModelString(PredictorReaderNodeModel.FILENAME, ""),
-                        PredictorReaderNodeDialog.class.getName(),
+                new SettingsModelString(PortObjectReaderNodeModel.FILENAME, ""),
+                        PortObjectReaderNodeDialog.class.getName(),
                         ".zip"));
     }
 
