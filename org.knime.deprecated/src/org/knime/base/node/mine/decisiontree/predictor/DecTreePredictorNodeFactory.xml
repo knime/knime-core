@@ -1,17 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./dtreepred.ico" type="Predictor" deprecated="true">
-	<name>Decision Tree Predictor (deprecated)</name>
+<knimeNode icon="./dectree_predictor.png" type="Predictor">
+	<name>Decision Tree Predictor</name>
 	
 	<shortDescription>
-	    This node is obsolete! Please use the new Decision Tree Predictor node 
-	    located in the Mining category.
+	    Uses an existing decision tree to compute class labels for input vectors.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>		
-		This node is obsolete! Please use the new Decision Tree Predictor node
-		located in the Mining category.<p />
 		This node uses an existing decision tree (passed in through the model
 		port) to predict the class value for new patterns.
 		The Node can be configured as follows:

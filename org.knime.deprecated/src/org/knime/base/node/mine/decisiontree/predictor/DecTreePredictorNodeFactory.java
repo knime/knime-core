@@ -18,30 +18,31 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   27.07.2005 (mb): created
  */
 package org.knime.base.node.mine.decisiontree.predictor;
 
+import org.knime.base.node.mine.decisiontree2.predictor.DecTreePredictorNodeModel;
+import org.knime.base.node.mine.decisiontree2.predictor.DecTreePredictorNodeView;
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 /**
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  */
-public class DecTreePredictorNodeFactory extends NodeFactory {
+public class DecTreePredictorNodeFactory extends GenericNodeFactory<DecTreePredictorNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public DecTreePredictorNodeModel createNodeModel() {
         return new DecTreePredictorNodeModel();
     }
 
@@ -57,8 +58,8 @@ public class DecTreePredictorNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public GenericNodeView<DecTreePredictorNodeModel> createNodeView(final int viewIndex,
+            final DecTreePredictorNodeModel nodeModel) {
         return new DecTreePredictorNodeView(nodeModel);
     }
 
