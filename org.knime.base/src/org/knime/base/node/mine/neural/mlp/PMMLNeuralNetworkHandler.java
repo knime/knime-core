@@ -177,7 +177,7 @@ public class PMMLNeuralNetworkHandler extends PMMLContentHandler {
                         + "supported in KNIME MLP.");
             }
             String normMethod = atts.getValue("normalizationMethod");
-            if (!normMethod.equals("none")) {
+            if (normMethod != null && !normMethod.equals("none")) {
                 throw new SAXException("No normalization method is "
                         + "supported in KNIME MLP.");
             }
