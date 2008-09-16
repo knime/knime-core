@@ -53,9 +53,9 @@ import org.knime.core.node.ModelContentWO;
  * 
  * and to narrow the return type of the {@link PortObject#getSpec() getSpec()}
  * method (most commonly used are specs of type
- * {@link org.knime.core.data.DataTableSpec} or
- * {@link AbstractSimplePortObjectSpec}, whereby the columns reflect the
- * required input attributes of a model). Derived classes don't need to provide
+ * {@link org.knime.core.data.DataTableSpec}, whereby the columns reflect the
+ * required input attributes of a model), or
+ * {@link AbstractSimplePortObjectSpec} Derived classes don't need to provide
  * a static serializer method as required by the interface {@link PortObject}.
  * 
  * @author Bernd Wiswedel, University of Konstanz
