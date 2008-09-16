@@ -7,7 +7,6 @@ Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Ko
 Fragment-Host: org.knime.base;bundle-version="2.0.0"
 Require-Bundle: org.knime.core
 Export-Package: org.knime.base.node.mine.decisiontree.predictor,
- org.knime.base.node.mine.decisiontree.predictor.decisiontree,
  org.knime.base.node.mine.mds,
  org.knime.base.node.mine.scorer,
  org.knime.base.node.mine.scorer.entrop,
