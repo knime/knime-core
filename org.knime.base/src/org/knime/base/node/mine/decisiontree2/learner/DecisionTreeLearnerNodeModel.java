@@ -28,9 +28,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPInputStream;
@@ -488,13 +490,15 @@ public class DecisionTreeLearnerNodeModel extends GenericNodeModel {
      * @return
      */
     private PortObject getPMMLOutPortObject(final DataTableSpec spec) {
-
-        DataColumnSpec[] colSpecs = new DataColumnSpec[spec.getNumColumns()];
+        Set<String> learnCols = new LinkedHashSet<String>();
         for(int i = 0; i < spec.getNumColumns(); i++) {
-            colSpecs[i] = spec.getColumnSpec(i);
+            learnCols.add(spec.getColumnSpec(i).getName());
         }
-
-        return new PMMLDecisionTreePortObject(m_decisionTree, spec, colSpecs);
+        Set<String> targetSet = new LinkedHashSet<String>();
+        targetSet.add(m_classifyColumn);
+        PMMLPortObjectSpec outSpec = new PMMLPortObjectSpec(
+                spec, learnCols, Collections.EMPTY_SET, targetSet);
+        return new PMMLDecisionTreePortObject(m_decisionTree, outSpec);
     }
 
     private void addHiliteAndColorInfo(final BufferedDataTable inData) {

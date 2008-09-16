@@ -24,7 +24,6 @@ package org.knime.base.node.mine.decisiontree2;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -40,14 +39,11 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitContinu
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitNominal;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitNominalBinary;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
-import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
@@ -75,19 +71,10 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
     /**
      * @param tree
      * @param spec
-     * @param usedColumns
      */
     public PMMLDecisionTreePortObject(final DecisionTree tree,
-            final DataTableSpec spec, final DataColumnSpec... usedColumns) {
-
-        PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(spec);
-
-        Set<String> learningCols = new HashSet<String>();
-        for (DataColumnSpec d : usedColumns) {
-            learningCols.add(d.getName());
-        }
-        creator.setTargetColName(tree.getClassifyColumn());
-        m_portSpec = creator.createSpec();
+            final PMMLPortObjectSpec spec) {
+        m_portSpec = spec;
         m_tree = tree;
     }
 
