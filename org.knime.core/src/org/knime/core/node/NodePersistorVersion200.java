@@ -33,13 +33,11 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.zip.ZipEntry;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.ReferencedFile;
-import org.knime.core.internal.SerializerMethodLoader;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
@@ -47,6 +45,7 @@ import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.port.PortObject.PortObjectSerializer;
 import org.knime.core.node.port.PortObjectSpec.PortObjectSpecSerializer;
 import org.knime.core.node.workflow.NodeMessage;
@@ -74,9 +73,6 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             final SingleNodeContainerPersistorVersion200 sncPersistor) {
         super(sncPersistor);
     }
-
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(NodePersistorVersion200.class);
 
     /**
      * Saves the node, node settings, and all internal structures, spec, data,
@@ -254,12 +250,12 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                 
                 File specFile = new File(specDir, specFileName);
                 PortObjectSpecZipOutputStream out = 
-                    new PortObjectSpecZipOutputStream(new BufferedOutputStream(
+                    PortUtil.getPortObjectSpecZipOutputStream(
+                            new BufferedOutputStream(
                         new FileOutputStream(specFile)));
                 settings.addString("port_spec_location", specPath);
                 PortObjectSpecSerializer serializer =
-                        getPortObjectSpecSerializer(spec.getClass());
-                out.putNextEntry(new ZipEntry("portSpec.file"));
+                        PortUtil.getPortObjectSpecSerializer(spec.getClass());
                 serializer.savePortObjectSpec(spec, out);
                 out.close();
             }
@@ -283,11 +279,11 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     objectPath = objectDirName + "/" + objectFileName;
                     File file = new File(objectDir, objectFileName);
                     PortObjectZipOutputStream out = 
-                        new PortObjectZipOutputStream(new BufferedOutputStream(
-                                new FileOutputStream(file)));
+                        PortUtil.getPortObjectZipOutputStream(
+                                new BufferedOutputStream(
+                                        new FileOutputStream(file)));
                     PortObjectSerializer serializer =
-                            getPortObjectSerializer(object.getClass());
-                    out.putNextEntry(new ZipEntry("portObject.file"));
+                            PortUtil.getPortObjectSerializer(object.getClass());
                     serializer.savePortObject(object, out, exec);
                     out.close();
                 }
@@ -529,16 +525,12 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                             + specFile.getAbsolutePath());
                 }
                 PortObjectSpecZipInputStream in = 
-                    new PortObjectSpecZipInputStream(new BufferedInputStream(
-                        new FileInputStream(specFile)));
+                    PortUtil.getPortObjectSpecZipInputStream(
+                            new BufferedInputStream(
+                                    new FileInputStream(specFile)));
                 PortObjectSpecSerializer<?> serializer =
-                        getPortObjectSpecSerializer(cl
+                        PortUtil.getPortObjectSpecSerializer(cl
                                 .asSubclass(PortObjectSpec.class));
-                ZipEntry entry = in.getNextEntry();
-                if (!"portSpec.file".equals(entry.getName())) {
-                    throw new IOException("Expected zip entry 'portSpec.file', "
-                            + "got '"  + entry.getName() + "'");
-                }
                 spec = serializer.loadPortObjectSpec(in);
                 in.close();
                 if (spec == null) {
@@ -582,18 +574,13 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                                 + objectFile.getAbsolutePath());
                     }
                     // buffering both disc I/O and the gzip stream pays off
-                    PortObjectZipInputStream in = new PortObjectZipInputStream(
-                            new BufferedInputStream(
-                                    new FileInputStream(objectFile)));
+                    PortObjectZipInputStream in = 
+                        PortUtil.getPortObjectZipInputStream(
+                                new BufferedInputStream(
+                                        new FileInputStream(objectFile)));
                     PortObjectSerializer<?> serializer =
-                            getPortObjectSerializer(cl
+                            PortUtil.getPortObjectSerializer(cl
                                     .asSubclass(PortObject.class));
-                    ZipEntry entry = in.getNextEntry();
-                    if (!"portObject.file".equals(entry.getName())) {
-                        throw new IOException(
-                                "Expected zip entry 'portObject.file', "
-                                + "got '"  + entry.getName() + "'");
-                    }
                     object = serializer.loadPortObject(in, spec, exec);
                     in.close();
                 }
@@ -635,56 +622,6 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             InvalidSettingsException {
         return BufferedDataTable.loadFromFile(objectDir, /* ignored in 1.2+ */
         null, exec, loadTblRep, tblRep);
-    }
-
-    private static final Map<Class<? extends PortObjectSpec>, PortObjectSpecSerializer<?>> PORT_SPEC_SERIALIZER_MAP =
-            new HashMap<Class<? extends PortObjectSpec>, PortObjectSpecSerializer<?>>();
-
-    @SuppressWarnings("unchecked")
-    // access to CLASS_TO_SERIALIZER_MAP
-    static <T extends PortObjectSpec> PortObjectSpecSerializer<T> getPortObjectSpecSerializer(
-            final Class<T> cl) {
-        if (PORT_SPEC_SERIALIZER_MAP.containsKey(cl)) {
-            return PortObjectSpecSerializer.class.cast(PORT_SPEC_SERIALIZER_MAP
-                    .get(cl));
-        }
-        PortObjectSpecSerializer<T> result;
-        try {
-            result =
-                    SerializerMethodLoader.getSerializer(cl,
-                            PortObjectSpecSerializer.class,
-                            "getPortObjectSpecSerializer", true);
-        } catch (NoSuchMethodException e) {
-            LOGGER.coding("Errors while accessing serializer object", e);
-            throw new RuntimeException(e);
-        }
-        PORT_SPEC_SERIALIZER_MAP.put(cl, result);
-        return result;
-    }
-
-    private static final Map<Class<? extends PortObject>, PortObjectSerializer<?>> PORT_OBJECT_SERIALIZER_MAP =
-            new HashMap<Class<? extends PortObject>, PortObjectSerializer<?>>();
-
-    @SuppressWarnings("unchecked")
-    // access to CLASS_TO_SERIALIZER_MAP
-    static <T extends PortObject> PortObjectSerializer<T> getPortObjectSerializer(
-            final Class<T> cl) {
-        if (PORT_OBJECT_SERIALIZER_MAP.containsKey(cl)) {
-            return PortObjectSerializer.class.cast(PORT_OBJECT_SERIALIZER_MAP
-                    .get(cl));
-        }
-        PortObjectSerializer<T> result;
-        try {
-            result =
-                    SerializerMethodLoader.getSerializer(cl,
-                            PortObjectSerializer.class,
-                            "getPortObjectSerializer", true);
-        } catch (NoSuchMethodException e) {
-            LOGGER.coding("Errors while accessing serializer object", e);
-            throw new RuntimeException(e);
-        }
-        PORT_OBJECT_SERIALIZER_MAP.put(cl, result);
-        return result;
     }
 
 }

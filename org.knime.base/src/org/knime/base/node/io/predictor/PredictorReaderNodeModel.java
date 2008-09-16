@@ -24,47 +24,40 @@
  */
 package org.knime.base.node.io.predictor;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.zip.GZIPInputStream;
 
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContent;
-import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.ModelContentWO;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortUtil;
 
 /**
  * Read ModelContent object from file.
  *
  * @author M. Berthold, University of Konstanz
  */
-public class PredictorReaderNodeModel extends NodeModel {
+public class PredictorReaderNodeModel extends GenericNodeModel {
 
     /** key for filename entry in config object. */
     static final String FILENAME = "filename";
 
     private final SettingsModelString m_fileName =
             new SettingsModelString(FILENAME, null);
-
-    private ModelContentRO m_predParams;
-
+    
     /**
      * Constructor: Create new NodeModel with only one Model Input Port.
      */
     public PredictorReaderNodeModel() {
-        super(0, 0, 0, 1);
+        super(new PortType[0], new PortType[]{new PortType(PortObject.class)});
     }
 
     /**
@@ -94,74 +87,38 @@ public class PredictorReaderNodeModel extends NodeModel {
     }
 
     /**
-     * Save model into ModelContent for a specific output port.
-     *
-     * @param index of the ModelContent's output port.
-     * @param predParam The object to write the model into.
-     * @throws InvalidSettingsException If the model could not be written to
-     *             file.
-     */
-    @Override
-    protected void saveModelContent(final int index,
-            final ModelContentWO predParam) throws InvalidSettingsException {
-        assert index == 0 : index;
-        if (predParam != null && m_predParams != null) {
-            m_predParams.copyTo(predParam);
-        }
-    }
-
-    /**
      * Execute does nothing - the reading of the file and writing to the
      * NodeSettings object has already happened during savePredictorParams.
      *
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] data,
-            final ExecutionContext exec) throws CanceledExecutionException,
-            IOException {
-        m_predParams = null;
-        InputStream is = new BufferedInputStream(new FileInputStream(
-                        new File(m_fileName.getStringValue())));
-        // if file ending is ".gz"
-        if (m_fileName.getStringValue().toLowerCase().endsWith(".gz")) {
-            is = new GZIPInputStream(is);
-        } else if (
-            !m_fileName.getStringValue().toLowerCase().endsWith(".pmml")) {
-            // file does not end with ".gz" and ".pmml"
-            try {
-                // try to open temp zip stream
-                GZIPInputStream zip = new GZIPInputStream(
-                    new FileInputStream(new File(m_fileName.getStringValue())));
-                zip.close();
-                is = new GZIPInputStream(is);
-            } catch (IOException ioe) {
-                // ignored, seems to be zip archive
-            }
-        }
-        exec.setMessage("Reading model from file: "
-                + m_fileName.getStringValue());
-        m_predParams = ModelContent.loadFromXML(is);
-        return new BufferedDataTable[0];
+    protected PortObject[] execute(final PortObject[] data,
+            final ExecutionContext exec) throws Exception {
+        String fileName = m_fileName.getStringValue();
+        checkFileAccess(fileName);
+        PortObject po = PortUtil.readObjectFromFile(new File(fileName), exec);
+        return new PortObject[]{po};
     }
 
-    /**
-     * Ignored.
-     *
-     * @see org.knime.core.node.NodeModel#reset()
-     */
+    /** {@inheritDoc} */
     @Override
     protected void reset() {
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         checkFileAccess(m_fileName.getStringValue());
-        return new DataTableSpec[0];
+        try {
+            return new PortObjectSpec[]{PortUtil.readObjectSpecFromFile(
+                    new File(m_fileName.getStringValue()))};
+        } catch (IOException ioe) {
+            throw new InvalidSettingsException("Failed to parse file \""
+                    + m_fileName.getStringValue() + "\": " 
+                    + ioe.getMessage(), ioe);
+        }
     }
 
     /**

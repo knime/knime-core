@@ -45,7 +45,7 @@ public class PredictorWriterNodeDialog extends DefaultNodeSettingsPane {
         addDialogComponent(new DialogComponentFileChooser(
                 new SettingsModelString(PredictorWriterNodeModel.FILENAME, ""),
                 PredictorWriterNodeDialog.class.getName(),
-                JFileChooser.SAVE_DIALOG, ".pmml.gz|.pmml"));
+                JFileChooser.SAVE_DIALOG, ".zip"));
     }
     
 }

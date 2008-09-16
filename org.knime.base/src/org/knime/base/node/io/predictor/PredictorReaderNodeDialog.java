@@ -43,7 +43,7 @@ public class PredictorReaderNodeDialog extends DefaultNodeSettingsPane {
         addDialogComponent(new DialogComponentFileChooser(
                 new SettingsModelString(PredictorReaderNodeModel.FILENAME, ""),
                         PredictorReaderNodeDialog.class.getName(),
-                        ".pmml.gz|.pmml"));
+                        ".zip"));
     }
 
 }

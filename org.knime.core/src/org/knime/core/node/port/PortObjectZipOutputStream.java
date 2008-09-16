@@ -43,7 +43,7 @@ public class PortObjectZipOutputStream extends ZipOutputStream {
      * @param outStream To write to.
      * @see ZipOutputStream#ZipOutputStream(OutputStream)
      */
-    public PortObjectZipOutputStream(final OutputStream outStream) {
+    PortObjectZipOutputStream(final OutputStream outStream) {
         super(outStream);
     }
     

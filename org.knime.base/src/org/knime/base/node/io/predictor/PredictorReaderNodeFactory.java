@@ -24,23 +24,23 @@
  */
 package org.knime.base.node.io.predictor;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 
 /** Node that connects to arbitrary model ports and reads the model as
  * ModelContent from a chosen file.
  * 
  * @author M. Berthold, University of Konstanz
  */
-public class PredictorReaderNodeFactory extends NodeFactory {
+public class PredictorReaderNodeFactory 
+        extends GenericNodeFactory<PredictorReaderNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public PredictorReaderNodeModel createNodeModel() {
         return new PredictorReaderNodeModel();
     }
 
@@ -56,8 +56,8 @@ public class PredictorReaderNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public GenericNodeView<PredictorReaderNodeModel> createNodeView(
+            final int viewIndex, final PredictorReaderNodeModel nodeModel) {
         return null;
     }
 
@@ -73,7 +73,7 @@ public class PredictorReaderNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeDialogPane createNodeDialogPane() {
+    public GenericNodeDialogPane createNodeDialogPane() {
         return new PredictorReaderNodeDialog();
     }
 

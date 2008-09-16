@@ -39,7 +39,7 @@ public class PortObjectSpecZipInputStream extends ZipInputStream {
      * @param inStream Delegated to super implementation.
      * @see ZipInputStream#ZipInputStream(InputStream)
      */
-    public PortObjectSpecZipInputStream(final InputStream inStream) {
+    PortObjectSpecZipInputStream(final InputStream inStream) {
         super(inStream);
     }
 

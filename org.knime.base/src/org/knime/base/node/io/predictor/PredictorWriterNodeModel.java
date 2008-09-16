@@ -24,24 +24,21 @@
  */
 package org.knime.base.node.io.predictor;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.zip.GZIPOutputStream;
 
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortUtil;
 
 
 /**
@@ -49,7 +46,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * 
  * @author M. Berthold, University of Konstanz
  */
-public class PredictorWriterNodeModel extends NodeModel {
+public class PredictorWriterNodeModel extends GenericNodeModel {
 
     /** key for filename entry in config object. */
     static final String FILENAME = "filename";
@@ -57,13 +54,11 @@ public class PredictorWriterNodeModel extends NodeModel {
     private final SettingsModelString m_fileName = 
         new SettingsModelString(FILENAME, null);
 
-    private ModelContentRO m_predParams;
-
     /**
      * Constructor: Create new NodeModel with only one Model Input Port.
      */
     public PredictorWriterNodeModel() {
-        super(0, 0, 1, 0);
+        super(new PortType[]{new PortType(PortObject.class)}, new PortType[0]);
     }
 
     /**
@@ -95,62 +90,28 @@ public class PredictorWriterNodeModel extends NodeModel {
     }
 
     /**
-     * Load ModelContent from input port.
-     * 
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadModelContent(final int index,
-            final ModelContentRO pConf) {
-        assert index == 0 : index;
-        m_predParams = pConf;
-    }
-
-    /**
      * Writes model as ModelContent to file.
      * 
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] data,
-            final ExecutionContext exec) throws CanceledExecutionException,
-            IOException {
-        OutputStream os = null;
-        try {
-            // delete original file
-            File realFile = new File(m_fileName.getStringValue());
-            if (realFile.exists()) {
-                realFile.delete();
-            }
-            // create temp file
-            File tempFile = new File(m_fileName.getStringValue() + "~");
-            if (tempFile.exists()) {
-                tempFile.delete();
-            }
-            // open stream
-            os = new BufferedOutputStream(new FileOutputStream(tempFile));
-            if (m_fileName.getStringValue().toLowerCase().endsWith(".gz")) {
-                os = new GZIPOutputStream(os);
-            }
-            exec.setMessage("Writing model to file: " 
-                    + m_fileName.getStringValue());
-            // and write ModelContent object as XML
-            m_predParams.saveToXML(os);
-            // and finally rename temp file to real file name
-            if (!tempFile.renameTo(realFile)) {
-                throw new IOException("write: rename of temp file failed");
-            }
-        } catch (Exception e) {
-            throw new IOException("write to file failed: " + e);
+    protected PortObject[] execute(final PortObject[] portObject,
+            final ExecutionContext exec) throws Exception {
+        File realFile = new File(m_fileName.getStringValue());
+        if (realFile.exists()) {
+            realFile.delete();
         }
-        // execution successful return empty array
-        return new BufferedDataTable[0];
+        try {
+            PortUtil.writeObjectToFile(portObject[0], realFile, exec);
+        } catch (Exception e) {
+            realFile.delete();
+            throw e;
+        }
+        return new PortObject[0];
     }
-
+    
     /**
-     * Ignored.
-     * 
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -160,16 +121,16 @@ public class PredictorWriterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        String newFileName = checkFileAccess(m_fileName.getStringValue());
-        if (new File(newFileName).exists()) {
+        String fileName = m_fileName.getStringValue();
+        checkFileAccess(fileName);
+        if (new File(fileName).exists()) {
             // here it exists and we can write it: warn user!
-            setWarningMessage("Selected output file \"" + newFileName + "\"" 
+            setWarningMessage("Selected output file \"" + fileName + "\"" 
                     + " exists and will be overwritten!");
         }
-        m_fileName.setStringValue(newFileName);
-        return new DataTableSpec[0];
+        return new PortObjectSpec[0];
     }
 
     /**
@@ -178,19 +139,12 @@ public class PredictorWriterNodeModel extends NodeModel {
      * @param fileName The file to check
      * @throws InvalidSettingsException If that fails.
      */
-    private String checkFileAccess(final String fileName)
+    private void checkFileAccess(final String fileName)
             throws InvalidSettingsException {
         if (fileName == null) {
             throw new InvalidSettingsException("No output file specified.");
         }
-        String newFileName = fileName;
-        if (!fileName.toLowerCase().endsWith(".pmml") 
-                && !fileName.toLowerCase().endsWith(".pmml.gz")) {
-            newFileName += ".pmml.gz";
-            super.setWarningMessage("File \"" + fileName + "\" is renamed"
-                    + " to \"" + newFileName + "\".");
-        }
-        File file = new File(newFileName);
+        File file = new File(fileName);
         if (file.isDirectory()) {
             throw new InvalidSettingsException("\"" + file.getAbsolutePath()
                     + "\" is a directory.");
@@ -201,13 +155,6 @@ public class PredictorWriterNodeModel extends NodeModel {
                     + file.getAbsolutePath() + "\".");
             }
         }
-        String tempFileName = newFileName + "~";
-        File tempFile = new File(tempFileName);
-        if (tempFile.exists() && (!tempFile.canWrite())) {
-            throw new InvalidSettingsException("Cannot write to (=delete) temp"
-                    + " file \"" + tempFile.getAbsolutePath() + "\".");
-        }
-        return newFileName;
     }
 
     /**
@@ -229,6 +176,5 @@ public class PredictorWriterNodeModel extends NodeModel {
             CanceledExecutionException {
         // nothing to do here
     }
-    
-    
+ 
 }

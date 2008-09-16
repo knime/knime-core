@@ -24,23 +24,23 @@
  */
 package org.knime.base.node.io.predictor;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 
 /** Node that connects to arbitrary model ports and writes the model as
  * ModelContent to a chosen file.
  * 
  * @author M. Berthold, University of Konstanz
  */
-public class PredictorWriterNodeFactory extends NodeFactory {
+public class PredictorWriterNodeFactory 
+        extends GenericNodeFactory<PredictorWriterNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public PredictorWriterNodeModel createNodeModel() {
         return new PredictorWriterNodeModel();
     }
 
@@ -56,8 +56,8 @@ public class PredictorWriterNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public GenericNodeView<PredictorWriterNodeModel> createNodeView(
+            final int viewIndex, final PredictorWriterNodeModel nodeModel) {
         return null;
     }
 
@@ -73,7 +73,7 @@ public class PredictorWriterNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeDialogPane createNodeDialogPane() {
+    public GenericNodeDialogPane createNodeDialogPane() {
         return new PredictorWriterNodeDialog();
     }
 

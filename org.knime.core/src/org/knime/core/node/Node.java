@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.zip.ZipEntry;
 
 import javax.swing.UIManager;
 
@@ -57,6 +56,7 @@ import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.StringFormat;
 import org.knime.core.node.workflow.LoopEndNode;
@@ -813,38 +813,32 @@ public final class Node implements NodeModelWarningListener {
         // first copy the spec, then copy the object
         final PortObjectSpec s = portObject.getSpec();
         PortObjectSpec.PortObjectSpecSerializer ser = 
-            NodePersistorVersion200.getPortObjectSpecSerializer(
-                    s.getClass());
+            PortUtil.getPortObjectSpecSerializer(s.getClass());
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream(10 * 1024);
         PortObjectSpecZipOutputStream specOut = 
-            new PortObjectSpecZipOutputStream(byteOut);
-        specOut.putNextEntry(new ZipEntry("portSpec.file"));
+            PortUtil.getPortObjectSpecZipOutputStream(byteOut);
         specOut.setLevel(0);
         ser.savePortObjectSpec(s, specOut);
         specOut.close();
         ByteArrayInputStream byteIn = 
             new ByteArrayInputStream(byteOut.toByteArray());
         PortObjectSpecZipInputStream specIn = 
-            new PortObjectSpecZipInputStream(byteIn);
-        specIn.getNextEntry();
+            PortUtil.getPortObjectSpecZipInputStream(byteIn);
         PortObjectSpec specCopy = ser.loadPortObjectSpec(specIn);
         specIn.close();
         
         PortObject.PortObjectSerializer obSer =
-            NodePersistorVersion200.getPortObjectSerializer(
-                    portObject.getClass());
+            PortUtil.getPortObjectSerializer(portObject.getClass());
         byteOut.reset();
         PortObjectZipOutputStream objOut = 
-            new PortObjectZipOutputStream(byteOut);
-        objOut.putNextEntry(new ZipEntry("portObject.file"));
+            PortUtil.getPortObjectZipOutputStream(byteOut);
         specOut.setLevel(0);
         obSer.savePortObject(portObject, objOut, exec);
         objOut.close();
         
         byteIn = new ByteArrayInputStream(byteOut.toByteArray());
         PortObjectZipInputStream objIn = 
-            new PortObjectZipInputStream(byteIn);
-        objIn.getNextEntry();
+            PortUtil.getPortObjectZipInputStream(byteIn);
         PortObject result = obSer.loadPortObject(
                 objIn, specCopy, exec);
         objIn.close();
