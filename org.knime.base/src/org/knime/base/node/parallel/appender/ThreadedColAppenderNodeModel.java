@@ -167,21 +167,6 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
     /**
      * Creates a new AbstractParallelNodeModel.
      *
-     * @param nrDataIns the number of {@link DataTable}s expected as inputs
-     * @param nrDataOuts the number of {@link DataTable}s expected at the
-     *            output
-     * @param nrPredParamsIns the number of
-     *            {@link org.knime.core.node.ModelContent} elements available as
-     *            inputs
-     */
-    public ThreadedColAppenderNodeModel(final int nrDataIns,
-            final int nrDataOuts, final int nrPredParamsIns) {
-        super(nrDataIns, nrDataOuts, nrPredParamsIns, 0);
-    }
-
-    /**
-     * Creates a new AbstractParallelNodeModel.
-     *
      * @param nrDataIns The number of {@link DataTable} elements expected as
      *            inputs.
      * @param nrDataOuts The number of {@link DataTable} objects expected at the
