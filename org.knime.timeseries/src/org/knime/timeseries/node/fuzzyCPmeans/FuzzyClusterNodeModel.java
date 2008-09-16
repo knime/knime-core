@@ -45,7 +45,6 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -239,7 +238,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
      * Constructor, remember parent and initialize status.
      */
     public FuzzyClusterNodeModel() {
-        super(1, 1, 0, 1); // specify one input, two outputs, one model output.
+        super(1, 1); // specify one input, two outputs
 
         m_nrClusters = INITIAL_NR_CLUSTERS;
         m_maxNrIterations = INITIAL_MAX_ITERATIONS;
@@ -664,43 +663,6 @@ public class FuzzyClusterNodeModel extends NodeModel {
      */
     public boolean noiseClustering() {
         return m_noise;
-    }
-
-    /**
-     * Saves a model of the clustering. It contains the cluster prototypes and
-     * their names and the columns used.
-     * 
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveModelContent(final int index,
-            final ModelContentWO predParams) throws InvalidSettingsException {
-        /*
-         * Determine the columns that have been used for clustering.
-         */
-        String[] colsused = new String[m_list.size()];
-        int i = 0;
-        for (DataColumnSpec colspec : m_spec) {
-            if (m_list.contains(colspec.getName())) {
-                colsused[i] = colspec.getName();
-                i++;
-            }
-        }
-        predParams.addStringArray(COLUMNSUSED_KEY, colsused);
-
-        /*
-         * Store all clusters in the predParams.
-         */
-        double[][] clusters = m_fcmAlgo.getClusterCentres();
-        for (int c = 0; c < clusters.length; c++) {
-            double[] cluster = clusters[c];
-            if (m_noise && c == clusters.length - 1) {
-                predParams.addDouble(NOISESPEC_KEY, m_delta);
-                break;
-            }
-            predParams.addDoubleArray(CLUSTER_KEY + c, cluster);
-        }
-
     }
 
     /**
