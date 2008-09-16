@@ -65,17 +65,29 @@ public abstract class PMMLPortObject implements PortObject {
 
     private static final String PMML_3_2 = "/schemata/pmml-3-2.xsd";
     
-    private static final Map<String, String> version_schema_map 
+    /** Constant for version 3.0. Can be used as argument for the load method.*/
+    public static final String PMML_V3_0 = "3.0";
+    /** Constant for version 3.1. Can be used as argument for the load method.*/
+    public static final String PMML_V3_1 = "3.1";
+    /** Constant for version 3.2. Can be used as argument for the load method.*/
+    public static final String PMML_V3_2 = "3.2";
+    
+    private static final Map<String, String> VERSION_SCHEMA_MAP 
         = new HashMap<String, String>();
 
+    /**
+     * Based on the version number the local schema location is returned.
+     * @param version version 3.0 - 3.2
+     * @return the location of the local schema
+     */
     public static String getLocalSchemaLocation(final String version) {
-        return version_schema_map.get(version);
+        return VERSION_SCHEMA_MAP.get(version);
     }
     
     static {
-        version_schema_map.put("3.0", PMML_3_0);
-        version_schema_map.put("3.1", PMML_3_1);
-        version_schema_map.put("3.2", PMML_3_2);
+        VERSION_SCHEMA_MAP.put(PMML_V3_0, PMML_3_0);
+        VERSION_SCHEMA_MAP.put(PMML_V3_1, PMML_3_1);
+        VERSION_SCHEMA_MAP.put(PMML_V3_2, PMML_3_2);
     }
     
     private TransformerHandler m_handler;
@@ -204,7 +216,15 @@ public abstract class PMMLPortObject implements PortObject {
     @Override
     public abstract String getSummary();
     
-    
+    /**
+     * 
+     * @param spec the referring spec of this object
+     * @param in the input stream to write to
+     * @param version the version (3.0 - 3.1)
+     * @throws SAXException if something goes wrong during writing
+     * @throws ParserConfigurationException if the parser cannot be instantiated
+     * @throws IOException if the file cannot be found
+     */
     public void loadFrom(final PMMLPortObjectSpec spec, final InputStream in, 
             final String version) 
             throws SAXException, ParserConfigurationException, IOException {
@@ -242,7 +262,7 @@ public abstract class PMMLPortObject implements PortObject {
         String packagePath =
                 PMMLPortObject.class.getPackage().getName().replace('.', '/');
         return loader.getResourceAsStream(
-                packagePath + version_schema_map.get(version));
+                packagePath + VERSION_SCHEMA_MAP.get(version));
     }
     
     
