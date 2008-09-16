@@ -119,7 +119,7 @@ public class ColorAppender2NodeModel extends GenericNodeModel {
                     + "\" not available.");
         }
         DataTableSpec spec = ColorManager2NodeModel.getOutSpec(
-                dataSpec, m_column.getStringValue(), colorHandler);
+                dataSpec, column, colorHandler);
         return spec;
     }
     

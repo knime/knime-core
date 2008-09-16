@@ -118,7 +118,7 @@ public class ShapeAppenderNodeModel extends GenericNodeModel {
                     + "\" not available.");
         }
         DataTableSpec spec = ShapeManagerNodeModel.appendShapeHandler(
-                dataSpec, m_column.getStringValue(), shapeHandler);
+                dataSpec, column, shapeHandler);
         return spec;
     }
 

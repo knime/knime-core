@@ -118,7 +118,7 @@ public class SizeAppenderNodeModel extends GenericNodeModel {
                     + "\" not available.");
         }
         DataTableSpec spec = SizeManager2NodeModel.appendSizeHandler(
-                dataSpec, m_column.getStringValue(), sizeHandler);
+                dataSpec, column, sizeHandler);
         return spec;
     }
 
