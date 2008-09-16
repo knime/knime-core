@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   01.08.2007 (sieb): created
  */
@@ -28,7 +28,7 @@ import org.knime.core.data.DataCell;
 
 /**
  * Super class for all nominal split variants.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public abstract class SplitNominal extends Split {
@@ -37,7 +37,7 @@ public abstract class SplitNominal extends Split {
      * Constructs the best split for the given attribute list and the class
      * distribution. The results can be retrieved from getter methods. This is a
      * nominal split.
-     * 
+     *
      * @param table the table for which to create the split
      * @param attributeIndex the index specifying the attribute for which to
      *            calculate the split
@@ -52,7 +52,7 @@ public abstract class SplitNominal extends Split {
     /**
      * Returns the possible values of this splits attribute. Those values are
      * used for the split criteria.
-     * 
+     *
      * @return the possible values of this splits attribute
      */
     public DataCell[] getSplitValues() {

@@ -1,5 +1,5 @@
-/* 
- * 
+/*
+ *
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -19,7 +19,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   06.08.2005 (mb): created
  */
@@ -43,7 +43,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
  */
@@ -63,7 +63,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     /**
      * Constructor of derived class. Read all type-specific information from XML
      * File.
-     * 
+     *
      * @param xmlNode XML node info
      * @param mapper map translating column names to DataCells and vice versa
      */
@@ -107,7 +107,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     /**
      * Constructor of base class. The necessary data is provided directly in the
      * constructor.
-     * 
+     *
      * @param nodeId the id of this node
      * @param majorityClass the majority class of the records in this node
      * @param classCounts the class distribution of the data in this node
@@ -195,7 +195,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     /**
      * Add colors for a pattern given as a row of values. This is a leaf so we
      * will simply add the color to our list.
-     * 
+     *
      * @param cell the cell to be used for the split at this level
      * @param row input pattern
      * @param spec the corresponding table spec
@@ -280,7 +280,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
 
     /**
      * Returns the values array of this nodes split attribute.
-     * 
+     *
      * @return the values array of this nodes split attribute
      */
     public DataCell[] getSplitValues() {

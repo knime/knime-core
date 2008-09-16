@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   27.07.2005 (mb): created
  */
@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.knime.base.node.mine.decisiontree2.PMMLDecisionTreePortObject;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -46,25 +47,28 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 
 /**
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  */
-public class DecTreePredictorNodeModel extends NodeModel {
+public class DecTreePredictorNodeModel extends GenericNodeModel {
     /** Index of input data port. */
-    public static final int INDATAPORT = 0;
+    public static final int INDATAPORT = 1;
 
     /** Index of input model (=decision tree) port. */
-    public static final int INMODELPORT = 1;
+    public static final int INMODELPORT = 0;
 
     /** The node logger for this class. */
     private static final NodeLogger LOGGER =
@@ -82,10 +86,12 @@ public class DecTreePredictorNodeModel extends NodeModel {
     private DecisionTree m_decTree;
 
     /**
-     * Default constructor.
+     * Creates a new predictor for PMMLDecisionTreePortObject models as input
+     * and one additional data input, and the scored data as output. 
      */
-    protected DecTreePredictorNodeModel() {
-        super(1, 1, 1, 0);
+    public DecTreePredictorNodeModel() {
+        super(new PortType[]{PMMLDecisionTreePortObject.TYPE, 
+              BufferedDataTable.TYPE}, new PortType[]{BufferedDataTable.TYPE});
         m_decTree = null;
     }
 
@@ -130,33 +136,35 @@ public class DecTreePredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inDataPorts,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
+        loadModelContent((PMMLDecisionTreePortObject) inDataPorts[INMODELPORT]);
+        BufferedDataTable inData = (BufferedDataTable)inDataPorts[INDATAPORT];
         assert m_decTree != null;
         LOGGER.info("Decision Tree Predictor: start execution.");
         DataTableSpec outSpec =
-                createOutTableSpec(inData[INDATAPORT].getDataTableSpec());
+                createOutTableSpec(inData.getDataTableSpec());
         BufferedDataContainer outData = exec.createDataContainer(outSpec);
         int coveredPattern = 0;
         int nrPattern = 0;
         int rowCount = 0;
-        int numberRows = inData[INDATAPORT].getRowCount();
+        int numberRows = inData.getRowCount();
         exec.setMessage("Classifying...");
-        for (DataRow thisRow : inData[INDATAPORT]) {
+        for (DataRow thisRow : inData) {
             DataCell cl = null;
             try {
                 cl =
-                        m_decTree.classifyPattern(thisRow, inData[INDATAPORT]
+                        m_decTree.classifyPattern(thisRow, inData
                                 .getDataTableSpec());
                 if (coveredPattern < m_maxNumCoveredPattern.getIntValue()) {
                     // remember this one for HiLite support
-                    m_decTree.addCoveredPattern(thisRow, inData[INDATAPORT]
+                    m_decTree.addCoveredPattern(thisRow, inData
                             .getDataTableSpec());
                     coveredPattern++;
                 } else {
                     // too many patterns for HiLite - at least remember color
-                    m_decTree.addCoveredColor(thisRow, inData[INDATAPORT]
+                    m_decTree.addCoveredColor(thisRow, inData
                             .getDataTableSpec());
                 }
                 nrPattern++;
@@ -178,7 +186,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
 
             rowCount++;
             if (rowCount % 100 == 0) {
-                exec.setProgress(rowCount / (double) numberRows, 
+                exec.setProgress(rowCount / (double) numberRows,
                         "Classifying... Row " + rowCount + " of " + numberRows);
             }
             exec.checkCanceled();
@@ -187,7 +195,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
             // let the user know that we did not store all available pattern
             // for HiLiting.
             this.setWarningMessage("Tree only stored first "
-                    + m_maxNumCoveredPattern.getIntValue() + " (of " 
+                    + m_maxNumCoveredPattern.getIntValue() + " (of "
                     + nrPattern + ") rows for HiLiting!");
         }
         outData.close();
@@ -195,20 +203,9 @@ public class DecTreePredictorNodeModel extends NodeModel {
         return new BufferedDataTable[]{outData.getTable()};
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadModelContent(final int index,
-            final ModelContentRO predParams) throws InvalidSettingsException {
-        assert index == 0 : index;
-        if (predParams == null) {
-            m_decTree = null;
-            LOGGER.info("Decision Tree Predictor: Nothing to load.");
-            return;
-        }
+    private void loadModelContent(final PMMLDecisionTreePortObject port) {
         LOGGER.info("Decision Tree Predictor: Loading predictor...");
-        m_decTree = new DecisionTree(predParams);
+        m_decTree = port.getTree();
         LOGGER.info("Decision Tree Predictor: Loading predictor successful.");
     }
 
@@ -224,13 +221,10 @@ public class DecTreePredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_decTree == null) {
-            throw new InvalidSettingsException("No Predictor (DecTree) "
-                    + "available!");
-        }
-        return new DataTableSpec[]{createOutTableSpec(inSpecs[INDATAPORT])};
+        return new PortObjectSpec[]{
+                createOutTableSpec((DataTableSpec)inSpecs[INDATAPORT])};
     }
 
     private static DataTableSpec createOutTableSpec(
@@ -247,7 +241,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
 
     /**
      * Load internals.
-     * 
+     *
      * @param nodeInternDir The intern node directory to load tree from.
      * @param exec Used to report progress or cancel saving.
      * @throws IOException Always, since this method has not been implemented
@@ -258,7 +252,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException {
-        
+
         // read the decision tree
         File internalsFile = new File(nodeInternDir, INTERNALS_FILE_NAME);
         if (!internalsFile.exists()) {
@@ -283,7 +277,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
 
     /**
      * Save internals.
-     * 
+     *
      * @param nodeInternDir The intern node directory to save table to.
      * @param exec Used to report progress or cancel saving.
      * @throws IOException Always, since this method has not been implemented
@@ -294,7 +288,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException {
-        
+
         // write the tree as pred params
         ModelContent model = new ModelContent(INTERNALS_FILE_NAME);
         m_decTree.saveToPredictorParams(model, true);

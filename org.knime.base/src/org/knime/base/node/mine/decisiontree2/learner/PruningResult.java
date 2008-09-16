@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   12.03.2007 (sieb): created
  */
@@ -29,7 +29,7 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 /**
  * A pruning result is the possibly new node and a quality value (e.g.
  * description length, estimated error) of this node.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class PruningResult {
@@ -41,13 +41,13 @@ public class PruningResult {
     /**
      * Creates a pruning result from a node and its quality value (e.g.
      * description length, estimated error).
-     * 
+     *
      * @param qualityValue the quality value (e.g. description length, estimated
      *            error) of the node
-     * 
+     *
      * @param node the node of the pruning result
      */
-    public PruningResult(final double qualityValue, 
+    public PruningResult(final double qualityValue,
             final DecisionTreeNode node) {
         m_qualityValue = qualityValue;
         m_node = node;
@@ -55,7 +55,7 @@ public class PruningResult {
 
     /**
      * Returns the quality value for this node.
-     * 
+     *
      * @return the quality value length for this node
      */
     public double getQualityValue() {
@@ -64,7 +64,7 @@ public class PruningResult {
 
     /**
      * Returns the decision tree of this pruning result.
-     * 
+     *
      * @return the decision tree of this pruning result
      */
     public DecisionTreeNode getNode() {

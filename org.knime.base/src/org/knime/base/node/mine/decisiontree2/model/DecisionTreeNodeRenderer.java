@@ -1,5 +1,5 @@
-/* 
- * 
+/*
+ *
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -19,7 +19,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   05.08.2005 (mb): created
  */
@@ -33,7 +33,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 
 /**
  * Renderer for a DecisionTreeNode within a JTree.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  */
 public class DecisionTreeNodeRenderer extends DefaultTreeCellRenderer {

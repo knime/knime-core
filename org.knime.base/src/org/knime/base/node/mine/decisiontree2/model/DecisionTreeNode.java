@@ -1,5 +1,5 @@
-/* 
- * 
+/*
+ *
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -19,7 +19,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   21.07.2005 (mb): created
  */
@@ -53,24 +53,24 @@ import org.w3c.dom.NodeList;
 /**
  * The base abstract implementations of a node of a decision tree. Separate
  * implementations for a leaf and a split node (abstract) exist.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
  */
 public abstract class DecisionTreeNode implements TreeNode, Serializable {
-    
+
     /** The node logger for this class. */
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(DecisionTreeNode.class);
-    
+
     private static final String CONFIG_KEY_COLORS = "colors";
     private static final String CONFIG_KEY_COLOR = "color";
     private static final String CONFIG_KEY_RED = "red";
     private static final String CONFIG_KEY_GREEN = "green";
     private static final String CONFIG_KEY_BLUE = "blue";
     private static final String CONFIG_KEY_COUNT = "count";
-    
-    private HashMap<Color, Double> m_coveredColors 
+
+    private HashMap<Color, Double> m_coveredColors
                 = new HashMap<Color, Double>();
 
     private HashMap<DataCell, Double> m_classCounts;
@@ -86,7 +86,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     private DecisionTreeNode m_parent = null;
 
     private String m_prefix = "root";
-    
+
     private Object m_customData;
 
     /**
@@ -98,7 +98,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     /**
      * Constructor of base class. Read all type-invariant information from XML
      * file.
-     * 
+     *
      * @param xmlNode XML node object
      * @param mapper map translating column names to {@link DataCell}s and vice
      *            versa
@@ -154,7 +154,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     /**
      * Constructor of base class. The necessary data is provided directly in the
      * constructor.
-     * 
+     *
      * @param nodeId the id of this node
      * @param majorityClass the majority class of the records in this node
      * @param classCounts the class distribution of the data in this node
@@ -199,7 +199,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * distinguished here - the constructors of these classes are called and
      * will read their individual information themselves. Most "node" type stuff
      * is handled here, however.
-     * 
+     *
      * @param xmlNode XML Information for this node
      * @param mapper map translating column names to {@link DataCell}s and vice
      *            versa
@@ -227,7 +227,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     /**
      * Add a new node to the tree structure based on a depth-first indexing
      * strategy.
-     * 
+     *
      * @param node node to be inserted
      * @param ix index of this node in depth first traversal order
      * @return true only if the node was successfully inserted
@@ -237,7 +237,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
 
     /**
      * Return majority class of this node.
-     * 
+     *
      * @return majority class
      */
     public DataCell getMajorityClass() {
@@ -247,7 +247,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     /**
      * Return class counts, that is how many patterns (also fractions of) for
      * each class were encountered in this branch during training.
-     * 
+     *
      * @return class counts
      */
     public HashMap<DataCell, Double> getClassCounts() {
@@ -257,7 +257,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     /**
      * Classify a new pattern given as a row of values. Returns the class with
      * the maximum count.
-     * 
+     *
      * @param row input pattern
      * @param spec the corresponding table spec
      * @return class of pattern the decision tree predicts
@@ -285,7 +285,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     /**
      * Determine class counts for a new pattern given as a row of values.
      * Returns a HashMap listing counts for all classes.
-     * 
+     *
      * @param row input pattern
      * @param spec the corresponding table spec
      * @return HashMap class/count
@@ -299,7 +299,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * non-risk decision tree). Note that there can be fractions of patterns,
      * for example when we have built a fuzzy decision tree or there were
      * missing values.
-     * 
+     *
      * @return number (and fractions) of patterns of class of this node
      */
     public double getOwnClassCount() {
@@ -310,7 +310,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * Return number of patterns of all classes. Note that there can be
      * fractions of patterns, for example when we have built a fuzzy decision
      * tree or there were missing values.
-     * 
+     *
      * @return number (and fractions) of patterns of alss classes
      */
     public double getEntireClassCount() {
@@ -321,7 +321,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * Add patterns given as a row of values if they fall within a specific
      * node. Usually only Leafs will actually hold a list of RowKeys, all
      * intermediate nodes will collect "their" information recursively.
-     * 
+     *
      * @param row input pattern
      * @param spec the corresponding table spec
      * @param weight the weight of the row (between 0.0 and 1.0)
@@ -334,7 +334,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * Add colors for a row of values if they fall within a specific
      * node/branch. Used if we don't want to (or can't anymore) store the
      * pattern itself. We still want the color pie chart to be correct.
-     * 
+     *
      * @param row input pattern
      * @param spec the corresponding table spec
      * @param weight the weight of the row (between 0.0 and 1.0)
@@ -355,7 +355,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     public final HashMap<Color, Double> coveredColors() {
         return m_coveredColors;
     }
-    
+
 
     /**
      * @return index of this node itself
@@ -366,7 +366,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
 
     /**
      * Set parent of this node.
-     * 
+     *
      * @param parent new parent
      */
     public void setParent(final DecisionTreeNode parent) {
@@ -380,14 +380,14 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     public final String toString() {
         NumberFormat nf = NumberFormat.getInstance();
         return "[" + m_prefix + "]: " + " class '" + m_class + "' ("
-                + nf.format(m_ownClassFreq) + " of " 
+                + nf.format(m_ownClassFreq) + " of "
                 + nf.format(m_allClassFreq) + ")";
     }
 
     /**
      * Set information about this node, e.g. condition this branch needs to
      * fulfill.
-     * 
+     *
      * @param pf string describing condition
      */
     public void setPrefix(final String pf) {
@@ -405,7 +405,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
 
     /**
      * Save node to a model content object.
-     * 
+     *
      * @param predParams configuration object to attach decision tree to
      * @param saveColorsAndKeys whether to save the colors and the row keys
      */
@@ -441,13 +441,13 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
         }
         // and finally save all internals of the derived class as well
         saveNodeInternalsToPredParams(predParams, saveColorsAndKeys);
-        
+
         // if the keys and colors are supposed to be stored
         if (saveColorsAndKeys) {
             Config colorsConfig = predParams.addConfig(CONFIG_KEY_COLORS);
             int counter = 0;
             for (Entry<Color, Double> entry : m_coveredColors.entrySet()) {
-                Config colorConfig = colorsConfig.addConfig(CONFIG_KEY_COLOR 
+                Config colorConfig = colorsConfig.addConfig(CONFIG_KEY_COLOR
                         + "_" + counter);
                 colorConfig.addInt(CONFIG_KEY_RED, entry.getKey().getRed());
                 colorConfig.addInt(CONFIG_KEY_GREEN, entry.getKey().getGreen());
@@ -460,7 +460,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
 
     /**
      * Save internal node settings to a model content object.
-     * 
+     *
      * @param pConf configuration object to attach decision tree to
      * @param saveKeysAndPatterns whether to save the keys and patterns
      */
@@ -469,7 +469,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
 
     /**
      * Load node from a model content object.
-     * 
+     *
      * @param predParams configuration object to load decision tree from
      * @throws InvalidSettingsException if something goes wrong
      */
@@ -492,8 +492,8 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
         }
         // and finally load all internals of the derived class as well
         loadNodeInternalsFromPredParams(predParams);
-        
- 
+
+
         // if the keys and colors are stored load them
         if (predParams.containsKey(CONFIG_KEY_COLORS)) {
             m_coveredColors.clear();
@@ -512,7 +512,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     /**
      * Creates a new DecisionTreeNode (and all it's children!) based on an model
      * content object.
-     * 
+     *
      * @param predParams configuration object
      * @param parent the parent node (or <code>null</code> if this is the
      *            root)
@@ -547,7 +547,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
 
     /**
      * Load internal node settings from a model content object.
-     * 
+     *
      * @param pConf configuration object to load decision tree from
      * @throws InvalidSettingsException if something goes wrong
      */
@@ -566,7 +566,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     /**
      * Returns the index of node in the receivers children. If the receiver does
      * not contain node, -1 will be returned.
-     * 
+     *
      * @param node that supposedly is a child of this one
      * @return index of node (or -1 if not found)
      */
@@ -584,10 +584,10 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     public final TreeNode getParent() {
         return m_parent;
     }
-    
+
     /**
      * Returns the count of the subtree.
-     * 
+     *
      * @return the count of the subtree
      */
     public abstract int getCountOfSubtree();
@@ -609,16 +609,16 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
 
     /**
      * Returns the prefix of this node representing the condition.
-     * 
+     *
      * @return the prefix of this node representing the condition
      */
     public String getPrefix() {
         return m_prefix;
     }
-    
+
     /**
      * Adds the given color to the color map.
-     * 
+     *
      * @param col the color to add
      * @param weight the weight for the color count
      */
@@ -635,7 +635,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
 
     /**
      * To get the custom data object.
-     * 
+     *
      * @return the custom data object
      */
     public Object getCustomData() {
@@ -644,7 +644,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
 
     /**
      * To set a custom data object.
-     * 
+     *
      * @param customData the custom data object to set
      */
     public void setCustomData(final Object customData) {
@@ -653,7 +653,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
 
     /**
      * Sets the covered colors distribution directly.
-     * 
+     *
      * @param coveredColors the color distribution to set
      */
     public void setCoveredColors(final HashMap<Color, Double> coveredColors) {

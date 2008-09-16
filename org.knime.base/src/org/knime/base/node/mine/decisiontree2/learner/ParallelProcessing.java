@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   26.03.2007 (sieb): created
  */
@@ -27,7 +27,7 @@ package org.knime.base.node.mine.decisiontree2.learner;
 /**
  * Holds information for the parallel processing and is also used for
  * synchronization stuff.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class ParallelProcessing {
@@ -38,7 +38,7 @@ public class ParallelProcessing {
 
     /**
      * Constructor.
-     * 
+     *
      * @param numberThreads the number of threads to use at most in parallel
      */
     public ParallelProcessing(final int numberThreads) {
@@ -48,7 +48,7 @@ public class ParallelProcessing {
 
     /**
      * Sets the number of parallel threads to use.
-     * 
+     *
      * @param numberThreads the number of threads to use in parallel
      */
     public void setNumberThreads(final int numberThreads) {
@@ -57,7 +57,7 @@ public class ParallelProcessing {
 
     /**
      * Returns the number of threads currently in use.
-     * 
+     *
      * @return the number of threads currently in use
      */
     public int getCurrentThreadsInUse() {
@@ -66,7 +66,7 @@ public class ParallelProcessing {
 
     /**
      * Increments the current number of threads in use by 1.
-     * 
+     *
      */
     public void incrementNumThreads() {
         m_currentThreadsInUse++;
@@ -74,7 +74,7 @@ public class ParallelProcessing {
 
     /**
      * Decrements the current number of threads in use by 1.
-     * 
+     *
      */
     public void decrementNumThreads() {
         m_currentThreadsInUse--;
@@ -83,7 +83,7 @@ public class ParallelProcessing {
     /**
      * Method invoked to manage available thread capacity. In case there are not
      * enough threads the invocation waits until a thread gets free.
-     * 
+     *
      */
     public synchronized void isThreadAvailableBlocking() {
         if (m_currentThreadsInUse < m_maxNumberThreads) {
@@ -103,7 +103,7 @@ public class ParallelProcessing {
      * Method invoked to manage available thread capacity. Returns true if there
      * was an available thread. Note: invoking this method and getting true
      * causes the thread counter to be incremented!! Non blocking!!
-     * 
+     *
      * @return whether a thread is available
      */
     public synchronized boolean isThreadAvailable() {
@@ -135,7 +135,7 @@ public class ParallelProcessing {
      * Sets the number of current threads to 1. Necessary if for example the
      * execution was canceled and the threads could not finish and decrement the
      * counter.
-     * 
+     *
      */
     public void reset() {
         m_currentThreadsInUse = 1;

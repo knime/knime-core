@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   31.07.2007 (sieb): created
  */
@@ -29,7 +29,7 @@ import java.util.HashMap;
 /**
  * A mapper mapping the objects of the defined class <code>S</code> to integer
  * indices and vice versa.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  * @param <S> the type to map to an integer
  */
@@ -63,7 +63,7 @@ public class ValueMapper<S> {
 
     /**
      * Returns the mapped object for the corresponding index.
-     * 
+     *
      * @param index the index for which to return the corresponding mapped
      *            object
      * @return the mapped object for the corresponding index, <code>null</code>
@@ -75,7 +75,7 @@ public class ValueMapper<S> {
 
     /**
      * Returns all mapped objects in the order they were inserted.
-     * 
+     *
      * @return the mapped objects
      */
     public S[] getMappedObjectsInMappingOrder() {
@@ -90,7 +90,7 @@ public class ValueMapper<S> {
 
     /**
      * Returns the integer index for the corresponding mapped object.
-     * 
+     *
      * @param mappedObject the mapped object for which to return the
      *            corresponding integer index
      * @return the integer index for the corresponding mapped object,
@@ -109,7 +109,7 @@ public class ValueMapper<S> {
      * Returns the integer index for the corresponding mapped object. If there
      * exists no mapping for the given mapped object a new mapping is created
      * and the new integer index is returned.
-     * 
+     *
      * @param mappedObject the mapped object for which to return the
      *            corresponding integer index
      * @return the integer index for the corresponding mapped object, a new
@@ -130,7 +130,7 @@ public class ValueMapper<S> {
 
     /**
      * Returns the number of mappings.
-     * 
+     *
      * @return the number of mappings
      */
     public int getNumMappings() {

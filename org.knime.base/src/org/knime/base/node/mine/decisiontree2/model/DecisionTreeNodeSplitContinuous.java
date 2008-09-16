@@ -1,5 +1,5 @@
-/* 
- * 
+/*
+ *
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -19,7 +19,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   23.07.2005 (mb): created
  */
@@ -44,7 +44,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
  */
@@ -63,7 +63,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     /**
      * Constructor of derived class. Read all type-specific information from XML
      * File.
-     * 
+     *
      * @param xmlNode XML node info
      * @param mapper map translating column names to DataCells and vice versa
      */
@@ -123,7 +123,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     /**
      * Constructor of base class. The necessary data is provided directly in the
      * constructor.
-     * 
+     *
      * @param nodeId the id of this node
      * @param majorityClass the majority class of the records in this node
      * @param classCounts the class distribution of the data in this node
@@ -172,7 +172,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
      * enough to already pick out the DataCell used for this split so we do not
      * need to find it. It is also guaranteed that it is not missing and of the
      * right type.
-     * 
+     *
      * @param cell the cell to be used for the split at this level
      * @param row input pattern
      * @param spec the corresponding table spec
@@ -193,7 +193,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     /**
      * Add patterns given as a row of values if they fall within a specific
      * node. This node simply forwards this request to the appropriate child.
-     * 
+     *
      * @param cell the cell to be used for the split at this level
      * @param row input pattern
      * @param spec the corresponding table spec
@@ -216,7 +216,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     /**
      * Add colors for a pattern given as a row of values. This is a leaf so we
      * will simply add the color to our list.
-     * 
+     *
      * @param cell the cell to be used for the split at this level
      * @param row input pattern
      * @param spec the corresponding table spec
@@ -309,7 +309,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
 
     /**
      * Returns the split threashold of this continous split.
-     * 
+     *
      * @return the split threashold of this continous split
      */
     public double getThreshold() {

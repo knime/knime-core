@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   02.08.2007 (sieb): created
  */
@@ -28,7 +28,7 @@ package org.knime.base.node.mine.decisiontree2.learner;
  * This class determines the best split for a nominal attribute. The split is
  * performed by creating one partition for each nominal value, i.e. the
  * branching degree of the tree.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class SplitNominalNormal extends SplitNominal {
@@ -46,7 +46,7 @@ public class SplitNominalNormal extends SplitNominal {
     /**
      * Constructs the best split for the given nominal attribute. The results
      * can be retrieved from getter methods.
-     * 
+     *
      * @param table the attribute list for which to create the split
      * @param attributeIndex the index of the attribute for which to calculate
      *            the split
@@ -129,7 +129,7 @@ public class SplitNominalNormal extends SplitNominal {
     /**
      * Checks if there are at least two partitions with at least the given
      * minimum number of objects.
-     * 
+     *
      * @param partitionCounter the array with the counts of the partitions
      * @param minObjectsCount the min number of objects
      * @return true if there are at least two partitions with at least the given
@@ -149,7 +149,7 @@ public class SplitNominalNormal extends SplitNominal {
     /**
      * The number of partitions of a normal nominal split corresponds to the
      * number of different nominal values of the attribute.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -159,7 +159,7 @@ public class SplitNominalNormal extends SplitNominal {
 
     /**
      * For normal nominal splits it makes no sense to be used in deeper levels.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override

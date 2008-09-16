@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   02.08.2007 (sieb): created
  */
@@ -29,7 +29,7 @@ package org.knime.base.node.mine.decisiontree2.learner;
  * for each nominal value. This histogram has all information to calculate the
  * information quality, either for normal nominal splits as well as for binary
  * nominal subset splits.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class NominalValueHistogram {
@@ -59,7 +59,7 @@ public class NominalValueHistogram {
     /**
      * Creates a nominal value histogram from the given template. The template
      * supplies the histogram sizes.
-     * 
+     *
      * @param template the template histogram from which to initialize the new
      *            histogram
      */
@@ -74,7 +74,7 @@ public class NominalValueHistogram {
     /**
      * Increments the histogram count at the given possition for the given
      * weight.
-     * 
+     *
      * @param nominalValueMapping the nominal index for which to increment the
      *            count
      * @param classValueMapping the class index for which to increment the count
@@ -127,7 +127,7 @@ public class NominalValueHistogram {
 
     /**
      * Returns the sum of weights of the missing values.
-     * 
+     *
      * @return the sum of weights of the missing values
      */
     public double getMissingValueCount() {
@@ -137,7 +137,7 @@ public class NominalValueHistogram {
     /**
      * Returns the count histogram. First dimension are the valid (non-missing)
      * nominal values. The second dimension are the valid class values.
-     * 
+     *
      * @return the count histogram; first dimension are the valid (non-missing)
      *         nominal values. The second dimension are the valid class values.
      */
@@ -148,7 +148,7 @@ public class NominalValueHistogram {
     /**
      * Returns the number of class values of the second dimension of the
      * histogram. NOTE: The value can increase when performing increments.
-     * 
+     *
      * @return the number of class values of the second dimension of the
      *         histogram
      */

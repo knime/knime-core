@@ -24,22 +24,22 @@ Option C)
   
 Option D)
 We have two extended NodeModels, LearnerNodeModel and PredictorNodeModel, 
-which simulate for now one ModelPort, either as out- or inport. The model
+which simulate for now one ModelPort, either as out- or in-port. The model
 itself is stored inside a so-called PredModel, which has methods to load and 
 save itself in XML (e.g. extending the Config object).
 The LearnerNodeModel provides one additional abstract method call getPredModel()
 in order to retrieve the PredModel generated during execute. The 
-PredictorNodeModel gets an additonal argument, PredModel, passed during the
+PredictorNodeModel gets an additional argument, PredModel, passed during the
 configure(DataTableSpec[],PredModel) and execute(DataTable[],PredModel) call
 adapted from the original configure(.) and execute(.) method from NodeModel.
 The configure will then evaluate the PredModel against the DataTableSpecs of the
 data to predict. The execute() then uses the model to make the final prediction
 and returns the new output data table.
 This works fine until we pass an empty data table during execute to model also 
-the number of model ports esplicity. The next step will be to have also
-ModelPorts, ModelIn- and ModelOutPort, over which the PredModels are tranferred.
-This model ports can be differently modeled in the GUI and don't need to pass
-an DataTable wrapper.
+the number of model ports explicitly. The next step will be to have also
+ModelPorts, ModelIn- and ModelOutPort, over which the PredModels are ´
+transferred. This model ports can be differently modeled in the GUI and don't 
+need to pass an DataTable wrapper.
 
 The reason for different Predictor-Nodes are mostly the
 dialogs: different functionality are needed (create winner-column only, create 

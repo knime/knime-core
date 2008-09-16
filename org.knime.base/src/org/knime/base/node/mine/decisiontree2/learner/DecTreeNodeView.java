@@ -37,17 +37,17 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeRenderer;
 import org.knime.core.data.RowKey;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * This node view is exactly the same as the one for the c4.5 encapsulating
  * view.
- * 
+ *
  * @author mb, University of Konstanz
  */
-public class DecTreeNodeView extends NodeView {
+public class DecTreeNodeView extends GenericNodeView<DecisionTreeLearnerNodeModel> {
 
     private JTree m_jTree;
 
@@ -57,12 +57,12 @@ public class DecTreeNodeView extends NodeView {
 
     /**
      * Default constructor, taking the model as argument.
-     * 
+     *
      * @param model the underlying NodeModel
      */
-    public DecTreeNodeView(final NodeModel model) {
+    public DecTreeNodeView(final DecisionTreeLearnerNodeModel model) {
         super(model);
-        assert (model instanceof DecisionTreeLearnerNodeModel);
+//        assert (model instanceof DecisionTreeLearnerNodeModel);
         m_jTree = new JTree();
         m_jTree.putClientProperty("JTree.lineStyle", "Angled");
         m_jTree.getSelectionModel().setSelectionMode(
@@ -72,7 +72,7 @@ public class DecTreeNodeView extends NodeView {
         JScrollPane treeView = new JScrollPane(m_jTree);
         setComponent(treeView);
         // retrieve HiLiteHandler from Input port
-        m_hiLiteHdl = (((DecisionTreeLearnerNodeModel)model)
+        m_hiLiteHdl = ((model)
                 .getInHiLiteHandler(DecisionTreeLearnerNodeModel.DATA_INPORT));
         // and add menu entries for HiLite-ing
         m_hiLiteMenu = this.createHiLiteMenu();
@@ -85,7 +85,7 @@ public class DecTreeNodeView extends NodeView {
      */
     @Override
     protected void modelChanged() {
-        NodeModel model = this.getNodeModel();
+        GenericNodeModel model = this.getNodeModel();
         DecisionTree dt = ((DecisionTreeLearnerNodeModel)model).
                                 getDecisionTree();
         if (dt != null) {
@@ -130,7 +130,7 @@ public class DecTreeNodeView extends NodeView {
     /*
      * hilite or unhilite all items that are covered by currently selected
      * branches in the tree
-     * 
+     *
      * @param state if true hilite, otherwise unhilite selection
      */
     private void changeSelectedHiLite(final boolean state) {
@@ -160,13 +160,13 @@ public class DecTreeNodeView extends NodeView {
 
     /*
      * Create menu to control hiliting.
-     * 
+     *
      * @return A new JMenu with hiliting buttons
      */
     private JMenu createHiLiteMenu() {
         final JMenu result = new JMenu(HiLiteHandler.HILITE);
         result.setMnemonic('H');
-        JMenuItem item = new JMenuItem(HiLiteHandler.HILITE_SELECTED 
+        JMenuItem item = new JMenuItem(HiLiteHandler.HILITE_SELECTED
                 + " Branch");
         item.setMnemonic('S');
         item.addActionListener(new ActionListener() {

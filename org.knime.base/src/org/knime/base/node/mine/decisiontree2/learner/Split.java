@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   22.02.2007 (sieb): created
  */
@@ -29,7 +29,7 @@ import org.knime.core.node.NodeLogger;
 /**
  * Calculates the best split for a given attribute list and the original class
  * distribution.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public abstract class Split {
@@ -50,7 +50,7 @@ public abstract class Split {
     /**
      * Constructs the best split for the given attribute list and the class
      * distribution. The results can be retrieved from getter methods.
-     * 
+     *
      * @param table the table for which to create the split
      * @param attributeIndex the index specifying the attribute for which to
      *            calculate the split
@@ -67,7 +67,7 @@ public abstract class Split {
 
     /**
      * Returns the {@link InMemoryTable}.
-     * 
+     *
      * @return the {@link InMemoryTable}
      */
     public InMemoryTable getTable() {
@@ -76,7 +76,7 @@ public abstract class Split {
 
     /**
      * Returns the quality index of this split.
-     * 
+     *
      * @return the quality index of this split
      */
     public double getBestQualityMeasure() {
@@ -86,7 +86,7 @@ public abstract class Split {
     /**
      * To set the quality index once calculated by the detailed
      * implementatioins.
-     * 
+     *
      * @param bestGini the gini index to set
      */
     protected void setBestQualityMeasure(final double bestGini) {
@@ -95,14 +95,14 @@ public abstract class Split {
 
     /**
      * Return the number of partitions resulting from this split.
-     * 
+     *
      * @return the number of partitions resulting from this split
      */
     public abstract int getNumberPartitions();
 
     /**
      * Returns the name of this split's attribute.
-     * 
+     *
      * @return the name of this split's attribute
      */
     public String getSplitAttributeName() {
@@ -118,7 +118,7 @@ public abstract class Split {
 
     /**
      * Returns the index of the attribute this split object is responsible for.
-     * 
+     *
      * @return the index of the attribute this split object is responsible for
      */
     public int getAttributeIndex() {
@@ -128,7 +128,7 @@ public abstract class Split {
     /**
      * Whether this split is a valid split. I.e. there exist a valid quality
      * measure.
-     * 
+     *
      * @return whether this split is a valid split
      */
     public boolean isValidSplit() {
@@ -138,7 +138,7 @@ public abstract class Split {
     /**
      * Returns true if it makes sense to use this split's attribute further in
      * deeper levels, false if not.
-     * 
+     *
      * @return true if it makes sense to use this split's attribute further in
      *         deeper levels, false if not
      */
@@ -147,7 +147,7 @@ public abstract class Split {
     /**
      * Returns the partition the given row belongs to according to this split.
      * If the value of the split attribute is missing (i.e. NaN) -1 is returned.
-     * 
+     *
      * @param row the row for which to get the partition index
      * @return the partition the given row belongs to according to this split;
      *         if the value of the split attribute is missing (i.e. NaN) -1 is
@@ -160,7 +160,7 @@ public abstract class Split {
      * frequency of valid rows per partition. The weights are normally used to
      * adapt the weight of rows whose split value is missing. Such a row is then
      * assigned to each parition with the adapted weight.
-     * 
+     *
      * @return the partition weights
      */
     public abstract double[] getPartitionWeights();

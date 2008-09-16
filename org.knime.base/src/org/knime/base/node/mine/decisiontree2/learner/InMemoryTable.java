@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   31.07.2007 (sieb): created
  */
@@ -34,7 +34,7 @@ import org.knime.core.data.DataCell;
  * Implements a table that holds {@link DataRowWeighted}s in memory.
  * Additionally, this class maintains distribution information about the class
  * values and possible values of nominal attributes.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class InMemoryTable implements Iterable<DataRowWeighted> {
@@ -111,7 +111,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
      * {@link ValueMapper} array must contain mappers only at array positions
      * where a nominal attribute is available. Numeric attributes do not need a
      * mapper. These array positions must contain <code>null</code>.
-     * 
+     *
      * @param nominalAttributeValueMapper the value mapper for the nominal
      *            attributes; the array must only contain mappers at positions
      *            where nominal values are available
@@ -171,7 +171,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
      * recieves the mappers, the remarks whether to considere certain
      * attributes, the minimum number rows per tree node and the nominal
      * attribute indices array.
-     * 
+     *
      * @param tableTemplate the table that is used as a template to create this
      *            new table
      */
@@ -209,10 +209,10 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
     /**
      * Returns true if the given attribute should be considered during learning,
      * false if not.
-     * 
+     *
      * @param attributeIndex the index of the attribute to get the considering
      *            information for
-     * 
+     *
      * @return true if the given attribute should be considered during learning,
      *         false if not
      */
@@ -223,7 +223,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
     /**
      * To set if an attribute should be considered during learning or not. NOTE:
      * this is just a hint for the algorithm (i.e. just a flag).
-     * 
+     *
      * @param attributeIndex the index of the attribute to set the considering
      *            information for
      * @param consider true - the attribute should be considered during
@@ -236,7 +236,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
 
     /**
      * Returns the name of the attribute specified by the given index.
-     * 
+     *
      * @param index the index of the attribute to get the name for
      * @return the name of the specified attribute
      */
@@ -246,7 +246,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
 
     /**
      * Whether the attribute at the given index position is nominal or not.
-     * 
+     *
      * @param index the attribute index position
      * @return true if the attribute at the given index position is nominal,
      *         false otherwise (i.e. the attribute is numeric)
@@ -301,7 +301,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
 
     /**
      * Adds a {@link DataRowWeighted}.
-     * 
+     *
      * @param row the row to add
      */
     public void addRow(final DataRowWeighted row) {
@@ -341,7 +341,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
 
     /**
      * Returns the frequency of the majoriy class.
-     * 
+     *
      * @return the frequency of the majoriy class.
      */
     public double getMajorityClassCount() {
@@ -356,7 +356,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
 
     /**
      * Returns the mapping value of the majority class.
-     * 
+     *
      * @return the mapping value of the majority class
      */
     public int getMajorityClass() {
@@ -375,7 +375,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
 
     /**
      * Returns the majority class value as {@link DataCell}.
-     * 
+     *
      * @return the majority class value as {@link DataCell}
      */
     public DataCell getMajorityClassAsCell() {
@@ -387,7 +387,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
      * enough. The table is pure enough, if there are only rows of one class
      * value, or if the number of rows (sum of weights) is below twice the
      * threashold specified in the constructor.
-     * 
+     *
      * @return true, if the table is pure enough, false otherwise
      */
     public boolean isPureEnough() {
@@ -401,7 +401,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
     /**
      * Returns the class frequency array representing the class distribution of
      * this table.
-     * 
+     *
      * @return the class frequency array representing the class distribution of
      *         this table
      */
@@ -413,7 +413,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
      * Returns a copy of the class frequency array representing the class
      * distribution of this table. This is important if the returned array is
      * inteded to be manipulated!
-     * 
+     *
      * @return a copy of the class frequency array representing the class
      *         distribution of this table
      */
@@ -424,11 +424,11 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
 
     /**
      * Returns the class frequencies as a {@link HashMap}
-     * 
+     *
      * mapping class values ({@link DataCell}) to the frequency as doubles.
-     * 
+     *
      * @return the class frequencies as a {@link HashMap}
-     * 
+     *
      * mapping class values ({@link DataCell}) to the frequency as doubles
      */
     public HashMap<DataCell, Double> getClassFrequencies() {
@@ -443,7 +443,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
 
     /**
      * Returns the size of this table.
-     * 
+     *
      * @return the size of this table
      */
     public int getNumberDataRows() {
@@ -452,7 +452,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
 
     /**
      * Returns the class value mapper of this table.
-     * 
+     *
      * @return the class value mapper of this table
      */
     public ValueMapper<DataCell> getClassValueMapper() {
@@ -461,9 +461,9 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
 
     /**
      * Returns the attribute value mapper of this table for the given attribute.
-     * 
+     *
      * @param attributeIndex the index for which to return the value mapper
-     * 
+     *
      * @return the attribute value mapper of this table for the given nominal
      *         attribute, <code>null</code> if the attribute is not nominal
      *         (i.e. numeric)
@@ -475,7 +475,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
 
     /**
      * Returns the number of attributes (excluding the class attribute).
-     * 
+     *
      * @return the number of attributes (excluding the class attribute)
      */
     public int getNumAttributes() {
@@ -507,7 +507,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
 
     /**
      * Returns the sum of the weights of all rows.
-     * 
+     *
      * @return the sum of the weights of all rows
      */
     public double getSumOfWeights() {
@@ -516,7 +516,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
 
     /**
      * Returns the number of nominal values for the given attribute.
-     * 
+     *
      * @param attributeIndex the nominal attribute index for which to get the
      *            number of nominal values
      * @return the number of nominal values for the given attribute; -1 if the
@@ -534,7 +534,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
     /**
      * Returns the value histogram for the given attribute index. If the
      * attribute is numeric, <code>null</code> is returned.
-     * 
+     *
      * @param attributeIndex the attribute index for which to return the
      *            histogram
      * @return the value histogram for the given attribute index; if the
@@ -549,7 +549,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
      * Returns the nominal values for the given attribute index. The value array
      * is ordered according to the integer mapping, i.e. the {@link DataCell}
      * mapped with integer 0 is palced first, and so on.
-     * 
+     *
      * @param attributeIndex the attribute index for which to return the nominal
      *            values; <code>null</code> if the attribute is not nomnial
      * @return the nominal values for the given attribute index. The value array
@@ -572,7 +572,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
     /**
      * Sorts the data rows of this table in acending order on the given
      * attribute index. The missing values are put at the end of the table.
-     * 
+     *
      * @param attributeIndex the index of the attribute on which to sort the
      *            data rows
      * @return the sum of weights of the missing value rows for each class
@@ -617,7 +617,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
 
     /**
      * Implements the basic quicksort algorithm.
-     * 
+     *
      * @param left the left index of the partition to sort
      * @param right the right index of the partition to sort
      * @param attributeIndex the attribute index to sort on
@@ -634,11 +634,11 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
     /**
      * Partitions the instances according to a pivot element. The pivot element
      * is here the element in the middle of the data rows.
-     * 
+     *
      * @param left the left index of the partition
      * @param right the right index of the partition
      * @param attributeIndex the attribute index to compare on
-     * 
+     *
      * @return the index of the element in the middle
      */
     private int partition(int left, int right, final int attributeIndex) {
@@ -660,7 +660,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
                 right--;
             }
         }
-        if ((left == right) 
+        if ((left == right)
                 && (m_rows[right].getValue(attributeIndex) > pivot)) {
             right--;
         }

@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   31.07.2007 (sieb): created
  */
@@ -27,7 +27,7 @@ package org.knime.base.node.mine.decisiontree2.learner;
 /**
  * A data row represented as a double array. Nominal values must be mapped to be
  * used. The class value is also a mapped int value.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class ClassValueDataRow {
@@ -44,7 +44,7 @@ public class ClassValueDataRow {
 
     /**
      * Constructs a data row.
-     * 
+     *
      * @param attributeValues the attribute values (nominal values are mapped
      *            doubles)
      * @param classValue the nominal class value mapped to an integer
@@ -56,7 +56,7 @@ public class ClassValueDataRow {
 
     /**
      * Returns the class value.
-     * 
+     *
      * @return the class value
      */
     public int getClassValue() {
@@ -65,9 +65,9 @@ public class ClassValueDataRow {
 
     /**
      * Returns the attribute value for the given index.
-     * 
+     *
      * @param index the column index for which to return the double value
-     * 
+     *
      * @return the attribute value for the given index
      */
     public double getValue(final int index) {
@@ -76,7 +76,7 @@ public class ClassValueDataRow {
 
     /**
      * Returns the number of attribute values, excluding the class value.
-     * 
+     *
      * @return the number of attribute values, excluding the class value
      */
     public int getNumAttributes() {

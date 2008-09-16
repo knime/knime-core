@@ -1,5 +1,5 @@
-/* 
- * 
+/*
+ *
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -19,7 +19,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   23.07.2005 (mb): created
  */
@@ -47,7 +47,7 @@ import org.w3c.dom.Node;
 /**
  * The Leaf of a decision tree. It stores class information and also some
  * information about the patterns this leaf "coveres".
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
  */
@@ -58,7 +58,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     private static final String CONFIG_KEY_PATTERN = "pattern";
 
     private HashSet<RowKey> m_coveredPattern = new HashSet<RowKey>();
-    
+
     private boolean m_pureEnough = false;
 
     /**
@@ -70,7 +70,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     /**
      * Constructor of derived class. Read all type-specific information from XML
      * File.
-     * 
+     *
      * @param xmlNode XML node containing info
      * @param mapper map translating column names to {@link DataCell}s and vice
      *            versa
@@ -84,7 +84,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     /**
      * Constructor of base class. The necessary data is provided directly in the
      * constructor.
-     * 
+     *
      * @param nodeId the id of this node
      * @param majorityClass the majority class of the records in this node
      * @param classCounts the class distribution of the data in this node
@@ -99,7 +99,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     /**
      * Add a new node to the tree structure based on a depth-first indexing
      * strategy.
-     * 
+     *
      * @param node node to be inserted
      * @param ix index of this node in depth first traversal order
      * @return false always since this node is a leaf!
@@ -113,7 +113,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     /**
      * Determine class counts for a new pattern given as a row of values.
      * Returns a HashMap listing counts for all classes.
-     * 
+     *
      * @param row input pattern
      * @param spec the corresponding table spec
      * @return HashMap class/count
@@ -128,7 +128,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     /**
      * Add patterns given as a row of values. This is a leaf so we will simply
      * add the RowKey to our list of hiliteable rows.
-     * 
+     *
      * @param row input pattern
      * @param spec the corresponding table spec
      * @param weight the weight of the row (between 0.0 and 1.0)
@@ -144,7 +144,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     /**
      * Add colors for a pattern given as a row of values. This is a leaf so we
      * will simply add the color to our list.
-     * 
+     *
      * @param row input pattern
      * @param spec the corresponding table spec
      * @param weight the weight of the row (between 0.0 and 1.0)
@@ -275,7 +275,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
 
     /**
      * Get the marker field for the purity.
-     * 
+     *
      * @return whether this leaf is pure enough or not; must have been set
      * properly
      */

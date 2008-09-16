@@ -29,7 +29,7 @@ package org.knime.base.node.mine.decisiontree2.learner;
  *
  * @author Christoph Sieb, University of Konstanz
  */
-public abstract class SplitQualityMeasure implements Cloneable {
+public abstract class SplitQualityMeasure implements Cloneable{
 
     /**
      * Calculates the quality for a given split.

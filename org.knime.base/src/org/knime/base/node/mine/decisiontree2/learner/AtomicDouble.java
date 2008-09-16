@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   01.08.2007 (sieb): created
  */
@@ -26,7 +26,7 @@ package org.knime.base.node.mine.decisiontree2.learner;
 
 /**
  * Implements an atomic double (i.e. synchronized double).
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class AtomicDouble {
@@ -34,7 +34,7 @@ public class AtomicDouble {
 
     /**
      * Creates an atomic double with the given value.
-     * 
+     *
      * @param value the initial value to set
      */
     public AtomicDouble(final double value) {
@@ -43,16 +43,16 @@ public class AtomicDouble {
 
     /**
      * Returns the value.
-     * 
+     *
      * @return the value
      */
-    public double getValue() {
+    public synchronized double getValue() {
         return m_value;
     }
 
     /**
      * Decrements this double by the given decrement.
-     * 
+     *
      * @param incrementValue the value to subtract from this double
      * @return the value after incrementing
      */

@@ -1,5 +1,5 @@
-/* 
- * 
+/*
+ *
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -19,7 +19,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   28.09.2005 (User): created
  */
@@ -45,7 +45,7 @@ import org.w3c.dom.Node;
 /**
  * An abstract implementation of an inner node of a decision tree, i.e. one that
  * is not a leaf. It mostly holds information about children.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
  */
@@ -69,7 +69,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     /**
      * Constructor of derived class. Read all type-specific information from XML
      * File.
-     * 
+     *
      * @param xmlNode XML node info
      * @param mapper map translating column names to {@link DataCell}s and vice
      *            versa
@@ -90,7 +90,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     /**
      * Constructor of base class. The necessary data is provided directly in the
      * constructor.
-     * 
+     *
      * @param nodeId the id of this node
      * @param majorityClass the majority class of the records in this node
      * @param classCounts the class distribution of the data in this node
@@ -108,7 +108,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
 
     /**
      * Return name of attribute this node splits on.
-     * 
+     *
      * @return string the name of the column used for the split
      */
     public String getSplitAttr() {
@@ -117,7 +117,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
 
     /**
      * Reserve space for specific number of kids.
-     * 
+     *
      * @param nrKids number of children attached to this node
      */
     protected void makeRoomForKids(final int nrKids) {
@@ -127,7 +127,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
 
     /**
      * Mark index of child node at a specific branch.
-     * 
+     *
      * @param pos position of branch at this node
      * @param index index of child node
      */
@@ -139,7 +139,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
 
     /**
      * Return DecisionTreeNode at specific branch.
-     * 
+     *
      * @param pos position of branch
      * @return node attached to this branch
      */
@@ -151,7 +151,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
 
     /**
      * Add the given node to this node at the given branch index.
-     * 
+     *
      * @param node node to be inserted
      * @param index of the child array where to insert the given node
      */
@@ -162,7 +162,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     /**
      * Add a new node to the tree structure based on a depth-first indexing
      * strategy.
-     * 
+     *
      * @param node node to be inserted
      * @param ix index of this node in depth first traversal order
      * @return true only if the node was successfully inserted
@@ -267,7 +267,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     /**
      * Determine class counts for a new pattern given as a row of values.
      * Returns a HashMap listing counts for all classes.
-     * 
+     *
      * @param cell the call to be used for classification at this node
      * @param row input pattern
      * @param spec the corresponding table spec
@@ -291,7 +291,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
                 if (m_previousIndex == -1) {
                     LOGGER.error(spec.toString());
                     throw new Exception("Decision Tree Prediction failed."
-                            + " Could not find attribute '" 
+                            + " Could not find attribute '"
                             + m_splitAttr + "'");
                 }
                 m_previousSpec = spec;
@@ -322,7 +322,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
      * Add patterns given as a row of values if they fall within a specific
      * node. Usually only Leafs will actually hold a list of RowKeys, all
      * intermediate nodes will collect "their" information recursively.
-     * 
+     *
      * @param cell the cell to be used for classification at this node
      * @param row input pattern
      * @param spec the corresponding table spec
@@ -345,7 +345,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
                 if (m_previousIndex == -1) {
                     LOGGER.error(spec.toString());
                     throw new Exception("Decision Tree Prediction failed."
-                            + " Could not find attribute '" 
+                            + " Could not find attribute '"
                             + m_splitAttr + "'");
                 }
                 m_previousSpec = spec;
@@ -375,7 +375,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     /**
      * Add colors for patterns given as a row of values if they fall within a
      * specific node.
-     * 
+     *
      * @param cell the call to be used for classification at this node
      * @param row input pattern
      * @param spec the corresponding table spec
@@ -409,7 +409,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
 
     /**
      * save internal SplitNode settings to a ModelContent object.
-     * 
+     *
      * @param pConf configuration object to save decision tree to
      */
     public abstract void saveNodeSplitInternalsToPredParams(
@@ -433,7 +433,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
                     DecisionTreeNode.createNodeFromPredictorParams(
                             newChildConf, this);
            // int kidIndex = newChildConf.getInt("index");
-//            if (!getPrefix().equals("root") 
+//            if (!getPrefix().equals("root")
 //                    && kidIndex != m_child[i].getOwnIndex()) {
 //               throw new InvalidSettingsException("DecisionTreeNode: Expected"
 //                        + " index does not match real index: " + kidIndex
@@ -449,7 +449,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
 
     /**
      * Load internal SplitNode settings from a ModelContent object.
-     * 
+     *
      * @param pConf configuration object to load decision tree from.
      * @throws InvalidSettingsException if something goes wrong
      */
@@ -517,10 +517,10 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
          */
         return null;
     }
-    
+
     /**
      * Returns the children.
-     * 
+     *
      * @return the children
      */
     public DecisionTreeNode[] getChildren() {
@@ -534,16 +534,16 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     public boolean getAllowsChildren() {
         return m_child != null;
     }
-    
+
     /**
      * Replace the given child by the new given one.
-     * 
+     *
      * @param oldNode the node to replace
      * @param newNode the new node
      */
-    public void replaceChild(final DecisionTreeNode oldNode, 
+    public void replaceChild(final DecisionTreeNode oldNode,
             final DecisionTreeNode newNode) {
-        
+
         int count = 0;
         for (DecisionTreeNode child : m_child) {
             if (child == oldNode) {
@@ -552,7 +552,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             count++;
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -562,7 +562,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
         for (DecisionTreeNode node : m_child) {
             childCounts += node.getCountOfSubtree();
         }
-        
+
         return childCounts + 1;
     }
 }

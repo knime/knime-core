@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   12.03.2007 (sieb): created
  */
@@ -31,7 +31,7 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplit;
 
 /**
  * Class implementing pruning schemes.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public final class Pruner {
@@ -43,7 +43,7 @@ public final class Pruner {
     /**
      * Prunes a {@link DecisionTree} according to the minimum description lenght
      * (MDL) principle.
-     * 
+     *
      * @param decTree the decision tree to prune
      */
     public static void mdlPruning(final DecisionTree decTree) {
@@ -57,11 +57,11 @@ public final class Pruner {
 //     * The general idea is to recursively prune the children and then compare
 //     * the potential leaf estimated erro with the actual estimated error
 //     * including the length of the children.
-//     * 
+//     *
 //     * @param node the node to prune
 //     * @param zValue the z value according to which the error is estimated
 //     *            calculated from the confidence value
-//     * 
+//     *
 //     * @return the resulting description length after pruning; this value is
 //     *         used in higher levels of the recursion, i.e. for the parent node
 //     */
@@ -130,7 +130,7 @@ public final class Pruner {
 //    /**
 //     * Prunes a {@link DecisionTree} according to the estimated error pruning
 //     * (Quinlan 87).
-//     * 
+//     *
 //     * @param decTree the decision tree to prune
 //     * @param confidence the confidence value according to which the error is
 //     *            estimated
@@ -148,9 +148,9 @@ public final class Pruner {
      * The general idea is to recursively prune the children and then compare
      * the potential leaf description length with the actual length including
      * the length of the children.
-     * 
+     *
      * @param node the node to prune
-     * 
+     *
      * @return the resulting description length after pruning; this value is
      *         used in higher levels of the recursion, i.e. for the parent node
      */
@@ -229,12 +229,12 @@ public final class Pruner {
 //        // return the weighted value
 //        return estimatedError * all;
 //    }
-//    
+//
     /**
      * Prunes a {@link DecisionTree} according to the training error. I.e.
      * if the error in the subtree according to the training data is the same
      * as in the current node, the subtree is pruned, as nothing is gained.
-     * 
+     *
      * @param decTree the decision tree to prune
      */
     public static void trainingErrorPruning(final DecisionTree decTree) {
@@ -243,12 +243,12 @@ public final class Pruner {
         DecisionTreeNode root = decTree.getRootNode();
         trainingErrorPruningRecurse(root);
     }
-    
+
     /**
      * The recursion for the training error based pruning.
-     * 
+     *
      * @param node the node to prune
-     * 
+     *
      * @return the resulting error; this value is
      *         used in higher levels of the recursion, i.e. for the parent node
      */
@@ -266,7 +266,7 @@ public final class Pruner {
         double[] childErrorRates = new double[node.getChildCount()];
         // this node must be a split node
         DecisionTreeNodeSplit splitNode = (DecisionTreeNodeSplit)node;
-        
+
         // prune all children
         DecisionTreeNode[] children = splitNode.getChildren();
         int count = 0;

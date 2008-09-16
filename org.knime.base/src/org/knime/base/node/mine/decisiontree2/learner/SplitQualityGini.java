@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   19.03.2007 (sieb): created
  */
@@ -28,14 +28,14 @@ package org.knime.base.node.mine.decisiontree2.learner;
  * Implements the gini index split quality measure. This gini index is
  * subtracted from 1 (worst value), thus the gini index is also better if it is
  * larger than another gini index (same as for gain ratio).
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class SplitQualityGini extends SplitQualityMeasure {
 
     /**
      * A gini index is better if it is larger than the other one.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -45,11 +45,11 @@ public class SplitQualityGini extends SplitQualityMeasure {
 
     /**
      * A GINI index is better if it is larger than the other one.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
-    public boolean isBetterOrEqual(final double quality1, 
+    public boolean isBetterOrEqual(final double quality1,
             final double quality2) {
         return quality1 >= quality2;
     }
@@ -63,7 +63,7 @@ public class SplitQualityGini extends SplitQualityMeasure {
      * <p>
      * The gini for the split is: giniSplit(T) = SUM(nx/N*gini(Tx)) - for all
      * relative partition frequencies nx/N and all partitions Tx
-     * 
+     *
      * @param allOverRecords the allover number of records with known values in
      *            the partition to split; corresponds to N in the formula
      * @param partitionFrequency the frequencies of the different patitions;
@@ -110,7 +110,7 @@ public class SplitQualityGini extends SplitQualityMeasure {
      * For a dataset T the gini index is: gini(T) = 1 - SUM(pj * pj) - for all
      * relative class frequencies pj (pj = Pj/|T|). Pj is the absolut class
      * frequency and nx the number of records in the data set
-     * 
+     *
      * @param alloverFrequency the allover number of records; the sum of all
      *            class frequencies
      * @param classFrequency class frequencies
@@ -161,7 +161,7 @@ public class SplitQualityGini extends SplitQualityMeasure {
 
     /**
      * The gini index need not to post process the measure.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override

@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   31.07.2007 (sieb): created
  */
@@ -41,7 +41,7 @@ import org.knime.core.node.NodeLogger;
  * Creates an in memory representation of the given {@link BufferedDataTable}.
  * The table only includes valid attributes (nominal, numeric and the class
  * attribute).
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class InMemoryTableCreator {
@@ -59,7 +59,7 @@ public class InMemoryTableCreator {
 
     /**
      * Creates a creator from the given table and the specified class index.
-     * 
+     *
      * @param table the data table from which to create the attribute lists
      * @param classColumnIndex the class column index
      * @param minNumberRowsPerNode the minimum number of nodes per leaf; used to
@@ -76,9 +76,9 @@ public class InMemoryTableCreator {
 
     /**
      * Creates the {@link InMemoryTable}.
-     * 
+     *
      * @param exec the {@link ExecutionContext} to report the progress to
-     * 
+     *
      * @return the {@link InMemoryTable}
      * @throws CanceledExecutionException thrown if the creation process is
      *             canceled by the user
@@ -196,7 +196,7 @@ public class InMemoryTableCreator {
 
     /**
      * Returns an array with valid attribute indices.
-     * 
+     *
      * @param spec the {@link DataTableSpec} of the underlying
      *            {@link BufferedDataTable}
      * @param classColumnIndex the class column index which is not included
@@ -230,7 +230,7 @@ public class InMemoryTableCreator {
     /**
      * Returns the number of rows removed during table creation due to missing
      * class values.
-     * 
+     *
      * @return the number of rows removed during table creation due to missing
      *         class values
      */

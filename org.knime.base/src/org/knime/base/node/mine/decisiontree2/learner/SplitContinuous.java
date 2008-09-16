@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   22.02.2007 (sieb): created
  */
@@ -30,7 +30,7 @@ import org.knime.core.node.NodeLogger;
 
 /**
  * This class determines the best split for a numeric attribute.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class SplitContinuous extends Split {
@@ -53,7 +53,7 @@ public class SplitContinuous extends Split {
     /**
      * Constructs the best split for the given numeric attribute list and the
      * class distribution. The results can be retrieved from getter methods.
-     * 
+     *
      * @param table the table with the data for which to create the split
      * @param attributeIndex the index of the attribute for which to create the
      *            split
@@ -77,7 +77,7 @@ public class SplitContinuous extends Split {
     /**
      * Constructs the best split for the given numeric attribute list and the
      * class distribution. The results can be retrieved from getter methods.
-     * 
+     *
      * @param table the table with the data for which to create the split
      * @param attributeIndex the index of the attribute for which to create the
      *            split
@@ -283,7 +283,7 @@ public class SplitContinuous extends Split {
     /**
      * Returns the split value which was evaluated as the best according to the
      * induced partition purity.
-     * 
+     *
      * @return the best split value for the underlying attribute
      */
     public double getBestSplitValue() {
@@ -292,7 +292,7 @@ public class SplitContinuous extends Split {
 
     /**
      * The number of partitions of a numeric split is always 2.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -303,7 +303,7 @@ public class SplitContinuous extends Split {
     /**
      * For numeric splits it makes sense to use the corresponding atribute in
      * deeper levels.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override

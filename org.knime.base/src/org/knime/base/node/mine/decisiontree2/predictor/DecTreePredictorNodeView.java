@@ -1,5 +1,5 @@
-/* 
- * 
+/*
+ *
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -19,7 +19,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   04.11.2005 (mb): created
  */
@@ -41,15 +41,15 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeRenderer;
 import org.knime.core.data.RowKey;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  */
-public class DecTreePredictorNodeView extends NodeView {
+public class DecTreePredictorNodeView 
+        extends GenericNodeView<DecTreePredictorNodeModel> {
 
     private JTree m_jTree;
 
@@ -59,12 +59,12 @@ public class DecTreePredictorNodeView extends NodeView {
 
     /**
      * Default constructor, taking the model as argument.
-     * 
+     *
      * @param model the underlying NodeModel
      */
-    public DecTreePredictorNodeView(final NodeModel model) {
+    public DecTreePredictorNodeView(final DecTreePredictorNodeModel model) {
         super(model);
-        assert (model instanceof DecTreePredictorNodeModel);
+
         m_jTree = new JTree();
         m_jTree.putClientProperty("JTree.lineStyle", "Angled");
         m_jTree.getSelectionModel().setSelectionMode(
@@ -74,8 +74,8 @@ public class DecTreePredictorNodeView extends NodeView {
         JScrollPane treeView = new JScrollPane(m_jTree);
         setComponent(treeView);
         // retrieve HiLiteHandler from Input port
-        m_hiLiteHdl = (((DecTreePredictorNodeModel)model)
-                .getInHiLiteHandler(DecTreePredictorNodeModel.INDATAPORT));
+        m_hiLiteHdl = model.getInHiLiteHandler(
+                DecTreePredictorNodeModel.INDATAPORT);
         // and add menu entries for HiLite-ing
         m_hiLiteMenu = this.createHiLitetMenu();
         this.getJMenuBar().add(m_hiLiteMenu);
@@ -87,8 +87,8 @@ public class DecTreePredictorNodeView extends NodeView {
      */
     @Override
     protected void modelChanged() {
-        NodeModel model = this.getNodeModel();
-        DecisionTree dt = ((DecTreePredictorNodeModel)model).getDecisionTree();
+        DecTreePredictorNodeModel model = this.getNodeModel();
+        DecisionTree dt = model.getDecisionTree();
         if (dt != null) {
             // set new model
             m_jTree.setModel(new DefaultTreeModel(dt.getRootNode()));
@@ -98,8 +98,7 @@ public class DecTreePredictorNodeView extends NodeView {
             // preferred size should be used instead)
             m_jTree.setRowHeight(0);
             // retrieve HiLiteHandler from Input port
-            m_hiLiteHdl = (((DecTreePredictorNodeModel)model)
-                    .getInHiLiteHandler(DecTreePredictorNodeModel.INDATAPORT));
+            m_hiLiteHdl = model.getInHiLiteHandler(DecTreePredictorNodeModel.INDATAPORT);
             // and adjust menu entries for HiLite-ing
             m_hiLiteMenu.setEnabled(m_hiLiteHdl != null);
         } else {
@@ -112,7 +111,7 @@ public class DecTreePredictorNodeView extends NodeView {
      */
     @Override
     protected void onClose() {
-        
+
     }
 
     /**
@@ -120,7 +119,7 @@ public class DecTreePredictorNodeView extends NodeView {
      */
     @Override
     protected void onOpen() {
-        
+
     }
 
     // /////////////////////////////
@@ -130,7 +129,7 @@ public class DecTreePredictorNodeView extends NodeView {
     /*
      * hilite or unhilite all items that are covered by currently selected
      * branches in the tree
-     * 
+     *
      * @param state if true hilite, otherwise unhilite selection
      */
     private void changeSelectedHiLite(final boolean state) {
@@ -160,7 +159,7 @@ public class DecTreePredictorNodeView extends NodeView {
 
     /*
      * Create menu to control hiliting
-     * 
+     *
      * @return A new JMenu with hiliting buttons
      */
     private JMenu createHiLitetMenu() {
@@ -193,7 +192,7 @@ public class DecTreePredictorNodeView extends NodeView {
             }
         });
         result.add(item);
-        // TODO listener when the hilite handler changes 
+        // TODO listener when the hilite handler changes
         // (disable/enable the menu)
         /*
          * PropertyChangeListener hiliterChangeListener = new

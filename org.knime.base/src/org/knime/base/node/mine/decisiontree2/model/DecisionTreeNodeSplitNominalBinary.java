@@ -1,5 +1,5 @@
-/* 
- * 
+/*
+ *
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -19,7 +19,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   20.03.2007 (sieb): created
  */
@@ -46,7 +46,7 @@ import org.w3c.dom.Node;
 /**
  * Represents a nominal split node that splits subsets of values in a binary
  * manner.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class DecisionTreeNodeSplitNominalBinary extends
@@ -89,7 +89,7 @@ public class DecisionTreeNodeSplitNominalBinary extends
     /**
      * Constructor of derived class. Read all type-specific information from XML
      * File.
-     * 
+     *
      * @param xmlNode XML node info
      * @param mapper map translating column names to DataCells and vice versa
      */
@@ -104,7 +104,7 @@ public class DecisionTreeNodeSplitNominalBinary extends
     /**
      * Constructor for a nominal split in binary format. The necessary data is
      * provided directly in the constructor.
-     * 
+     *
      * @param nodeId the id of this node
      * @param majorityClass the majority class of the records in this node
      * @param classCounts the class distribution of the data in this node
@@ -172,11 +172,11 @@ public class DecisionTreeNodeSplitNominalBinary extends
      * Creates a string of the nominal values for the prefix string. The input
      * are all possible split values and the integer mappings (the split values
      * must be in the correct order corresponding to the mappings)
-     * 
+     *
      * @param splitValues all nominal split values
      * @param splitMappings the integer mappings of the values that should be
      *            included in the string
-     * 
+     *
      * @return the string of the wished split values separated by comma
      */
     private String getNominalValueString(final DataCell[] splitValues,
@@ -238,7 +238,7 @@ public class DecisionTreeNodeSplitNominalBinary extends
 
     /**
      * Add colors for a pattern given as a row of values.
-     * 
+     *
      * @param cell the cell to be used for the split at this level
      * @param row input pattern
      * @param spec the corresponding table spec
@@ -355,5 +355,19 @@ public class DecisionTreeNodeSplitNominalBinary extends
         super.loadNodeSplitInternalsFromPredParams(pConf);
         m_childIndices0 = toArrayList(pConf.getIntArray("childIndices0"));
         m_childIndices1 = toArrayList(pConf.getIntArray("childIndices1"));
+    }
+
+    /**
+     * @return indices of patterns that fall into child node 0.
+     */
+    public List<Integer> getChildIndices0(){
+        return m_childIndices0;
+    }
+
+    /**
+     * @return indices of patterns that fall into child node 1.
+     */
+    public List<Integer> getChildIndices1(){
+        return m_childIndices1;
     }
 }

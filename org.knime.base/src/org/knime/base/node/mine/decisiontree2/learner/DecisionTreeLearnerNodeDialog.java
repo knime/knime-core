@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   25.10.2006 (sieb): created
  */
@@ -36,7 +36,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * Dialog for a decision tree learner node.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {

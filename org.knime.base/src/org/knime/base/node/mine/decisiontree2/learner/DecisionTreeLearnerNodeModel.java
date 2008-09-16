@@ -29,11 +29,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.knime.base.node.mine.decisiontree2.PMMLDecisionTreePortObject;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeLeaf;
@@ -49,15 +52,20 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 
 /**
  * Implements a decision tree induction algorithm based on C4.5 and SPRINT.
@@ -66,7 +74,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
  *
  * @see DecisionTreeLearnerNodeFactory
  */
-public class DecisionTreeLearnerNodeModel extends NodeModel {
+public class DecisionTreeLearnerNodeModel extends GenericNodeModel {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(DecisionTreeLearnerNodeModel.class);
@@ -78,11 +86,11 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      */
     public static final String KEY_CLASSIFYCOLUMN = "classifyColumn";
 
-//    TODO /**
-//     * Key to store the confidence threshold for tree pruning in the settings.
-//     */
-//    public static final String KEY_PRUNING_CONFIDENCE_THRESHOLD =
-//            "significanceTh";
+    // TODO /**
+    // * Key to store the confidence threshold for tree pruning in the settings.
+    // */
+    // public static final String KEY_PRUNING_CONFIDENCE_THRESHOLD =
+    // "significanceTh";
 
     /**
      * Key to store the confidence threshold for tree pruning in the settings.
@@ -155,10 +163,10 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      */
     public static final String PRUNING_MDL = "MDL";
 
-//    TODO /**
-//     * The constant for estimated error pruning.
-//     */
-//    public static final String PRUNING_ESTIMATED_ERROR = "Estimated error";
+    // TODO /**
+    // * The constant for estimated error pruning.
+    // */
+    // public static final String PRUNING_ESTIMATED_ERROR = "Estimated error";
 
     /**
      * The constant for estimated error pruning.
@@ -236,11 +244,11 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      */
     private int m_classColumnIndex;
 
-//    TODO /**
-//     * The pruning confidence threshold.
-//     */
-//    private double m_pruningConfidenceThreshold =
-//            DEFAULT_PRUNING_CONFIDENCE_THRESHOLD;
+    // TODO /**
+    // * The pruning confidence threshold.
+    // */
+    // private double m_pruningConfidenceThreshold =
+    // DEFAULT_PRUNING_CONFIDENCE_THRESHOLD;
 
     /**
      * The pruning method used for pruning.
@@ -313,26 +321,30 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      * Inits a new Decision Tree model with one data in- and one model output
      * port.
      */
+    // public DecisionTreeLearnerNodeModel() {
+    // super(1, 0, 0, 1);
+    // reset();
+    // }
     public DecisionTreeLearnerNodeModel() {
-        super(1, 0, 0, 1);
-        reset();
+        super(new PortType[]{BufferedDataTable.TYPE},
+                new PortType[]{PMMLDecisionTreePortObject.TYPE});
     }
 
-    /**
-     * Saves decision tree to model out port.
-     *
-     * @param index The outport index.
-     * @param predParams holding the model afterwards.
-     * @throws InvalidSettingsException if settings are wrong
-     */
-    @Override
-    protected void saveModelContent(final int index,
-            final ModelContentWO predParams) throws InvalidSettingsException {
-
-        assert index == MODEL_OUTPORT : index;
-
-        m_decisionTree.saveToPredictorParams(predParams, false);
-    }
+    // /**
+    // * Saves decision tree to model out port.
+    // *
+    // * @param index The outport index.
+    // * @param predParams holding the model afterwards.
+    // * @throws InvalidSettingsException if settings are wrong
+    // */
+    // @Override
+    // protected void saveModelContent(final int index,
+    // final ModelContentWO predParams) throws InvalidSettingsException {
+    //
+    // assert index == MODEL_OUTPORT : index;
+    //
+    // m_decisionTree.saveToPredictorParams(predParams, false);
+    // }
 
     /**
      * Start of decision tree induction.
@@ -346,7 +358,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      * @throws IllegalAccessException if an illegal partitioning is accessed
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] data,
+    protected PortObject[] execute(final PortObject[] data,
             final ExecutionContext exec) throws CanceledExecutionException,
             IllegalArgumentException, IllegalAccessException {
 
@@ -362,18 +374,18 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                 + " used threads: "
                 + m_parallelProcessing.getCurrentThreadsInUse());
 
-// TODO
-//        if (LOGGER.isDebugEnabled()) {
-//            LOGGER.debug("Pruning confidence TH: "
-//                    + m_pruningConfidenceThreshold);
-//        }
+        // TODO
+        // if (LOGGER.isDebugEnabled()) {
+        // LOGGER.debug("Pruning confidence TH: "
+        // + m_pruningConfidenceThreshold);
+        // }
 
         exec.setProgress("Preparing...");
 
         // check input data
         assert (data != null && data.length == 1 && data[DATA_INPORT] != null);
 
-        BufferedDataTable inData = data[DATA_INPORT];
+        BufferedDataTable inData = (BufferedDataTable)data[DATA_INPORT];
 
         // the data table must have more than 2 records
         if (inData.getRowCount() <= 1) {
@@ -442,7 +454,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
         // the decision tree will be saved after execution in the method
         // "saveModelContent()"
-        m_decisionTree = new DecisionTree(root);
+        m_decisionTree = new DecisionTree(root, m_classifyColumn);
 
         // prune the tree
         timer = System.currentTimeMillis();
@@ -469,7 +481,20 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         }
 
         // no data out table is created -> return an empty table array
-        return new BufferedDataTable[]{};
+        return new PortObject[]{getPMMLOutPortObject(inData.getDataTableSpec())};
+    }
+
+    /**
+     * @return
+     */
+    private PortObject getPMMLOutPortObject(final DataTableSpec spec) {
+
+        DataColumnSpec[] colSpecs = new DataColumnSpec[spec.getNumColumns()];
+        for(int i = 0; i < spec.getNumColumns(); i++) {
+            colSpecs[i] = spec.getColumnSpec(i);
+        }
+
+        return new PMMLDecisionTreePortObject(m_decisionTree, spec, colSpecs);
     }
 
     private void addHiliteAndColorInfo(final BufferedDataTable inData) {
@@ -506,9 +531,10 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         // now prune according to the selected pruning method
         if (m_pruningMethod.equals(PRUNING_MDL)) {
             Pruner.mdlPruning(m_decisionTree);
-//        TODO } else if (m_pruningMethod.equals(PRUNING_ESTIMATED_ERROR)) {
-//            Pruner.estimatedErrorPruning(m_decisionTree,
-//                    m_pruningConfidenceThreshold);
+            // TODO } else if (m_pruningMethod.equals(PRUNING_ESTIMATED_ERROR))
+            // {
+            // Pruner.estimatedErrorPruning(m_decisionTree,
+            // m_pruningConfidenceThreshold);
         } else if (m_pruningMethod.equals(PRUNING_NO)) {
             // do nothing
         } else {
@@ -525,7 +551,6 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      *            partitioning
      * @param exec the execution context for progress information
      * @param depth the current recursion depth
-     * @throws CloneNotSupportedException
      */
     private DecisionTreeNode buildTree(final InMemoryTable table,
             final ExecutionContext exec, final int depth,
@@ -703,21 +728,22 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      * @return the table specs for the output ports
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
 
+        DataTableSpec inSpec = (DataTableSpec)inSpecs[DATA_INPORT];
         // check spec with selected column
-        DataColumnSpec columnSpec =
-                inSpecs[DATA_INPORT].getColumnSpec(m_classifyColumn);
+        DataColumnSpec columnSpec = inSpec.getColumnSpec(m_classifyColumn);
         if (columnSpec == null
                 || !columnSpec.getType().isCompatible(NominalValue.class)) {
             // if no useful column is selected guess one
             // get the first useful one starting at the end of the table
-            for (int i = inSpecs[DATA_INPORT].getNumColumns() - 1; i >= 0; i--) {
-                if (inSpecs[DATA_INPORT].getColumnSpec(i).getType()
-                        .isCompatible(NominalValue.class)) {
-                    m_classifyColumn =
-                            inSpecs[DATA_INPORT].getColumnSpec(i).getName();
+            for (int i = inSpec.getNumColumns() - 1; i >= 0; i--) {
+                if (inSpec.getColumnSpec(i).getType().isCompatible(
+                        NominalValue.class)) {
+                    m_classifyColumn = inSpec.getColumnSpec(i).getName();
+                    super.setWarningMessage("Guessing target column: \""
+                            + m_classifyColumn + "\".");
                     break;
                 }
                 throw new InvalidSettingsException("Table contains no nominal"
@@ -725,7 +751,15 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             }
         }
 
-        return new DataTableSpec[]{};
+        return new PortObjectSpec[]{createPMMLSpec(inSpec)};
+    }
+
+    private PMMLPortObjectSpec createPMMLSpec(final DataTableSpec spec){
+        PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(spec);
+        Set<String> targetCols = new HashSet<String>();
+        targetCols.add(m_classifyColumn);
+        creator.setTargetColsNames(targetCols);
+        return creator.createSpec();
     }
 
     /**
@@ -741,10 +775,10 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             throws InvalidSettingsException {
 
         m_classifyColumn = settings.getString(KEY_CLASSIFYCOLUMN);
-// TODO
-//        m_pruningConfidenceThreshold =
-//                (float)settings.getDouble(KEY_PRUNING_CONFIDENCE_THRESHOLD,
-//                        DEFAULT_PRUNING_CONFIDENCE_THRESHOLD);
+        // TODO
+        // m_pruningConfidenceThreshold =
+        // (float)settings.getDouble(KEY_PRUNING_CONFIDENCE_THRESHOLD,
+        // DEFAULT_PRUNING_CONFIDENCE_THRESHOLD);
         m_numberRecordsStoredForView.loadSettingsFrom(settings);
         m_buildInMemory =
                 settings.getBoolean(KEY_MEMORY_OPTION, DEFAULT_MEMORY_OPTION);
@@ -776,15 +810,15 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         assert (settings != null);
         settings.addString(KEY_CLASSIFYCOLUMN, m_classifyColumn);
-// TODO       settings.addDouble(KEY_PRUNING_CONFIDENCE_THRESHOLD,
-//                m_pruningConfidenceThreshold);
+        // TODO settings.addDouble(KEY_PRUNING_CONFIDENCE_THRESHOLD,
+        // m_pruningConfidenceThreshold);
         m_numberRecordsStoredForView.saveSettingsTo(settings);
         settings.addBoolean(KEY_MEMORY_OPTION, m_buildInMemory);
         settings.addInt(KEY_MIN_NUMBER_RECORDS_PER_NODE,
                 (int)m_minNumberRecordsPerNode);
         settings.addString(KEY_PRUNING_METHOD, m_pruningMethod);
-        settings.addString(KEY_SPLIT_QUALITY_MEASURE,
-                m_splitQualityMeasureType);
+        settings
+                .addString(KEY_SPLIT_QUALITY_MEASURE, m_splitQualityMeasureType);
         settings.addBoolean(KEY_SPLIT_AVERAGE, m_averageSplitpoint);
         settings.addInt(KEY_NUM_PROCESSORS, m_parallelProcessing
                 .getMaxNumberThreads());
@@ -809,17 +843,16 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             throws InvalidSettingsException {
         String classifyColumn = settings.getString(KEY_CLASSIFYCOLUMN);
         if (classifyColumn == null || classifyColumn.equals("")) {
-            throw new InvalidSettingsException(
-                    "Classification column not set.");
+            throw new InvalidSettingsException("Classification column not set.");
         }
 
-// TODO       double significance =
-//                settings.getDouble(KEY_PRUNING_CONFIDENCE_THRESHOLD);
-//
-//        if (significance < 0 || significance > 0.5) {
-//            throw new InvalidSettingsException(
-//                    "Significance threshold must be in the range of 0.0 - 0.5");
-//        }
+        // TODO double significance =
+        // settings.getDouble(KEY_PRUNING_CONFIDENCE_THRESHOLD);
+        //
+        // if (significance < 0 || significance > 0.5) {
+        // throw new InvalidSettingsException(
+        // "Significance threshold must be in the range of 0.0 - 0.5");
+        // }
     }
 
     /**

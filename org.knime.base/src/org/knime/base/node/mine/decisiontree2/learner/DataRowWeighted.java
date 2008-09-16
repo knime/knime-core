@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   31.07.2007 (sieb): created
  */
@@ -27,7 +27,7 @@ package org.knime.base.node.mine.decisiontree2.learner;
 /**
  * A data row represented as a double array. Nominal values must be mapped to be
  * used. The class value is also a mapped int value.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class DataRowWeighted {
@@ -43,7 +43,7 @@ public class DataRowWeighted {
 
     /**
      * Constructs a weighted data row.
-     * 
+     *
      * @param dataRow the underlying {@link ClassValueDataRow}
      * @param weight the weight for this {@link DataRowWeighted}
      */
@@ -55,7 +55,7 @@ public class DataRowWeighted {
     /**
      * Constructs a weighted data row from another one and sets the weight to
      * the given value.
-     * 
+     *
      * @param dataRow the other {@link DataRowWeighted}
      * @param weight the weight for this {@link DataRowWeighted}
      */
@@ -66,7 +66,7 @@ public class DataRowWeighted {
 
     /**
      * Returns the class value.
-     * 
+     *
      * @return the class value
      */
     public int getClassValue() {
@@ -75,9 +75,9 @@ public class DataRowWeighted {
 
     /**
      * Returns the attribute value for the given index.
-     * 
+     *
      * @param index the column index for which to return the double value
-     * 
+     *
      * @return the attribute value for the given index
      */
     public double getValue(final int index) {
@@ -86,7 +86,7 @@ public class DataRowWeighted {
 
     /**
      * Returns the number of attribute values, excluding the class value.
-     * 
+     *
      * @return the number of attribute values, excluding the class value
      */
     public int getNumAttributes() {
@@ -95,7 +95,7 @@ public class DataRowWeighted {
 
     /**
      * Return the weight of this data row.
-     * 
+     *
      * @return the weight of this data row
      */
     public double getWeight() {

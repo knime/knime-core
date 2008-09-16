@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   22.02.2007 (sieb): created
  */
@@ -30,7 +30,7 @@ import java.util.List;
 /**
  * This class determines the best binary split for a nominal attribute. The
  * split consists of subsets for both partitions.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class SplitNominalBinary extends SplitNominal {
@@ -69,7 +69,7 @@ public class SplitNominalBinary extends SplitNominal {
     /**
      * Constructs the best split for the given nominal attribute. The results
      * can be retrieved from getter methods.
-     * 
+     *
      * @param table the attribute list for which to create the split
      * @param attributeIndex the index of the attribute for which to calculate
      *            the split
@@ -329,7 +329,7 @@ public class SplitNominalBinary extends SplitNominal {
     /**
      * Converts the gray code representation of the partitioning to the 2D int
      * array representation (stored in a member variable).
-     * 
+     *
      * @param grayCode the gray code to convert
      * @param numNominalValues the number of different nominal values, i.e. the
      *            required bit length of the gray code (each bit represents a
@@ -366,7 +366,7 @@ public class SplitNominalBinary extends SplitNominal {
     /**
      * Checks if there are at least two partitions with at least the given
      * minimum number of objects.
-     * 
+     *
      * @param partitionCounter the array with the counts of the partitions
      * @param minObjectsCount the min number of objects
      * @return true if there are at least two partitions with at least the given
@@ -385,7 +385,7 @@ public class SplitNominalBinary extends SplitNominal {
 
     /**
      * The number of partitions of a binary nominal split is 2.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -395,7 +395,7 @@ public class SplitNominalBinary extends SplitNominal {
 
     /**
      * Binary nominal splits can be furhter used.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -427,7 +427,7 @@ public class SplitNominalBinary extends SplitNominal {
     /**
      * Returns an array of integer mappings corresponding to the false partition
      * nominal values.
-     * 
+     *
      * @return an array of integer mappings corresponding to the false partition
      *         nominal values
      */
@@ -438,7 +438,7 @@ public class SplitNominalBinary extends SplitNominal {
     /**
      * Returns an array of integer mappings corresponding to the true partition
      * nominal values.
-     * 
+     *
      * @return an array of integer mappings corresponding to the true partition
      *         nominal values
      */
@@ -470,7 +470,7 @@ public class SplitNominalBinary extends SplitNominal {
      * this {@link GrayCodeCounter} enable consecutive retrieval of the gray
      * codes and also the index of the bit which was last changed. The index
      * represents then the mapping of the nominal value.
-     * 
+     *
      * @author Christoph Sieb, University of Konstanz
      */
     private static class GrayCodeCounter {
@@ -490,12 +490,12 @@ public class SplitNominalBinary extends SplitNominal {
          * calculated. This is enough, as the calculation time for more than 15
          * bits is prohibitive high. More than 15 different nominal values must
          * be calculated with a heuristic.
-         * 
+         *
          * @param length the length of this gray code counter
          * @param noComplementary if true, only half the gray codes are created,
          *            as the other half are the complementary sets
          */
-        public GrayCodeCounter(final int length, 
+        public GrayCodeCounter(final int length,
                 final boolean noComplementary) {
             if (length > 63) {
                 throw new IllegalArgumentException("The maximum length is 63!");
@@ -511,7 +511,7 @@ public class SplitNominalBinary extends SplitNominal {
 
         /**
          * Returns true, if this counter has not reached its maximum value yet.
-         * 
+         *
          * @return true, if this counter has not reached its maximum value yet
          */
         public boolean hasNext() {
@@ -521,7 +521,7 @@ public class SplitNominalBinary extends SplitNominal {
         /**
          * Returns the gray code as long value. The bits of the long represent
          * the binary gray code.
-         * 
+         *
          * @return the gray code as long value
          */
         public long getGrayCode() {
@@ -555,7 +555,7 @@ public class SplitNominalBinary extends SplitNominal {
         /**
          * Returns the index of the bit that was changed during the last
          * increment operation.
-         * 
+         *
          * @return the index of the bit that was changed during the last
          *         increment operation
          */
@@ -566,7 +566,7 @@ public class SplitNominalBinary extends SplitNominal {
         /**
          * Returns true, if the last changed bit in the gray code was changed to
          * true (1). Fals, if the bit was set to false (0).
-         * 
+         *
          * @return true, if the last changed bit in the gray code was changed to
          *         true (1), fals, if the bit was set to false (0)
          */

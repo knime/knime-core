@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   01.08.2007 (sieb): created
  */
@@ -32,7 +32,7 @@ import org.knime.core.node.NodeLogger;
 /**
  * Finds the best split for a given {@link InMemoryTable}. The results can be
  * retrieved via getter methdods.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class SplitFinder {
@@ -47,7 +47,7 @@ public class SplitFinder {
 
     /**
      * Finds the best split for the given data.
-     * 
+     *
      * @param table the data table for which to find the best split attribute
      *            and for this the best split
      * @param splitQualityMeasure the quality measure (e.g. gini or gain
@@ -142,7 +142,7 @@ public class SplitFinder {
 
     /**
      * Returns the split evaluated as the best for the given data.
-     * 
+     *
      * @return the split evaluated as the best for the given data
      */
     public Split getSplit() {
@@ -151,7 +151,7 @@ public class SplitFinder {
 
     /**
      * Returns the attribute list that determines the split.
-     * 
+     *
      * @return the attribute list that determines the split
      */
     public int getSplitAttributeIndex() {

@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   03.08.2007 (sieb): created
  */
@@ -28,7 +28,7 @@ import org.knime.core.node.NodeLogger;
 
 /**
  * Partitions a table according to a given split.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class Partitioner {
@@ -63,7 +63,7 @@ public class Partitioner {
 
     /**
      * Partitions the data table according to the given split.
-     * 
+     *
      * @param table the data table to partition
      * @param split the split according to which the table is split
      * @param minNumExamples a partitioning is only created if there are at
@@ -137,7 +137,7 @@ public class Partitioner {
 
     /**
      * Return the partition tables.
-     * 
+     *
      * @return the partitioned tables.
      * @throws IllegalAccessException thrown if no useful partitioning could be
      *             created, i.e. this is the case if all records fall in one
@@ -158,7 +158,7 @@ public class Partitioner {
      * Whether a useful partition could be created. More precisely, there must
      * exist at least two partitions that contain at least a given number of
      * examples (defined in the constructor).
-     * 
+     *
      * @return if true a useful partition could be created and can be get via
      *         "getPartitionedLists"
      */

@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   19.03.2007 (sieb): created
  */
@@ -26,7 +26,7 @@ package org.knime.base.node.mine.decisiontree2.learner;
 
 /**
  * Implements the gain ratio split quality measure.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class SplitQualityGainRatio extends SplitQualityMeasure {
@@ -37,7 +37,7 @@ public class SplitQualityGainRatio extends SplitQualityMeasure {
 
     /**
      * A gain ratio index is better if it is larger than the other one.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -47,11 +47,11 @@ public class SplitQualityGainRatio extends SplitQualityMeasure {
 
     /**
      * A gain ratio index is better if it is larger or equal than the other one.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
-    public boolean isBetterOrEqual(final double quality1, 
+    public boolean isBetterOrEqual(final double quality1,
             final double quality2) {
         return quality1 >= quality2;
     }
@@ -63,7 +63,7 @@ public class SplitQualityGainRatio extends SplitQualityMeasure {
      * <p>
      * gainRatio(T) = gain(T) / splitInfo(T)
      * <p>
-     * 
+     *
      * @param allOverRecords the allover number of records with known values in
      *            the partition to split; corresponds to N in the formula
      * @param partitionFrequency the frequencies of the different patitions;
@@ -80,7 +80,7 @@ public class SplitQualityGainRatio extends SplitQualityMeasure {
             final double[] partitionFrequency,
             final double[][] partitionClassFrequency,
             final double numUnknownRecords) {
-        
+
         double infoAll = 0.0;
         double knownAndUnknownRecords = allOverRecords + numUnknownRecords;
 
@@ -159,7 +159,7 @@ public class SplitQualityGainRatio extends SplitQualityMeasure {
     /**
      * The post processing of the gain ration measure normalizes the info gain
      * with the split info (see c4.5).
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
