@@ -48,6 +48,7 @@ import org.knime.workbench.repository.model.IContainerObject;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
 import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.repository.model.Root;
+import org.osgi.framework.Bundle;
 
 /**
  * Manages the (global) KNIME Repository. This class collects all the
@@ -322,27 +323,47 @@ public final class RepositoryManager {
         for (IExtension mnExt : metanodeExtensions) {
             IConfigurationElement[] mnConfigElems =
                 mnExt.getConfigurationElements();
-            for (IConfigurationElement mnConfig : mnConfigElems) {
-                MetaNodeTemplate metaNode =
-                    RepositoryFactory.createMetaNode(mnConfig);
-                IContainerObject parentContainer =
-                    m_root.findContainer(metaNode.getCategoryPath());
-                
-                // If parent category is illegal, log an error and append
-                // the node to the repository root.
-                if (parentContainer == null) {
-                    WorkbenchErrorLogger
-                    .warning("Invalid category-path for node "
-                            + "contribution: '"
-                            + metaNode.getCategoryPath()
-                            + "' - adding to root instead");
-                    m_root.addChild(metaNode);
-                } else {
-                    // everything is fine, add the node to its parent
-                    // category
-                    parentContainer.addChild(metaNode);
+                for (IConfigurationElement mnConfig : mnConfigElems) {
+                    try {
+                        MetaNodeTemplate metaNode =
+                            RepositoryFactory.createMetaNode(mnConfig);
+                        IContainerObject parentContainer =
+                            m_root.findContainer(metaNode.getCategoryPath());
+                        // If parent category is illegal, log an error and 
+                        // append the node to the repository root.
+                        if (parentContainer == null) {
+                            WorkbenchErrorLogger
+                            .warning("Invalid category-path for node "
+                                    + "contribution: '"
+                                    + metaNode.getCategoryPath()
+                                    + "' - adding to root instead");
+                            m_root.addChild(metaNode);
+                        } else {
+                            // everything is fine, add the node to its parent
+                            // category
+                            parentContainer.addChild(metaNode);
+                        }
+                    } catch (Throwable t) {
+                        String message = "MetaNode " 
+                            + mnConfig.getAttribute("id")
+                        + "' from plugin '" + mnConfig.getNamespaceIdentifier()
+                        + "' could not be created.";
+                        Bundle plugin = Platform.getBundle(mnConfig
+                                .getNamespaceIdentifier());
+                        
+                        if (plugin == null) {
+                            // if the plugin is null, the plugin could not
+                            // be activated maybe due to a not
+                            // activateable plugin 
+                            // (plugin class can not be found)
+                            message = message + " The corresponding plugin "
+                            + "bundle could not be activated!";
+                        }
+                        
+                        LOGGER.error(message, t);
+                        errorString.append(message + "\n");
+                    }
                 }
-            }
         }
         
         m_lock.release();
