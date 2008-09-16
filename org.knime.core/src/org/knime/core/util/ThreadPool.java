@@ -32,22 +32,26 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.JobExecutor;
+import org.knime.core.node.workflow.JobRunnable;
 
 /**
  * Implements a sophisticated thread pool.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ThreadPool {
+public class ThreadPool implements JobExecutor {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(ThreadPool.class);
 
     private class MyFuture<T> extends FutureTask<T> {
+        private final CountDownLatch m_startWaiter = new CountDownLatch(1);
 
         /**
          * @see FutureTask#FutureTask(Callable)
@@ -79,6 +83,32 @@ public class ThreadPool {
          */
         public ThreadPool getPool() {
             return ThreadPool.this;
+        }
+
+        @Override
+        public void run() {
+            m_startWaiter.countDown();
+            super.run();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean cancel(final boolean mayInterruptIfRunning) {
+            m_startWaiter.countDown();
+            return super.cancel(mayInterruptIfRunning);
+        }
+
+        /**
+         * Waits until this future has started its execution. Returns
+         * immediately if the future is already running or even finished.
+         *
+         * @throws InterruptedException if the current thread is interrupted
+         *             while waiting
+         */
+        public void waitUntilStarted() throws InterruptedException {
+            m_startWaiter.await();
         }
     }
 
@@ -143,7 +173,8 @@ public class ThreadPool {
          * @param r the Runnable to run
          * @param pool the pool from which the worker is taken from
          * @return <code>true</code> if the worker has been woken up,
-         * <code>false</code> if not because the thread has already died
+         *         <code>false</code> if not because the thread has already
+         *         died
          */
         public boolean wakeup(final Runnable r, final ThreadPool pool) {
             synchronized (m_lock) {
@@ -345,8 +376,7 @@ public class ThreadPool {
 
         Worker thisWorker = (Worker)Thread.currentThread();
         if (!m_runningWorkers.contains(thisWorker)) {
-            if (
-              !thisWorker.m_startedFrom.m_runningWorkers.contains(thisWorker)) {
+            if (!thisWorker.m_startedFrom.m_runningWorkers.contains(thisWorker)) {
                 throw new IllegalThreadStateException("The current thread is "
                         + "not taken out of this thread pool");
             }
@@ -393,6 +423,12 @@ public class ThreadPool {
      * Shuts the pool down, still running threads are not interrupted.
      */
     public void shutdown() {
+        synchronized (m_queuedFutures) {
+            for (MyFuture<?> future : m_queuedFutures) {
+                future.cancel(true);
+            }
+            m_queuedFutures.clear();
+        }
         setMaxThreads(0);
     }
 
@@ -425,21 +461,9 @@ public class ThreadPool {
             throw new NullPointerException();
         }
 
-        final Object lock = new Object();
-        final Callable<T> t = new Callable<T>() {
-            public T call() throws Exception {
-                synchronized (lock) {
-                    lock.notifyAll();
-                }
-                return task.call();
-            }
-        };
-
-        synchronized (lock) {
-            Future<T> ftask = enqueue(t);
-            lock.wait();
-            return ftask;
-        }
+        MyFuture<T> ftask = (MyFuture<T>)enqueue(task);
+        ftask.waitUntilStarted();
+        return ftask;
     }
 
     /**
@@ -459,21 +483,9 @@ public class ThreadPool {
             throw new NullPointerException();
         }
 
-        final Object lock = new Object();
-        final Runnable r = new Runnable() {
-            public void run() {
-                synchronized (lock) {
-                    lock.notifyAll();
-                }
-                task.run();
-            }
-        };
-
-        synchronized (lock) {
-            Future<?> ftask = enqueue(r);
-            lock.wait();
-            return ftask;
-        }
+        MyFuture<?> ftask = (MyFuture<?>)enqueue(task);
+        ftask.waitUntilStarted();
+        return ftask;
     }
 
     /**
@@ -554,5 +566,13 @@ public class ThreadPool {
         } else {
             return null;
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Future<?> submitJob(final JobRunnable r) {
+        return enqueue(r);
     }
 }

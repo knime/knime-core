@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 13, 2007 (mb): created
  */
@@ -27,21 +27,22 @@ package org.knime.core.node.workflow;
 import org.knime.core.node.ExecutionContext;
 
 public abstract class JobRunnable implements Runnable {
-    
+
     private JobID m_id;
-    
+
     private final ExecutionContext m_execContext;
-    
+
     public JobRunnable(final ExecutionContext ec) {
         m_execContext = ec;
     }
 
     public abstract void run(final ExecutionContext ec);
-    
+
+    @Override
     public final void run() {
         run(m_execContext);
     }
-    
+
     public final void triggerCancel() {
         m_execContext.getProgressMonitor().setExecuteCanceled();
     }
@@ -50,7 +51,7 @@ public abstract class JobRunnable implements Runnable {
         return m_id;
     }
 
-    void setJobID(JobID id) {
+    void setJobID(final JobID id) {
         m_id = id;
     }
 

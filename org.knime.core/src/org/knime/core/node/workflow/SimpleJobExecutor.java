@@ -18,29 +18,27 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 12, 2007 (mb): created
  */
 package org.knime.core.node.workflow;
 
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+
 /**
- * Extremely simple job executor. Just runs everything it get its hand on. 
- * 
+ * Extremely simple job executor. Just runs everything it get its hand on.
+ *
  * @author M. Berthold & B. Wiswedel, University of Konstanz
  */
 public class SimpleJobExecutor implements JobExecutor {
-
     /**
      * {@inheritDoc}
      */
-    public JobID submitJob(final JobRunnable r) {
-        r.run();
-        return JobID.createNewID();
+    public Future<?> submitJob(final JobRunnable r) {
+        FutureTask<?> ft = new FutureTask<Object>(r, null);
+        ft.run();
+        return ft;
     }
-    
-    public void cancelJob(final JobID id) {
-        throw new IllegalArgumentException("Unknown ID, can't cancel job.");
-    }
-
 }

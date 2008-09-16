@@ -40,6 +40,7 @@ import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeDialog;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
@@ -73,7 +74,7 @@ public abstract class NodeContainer {
         QUEUED,
         EXECUTING,
         EXECUTED;
-        
+
         /** @return Whether this state represents an intermediate state,
          * i.e. where the node is either executing or in some way scheduled
          * for execution.
@@ -95,7 +96,7 @@ public abstract class NodeContainer {
     private final WorkflowManager m_parent;
 
     private JobExecutor m_jobExecutor;
-    
+
     private boolean m_isDeletable;
 
     /** this list will hold ScopeObjects of loops in the pipeline which can not
@@ -108,9 +109,9 @@ public abstract class NodeContainer {
     private String m_customName;
 
     private String m_customDescription;
-    
+
     private ReferencedFile m_nodeContainerDirectory;
-    
+
     private boolean m_isDirty;
 
     /**
@@ -149,7 +150,7 @@ public abstract class NodeContainer {
         if (m_parent == null) {
             // make sure at least the top node knows how to execute stuff
             // TODO: better default choice??
-            m_jobExecutor = new ThreadedJobExecutor(16);
+            m_jobExecutor = KNIMEConstants.GLOBAL_THREAD_POOL;
         }
         m_id = id;
         m_state = State.IDLE;
@@ -202,9 +203,9 @@ public abstract class NodeContainer {
     /////////////////////////////////////////////////
     // List Management of Waiting Loop Head Nodes
     /////////////////////////////////////////////////
-    
-    /** add a loop to the list of waiting loops. 
-     * 
+
+    /** add a loop to the list of waiting loops.
+     *
      * @param so ScopeObject of the loop.
      */
     public void addWaitingLoop(final ScopeLoopContext slc) {
@@ -212,7 +213,7 @@ public abstract class NodeContainer {
             m_listOfWaitingLoops.add(slc);
         }
     }
-    
+
     /**
      * @return a list of waiting loops (well: their ScopeObjects)
      */
@@ -225,9 +226,9 @@ public abstract class NodeContainer {
     public void clearWaitingLoopList() {
         m_listOfWaitingLoops.clear();
     }
-    
+
     /** Remove element from list of waiting loops.
-     * 
+     *
      * @param so loop to be removed.
      */
     public void removeWaitingLoopHeadNode(final ScopeObject so) {
@@ -360,7 +361,7 @@ public abstract class NodeContainer {
     *   coordinates on workbench and custom name.
     */
    public void setUIInformation(final UIInformation uiInformation) {
-       // ui info is a property of the outer workflow (it just happened 
+       // ui info is a property of the outer workflow (it just happened
        // to be a field member of this class)
        // there is no reason on settings the dirty flag when changed.
        m_uiInformation = uiInformation;
@@ -439,7 +440,7 @@ public abstract class NodeContainer {
             }
         }
         // TODO: This is sometimes (always?) synchronized on m_nodeMutex as
-        // the calling method is sync'ed... 
+        // the calling method is sync'ed...
         // I ran into a deadlock (see Email to Michael on 11.4.08)
         if (changesMade) {
             if (setDirty) {
@@ -450,7 +451,7 @@ public abstract class NodeContainer {
         LOGGER.debug(this.getNameWithID() + " has new state: " + m_state);
         return changesMade;
     }
-    
+
     /* ---------- State changing actions ------------ */
 
     /** Configure underlying node.
@@ -476,7 +477,7 @@ public abstract class NodeContainer {
 
     /** Cancel execution of a marked, queued, or executing node. (Tolerate
      * execute as this may happen throughout cancelation).
-     * 
+     *
      * @throws IllegalStateException
      */
     abstract void cancelExecutionAsNodeContainer()
@@ -486,7 +487,7 @@ public abstract class NodeContainer {
      * @return if node can be reset.
      */
     abstract boolean isResetableAsNodeContainer();
-    
+
     /** Reset underlying node and update state accordingly.
      * @throws IllegalStateException in case of illegal entry state.
      */
@@ -639,28 +640,28 @@ public abstract class NodeContainer {
                     m_customName, m_customDescription));
         }
     }
-    
+
     /**
      * @return the isDeletable
      */
     public boolean isDeletable() {
         return m_isDeletable;
     }
-    
-    /** Method that's called when the node is discarded. The single node 
+
+    /** Method that's called when the node is discarded. The single node
      * container overwrites this method and cleans the outport data of the
      * node (deletes temp files).
-     */ 
+     */
     void cleanup() {
     }
-    
+
     /**
      * @return the isDirty
      */
     public final boolean isDirty() {
         return m_isDirty;
-    } 
-    
+    }
+
     /**
      * Mark this node container to be changed, that is, it needs to be saved.
      */
@@ -673,18 +674,18 @@ public abstract class NodeContainer {
             m_parent.setDirty();
         }
     }
-    
+
     /** Called from persistor when node has been saved. */
     void unsetDirty() {
         m_isDirty = false;
     }
-    
+
     /** Get a new persistor that is used to copy this node (copy& paste action).
      * @param tableRep Table repository of the destination.
      * @return A new persistor for copying. */
     protected abstract NodeContainerPersistor getCopyPersistor(
             final HashMap<Integer, ContainerTable> tableRep);
-    
+
     /**
      * @param directory the nodeContainerDirectory to set
      */
@@ -695,16 +696,16 @@ public abstract class NodeContainer {
         }
         m_nodeContainerDirectory = directory;
     }
-    
+
     /**
      * @return the nodeContainerDirectory
      */
     protected final ReferencedFile getNodeContainerDirectory() {
         return m_nodeContainerDirectory;
     }
-    
-    /** Restore content from persistor. This represents the second step 
-     * when loading a workflow. 
+
+    /** Restore content from persistor. This represents the second step
+     * when loading a workflow.
      * @param persistor To load from.
      * @param tblRep A table repository to restore BufferedDatTables
      * @param inStack Incoming scope object stack.
@@ -712,10 +713,10 @@ public abstract class NodeContainer {
      * @return A result representing the load process.
      * @throws CanceledExecutionException If canceled.
      */
-    abstract LoadResult loadContent(final NodeContainerPersistor persistor, 
-            final Map<Integer, BufferedDataTable> tblRep, 
+    abstract LoadResult loadContent(final NodeContainerPersistor persistor,
+            final Map<Integer, BufferedDataTable> tblRep,
             final ScopeObjectStack inStack, final ExecutionMonitor exec)
             throws CanceledExecutionException;
-    
+
 
 }

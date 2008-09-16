@@ -167,7 +167,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      *         <code>NodeModel</code> has been canceled.
      */
     boolean isCanceled() {
-        return m_cancelExecute;
+        return m_cancelExecute || Thread.currentThread().isInterrupted();
     }
 
     /**
@@ -582,19 +582,19 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         public void setMessage(final String arg0) {
             // do nothing here
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public void setProgress(final String message) {
             // do nothing here
         }
-        
+
         /** {@inheritDoc} */
         @Override
         void appendMessage(final String append) {
             // do nothing here
         }
-        
+
         /** {@inheritDoc} */
         @Override
         void setProgress(final String message, final boolean append) {

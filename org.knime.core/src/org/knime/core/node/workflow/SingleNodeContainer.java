@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.BufferedDataTable;
@@ -64,12 +65,12 @@ public final class SingleNodeContainer extends NodeContainer
     /** my logger. */
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(SingleNodeContainer.class);
-    
+
     /** underlying node. */
     private final Node m_node;
 
     /** remember ID of the job when this node is submitted to a JobExecutor. */
-    private JobID m_executionID;
+    private Future<?> m_executionFuture;
 
     /** progress monitor. */
     private final NodeProgressMonitor m_progressMonitor =
@@ -91,7 +92,7 @@ public final class SingleNodeContainer extends NodeContainer
 
     /**
      * Create new SingleNodeContainer from persistor.
-     * 
+     *
      * @param parent the workflow manager holding this node
      * @param id the identifier
      * @param persistor to read from
@@ -127,13 +128,13 @@ public final class SingleNodeContainer extends NodeContainer
     public int getNrInPorts() {
         return m_node.getNrInPorts();
     }
-    
+
     private NodeContainerOutPort[] m_outputPorts = null;
     /**
      * Returns the output port for the given <code>portID</code>. This port
      * is essentially a container for the underlying Node and the index and
      * will retrieve all interesting data from the Node.
-     * 
+     *
      * @param index The output port's ID.
      * @return Output port with the specified ID.
      * @throws IndexOutOfBoundsException If the index is out of range.
@@ -153,7 +154,7 @@ public final class SingleNodeContainer extends NodeContainer
     /**
      * Return a port, which for the inputs really only holds the type
      * and some other static information.
-     * 
+     *
      * @param index the index of the input port
      * @return port
      */
@@ -163,7 +164,7 @@ public final class SingleNodeContainer extends NodeContainer
             m_inputPorts = new NodeInPort[getNrInPorts()];
         }
         if (m_inputPorts[index] == null) {
-            m_inputPorts[index] 
+            m_inputPorts[index]
                             = new NodeInPort(index, m_node.getInputType(index));
         }
         return m_inputPorts[index];
@@ -173,12 +174,12 @@ public final class SingleNodeContainer extends NodeContainer
 
     /**
      * Set a new HiLiteHandler for an incoming connection.
-     * 
+     *
      */
     void setInHiLiteHandler(final int index, final HiLiteHandler hdl) {
         m_node.setInHiLiteHandler(index, hdl);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public GenericNodeView<GenericNodeModel> getView(final int i) {
@@ -200,7 +201,7 @@ public final class SingleNodeContainer extends NodeContainer
     public int getNrViews() {
         return m_node.getNrViews();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     void cleanup() {
@@ -382,7 +383,7 @@ public final class SingleNodeContainer extends NodeContainer
                             + getState()
                             + " encountered in markForExecution(false).");
                 }
-            }                    
+            }
         }
     }
 
@@ -418,7 +419,7 @@ public final class SingleNodeContainer extends NodeContainer
             case MARKEDFOREXEC:
                 setState(State.QUEUED);
                 ExecutionContext execCon = createExecutionContext();
-                m_executionID
+                m_executionFuture
                        = findJobExecutor().submitJob(new JobRunnable(execCon) {
                     @Override
                     public void run(final ExecutionContext ec) {
@@ -433,7 +434,7 @@ public final class SingleNodeContainer extends NodeContainer
             }
         }
     }
-    
+
 
     /** {@inheritDoc} */
     @Override
@@ -448,7 +449,7 @@ public final class SingleNodeContainer extends NodeContainer
                 break;
             case QUEUED:
             case EXECUTING:
-                findJobExecutor().cancelJob(m_executionID);
+                m_executionFuture.cancel(true);
                 break;
             case EXECUTED:
                 // Too late - do nothing.
@@ -459,7 +460,7 @@ public final class SingleNodeContainer extends NodeContainer
             }
         }
     }
-    
+
 
     //////////////////////////////////////
     //  internal state change actions
@@ -492,7 +493,7 @@ public final class SingleNodeContainer extends NodeContainer
      * this node as well!) AFTER the actual execution.
      * The main reason is that the actual execution should be performed
      * unsychronized!
-     * 
+     *
      * @param success indicates if execution was successful
      */
     void postExecuteNode(final boolean success) {
@@ -513,6 +514,7 @@ public final class SingleNodeContainer extends NodeContainer
                 //  output execute() may create hence we do not need it here)
                 setState(State.CONFIGURED);
             }
+            m_executionFuture = null;
         }
     }
 
@@ -540,7 +542,7 @@ public final class SingleNodeContainer extends NodeContainer
         // public world.
         ec.getProgressMonitor().reset();
         // execute node outside any synchronization!
-        boolean success = !caughtContextStackException 
+        boolean success = !caughtContextStackException
             && m_node.execute(inObjects, ec);
         if (success) {
             // output tables are made publicly available (for blobs)
@@ -554,18 +556,18 @@ public final class SingleNodeContainer extends NodeContainer
         // clean up stuff and especially change states synchronized again
         getParent().doAfterExecution(SingleNodeContainer.this, success);
     }
-    
+
 
     /**
      * Enumerates the output tables and puts them into the workflow global
      * repository of tables. All other (temporary) tables that were created in
      * the given execution context, will be put in a set of temporary tables in
      * the node.
-     * 
+     *
      * @param c The execution context containing the (so far) local tables.
      */
     private void putOutputTablesIntoGlobalRepository(final ExecutionContext c) {
-        HashMap<Integer, ContainerTable> globalRep = 
+        HashMap<Integer, ContainerTable> globalRep =
             getParent().getGlobalTableRepository();
         m_node.putOutputTablesIntoGlobalRepository(globalRep);
         HashMap<Integer, ContainerTable> localRep =
@@ -596,21 +598,21 @@ public final class SingleNodeContainer extends NodeContainer
             setDirty();
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     LoadResult loadContent(final NodeContainerPersistor nodePersistor,
-            final Map<Integer, BufferedDataTable> tblRep, 
-            final ScopeObjectStack inStack, 
+            final Map<Integer, BufferedDataTable> tblRep,
+            final ScopeObjectStack inStack,
             final ExecutionMonitor exec) throws CanceledExecutionException {
         synchronized (m_nodeMutex) {
             if (!(nodePersistor instanceof SingleNodeContainerPersistor)) {
-                throw new IllegalStateException("Expected " 
-                        + SingleNodeContainerPersistor.class.getSimpleName() 
-                        + " persistor object, got " 
+                throw new IllegalStateException("Expected "
+                        + SingleNodeContainerPersistor.class.getSimpleName()
+                        + " persistor object, got "
                         + nodePersistor.getClass().getSimpleName());
             }
-            SingleNodeContainerPersistor persistor = 
+            SingleNodeContainerPersistor persistor =
                 (SingleNodeContainerPersistor)nodePersistor;
             State state = persistor.getMetaPersistor().getState();
             setState(state, false);
@@ -661,7 +663,7 @@ public final class SingleNodeContainer extends NodeContainer
             return m_node.getScopeContextStackContainer();
         }
     }
-    
+
     Node.LoopRole getLoopRole() {
         return getNode().getLoopRole();
     }
@@ -684,7 +686,7 @@ public final class SingleNodeContainer extends NodeContainer
     ///////////////////////////////////
     // NodeContainer->Node forwarding
     ///////////////////////////////////
-    
+
     /** {@inheritDoc} */
     @Override
     public String getName() {
@@ -763,7 +765,7 @@ public final class SingleNodeContainer extends NodeContainer
     public Element getXMLDescription() {
         return m_node.getXMLDescription();
     }
-    
+
     /** Overridden to also ensure that outport tables are "open" (node directory
      * is deleted upon save() - so the tables are better copied into temp).
      * {@inheritDoc}
@@ -778,7 +780,7 @@ public final class SingleNodeContainer extends NodeContainer
         m_node.ensureOutputDataIsRead();
         super.setDirty();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected NodeContainerPersistor getCopyPersistor(

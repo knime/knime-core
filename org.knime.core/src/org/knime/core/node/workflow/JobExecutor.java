@@ -18,21 +18,20 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 12, 2007 (mb): created
  */
 package org.knime.core.node.workflow;
 
+import java.util.concurrent.Future;
+
 /**
  * Main entry point for compute intensive jobs. Controls resource (thread)
  * allocation...
- * 
+ *
  * @author M. Berthold & B. Wiswedel, University of Konstanz
  */
 public interface JobExecutor {
-    JobID submitJob(JobRunnable r);
-    
-    void cancelJob(JobID id);
-    
+    Future<?> submitJob(JobRunnable r);
 }
