@@ -15,7 +15,7 @@
 &lt;li&gt;Fill out the attributes:
 &lt;dl&gt;
 &lt;dt&gt;workflowDir:&lt;/dt&gt;
-&lt;dd&gt;point to the directory containing the meta node&lt;/dd&gt;
+&lt;dd&gt;point to the directory containing the meta node (make sure to add the directory also to the binary build in &lt;code&gt;build.properties&lt;/code&gt;&lt;/dd&gt;
 &lt;dt&gt;name:&lt;/dt&gt;
 &lt;dd&gt;The name is displayed as the name for your meta node template in the node repository&lt;/dd&gt;
 &lt;dt&gt;id:&lt;/dt&gt;
