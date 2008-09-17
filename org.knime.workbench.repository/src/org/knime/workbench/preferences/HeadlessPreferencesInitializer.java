@@ -24,7 +24,7 @@ import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.workbench.repository.KNIMERepositoryPlugin;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class HeadlessPreferencesInitializer extends
@@ -37,14 +37,16 @@ public class HeadlessPreferencesInitializer extends
     public void initializeDefaultPreferences() {
         IPreferenceStore store = KNIMERepositoryPlugin.getDefault()
             .getPreferenceStore();
-        store.setDefault(HeadlessPreferencesConstants.P_MAXIMUM_THREADS, 
+        store.setDefault(HeadlessPreferencesConstants.P_MAXIMUM_THREADS,
                 2 * Runtime.getRuntime().availableProcessors());
 
-        store.setDefault(HeadlessPreferencesConstants.P_TEMP_DIR, 
+        store.setDefault(HeadlessPreferencesConstants.P_TEMP_DIR,
                 System.getProperty("java.io.tmpdir"));
-        
+
         store.setDefault(HeadlessPreferencesConstants.P_LOGLEVEL_LOG_FILE,
                 LEVEL.DEBUG.name());
+        store.setDefault(HeadlessPreferencesConstants.P_VAR_EXPERT_MODE,
+                Boolean.toString(false));
     }
 
 }

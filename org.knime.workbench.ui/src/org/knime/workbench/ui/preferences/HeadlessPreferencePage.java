@@ -35,28 +35,27 @@ import org.knime.workbench.preferences.HeadlessPreferencesConstants;
 import org.knime.workbench.repository.KNIMERepositoryPlugin;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
         IWorkbenchPreferencePage {
-    
 
     private boolean m_apply = false;
 
     private String m_tempPath;
-    
+
     /**
-     * 
+     *
      */
     public HeadlessPreferencePage() {
         super(GRID);
 
-//        setDescription("KNIME global preferences");
+        // setDescription("KNIME global preferences");
 
         // get the preference store for the UI plugin
-        IPreferenceStore store = KNIMERepositoryPlugin.getDefault()
-                .getPreferenceStore();
+        IPreferenceStore store =
+                KNIMERepositoryPlugin.getDefault().getPreferenceStore();
         m_tempPath = store.getString(HeadlessPreferencesConstants.P_TEMP_DIR);
     }
 
@@ -66,10 +65,10 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
     @Override
     protected void createFieldEditors() {
         Composite parent = getFieldEditorParent();
-        
+
         // Specify the minimum log level for log file
         addField(new RadioGroupFieldEditor(
-                HeadlessPreferencesConstants.P_LOGLEVEL_LOG_FILE, 
+                HeadlessPreferencesConstants.P_LOGLEVEL_LOG_FILE,
                 "Log File Log Level",
                 4, new String[][] {
                         {"&DEBUG", LEVEL.DEBUG.name()},
@@ -80,7 +79,7 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
 
                         {"&ERROR", LEVEL.ERROR.name()} },
                 parent));
-        
+
         // number threads
         IntegerFieldEditor maxThreadEditor = new IntegerFieldEditor(
                 HeadlessPreferencesConstants.P_MAXIMUM_THREADS,
@@ -90,20 +89,30 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
         maxThreadEditor.setTextLimit(3);
         addField(maxThreadEditor);
 
-        
+
         // temp dir
         DirectoryFieldEditor tempDirEditor = new TempDirFieldEditor(
                 HeadlessPreferencesConstants.P_TEMP_DIR,
                 "Directory for temporary files\n(you should restart KNIME after"
                         + " changing this value)", parent);
         tempDirEditor.setEmptyStringAllowed(false);
-        
+
         addField(tempDirEditor);
+
+        // variable expert mode
+        RadioGroupFieldEditor expert = new RadioGroupFieldEditor(
+                HeadlessPreferencesConstants.P_VAR_EXPERT_MODE,
+                "Variables Expert Mode:",
+                2, new String[][] {
+                        {"&on", Boolean.toString(true)},
+
+                        {"o&ff", Boolean.toString(false)} },
+                parent);
+        addField(expert);
     }
 
-
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -115,7 +124,7 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
     /**
      * Overriden to display a message box in case the temp directory was
      * changed.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -130,7 +139,7 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
 
     /**
      * Overriden to react when the users applies but then presses cancel.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -151,17 +160,18 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
         }
 
         // get the preference store for the UI plugin
-        IPreferenceStore store = KNIMERepositoryPlugin.getDefault()
-                .getPreferenceStore();
-        String currentTmpDir = store.getString(
-                HeadlessPreferencesConstants.P_TEMP_DIR);
+        IPreferenceStore store =
+                KNIMERepositoryPlugin.getDefault().getPreferenceStore();
+        String currentTmpDir =
+                store.getString(HeadlessPreferencesConstants.P_TEMP_DIR);
         boolean tempDirChanged = !m_tempPath.equals(currentTmpDir);
         if (tempDirChanged) {
 
             // reset the directory
             m_tempPath = currentTmpDir;
-            MessageBox mb = new MessageBox(Display.getDefault()
-                    .getActiveShell(), SWT.ICON_QUESTION | SWT.YES | SWT.NO);
+            MessageBox mb =
+                    new MessageBox(Display.getDefault().getActiveShell(),
+                            SWT.ICON_QUESTION | SWT.YES | SWT.NO);
             mb.setText("Restart workbench...");
             mb.setMessage("Changes of the temporary directory become "
                     + "first available after restarting the workbench.\n"
@@ -173,15 +183,15 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
             Workbench.getInstance().restart();
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public void init(IWorkbench workbench) {
+    public void init(final IWorkbench workbench) {
         // we use the pref store of the UI plugin
         setPreferenceStore(KNIMERepositoryPlugin.getDefault()
-                   .getPreferenceStore());
+                .getPreferenceStore());
     }
 
 }

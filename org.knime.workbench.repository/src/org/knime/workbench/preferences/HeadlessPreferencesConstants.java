@@ -19,18 +19,22 @@
 package org.knime.workbench.preferences;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public interface HeadlessPreferencesConstants {
-    
+
     /** Preference constant: log level for console appender. */
     public static final String P_LOGLEVEL_LOG_FILE = "logging.loglevel.logfile";
-    
+
     /** Preference constant: maximum threads to use. */
     public static final String P_MAXIMUM_THREADS = "knime.maxThreads";
 
     /** Preference constant: directory for temporary files. */
     public static final String P_TEMP_DIR = "knime.tempDir";
+
+    /** Preference constant: expert mode for variables ("true" or "false" -
+     * actually Boolean.toString(true) or Boolean.toString(false)). */
+    public static final String P_VAR_EXPERT_MODE = "knime.variables.expert";
 
 }
