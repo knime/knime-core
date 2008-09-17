@@ -24,16 +24,15 @@
  */
 package org.knime.base.node.mine.cluster.assign;
 
+import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
  * 
  * @author cebron, University of Konstanz
  */
-public class ClusterAssignerNodeFactory extends NodeFactory {
+public class ClusterAssignerNodeFactory extends GenericNodeFactory<ClusterAssignerNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -47,7 +46,7 @@ public class ClusterAssignerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public ClusterAssignerNodeModel createNodeModel() {
         return new ClusterAssignerNodeModel();
     }
 
@@ -56,7 +55,7 @@ public class ClusterAssignerNodeFactory extends NodeFactory {
      */
     @Override
     public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+            final ClusterAssignerNodeModel nodeModel) {
         return null;
     }
 

@@ -28,8 +28,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 
+import org.knime.base.node.mine.cluster.PMMLClusterPortObject;
+import org.knime.base.node.mine.cluster.PMMLClusterPortObject.ComparisonMeasure;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -43,27 +46,29 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 /**
  * 
  * @author cebron, University of Konstanz
  */
-public class ClusterAssignerNodeModel extends NodeModel {
-
-    
-    /*
-     * ModelContent from model input port.
-     */
-   private ModelContentRO m_predParams;
+public class ClusterAssignerNodeModel extends GenericNodeModel {
    
    private DataTableSpec m_clusterSpec;
    
    private List<Prototype> m_prototypes;
+   
+   private ComparisonMeasure m_measure = ComparisonMeasure.euclidean;
+   
+   private static final int PMML_PORT = 0;
+   private static final int DATA_PORT = 1;
    
    private int[] m_colIndices;
    
@@ -75,51 +80,25 @@ public class ClusterAssignerNodeModel extends NodeModel {
      * 
      */
     public ClusterAssignerNodeModel() {
-        super(1, 1, 1, 0);
+        super(new PortType[] {
+                PMMLClusterPortObject.TYPE,
+                BufferedDataTable.TYPE 
+                },
+                new PortType[] {BufferedDataTable.TYPE});
     }
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-       if (m_predParams != null) {
-           extractModelInfo(m_predParams);
-           Vector<Integer> colIndices = new Vector<Integer>();
-           for (DataColumnSpec colspec : m_clusterSpec) {
-               int index = inSpecs[0].findColumnIndex(colspec.getName());
-               if (index < 0) {
-                   throw new InvalidSettingsException("Column " 
-                    + colspec.getName() + " not found in input DataTableSpec.");
-               }
-               colIndices.add(index);
-           }
-           m_colIndices = new int[colIndices.size()];
-           for (int i = 0; i < m_colIndices.length; i++) {
-               m_colIndices[i] = colIndices.get(i);
-           }
-           
-           ColumnRearranger colre = new ColumnRearranger(inSpecs[0]);
-           colre.append(new ClusterAssignFactory(NEWCOLSPEC));
-           colre.createSpec();
-       }
-       return new DataTableSpec[]{null};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
-        if (m_predParams == null) {
-            throw new Exception("Predictor params not available.");
-        }
-        extractModelInfo(m_predParams);
-        DataTableSpec inSpec = inData[0].getDataTableSpec();
+        m_clusterSpec = ((PMMLPortObjectSpec)inSpecs[PMML_PORT])
+            .getDataTableSpec();
         Vector<Integer> colIndices = new Vector<Integer>();
         for (DataColumnSpec colspec : m_clusterSpec) {
-            int index = inSpec.findColumnIndex(colspec.getName());
+            int index =
+                    ((DataTableSpec)inSpecs[DATA_PORT]).findColumnIndex(colspec
+                            .getName());
             if (index < 0) {
                 throw new InvalidSettingsException("Column "
                         + colspec.getName()
@@ -131,38 +110,65 @@ public class ClusterAssignerNodeModel extends NodeModel {
         for (int i = 0; i < m_colIndices.length; i++) {
             m_colIndices[i] = colIndices.get(i);
         }
-        ColumnRearranger colre = new ColumnRearranger(inSpec);
+
+        ColumnRearranger colre =
+                new ColumnRearranger((DataTableSpec)inSpecs[DATA_PORT]);
         colre.append(new ClusterAssignFactory(NEWCOLSPEC));
-        BufferedDataTable bdt =
-                exec.createColumnRearrangeTable(inData[0], colre, exec);
-        return new BufferedDataTable[]{bdt};
+        DataTableSpec out = colre.createSpec();
+        return new DataTableSpec[]{out};
     }
-    
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadModelContent(final int index,
-            final ModelContentRO predParams) throws InvalidSettingsException {
-        if (index == 0) {
-            m_predParams = predParams;
+    protected PortObject[] execute(final PortObject[] inData,
+            final ExecutionContext exec) throws Exception {
+//        extractModelInfo(m_predParams);
+        extractModelInfo((PMMLClusterPortObject)inData[PMML_PORT], 
+                inData[PMML_PORT].getSpec());
+        DataTableSpec inSpec = ((BufferedDataTable)inData[DATA_PORT])
+            .getDataTableSpec();
+        ColumnRearranger colre = new ColumnRearranger(inSpec);
+        colre.append(new ClusterAssignFactory(NEWCOLSPEC));
+        BufferedDataTable bdt =
+                exec.createColumnRearrangeTable(
+                        (BufferedDataTable)inData[DATA_PORT], colre, exec);
+        return new BufferedDataTable[]{bdt};
+    }
+    
+    
+
+    private void extractModelInfo(final PMMLClusterPortObject model, 
+            final PortObjectSpec spec)
+            throws InvalidSettingsException {
+        m_clusterSpec = ((PMMLPortObjectSpec)spec).getDataTableSpec();
+        m_measure = model.getComparisonMeasure();
+        m_prototypes = new ArrayList<Prototype>();
+        String[] labels = model.getLabels();
+        double[][] protos = model.getPrototypes();
+        for (int i = 0; i < protos.length; i++) {
+            double[] prototype = protos[i];
+            m_prototypes.add(new Prototype(prototype, 
+                    new StringCell(labels[i])));
+        }
+        Set<DataColumnSpec> inclCols = model.getUsedColumns();
+        m_colIndices = new int[inclCols.size()];
+        int i = 0;
+        for (DataColumnSpec colSpec : inclCols) {
+            int idx = ((PMMLPortObjectSpec)spec).getDataTableSpec()
+                .findColumnIndex(colSpec.getName());
+            if (idx < 0) {
+                throw new InvalidSettingsException(
+                        "Column " + colSpec.getName() 
+                        + " was not found in spec");
+            } else {
+                m_colIndices[i] = idx;
+            }
+            i++;
         }
     }
     
-    private void extractModelInfo(final ModelContentRO model)
-            throws InvalidSettingsException {
-        ModelContentRO specRO =
-                model.getModelContent(Prototype.CFG_COLUMNSUSED);
-        m_clusterSpec = DataTableSpec.load(specRO);
-
-        ModelContentRO protos = model.getModelContent(Prototype.CFG_PROTOTYPE);
-        m_prototypes = new ArrayList<Prototype>();
-        for (String key : protos) {
-            ModelContentRO protoRO = protos.getModelContent(key);
-            m_prototypes.add(Prototype.loadFrom(protoRO));
-        }
-    }
     
     /**
      * {@inheritDoc}
@@ -230,8 +236,14 @@ public class ClusterAssignerNodeModel extends NodeModel {
             double mindistance = Double.MAX_VALUE;
             DataCell winnercell = DataType.getMissingCell();
             for (Prototype proto : m_prototypes) {
-                if (proto.getDistance(row, m_colIndices) < mindistance) {
-                    mindistance = proto.getDistance(row, m_colIndices);
+                double dist;
+                if (m_measure.equals(ComparisonMeasure.squaredEuclidean)) {
+                    dist = proto.getSquaredEuclideanDistance(row, m_colIndices);
+                } else {
+                    dist = proto.getDistance(row, m_colIndices);
+                }
+                if (dist < mindistance) {
+                    mindistance = dist;
                     if (mindistance > 0) {
                         winnercell = proto.getLabel();
                     }
