@@ -25,23 +25,13 @@
 
 package org.knime.base.node.preproc.groupby;
 
-import java.awt.Dimension;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JComponent;
-import javax.swing.JPanel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import org.knime.base.node.preproc.groupby.dialogutil.AggregationColumnPanel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
@@ -50,6 +40,21 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.port.PortObjectSpec;
+
+import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
+import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
+import org.knime.base.node.preproc.groupby.dialogutil.AggregationColumnPanel;
+
+import java.awt.Dimension;
+import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 
 /**
@@ -103,7 +108,7 @@ public class GroupByNodeDialog extends GenericNodeDialogPane {
         m_panel.setLayout(new BoxLayout(m_panel, BoxLayout.Y_AXIS));
         addTab("Options", m_panel);
 
-//The group column panel
+//The group column box
         m_groupColPanel = new DialogComponentColumnFilter(m_groupByCols, 0);
         m_groupColPanel.setIncludeTitle(" Group column(s) ");
         m_groupColPanel.setExcludeTitle(" Available column(s) ");
@@ -119,9 +124,10 @@ public class GroupByNodeDialog extends GenericNodeDialogPane {
                 m_groupColPanel.getComponentPanel());
         m_panel.add(groupPanel);
 
-//The aggregation column panel
+//The aggregation column box
         m_panel.add(m_aggrColPanel.getComponentPanel());
 
+//The advanced settings box
         m_panel.add(createAdvancedOptionsBox());
     }
 
@@ -132,7 +138,7 @@ public class GroupByNodeDialog extends GenericNodeDialogPane {
         box.add(Box.createVerticalGlue());
         final DialogComponent maxNoneNumericVals =
             new DialogComponentNumber(m_maxUniqueValues,
-                    "Maximum unique values per group", 1);
+                    "Maximum unique values per group", new Integer(1), 5);
         maxNoneNumericVals.setToolTipText("All groups with more unique values "
                 + "will be skipped and replaced by a missing value");
         box.add(maxNoneNumericVals.getComponentPanel());
@@ -152,9 +158,6 @@ public class GroupByNodeDialog extends GenericNodeDialogPane {
                 m_keepColumnName, "Keep original column name(s)");
         box.add(keepColName.getComponentPanel());
         box.add(Box.createVerticalGlue());
-        final Dimension dimension = box.getPreferredSize();
-        box.setMinimumSize(dimension);
-        box.setMaximumSize(dimension);
         return box;
     }
 
@@ -163,7 +166,7 @@ public class GroupByNodeDialog extends GenericNodeDialogPane {
      * selected group columns.
      */
     void groupByColsChanged() {
-        m_aggrColPanel.groupColsChange(m_groupByCols.getIncludeList());
+        m_aggrColPanel.excludeColsChange(m_groupByCols.getIncludeList());
     }
 
     /**
@@ -183,8 +186,12 @@ public class GroupByNodeDialog extends GenericNodeDialogPane {
             throw new NotConfigurableException(e.getMessage());
         }
         m_groupColPanel.loadSettingsFrom(settings, new DataTableSpec[] {spec});
-        m_aggrColPanel.loadSettingsFrom(settings, spec,
-                m_groupByCols.getIncludeList());
+        try {
+            m_aggrColPanel.loadSettingsFrom(settings, spec);
+        } catch (final InvalidSettingsException e) {
+            m_aggrColPanel.initialize(spec, getColumnMethods(spec,
+                    m_groupByCols.getIncludeList(), settings));
+        }
         groupByColsChanged();
     }
 
@@ -217,4 +224,29 @@ public class GroupByNodeDialog extends GenericNodeDialogPane {
         return subPanel;
     }
 
+    /**
+     * Helper method to get the aggregation methods for the old node settings.
+     * @param spec the input {@link DataTableSpec}
+     * @param excludeCols the columns that should be excluded from the
+     * aggregation columns
+     * @param config the config object to read from
+     * @return the {@link ColumnAggregator}s
+     */
+    public static List<ColumnAggregator> getColumnMethods(
+            final DataTableSpec spec, final List<String> excludeCols,
+            final ConfigRO config) {
+        String numeric = null;
+        String nominal = null;
+        try {
+            numeric =
+                config.getString(GroupByNodeModel.OLD_CFG_NUMERIC_COL_METHOD);
+            nominal =
+                config.getString(GroupByNodeModel.OLD_CFG_NOMINAL_COL_METHOD);
+        } catch (final InvalidSettingsException e) {
+            numeric = AggregationMethod.getDefaultNumericMethod().getLabel();
+            nominal = AggregationMethod.getDefaultNominalMethod().getLabel();
+        }
+        return GroupByNodeModel.createColumnAggregators(spec, excludeCols,
+                numeric, nominal);
+    }
 }

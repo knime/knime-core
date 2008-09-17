@@ -58,7 +58,8 @@ public class AggregationMethodTableCellRenderer
      */
     @Override
     public String getToolTipText() {
-        return "Click to change method";
+        return "Left mouse click to change method. "
+        + "Right mouse click for context menu.";
     }
 
     /**

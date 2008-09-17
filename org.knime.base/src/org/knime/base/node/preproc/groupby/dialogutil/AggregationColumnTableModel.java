@@ -26,18 +26,14 @@
 package org.knime.base.node.preproc.groupby.dialogutil;
 
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.config.ConfigRO;
+import org.knime.core.data.DoubleValue;
 
-import org.knime.base.node.preproc.groupby.GroupByNodeModel;
 import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
 import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -60,9 +56,19 @@ public class AggregationColumnTableModel extends DefaultTableModel {
         new ArrayList<ColumnAggregator>();
 
     /**
+     * Initializes the column aggregator table with the given
+     * {@link ColumnAggregator}s.
+     * @param colAggrs the {@link List} of {@link ColumnAggregator}s
+     */
+    protected void initialize(final List<ColumnAggregator> colAggrs) {
+        m_cols.clear();
+        m_cols.addAll(colAggrs);
+    }
+
+    /**
      * @param specs the {@link DataColumnSpec}s of the columns to add
      */
-    public void addColumn(final DataColumnSpec... specs) {
+    protected void addColumn(final DataColumnSpec... specs) {
         if (specs == null || specs.length < 1) {
             return;
         }
@@ -76,7 +82,7 @@ public class AggregationColumnTableModel extends DefaultTableModel {
     /**
      * @param idxs the indices of the columns to remove
      */
-    public void removeColumn(final int... idxs) {
+    protected void removeColumn(final int... idxs) {
         if (idxs == null || idxs.length < 1) {
             return;
         }
@@ -92,7 +98,7 @@ public class AggregationColumnTableModel extends DefaultTableModel {
     /**
      * @param colNames the names of the columns to remove
      */
-    public void removeColumns(final Collection<String> colNames) {
+    protected void removeColumns(final Collection<String> colNames) {
         if (colNames == null || colNames.isEmpty()) {
             return;
         }
@@ -111,8 +117,27 @@ public class AggregationColumnTableModel extends DefaultTableModel {
     /**
      * Removes all aggregation column.
      */
-    public void removeAll() {
+    protected void removeAll() {
         m_cols.clear();
+        fireTableDataChanged();
+    }
+
+    /**
+     * @param selectedRows the index of the rows to change the aggregation
+     * method
+     * @param method the aggregation method to use
+     */
+    protected void setAggregationMethod(final int[] selectedRows,
+            final AggregationMethod method) {
+        if (selectedRows == null) {
+            return;
+        }
+        for (final int i : selectedRows) {
+            if (i < 0) {
+                continue;
+            }
+            updateMethod(i, method);
+        }
         fireTableDataChanged();
     }
 
@@ -127,6 +152,106 @@ public class AggregationColumnTableModel extends DefaultTableModel {
         return "Aggregation (click to change)";
 
     }
+
+    /**
+     * @param rows2check the index of the rows to check
+     * @return <code>true</code> if all rows with the given index are numerical
+     */
+    protected boolean onlyNumerical(final int[] rows2check) {
+        if (rows2check == null) {
+            return false;
+        }
+        for (final int idx : rows2check) {
+            if (!isNumerical(idx)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * @return the row indices of all numerical rows
+     */
+    protected Collection<Integer> getNumericalRowIdxs() {
+        final Collection<Integer> result = new LinkedList<Integer>();
+        for (int i = 0, length = m_cols.size(); i < length; i++) {
+            if (isNumerical(i)) {
+                result.add(new Integer(i));
+            }
+        }
+        return result;
+    }
+
+    /**
+     * @return the row indices of all none numerical rows
+     */
+    protected Collection<Integer> getNoneNumericalRowIdxs() {
+        final Collection<Integer> result = new LinkedList<Integer>();
+        for (int i = 0, length = m_cols.size(); i < length; i++) {
+            if (!isNumerical(i)) {
+                result.add(new Integer(i));
+            }
+        }
+        return result;
+    }
+
+    /**
+     * @param row the index of the row to check
+     * @return <code>true</code> if the row contains a numerical column
+     */
+    protected boolean isNumerical(final int row) {
+        final ColumnAggregator colAggr = getColumnAggregator(row);
+        return colAggr.getDataType().isCompatible(DoubleValue.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setValueAt(final Object aValue, final int row,
+            final int columnIdx) {
+        if (aValue == null) {
+            return;
+        }
+        if (aValue instanceof AggregationMethod) {
+            final AggregationMethod newMethod =
+                (AggregationMethod)aValue;
+            assert columnIdx == 1;
+            updateMethod(row, newMethod);
+        }
+    }
+
+    /**
+     * @param row row index to change the method for
+     * @param method the new aggregation method
+     */
+    private void updateMethod(final int row, final AggregationMethod method) {
+        final ColumnAggregator colAggr = getColumnAggregator(row);
+        m_cols.set(row, new ColumnAggregator(
+                colAggr.getColSpec(), method));
+    }
+
+    /**
+     * @param row the index of the row
+     * @return the aggregator for the row with the given index
+     */
+    private ColumnAggregator getColumnAggregator(final int row) {
+        if (row < 0 || m_cols.size() <= row) {
+            throw new IllegalArgumentException("Invalid row index");
+        }
+        final ColumnAggregator colAggr =
+            m_cols.get(row);
+        return colAggr;
+    }
+
+
+    /**
+     * @return the {@link ColumnAggregator} {@link List}
+     */
+    protected List<ColumnAggregator> getColumnAggregators() {
+        return Collections.unmodifiableList(m_cols);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -167,75 +292,8 @@ public class AggregationColumnTableModel extends DefaultTableModel {
     @Override
     public Object getValueAt(final int row, final int columnIndex) {
         if (columnIndex == 1) {
-            return m_cols.get(row).getMethod();
+            return getColumnAggregator(row).getMethod();
         }
-        return m_cols.get(row).getColSpec();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setValueAt(final Object aValue, final int row,
-            final int columnIdx) {
-        if (aValue == null) {
-            return;
-        }
-        if (aValue instanceof AggregationMethod) {
-            final AggregationMethod newMethod =
-                (AggregationMethod)aValue;
-            assert columnIdx == 1;
-            final ColumnAggregator colAggr =
-                m_cols.get(row);
-            m_cols.set(row, new ColumnAggregator(
-                    colAggr.getColSpec(), newMethod));
-        }
-    }
-
-    /**
-     * @param settings the settings object to write to
-     */
-    public void saveSettingsTo(final NodeSettingsWO settings) {
-        ColumnAggregator.saveColumnAggregators(settings, m_cols);
-    }
-
-    /**
-     * @param settings the settings object to read from
-     * @param spec the input {@link DataTableSpec}
-     * @param groupCols the group by columns for compatibility
-     */
-    public void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec spec, final List<String> groupCols) {
-        m_cols.clear();
-        try {
-            m_cols.addAll(ColumnAggregator.loadColumnAggregators(settings));
-        } catch (final InvalidSettingsException e) {
-            m_cols.addAll(getColumnMethods(spec, groupCols, settings));
-        }
-    }
-
-    /**
-     * Helper method to get the aggregation methods for the old node settings.
-     * @param spec the input {@link DataTableSpec}
-     * @param groupByCols the columns that are used for grouping
-     * @param config the config object to read from
-     * @return the {@link ColumnAggregator}s
-     */
-    private static Collection<ColumnAggregator> getColumnMethods(
-            final DataTableSpec spec, final List<String> groupByCols,
-            final ConfigRO config) {
-        String numeric = null;
-        String nominal = null;
-        try {
-            numeric =
-                config.getString(GroupByNodeModel.OLD_CFG_NUMERIC_COL_METHOD);
-            nominal =
-                config.getString(GroupByNodeModel.OLD_CFG_NOMINAL_COL_METHOD);
-        } catch (final InvalidSettingsException e) {
-            numeric = AggregationMethod.getDefaultNumericMethod().getLabel();
-            nominal = AggregationMethod.getDefaultNominalMethod().getLabel();
-        }
-        return GroupByNodeModel.createColumnAggregators(spec, groupByCols,
-                numeric, nominal);
+        return getColumnAggregator(row).getColSpec();
     }
 }

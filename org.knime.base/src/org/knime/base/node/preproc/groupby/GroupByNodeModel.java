@@ -447,20 +447,20 @@ public class GroupByNodeModel extends GenericNodeModel {
      * Helper method to get the aggregation methods for the previous version
      * with only one method for numerical and one for nominal columns.
      * @param spec the {@link DataTableSpec}
-     * @param groupByCols the name of all group columns
+     * @param excludeCols the name of all columns to be excluded
      * @param numeric the name of the numerical aggregation method
      * @param nominal the name of the nominal aggregation method
      * @return {@link Collection} of the {@link ColumnAggregator}s
      */
-    public static Collection<ColumnAggregator> createColumnAggregators(
-            final DataTableSpec spec, final List<String> groupByCols,
+    public static List<ColumnAggregator> createColumnAggregators(
+            final DataTableSpec spec, final List<String> excludeCols,
             final String numeric, final String nominal) {
         final AggregationMethod numericMethod =
             AggregationMethod.getMethod4Label(numeric);
         final AggregationMethod nominalMethod =
             AggregationMethod.getMethod4Label(nominal);
-        final Set<String> groupCols = new HashSet<String>(groupByCols);
-        final Collection<ColumnAggregator> colAg =
+        final Set<String> groupCols = new HashSet<String>(excludeCols);
+        final List<ColumnAggregator> colAg =
             new LinkedList<ColumnAggregator>();
         for (int colIdx = 0, length = spec.getNumColumns();
             colIdx < length; colIdx++) {

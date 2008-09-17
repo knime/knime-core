@@ -49,12 +49,9 @@
     		</ul>
     		</p>
     		<p>
-            If the aggregation method 'Mode' or 'Unique concatenate' 
-            is selected, a maximum number 
-            of different values can be defined to be stored in memory. 
-            If the actual number of values exceeds this limit, 
-            the calculation for this group is skipped, a missing value is set 
-            in the corresponding column, and a warning is displayed. 
+            To change the aggregation method of more than one column select all
+            columns to change, open the context menu with a right mouse click
+            and select the aggregation method to use.
             </p>
             <p>
             If the 'Sort in memory' option is checked the complete table is 
@@ -75,7 +72,7 @@
 	        Defines the maximum number of unique values per group to avoid 
 	        problems with memory overloading. All groups with more unique
 	        values are skipped during the calculation and a missing value is set 
-            in the corresponding column.
+            in the corresponding column, and a warning is displayed.
         </option>
         <option name="Sort in memory">
 			Performs necessary sorting in the memory. Speeds up the process
