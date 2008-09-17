@@ -53,7 +53,7 @@ import org.knime.core.node.property.hilite.KeyEvent;
 /**
  * @author Michael Berthold, University of Konstanz
  */
-public class ClusterNodeView extends GenericNodeView<ClusterNodeModel> 
+public class ClusterNodeView extends GenericNodeView<ClusterNodeModel>
     implements HiLiteListener {
 
     // private static final NodeLogger LOGGER = NodeLogger.getLogger(
@@ -81,7 +81,7 @@ public class ClusterNodeView extends GenericNodeView<ClusterNodeModel>
     /**
      * Constructor - set name of view and
      * {@link org.knime.core.node.NodeModel}.
-     * 
+     *
      * @param nodeModel the underlying model
      */
     public ClusterNodeView(final ClusterNodeModel nodeModel) {
@@ -104,7 +104,7 @@ public class ClusterNodeView extends GenericNodeView<ClusterNodeModel>
                     return;
                 }
                 for (TreePath path : m_jtree.getSelectionPaths()) {
-                    if (path.getLastPathComponent() 
+                    if (path.getLastPathComponent()
                             instanceof ClusterMutableTreeNode) {
                         RowKey rowKey = ((ClusterMutableTreeNode)path
                                 .getLastPathComponent()).getRowId();
@@ -135,13 +135,13 @@ public class ClusterNodeView extends GenericNodeView<ClusterNodeModel>
         super.getJMenuBar().add(m_hiliteMenu);
         super.setComponent(myComp);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected ClusterNodeModel getNodeModel() {
-        return (ClusterNodeModel) super.getNodeModel();
+        return super.getNodeModel();
     }
 
     private JMenu getHiLiteMenu() {
@@ -264,7 +264,7 @@ public class ClusterNodeView extends GenericNodeView<ClusterNodeModel>
     /**
      * Update content of view - in this case fill TreeModel of JTree with new
      * information or a message indicating nonexistend or erronous model.
-     * 
+     *
      * @see java.util.Observer#update(java.util.Observable, java.lang.Object)
      */
     @Override
@@ -274,7 +274,7 @@ public class ClusterNodeView extends GenericNodeView<ClusterNodeModel>
             root = new DefaultMutableTreeNode("No Model");
         } else { // check for empty cluster model before adding content to
             // tree
-            ClusterNodeModel myModel = (ClusterNodeModel) getNodeModel();
+            ClusterNodeModel myModel = getNodeModel();
             if (!myModel.hasModel()) {
                 root = new DefaultMutableTreeNode("Empty Model");
             } else { // put cluster info into the tree
@@ -308,7 +308,7 @@ public class ClusterNodeView extends GenericNodeView<ClusterNodeModel>
         /**
          * Constructor like super but stores also the row key for hiliting
          * purposes.
-         * 
+         *
          * @param o the object to be displayed
          * @param rowId the row key srtored internally
          */
