@@ -394,6 +394,8 @@ public final class GUIUtils {
      * @param slider the slider to label
      * @param divisor the steps are calculated
      *            <code>maxVal - minVal / divisor</code>
+     * @param showDigitsAndTicks <code>true</code> if the ticks and their
+     * labels should be displayed
      */
     public static void setSliderLabels(final JSlider slider,
             final int divisor, final boolean showDigitsAndTicks) {
