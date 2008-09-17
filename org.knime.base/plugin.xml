@@ -706,17 +706,7 @@
              factory-class="org.knime.base.collection.list.split.CollectionSplitNodeFactory"
              id="org.knime.base.collection.list.split.CollectionSplitNodeFactory">
        </node>
-             <node
-            category-path="/mining/clustering"
-            factory-class="org.knime.base.node.mine.cluster.kmeans.ClusterNodeFactory"
-            id="org.knime.base.node.mine.cluster.kmeans.ClusterNodeFactory">
-      </node>
 
-      <node
-            category-path="/mining/clustering"
-            factory-class="org.knime.base.node.mine.cluster.assign.ClusterAssignerNodeFactory"
-            id="org.knime.base.node.mine.cluster.assign.ClusterAssignerNodeFactory">
-      </node>
 
       <node
             category-path="/io/read"
