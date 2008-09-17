@@ -73,7 +73,7 @@ public class RadialBasisFunctionLearnerNodeModel
         LOGGER.debug("theta-minus  : " + m_thetaMinus);
         LOGGER.debug("theta-plus   : " + m_thetaPlus);
         return new RadialBasisFunctionFactory(m_thetaMinus, m_thetaPlus,
-                getDistance(), spec, getDataColumns(), getTargetColumns());
+                getDistance(), spec, getTargetColumns());
     }
 
     /**

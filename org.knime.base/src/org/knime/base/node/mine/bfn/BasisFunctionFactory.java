@@ -22,6 +22,8 @@
 package org.knime.base.node.mine.bfn;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
@@ -88,23 +90,22 @@ public abstract class BasisFunctionFactory {
     /**
      * Creates new basisfunction factory with the given spec to extract min/max
      * value for all numeric columns.
-     * 
      * @param spec the training's data spec
-     * @param dataColumns used for training
      * @param targetColumns the class info column in the data
      * @param type the type for the model columns
      * @param distance the choice of distance function
      */
-    protected BasisFunctionFactory(final DataTableSpec spec,
-            final String[] dataColumns, final String[] targetColumns, 
-            final DataType type, final int distance) {
+    protected BasisFunctionFactory(final DataTableSpec spec, 
+            final String[] targetColumns, final DataType type, 
+            final int distance) {
         // keep distance function
         m_distance = distance;
         // init mins and maxs from domain
-        int nrColumns = dataColumns.length;
-        m_mins = new MutableDouble[nrColumns];
-        m_maxs = new MutableDouble[nrColumns];
-        for (int i = 0; i < nrColumns; i++) {
+        String[] dataColumns = findDataColumns(spec, 
+                Arrays.asList(targetColumns));
+        m_mins = new MutableDouble[dataColumns.length];
+        m_maxs = new MutableDouble[dataColumns.length];
+        for (int i = 0; i < dataColumns.length; i++) {
             DataColumnDomain domain = 
                 spec.getColumnSpec(dataColumns[i]).getDomain();
             m_mins[i] = new MutableDouble(Double.NaN);
@@ -123,6 +124,25 @@ public abstract class BasisFunctionFactory {
             }
         }
         m_spec = createModelSpec(spec, dataColumns, targetColumns, type);
+    }
+    
+    /**
+     * Find all numeric columns which are not target columns.
+     * @param spec the input spec
+     * @param targetCols column(s) set as target
+     * @return array of data column names
+     */
+    public static final String[] findDataColumns(final DataTableSpec spec,
+            final List<String> targetCols) {
+        // if no data columns are found, use all numeric columns
+        List<String> dataCols = new ArrayList<String>();
+        for (DataColumnSpec cspec : spec) {
+            if (!targetCols.contains(cspec.getName())
+                    && cspec.getType().isCompatible(DoubleValue.class)) {
+                dataCols.add(cspec.getName());
+            }
+        }
+        return dataCols.toArray(new String[0]);
     }
 
     /**

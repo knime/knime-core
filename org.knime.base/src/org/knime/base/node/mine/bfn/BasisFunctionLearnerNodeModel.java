@@ -30,12 +30,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -92,17 +89,11 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
     
     /** Key of the target column. */
     public static final String TARGET_COLUMNS = "target_column";
-    
-    /** Key of the target column. */
-    public static final String DATA_COLUMNS = "data_columns";
 
     /**
      * Keeps names of all columns used to make classification during training.
      */
     private String[] m_targetColumns = null;
-    
-    /** Keeps names of all numeric columns used for training. */
-    private String[] m_dataColumns = null;
     
     /** Keeps a value for missing replacement function index. */
     private int m_missing = 0;
@@ -228,32 +219,10 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
         }
         
         // if no data columns are found, use all numeric columns
-        List<String> dataCols = new ArrayList<String>();
-        if (m_dataColumns == null || m_dataColumns.length == 0) {
-            for (DataColumnSpec cspec : inSpec) {
-                if (!targetHash.contains(cspec.getName())
-                        && cspec.getType().isCompatible(DoubleValue.class)) {
-                    dataCols.add(cspec.getName());
-                }
-            }
-            m_dataColumns = dataCols.toArray(new String[dataCols.size()]);
-        } else {
-            // check data columns, only numeric
-            for (String dataColumn : m_dataColumns) {
-                if (!inSpec.containsName(dataColumn)) {
-                    throw new InvalidSettingsException(
-                        "Data \"" + dataColumn + "\" column not available.");
-                }
-                if (!inSpec.getColumnSpec(dataColumn).getType().isCompatible(
-                            DoubleValue.class)) {
-                        throw new InvalidSettingsException(
-                                "Data \"" + dataColumn 
-                                + "\" column not of type DoubleValue.");
-                }
-            }
-        }
+        String[] dataCols = BasisFunctionFactory.findDataColumns(
+                inSpec, targetHash);
         DataTableSpec modelSpec = BasisFunctionFactory.createModelSpec(inSpec,
-                m_dataColumns, m_targetColumns, getModelType());
+                dataCols, m_targetColumns, getModelType());
         return new DataTableSpec[]{modelSpec, modelSpec};
     }
     
@@ -297,21 +266,13 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
                 }
             }
         }
+        // get all data columns without target columns
+        String[] dataCols = BasisFunctionFactory.findDataColumns(
+                tSpec, targetHash);
+        columns.addAll(Arrays.asList(dataCols));
         // add target columns at the end
         columns.addAll(Arrays.asList(m_targetColumns));
         
-        // if no data columns are found, use all numeric columns
-        List<String> dataCols = new ArrayList<String>();
-        if (m_dataColumns == null || m_dataColumns.length == 0) {
-            for (DataColumnSpec cspec : tSpec) {
-                if (!targetHash.contains(cspec.getName())
-                        && cspec.getType().isCompatible(DoubleValue.class)) {
-                    dataCols.add(cspec.getName());
-                }
-            }
-            m_dataColumns = dataCols.toArray(new String[dataCols.size()]);
-        }
-
         // filter selected columns from input data
         String[] cols = columns.toArray(new String[]{});
         ColumnRearranger colRe = new ColumnRearranger(tSpec);
@@ -322,7 +283,7 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
         // print settings info
         LOGGER.debug("distance      : " + getDistance());
         LOGGER.debug("missing       : " + getMissingFct());
-        LOGGER.debug("targets       : " + m_targetColumns);
+        LOGGER.debug("target columns: " + m_targetColumns);
         LOGGER.debug("shrink commit : " + isShrinkAfterCommit());
         LOGGER.debug("max coverage  : " + isMaxClassCoverage());
         LOGGER.debug("max no. epochs: " + m_maxEpochs);
@@ -332,7 +293,7 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
                 trainData.getDataTableSpec());
         // start training
         BasisFunctionLearnerTable table = new BasisFunctionLearnerTable(
-                trainData, m_dataColumns, m_targetColumns, factory,
+                trainData, dataCols, m_targetColumns, factory,
                 BasisFunctionLearnerTable.MISSINGS[m_missing],
                 m_shrinkAfterCommit, m_maxCoverage, m_maxEpochs, exec);
         DataTableSpec modelSpec = table.getDataTableSpec();
@@ -395,18 +356,6 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
         if (targetColumns == null || targetColumns.length == 0) {
             msg.append("Target columns not found in settings.\n");
         }
-        // get data columns
-        String[] dataColumns = settings.getStringArray(DATA_COLUMNS, 
-                (String[]) null);
-        if (dataColumns != null && targetColumns != null) {
-            Set<String> hash = new HashSet<String>(Arrays.asList(dataColumns));
-            for (String target : targetColumns) {
-                if (hash.contains(target)) {
-                    msg.append("Target and data columns overlap in: " 
-                            + Arrays.toString(targetColumns) + "\n");
-                }
-            }
-        }
         // distance function
         int distance = settings.getInt(DISTANCE, -1);
         if (distance < 0 || distance > DISTANCES.length) {
@@ -439,9 +388,6 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
             m_targetColumns = new String[]{settings.getString(
                     TARGET_COLUMNS, null)};
         }
-        // data columns for training
-        m_dataColumns = settings.getStringArray(
-                DATA_COLUMNS, new String[0]);
         // missing value replacement
         m_missing = settings.getInt(BasisFunctionLearnerTable.MISSING);
         // distance function
@@ -461,8 +407,6 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
     public void saveSettingsTo(final NodeSettingsWO settings) {
         // selected target columns
         settings.addStringArray(TARGET_COLUMNS, m_targetColumns);
-        // selected target columns
-        settings.addStringArray(DATA_COLUMNS, m_dataColumns);
         // missing value replacement function
         settings.addInt(BasisFunctionLearnerTable.MISSING, m_missing);
         // distance function
@@ -552,13 +496,6 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
      */
     public final String[] getTargetColumns() {
         return m_targetColumns;
-    }
-    
-    /**
-     * @return the data columns used for training
-     */
-    public final String[] getDataColumns() {
-        return m_dataColumns;
     }
 
     /**

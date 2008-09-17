@@ -54,19 +54,16 @@ public class RadialBasisFunctionFactory extends BasisFunctionFactory {
 
     /**
      * Creates a new factory for a radial basis function learner.
-     * 
      * @param thetaMinus the upper bound activation for conflicting instances
      * @param thetaPlus the lower bound activation for non-conflicting instances
      * @param distance the choice of distance function
      * @param spec the input data to learn from
-     * @param dataColumns used for training
      * @param targetColumns the class info columns in the data
      */
     protected RadialBasisFunctionFactory(final double thetaMinus, 
             final double thetaPlus, final int distance, 
-            final DataTableSpec spec, final String[] dataColumns, 
-            final String[] targetColumns) {
-        super(spec, dataColumns, targetColumns, DoubleCell.TYPE, distance);
+            final DataTableSpec spec, final String[] targetColumns) {
+        super(spec, targetColumns, DoubleCell.TYPE, distance);
         m_thetaMinus = thetaMinus;
         m_thetaPlus = thetaPlus;
     }

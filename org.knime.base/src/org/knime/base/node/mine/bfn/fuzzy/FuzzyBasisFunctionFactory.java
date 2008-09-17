@@ -58,19 +58,16 @@ public class FuzzyBasisFunctionFactory extends BasisFunctionFactory {
     /**
      * Creates a new factory fuzzy basisfunction along with a {@link Norm} and a
      * {@link Shrink} function.
-     * 
      * @param norm the choice of fuzzy norm
      * @param shrink the choice of shrink procedure
      * @param spec the data to retrieve all columns and class info from
-     * @param dataColumns used for training
      * @param targetColumns the class info column in the data
      * @param distance the choice of distance function
      */
     public FuzzyBasisFunctionFactory(final int norm, final int shrink,
-            final DataTableSpec spec, final String[] dataColumns, 
+            final DataTableSpec spec,
             final String[] targetColumns, final int distance) {
-        super(spec, dataColumns, targetColumns, FuzzyIntervalCell.TYPE, 
-                distance);
+        super(spec, targetColumns, FuzzyIntervalCell.TYPE, distance);
         m_norm = norm;
         m_shrink = shrink;
     }

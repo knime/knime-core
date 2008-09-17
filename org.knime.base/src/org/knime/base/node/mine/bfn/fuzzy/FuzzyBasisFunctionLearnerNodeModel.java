@@ -84,7 +84,7 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
         LOGGER.debug("fuzzy_norm   : " + Norm.NORMS[m_norm]);
         LOGGER.debug("shrink       : " + Shrink.SHRINKS[m_shrink]);
         return new FuzzyBasisFunctionFactory(m_norm, m_shrink, spec,
-                getDataColumns(), getTargetColumns(), getDistance());
+                getTargetColumns(), getDistance());
     } 
 
     /**
