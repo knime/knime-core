@@ -66,7 +66,6 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
 
     private DecisionTree m_tree;
 
-    private PMMLPortObjectSpec m_portSpec;
 
     /**
      * @param tree
@@ -74,7 +73,7 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
      */
     public PMMLDecisionTreePortObject(final DecisionTree tree,
             final PMMLPortObjectSpec spec) {
-        m_portSpec = spec;
+        super(spec);
         m_tree = tree;
     }
 
@@ -106,7 +105,7 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
             splitCharacteristic);
         handler.startElement(null, null, "TreeModel", atts);
 
-        PMMLPortObjectSpec.writeMiningSchema(m_portSpec, handler);
+        PMMLPortObjectSpec.writeMiningSchema(getSpec(), handler);
 
         addTreeNode(handler, m_tree.getRootNode());
         handler.endElement(null, null, "TreeModel");
@@ -276,7 +275,7 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
      * {@inheritDoc}
      */
     @Override
-    public void loadFrom(final PMMLPortObjectSpec spec, 
+    public void loadFrom(final PMMLPortObjectSpec spec,
             final InputStream stream, final String version)
             throws ParserConfigurationException, SAXException, IOException {
         PMMLDecisionTreeHandler hdl = new PMMLDecisionTreeHandler();
@@ -305,12 +304,5 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
                 + " nodes";
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public PMMLPortObjectSpec getSpec() {
-        return m_portSpec;
-    }
 
 }
