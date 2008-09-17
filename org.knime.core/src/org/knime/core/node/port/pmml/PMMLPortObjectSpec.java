@@ -23,6 +23,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 
+import javax.swing.JComponent;
 import javax.xml.transform.sax.TransformerHandler;
 
 import org.knime.core.data.DataCell;
@@ -41,6 +42,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
+import org.knime.core.node.workflow.DataTableSpecView;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
@@ -482,6 +484,15 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
         handler.startElement(null, null, "Application", atts);
         handler.endElement(null, null, "Application");
         handler.endElement(null, null, "Header");
+    }
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public JComponent[] getViews() {
+        return new JComponent[] {new DataTableSpecView(getDataTableSpec())};
     }
     
 }

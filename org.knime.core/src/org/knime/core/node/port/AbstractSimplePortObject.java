@@ -27,6 +27,8 @@ package org.knime.core.node.port;
 import java.io.IOException;
 import java.util.zip.ZipEntry;
 
+import javax.swing.JComponent;
+
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
@@ -35,6 +37,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.node.workflow.ModelContentOutPortView;
 
 /**
  * Abstract implementation of basic port objects that save and load themselves
@@ -178,5 +181,18 @@ public abstract class AbstractSimplePortObject implements PortObject {
             out.putNextEntry(new ZipEntry("content.xml"));
             model.saveToXML(out);
         }
+    }
+    
+    @Override
+    public JComponent[] getViews() {
+        try {
+            ModelContent model = new ModelContent("Model Content");
+            save(model, new ExecutionMonitor());
+            return new JComponent[] {
+                    new ModelContentOutPortView((ModelContentRO)model)};
+        } catch (CanceledExecutionException cee) {
+            // should not be possible
+        }
+        return null;
     }
 }

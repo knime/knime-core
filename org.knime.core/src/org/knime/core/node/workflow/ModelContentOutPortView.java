@@ -26,7 +26,6 @@
 package org.knime.core.node.workflow;
 
 import java.awt.BorderLayout;
-import java.awt.Container;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -34,6 +33,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Enumeration;
 
+import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -45,9 +45,6 @@ import javax.swing.tree.TreePath;
 
 import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.NodeModel.ModelContentWrapper;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * A port view showing the port's <code>ModelContent</code> as
@@ -55,7 +52,7 @@ import org.knime.core.node.port.PortObjectSpec;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-final class ModelContentOutPortView extends NodeOutPortView {
+public final class ModelContentOutPortView extends JComponent {
 
     /** Shows the ModelContent as JTree. */
     private final JTree m_tree;
@@ -65,19 +62,19 @@ final class ModelContentOutPortView extends NodeOutPortView {
         = new DefaultMutableTreeNode("<No Model>", false);
 
     private final JPopupMenu m_treePopup = new JPopupMenu();
+    
+    private final ModelContentRO m_portObject; 
 
     /**
      * A view showing the data model stored in the specified ModelContent
      * output port.
      *
-     * @param nodeName Name of the node the inspected port belongs to. Will
-     *            be part of the frame's title.
-     * @param portName Name of the port to view the ModelContent from. Will
-     *            be part of the frame's title.
+     * @param portObject the port object whose content should be displayed
      *
      */
-    ModelContentOutPortView(final String nodeName, final String portName) {
-        super(nodeName + ", " + portName);
+    public ModelContentOutPortView(final ModelContentRO portObject) {
+        m_portObject = portObject;
+        setName(portObject.getKey());
         m_tree = new JTree();
         m_tree.setEditable(false);
         m_tree.setFont(new Font("Courier", Font.PLAIN, 12));
@@ -123,10 +120,10 @@ final class ModelContentOutPortView extends NodeOutPortView {
                }
            }
         });
-        Container cont = getContentPane();
-        cont.setLayout(new BorderLayout());
-        cont.setBackground(GenericNodeView.COLOR_BACKGROUND);
-        cont.add(new JScrollPane(m_tree), BorderLayout.CENTER);
+        setLayout(new BorderLayout());
+        setBackground(GenericNodeView.COLOR_BACKGROUND);
+        add(new JScrollPane(m_tree), BorderLayout.CENTER);
+        update();
     }
 
     private void expandAll(final TreePath parent) {
@@ -150,35 +147,27 @@ final class ModelContentOutPortView extends NodeOutPortView {
                 collapseAll(path);
             }
         }
-        m_tree.expandPath(parent);
+        m_tree.collapsePath(parent);
     }
 
     /**
      * Updates the view's content with new ModelContent object.
      *
-     * @param predParams the new content can be null
-     * @param spec the new spec, not used
      */
-    @Override
-    void update(final PortObject predParams, final PortObjectSpec spec) {
+    private void update() {
         m_tree.removeAll();
-        if (predParams == null) {
+        if (m_portObject == null) {
             m_tree.setModel(new DefaultTreeModel(NO_TEXT));
         } else {
             //String text = predParams.toString();
-            ModelContentRO cont =
-                ((ModelContentWrapper) predParams).getModelContent();
-            m_tree.setModel(new DefaultTreeModel(cont));
+            m_tree.setModel(new DefaultTreeModel(m_portObject));
         }
-        super.updatePortView();
     }
 
     /**
      * {@inheritDoc}
      */
-    @Override
     public void dispose() {
-        super.dispose();
         m_tree.removeAll();
         m_tree.setModel(null);
     }

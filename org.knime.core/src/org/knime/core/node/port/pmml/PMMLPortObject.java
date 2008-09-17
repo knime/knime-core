@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.JComponent;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -284,6 +285,13 @@ public abstract class PMMLPortObject implements PortObject {
     protected abstract void writePMMLModel(final TransformerHandler handler)
         throws SAXException;
     
-    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public JComponent[] getViews() {
+        return new JComponent[] {new PMMLPortObjectView(this)};
+    }
 
 }

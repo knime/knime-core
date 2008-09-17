@@ -27,6 +27,8 @@ package org.knime.core.node;
 import java.io.IOException;
 import java.util.zip.ZipEntry;
 
+import javax.swing.JComponent;
+
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -35,6 +37,7 @@ import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.ModelContentOutPortView;
 
 
 /**
@@ -194,6 +197,12 @@ public abstract class NodeModel extends GenericNodeModel {
         @Override
         public String getSummary() {
             return null;
+        }
+        
+        @Override
+        public JComponent[] getViews() {
+            return new JComponent[] {new ModelContentOutPortView(
+                    this.getModelContent())};
         }
         
         /** @return serializer as required by class {@link PortObject}. */

@@ -22,8 +22,12 @@
  */
 package org.knime.core.node.port.viewproperty;
 
+import javax.swing.JComponent;
+
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.ModelContent;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.ModelContentOutPortView;
 
 /**
  * <code>PortObject</code> implementation for {@link SizeHandlerPortObject}
@@ -54,5 +58,17 @@ public class SizeHandlerPortObject extends ViewPropertyPortObject {
             final DataTableSpec spec, final String portSummary) {
         super(spec, portSummary);
     }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public JComponent[] getViews() {
+        ModelContent model = new ModelContent("Size"); 
+        getSpec().getColumnSpec(0).getSizeHandler().save(model);
+        return new JComponent[] {new ModelContentOutPortView(model)};
+    }
+    
 
 }

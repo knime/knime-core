@@ -36,6 +36,8 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 
+import javax.swing.JComponent;
+
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.data.property.ShapeFactory;
 import org.knime.core.data.property.SizeHandler;
@@ -49,6 +51,8 @@ import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
+import org.knime.core.node.workflow.DataColumnPropertiesView;
+import org.knime.core.node.workflow.DataTableSpecView;
 
 /**
  * <code>DataTableSpec</code>s specify the structure of a {@link DataTable}.
@@ -942,6 +946,12 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         }
         buffer.append("]");
         return buffer.toString();
+    }
+    
+    @Override
+    public JComponent[] getViews() {
+        return new JComponent[] {new DataTableSpecView(this), 
+                new DataColumnPropertiesView(this)};
     }
 
 } // DataTableSpec

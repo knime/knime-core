@@ -53,7 +53,7 @@ public class NodeContainerOutPort extends NodePortAdaptor
     /**
      * The inspector view of this port. Could be null if not opened yet.
      */
-    private NodeOutPortView m_portView;
+    private OutPortView m_portView;
 
     /**
      * Creates a new output port with a fixed and ID (should unique to all other
@@ -127,7 +127,7 @@ public class NodeContainerOutPort extends NodePortAdaptor
      * @throws IllegalStateException If the port view was already set.
      * @see #getPortView()
      */
-    private final void setPortView(final NodeOutPortView portView) {
+    private final void setPortView(final OutPortView portView) {
         if (portView == null) {
             throw new NullPointerException("Can't set port view to null");
         }
@@ -142,7 +142,7 @@ public class NodeContainerOutPort extends NodePortAdaptor
      *
      * @return The port view or null.
      */
-    protected final NodeOutPortView getPortView() {
+    protected final OutPortView getPortView() {
         return m_portView;
     }
 
@@ -152,11 +152,11 @@ public class NodeContainerOutPort extends NodePortAdaptor
     // TODO: return component with convenience method for Frame construction.
     public void openPortView(final String name) {
         if (m_portView == null) {
-            setPortView(NodeOutPortView.createOutPortView(getPortType(),
-                    name, getPortName()));
+            setPortView(new OutPortView(m_snc.getName() + "#" 
+                    + m_snc.getID().getIndex(), getPortName()));
         }
-        m_portView.update(getPortObject(), getPortObjectSpec());
         m_portView.openView();
+        m_portView.update(getPortObject(), getPortObjectSpec());
     }
 
     /** {@inheritDoc} */

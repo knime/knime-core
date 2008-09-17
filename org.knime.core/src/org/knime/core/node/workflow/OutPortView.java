@@ -1,6 +1,4 @@
-/*
- * ------------------------------------------------------------------
- * This source code, its documentation and all appendant files
+/* This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
  * Copyright, 2003 - 2008
@@ -17,40 +15,41 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * --------------------------------------------------------------------- *
- * History
- *   03.08.2005 (ohl): created
- *   08.05.2006(sieb, ohl): reviewed
  */
 package org.knime.core.node.workflow;
 
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
+import javax.swing.Box;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
 import javax.swing.WindowConstants;
 
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.database.DatabasePortObject;
+import org.knime.core.node.util.ViewUtils;
 
 /**
- * Implements a view to inspect the data stored in an output port.
- *
- * @author ohl, University of Konstanz
+ * 
+ * 
+ * @author Fabian Dill, University of Konstanz
  */
-abstract class NodeOutPortView extends JFrame {
-
+public class OutPortView extends JFrame {
+    
     /** Keeps track if view has been opened before. */
     private boolean m_wasOpened = false;
 
@@ -60,36 +59,22 @@ abstract class NodeOutPortView extends JFrame {
     /** Initial frame height. */
     static final int INIT_HEIGHT = 400;
 
-    /**
-     * Returns the appropriate {@link NodeOutPortView} for the passed type.
-     * @param type the type of the port
-     * @param nodeName the name of the node
-     * @param portName the name of the port
-     * @return the appropriate type for the given port type
-     */
-    static NodeOutPortView createOutPortView(final PortType type,
-            final String nodeName, final String portName) {
-        if (type == BufferedDataTable.TYPE) {
-            return new DataOutPortView(nodeName, portName);
-        } else if (type == NodeModel.OLDSTYLEMODELPORTTYPE) {
-            return new ModelContentOutPortView(nodeName, portName);
-        } else if (type == DatabasePortObject.TYPE) {
-            return new DatabaseOutPortView(nodeName, portName);    
-        } else {
-            throw new IllegalArgumentException(
-                    "Port type " + type + " not supported yet!");
-        }
-    }
+    private final JTabbedPane m_tabbedPane;
+    
+    private final LoadingPanel m_loadingPanel = new LoadingPanel();
+
+//    private final Object m_updateLock = new Object();
 
     /**
      * A view showing the data stored in the specified output port.
      *
-     * @param name The name of the node the inspected port belongs to.
+     * @param nodeName The name of the node the inspected port belongs to
+     * @param portName name of the port which is also displayed in the title
      */
-    NodeOutPortView(final String name) {
-        super(name);
+    OutPortView(final String nodeName, final String portName) {
+        super(nodeName + " (" + portName + ")");
         // init frame
-        super.setName(name + " View");
+        super.setName(nodeName + " - " + portName + " View");
         if (KNIMEConstants.KNIME16X16 != null) {
             super.setIconImage(KNIMEConstants.KNIME16X16.getImage());
         }
@@ -110,17 +95,20 @@ abstract class NodeOutPortView extends JFrame {
         menu.add(item);
         menuBar.add(menu);
         setJMenuBar(menuBar);
+        m_tabbedPane = new JTabbedPane();
+        getContentPane().add(m_loadingPanel);
     }
 
     /**
      * shows this view and brings it to front.
      */
     void openView() {
-        if (!m_wasOpened) { // if the view was already visible
+        if (!m_wasOpened) { 
             m_wasOpened = true;
             updatePortView();
             setLocation();
         }
+        // if the view was already visible
         setVisible(true);
         toFront();
     }
@@ -133,6 +121,7 @@ abstract class NodeOutPortView extends JFrame {
         validate();
         repaint();
     }
+    
 
     /**
      * Sets this frame in the center of the screen observing the current screen
@@ -151,7 +140,55 @@ abstract class NodeOutPortView extends JFrame {
      * @param portObject a data table, model content or other
      * @param portObjectSpec data table spec or model content spec or other spec
      */
-    abstract void update(final PortObject portObject,
-            final PortObjectSpec portObjectSpec);
+    void update(final PortObject portObject, 
+            final PortObjectSpec portObjectSpec) {
+        // TODO: maybe store the objects, compare them 
+        // and only remove and add them if they are different...
+        // add all port object tabs
+        final Map<String, JComponent> views 
+            = new LinkedHashMap<String, JComponent>();
+        new Thread() {
+            @Override
+            public void run() {
+                if (portObject != null) {
+                    for (JComponent comp : portObject.getViews()) {
+                        views.put(comp.getName(), comp);
+                    }
+                } else {
+                    // what to display, if no port object is available?
+                    JPanel noDataPanel = new JPanel();
+                    noDataPanel.setLayout(new BorderLayout());
+                    Box boexle = Box.createHorizontalBox();
+                    boexle.add(Box.createHorizontalGlue());
+                    boexle.add(new JLabel("No data available!"));
+                    boexle.add(Box.createHorizontalGlue());
+                    noDataPanel.add(boexle, BorderLayout.CENTER);
+                    noDataPanel.setName("No data available");
+                    views.put("No data available", noDataPanel);
+                }
+                if (portObjectSpec != null) {
+                    for (JComponent comp : portObjectSpec.getViews()) {
+                        views.put(comp.getName(), comp);
+                    }
+                }
+                ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+                    @Override
+                    public void run() {
+                        m_tabbedPane.removeAll();
+                        for (Map.Entry<String, JComponent>entry 
+                                    : views.entrySet()) {
+                            m_tabbedPane.addTab(entry.getKey(), 
+                                    entry.getValue());
+                        }
+                        remove(m_loadingPanel);
+                        add(m_tabbedPane);
+                        invalidate();
+                        validate();
+                        repaint();
+                    }
+                });
+            }
+        } .start();
 
+    }
 }

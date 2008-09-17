@@ -35,6 +35,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.swing.JComponent;
+
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.CloseableRowIterator;
@@ -49,6 +51,7 @@ import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.BufferedDataTableView;
 
 
 /**
@@ -593,6 +596,11 @@ public final class BufferedDataTable implements DataTable, PortObject {
          */
         void removeFromTableRepository(
                 final HashMap<Integer, ContainerTable> rep);
+    }
+    
+    @Override
+    public JComponent[] getViews() {
+        return new JComponent[] {new BufferedDataTableView(this)};
     }
 }
 
