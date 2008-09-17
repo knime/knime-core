@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   29.01.2008 (cebron): created
  */
@@ -29,10 +29,11 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author cebron, University of Konstanz
  */
-public class ClusterAssignerNodeFactory extends GenericNodeFactory<ClusterAssignerNodeModel> {
+public class ClusterAssignerNodeFactory extends
+        GenericNodeFactory<ClusterAssignerNodeModel> {
 
     /**
      * {@inheritDoc}
