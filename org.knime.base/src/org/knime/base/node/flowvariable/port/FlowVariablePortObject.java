@@ -25,6 +25,8 @@ package org.knime.base.node.flowvariable.port;
 
 import java.io.IOException;
 
+import javax.swing.JComponent;
+
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.PortObject;
@@ -75,6 +77,15 @@ public class FlowVariablePortObject implements PortObject {
     @Override
     public String getSummary() {
         return "Variables connection";
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public JComponent[] getViews() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

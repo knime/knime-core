@@ -23,6 +23,8 @@
  */
 package org.knime.base.node.flowvariable.port;
 
+import javax.swing.JComponent;
+
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
@@ -56,5 +58,14 @@ public class FlowVariablePortObjectSpec implements PortObjectSpec {
     
     private FlowVariablePortObjectSpec() {
         
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public JComponent[] getViews() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
