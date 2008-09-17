@@ -29,13 +29,13 @@ import javax.swing.JPanel;
 
 import org.knime.base.node.mine.sota.view.SotaDrawingPane;
 import org.knime.base.node.mine.sota.view.SotaTreeViewPropsPanel;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.GenericNodeView;
 
 /**
  * 
  * @author Kilian Thiel, University of Konstanz
  */
-public class SotaNodeView extends NodeView {
+public class SotaNodeView extends GenericNodeView<SotaNodeModel> {
     private SotaDrawingPane m_pane;
 
     private SotaTreeViewPropsPanel m_panel;
@@ -84,7 +84,7 @@ public class SotaNodeView extends NodeView {
      */
     @Override
     protected void modelChanged() {
-        SotaNodeModel node = (SotaNodeModel)this.getNodeModel();
+        SotaNodeModel node = this.getNodeModel();
 
         if (m_pane != null) {
             m_pane.setRoot(node.getSotaManager().getRoot());

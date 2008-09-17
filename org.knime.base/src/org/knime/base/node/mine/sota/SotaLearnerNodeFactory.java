@@ -24,21 +24,20 @@
  */
 package org.knime.base.node.mine.sota;
 
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * 
  * @author Kilian Thiel, University of Konstanz
  */
-public class SotaLearnerNodeFactory extends NodeFactory {
+public class SotaLearnerNodeFactory extends GenericNodeFactory<SotaNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public SotaNodeModel createNodeModel() {
         return new SotaNodeModel();
     }
 
@@ -54,10 +53,10 @@ public class SotaLearnerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public GenericNodeView<SotaNodeModel> createNodeView(final int viewIndex,
+            final SotaNodeModel nodeModel) {
         assert (viewIndex == 0);
-        return new SotaNodeView((SotaNodeModel)nodeModel);
+        return new SotaNodeView(nodeModel);
     }
 
     /**
