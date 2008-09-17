@@ -708,14 +708,14 @@
        </node>
              <node
             category-path="/mining/clustering"
-            factory-class="org.knime.base.node.mine.cluster.kmeans.PMMLClusterNodeFactory"
-            id="org.knime.base.node.mine.cluster.kmeans.PMMLClusterNodeFactory">
+            factory-class="org.knime.base.node.mine.cluster.kmeans.ClusterNodeFactory"
+            id="org.knime.base.node.mine.cluster.kmeans.ClusterNodeFactory">
       </node>
 
       <node
             category-path="/mining/clustering"
-            factory-class="org.knime.base.node.mine.cluster.assign.PMMLClusterAssignerNodeFactory"
-            id="org.knime.base.node.mine.cluster.assign.PMMLClusterAssignerNodeFactory">
+            factory-class="org.knime.base.node.mine.cluster.assign.ClusterAssignerNodeFactory"
+            id="org.knime.base.node.mine.cluster.assign.ClusterAssignerNodeFactory">
       </node>
 
       <node
