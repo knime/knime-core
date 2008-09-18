@@ -49,14 +49,11 @@ public class NaiveBayesPortObject extends AbstractSimplePortObject {
     public static final PortType TYPE =
         new PortType(NaiveBayesPortObject.class);
 
-    private static final String CNFG_SPEC = "trainingTableSpec";
-
     private static final String CNFG_MODEL = "naiveBayesModel";
 
     private NaiveBayesModel m_model;
 
-    private DataTableSpec m_spec;
-
+    private PortObjectSpec m_portSpec;
 
     /**Constructor for class NaiveBayesPortObject.
      */
@@ -76,8 +73,9 @@ public class NaiveBayesPortObject extends AbstractSimplePortObject {
         if (model == null) {
             throw new NullPointerException("model must not be null");
         }
-        m_spec = trainingDataSpec;
         m_model = model;
+        m_portSpec = new NaiveBayesPortObjectSpec(trainingDataSpec,
+                trainingDataSpec.getColumnSpec(m_model.getClassColumnName()));
     }
     /**
      * {@inheritDoc}
@@ -87,8 +85,7 @@ public class NaiveBayesPortObject extends AbstractSimplePortObject {
             final ExecutionMonitor exec) throws InvalidSettingsException {
         final Config modelConfig = model.getConfig(CNFG_MODEL);
         m_model = new NaiveBayesModel(modelConfig);
-        final ModelContentRO specModel = model.getModelContent(CNFG_SPEC);
-        m_spec = DataTableSpec.load(specModel);
+        m_portSpec = spec;
     }
 
     /**
@@ -99,8 +96,6 @@ public class NaiveBayesPortObject extends AbstractSimplePortObject {
             final ExecutionMonitor exec) {
         final Config modelConfig = model.addConfig(CNFG_MODEL);
         m_model.savePredictorParams(modelConfig);
-        final Config specModel = model.addConfig(CNFG_SPEC);
-        m_spec.save(specModel);
     }
 
     /**
@@ -108,8 +103,7 @@ public class NaiveBayesPortObject extends AbstractSimplePortObject {
      */
     @Override
     public PortObjectSpec getSpec() {
-        return new NaiveBayesPortObjectSpec(m_spec,
-                m_spec.getColumnSpec(m_model.getClassColumnName()));
+        return m_portSpec;
     }
 
     /**
