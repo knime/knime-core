@@ -28,15 +28,12 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.zip.GZIPInputStream;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.NodeModel.ModelContentWrapper;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -153,16 +150,16 @@ public class NodePersistorVersion1xx implements NodePersistor {
                 setPortObjectSpec(i, spec);
             }
             if (m_isExecuted) {
-                PortObject object;
+                PortObject object = null;
                 if (isDataPort) {
                     object = loadBufferedDataTable(
                             node, settings, execPort, loadTblRep, i, tblRep);
-                } else {
-                    object = loadModelContent(node, settings, execPort, i);
-                    // no separate spec for models in 1.x.x
-                    if (object != null) {
-                        setPortObjectSpec(i, object.getSpec());
-                    }
+//                } else {
+//                    object = loadModelContent(node, settings, execPort, i);
+//                    // no separate spec for models in 1.x.x
+//                    if (object != null) {
+//                        setPortObjectSpec(i, object.getSpec());
+//                    }
                 }
                 String summary = object != null ? object.getSummary() : null;
                 setPortObject(i, object);
@@ -245,33 +242,33 @@ public class NodePersistorVersion1xx implements NodePersistor {
         }
     }
 
-    private ModelContentWrapper loadModelContent(final Node node,
-            final NodeSettingsRO settings, final ExecutionMonitor execMon,
-            final int index) throws InvalidSettingsException, IOException,
-            CanceledExecutionException {
-        // load models
-        int modelIndex = index - countDataOutPorts(node);
-        NodeSettingsRO model = settings.getNodeSettings(CFG_MODEL_FILES);
-        String modelName = model.getString(CFG_OUTPUT_PREFIX + modelIndex);
-        File targetFile = new File(m_nodeDirectory.getFile(), modelName);
-    
-        // in an earlier version the model settings were written
-        // directly (without zipping); now the settings are
-        // zipped (see save()); to be backward compatible
-        // both ways are tried
-        InputStream in = null;
-        try {
-            in = new GZIPInputStream(new BufferedInputStream(
-                    new FileInputStream(targetFile)));
-        } catch (IOException ioe) {
-            // if a gz input stream could not be created
-            // we use read directly from the file via the
-            // previously created buffered input stream
-            in = new BufferedInputStream(new FileInputStream(targetFile));
-        }
-        ModelContentRO pred = ModelContent.loadFromXML(in);
-        return new ModelContentWrapper((ModelContent)pred);
-    }
+//    private ModelContentWrapper loadModelContent(final Node node,
+//            final NodeSettingsRO settings, final ExecutionMonitor execMon,
+//            final int index) throws InvalidSettingsException, IOException,
+//            CanceledExecutionException {
+//        // load models
+//        int modelIndex = index - countDataOutPorts(node);
+//        NodeSettingsRO model = settings.getNodeSettings(CFG_MODEL_FILES);
+//        String modelName = model.getString(CFG_OUTPUT_PREFIX + modelIndex);
+//        File targetFile = new File(m_nodeDirectory.getFile(), modelName);
+//    
+//        // in an earlier version the model settings were written
+//        // directly (without zipping); now the settings are
+//        // zipped (see save()); to be backward compatible
+//        // both ways are tried
+//        InputStream in = null;
+//        try {
+//            in = new GZIPInputStream(new BufferedInputStream(
+//                    new FileInputStream(targetFile)));
+//        } catch (IOException ioe) {
+//            // if a gz input stream could not be created
+//            // we use read directly from the file via the
+//            // previously created buffered input stream
+//            in = new BufferedInputStream(new FileInputStream(targetFile));
+//        }
+//        ModelContentRO pred = ModelContent.loadFromXML(in);
+//        return new ModelContentWrapper((ModelContent)pred);
+//    }
 
     private PortObjectSpec loadPortObjectSpec(final Node node,
             final NodeSettingsRO settings, final int index)
@@ -596,16 +593,16 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return m_nodeMessage;
     }
     
-    private static int countDataOutPorts(final Node node) {
-        int dataPortsCount = 0;
-        for (int i = 0; i < node.getNrOutPorts(); i++) {
-            PortType type = node.getOutputType(i);
-            if (BufferedDataTable.class.isAssignableFrom(
-                    type.getPortObjectClass())) {
-                dataPortsCount += 1;
-            }
-        }
-        return dataPortsCount;
-    }
+//    private static int countDataOutPorts(final Node node) {
+//        int dataPortsCount = 0;
+//        for (int i = 0; i < node.getNrOutPorts(); i++) {
+//            PortType type = node.getOutputType(i);
+//            if (BufferedDataTable.class.isAssignableFrom(
+//                    type.getPortObjectClass())) {
+//                dataPortsCount += 1;
+//            }
+//        }
+//        return dataPortsCount;
+//    }
     
 }
