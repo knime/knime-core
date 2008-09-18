@@ -121,7 +121,8 @@ implements LoopStartNode {
             DataCell cell = currentVariables == null 
                 ? defaultRow.getCell(i) : currentVariables.getCell(i);
             if (cell.isMissing()) {
-                cell = defaultRow.getCell(i);
+                throw new IllegalArgumentException("Missing Values not"
+                    + " allowed for Variable Values!");
             }
             if (type.isCompatible(IntValue.class)) {
                 pushScopeVariableInt(name, ((IntValue)cell).getIntValue());
