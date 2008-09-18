@@ -23,6 +23,8 @@
  */
 package org.knime.base.node.mine.sota;
 
+import javax.swing.JComponent;
+
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
@@ -126,5 +128,13 @@ public class SotaPortObjectSpec extends AbstractSimplePortObjectSpec {
         }
         
         return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public JComponent[] getViews() {
+        return new JComponent[]{};
     }
 }
