@@ -34,11 +34,13 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 
 /**
  * This node takes a discretization model and applies it to the given input data
@@ -48,80 +50,48 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @see DiscretizationApplyNodeFactory
  */
-public class DiscretizationApplyNodeModel extends NodeModel {
+public class DiscretizationApplyNodeModel extends GenericNodeModel {
 
-    /**
-     * Key to store the included columns settings. (Columns to perform the
-     * discretization on)
-     */
-    public static final String INCLUDED_COLUMNS_KEY = "includedColumns";
+    /** index of the port receiving data. */
+    static final int DATA_INPORT = 1;
 
-    /** Index of input data port. */
-    public static final int DATA_INPORT = 0;
+    /** index of the port providing the model. */
+    static final int MODEL_INPORT = 0;
 
-    /** Index of data out port. */
-    public static final int DATA_OUTPORT = 0;
-
-    /** Index of model out port. */
-    public static final int MODEL_INPORT = 0;
-
-    /**
-     * The learned discretization model for the included columns.
-     */
-    private DiscretizationModel m_discretizationModel;
+    /** index of the port providing output data. */
+    static final int DATA_OUTPORT = 0;
 
     /**
      * Inits a new discretization applier model with one data in-, one model in-
      * and one data output port.
      */
     public DiscretizationApplyNodeModel() {
-        super(1, 1, 1, 0);
-        reset();
+        super(new PortType[]{DiscretizationModel.TYPE, BufferedDataTable.TYPE},
+                new PortType[]{BufferedDataTable.TYPE});
     }
 
     /**
-     * Applies the discretization model to the input data table.
-     * @param data the input data to which the model should be applied
-     * @param exec the execution context for this node
-     * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
-     * @throws CanceledExecutionException If canceled.
-     * @throws Exception if something else goes wrong.
-     * @return the discretized input table
+     * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] data,
-            final ExecutionContext exec) throws CanceledExecutionException,
-            Exception {
+    protected PortObject[] execute(final PortObject[] inData,
+            final ExecutionContext exec) throws Exception {
+
+        DiscretizationModel discrModel =
+                (DiscretizationModel)inData[MODEL_INPORT];
 
         // if an empty model was received, just return the input data
-        if (m_discretizationModel.getSchemes().length == 0) {
-            return data;
+        if (discrModel.getSchemes().length == 0) {
+            return new PortObject[]{inData[DATA_INPORT]};
         }
 
         // create an output table that replaces the included columns by
         // interval values from the model
         BufferedDataTable resultTable =
                 CAIMDiscretizationNodeModel.createResultTable(exec,
-                        data[DATA_INPORT], m_discretizationModel);
+                        (BufferedDataTable)inData[DATA_INPORT], discrModel);
 
         return new BufferedDataTable[]{resultTable};
-    }
-
-    /**
-     * Checks if the given column spec is included in the included columns list.
-     *
-     * @param columnSpec the column spec to check
-     * @return true, if the given column spec was discretized
-     */
-    private static boolean isIncluded(final DataColumnSpec columnSpec,
-            final String[] includedColumnNames) {
-        for (String inludedColumn : includedColumnNames) {
-            if (inludedColumn.equals(columnSpec.getName())) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**
@@ -129,44 +99,50 @@ public class DiscretizationApplyNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-
-        // nothing to do yet
+        // nothing to do
     }
 
     /**
-     * The number of the class columns must be > 0 and < number of input
-     * columns. Also create the output table spec replacing the columns to
-     * discretize to nominal String values.
-     *
-     * @see NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
 
         // if no columns are defined to discretize, return the input spec
-        if (m_discretizationModel == null) {
-            return inSpecs;
+        DataTableSpec modelSpec = (DataTableSpec)inSpecs[MODEL_INPORT];
+        if (modelSpec == null || modelSpec.getNumColumns() == 0) {
+            return new PortObjectSpec[]{inSpecs[DATA_INPORT]};
         } else {
             // else replace for each included column the attribute type to
             // string
+            DataTableSpec dataSpec = (DataTableSpec)inSpecs[DATA_INPORT];
             DataColumnSpec[] newColumnSpecs =
-                    new DataColumnSpec[inSpecs[DATA_INPORT].getNumColumns()];
+                    new DataColumnSpec[dataSpec.getNumColumns()];
 
-            String[] includedColumnNames =
-                    m_discretizationModel.getIncludedColumnNames();
             int counter = 0;
-            for (DataColumnSpec originalColumnSpec : inSpecs[DATA_INPORT]) {
+            for (DataColumnSpec origColSpec : dataSpec) {
 
                 // if the column is included for discretizing, change the spec
-                if (isIncluded(originalColumnSpec, includedColumnNames)) {
-                    // creat a nominal string column spec
+                int modelColIdx =
+                        modelSpec.findColumnIndex(origColSpec.getName());
+                if (modelColIdx >= 0) {
+                    // types of columns must be compatible
+                    if (!modelSpec.getColumnSpec(modelColIdx).getType()
+                            .isASuperTypeOf(origColSpec.getType())) {
+                        throw new InvalidSettingsException("The type of the"
+                                + " column used to create the model is not"
+                                + " compatible to the input column type ("
+                                + " column name = " + origColSpec.getName()
+                                + ")");
+                    }
+                    // create a nominal string column spec
                     newColumnSpecs[counter] =
-                            new DataColumnSpecCreator(originalColumnSpec
-                                    .getName(), StringCell.TYPE).createSpec();
+                            new DataColumnSpecCreator(origColSpec.getName(),
+                                    StringCell.TYPE).createSpec();
                 } else {
                     // add it as is
-                    newColumnSpecs[counter] = originalColumnSpec;
+                    newColumnSpecs[counter] = origColSpec;
                 }
 
                 counter++;
@@ -179,56 +155,29 @@ public class DiscretizationApplyNodeModel extends NodeModel {
     }
 
     /**
-     * Loads the class column and the classification value in the model.
-     *
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-
+        // empty
     }
 
     /**
-     * Saves the class column and the classification value in the settings.
-     *
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-
+        // empty
     }
 
     /**
-     * This method validates the settings. That is:
-     * <ul>
-     * <li>The number of the class column must be an integer > 0</li>
-     * <li>The positive value <code>DataCell</code> must not be null</li>
-     * </ul>
-     *
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-
-    }
-
-    /**
-     * Loads the discretization model from the model input port.
-     *
-     * @see org.knime.core.node.NodeModel#loadModelContent(int,
-     *      org.knime.core.node.ModelContentRO)
-     */
-    @Override
-    protected void loadModelContent(final int index,
-            final ModelContentRO predParams) throws InvalidSettingsException {
-
-        if (predParams == null) {
-            return;
-        }
-
-        m_discretizationModel = new DiscretizationModel(predParams);
+        // empty
     }
 
     /**
@@ -238,7 +187,6 @@ public class DiscretizationApplyNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-
         // do nothing
     }
 
@@ -249,7 +197,6 @@ public class DiscretizationApplyNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-
         // do nothing here
     }
 }

@@ -1,5 +1,5 @@
 /*
- * @(#)$RCSfile$ 
+ * @(#)$RCSfile$
  * $Revision: 4973 $ $Date: 2006-08-01 12:15:56 +0200 (Di, 01 Aug 2006) $ $
  * --------------------------------------------------------------------- *
  * This source code, its documentation and all appendant files
@@ -23,23 +23,23 @@
  */
 package org.knime.base.node.preproc.discretization.caim2.modelcreator;
 
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * The Factory for the CAIM Discretizer.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
-public class CAIMDiscretization2NodeFactory extends NodeFactory {
+public class CAIMDiscretization2NodeFactory extends
+        GenericNodeFactory<CAIMDiscretizationNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public CAIMDiscretizationNodeModel createNodeModel() {
         return new CAIMDiscretizationNodeModel();
     }
 
@@ -55,15 +55,13 @@ public class CAIMDiscretization2NodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex, 
-            final NodeModel nodeModel) {
-        return new BinModelNodeView(nodeModel, 
-                new BinModelPlotter());
+    public GenericNodeView<CAIMDiscretizationNodeModel> createNodeView(
+            final int viewIndex, final CAIMDiscretizationNodeModel nodeModel) {
+        return new BinModelNodeView(nodeModel, new BinModelPlotter());
     }
-    
+
     /**
-     * @return <b>true</b>.
-     * @see org.knime.core.node.NodeFactory#hasDialog()
+     * {@inheritDoc}
      */
     @Override
     public boolean hasDialog() {

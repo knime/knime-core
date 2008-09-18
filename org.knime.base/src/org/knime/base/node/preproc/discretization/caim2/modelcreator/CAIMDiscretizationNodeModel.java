@@ -55,17 +55,20 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 
 /**
  * Implements the CAIM discretization algorithm. The algorithm is based on the
@@ -77,23 +80,19 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  *
  * @see CAIMDiscretization2NodeFactory
  */
-public class CAIMDiscretizationNodeModel extends NodeModel {
+public class CAIMDiscretizationNodeModel extends GenericNodeModel {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(CAIMDiscretizationNodeModel.class);
 
     private static final String SAVE_INTERNALS_FILE_NAME = "Binning.model";
 
-     /**
+    private static final String CONFIG_KEY_COLUMN_NANES = "IncludedColumns";
+
+    /**
      * Key to store whether the class optimized version should be applied.
      */
     public static final String USE_CLASS_OPTIMIZATION = "classOptimized";
-
-    /** Index of input data port. */
-    public static final int DATA_INPORT = 0;
-
-    /** Index of data out port. */
-    public static final int DATA_OUTPORT = 0;
 
     private static final String WARNING_NO_COLS_SELECTED =
             "No columns selected for binning. Output table will be the same.";
@@ -143,8 +142,8 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
 
     /**
      * Whether to use the class optimized version. The class optimized version
-     * creates candidate boundaries only at positions where class values chages.
-     * At ohter positions boundary checks are not necessary.
+     * creates candidate boundaries only at positions where class values change.
+     * At other positions boundary checks are not necessary.
      */
     private boolean m_classOptimizedVersion;
 
@@ -154,11 +153,21 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
      */
     private boolean m_reducedBoundaries = false;
 
+    /** index of the port receiving data. */
+    static final int DATA_INPORT = 0;
+
+    /** index of the port providing the model. */
+    static final int MODEL_OUTPORT = 0;
+
+    /** index of the port providing output data. */
+    static final int DATA_OUTPORT = 0;
+
     /**
-     * Inits a new CAIM model with one data in- and one data output port.
+     * Initializes a new CAIM model with one data in- and one data output port.
      */
     public CAIMDiscretizationNodeModel() {
-        super(1, 1, 0, 1);
+        super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{
+                BufferedDataTable.TYPE, DiscretizationModel.TYPE});
         reset();
     }
 
@@ -183,19 +192,11 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
     }
 
     /**
-     * Starts the diescretization.
-     *
-     * @param data the input data tables
-     * @param exec the execution context for this node
-     * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
-     * @throws CanceledExecutionException If canceled.
-     * @throws Exception if something else goes wrong.
-     * @return the result table with the discretized values
+     * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] data,
-            final ExecutionContext exec) throws CanceledExecutionException,
-            Exception {
+    protected PortObject[] execute(final PortObject[] inData,
+            final ExecutionContext exec) throws Exception {
 
         // measure the time
         long startTime = System.currentTimeMillis();
@@ -204,10 +205,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
         // empty model
         if (m_includedColumnNames.getIncludeList() == null
                 || m_includedColumnNames.getIncludeList().size() == 0) {
-            m_discretizationModel =
-                    new DiscretizationModel(new String[0],
-                            new DiscretizationScheme[0]);
-            return data;
+            return new PortObject[]{inData[0], new DiscretizationModel()};
         }
         LOGGER.debug("Start discretizing.");
 
@@ -216,19 +214,18 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
         // labeled as positive class and the rest as negative
         exec.setProgress(0.0, "Preparing...");
         // check input data
-        assert (data != null && data.length == 1 && data[DATA_INPORT] != null);
 
-        BufferedDataTable inData = data[0];
+        BufferedDataTable data = (BufferedDataTable)inData[0];
 
         // get class column index
         m_classifyColumnIndex =
-                inData.getDataTableSpec().findColumnIndex(
+                data.getDataTableSpec().findColumnIndex(
                         m_classColumnName.getStringValue());
 
         assert m_classifyColumnIndex > -1;
 
         // create the class - index mapping
-        createClassFromToIndexMaps(inData.getDataTableSpec());
+        createClassFromToIndexMaps(data.getDataTableSpec());
 
         // create the array with the result discretization schemes for
         // each included column
@@ -241,8 +238,9 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
         for (String includedColumnName : m_includedColumnNames.getIncludeList()) {
 
             LOGGER.debug("Process column: " + includedColumnName);
-            exec.setProgress("Discretizing column '" + includedColumnName
-                    + "'");
+            exec
+                    .setProgress("Discretizing column '" + includedColumnName
+                            + "'");
             ExecutionContext subExecPerColumn =
                     exec.createSubExecutionContext(1.0D / m_includedColumnNames
                             .getIncludeList().size());
@@ -254,11 +252,10 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
 
             // determine the column index of the current column
             int columnIndex =
-                    inData.getDataTableSpec().findColumnIndex(
-                            includedColumnName);
+                    data.getDataTableSpec().findColumnIndex(includedColumnName);
 
             DataColumnDomain domain =
-                    inData.getDataTableSpec().getColumnSpec(columnIndex)
+                    data.getDataTableSpec().getColumnSpec(columnIndex)
                             .getDomain();
 
             double minValue =
@@ -273,17 +270,17 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
             BoundaryScheme boundaryScheme = null;
 
             // create subExec for sorting
-            ExecutionContext subExecSort = subExecPerColumn
-                    .createSubExecutionContext(0.1);
+            ExecutionContext subExecSort =
+                    subExecPerColumn.createSubExecutionContext(0.1);
 
             // long t1 = System.currentTimeMillis();
             if (m_classOptimizedVersion) {
                 boundaryScheme =
-                        createAllIntervalBoundaries(inData, columnIndex,
+                        createAllIntervalBoundaries(data, columnIndex,
                                 subExecSort);
             } else {
                 boundaryScheme =
-                        createAllIntervalBoundaries2(inData, columnIndex,
+                        createAllIntervalBoundaries2(data, columnIndex,
                                 subExecSort);
             }
 
@@ -306,16 +303,16 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
             int numInsertedBounds = 0;
             double currentCAIM = 0;
             // create subExec for inserted bounds
-            ExecutionContext subExecBounds = subExecPerColumn
-                    .createSubExecutionContext(0.9);
+            ExecutionContext subExecBounds =
+                    subExecPerColumn.createSubExecutionContext(0.9);
             while (currentCAIM > globalCAIM
                     || numInsertedBounds < m_classValues.length) {
                 subExecPerColumn.checkCanceled();
 
                 // create subExec for counting
-                ExecutionContext subExecCount = subExecBounds
-                        .createSubExecutionContext(1.0D
-                                / m_classValues.length);
+                ExecutionContext subExecCount =
+                        subExecBounds
+                                .createSubExecutionContext(1.0D / m_classValues.length);
 
                 // LOGGER.debug("Inserted bounds: " + numInsertedBounds);
                 // LOGGER.debug("intervall boundaries: " +
@@ -334,8 +331,8 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
 
                     // set progress
                     currentCountedBoundaries++;
-                    subExecCount.setProgress((double) currentCountedBoundaries
-                            / (double) boundaryScheme.getNumBoundaries(),
+                    subExecCount.setProgress((double)currentCountedBoundaries
+                            / (double)boundaryScheme.getNumBoundaries(),
                             "Count for possible boundary "
                                     + currentCountedBoundaries + " of "
                                     + boundaryScheme.getNumBoundaries());
@@ -350,7 +347,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
                             new QuantaMatrix2D(tentativeDS,
                                     m_classValueToIndexMap);
                     // pass the data for filling the matrix
-                    quantaMatrix.countData(inData, columnIndex,
+                    quantaMatrix.countData(data, columnIndex,
                             m_classifyColumnIndex);
                     // calculate the caim
                     double caim = quantaMatrix.calculateCaim();
@@ -412,24 +409,22 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
         }
 
         // set the model
+        DataTableSpec modelSpec =
+                createModelSpec(m_includedColumnNames, data.getDataTableSpec());
         m_discretizationModel =
-                new DiscretizationModel(m_includedColumnNames.getIncludeList()
-                        .toArray(
-                                new String[m_includedColumnNames
-                                        .getIncludeList().size()]),
-                        resultSchemes);
+                new DiscretizationModel(resultSchemes, modelSpec);
 
         // create an output table that replaces the included columns by
         // interval values
         BufferedDataTable resultTable =
-                createResultTable(exec, inData, m_discretizationModel);
+                createResultTable(exec, data, m_discretizationModel);
 
         // log the runtime of the execute method
         long runtime = System.currentTimeMillis() - startTime;
 
         LOGGER.debug("Binning runtime: " + (runtime / 1000.0) + " sec.");
 
-        return new BufferedDataTable[]{resultTable};
+        return new PortObject[]{resultTable, m_discretizationModel};
     }
 
     /**
@@ -685,8 +680,8 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
         sortOrder[1] = true;
 
         SortedTable sortedTable =
-                new SortedTable(table, sortColumn, sortOrder,
-                        m_sortInMemory.getBooleanValue(), exec);
+                new SortedTable(table, sortColumn, sortOrder, m_sortInMemory
+                        .getBooleanValue(), exec);
 
         // the first different value is the minimum value of the sorted list
         RowIterator rowIterator = sortedTable.iterator();
@@ -757,9 +752,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
                     if (!Double.isNaN(lastChangeValueWithoutNewBoundary)) {
                         // a new boundary is the midpoint
                         double newBoundary =
-                                (lastDifferentValue
-                                        + lastChangeValueWithoutNewBoundary)
-                                        /  2.0D;
+                                (lastDifferentValue + lastChangeValueWithoutNewBoundary) / 2.0D;
 
                         // add the new midpoint boundary to the linked list
                         lastAdded.m_next = new LinkedDouble(newBoundary);
@@ -807,6 +800,36 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
     }
 
     /**
+     * Creates a table spec including the columns used. In order to specify
+     * included names and types a data table spec is created that contains the
+     * included columns.
+     *
+     * @param cols the names of the columns to include.
+     * @param inSpec the input spec the specified columns are taken from and
+     *            included into the result.
+     * @return a table spec containing the columns with the specified names
+     * @throws InvalidSettingsException if a name is specified that is not
+     *             included in the input spec.
+     */
+    private DataTableSpec createModelSpec(final SettingsModelFilterString cols,
+            final DataTableSpec inSpec) throws InvalidSettingsException {
+        DataColumnSpec[] colSpecs =
+                new DataColumnSpec[cols.getIncludeList().size()];
+        int c = 0;
+        for (String colName : cols.getIncludeList()) {
+            int colIdx = inSpec.findColumnIndex(colName);
+            if (colIdx < 0) {
+                throw new InvalidSettingsException("Specified column name ("
+                        + colName + ") not in input table.");
+            }
+            colSpecs[c] = inSpec.getColumnSpec(colIdx);
+            c++;
+        }
+
+        return new DataTableSpec(colSpecs);
+    }
+
+    /**
      * The number of the class columns must be > 0 and < number of input
      * columns. Also create the output table spec replacing the columns to
      * discretize to nominal String values.
@@ -814,19 +837,20 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         // if no columns are defined to discretize, return the input spec
         if (m_includedColumnNames.getIncludeList() == null
                 || m_includedColumnNames.getIncludeList().size() == 0) {
             setWarningMessage(WARNING_NO_COLS_SELECTED);
-            return inSpecs;
+            return new PortObjectSpec[]{inSpecs[0], new DataTableSpec()};
         }
+        DataTableSpec inDataSpec = (DataTableSpec)inSpecs[0];
         // first check if the in specs correspond to the settings
         // i.e. check if the selected columns for binning are
         // contained in the in data table
         for (String includedColName : m_includedColumnNames.getIncludeList()) {
-            if (!inSpecs[DATA_INPORT].containsName(includedColName)) {
+            if (inDataSpec.containsName(includedColName)) {
                 throw new InvalidSettingsException(
                         "The selected column to bin '" + includedColName
                                 + "' does not exist in the input data "
@@ -838,11 +862,10 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
         // else replace for each included column the attribute type to
         // string
         DataColumnSpec[] newColumnSpecs =
-            new DataColumnSpec[inSpecs[DATA_INPORT]
-                .getNumColumns()];
+                new DataColumnSpec[inDataSpec.getNumColumns()];
 
         int counter = 0;
-        for (DataColumnSpec originalColumnSpec : inSpecs[DATA_INPORT]) {
+        for (DataColumnSpec originalColumnSpec : inDataSpec) {
 
             // if the column is included for discretizing, change the spec
             if (isIncluded(originalColumnSpec, m_includedColumnNames
@@ -861,10 +884,8 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
             counter++;
         }
 
-        DataTableSpec[] newSpecs = new DataTableSpec[1];
-        newSpecs[0] = new DataTableSpec(newColumnSpecs);
-        return newSpecs;
-
+        return new PortObjectSpec[]{new DataTableSpec(newColumnSpecs),
+                createModelSpec(m_includedColumnNames, inDataSpec)};
     }
 
     /**
@@ -918,8 +939,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
                 m_classColumnName.createCloneWithValidatedValue(settings);
         String classifyColumn = tmp.getStringValue();
         if (classifyColumn == null || classifyColumn.equals("")) {
-            throw new InvalidSettingsException(
-                    "Discretization column not set.");
+            throw new InvalidSettingsException("Discretization column not set");
         }
 
         SettingsModelFilterString tmpIncl =
@@ -930,21 +950,6 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
         }
 
         m_sortInMemory.validateSettings(settings);
-    }
-
-    /**
-     * Saves the {@link DiscretizationModel} to a config object at the model
-     * outport.
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveModelContent(final int index,
-            final ModelContentWO predParams) throws InvalidSettingsException {
-
-        if (m_discretizationModel != null) {
-            m_discretizationModel.saveToModelContent(predParams);
-        }
     }
 
     /**
@@ -968,7 +973,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
         if (!internalsFile.exists()) {
             // file to load internals from not available
             throw new IOException("Internal model could not be loaded, file \""
-                + internalsFile.getAbsoluteFile() + "\" does not exist.");
+                    + internalsFile.getAbsoluteFile() + "\" does not exist.");
         }
 
         BufferedInputStream in =
@@ -978,7 +983,13 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
         ModelContentRO binModel = ModelContent.loadFromXML(in);
 
         try {
-            m_discretizationModel = new DiscretizationModel(binModel);
+            // first load the table spec of included names
+            ModelContentRO sub =
+                    binModel.getModelContent(CONFIG_KEY_COLUMN_NANES);
+            DataTableSpec inclCols = DataTableSpec.load(sub);
+            // now load/create the model
+            m_discretizationModel = new DiscretizationModel(binModel, inclCols);
+
         } catch (InvalidSettingsException ise) {
             throw new IOException("Internal model could not be loaded.", ise);
         }
@@ -993,6 +1004,13 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
             CanceledExecutionException {
 
         ModelContent binModel = new ModelContent(SAVE_INTERNALS_FILE_NAME);
+
+        // save the table spec of included names first
+        ModelContentWO sub = binModel.addModelContent(CONFIG_KEY_COLUMN_NANES);
+        DataTableSpec spec = (DataTableSpec)m_discretizationModel.getSpec();
+        spec.save(sub);
+
+        // now save the model.
         m_discretizationModel.saveToModelContent(binModel);
 
         File internalsFile = new File(nodeInternDir, SAVE_INTERNALS_FILE_NAME);
@@ -1025,4 +1043,3 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
     }
 
 }
-

@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   15.11.2006 (Christoph Sieb): created
  */
@@ -31,16 +31,16 @@ import javax.swing.JTabbedPane;
 
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.DataProvider;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * The view to visualize a binning model.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
-public class BinModelNodeView extends NodeView {
+public class BinModelNodeView extends
+        GenericNodeView<CAIMDiscretizationNodeModel> {
 
     private JTabbedPane m_tabs;
 
@@ -51,18 +51,17 @@ public class BinModelNodeView extends NodeView {
     /**
      * The <code>NodeView</code> which sets the model and calls the right
      * methods of the plotter.
-     * 
+     *
      * @param model the node model (must implement DataProvider).
      * @param plotter the plotter
      */
-    public BinModelNodeView(final NodeModel model, 
+    public BinModelNodeView(final CAIMDiscretizationNodeModel model,
             final AbstractPlotter plotter) {
         super(model);
         m_plotters = new ArrayList<AbstractPlotter>();
         m_plotters.add(plotter);
-        ((BinModelPlotter)plotter)
-                .setDiscretizationModel(((CAIMDiscretizationNodeModel)model)
-                        .getDiscretizationModel());
+        ((BinModelPlotter)plotter).setDiscretizationModel(model
+                .getDiscretizationModel());
         plotter.setHiLiteHandler(model.getInHiLiteHandler(0));
         plotter.updatePaintModel();
         setComponent(plotter);
@@ -71,20 +70,19 @@ public class BinModelNodeView extends NodeView {
     /**
      * A generic NodeView which sets the model and calls the right methods of
      * the abstract plotter.
-     * 
+     *
      * @param model the node model (must implement DataProvider).
      * @param plotter the plotter
      * @param title the title for the first tab
      */
-    public BinModelNodeView(final NodeModel model,
+    public BinModelNodeView(final CAIMDiscretizationNodeModel model,
             final AbstractPlotter plotter, final String title) {
         super(model);
 
         m_plotters = new ArrayList<AbstractPlotter>();
         m_plotters.add(plotter);
         ((BinModelPlotter)plotter)
-                .setDiscretizationModel(((CAIMDiscretizationNodeModel)model)
-                        .getDiscretizationModel());
+                .setDiscretizationModel(model.getDiscretizationModel());
         plotter.setDataProvider((DataProvider)model);
         plotter.setHiLiteHandler(model.getInHiLiteHandler(0));
         m_tabs = new JTabbedPane();
@@ -94,7 +92,7 @@ public class BinModelNodeView extends NodeView {
 
     /**
      * Adds another tab containing a plotter.
-     * 
+     *
      * @param plotter another visualization
      * @param title the title of the tab (if null a standard name is provided)
      */
@@ -123,7 +121,7 @@ public class BinModelNodeView extends NodeView {
      */
     @Override
     protected void modelChanged() {
-        NodeModel model = getNodeModel();
+        CAIMDiscretizationNodeModel model = getNodeModel();
         if (model == null) {
             return;
         }
@@ -134,7 +132,7 @@ public class BinModelNodeView extends NodeView {
                 plotter.reset();
                 plotter.setHiLiteHandler(hiliteHandler);
                 ((BinModelPlotter)plotter)
-                    .setDiscretizationModel(((CAIMDiscretizationNodeModel)model)
+                        .setDiscretizationModel((model)
                                 .getDiscretizationModel());
                 plotter.updatePaintModel();
                 plotter.getDrawingPane().repaint();
@@ -147,6 +145,7 @@ public class BinModelNodeView extends NodeView {
      */
     @Override
     protected void onClose() {
+        // empty.
     }
 
     /**
@@ -154,6 +153,7 @@ public class BinModelNodeView extends NodeView {
      */
     @Override
     protected void onOpen() {
+        // empty.
     }
 
 }
