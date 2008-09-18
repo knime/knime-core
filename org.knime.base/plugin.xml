@@ -758,6 +758,11 @@
             factory-class="org.knime.base.node.flowvariable.variableloophead.VariableLoopStartNodeFactory"
             id="org.knime.base.flowvariable.variableloophead">
       </node>
+      <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.setoperator.SetOperatorNodeFactory"
+            id="org.knime.base.node.preproc.setoperator.SetOperatorNodeFactory">
+      </node>
    </extension>
       <extension
          point="org.knime.base.pmmlports">
