@@ -82,9 +82,7 @@ public class SotaPortObject extends AbstractSimplePortObject {
     
     private String m_distance;
     
-    private DataTableSpec m_spec;
-    
-    private int m_indexOfClassCol;
+    private SotaPortObjectSpec m_spec;
     
     /**
      * Creates empty instance of <code>SotaPortObject</code>.
@@ -104,8 +102,7 @@ public class SotaPortObject extends AbstractSimplePortObject {
             final int indexOfClassCol) {
         this();
         setSota(sota);
-        m_spec = spec;
-        m_indexOfClassCol = indexOfClassCol;
+        m_spec = new SotaPortObjectSpec(spec, indexOfClassCol);
     }   
 
     /**
@@ -130,12 +127,7 @@ public class SotaPortObject extends AbstractSimplePortObject {
             
             m_distance = model.getString(CFG_KEY_DIST);
         }
-        
-        if (spec instanceof SotaPortObjectSpec) {
-            m_spec = ((SotaPortObjectSpec)spec).getSpec();
-        }
-        
-        m_indexOfClassCol = model.getInt(CFG_KEY_CLASSCOL_INDEX);
+        m_spec = (SotaPortObjectSpec) spec;
     }
 
     /**
@@ -160,15 +152,7 @@ public class SotaPortObject extends AbstractSimplePortObject {
 
             model.addString(CFG_KEY_DIST, m_sota.getDistance());
         }
-        
-        if (m_spec != null) {
-            SotaPortObjectSpec spec = new SotaPortObjectSpec(m_spec, 
-                    m_indexOfClassCol);
-            ModelContentWO subContent = model.addModelContent(CFG_KEY_SPEC);
-            spec.save(subContent);
-        }
-        
-        model.addInt(CFG_KEY_CLASSCOL_INDEX, m_indexOfClassCol);
+
     }
 
     /**
@@ -176,7 +160,7 @@ public class SotaPortObject extends AbstractSimplePortObject {
      */
     @Override
     public PortObjectSpec getSpec() {
-        return new SotaPortObjectSpec(m_spec, m_indexOfClassCol);
+        return m_spec;
     }
 
     /**
@@ -221,17 +205,4 @@ public class SotaPortObject extends AbstractSimplePortObject {
         return m_distance;
     }
 
-    /**
-     * @return the indexOfClassCol
-     */
-    public int getIndexOfClassCol() {
-        return m_indexOfClassCol;
-    }
-
-    /**
-     * @param indexOfClassCol the indexOfClassCol to set
-     */
-    public void setIndexOfClassCol(final int indexOfClassCol) {
-        m_indexOfClassCol = indexOfClassCol;
-    }
 }
