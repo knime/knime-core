@@ -24,6 +24,7 @@
 package org.knime.base.node.mine.sota;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
@@ -126,5 +127,22 @@ public class SotaPortObjectSpec extends AbstractSimplePortObjectSpec {
         }
         
         return true;
+    }
+    
+    /**
+     * @return <code>true</code> if internal data table spec contains a column
+     * which is compatible to string value.
+     */
+    public boolean hasClassColumn() {
+        if (m_spec == null) {
+            return false;
+        }
+        for (int i = 0; i < m_spec.getNumColumns(); i++) {
+            if (m_spec.getColumnSpec(i).getType().isCompatible(
+                    StringValue.class)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

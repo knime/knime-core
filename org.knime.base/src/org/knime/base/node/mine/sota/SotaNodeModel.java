@@ -70,7 +70,7 @@ public class SotaNodeModel extends GenericNodeModel {
     /**
      * The default value for the usage of out data.
      */
-    public static final boolean DEFAULT_USE_OUTDATA = false;
+    public static final boolean DEFAULT_USE_OUTDATA = true;
     
     /**
      * The configuration key for the internal model of SOTA.

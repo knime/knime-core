@@ -81,8 +81,15 @@ public class SotaPredictorNodeModel extends GenericNodeModel {
             throw new InvalidSettingsException(
                     "Given spec at index 0 is not a DataTableSpec!");
         }
-        
+                
         SotaPortObjectSpec sp = (SotaPortObjectSpec)inSpecs[0];
+        
+        if (!sp.hasClassColumn()) {
+            setWarningMessage("Given model is trained on data without a " 
+                    + "class column, which makes prediction pretty odd. "
+                    + "Predicted class is set to \"NoClassDefined\".");
+        }
+        
         if (!sp.validateSpec((DataTableSpec)inSpecs[1])) {
             throw new InvalidSettingsException("Input data is not compatible " 
                     + "with given sota model!");
