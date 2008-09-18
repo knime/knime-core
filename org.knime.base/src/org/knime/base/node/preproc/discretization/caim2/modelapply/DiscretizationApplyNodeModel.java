@@ -48,7 +48,7 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @see DiscretizationApplyNodeFactory
  */
-class DiscretizationApplyNodeModel extends NodeModel {
+public class DiscretizationApplyNodeModel extends NodeModel {
 
     /**
      * Key to store the included columns settings. (Columns to perform the
