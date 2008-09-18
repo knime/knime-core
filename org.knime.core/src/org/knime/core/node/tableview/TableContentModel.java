@@ -25,6 +25,7 @@ package org.knime.core.node.tableview;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashSet;
@@ -43,6 +44,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteListener;
 import org.knime.core.node.property.hilite.KeyEvent;
@@ -273,13 +275,12 @@ public class TableContentModel extends AbstractTableModel
         if (SwingUtilities.isEventDispatchThread()) {
             setDataTableIntern(data);
         } else {
-//            try {
-                new Thread(new Runnable() {
+            try {
+                SwingUtilities.invokeAndWait(new Runnable() {
                    public void run() {
                        setDataTableIntern(data);
                    } 
-                }).start();
-                /*
+                });
             } catch (InterruptedException ie) {
                 NodeLogger.getLogger(getClass()).warn(
                         "Exception while setting new table.", ie);
@@ -287,7 +288,6 @@ public class TableContentModel extends AbstractTableModel
                 NodeLogger.getLogger(getClass()).warn(
                         "Exception while setting new table.", ite);
             }
-            */
         }
     }
 
