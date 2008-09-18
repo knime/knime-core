@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import javax.swing.JComponent;
+
 import org.knime.base.util.HalfDoubleMatrix;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
@@ -379,6 +381,12 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
      */
     String[] getColNames() {
         return m_colNames;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public JComponent[] getViews() {
+        return null;
     }
     
     
