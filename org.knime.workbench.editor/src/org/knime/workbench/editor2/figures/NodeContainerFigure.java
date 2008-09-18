@@ -545,7 +545,35 @@ public class NodeContainerFigure extends RectangleFigure {
      */
     @Override
     public Dimension getPreferredSize(final int wHint, final int hHint) {
-
+        // TODO: rewrite. We have to take into account:
+        /*
+         * WIDTH: max of 
+         * m_contentFigure
+         * m_heading
+         * m_status figure
+         * m_name
+         * 
+         * HEIGHT:
+         * m_contentFigure
+         * m_infoWarnErrorPanel constant height?
+         * m_statusFigure
+         * m_name
+         * 
+         */
+        
+        int prefWidth = Math.max(WIDTH, m_heading.getTextBounds().width);
+        
+        int prefHeight = m_heading.getPreferredSize().height
+                        + m_contentFigure.getPreferredSize().height
+                        //+ m_infoWarnErrorPanel.getPreferredSize().height
+                        // replace with a fixed size of 16? pixel
+                        + m_progressFigure.getPreferredSize().height
+                        + m_statusFigure.getPreferredSize().height
+                        + m_name.getPreferredSize().height;
+                        
+        return new Dimension(prefWidth, prefHeight);
+        
+        /*
         Rectangle parentBounds = getBounds();
         int prefWidth = Math.max(WIDTH, m_heading.getPreferredSize().width);
         if (parentBounds.width > 0) {
@@ -563,8 +591,9 @@ public class NodeContainerFigure extends RectangleFigure {
                         + m_infoWarnErrorPanel.getPreferredSize().height
                         + m_statusFigure.getPreferredSize().height
                         + m_name.getPreferredSize().height + 5;
-                        */
+                        *
         return new Dimension(prefWidth, prefHeight);
+        */
     }
 
     /**
