@@ -14,10 +14,18 @@
 			the second table as reference. Depending on the dialog
 			setting, the rows from the reference table are either included or
 			excluded in the output table.<br />
-            During the test for in-/exclusion the row IDs of both tables are
-            compared.
+            During the test for in-/exclusion the values of the selected columns
+             of both tables are compared.
 		</intro>
 		
+        <option name="Data table column">
+            The column from the table to be filtered that should be used for
+            comparison.
+        </option>
+        <option name="Reference table column">
+            The column from the filter table that should be used for
+            comparison.
+        </option>
         <option name="In-/Exclude rows from reference table">
             Includes or excludes all rows from the reference table in the
             resulting table from the first input.

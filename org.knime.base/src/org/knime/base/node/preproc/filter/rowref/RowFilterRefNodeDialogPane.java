@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,20 +18,25 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   07.05.2008 (gabriel): created
  */
 package org.knime.base.node.preproc.filter.rowref;
 
+import org.knime.core.data.DataValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnName;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.util.DataValueColumnFilter;
 
 /**
  * The dialog pane for the Reference Row Filter node which offers an
  * include and exclude option.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class RowFilterRefNodeDialogPane extends DefaultNodeSettingsPane {
@@ -46,18 +51,52 @@ public class RowFilterRefNodeDialogPane extends DefaultNodeSettingsPane {
      * include or exclude mode.
      */
     public RowFilterRefNodeDialogPane() {
-        DialogComponentButtonGroup group = new DialogComponentButtonGroup(
-                createInExcludeModel(), 
+        final DataValueColumnFilter colFilter =
+            new DataValueColumnFilter(DataValue.class);
+        final DialogComponent table1RefCol =
+            new DialogComponentColumnNameSelection(
+                    createDataTableColModel(), "Data table column: ", 0,
+                    true, colFilter);
+        final DialogComponent table2RefCol =
+            new DialogComponentColumnNameSelection(
+                    createReferenceTableColModel(), "Reference table column: ",
+                    0, true, colFilter);
+        final DialogComponentButtonGroup group = new DialogComponentButtonGroup(
+                createInExcludeModel(),
                 true, INCLUDE, new String[]{INCLUDE, EXCLUDE});
         group.setToolTipText("Include or exclude rows in first table "
                 + "according to the second reference table.");
+        createNewGroup(" Reference columns ");
+        addDialogComponent(table1RefCol);
+        addDialogComponent(table2RefCol);
+        closeCurrentGroup();
         addDialogComponent(group);
     }
-    
+
     /**
      * @return setting model for include/exclude row IDs
      */
     static SettingsModelString createInExcludeModel() {
         return new SettingsModelString("inexclude", INCLUDE);
+    }
+
+    /**
+     * @return setting model for for the column of the table to filter
+     */
+    static SettingsModelColumnName createDataTableColModel() {
+        final SettingsModelColumnName col =
+            new SettingsModelColumnName("dataTableColumn", null);
+        col.setSelection(null, true);
+        return col;
+    }
+
+    /**
+     * @return setting model for the column of the reference table
+     */
+    static SettingsModelColumnName createReferenceTableColModel() {
+        final SettingsModelColumnName col =
+            new SettingsModelColumnName("referenceTableColumn", null);
+        col.setSelection(null, true);
+        return col;
     }
 }
