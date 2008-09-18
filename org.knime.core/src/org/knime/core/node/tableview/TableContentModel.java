@@ -272,6 +272,9 @@ public class TableContentModel extends AbstractTableModel
      * @param data the new data being displayed or <code>null</code>
      */
     public void setDataTable(final DataTable data) {
+        // TODO: setDataIntern should be in own thread, but is now in 
+        // EventDispatchThread (even invokeAndWait). This causes OutportView to 
+        // freeze while data is loading (since it is loaded in EDT)
         if (SwingUtilities.isEventDispatchThread()) {
             setDataTableIntern(data);
         } else {
