@@ -74,10 +74,12 @@ public class KNIMETestingApplication implements IApplication {
         // - though it will still function)
         // Under Linux this must be not be true, otherwise the views will not
         // open!
-        if (!System.getProperty("os.name").equals("Linux")
-                && System.getProperty("java.awt.headless") == null) {
-            System.setProperty("java.awt.headless", "true");
-        }
+        // Suddenly under windows this causes a headless exception (at least
+        // if started without command line arguments)
+//        if (!System.getProperty("os.name").equals("Linux")
+//                && System.getProperty("java.awt.headless") == null) {
+//            System.setProperty("java.awt.headless", "true");
+//        }
 
         // make sure the logfile doesn't get split.
         System.setProperty(LogfileAppender.MAX_SIZE_ENV_VARIABLE, "-1");
