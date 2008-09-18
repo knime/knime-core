@@ -26,11 +26,9 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodePort;
-import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.editor2.ImageRepository;
 
 /**
@@ -87,25 +85,7 @@ public class OpenPortViewAction extends Action {
      */
     @Override
     public String getText() {
-
-        // the name is constructed like "Model outport <specificIndex>"
-        String name;
-
-        if (m_nodeContainer.getOutPort(m_index).getPortType().equals(
-                BufferedDataTable.TYPE)) {
-            name = "Data Outport " + m_index;
-        } else if (KNIMEEditorPlugin.PMML_PORT_TYPE.isSuperTypeOf(
-                m_nodeContainer.getOutPort(m_index).getPortType())) {
-            name = "PMML Model Outport " + m_index;
-        } else {
-            name ="Unknown Outport " + m_index;
-        }
-
-        // the text will be displayed in the context menu
-        // it consists of the specific port type and index and its description
-        String description = m_nodeContainer.getOutPort(m_index).getPortName();
-
-        return name + ": " + description;
+        return m_index + m_nodeContainer.getOutPort(m_index).getPortName();
     }
 
     /**
