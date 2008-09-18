@@ -80,6 +80,12 @@ public class NodeID implements Comparable<NodeID> {
     public int getIndex() {
         return m_index;
     }
+    
+    public String getIDWithoutRoot() {
+        String id = toString();
+        String withoutRoot = id.substring(id.indexOf(":") + 1);
+        return withoutRoot;
+    }
 
     /** Checks for exact matching prefixes.
      *

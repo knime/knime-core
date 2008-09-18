@@ -28,8 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 
-import org.knime.base.node.flowvariable.port.FlowVariablePortObject;
-import org.knime.base.node.flowvariable.port.FlowVariablePortObjectSpec;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -53,6 +51,8 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.workflow.LoopStartNode;
 
 /** Start of loop: pushes variables in input datatable columns

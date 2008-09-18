@@ -21,7 +21,7 @@
  * History
  *   Sep 17, 2008 (wiswedel): created
  */
-package org.knime.base.node.flowvariable.port;
+package org.knime.core.node.port.flowvariable;
 
 import javax.swing.JComponent;
 
