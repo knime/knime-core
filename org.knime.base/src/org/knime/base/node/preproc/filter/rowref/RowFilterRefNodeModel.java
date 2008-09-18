@@ -76,8 +76,23 @@ public class RowFilterRefNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) {
-        //check if the user uses the rowkey with a column
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    throws InvalidSettingsException {
+        if (!m_dataTableCol.useRowID()) {
+            final DataColumnSpec dataColSpec = inSpecs[0].getColumnSpec(
+                    m_dataTableCol.getColumnName());
+            if (dataColSpec == null) {
+                throw new InvalidSettingsException("Invalid data table column");
+            }
+        }
+        if (!m_referenceTableCol.useRowID()) {
+            final DataColumnSpec refColSpec = inSpecs[1].getColumnSpec(
+                    m_referenceTableCol.getColumnName());
+            if (refColSpec == null) {
+                throw new InvalidSettingsException(
+                        "Invalid reference table column");
+            }
+        }
         if (m_dataTableCol.useRowID() != m_referenceTableCol.useRowID()) {
             if (m_dataTableCol.useRowID()) {
                 setWarningMessage("Using string representation of column "
@@ -89,11 +104,11 @@ public class RowFilterRefNodeModel extends NodeModel {
                             + " for RowKey comparison");
             }
         } else if (!m_dataTableCol.useRowID()) {
-            final DataColumnSpec datColSpec = inSpecs[0].getColumnSpec(
+            final DataColumnSpec dataColSpec = inSpecs[0].getColumnSpec(
                     m_dataTableCol.getColumnName());
             final DataColumnSpec refColSpec = inSpecs[1].getColumnSpec(
                     m_referenceTableCol.getColumnName());
-            if (!refColSpec.getType().equals(datColSpec.getType())) {
+            if (!refColSpec.getType().equals(dataColSpec.getType())) {
                 setWarningMessage("Different column types using string "
                         + "representation for comparison");
             }
