@@ -24,15 +24,6 @@
  */
 package org.knime.base.node.mine.bayes.naivebayes.datamodel;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -46,10 +37,19 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.Config;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
+
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This class represents the learned Naive Bayes model. This basic model
@@ -317,7 +317,7 @@ public class NaiveBayesModel {
      * @param predParams the <code>ModelContentRO</code> to read from
      * @throws InvalidSettingsException if a mandatory key is not available
      */
-    public NaiveBayesModel(final ModelContentRO predParams)
+    public NaiveBayesModel(final ConfigRO predParams)
     throws InvalidSettingsException {
         if (predParams == null) {
             throw new NullPointerException("PredParams must not be null");
@@ -352,7 +352,7 @@ public class NaiveBayesModel {
     /**
      * @param predParams to save the model
      */
-    public void savePredictorParams(final ModelContentWO predParams) {
+    public void savePredictorParams(final ConfigWO predParams) {
         //Save the classifier column
         predParams.addString(CLASS_COL_NAME, m_classColName);
         predParams.addBoolean(SKIP_MISSING_VALS, m_skipMissingVals);
@@ -399,12 +399,41 @@ public class NaiveBayesModel {
         throw new IllegalStateException("Class column model not found");
     }
 
+    /**
+     * @return <code>true</code> if the model contains skipped attributes
+     */
+    public boolean containsSkippedAttributes() {
+        return m_skippedAttributes != null && !m_skippedAttributes.isEmpty();
+    }
 
     /**
      * @return the skipped attributes or an empty list
      */
     public List<AttributeModel> getSkippedAttributes() {
         return Collections.unmodifiableList(m_skippedAttributes);
+    }
+
+    /**
+     * @param max2Show the maximum number of missing attributes to display
+     * @return a String that shows the skipped attributes
+     */
+    public String getSkippedAttributesString(final int max2Show) {
+        final StringBuilder buf = new StringBuilder();
+        buf.append("The following attributes are skipped: ");
+        for (int i = 0, length = m_skippedAttributes.size(); i < length; i++) {
+            if (i != 0) {
+                buf.append(", ");
+            }
+            if (i > max2Show) {
+                buf.append("...(see node view)");
+                break;
+            }
+            final AttributeModel model = m_skippedAttributes.get(i);
+            buf.append(model.getAttributeName());
+            buf.append("/");
+            buf.append(model.getInvalidCause());
+        }
+        return buf.toString();
     }
 
     /**
@@ -518,6 +547,23 @@ public class NaiveBayesModel {
      */
     public DataType getClassColumnDataType() {
         return StringCell.TYPE;
+    }
+
+    /**
+     * @return the a summary of the model
+     */
+    public String getSummary() {
+        final StringBuilder buf = new StringBuilder();
+        buf.append("NaiveBayes Model. Class column: ");
+        buf.append(getClassColumnName());
+        buf.append(" Number of attributes: ");
+        //minus 1 because of the class model
+        buf.append(getAttributeModels().size() - 1);
+        if (containsSkippedAttributes()) {
+            buf.append(" ");
+            buf.append(getSkippedAttributesString(3));
+        }
+        return buf.toString();
     }
 
     /**

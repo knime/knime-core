@@ -24,13 +24,6 @@
  */
 package org.knime.base.node.mine.bayes.naivebayes.learner;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -39,19 +32,30 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.base.node.mine.bayes.naivebayes.datamodel.AttributeModel;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+
 import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
+import org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObject;
+import org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObjectSpec;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This is the <code>NodeModel</code> implementation of the
@@ -59,7 +63,7 @@ import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
  *
  * @author Tobias Koetter
  */
-public class NaiveBayesLearnerNodeModel extends NodeModel {
+public class NaiveBayesLearnerNodeModel extends GenericNodeModel {
 
     // our logger instance
     private static final NodeLogger LOGGER = NodeLogger
@@ -117,14 +121,15 @@ public class NaiveBayesLearnerNodeModel extends NodeModel {
     protected NaiveBayesLearnerNodeModel() {
 //      we have one data in port for the training data and one model out port
         //for the prediction result
-        super(1, 0, 0, 1);
+        super(new PortType[] {BufferedDataTable.TYPE},
+                new PortType[] {NaiveBayesPortObject.TYPE});
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws CanceledExecutionException,
             InvalidSettingsException {
         LOGGER.debug("Entering execute of "
@@ -132,7 +137,11 @@ public class NaiveBayesLearnerNodeModel extends NodeModel {
 //      check input data
         assert (inData != null && inData.length == 1
                 && inData[TRAINING_DATA_PORT] != null);
-        final BufferedDataTable trainingTable = inData[TRAINING_DATA_PORT];
+        final PortObject inObject = inData[TRAINING_DATA_PORT];
+        if (!(inObject instanceof BufferedDataTable)) {
+            throw new IllegalArgumentException("Invalid input data");
+        }
+        final BufferedDataTable trainingTable = (BufferedDataTable)inObject;
         final String colName = m_classifyColumnName.getStringValue();
         final boolean skipMissingVals = m_skipMissingVals.getBooleanValue();
         final int maxNoOfNomVals = m_maxNoOfNominalVals.getIntValue();
@@ -155,31 +164,15 @@ public class NaiveBayesLearnerNodeModel extends NodeModel {
             }
             setWarningMessage(buf.toString());
         }
-
-        final List<AttributeModel> skippedAttrs =
-            m_model.getSkippedAttributes();
-        if (skippedAttrs.size() > 0) {
-            final StringBuilder buf = new StringBuilder();
-            buf.append("The following attributes are skipped: ");
-            for (int i = 0, length = skippedAttrs.size(); i < length; i++) {
-                if (i != 0) {
-                    buf.append(", ");
-                }
-                if (i > 3) {
-                    buf.append("...(see node view)");
-                    break;
-                }
-                final AttributeModel model = skippedAttrs.get(i);
-                buf.append(model.getAttributeName());
-                buf.append("/");
-                buf.append(model.getInvalidCause());
-            }
-            setWarningMessage(buf.toString());
+        if (m_model.containsSkippedAttributes()) {
+            setWarningMessage(m_model.getSkippedAttributesString(3));
         }
         LOGGER.debug("Exiting execute of "
                 + NaiveBayesLearnerNodeModel.class.getName());
         // return no data tables (empty array)
-        return new BufferedDataTable[0];
+        return new PortObject[] {
+                new NaiveBayesPortObject(trainingTable.getDataTableSpec(),
+                        m_model)};
     }
 
     /**
@@ -194,23 +187,27 @@ public class NaiveBayesLearnerNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        this.m_model = null;
+        m_model = null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-    throws InvalidSettingsException {
-        final String classColumn = m_classifyColumnName.getStringValue();
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
+            throws InvalidSettingsException {
         //        check the internal variables if they are valid
+        final String classColumn = m_classifyColumnName.getStringValue();
         if (classColumn == null
         || classColumn.length() < 1) {
             throw new InvalidSettingsException(
                     "Please define the classification column");
         }
-        final DataTableSpec tableSpec = inSpecs[TRAINING_DATA_PORT];
+        final PortObjectSpec inSpec = inSpecs[TRAINING_DATA_PORT];
+        if (!(inSpec instanceof DataTableSpec)) {
+            throw new IllegalArgumentException("Invalid input data");
+        }
+        final DataTableSpec tableSpec = (DataTableSpec)inSpec;
         if (tableSpec.findColumnIndex(classColumn) < 0) {
             throw new InvalidSettingsException(
                 "Please define the classification column");
@@ -256,10 +253,10 @@ public class NaiveBayesLearnerNodeModel extends NodeModel {
         }
         if (toBigNominalColumns.size() == 1) {
             setWarningMessage("Column " + toBigNominalColumns.get(0)
-                    + " will be skipped.");
+                    + " will possibly be skipped.");
         } else if (toBigNominalColumns.size() > 1) {
             final StringBuilder buf = new StringBuilder();
-            buf.append("The following columns will be skipped: ");
+            buf.append("The following columns will possibly be skipped: ");
             for (int i = 0, length = toBigNominalColumns.size(); i < length;
                 i++) {
                 if (i != 0) {
@@ -277,18 +274,9 @@ public class NaiveBayesLearnerNodeModel extends NodeModel {
         if (tableSpec.getNumColumns() - toBigNominalColumns.size() < 1) {
             throw new InvalidSettingsException("Not enough valid columns");
         }
-        //we have no data output port so we don't need to return a tableSpec
-        return new DataTableSpec[]{};
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveModelContent(final int index,
-            final ModelContentWO predParams) {
-        assert index == NaiveBayesLearnerNodeModel.BAYES_MODEL_PORT : index;
-        m_model.savePredictorParams(predParams);
+        return new PortObjectSpec[]{new NaiveBayesPortObjectSpec(tableSpec,
+                tableSpec.getColumnSpec(classColumn))};
     }
 
     /**

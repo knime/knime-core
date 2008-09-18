@@ -24,23 +24,30 @@
  */
 package org.knime.base.node.mine.bayes.naivebayes.predictor;
 
-import java.io.File;
-import java.util.List;
-
-import org.knime.base.data.append.column.AppendedColumnTable;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+
+import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
+import org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObject;
+import org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObjectSpec;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This is the <code>NodeModel</code> implementation of the
@@ -48,15 +55,16 @@ import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
  *
  * @author Tobias Koetter
  */
-public class NaiveBayesPredictorNodeModel extends NodeModel {
+public class NaiveBayesPredictorNodeModel extends GenericNodeModel {
 
     // our logger instance
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(NaiveBayesPredictorNodeModel.class);
 
-    private static final int DATA_IN_PORT = 0;
+    private static final int DATA_IN_PORT = 1;
 
     private static final int MODEL_IN_PORT = 0;
+
 
     /**The settings key for the include probability values boolean.*/
     protected static final String CFG_INCL_PROBABILITYVALS_KEY = "inclProbVals";
@@ -64,36 +72,47 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
     private final SettingsModelBoolean m_inclProbVals =
         new SettingsModelBoolean(CFG_INCL_PROBABILITYVALS_KEY, false);
 
-    private NaiveBayesModel m_model;
-
     /**Constructor for class NaiveBayesPredictorNodeModel.
      */
     protected NaiveBayesPredictorNodeModel() {
 //      we have one data in and out port and one model in port
-        super(1, 1, 1, 0);
+        super(new PortType[] {NaiveBayesPortObject.TYPE,
+                BufferedDataTable.TYPE},
+                new PortType[] {BufferedDataTable.TYPE});
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
 
         LOGGER.debug("Entering execute(inData, exec) of class "
                 + "NaiveBayesPredictorNodeModel.");
 //      check input data
-        assert (inData != null && inData.length == 1
-                && inData[DATA_IN_PORT] != null);
-        final BufferedDataTable data = inData[DATA_IN_PORT];
+        assert (inData != null && inData.length == 2
+                && inData[DATA_IN_PORT] != null
+                && inData[MODEL_IN_PORT] != null);
+        final PortObject dataObject = inData[DATA_IN_PORT];
+        if (!(dataObject instanceof BufferedDataTable)) {
+            throw new IllegalArgumentException("Invalid input data");
+        }
+        final BufferedDataTable data = (BufferedDataTable)dataObject;
+        final PortObject modelObject = inData[MODEL_IN_PORT];
+        if (!(modelObject instanceof NaiveBayesPortObject)) {
+            throw new IllegalArgumentException("Invalid input data");
+        }
+        final NaiveBayesModel model =
+            ((NaiveBayesPortObject)modelObject).getModel();
         exec.setMessage("Classifying rows...");
-        if (m_model == null) {
+        if (model == null) {
             throw new Exception("Node not properly configured. "
                     + "No Naive Bayes Model available.");
         }
 
         final NaiveBayesCellFactory appender =
-            new NaiveBayesCellFactory(m_model, data.getDataTableSpec(),
+            new NaiveBayesCellFactory(model, data.getDataTableSpec(),
                     m_inclProbVals.getBooleanValue());
         final ColumnRearranger rearranger =
             new ColumnRearranger(data.getDataTableSpec());
@@ -107,7 +126,7 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
 //            exec.createBufferedDataTable(appTable, exec);
         LOGGER.debug("Exiting execute(inData, exec) of class "
                 + "NaiveBayesPredictorNodeModel.");
-        return new BufferedDataTable[] {returnVal};
+        return new PortObject[] {returnVal};
     }
 
     /**
@@ -115,7 +134,7 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_model = null;
+        //nothing to do
     }
 
 
@@ -123,20 +142,33 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         //check the input data
-        assert (inSpecs != null && inSpecs.length == 1
-                && inSpecs[DATA_IN_PORT] != null);
-        if (m_model == null) {
-            throw new InvalidSettingsException("No model available");
+        assert (inSpecs != null && inSpecs.length == 2
+                && inSpecs[DATA_IN_PORT] != null
+                && inSpecs[MODEL_IN_PORT] != null);
+        final PortObjectSpec modelObject = inSpecs[MODEL_IN_PORT];
+        if (!(modelObject instanceof NaiveBayesPortObjectSpec)) {
+            throw new IllegalArgumentException("Invalid input data");
         }
-        final DataTableSpec spec = inSpecs[DATA_IN_PORT];
-        if (spec == null) {
-            throw new NullPointerException("TableSpec must not be null");
+        final DataTableSpec trainingSpec =
+            ((NaiveBayesPortObjectSpec)modelObject).getTableSpec();
+        final DataColumnSpec classColumn =
+            ((NaiveBayesPortObjectSpec)modelObject).getClassColumn();
+        if (trainingSpec == null) {
+            throw new InvalidSettingsException("No model spec available");
         }
+
+        final PortObjectSpec inSpec = inSpecs[DATA_IN_PORT];
+        if (!(inSpec instanceof DataTableSpec)) {
+            throw new IllegalArgumentException("TableSpec must not be null");
+        }
+        final DataTableSpec spec = (DataTableSpec)inSpec;
+
+
         //check the input data for columns with the wrong name or wrong type
-        final List<String> unknownCols = m_model.check4UnknownCols(spec);
+        final List<String> unknownCols = check4UnknownCols(trainingSpec, spec);
         if (unknownCols.size() >= spec.getNumColumns()) {
             setWarningMessage("No known attribute columns found use "
             + "class prior probability to predict the class membership");
@@ -162,7 +194,7 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
         //check if the learned model contains columns which are not in the
         //input data
         final List<String> missingInputCols =
-            m_model.check4MissingCols(spec);
+            check4MissingCols(trainingSpec, classColumn.getName(), spec);
         if (missingInputCols.size() == 1) {
             setWarningMessage("Attribute " + missingInputCols.get(0)
                     + " is missing in the input data");
@@ -182,13 +214,46 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
             }
             setWarningMessage(buf.toString());
         }
+        final DataColumnSpec resultColSpecs =
+            NaiveBayesCellFactory.createResultColSpecs(classColumn,
+                spec, m_inclProbVals.getBooleanValue());
+        if (resultColSpecs != null) {
+            return new PortObjectSpec[] {
+                    AppendedColumnTable.getTableSpec(spec, resultColSpecs)};
+        }
+        return null;
+    }
 
-        return new DataTableSpec[] {
-            AppendedColumnTable.getTableSpec(inSpecs[DATA_IN_PORT],
-                    NaiveBayesCellFactory.createResultColSpecs(m_model,
-                            inSpecs[DATA_IN_PORT],
-                            m_inclProbVals.getBooleanValue()))
-        };
+    private List<String> check4MissingCols(final DataTableSpec trainingSpec,
+            final String classCol, final DataTableSpec spec) {
+        final List<String> missingInputCols = new ArrayList<String>();
+        for (final DataColumnSpec trainColSpec : trainingSpec) {
+            if (!trainColSpec.getName().equals(classCol)) {
+                //check only for none class value columns
+                if (spec.getColumnSpec(trainColSpec.getName()) == null) {
+                    missingInputCols.add(trainColSpec.getName());
+                }
+            }
+        }
+        return missingInputCols;
+    }
+
+    private List<String> check4UnknownCols(final DataTableSpec trainingSpec,
+            final DataTableSpec spec) {
+        if (spec == null) {
+            throw new NullPointerException("TableSpec must not be null");
+        }
+
+        final List<String> unknownCols = new ArrayList<String>();
+        for (final DataColumnSpec colSpec : spec) {
+            final DataColumnSpec trainColSpec =
+                trainingSpec.getColumnSpec(colSpec.getName());
+            if (trainColSpec == null || !colSpec.getType().equals(
+                    trainColSpec.getType())) {
+                unknownCols.add(colSpec.getName());
+            }
+        }
+        return unknownCols;
     }
 
     /**
@@ -233,23 +298,5 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) {
         //nothing to do
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadModelContent(final int index,
-            final ModelContentRO predParams) throws InvalidSettingsException {
-        if (index != MODEL_IN_PORT) {
-            throw new IndexOutOfBoundsException("Invalid model input-port: "
-                    + index);
-        }
-        if (predParams == null) {
-            m_model = null;
-        } else {
-            m_model = new NaiveBayesModel(predParams);
-        }
     }
 }

@@ -23,12 +23,12 @@
 
 package org.knime.base.node.mine.bayes.naivebayes.learner;
 
+import org.knime.core.node.GenericNodeView;
+
+import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
+
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
-
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
-import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
 
 
 /**
@@ -36,7 +36,8 @@ import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
  *
  * @author Tobias Koetter
  */
-public class NaiveBayesLearnerNodeView extends NodeView {
+public class NaiveBayesLearnerNodeView
+extends GenericNodeView<NaiveBayesLearnerNodeModel> {
 
 
     private NaiveBayesModel m_model;
@@ -49,12 +50,12 @@ public class NaiveBayesLearnerNodeView extends NodeView {
      * class: <code>NaiveBayesPredictorNodeModel</code>)
      * @param title The title
      */
-    protected NaiveBayesLearnerNodeView(final NodeModel nodeModel,
+    protected NaiveBayesLearnerNodeView(
+            final NaiveBayesLearnerNodeModel nodeModel,
             final String title) {
         super(nodeModel);
         setViewTitle(title);
-        assert (nodeModel instanceof NaiveBayesLearnerNodeModel);
-        m_model = ((NaiveBayesLearnerNodeModel)nodeModel).getNaiveBayesModel();
+        m_model = (nodeModel).getNaiveBayesModel();
         //The output as HTML
         m_htmlPane = new JEditorPane("text/html", "");
 //        m_htmlPane.setText(m_model.getHTMLTable());
@@ -76,9 +77,8 @@ public class NaiveBayesLearnerNodeView extends NodeView {
      */
     @Override
     protected void modelChanged() {
-        final NodeModel nodeModel = getNodeModel();
-        assert (nodeModel instanceof NaiveBayesLearnerNodeModel);
-        m_model = ((NaiveBayesLearnerNodeModel)nodeModel).getNaiveBayesModel();
+        final NaiveBayesLearnerNodeModel nodeModel = getNodeModel();
+        m_model = nodeModel.getNaiveBayesModel();
         if (m_model != null) {
             m_htmlPane.setText(m_model.getHTMLView());
         } else {

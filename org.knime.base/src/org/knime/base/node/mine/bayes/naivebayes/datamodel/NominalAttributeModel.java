@@ -337,7 +337,7 @@ class NominalAttributeModel extends AttributeModel {
             final String attrValString = attrValue.toString();
             if (!m_attributeVals.contains(attrValString)) {
                 //check the different number of attribute values
-                if (m_attributeVals.size() > m_maxNoOfAttrVals) {
+                if (m_attributeVals.size() >= m_maxNoOfAttrVals) {
                     throw new TooManyValuesException("Attribute value "
                                 + attrValString + " doesn't fit into model");
                 }

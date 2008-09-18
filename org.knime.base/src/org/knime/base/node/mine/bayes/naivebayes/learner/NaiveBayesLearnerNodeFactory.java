@@ -23,22 +23,21 @@
  *   02.05.2006 (koetter): created
  */
 package org.knime.base.node.mine.bayes.naivebayes.learner;
+import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * <code>NodeFactory</code> for the "Naive Bayes Learner" node.
 
  * @author Tobias Koetter
  */
-public class NaiveBayesLearnerNodeFactory extends NodeFactory {
+public class NaiveBayesLearnerNodeFactory
+    extends GenericNodeFactory<NaiveBayesLearnerNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public NaiveBayesLearnerNodeModel createNodeModel() {
         return new NaiveBayesLearnerNodeModel();
     }
 
@@ -54,8 +53,8 @@ public class NaiveBayesLearnerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public NaiveBayesLearnerNodeView createNodeView(final int viewIndex,
+            final NaiveBayesLearnerNodeModel nodeModel) {
         if (viewIndex != 0) {
             throw new IllegalArgumentException();
         }
