@@ -65,7 +65,8 @@ final class DBQueryNodeModel extends DBNodeModel {
         String queryString = query.getStringValue();
         if (queryString != null && !queryString.contains(TABLE_PLACE_HOLDER)) {
             throw new InvalidSettingsException(
-                    "Database view place holder should not be replaced.");
+                    "Database view place holder (" + TABLE_PLACE_HOLDER 
+                    + ") must not be replaced.");
         }
     }
 

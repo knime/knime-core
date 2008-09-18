@@ -28,11 +28,10 @@ import java.io.InputStreamReader;
 import java.security.InvalidKeyException;
 import java.sql.Blob;
 import java.sql.Clob;
-import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Types;
 
 import javax.crypto.BadPaddingException;
@@ -52,6 +51,9 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 
@@ -60,24 +62,22 @@ import org.knime.core.node.NodeLogger;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-final class DBReaderConnection implements DataTable {
+final class DBReaderConnection {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(DBReaderConnection.class);
+    
+    private BufferedDataTable m_table = null;
 
     private final DataTableSpec m_spec;
-
-    private final Connection m_conn;
-
-    private final String m_query;
-
-    private final int m_cacheNoRows;
+    
+    private final DBQueryConnection m_conn;
+    
+    private final PreparedStatement m_stmt;
     
     /**
      * Create connection to database and read meta info.
-     * 
      * @param conn a database connection object
-     * @param query SQL query executed to read data
      * @throws SQLException {@link SQLException}
      * @throws InvalidSettingsException {@link InvalidSettingsException}
      * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
@@ -85,81 +85,78 @@ final class DBReaderConnection implements DataTable {
      * @throws InvalidKeyException {@link InvalidKeyException}
      * @throws IOException {@link IOException}
      */
-    DBReaderConnection(final DBConnection conn, final String query) throws
-            InvalidSettingsException, SQLException,
-            IllegalBlockSizeException, BadPaddingException,
-            InvalidKeyException, IOException {
-        this(conn, query, Integer.MAX_VALUE);
-    }
-
-    /**
-     * Create connection to database and read meta info.
-     * 
-     * @param conn a database connection object
-     * @param query SQL query executed to read data
-     * @param cacheNoRows number of rows cached
-     * @throws SQLException {@link SQLException}
-     * @throws InvalidSettingsException {@link InvalidSettingsException}
-     * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
-     * @throws BadPaddingException {@link BadPaddingException}
-     * @throws InvalidKeyException {@link InvalidKeyException}
-     * @throws IOException {@link IOException}
-     */
-    DBReaderConnection(final DBConnection conn, final String query,
-            final int cacheNoRows) throws SQLException, 
-            InvalidSettingsException, IllegalBlockSizeException,
-            BadPaddingException, InvalidKeyException, IOException {
-        m_cacheNoRows = cacheNoRows;
-        Statement stmt = null;
-        ResultSet result = null;
+    DBReaderConnection(final DBQueryConnection conn) 
+            throws SQLException, InvalidSettingsException, 
+            IllegalBlockSizeException, BadPaddingException, InvalidKeyException,
+            IOException {
+        PreparedStatement stmt = null;
         try {
-            m_conn = conn.createConnection();
-            stmt = m_conn.createStatement();
-            m_query = query;
-            result = stmt.executeQuery(m_query);
-            m_spec = createTableSpec(result.getMetaData());
-        } finally {
-            if (result != null) {
-                result.close();
-            }
+            String pQuery = 
+                "SELECT * FROM (" + conn.getQuery() + ") WHERE 1 = 0";
+            stmt = conn.createConnection().prepareStatement(pQuery);
+            stmt.execute();
+            m_spec = createTableSpec(stmt.getMetaData());
+        } catch (SQLException sql) {
             if (stmt != null) {
                 stmt.close();
             }
+            throw sql;
         }
+        m_conn = conn;
+        m_stmt = stmt;
+    }
+    
+    DBQueryConnection getQueryConnection() {
+        return m_conn;
     }
 
     /**
-     * Closes connection.
+     *
      */
-    void close() {
-        try {
-            m_conn.close();
-        } catch (Throwable t) {
-            LOGGER.info("Could not close database connection, reason: "
-                    + t.getMessage(), t);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public DataTableSpec getDataTableSpec() {
+    DataTableSpec getDataTableSpec() {
         return m_spec;
     }
-
+    
     /**
-     * {@inheritDoc}
+     * 
+     * @param exec
+     * @return buffered data table read from database
+     * @throws CanceledExecutionException
      */
-    public RowIterator iterator() {
-        try {
-            Statement stmt = m_conn.createStatement();
-            ResultSet result = stmt.executeQuery(m_query);
-            // stmt.close();
-            return new DBRowIterator(result);
-        } catch (Throwable t) {
-            LOGGER.error(t);
-            return new DBRowIterator(null);
+    BufferedDataTable createTable(final ExecutionContext exec)
+            throws CanceledExecutionException, SQLException {
+        if (m_table == null) {
+            String query;
+            if (m_conn.getRowCacheSize() < 0) {
+                query = m_conn.getQuery();
+            } else {
+                query = "SELECT * FROM (" + m_conn.getQuery() 
+                    + ") WHERE ROWNUM <= " + m_conn.getRowCacheSize();
+            }
+            m_stmt.execute(query);
+            final ResultSet result = m_stmt.getResultSet(); 
+            m_table = exec.createBufferedDataTable(new DataTable() {
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public DataTableSpec getDataTableSpec() {
+                    return m_spec;
+                }
+
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public RowIterator iterator() {
+                    return new DBRowIterator(result);
+                }
+
+            }, exec);
+            result.close();
+            m_stmt.close();
         }
+        return m_table;
     }
 
     private DataTableSpec createTableSpec(final ResultSetMetaData meta)
@@ -208,21 +205,14 @@ final class DBReaderConnection implements DataTable {
      * RowIterator via a database ResultSet.
      */
     private class DBRowIterator extends RowIterator {
-
-        private boolean m_end;
-
+        
         private final ResultSet m_result;
-
-        private int m_rowCnt = 0;
 
         /**
          * Creates new iterator.
-         * 
-         * @param result Underlying ResultSet.
          */
         DBRowIterator(final ResultSet result) {
             m_result = result;
-            m_end = end();
         }
 
         /**
@@ -230,7 +220,22 @@ final class DBReaderConnection implements DataTable {
          */
         @Override
         public boolean hasNext() {
-            return !m_end;
+            boolean ret = false;
+            try {
+                ret = m_result.next();
+            } catch (SQLException sql) {
+                ret = false;
+            }
+            if (!ret) {
+                try {
+                    m_result.close();
+                } catch (SQLException e) {
+                    LOGGER.error("SQL Exception: ", e);
+                } catch (Throwable t) {
+                    LOGGER.fatal("Unknown error: ", t);
+                }
+            }
+            return ret;
         }
 
         /**
@@ -335,35 +340,7 @@ final class DBReaderConnection implements DataTable {
             } catch (SQLException sqle) {
                 LOGGER.error("SQL Exception:", sqle);
             }
-            m_end = end();
-            m_rowCnt++;
             return new DefaultRow(RowKey.createRowKey(rowId), cells);
-        }
-
-        private boolean end() {
-            boolean ret;
-            if (m_rowCnt + 1 == m_cacheNoRows) {
-                ret = true;
-            } else {
-                try {
-                    ret = !m_result.next();
-                } catch (SQLException sqle) {
-                    LOGGER.error("SQL Exception:", sqle);
-                    ret = true;
-                }
-                if (ret) {
-                    try {
-                        m_result.close();
-                        m_conn.close();
-                    } catch (SQLException e) {
-                        LOGGER.error("SQL Exception: ", e);
-                    } catch (Throwable t) {
-                        LOGGER.fatal("Unknown error: ", t);
-                    }   
-                }
-            }
-            return ret;
-                
         }
 
         private boolean wasNull() {

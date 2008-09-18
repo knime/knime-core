@@ -49,6 +49,7 @@ import org.knime.core.node.port.database.DatabasePortObjectSpec;
  */
 final class DBConnectionNodeModel extends GenericNodeModel {
     
+    private DBReaderConnection m_load = null;
     private DataTableSpec m_lastSpec = null;
     
     /** Config key to write last processed spec. */
@@ -56,11 +57,10 @@ final class DBConnectionNodeModel extends GenericNodeModel {
     
     /**
      * Creates a new database connection reader.
-     * @param inPorts array of in-port types
-     * @param outPorts array of out-port types
      */
-    DBConnectionNodeModel(final PortType[] inPorts, final PortType[] outPorts) {
-        super(inPorts, outPorts);
+    DBConnectionNodeModel() {
+        super(new PortType[]{DatabasePortObject.TYPE}, 
+                new PortType[]{BufferedDataTable.TYPE});
     }
 
     /**
@@ -71,18 +71,17 @@ final class DBConnectionNodeModel extends GenericNodeModel {
             final ExecutionContext exec) 
             throws CanceledExecutionException, Exception {
         try {
-            exec.setProgress("Opening database connection...");
-            DatabasePortObject dbObj = (DatabasePortObject) inData[0];
-            DBQueryConnection conn = new DBQueryConnection();
-            conn.loadValidatedConnection(dbObj.getConnectionModel());
-            DBReaderConnection load = new DBReaderConnection(
-                    conn, conn.getQuery());
-            m_lastSpec = load.getDataTableSpec();
+            if (m_load == null || m_lastSpec == null) {
+                exec.setProgress("Opening database connection...");
+                DatabasePortObject dbObj = (DatabasePortObject) inData[0];
+                DBQueryConnection conn = new DBQueryConnection(
+                        dbObj.getConnectionModel());
+                m_load = new DBReaderConnection(conn);
+                m_lastSpec = m_load.getDataTableSpec();
+            }
             exec.setProgress("Reading data from database...");
-            return new BufferedDataTable[]{
-                    exec.createBufferedDataTable(load, exec)};
+            return new BufferedDataTable[]{m_load.createTable(exec)};
         } catch (Throwable t) {
-            m_lastSpec = null;
             throw new RuntimeException(t);
         }
     }
@@ -92,7 +91,6 @@ final class DBConnectionNodeModel extends GenericNodeModel {
      */
     @Override
     protected void reset() {
-
     }
 
     /**
@@ -112,9 +110,8 @@ final class DBConnectionNodeModel extends GenericNodeModel {
         try {
             m_lastSpec = DataTableSpec.load(specSett);
         } catch (InvalidSettingsException ise) {
-            IOException ioe = new IOException("Could not read last spec.");
-            ioe.initCause(ise);
-            throw ioe;
+            m_lastSpec = null;
+            throw new IOException("Could not read last spec.", ise);
         }
     }
 
@@ -142,12 +139,14 @@ final class DBConnectionNodeModel extends GenericNodeModel {
             return new DataTableSpec[]{m_lastSpec};
         }
         try {
-            DatabasePortObjectSpec dbSpec = (DatabasePortObjectSpec) inSpecs[0];
-            DBQueryConnection conn = new DBQueryConnection();
-            conn.loadValidatedConnection(dbSpec.getConnectionModel());
-            DBReaderConnection reader = 
-                new DBReaderConnection(conn, conn.getQuery());
-            m_lastSpec = reader.getDataTableSpec();
+            if (m_load == null || m_lastSpec == null) {
+                DatabasePortObjectSpec dbSpec = 
+                    (DatabasePortObjectSpec) inSpecs[0];
+                DBQueryConnection conn = new DBQueryConnection(
+                        dbSpec.getConnectionModel());
+                m_load = new DBReaderConnection(conn);
+                m_lastSpec = m_load.getDataTableSpec();
+            }
             return new DataTableSpec[]{m_lastSpec};
         } catch (InvalidSettingsException ise) {
             m_lastSpec = null;

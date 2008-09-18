@@ -22,12 +22,9 @@
  */
 package org.knime.base.node.io.database;
 
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.GenericNodeView;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.database.DatabasePortObject;
 
 /**
  * 
@@ -41,9 +38,7 @@ public final class DBConnectionNodeFactory
      */
     @Override
     public DBConnectionNodeModel createNodeModel() {
-        return new DBConnectionNodeModel(
-                new PortType[]{DatabasePortObject.TYPE}, 
-                new PortType[]{BufferedDataTable.TYPE});
+        return new DBConnectionNodeModel();
     }
 
     /**

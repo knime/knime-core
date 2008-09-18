@@ -29,7 +29,6 @@ import java.io.IOException;
 
 import org.knime.base.node.io.database.DBConnectionDialogPanel.DBTableOptions;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -111,30 +110,41 @@ abstract class DBNodeModel extends GenericNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData,
+    protected final PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) 
             throws CanceledExecutionException, Exception {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
-        m_conn = new DBQueryConnection();
-        m_conn.loadValidatedConnection(dbObj.getConnectionModel());
+        m_conn = new DBQueryConnection(dbObj.getConnectionModel());
         String newQuery = createQuery(m_conn.getQuery(), m_tableId); 
-        LOGGER.debug("Execute SQL query: " + newQuery);
+        LOGGER.debug("Executing SQL query during #execute: " + newQuery);
         if (DBTableOptions.CREATE_TABLE.getActionCommand().equals(
                 m_tableOption.getStringValue())) {
             m_conn.execute("CREATE TABLE " + m_tableId + " AS " + newQuery);
             m_conn = new DBQueryConnection(m_conn, 
-                    "SELECT * FROM " + m_tableId);
+                    "SELECT * FROM " + m_tableId, Integer.MAX_VALUE);
         } else {
-            m_conn = new DBQueryConnection(m_conn, newQuery);
-        }
-        DBReaderConnection load = 
-            new DBReaderConnection(m_conn, newQuery,
+            m_conn = new DBQueryConnection(m_conn, newQuery, 
                     m_cachedRows.getIntValue());
-        BufferedDataTable data = exec.createBufferedDataTable(load, exec);
-        DatabasePortObject outObj = new DatabasePortObject(data,
-                m_conn.createConnectionModel());
+        }
+        DBReaderConnection load = new DBReaderConnection(m_conn);
+        DatabasePortObject outObj = new DatabasePortObject(
+                new DatabasePortObjectSpec(load.getDataTableSpec(),
+                        m_conn.createConnectionModel()));
         return new PortObject[]{outObj};
     }
+    
+//    /**
+//     *
+//     */
+//    protected abstract PortObject[] executeDB(final PortObject[] inData,
+//            final ExecutionContext exec) 
+//            throws CanceledExecutionException, Exception;
+//    
+//   /**
+//    *
+//    */
+//   protected abstract PortObject[] configureDB(final PortObjectSpec[] inSpec) 
+//           throws InvalidSettingsException;
 
     /**
      * {@inheritDoc}
@@ -142,11 +152,14 @@ abstract class DBNodeModel extends GenericNodeModel {
     @Override
     protected void reset() {
         if (m_conn != null) {
-            try {
-                m_conn.execute("DROP TABLE " + m_tableId);
-            } catch (Exception e) {
-                super.setWarningMessage("Can't drop table with id \"" 
-                        + m_tableId + "\", reason: " + e.getMessage());
+            if (DBTableOptions.CREATE_TABLE.getActionCommand().equals(
+                    m_tableOption.getStringValue())) {
+                try {
+                    m_conn.execute("DROP TABLE " + m_tableId);
+                } catch (Exception e) {
+                    super.setWarningMessage("Can't drop table with id \"" 
+                            + m_tableId + "\", reason: " + e.getMessage());
+                }
             }
             m_conn = null;
         }
@@ -182,27 +195,23 @@ abstract class DBNodeModel extends GenericNodeModel {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
-        m_conn = new DBQueryConnection();
         m_conn.loadValidatedConnection(spec.getConnectionModel());
-        // replace view place holder and create where clause
         String newQuery = createQuery(m_conn.getQuery(), m_tableId);
-        LOGGER.debug("Execute SQL query: " + newQuery);
-        DBQueryConnection conn = new DBQueryConnection(m_conn, newQuery);
-        // try to create database connection
-        DataTableSpec outSpec = null;
+        LOGGER.debug("Executing SQL query during #configure: " + newQuery);
+        DBQueryConnection conn = new DBQueryConnection(m_conn, newQuery,
+                m_cachedRows.getIntValue());
         try {
             conn.createConnection();
-            DBReaderConnection reader = 
-                new DBReaderConnection(conn, newQuery);
-            outSpec = reader.getDataTableSpec();
+            DBReaderConnection reader = new DBReaderConnection(conn);
+            DataTableSpec outSpec = reader.getDataTableSpec();
+            DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(
+                    outSpec, conn.createConnectionModel());
+            return new PortObjectSpec[]{dbSpec};
         } catch (InvalidSettingsException ise) {
             throw ise;
         } catch (Throwable t) {
             throw new InvalidSettingsException(t);
         }
-        DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(
-                outSpec, conn.createConnectionModel());
-        return new PortObjectSpec[]{dbSpec};
     }
     
     /**

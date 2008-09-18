@@ -69,12 +69,11 @@ final class DBReaderNodeModel extends NodeModel {
             throws CanceledExecutionException, Exception {
         exec.setProgress("Opening database connection...");
         try {
-            DBReaderConnection load = new DBReaderConnection(m_conn, m_query);
+            DBReaderConnection load = new DBReaderConnection(
+                    new DBQueryConnection(m_conn, m_query, Integer.MAX_VALUE));
             m_lastSpec = load.getDataTableSpec();
             exec.setProgress("Reading data from database...");
-            BufferedDataTable data = exec.createBufferedDataTable(load, exec);
-            load.close();
-            return new BufferedDataTable[]{data};
+            return new BufferedDataTable[]{load.createTable(exec)};
         } catch (Throwable t) {
             m_lastSpec = null;
             throw new RuntimeException(t);
@@ -137,9 +136,9 @@ final class DBReaderNodeModel extends NodeModel {
             return new DataTableSpec[]{m_lastSpec};
         }
         try {
-            DBReaderConnection conn = new DBReaderConnection(m_conn, m_query);
+            DBReaderConnection conn = new DBReaderConnection(
+                    new DBQueryConnection(m_conn, m_query, Integer.MAX_VALUE));
             m_lastSpec = conn.getDataTableSpec();
-            conn.close();
             return new DataTableSpec[]{m_lastSpec};
         } catch (InvalidSettingsException e) {
             m_lastSpec = null;
@@ -160,7 +159,8 @@ final class DBReaderNodeModel extends NodeModel {
         if (query != null 
                 && query.contains(DBQueryConnection.TABLE_PLACEHOLDER)) {
             throw new InvalidSettingsException(
-                    "Database table place holder not replaced.");
+                    "Database table place holder (" 
+                    + DBQueryConnection.TABLE_PLACEHOLDER + ") not replaced.");
         }
         m_conn.validateConnection(settings);
     }

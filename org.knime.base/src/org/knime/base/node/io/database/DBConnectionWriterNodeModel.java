@@ -67,8 +67,8 @@ final class DBConnectionWriterNodeModel extends GenericNodeModel {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
         exec.setProgress("Opening database connection...");
         String tableName = m_tableName.getStringValue();
-        DBQueryConnection conn = new DBQueryConnection();
-            conn.loadValidatedConnection(dbObj.getConnectionModel());
+        DBQueryConnection conn = new DBQueryConnection(
+                dbObj.getConnectionModel());
         try {
             conn.execute("DROP TABLE " + tableName);
         } catch (Exception e) {
@@ -113,8 +113,8 @@ final class DBConnectionWriterNodeModel extends GenericNodeModel {
             throws InvalidSettingsException {
         try {
             DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
-            DBQueryConnection conn = new DBQueryConnection();
-            conn.loadValidatedConnection(spec.getConnectionModel());
+            DBQueryConnection conn = new DBQueryConnection(
+                    spec.getConnectionModel());
             conn.createConnection();
         } catch (InvalidSettingsException ise) {
             throw ise;

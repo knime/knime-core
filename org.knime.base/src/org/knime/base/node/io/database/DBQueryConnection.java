@@ -37,13 +37,18 @@ final class DBQueryConnection extends DBConnection {
     /** Place holder <code>&lttable&gt</code>. */
     static final String TABLE_PLACEHOLDER = "<table>"; 
     
-    private String m_query = null;
+    private final String m_query;
+    
+    private final int m_cacheNoRows;
     
     /**
      * Create a new connection with an empty query object.
      */
-    DBQueryConnection() {
+    DBQueryConnection(final ConfigRO settings) throws InvalidSettingsException {
         super();
+        m_query = settings.getString(DBConnection.CFG_STATEMENT);
+        m_cacheNoRows = settings.getInt("row_cache_size");
+        super.loadValidatedConnection(settings);
     }
     
     /**
@@ -52,9 +57,21 @@ final class DBQueryConnection extends DBConnection {
      * @param conn connection to copy
      * @param query the SQL query
      */
-    DBQueryConnection(final DBQueryConnection conn, final String query) {
+    DBQueryConnection(final DBConnection conn, final String query,
+            final int cacheNoRows) {
         super(conn);
         m_query = query;
+        m_cacheNoRows = cacheNoRows;
+    }
+    
+    /**
+     * Creates a new connection based in the given connection and the query
+     * string.
+     * @param conn connection to copy
+     * @param query the SQL query
+     */
+    DBQueryConnection(final DBConnection conn, final String query) {
+        this(conn, query, Integer.MAX_VALUE);
     }
     
     /**
@@ -65,8 +82,9 @@ final class DBQueryConnection extends DBConnection {
             throws InvalidSettingsException {
         String query = settings.getString(CFG_STATEMENT);
         if (query != null && query.contains(TABLE_PLACEHOLDER)) {
-            throw new InvalidSettingsException(
-            "Database table place holder not replaced.");
+            throw new InvalidSettingsException("Database table place holder (" 
+                    + TABLE_PLACEHOLDER + ") not replaced in query:\n"
+                    + query);
         }
         super.validateConnection(settings);
     }
@@ -75,18 +93,9 @@ final class DBQueryConnection extends DBConnection {
      * {@inheritDoc}
      */
     @Override
-    public boolean loadValidatedConnection(final ConfigRO settings)
-            throws InvalidSettingsException {
-        m_query = settings.getString(DBConnection.CFG_STATEMENT);
-        return super.loadValidatedConnection(settings);
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void saveConnection(final ConfigWO settings) {
         settings.addString(CFG_STATEMENT, m_query);
+        settings.addInt("row_cache_size", m_cacheNoRows);
         super.saveConnection(settings);
     }
     
@@ -95,6 +104,10 @@ final class DBQueryConnection extends DBConnection {
      */
     String getQuery() {
         return m_query;
+    }
+    
+    int getRowCacheSize() {
+        return m_cacheNoRows;
     }
     
     /**

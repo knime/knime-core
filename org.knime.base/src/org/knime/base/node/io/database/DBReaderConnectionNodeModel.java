@@ -29,7 +29,6 @@ import java.io.IOException;
 
 import org.knime.base.node.io.database.DBConnectionDialogPanel.DBTableOptions;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -52,7 +51,7 @@ import org.knime.core.node.port.database.DatabasePortObjectSpec;
  */
 final class DBReaderConnectionNodeModel extends GenericNodeModel {
     
-    private final DBQueryConnection m_conn;
+    // private final DBQueryConnection m_conn;
     
     private final SettingsModelString m_tableOption =
         DBConnectionDialogPanel.createTableModel();
@@ -62,13 +61,13 @@ final class DBReaderConnectionNodeModel extends GenericNodeModel {
     
     private String m_tableId;
     
+    private DBReaderConnection m_load; 
+    
     /**
      * Creates a new database reader.
      */
     DBReaderConnectionNodeModel() {
         super(new PortType[0], new PortType[]{DatabasePortObject.TYPE});
-        m_conn = new DBQueryConnection();
-        m_tableId = "table_" + System.identityHashCode(this);
     }
 
     /**
@@ -76,7 +75,8 @@ final class DBReaderConnectionNodeModel extends GenericNodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_conn.saveConnection(settings);
+        m_load.getQueryConnection().saveConnection(settings);
+        m_tableId = "table_" + System.identityHashCode(this);
         m_tableOption.saveSettingsTo(settings);
         m_cachedRows.saveSettingsTo(settings);
     }
@@ -87,7 +87,7 @@ final class DBReaderConnectionNodeModel extends GenericNodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_conn.loadValidatedConnection(settings);
+        m_load.getQueryConnection().loadValidatedConnection(settings);
         m_tableOption.validateSettings(settings);
         m_cachedRows.validateSettings(settings);
     }
@@ -98,7 +98,7 @@ final class DBReaderConnectionNodeModel extends GenericNodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_conn.loadValidatedConnection(settings);
+        m_load.getQueryConnection().loadValidatedConnection(settings);
         m_tableOption.loadSettingsFrom(settings);
         m_cachedRows.loadSettingsFrom(settings);
     }
@@ -110,21 +110,17 @@ final class DBReaderConnectionNodeModel extends GenericNodeModel {
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) 
             throws CanceledExecutionException, Exception {
-        String query = m_conn.getQuery();
-        final DBQueryConnection conn;
+        DBQueryConnection conn = m_load.getQueryConnection();
         if (DBTableOptions.CREATE_TABLE.getActionCommand().equals(
                 m_tableOption.getStringValue())) {
-            m_conn.execute("CREATE TABLE " + m_tableId + " AS " + query);
-            conn = new DBQueryConnection(m_conn,
-                    "SELECT * FROM " + m_tableId);
-        } else {
-            conn = new DBQueryConnection(m_conn, m_conn.getQuery());
+            conn.execute("CREATE TABLE " + m_tableId + " AS " 
+                    + conn.getQuery());
+            conn = new DBQueryConnection(conn, "SELECT * FROM " + m_tableId);
+            m_load = new DBReaderConnection(conn);
         }
-        DBReaderConnection load = new DBReaderConnection(
-                conn, conn.getQuery(), m_cachedRows.getIntValue());
-        BufferedDataTable data = exec.createBufferedDataTable(load, exec);
-        DatabasePortObject dbObj = new DatabasePortObject(data,
-                conn.createConnectionModel());
+        DataTableSpec spec = m_load.getDataTableSpec();
+        DatabasePortObject dbObj = new DatabasePortObject(
+                new DatabasePortObjectSpec(spec, conn.createConnectionModel()));
         return new PortObject[]{dbObj};
     }
     
@@ -134,7 +130,7 @@ final class DBReaderConnectionNodeModel extends GenericNodeModel {
     @Override
     protected void reset() {
         try {
-            m_conn.execute("DROP TABLE " + m_tableId);
+            m_load.getQueryConnection().execute("DROP TABLE " + m_tableId);
         } catch (Exception e) {
             super.setWarningMessage("Can't drop table with id \"" 
                     + m_tableId + "\", reason: " + e.getMessage());
@@ -172,17 +168,11 @@ final class DBReaderConnectionNodeModel extends GenericNodeModel {
             throws InvalidSettingsException {
         try {
             // try to create database connection
-            DBQueryConnection conn = 
-                new DBQueryConnection(m_conn, m_conn.getQuery());
-            conn.createConnection();
-            DBReaderConnection reader = 
-                new DBReaderConnection(conn, conn.getQuery());
-            DataTableSpec spec = reader.getDataTableSpec();
+            DBQueryConnection conn = m_load.getQueryConnection();
+            DataTableSpec spec = m_load.getDataTableSpec();
             DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(spec,
                     conn.createConnectionModel());
             return new PortObjectSpec[]{dbSpec};
-        } catch (InvalidSettingsException ise) {
-            throw ise;
         } catch (Throwable t) {
             throw new InvalidSettingsException(t);
         }

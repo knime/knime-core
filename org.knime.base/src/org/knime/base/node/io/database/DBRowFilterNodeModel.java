@@ -48,7 +48,6 @@ final class DBRowFilterNodeModel extends DBNodeModel {
      * Creates a new database reader.
      */
     DBRowFilterNodeModel() {
-
     }
 
     /**
@@ -92,7 +91,7 @@ final class DBRowFilterNodeModel extends DBNodeModel {
         DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
         if (!spec.getDataTableSpec().containsName(m_column.getStringValue())) {
             throw new InvalidSettingsException("Can't filter according to "
-                    + "selected column \"" + m_column.getStringValue() + "\"");
+                    + "selected column \"" + m_column.getStringValue() + "\".");
         }
         return super.configure(inSpecs);
     }
