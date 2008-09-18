@@ -23,23 +23,27 @@
  */
 package org.knime.base.node.preproc.discretization.caim.modelcreator;
 
+import org.knime.base.node.preproc.discretization.caim2.modelcreator.BinModelNodeView;
+import org.knime.base.node.preproc.discretization.caim2.modelcreator.BinModelPlotter;
+import org.knime.base.node.preproc.discretization.caim2.modelcreator.CAIMDiscretizationNodeDialog;
+import org.knime.base.node.preproc.discretization.caim2.modelcreator.CAIMDiscretizationNodeModel;
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * The Factory for the CAIM Discretizer.
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-public class CAIMDiscretizationNodeFactory extends NodeFactory {
+public class CAIMDiscretizationNodeFactory 
+        extends GenericNodeFactory<CAIMDiscretizationNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public CAIMDiscretizationNodeModel createNodeModel() {
         return new CAIMDiscretizationNodeModel();
     }
 
@@ -55,8 +59,8 @@ public class CAIMDiscretizationNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex, 
-            final NodeModel nodeModel) {
+    public GenericNodeView<CAIMDiscretizationNodeModel> createNodeView(final int viewIndex, 
+            final CAIMDiscretizationNodeModel nodeModel) {
         return new BinModelNodeView(nodeModel, 
                 new BinModelPlotter());
     }

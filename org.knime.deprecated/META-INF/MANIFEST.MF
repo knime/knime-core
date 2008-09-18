@@ -9,9 +9,9 @@ Require-Bundle: org.knime.core
 Export-Package: org.knime.base.node.mine.decisiontree.predictor,
  org.knime.base.node.mine.mds,
  org.knime.base.node.mine.scorer,
+ 
  org.knime.base.node.mine.scorer.entrop,
  org.knime.base.node.mine.sota,
- org.knime.base.node.preproc.discretization.caim,
  org.knime.base.node.preproc.discretization.caim.modelapply,
  org.knime.base.node.preproc.discretization.caim.modelcreator,
  org.knime.base.node.preproc.join,
