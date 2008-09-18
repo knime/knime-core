@@ -27,6 +27,8 @@ package org.knime.core.node.port.database;
 import java.io.IOException;
 import java.util.zip.ZipEntry;
 
+import javax.swing.JComponent;
+
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.util.NonClosableOutputStream;
@@ -36,6 +38,8 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
+import org.knime.core.node.workflow.DataTableSpecView;
+import org.knime.core.node.workflow.ModelContentOutPortView;
 
 /**
  * Class used as database port object holding a {@link DataTableSpec}
@@ -143,6 +147,16 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
         specModel.saveToXML(new NonClosableOutputStream.Zip(os));
         ze.clone();
         os.close();
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public JComponent[] getViews() {
+        JComponent connPanel = new ModelContentOutPortView(m_conn);
+        JComponent specPanel = new DataTableSpecView(m_spec);
+        return new JComponent[]{connPanel, specPanel};
     }
     
 }

@@ -27,8 +27,11 @@ package org.knime.core.node.port.database;
 import java.io.IOException;
 import java.util.zip.ZipEntry;
 
+import javax.swing.JComponent;
+
 import org.knime.core.data.DataTable;
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.node.BufferedDataContainer;
@@ -41,6 +44,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.BufferedDataTableView;
 
 /**
  * Class used as database port object holding a {@link BufferedDataTable}
@@ -50,9 +54,9 @@ import org.knime.core.node.port.PortType;
  */
 public class DatabasePortObject implements PortObject {
     
-    private final DataTable m_data;
+    private DataTable m_data = null;
     
-    private final ModelContentRO m_conn;
+    private final DatabasePortObjectSpec m_spec;
 
     /**
      * Database port type formed <code>PortObjectSpec.class</code> and 
@@ -63,33 +67,35 @@ public class DatabasePortObject implements PortObject {
     /** {@inheritDoc} */
     @Override
     public DatabasePortObjectSpec getSpec() {
-        return new DatabasePortObjectSpec(
-                    m_data.getDataTableSpec(), m_conn);
+        return m_spec;
     }
     
     /** {@inheritDoc} */
     @Override
     public String getSummary() {
-        return "No. of columns: " + m_data.getDataTableSpec().getNumColumns();
+        return "No. of columns: " + m_spec.getDataTableSpec().getNumColumns();
     }
     
     /**
      * Creates a new database port object.
-     * @param data underlying data
-     * @param conn connection model
+     * @param spec database port object spec
      * @throws NullPointerException if one of the arguments is null
      */
-    public DatabasePortObject(final DataTable data, 
-            final ModelContentRO conn) {
-        if (data == null) {
-            throw new NullPointerException("DataTable must not be null!");
-        }
-        if (conn == null) {
+    public DatabasePortObject(final DatabasePortObjectSpec spec) {
+        this(spec, null);
+    }
+    
+    /**
+     *
+     */
+    private DatabasePortObject(final DatabasePortObjectSpec spec,
+            final DataTable data) {
+        if (spec == null) {
             throw new NullPointerException(
-                    "Database connection must not be null!");
+                    "DatabasePortObjectSpec must not be null!");
         }
+        m_spec = spec;
         m_data = data;
-        m_conn = conn;
     }
     
     /**
@@ -103,7 +109,7 @@ public class DatabasePortObject implements PortObject {
      * @return connection model
      */
     public ModelContentRO getConnectionModel() {
-        return m_conn;
+        return m_spec.getConnectionModel();
     }
     
     /**
@@ -130,7 +136,7 @@ public class DatabasePortObject implements PortObject {
                     final PortObjectSpec spec, 
                     final ExecutionMonitor exec)
                     throws IOException, CanceledExecutionException {
-                return load(in, (DatabasePortObjectSpec) spec);
+                return load(in, (DatabasePortObjectSpec) spec, exec);
             }
         };
     }
@@ -139,25 +145,39 @@ public class DatabasePortObject implements PortObject {
     
     private static DatabasePortObject load(
             final PortObjectZipInputStream in, 
-            final DatabasePortObjectSpec spec) throws IOException {
+            final DatabasePortObjectSpec spec,
+            final ExecutionMonitor exec) throws IOException {
         ZipEntry ze = in.getNextEntry();
-        if (!ze.getName().equals(KEY_PREVIEW_TABLE)) {
-            throw new IOException("Key \"" + ze.getName() + "\" does not "
-                    + " match expected zip entry name \"" 
-                    + KEY_PREVIEW_TABLE + "\".");
+        if (ze.getName().equals(KEY_PREVIEW_TABLE)) {
+            ContainerTable data = DataContainer.readFromStream(
+                    new NonClosableInputStream.Zip(in));
+            return new DatabasePortObject(spec, data);
         }
-        ContainerTable data = BufferedDataContainer.readFromStream(
-                new NonClosableInputStream.Zip(in));
-        return new DatabasePortObject(data, spec.getConnectionModel());
+        return new DatabasePortObject(spec, null);
     }
     
     private static void save(final PortObjectZipOutputStream out, 
             final ExecutionMonitor em, final DatabasePortObject portObject) 
             throws IOException, CanceledExecutionException {
-        out.putNextEntry(new ZipEntry(KEY_PREVIEW_TABLE));
-        BufferedDataContainer.writeToStream(portObject.m_data, 
-                new NonClosableOutputStream.Zip(out), em);
+        if (portObject.m_data != null) {
+            out.putNextEntry(new ZipEntry(KEY_PREVIEW_TABLE));
+            BufferedDataContainer.writeToStream(portObject.m_data, 
+                    new NonClosableOutputStream.Zip(out), em);
+        }
     }
-    
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public JComponent[] getViews() {
+        JComponent[] specPanels = m_spec.getViews();
+        JComponent[] panels = new JComponent[specPanels.length + 1];
+        for (int i = 0; i < specPanels.length; i++) {
+            panels[i] = specPanels[i];
+        }
+        panels[panels.length - 1] = new BufferedDataTableView(m_data);
+        return panels;
+    }
     
 }
