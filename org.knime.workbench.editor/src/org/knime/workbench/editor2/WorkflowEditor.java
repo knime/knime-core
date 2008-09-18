@@ -686,7 +686,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
 
         // Editor name (title)
-        setPartName(file.getParentFile().getName());
+        setPartName(m_manager.getID().getIDWithoutRoot() 
+                + ": " + file.getParentFile().getName());
 
         if (getGraphicalViewer() != null) {
             loadProperties();
@@ -702,7 +703,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         WorkflowManager wfm =
                 ((WorkflowManagerInput)input).getWorkflowManager();
         setWorkflowManager(wfm);
-        setPartName(m_parentEditor.getPartName() + "|" + input.getName());
+        setPartName(input.getName());
         wfm.addListener(this);
         if (getGraphicalViewer() != null) {
             loadProperties();
