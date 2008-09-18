@@ -250,11 +250,6 @@ public class GroupByNodeModel extends GenericNodeModel {
         m_maxUniqueValues.validateSettings(settings);
         m_enableHilite.validateSettings(settings);
         m_sortInMemory.validateSettings(settings);
-        try {
-            m_keepColumnName.validateSettings(settings);
-        } catch (final InvalidSettingsException e) {
-            //be compatible to previous versions
-        }
     }
 
     /**
