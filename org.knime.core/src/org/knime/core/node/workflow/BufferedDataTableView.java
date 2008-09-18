@@ -22,6 +22,7 @@ import java.awt.BorderLayout;
 
 import javax.swing.JComponent;
 
+import org.knime.core.data.DataTable;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.tableview.TableView;
@@ -37,7 +38,7 @@ public class BufferedDataTableView extends JComponent {
 
     private final TableView m_dataView;
 
-    private BufferedDataTable m_table;
+    private DataTable m_table;
     
 
     /** Updates are synchronized on this object. Declaring the methods
@@ -52,7 +53,7 @@ public class BufferedDataTableView extends JComponent {
      * @param table table to display
      *
      */
-    public BufferedDataTableView(final BufferedDataTable table) {
+    public BufferedDataTableView(final DataTable table) {
         m_table = table;
 
         setLayout(new BorderLayout());
@@ -98,17 +99,22 @@ public class BufferedDataTableView extends JComponent {
             result.append(", Column" + (numOfColumns > 1 ? "s" : "")
                     + ": " + numOfColumns);
         }
-        String numOfRows = null;
-        if (m_table != null) {
-            numOfRows = "" + m_table.getRowCount();
-        }
-        if (numOfRows != null) {
-            result.append(", Rows: " + numOfRows);
+        if (m_table instanceof BufferedDataTable) {
+            String numOfRows = null;
+            if (m_table != null) {
+                numOfRows = "" + ((BufferedDataTable) m_table).getRowCount();
+            }
+            if (numOfRows != null) {
+                result.append(", Rows: " + numOfRows);
+            }
         }
         return result.toString();
     }
 
 
+    /**
+     * Rest internal data table and reset data out-port view.
+     */
     public void dispose() {
         m_table = null;
         m_dataView.setDataTable(null);
