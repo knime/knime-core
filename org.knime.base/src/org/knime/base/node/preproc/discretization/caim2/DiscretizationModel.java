@@ -165,7 +165,8 @@ public class DiscretizationModel extends AbstractSimplePortObject {
      */
     @Override
     public String getSummary() {
-        if (m_includedColumnNames.getNumColumns() == 0 || m_schemes.length == 0) {
+        if (m_includedColumnNames.getNumColumns() == 0 
+                || m_schemes.length == 0) {
             return "Empty Model";
         }
         return "Binning schemes for " + m_schemes.length + " columns";
@@ -182,6 +183,7 @@ public class DiscretizationModel extends AbstractSimplePortObject {
     protected void load(final ModelContentRO model, final PortObjectSpec spec,
             final ExecutionMonitor exec) throws InvalidSettingsException,
             CanceledExecutionException {
+        m_includedColumnNames = (DataTableSpec)spec;
         try {
 
             Config schemesConfig = model.getConfig(CONFIG_KEY_SCHEMES);

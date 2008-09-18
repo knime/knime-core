@@ -857,7 +857,7 @@ public class CAIMDiscretizationNodeModel extends GenericNodeModel {
         // i.e. check if the selected columns for binning are
         // contained in the in data table
         for (String includedColName : m_includedColumnNames.getIncludeList()) {
-            if (inDataSpec.containsName(includedColName)) {
+            if (!inDataSpec.containsName(includedColName)) {
                 throw new InvalidSettingsException(
                         "The selected column to bin '" + includedColName
                                 + "' does not exist in the input data "
