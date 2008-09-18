@@ -753,6 +753,11 @@
             factory-class="org.knime.base.node.viz.liftchart.LiftChartNodeFactory"
             id="org.knime.base.node.viz.liftchart.LiftChartNodeFactory">
       </node>
+      <node
+            category-path="/meta"
+            factory-class="org.knime.base.node.flowvariable.variableloophead.VariableLoopStartNodeFactory"
+            id="org.knime.base.flowvariable.variableloophead">
+      </node>
    </extension>
       <extension
          point="org.knime.base.pmmlports">
