@@ -183,6 +183,10 @@ public abstract class AbstractSimplePortObject implements PortObject {
         }
     }
     
+    /**
+     * 
+     * {@inheritDoc}
+     */
     @Override
     public JComponent[] getViews() {
         try {

@@ -27,12 +27,15 @@ package org.knime.core.node.port;
 import java.io.IOException;
 import java.util.zip.ZipEntry;
 
+import javax.swing.JComponent;
+
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.node.workflow.ModelContentOutPortView;
 
 /**
  * Abstract implementation of basic port object specs that save and load
@@ -156,5 +159,17 @@ public abstract class AbstractSimplePortObjectSpec implements PortObjectSpec {
             out.putNextEntry(new ZipEntry("content.xml"));
             model.saveToXML(out);
         }
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public JComponent[] getViews() {
+            ModelContent model = new ModelContent("Model Content Spec");
+            save(model);
+            return new JComponent[] {
+                    new ModelContentOutPortView((ModelContentRO)model)};
     }
 }
