@@ -36,6 +36,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.AbstractSimplePortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabasePortObject;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.workbench.KNIMEEditorPlugin;
 
 
@@ -111,6 +112,8 @@ public abstract class AbstractPortFigure extends Shape {
         } else if (getType().equals(DatabasePortObject.TYPE)) {
             // database
             color = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
+        } else if (getType().equals(FlowVariablePortObject.TYPE)) {
+            color = Display.getCurrent().getSystemColor(SWT.COLOR_RED);
         }
         return color;
     }
