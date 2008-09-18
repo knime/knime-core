@@ -89,10 +89,10 @@ public class RowFilterRefNodeModel extends NodeModel {
                             + " for RowKey comparison");
             }
         } else if (!m_dataTableCol.useRowID()) {
-            final DataColumnSpec refColSpec = inSpecs[0].getColumnSpec(
-                    m_referenceTableCol.getColumnName());
-            final DataColumnSpec datColSpec = inSpecs[1].getColumnSpec(
+            final DataColumnSpec datColSpec = inSpecs[0].getColumnSpec(
                     m_dataTableCol.getColumnName());
+            final DataColumnSpec refColSpec = inSpecs[1].getColumnSpec(
+                    m_referenceTableCol.getColumnName());
             if (!refColSpec.getType().equals(datColSpec.getType())) {
                 setWarningMessage("Different column types using string "
                         + "representation for comparison");

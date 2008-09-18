@@ -53,22 +53,22 @@ public class RowFilterRefNodeDialogPane extends DefaultNodeSettingsPane {
     public RowFilterRefNodeDialogPane() {
         final DataValueColumnFilter colFilter =
             new DataValueColumnFilter(DataValue.class);
-        final DialogComponent table1RefCol =
+        final DialogComponent dataTableCol =
             new DialogComponentColumnNameSelection(
                     createDataTableColModel(), "Data table column: ", 0,
                     true, colFilter);
-        final DialogComponent table2RefCol =
+        final DialogComponent referenceTableCol =
             new DialogComponentColumnNameSelection(
                     createReferenceTableColModel(), "Reference table column: ",
-                    0, true, colFilter);
+                    1, true, colFilter);
         final DialogComponentButtonGroup group = new DialogComponentButtonGroup(
-                createInExcludeModel(),
-                true, INCLUDE, new String[]{INCLUDE, EXCLUDE});
+                createInExcludeModel(), true, INCLUDE,
+                new String[]{INCLUDE, EXCLUDE});
         group.setToolTipText("Include or exclude rows in first table "
                 + "according to the second reference table.");
         createNewGroup(" Reference columns ");
-        addDialogComponent(table1RefCol);
-        addDialogComponent(table2RefCol);
+        addDialogComponent(dataTableCol);
+        addDialogComponent(referenceTableCol);
         closeCurrentGroup();
         addDialogComponent(group);
     }
