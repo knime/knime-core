@@ -36,6 +36,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipEntry;
 
+import javax.swing.JComponent;
+
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.PortObject;
@@ -139,13 +141,14 @@ public class BWElimModel implements PortObject, PortObjectSpec {
      *
      * @return a port object serializer
      */
-    public static PortObjectSpecSerializer<BWElimModel> getPortObjectSpecSerializer() {
+    public static PortObjectSpecSerializer<BWElimModel> 
+            getPortObjectSpecSerializer() {
         return SpecSerializer.INSTANCE;
     }
 
     private static class SpecSerializer extends
             PortObjectSpecSerializer<BWElimModel> {
-        static final SpecSerializer INSTANCE = new SpecSerializer();
+        private static final SpecSerializer INSTANCE = new SpecSerializer();
 
         /** {@inheritDoc} */
         @Override
@@ -195,7 +198,7 @@ public class BWElimModel implements PortObject, PortObjectSpec {
 
     private static class ModelSerializer extends
             PortObjectSerializer<BWElimModel> {
-        static final ModelSerializer INSTANCE = new ModelSerializer();
+        private static final ModelSerializer INSTANCE = new ModelSerializer();
 
         /**
          * {@inheritDoc}
@@ -217,4 +220,14 @@ public class BWElimModel implements PortObject, PortObjectSpec {
                 throws IOException, CanceledExecutionException {
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public JComponent[] getViews() {
+        return null;
+    }
+    
+    
 }

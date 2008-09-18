@@ -63,7 +63,9 @@ import org.knime.core.node.workflow.LoopEndNode;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class BWElimTailNodeModel extends GenericNodeModel implements LoopEndNode {
+public class BWElimTailNodeModel extends GenericNodeModel 
+        implements LoopEndNode {
+    
     private final BWElimTailSettings m_settings = new BWElimTailSettings();
 
     private final List<String> m_includedColumns = new ArrayList<String>();
@@ -275,7 +277,8 @@ public class BWElimTailNodeModel extends GenericNodeModel implements LoopEndNode
                 throw new RuntimeException(
                         "This node cannot handle missing values");
             }
-            if (!row.getCell(predictionIndex).equals(row.getCell(targetIndex))) {
+            if (!row.getCell(predictionIndex).equals(
+                    row.getCell(targetIndex))) {
                 wrong++;
             }
 
