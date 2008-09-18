@@ -23,14 +23,17 @@
  */
 package org.knime.core.node.workflow;
 
-/** Interface of the node starting a loop with a simply end condition
- * which the start node already provdes. This guarantees that a
- * int-variable called "terminateLoop" is available on the stack for
- * the subsequent end node, indicating if the loop continues (=0)
- * or is supposed to finish (=1).
+/** Interface of the node starting a loop with a simple end condition
+ * which the start node already provides.
  * 
  * @author M. Berthold, University of Konstanz
  */
 public interface LoopStartNodeWhileDo extends LoopStartNode {
 
+    /**
+     * @return true if this was the last iteration of the loop, i.e. the
+     *   tail node must not trigger re-execution of the loop.
+     */
+    boolean terminateLoop();
+    
 }

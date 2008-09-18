@@ -81,7 +81,6 @@ implements LoopStartNodeWhileDo {
         pushVariables((DataTableSpec)inSpecs[0], null);
         pushScopeVariableInt("maxIterations", 0);
         pushScopeVariableInt("currentIteration", 0);
-        pushScopeVariableInt("terminateLoop", 0);
         return new PortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
     }
     
@@ -171,9 +170,15 @@ implements LoopStartNodeWhileDo {
         // and add information about loop progress
         pushScopeVariableInt("maxIterations", m_maxNrIterations);
         pushScopeVariableInt("currentIteration", m_currentIteration);
-        pushScopeVariableInt("terminateLoop",
-                m_currentIteration >= m_maxNrIterations ? 1 : 0);
         return new PortObject[]{new FlowVariablePortObject()};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean terminateLoop() {
+        return m_currentIteration >= m_maxNrIterations;
     }
     
     /** {@inheritDoc} */

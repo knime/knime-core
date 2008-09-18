@@ -94,14 +94,20 @@ implements LoopStartNodeWhileDo {
                 throw new IllegalArgumentException("Loop tail has wrong type!");
             }
         }
-        // we need to put the counts on the stack for the loop's tail to see:
+        // let's also put the counts on the stack for someone else:
         pushScopeVariableInt("currentIteration", m_iteration);
         pushScopeVariableInt("maxIterations", m_settings.loops());
         // increment counter for next iteration
         m_iteration++;
-        pushScopeVariableInt("terminateLoop",
-                m_iteration >= m_settings.loops() ? 1 : 0);
         return inData;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean terminateLoop() {
+        return m_iteration >= m_settings.loops();
     }
 
     /**

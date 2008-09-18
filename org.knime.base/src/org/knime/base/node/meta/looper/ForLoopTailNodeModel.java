@@ -26,7 +26,6 @@ package org.knime.base.node.meta.looper;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.NoSuchElementException;
 
 import org.knime.base.data.append.column.AppendedColumnRow;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -93,16 +92,6 @@ public class ForLoopTailNodeModel extends NodeModel implements LoopEndNode {
             throw new IllegalStateException("Loop end is not connected"
                    + " to matching/corresponding loop start node!");
         }
-        // retrieve variables from the stack which the head of this
-        // loop hopefully put there:
-        boolean terminateLoop = false;
-        try {
-            if (peekScopeVariableInt("terminateLoop") == 1) {
-                terminateLoop = true;
-            }
-        } catch (NoSuchElementException e) {
-            throw new Exception("No matching Loop Start node!", e);
-        }
         if (m_resultContainer == null) {
             // first time we are getting to this: open container
             m_resultContainer =
@@ -118,6 +107,8 @@ public class ForLoopTailNodeModel extends NodeModel implements LoopEndNode {
             m_resultContainer.addRowToTable(newRow);
         }
 
+        boolean terminateLoop = 
+            ((LoopStartNodeWhileDo)this.getLoopStartNode()).terminateLoop();
         if (terminateLoop) {
             // this was the last iteration - close container and continue
             m_resultContainer.close();
