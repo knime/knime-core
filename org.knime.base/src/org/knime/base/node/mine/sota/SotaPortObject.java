@@ -131,11 +131,14 @@ public class SotaPortObject extends AbstractSimplePortObject {
             m_distance = model.getString(CFG_KEY_DIST);
         }
         
-        SotaPortObjectSpec objectspec = new SotaPortObjectSpec(null, 
-                m_indexOfClassCol);
-        ModelContentRO subContent = model.getModelContent(CFG_KEY_SPEC);
-        objectspec.load(subContent);
-        m_spec = objectspec.getSpec();
+        if (spec instanceof SotaPortObjectSpec) {
+            m_spec = ((SotaPortObjectSpec)spec).getSpec();
+        } else {
+            SotaPortObjectSpec objectspec = new SotaPortObjectSpec(null, 
+                    m_indexOfClassCol);
+            ModelContentRO subContent = model.getModelContent(CFG_KEY_SPEC);
+            objectspec.load(subContent);
+        }
         
         m_indexOfClassCol = model.getInt(CFG_KEY_CLASSCOL_INDEX);
     }
