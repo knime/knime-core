@@ -117,6 +117,9 @@ public class DiscretizationApplyNodeModel extends GenericNodeModel {
             // else replace for each included column the attribute type to
             // string
             DataTableSpec dataSpec = (DataTableSpec)inSpecs[DATA_INPORT];
+            if (dataSpec == null) {
+                return new DataTableSpec[]{null};
+            }
             DataColumnSpec[] newColumnSpecs =
                     new DataColumnSpec[dataSpec.getNumColumns()];
 

@@ -843,9 +843,16 @@ public class CAIMDiscretizationNodeModel extends GenericNodeModel {
         if (m_includedColumnNames.getIncludeList() == null
                 || m_includedColumnNames.getIncludeList().size() == 0) {
             setWarningMessage(WARNING_NO_COLS_SELECTED);
-            return new PortObjectSpec[]{inSpecs[0], new DataTableSpec()};
+            return new PortObjectSpec[]{inSpecs[DATA_INPORT],
+                    new DataTableSpec()};
         }
-        DataTableSpec inDataSpec = (DataTableSpec)inSpecs[0];
+        DataTableSpec inDataSpec = (DataTableSpec)inSpecs[DATA_INPORT];
+
+        if (inDataSpec == null) {
+            // garbage in, garbage out
+            return new PortObjectSpec[]{null, new DataTableSpec()};
+        }
+
         // first check if the in specs correspond to the settings
         // i.e. check if the selected columns for binning are
         // contained in the in data table
