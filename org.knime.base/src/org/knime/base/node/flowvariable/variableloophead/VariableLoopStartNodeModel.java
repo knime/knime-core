@@ -53,7 +53,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
-import org.knime.core.node.workflow.LoopStartNode;
+import org.knime.core.node.workflow.LoopStartNodeWhileDo;
 
 /** Start of loop: pushes variables in input datatable columns
  * onto stack, taking the values from one row per iteration.
@@ -61,7 +61,7 @@ import org.knime.core.node.workflow.LoopStartNode;
  * @author M. Berthold, University of Konstanz
  */
 public class VariableLoopStartNodeModel extends GenericNodeModel
-implements LoopStartNode {
+implements LoopStartNodeWhileDo {
 
     // remember which iteration we are in:
     private int m_currentIteration = -1;
@@ -79,6 +79,9 @@ implements LoopStartNode {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         pushVariables((DataTableSpec)inSpecs[0], null);
+        pushScopeVariableInt("maxIterations", 0);
+        pushScopeVariableInt("currentIteration", 0);
+        pushScopeVariableInt("terminateLoop", 0);
         return new PortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
     }
     
@@ -166,8 +169,10 @@ implements LoopStartNode {
         // put values for variables on stack, based on current row
         pushVariables(inData.getDataTableSpec(), row);
         // and add information about loop progress
-        pushScopeVariableInt("NrIterations", m_maxNrIterations);
+        pushScopeVariableInt("maxIterations", m_maxNrIterations);
         pushScopeVariableInt("currentIteration", m_currentIteration);
+        pushScopeVariableInt("terminateLoop",
+                m_currentIteration >= m_maxNrIterations ? 1 : 0);
         return new PortObject[]{new FlowVariablePortObject()};
     }
     

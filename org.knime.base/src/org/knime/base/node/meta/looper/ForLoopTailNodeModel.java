@@ -45,6 +45,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.LoopEndNode;
+import org.knime.core.node.workflow.LoopStartNodeWhileDo;
 
 /**
  * This model is the tail node of a for loop.
@@ -52,7 +53,9 @@ import org.knime.core.node.workflow.LoopEndNode;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ForLoopTailNodeModel extends NodeModel implements LoopEndNode {
+
     private BufferedDataContainer m_resultContainer;
+    private int m_count;
 
     /**
      * Creates a new model.
@@ -86,43 +89,46 @@ public class ForLoopTailNodeModel extends NodeModel implements LoopEndNode {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
 
+        if (!(this.getLoopStartNode() instanceof LoopStartNodeWhileDo)) {
+            throw new IllegalStateException("Loop end is not connected"
+                   + " to matching/corresponding loop start node!");
+        }
         // retrieve variables from the stack which the head of this
         // loop hopefully put there:
-        int count;
-        int maxCount;
+        boolean terminateLoop = false;
         try {
-            count = peekScopeVariableInt("currentIteration");
-            maxCount = peekScopeVariableInt("maxIterations");
+            if (peekScopeVariableInt("terminateLoop") == 1) {
+                terminateLoop = true;
+            }
         } catch (NoSuchElementException e) {
             throw new Exception("No matching Loop Start node!", e);
         }
-        if (count < 0 || count >= maxCount) {
-            throw new Exception("Conflicting loop variables, count is " 
-                    + count + " and max count is " + maxCount);
-        }
-        if (count == 0) {
+        if (m_resultContainer == null) {
             // first time we are getting to this: open container
             m_resultContainer =
                     exec.createDataContainer(createSpec(inData[0]
                             .getDataTableSpec()));
         }
 
-        IntCell currIterCell = new IntCell(count);
+        IntCell currIterCell = new IntCell(m_count);
         for (DataRow row : inData[0]) {
             AppendedColumnRow newRow =
                     new AppendedColumnRow(new DefaultRow(new RowKey(row.getKey()
-                    + "#" + count), row), currIterCell);
+                    + "#" + m_count), row), currIterCell);
             m_resultContainer.addRowToTable(newRow);
         }
 
-        assert count < maxCount;
-        
-        if (count == maxCount - 1) {
+        if (terminateLoop) {
             // this was the last iteration - close container and continue
             m_resultContainer.close();
-            return new BufferedDataTable[]{m_resultContainer.getTable()};
+            BufferedDataTable outTable = m_resultContainer.getTable();
+            m_resultContainer.close();
+            m_resultContainer = null;
+            m_count = 0;
+            return new BufferedDataTable[]{ outTable };
         } else {
             continueLoop();
+            m_count++;
             return new BufferedDataTable[1];
         }
     }
@@ -150,6 +156,7 @@ public class ForLoopTailNodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected void reset() {
         m_resultContainer = null;
+        m_count = 0;
     }
 
     /**

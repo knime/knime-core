@@ -37,14 +37,15 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.LoopStartNode;
+import org.knime.core.node.workflow.LoopStartNodeWhileDo;
 
 /**
  * This model is the head node of a for loop.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ForLoopHeadNodeModel extends GenericNodeModel implements LoopStartNode {
+public class ForLoopHeadNodeModel extends GenericNodeModel
+implements LoopStartNodeWhileDo {
 
     private int m_iteration;
 
@@ -98,6 +99,8 @@ public class ForLoopHeadNodeModel extends GenericNodeModel implements LoopStartN
         pushScopeVariableInt("maxIterations", m_settings.loops());
         // increment counter for next iteration
         m_iteration++;
+        pushScopeVariableInt("terminateLoop",
+                m_iteration >= m_settings.loops() ? 1 : 0);
         return inData;
     }
 
