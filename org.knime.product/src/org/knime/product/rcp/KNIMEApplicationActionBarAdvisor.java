@@ -42,7 +42,6 @@ import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
-import org.eclipse.ui.ide.IDEActionFactory;
 import org.knime.workbench.help.intro.InvokeInstallSiteAction;
 
 /**
@@ -58,7 +57,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
 
     private IWorkbenchAction m_preferencesAction;
 
-    // private IWorkbenchAction m_introAction;
+     private IWorkbenchAction m_introAction;
 
     private IWorkbenchAction m_aboutAction;
 
@@ -72,9 +71,9 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
 
     private IWorkbenchAction m_pasteAction;
 
-    private IWorkbenchAction m_undoAction;
-
-    private IWorkbenchAction m_redoAction;
+//    private IWorkbenchAction m_undoAction;
+//
+//    private IWorkbenchAction m_redoAction;
 
     private IWorkbenchAction m_deleteAction;
 
@@ -85,8 +84,11 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     private IWorkbenchAction m_saveAction;
 
     private IWorkbenchAction m_saveAllAction;
+    
+    private IWorkbenchAction m_closeAllAction;
 
-    private IWorkbenchAction m_changeWorkspaceAction;
+//    private IWorkbenchAction m_changeWorkspaceAction;
+    
 
     private IAction m_updateKnimeAction;
 
@@ -113,6 +115,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     public KNIMEApplicationActionBarAdvisor(
             final IActionBarConfigurer configurer) {
         super(configurer);
+        configurer.getMenuManager().remove("org.eclipse.ui.run");
     }
 
     /**
@@ -141,9 +144,9 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         register(m_saveAllAction);
         m_exitAction = ActionFactory.QUIT.create(window);
         register(m_exitAction);
-        m_changeWorkspaceAction =
-                IDEActionFactory.OPEN_WORKSPACE.create(window);
-        register(m_changeWorkspaceAction);
+//        m_changeWorkspaceAction =
+//                IDEActionFactory.OPEN_WORKSPACE.create(window);
+//        register(m_changeWorkspaceAction);
         m_updateKnimeAction = new InvokeInstallSiteAction();
         register(m_updateKnimeAction);
         m_preferencesAction = ActionFactory.PREFERENCES.create(window);
@@ -156,14 +159,16 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         register(m_copyAction);
         m_pasteAction = ActionFactory.PASTE.create(window);
         register(m_pasteAction);
-        m_undoAction = ActionFactory.UNDO.create(window);
-        register(m_undoAction);
-        m_redoAction = ActionFactory.REDO.create(window);
-        register(m_redoAction);
+//        m_undoAction = ActionFactory.UNDO.create(window);
+//        register(m_undoAction);
+//        m_redoAction = ActionFactory.REDO.create(window);
+//        register(m_redoAction);
         m_deleteAction = ActionFactory.DELETE.create(window);
         register(m_deleteAction);
         m_selectAllAction = ActionFactory.SELECT_ALL.create(window);
         register(m_selectAllAction);
+        m_closeAllAction = ActionFactory.CLOSE_ALL.create(window);
+        register(m_closeAllAction);
 
         // View Actions
         // m_openOutlineViewAction = new OpenOutlineViewAction();
@@ -181,9 +186,9 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
                 .create(window);
 
         // Help Actions
-        // m_introAction = ActionFactory.INTRO.create(window);
-        // m_introAction.setText("Show &Intro page");
-        // register(m_introAction);
+         m_introAction = ActionFactory.INTRO.create(window);
+         m_introAction.setText("Show &Intro page");
+         register(m_introAction);
 
         m_helpAction = ActionFactory.HELP_CONTENTS.create(window);
         register(m_helpAction);
@@ -206,6 +211,10 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
      */
     @Override
     protected void fillMenuBar(final IMenuManager menuBar) {
+        menuBar.remove(IWorkbenchActionConstants.MB_ADDITIONS);
+        
+        
+        
         MenuManager fileMenu = new MenuManager("&File");
         MenuManager editMenu = new MenuManager("&Edit",
                 IWorkbenchActionConstants.M_EDIT);
@@ -229,8 +238,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         fileMenu.add(m_newAction);
         fileMenu.add(m_saveAction);
         fileMenu.add(m_saveAllAction);
-        fileMenu.add(new Separator());
-        fileMenu.add(m_changeWorkspaceAction);
+        fileMenu.add(m_closeAllAction);
         fileMenu.add(new Separator());
         fileMenu.add(m_preferencesAction);
         fileMenu.add(m_updateKnimeAction);
@@ -244,9 +252,9 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         editMenu.add(new Separator());
         editMenu.add(m_deleteAction);
         editMenu.add(m_selectAllAction);
-        editMenu.add(new Separator());
-        editMenu.add(m_undoAction);
-        editMenu.add(m_redoAction);
+//        editMenu.add(new Separator());
+//        editMenu.add(m_undoAction);
+//        editMenu.add(m_redoAction);
 
         // View menu (contribution item contributes all views registered via
         // "perspectiveExtension" in ui plugin
@@ -264,8 +272,9 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         // helpMenu.add(m_introAction);
         helpMenu.add(m_helpAction);
         helpMenu.add(m_helpSearchAction);
-        menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+//        menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
         helpMenu.add(m_aboutAction);
+        
 
     }
 
@@ -276,8 +285,9 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     protected void fillCoolBar(final ICoolBarManager coolBar) {
         // create a toolbar and add it to the coolbar :)
         IToolBarManager toolbar = new ToolBarManager(SWT.FLAT | SWT.RIGHT);
+        coolBar.removeAll();
         coolBar.add(new ToolBarContributionItem(toolbar, "main"));
-
+        
         // add tools to the toolbar
         toolbar.add(m_newWizardDropdownAction);
         toolbar.add(m_saveAction);
