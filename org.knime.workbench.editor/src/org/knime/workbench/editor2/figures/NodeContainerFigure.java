@@ -562,6 +562,9 @@ public class NodeContainerFigure extends RectangleFigure {
          */
         
         int prefWidth = Math.max(WIDTH, m_heading.getTextBounds().width);
+        // add some offset, that the selection border is not directly at 
+        // the label
+        prefWidth += 10;
         
         int prefHeight = m_heading.getPreferredSize().height
                         + m_contentFigure.getPreferredSize().height
