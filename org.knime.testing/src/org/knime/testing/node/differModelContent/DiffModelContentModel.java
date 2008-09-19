@@ -27,16 +27,17 @@ package org.knime.testing.node.differModelContent;
 import java.io.File;
 import java.io.IOException;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 import org.knime.testing.node.differNode.TestEvaluationException;
 
 /**
@@ -46,15 +47,13 @@ import org.knime.testing.node.differNode.TestEvaluationException;
  */
 public class DiffModelContentModel extends NodeModel {
 
-    private ModelContentRO m_modelContent1;
-
-    private ModelContentRO m_modelContent2;
-
+    private static final PortType PORTTYPE = new PortType(PortObject.class);
+    
     /**
      * Creates a model with two model inports.
      */
     public DiffModelContentModel() {
-        super(0, 0, 2, 0);
+        super(new PortType[0], new PortType[]{PORTTYPE, PORTTYPE});
     }
 
     /**
@@ -87,11 +86,10 @@ public class DiffModelContentModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-
-        if (!m_modelContent1.equals(m_modelContent2)) {
-            throw new TestEvaluationException("The models are not the same.");
+        if (!inData[0].equals(inData[1])) {
+            throw new TestEvaluationException("The ports are not the same.");
         }
 
         return new BufferedDataTable[]{};
@@ -109,9 +107,9 @@ public class DiffModelContentModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        return new DataTableSpec[]{};
+        return new PortObjectSpec[]{};
     }
 
     /**
@@ -136,20 +134,4 @@ public class DiffModelContentModel extends NodeModel {
 
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadModelContent(final int index,
-            final ModelContentRO predParams) throws InvalidSettingsException {
-
-        if (index == 0) {
-            m_modelContent1 = predParams;
-        } else if (index == 1) {
-            m_modelContent2 = predParams;
-        } else {
-            throw new InvalidSettingsException("Only models at port 0 and "
-                    + "1 are expected not at index: " + index);
-        }
-    }
 }

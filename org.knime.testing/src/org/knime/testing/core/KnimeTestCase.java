@@ -34,10 +34,10 @@ import junit.framework.TestCase;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
-import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowException;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -189,15 +189,15 @@ public class KnimeTestCase extends TestCase {
      */
     @Override
     public void runTest() {
-        final Set<GenericNodeView<? extends GenericNodeModel>> allViews =
-            new HashSet<GenericNodeView<? extends GenericNodeModel>>();
+        final Set<NodeView<? extends NodeModel>> allViews =
+            new HashSet<NodeView<? extends NodeModel>>();
 
         // Collection<NodeView> views = new ArrayList<NodeView>();
         for (NodeContainer nodeCont : m_manager.getNodeContainers()) {
             for (int i = 0; i < nodeCont.getNrViews(); i++) {
                 logger.debug("opening view nr. " + i + " for node "
                         + nodeCont.getName());
-                GenericNodeView<? extends GenericNodeModel> view =
+                NodeView<? extends NodeModel> view =
                     nodeCont.getView(i);
                 // store the view in order to close is after the test finishes
                 allViews.add(view);
@@ -269,7 +269,7 @@ public class KnimeTestCase extends TestCase {
             timeout.cancel();
 
             // always close these views.
-            for (GenericNodeView<? extends GenericNodeModel> v : allViews) {
+            for (NodeView<? extends NodeModel> v : allViews) {
                 v.closeView();
             }
 
