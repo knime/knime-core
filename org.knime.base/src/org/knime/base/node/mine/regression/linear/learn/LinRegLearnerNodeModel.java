@@ -55,7 +55,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
@@ -73,7 +73,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class LinRegLearnerNodeModel extends GenericNodeModel implements
+public class LinRegLearnerNodeModel extends NodeModel implements
         LinRegDataProvider {
 
     /** Logger to print debug info to. */

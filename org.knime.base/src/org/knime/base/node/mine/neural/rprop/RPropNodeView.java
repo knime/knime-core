@@ -28,7 +28,7 @@ import java.awt.Color;
 
 import org.knime.base.node.viz.plotter.basic.BasicPlotter;
 import org.knime.base.node.viz.plotter.basic.BasicPlotterImpl;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 
 
 /**
@@ -36,7 +36,7 @@ import org.knime.core.node.GenericNodeView;
  *
  * @author Nicolas Cebron, University of Konstanz
  */
-public class RPropNodeView extends GenericNodeView<RPropNodeModel> {
+public class RPropNodeView extends NodeView<RPropNodeModel> {
 
     private BasicPlotter m_errorplotter;
 

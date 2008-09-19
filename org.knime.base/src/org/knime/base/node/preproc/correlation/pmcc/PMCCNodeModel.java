@@ -51,7 +51,7 @@ import org.knime.core.node.BufferedDataTableHolder;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
@@ -66,7 +66,7 @@ import org.knime.core.node.port.PortType;
  * 
  * @author wiswedel, University of Konstanz
  */
-public class PMCCNodeModel extends GenericNodeModel 
+public class PMCCNodeModel extends NodeModel 
     implements BufferedDataTableHolder {
     
     private final SettingsModelFilterString m_columnIncludesList;

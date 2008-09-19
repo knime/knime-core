@@ -30,7 +30,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 
-import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -42,7 +42,7 @@ import org.knime.core.node.port.PortObjectSpec;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class DBReaderDialogPane extends GenericNodeDialogPane {
+class DBReaderDialogPane extends NodeDialogPane {
     
     private final DBDialogPane m_loginPane = new DBDialogPane();
   

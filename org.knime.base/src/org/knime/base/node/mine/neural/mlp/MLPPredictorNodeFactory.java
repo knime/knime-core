@@ -24,8 +24,8 @@
  */
 package org.knime.base.node.mine.neural.mlp;
 
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeDialogPane;
 
 /**
@@ -35,7 +35,7 @@ import org.knime.core.node.NodeDialogPane;
  * @author Nicolas Cebron, University of Konstanz
  */
 public class MLPPredictorNodeFactory extends
-        GenericNodeFactory<MLPPredictorNodeModel> {
+        NodeFactory<MLPPredictorNodeModel> {
     /**
      * {@inheritDoc}
      */
@@ -56,7 +56,7 @@ public class MLPPredictorNodeFactory extends
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<MLPPredictorNodeModel> createNodeView(
+    public NodeView<MLPPredictorNodeModel> createNodeView(
             final int viewIndex, final MLPPredictorNodeModel nodeModel) {
         return null;
     }

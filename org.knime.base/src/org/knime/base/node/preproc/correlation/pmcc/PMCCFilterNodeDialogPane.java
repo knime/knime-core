@@ -60,7 +60,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
-import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -72,7 +72,7 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class PMCCFilterNodeDialogPane extends GenericNodeDialogPane {
+public class PMCCFilterNodeDialogPane extends NodeDialogPane {
     
     private static final NumberFormat FORMAT = new DecimalFormat("#.#######");
     

@@ -23,7 +23,7 @@
 package org.knime.base.node.io.database;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -37,7 +37,7 @@ import org.knime.core.node.port.database.DatabasePortObjectSpec;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-final class DBColumnFilterNodeDialogPane extends GenericNodeDialogPane {
+final class DBColumnFilterNodeDialogPane extends NodeDialogPane {
 
     private final DialogComponentColumnFilter m_panel;
 

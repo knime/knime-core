@@ -34,7 +34,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.PlainDocument;
 
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 
 /**
  * Base class for both output views. Provides a text field and the ability to
@@ -44,7 +44,7 @@ import org.knime.core.node.GenericNodeView;
  * @param <T> the actual implementation of the abstract node model
  */
 public abstract class ExtToolOutputNodeView<T extends ExtToolOutputNodeModel>
-        extends GenericNodeView<T> {
+        extends NodeView<T> {
 
     private final JTextArea m_output;
 

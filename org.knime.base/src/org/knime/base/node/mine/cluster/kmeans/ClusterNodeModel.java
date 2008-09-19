@@ -50,7 +50,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -75,7 +75,7 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
  * 
  * @author Michael Berthold, University of Konstanz
  */
-public class ClusterNodeModel extends GenericNodeModel {
+public class ClusterNodeModel extends NodeModel {
     /** Constant for the RowKey generation and identification in the view. */
     public static final String CLUSTER = "cluster_";
 
@@ -182,7 +182,7 @@ public class ClusterNodeModel extends GenericNodeModel {
      * Appends to the given node settings the model specific configuration, that
      * are, the current settings (e.g. from the
      * {@link org.knime.core.node.NodeDialogPane}), as wells, the
-     * {@link GenericNodeModel} itself if applicable.
+     * {@link NodeModel} itself if applicable.
      * <p>
      * Method is called by the {@link org.knime.core.node.Node} if the
      * current configuration needs to be saved.
@@ -222,7 +222,7 @@ public class ClusterNodeModel extends GenericNodeModel {
     }
 
     /**
-     * Method is called when the {@link GenericNodeModel} has to set its
+     * Method is called when the {@link NodeModel} has to set its
      * configuration using the given one. This method is also called by the
      * {@link org.knime.core.node.Node}. Note that the settings should
      * have been validated before this method is called.
@@ -561,7 +561,7 @@ public class ClusterNodeModel extends GenericNodeModel {
     /**
      * Clears the model.
      * 
-     * @see GenericNodeModel#reset()
+     * @see NodeModel#reset()
      */
     @Override
     protected void reset() {

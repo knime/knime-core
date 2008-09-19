@@ -24,8 +24,8 @@
  */
 package org.knime.base.node.flowvariable.variableloophead;
 
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeDialogPane;
 
 
@@ -34,7 +34,7 @@ import org.knime.core.node.NodeDialogPane;
  * @author M. Berthold, University of Konstanz
  */
 public class VariableLoopStartNodeFactory 
-    extends GenericNodeFactory<VariableLoopStartNodeModel> {
+    extends NodeFactory<VariableLoopStartNodeModel> {
     
     /** Create factory, that instantiates nodes.
      */
@@ -55,7 +55,7 @@ public class VariableLoopStartNodeFactory
 
     /** {@inheritDoc} */
     @Override
-    public GenericNodeView<VariableLoopStartNodeModel> createNodeView(
+    public NodeView<VariableLoopStartNodeModel> createNodeView(
             final int index, final VariableLoopStartNodeModel model) {
         return null;
     }

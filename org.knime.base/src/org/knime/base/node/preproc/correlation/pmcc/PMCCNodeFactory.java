@@ -24,21 +24,21 @@
  */
 package org.knime.base.node.preproc.correlation.pmcc;
 
-import org.knime.core.node.GenericNodeDialogPane;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class PMCCNodeFactory extends GenericNodeFactory<PMCCNodeModel> {
+public class PMCCNodeFactory extends NodeFactory<PMCCNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected GenericNodeDialogPane createNodeDialogPane() {
+    protected NodeDialogPane createNodeDialogPane() {
         return new PMCCNodeDialogPane();
     }
 
@@ -54,7 +54,7 @@ public class PMCCNodeFactory extends GenericNodeFactory<PMCCNodeModel> {
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<PMCCNodeModel> createNodeView(
+    public NodeView<PMCCNodeModel> createNodeView(
             final int viewIndex, final PMCCNodeModel nodeModel) {
         return new PMCCNodeView(nodeModel);
     }

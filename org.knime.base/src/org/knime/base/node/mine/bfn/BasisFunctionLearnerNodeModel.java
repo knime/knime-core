@@ -47,7 +47,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
@@ -68,7 +68,7 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
+public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(BasisFunctionLearnerNodeModel.class);
 

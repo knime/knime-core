@@ -39,7 +39,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
-import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeView;
 
 /**
@@ -64,7 +63,7 @@ public class EmbeddedNodeView extends ViewPart implements
 
     private Component m_content;
 
-    private GenericNodeView<?> m_nodeView;
+    private NodeView<?> m_nodeView;
 
     /**
      * The constructor.
@@ -97,7 +96,7 @@ public class EmbeddedNodeView extends ViewPart implements
      *
      * @param view The node view to embedd
      */
-    public void setNodeView(final GenericNodeView<?> view) {
+    public void setNodeView(final NodeView<?> view) {
         if (m_nodeView != null) {
             releaseNodeView();
             m_content.removePropertyChangeListener(this);

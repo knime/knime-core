@@ -25,11 +25,10 @@
 package org.knime.base.node.mine.regression.predict;
 
 import org.knime.base.node.mine.regression.linear.predict.LinRegPredictorNodeFactory;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeView;
 
 /**
  * Factory for linear regression predictor node.
@@ -37,7 +36,7 @@ import org.knime.core.node.NodeLogger;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class RegressionPredictorNodeFactory 
-    extends GenericNodeFactory<RegressionPredictorNodeModel> {
+    extends NodeFactory<RegressionPredictorNodeModel> {
     
     static {
         try {
@@ -67,7 +66,7 @@ public class RegressionPredictorNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<RegressionPredictorNodeModel> 
+    public NodeView<RegressionPredictorNodeModel> 
         createNodeView(final int index, final RegressionPredictorNodeModel m) {
         throw new IndexOutOfBoundsException();
     }

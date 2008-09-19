@@ -24,22 +24,22 @@
  */
 package org.knime.base.node.preproc.correlation.pmcc;
 
-import org.knime.core.node.GenericNodeDialogPane;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
 public class PMCCFilterNodeFactory 
-extends GenericNodeFactory<PMCCFilterNodeModel> {
+extends NodeFactory<PMCCFilterNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected GenericNodeDialogPane createNodeDialogPane() {
+    protected NodeDialogPane createNodeDialogPane() {
         return new PMCCFilterNodeDialogPane();
     }
 
@@ -55,7 +55,7 @@ extends GenericNodeFactory<PMCCFilterNodeModel> {
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<PMCCFilterNodeModel> createNodeView(
+    public NodeView<PMCCFilterNodeModel> createNodeView(
             final int viewIndex, final PMCCFilterNodeModel nodeModel) {
         throw new IndexOutOfBoundsException("no views available."); 
     }

@@ -30,7 +30,7 @@ import java.io.IOException;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -44,7 +44,7 @@ import org.knime.core.node.workflow.LoopStartNodeWhileDo;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ForLoopHeadNodeModel extends GenericNodeModel
+public class ForLoopHeadNodeModel extends NodeModel
 implements LoopStartNodeWhileDo {
 
     private int m_iteration;

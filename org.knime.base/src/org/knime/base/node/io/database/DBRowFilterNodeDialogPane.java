@@ -30,7 +30,7 @@ import javax.swing.JPanel;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
-import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -47,7 +47,7 @@ import org.knime.core.node.port.database.DatabasePortObjectSpec;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-final class DBRowFilterNodeDialogPane extends GenericNodeDialogPane {
+final class DBRowFilterNodeDialogPane extends NodeDialogPane {
     
     private final DBConnectionDialogPanel m_tableOptions =
         new DBConnectionDialogPanel();

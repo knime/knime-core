@@ -24,9 +24,9 @@
  */
 package org.knime.base.node.meta.feature.backwardelim;
 
-import org.knime.core.node.GenericNodeDialogPane;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  * This factory creates all necessary classes for the feature elimination filter
@@ -35,13 +35,13 @@ import org.knime.core.node.GenericNodeView;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class BWElimFilterNodeFactory extends
-        GenericNodeFactory<BWElimFilterNodeModel> {
+        NodeFactory<BWElimFilterNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected GenericNodeDialogPane createNodeDialogPane() {
+    protected NodeDialogPane createNodeDialogPane() {
         return new BWElimFilterNodeDialog();
     }
 
@@ -73,7 +73,7 @@ public class BWElimFilterNodeFactory extends
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<BWElimFilterNodeModel> createNodeView(
+    public NodeView<BWElimFilterNodeModel> createNodeView(
             final int index, final BWElimFilterNodeModel model) {
         return null;
     }

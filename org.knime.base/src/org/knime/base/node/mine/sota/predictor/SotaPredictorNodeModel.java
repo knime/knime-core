@@ -38,7 +38,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -51,7 +51,7 @@ import org.knime.core.node.port.PortType;
  * 
  * @author Kilian Thiel, University of Konstanz
  */
-public class SotaPredictorNodeModel extends GenericNodeModel {
+public class SotaPredictorNodeModel extends NodeModel {
     
     private SettingsModelFilterString m_cols = new SettingsModelFilterString(
                 SotaPredictorConfigKeys.CFG_KEY_FILTERED_COLS);

@@ -22,16 +22,16 @@
  */
 package org.knime.base.node.io.database;
 
-import org.knime.core.node.GenericNodeDialogPane;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class DBConnectionNodeFactory 
-        extends GenericNodeFactory<DBConnectionNodeModel> {
+        extends NodeFactory<DBConnectionNodeModel> {
     
     /**
      * {@inheritDoc}
@@ -53,7 +53,7 @@ public final class DBConnectionNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<DBConnectionNodeModel> createNodeView(
+    public NodeView<DBConnectionNodeModel> createNodeView(
             final int viewIndex,
             final DBConnectionNodeModel nodeModel) {
         return null;
@@ -71,7 +71,7 @@ public final class DBConnectionNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeDialogPane createNodeDialogPane() {
+    public NodeDialogPane createNodeDialogPane() {
         return null;
     }
 }

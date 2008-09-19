@@ -31,7 +31,7 @@ import javax.swing.JTabbedPane;
 
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.DataProvider;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
@@ -40,7 +40,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * @author Christoph Sieb, University of Konstanz
  */
 public class BinModelNodeView extends
-        GenericNodeView<CAIMDiscretizationNodeModel> {
+        NodeView<CAIMDiscretizationNodeModel> {
 
     private JTabbedPane m_tabs;
 

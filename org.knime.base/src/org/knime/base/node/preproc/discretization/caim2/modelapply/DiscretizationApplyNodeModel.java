@@ -34,7 +34,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -50,7 +50,7 @@ import org.knime.core.node.port.PortType;
  *
  * @see DiscretizationApplyNodeFactory
  */
-public class DiscretizationApplyNodeModel extends GenericNodeModel {
+public class DiscretizationApplyNodeModel extends NodeModel {
 
     /** index of the port receiving data. */
     static final int DATA_INPORT = 1;

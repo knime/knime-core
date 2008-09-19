@@ -41,7 +41,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
@@ -65,7 +64,7 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class GroupByNodeModel extends GenericNodeModel {
+public class GroupByNodeModel extends NodeModel {
 
     /**Configuration key of the selected group by columns.*/
     protected static final String CFG_GROUP_BY_COLUMNS = "grouByColumns";

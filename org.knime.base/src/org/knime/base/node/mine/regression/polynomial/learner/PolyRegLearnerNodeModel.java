@@ -55,7 +55,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -73,7 +73,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class PolyRegLearnerNodeModel extends GenericNodeModel implements
+public class PolyRegLearnerNodeModel extends NodeModel implements
         DataProvider {
     private final PolyRegLearnerSettings m_settings =
             new PolyRegLearnerSettings();

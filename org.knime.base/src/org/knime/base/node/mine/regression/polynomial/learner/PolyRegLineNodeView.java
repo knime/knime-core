@@ -24,7 +24,7 @@
  */
 package org.knime.base.node.mine.regression.polynomial.learner;
 
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 
 /**
  * This class shows a view with one attribute on the x-axis, its values on the
@@ -33,7 +33,7 @@ import org.knime.core.node.GenericNodeView;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class PolyRegLineNodeView extends
-        GenericNodeView<PolyRegLearnerNodeModel> {
+        NodeView<PolyRegLearnerNodeModel> {
     // the scoll and drawing pane
     private final PolyRegLineScatterPlotter m_plot;
 

@@ -21,9 +21,9 @@
  */
 package org.knime.base.node.viz.property.color;
 
-import org.knime.core.node.GenericNodeDialogPane;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  * The color manager factory which creates a
@@ -36,7 +36,7 @@ import org.knime.core.node.GenericNodeView;
  */
 @Deprecated
 public class ColorManagerNodeFactory 
-        extends GenericNodeFactory<ColorManager2NodeModel> {
+        extends NodeFactory<ColorManager2NodeModel> {
     
     /**
      * Empty default constructor.
@@ -65,7 +65,7 @@ public class ColorManagerNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeDialogPane createNodeDialogPane() {
+    public NodeDialogPane createNodeDialogPane() {
         return new ColorManager2NodeDialogPane();
     }
 
@@ -81,7 +81,7 @@ public class ColorManagerNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<ColorManager2NodeModel> createNodeView(
+    public NodeView<ColorManager2NodeModel> createNodeView(
             final int index, final ColorManager2NodeModel nodeModel) {
         return null;
     }

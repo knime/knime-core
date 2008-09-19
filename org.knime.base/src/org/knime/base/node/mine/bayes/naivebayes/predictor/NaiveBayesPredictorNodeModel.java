@@ -30,7 +30,7 @@ import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
@@ -55,7 +55,7 @@ import java.util.List;
  *
  * @author Tobias Koetter
  */
-public class NaiveBayesPredictorNodeModel extends GenericNodeModel {
+public class NaiveBayesPredictorNodeModel extends NodeModel {
 
     // our logger instance
     private static final NodeLogger LOGGER = NodeLogger

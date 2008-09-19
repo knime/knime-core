@@ -31,7 +31,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.ModelContent;
 
 
@@ -41,7 +41,7 @@ import org.knime.core.node.ModelContent;
  * {@link org.knime.core.node.BufferedDataTable}. 
  * <code>PortObjects</code> contain the actual data or models, which are used
  * during a node's 
- * {@link GenericNodeModel#execute(PortObject[], ExecutionContext) execution}.
+ * {@link NodeModel#execute(PortObject[], ExecutionContext) execution}.
  * 
  * <p><b>Important:</b> Implementors of this interface must also provide a 
  * {@link PortObjectSerializer}, which is used to save and load instances. The

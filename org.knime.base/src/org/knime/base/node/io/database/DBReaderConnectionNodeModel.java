@@ -32,7 +32,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -49,7 +49,7 @@ import org.knime.core.node.port.database.DatabasePortObjectSpec;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-final class DBReaderConnectionNodeModel extends GenericNodeModel {
+final class DBReaderConnectionNodeModel extends NodeModel {
     
     // private final DBQueryConnection m_conn;
     

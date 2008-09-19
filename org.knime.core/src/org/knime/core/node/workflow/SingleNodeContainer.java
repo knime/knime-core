@@ -37,9 +37,9 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeDialogPane;
-import org.knime.core.node.GenericNodeModel;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
@@ -47,7 +47,7 @@ import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.GenericNodeFactory.NodeType;
+import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -182,12 +182,12 @@ public final class SingleNodeContainer extends NodeContainer
 
     /** {@inheritDoc} */
     @Override
-    public GenericNodeView<GenericNodeModel> getView(final int i) {
+    public NodeView<NodeModel> getView(final int i) {
         String title = getNameWithID() + " (" + getViewName(i) + ")";
         if (getCustomName() != null) {
             title += " - " + getCustomName();
         }
-        return (GenericNodeView<GenericNodeModel>)m_node.getView(i, title);
+        return (NodeView<NodeModel>)m_node.getView(i, title);
     }
 
     /** {@inheritDoc} */
@@ -710,7 +710,7 @@ public final class SingleNodeContainer extends NodeContainer
 
     /** {@inheritDoc} */
     @Override
-    GenericNodeDialogPane getDialogPaneWithSettings(
+    NodeDialogPane getDialogPaneWithSettings(
             final PortObjectSpec[] inSpecs) throws NotConfigurableException {
         ScopeObjectStack stack = getScopeObjectStack();
         return m_node.getDialogPaneWithSettings(inSpecs, stack);
@@ -718,7 +718,7 @@ public final class SingleNodeContainer extends NodeContainer
 
     /** {@inheritDoc} */
     @Override
-    GenericNodeDialogPane getDialogPane() {
+    NodeDialogPane getDialogPane() {
         return m_node.getDialogPane();
     }
 

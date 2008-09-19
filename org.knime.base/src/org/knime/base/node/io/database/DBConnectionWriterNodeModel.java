@@ -30,7 +30,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -45,7 +45,7 @@ import org.knime.core.node.port.database.DatabasePortObjectSpec;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-final class DBConnectionWriterNodeModel extends GenericNodeModel {
+final class DBConnectionWriterNodeModel extends NodeModel {
     
     private SettingsModelString m_tableName = 
         DBConnectionWriterDialogPane.createTableNameModel();

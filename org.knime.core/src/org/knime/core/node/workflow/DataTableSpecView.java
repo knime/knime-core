@@ -35,7 +35,7 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.tableview.TableView;
 
 /**
@@ -68,7 +68,7 @@ public class DataTableSpecView extends JPanel {
 
 
         setLayout(new BorderLayout());
-        setBackground(GenericNodeView.COLOR_BACKGROUND);
+        setBackground(NodeView.COLOR_BACKGROUND);
 
         m_specView = new TableView();
         m_specView.setShowIconInColumnHeader(false);

@@ -34,7 +34,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -50,7 +50,7 @@ import org.knime.core.node.port.viewproperty.ViewPropertyPortObject;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class ColorAppender2NodeModel extends GenericNodeModel {
+public class ColorAppender2NodeModel extends NodeModel {
     
     private final SettingsModelString m_column = 
         ColorAppender2NodeDialogPane.createColumnModel();

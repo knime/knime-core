@@ -42,7 +42,7 @@ import javax.swing.JTextField;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
@@ -58,7 +58,7 @@ import org.knime.core.node.util.ColumnFilterPanel;
  *
  * @author Nicolas Cebron, University of Konstanz
  */
-public class NormalizerNodeDialog extends GenericNodeDialogPane {
+public class NormalizerNodeDialog extends NodeDialogPane {
 
     /** The node logger fot this class. */
     private static final NodeLogger LOGGER = NodeLogger

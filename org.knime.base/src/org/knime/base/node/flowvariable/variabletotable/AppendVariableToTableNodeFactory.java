@@ -24,15 +24,15 @@
  */
 package org.knime.base.node.flowvariable.variabletotable;
 
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
 public class AppendVariableToTableNodeFactory extends
-        GenericNodeFactory<AppendVariableToTableNodeModel> {
+        NodeFactory<AppendVariableToTableNodeModel> {
 
     /** {@inheritDoc} */
     @Override
@@ -48,7 +48,7 @@ public class AppendVariableToTableNodeFactory extends
 
     /** {@inheritDoc} */
     @Override
-    public GenericNodeView<AppendVariableToTableNodeModel> 
+    public NodeView<AppendVariableToTableNodeModel> 
         createNodeView(final int index, final AppendVariableToTableNodeModel model) {
         return null;
     }

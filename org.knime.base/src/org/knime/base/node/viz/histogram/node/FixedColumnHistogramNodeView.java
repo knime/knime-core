@@ -25,7 +25,7 @@
 package org.knime.base.node.viz.histogram.node;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.impl.fixed.FixedHistogramPlotter;
@@ -38,7 +38,7 @@ import org.knime.base.node.viz.histogram.impl.fixed.FixedHistogramProperties;
  *
  */
 public class FixedColumnHistogramNodeView
-    extends GenericNodeView<FixedColumnHistogramNodeModel> {
+    extends NodeView<FixedColumnHistogramNodeModel> {
 
     private FixedHistogramPlotter m_plotter;
 

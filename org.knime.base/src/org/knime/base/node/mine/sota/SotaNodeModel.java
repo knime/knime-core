@@ -44,7 +44,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
@@ -60,7 +60,7 @@ import org.knime.core.node.port.PortType;
  * 
  * @author Kilian Thiel, University of Konstanz
  */
-public class SotaNodeModel extends GenericNodeModel {
+public class SotaNodeModel extends NodeModel {
 
     /**
      * The input port used here.

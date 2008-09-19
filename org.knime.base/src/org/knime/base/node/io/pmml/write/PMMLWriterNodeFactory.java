@@ -18,22 +18,22 @@
  */
 package org.knime.base.node.io.pmml.write;
 
-import org.knime.core.node.GenericNodeDialogPane;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  * 
  * @author Fabian Dill, University of Konstanz
  */
 public class PMMLWriterNodeFactory 
-    extends GenericNodeFactory<PMMLWriterNodeModel> {
+    extends NodeFactory<PMMLWriterNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected GenericNodeDialogPane createNodeDialogPane() {
+    protected NodeDialogPane createNodeDialogPane() {
         return new PMMLWriterNodeDialog();
     }
 
@@ -49,7 +49,7 @@ public class PMMLWriterNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<PMMLWriterNodeModel> createNodeView(
+    public NodeView<PMMLWriterNodeModel> createNodeView(
             final int viewIndex,
             final PMMLWriterNodeModel nodeModel) {
         return null;

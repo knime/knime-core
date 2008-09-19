@@ -23,7 +23,7 @@
  *   02.05.2006 (koetter): created
  */
 package org.knime.base.node.mine.bayes.naivebayes.learner;
-import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeDialogPane;
 
 /**
@@ -32,7 +32,7 @@ import org.knime.core.node.NodeDialogPane;
  * @author Tobias Koetter
  */
 public class NaiveBayesLearnerNodeFactory
-    extends GenericNodeFactory<NaiveBayesLearnerNodeModel> {
+    extends NodeFactory<NaiveBayesLearnerNodeModel> {
     /**
      * {@inheritDoc}
      */

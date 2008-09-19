@@ -29,7 +29,7 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
-import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
@@ -48,7 +48,7 @@ public class CreateNodeCommand extends Command {
 
     private final WorkflowManager m_manager;
 
-    private final GenericNodeFactory<?> m_factory;
+    private final NodeFactory<?> m_factory;
 
     private final Point m_location;
 
@@ -62,7 +62,7 @@ public class CreateNodeCommand extends Command {
      * @param location Initial visual location in the
      */
     public CreateNodeCommand(final WorkflowManager manager,
-            final GenericNodeFactory<?> factory, final Point location) {
+            final NodeFactory<?> factory, final Point location) {
         m_manager = manager;
         m_factory = factory;
         m_location = location;

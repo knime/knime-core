@@ -53,7 +53,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
-import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
@@ -75,7 +75,7 @@ public class WrappedNodeDialog extends Dialog {
 
     private Panel2CompositeWrapper m_wrapper;
 
-    private final GenericNodeDialogPane m_dialogPane;
+    private final NodeDialogPane m_dialogPane;
 
     private Menu m_menuBar;
 

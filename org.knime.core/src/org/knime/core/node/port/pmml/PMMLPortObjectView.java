@@ -30,7 +30,7 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeLogger;
 import org.xml.sax.InputSource;
 
@@ -56,7 +56,7 @@ public class PMMLPortObjectView extends JComponent {
      */
     public PMMLPortObjectView(final PMMLPortObject portObject) {
         setLayout(new BorderLayout());
-        setBackground(GenericNodeView.COLOR_BACKGROUND);
+        setBackground(NodeView.COLOR_BACKGROUND);
         m_portObject = portObject;
         setName("PMML: " + portObject.getModelType().name());
         m_tree = new JTree();

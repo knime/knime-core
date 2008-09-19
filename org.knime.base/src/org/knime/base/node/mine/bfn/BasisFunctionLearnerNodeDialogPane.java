@@ -27,7 +27,7 @@ import java.util.Set;
 import javax.swing.BorderFactory;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -42,7 +42,7 @@ import org.knime.core.node.util.ColumnFilterPanel;
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class BasisFunctionLearnerNodeDialogPane 
-        extends GenericNodeDialogPane {
+        extends NodeDialogPane {
 
     /** Contains the basic settings for this learner. */
     private final BasisFunctionLearnerNodeDialogPanel m_basicsPanel;

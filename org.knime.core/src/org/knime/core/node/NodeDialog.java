@@ -58,7 +58,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 public final class NodeDialog {
 
     /** The underlying dialog's pane. */
-    private final GenericNodeDialogPane m_dialogPane;
+    private final NodeDialogPane m_dialogPane;
 
     /**
      * The underlying workflow manager and node ID
@@ -85,7 +85,7 @@ public final class NodeDialog {
      * @param pane this dialog's underlying pane
      * @param node the underlying node
      */
-    public NodeDialog(final GenericNodeDialogPane pane, final WorkflowManager wfm,
+    public NodeDialog(final NodeDialogPane pane, final WorkflowManager wfm,
             final NodeID node) {
         m_wfm = wfm;
         m_node = node;

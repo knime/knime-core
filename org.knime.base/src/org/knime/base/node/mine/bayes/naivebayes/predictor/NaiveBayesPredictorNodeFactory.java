@@ -23,8 +23,8 @@
  *   02.05.2006 (koetter): created
  */
 package org.knime.base.node.mine.bayes.naivebayes.predictor;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeDialogPane;
 
 /**
@@ -33,7 +33,7 @@ import org.knime.core.node.NodeDialogPane;
  * @author Tobias Koetter
  */
 public class NaiveBayesPredictorNodeFactory
-    extends GenericNodeFactory<NaiveBayesPredictorNodeModel> {
+    extends NodeFactory<NaiveBayesPredictorNodeModel> {
     /**
      * {@inheritDoc}
      */
@@ -54,7 +54,7 @@ public class NaiveBayesPredictorNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<NaiveBayesPredictorNodeModel> createNodeView(
+    public NodeView<NaiveBayesPredictorNodeModel> createNodeView(
             final int viewIndex, final NaiveBayesPredictorNodeModel nodeModel) {
         return null;
     }

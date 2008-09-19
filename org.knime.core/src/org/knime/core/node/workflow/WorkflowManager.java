@@ -51,10 +51,10 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeDialogPane;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeModel;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node;
@@ -63,7 +63,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.GenericNodeFactory.NodeType;
+import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -292,7 +292,7 @@ public final class WorkflowManager extends NodeContainer {
      * @return newly created (unique) NodeID
      */
     // FIXME: I don't like this type cast warning (and the ? for that matter!)
-    public NodeID createAndAddNode(final GenericNodeFactory<?> factory) {
+    public NodeID createAndAddNode(final NodeFactory<?> factory) {
         NodeID newID;
         synchronized (m_workflowMutex) {
             // TODO synchronize to avoid messing with running workflows!
@@ -300,7 +300,7 @@ public final class WorkflowManager extends NodeContainer {
             // insert node
             newID = createUniqueID();
             SingleNodeContainer container = new SingleNodeContainer(this,
-               new Node((GenericNodeFactory<GenericNodeModel>)factory), newID);
+               new Node((NodeFactory<NodeModel>)factory), newID);
             addNodeContainer(container, true);
         }
         configureNodeAndSuccessors(newID, true, true);
@@ -1800,14 +1800,14 @@ public final class WorkflowManager extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    GenericNodeDialogPane getDialogPaneWithSettings(
+    NodeDialogPane getDialogPaneWithSettings(
             final PortObjectSpec[] inSpecs) throws NotConfigurableException {
         throw new IllegalStateException("Workflow has no dialog (yet)");
     }
 
     /** {@inheritDoc} */
     @Override
-    GenericNodeDialogPane getDialogPane() {
+    NodeDialogPane getDialogPane() {
         throw new IllegalStateException("Workflow has no dialog (yet)");
     }
 
@@ -3141,7 +3141,7 @@ public final class WorkflowManager extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    public GenericNodeView<GenericNodeModel> getView(final int i) {
+    public NodeView<NodeModel> getView(final int i) {
         throw new IndexOutOfBoundsException("WFM don't have views.");
     }
 

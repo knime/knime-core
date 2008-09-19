@@ -22,8 +22,8 @@
  */
 package org.knime.base.node.meta.looper;
 
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeDialogPane;
 
 /**
@@ -32,7 +32,7 @@ import org.knime.core.node.NodeDialogPane;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ForLoopHeadNodeFactory extends
-        GenericNodeFactory<ForLoopHeadNodeModel> {
+        NodeFactory<ForLoopHeadNodeModel> {
     /**
      * {@inheritDoc}
      */
@@ -69,7 +69,7 @@ public class ForLoopHeadNodeFactory extends
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<ForLoopHeadNodeModel> createNodeView(
+    public NodeView<ForLoopHeadNodeModel> createNodeView(
             final int index, final ForLoopHeadNodeModel model) {
         return null;
     }

@@ -24,8 +24,8 @@
  */
 package org.knime.base.node.mine.regression.linear.learn;
 
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeDialogPane;
 
 /**
@@ -34,7 +34,7 @@ import org.knime.core.node.NodeDialogPane;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class LinRegLearnerNodeFactory 
-    extends GenericNodeFactory<LinRegLearnerNodeModel> {
+    extends NodeFactory<LinRegLearnerNodeModel> {
     /**
      * {@inheritDoc}
      */
@@ -55,7 +55,7 @@ public class LinRegLearnerNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<LinRegLearnerNodeModel> createNodeView(
+    public NodeView<LinRegLearnerNodeModel> createNodeView(
             final int index, final LinRegLearnerNodeModel model) {
         switch (index) {
         case 0:

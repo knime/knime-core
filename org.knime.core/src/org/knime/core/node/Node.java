@@ -44,8 +44,8 @@ import javax.swing.UIManager;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.GenericNodeDialogPane.MiscNodeDialogPane;
-import org.knime.core.node.GenericNodeFactory.NodeType;
+import org.knime.core.node.NodeDialogPane.MiscNodeDialogPane;
+import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
@@ -109,16 +109,16 @@ public final class Node implements NodeModelWarningListener {
     private String m_name;
 
     /** The factory used to create model, dialog, and views. */
-    private final GenericNodeFactory<GenericNodeModel> m_factory;
+    private final NodeFactory<NodeModel> m_factory;
 
     /** The node's assigned node model. */
-    private final GenericNodeModel m_model;
+    private final NodeModel m_model;
 
     /** the last fired message (or null if none available). */
     private NodeMessage m_message;
 
     /** The node's dialog or <code>null</code> if not available. */
-    private GenericNodeDialogPane m_dialogPane;
+    private NodeDialogPane m_dialogPane;
 
     private NodeSettings m_variablesSettings;
 
@@ -217,7 +217,7 @@ public final class Node implements NodeModelWarningListener {
      * @throws IllegalArgumentException If the <i>nodeFactory</i> is
      *             <code>null</code>.
      */
-    public Node(final GenericNodeFactory<GenericNodeModel> nodeFactory) {
+    public Node(final NodeFactory<NodeModel> nodeFactory) {
         if (nodeFactory == null) {
             throw new IllegalArgumentException("NodeFactory must not be null.");
         }
@@ -602,7 +602,7 @@ public final class Node implements NodeModelWarningListener {
      * Delegate method to node model.
      *
      * @return Whether the node model has (potentially) content to be displayed.
-     * @see GenericNodeModel#hasContent()
+     * @see NodeModel#hasContent()
      */
     boolean hasContent() {
         return m_model.hasContent();
@@ -911,7 +911,7 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
-     * Is called, when a warning message is set in the {@link GenericNodeModel}.
+     * Is called, when a warning message is set in the {@link NodeModel}.
      * Forwards it to registered {@link NodeMessageListener}s.
      *
      * @param warningMessage the new message in the node model.
@@ -1350,8 +1350,8 @@ public final class Node implements NodeModelWarningListener {
      * @return The node view with the specified index.
      * @throws ArrayIndexOutOfBoundsException If the view index is out of range.
      */
-    public GenericNodeView<?> getView(final int viewIndex, final String title) {
-        GenericNodeView<?> view;
+    public NodeView<?> getView(final int viewIndex, final String title) {
+        NodeView<?> view;
         try {
             view = m_factory.createNodeView(viewIndex, m_model);
             view.setViewTitle(title);
@@ -1366,9 +1366,9 @@ public final class Node implements NodeModelWarningListener {
      * Closes all views.
      */
     public void closeAllViews() {
-        Set<GenericNodeView<?>> views =
-                new HashSet<GenericNodeView<?>>(m_model.getViews());
-        for (GenericNodeView<?> view : views) {
+        Set<NodeView<?>> views =
+                new HashSet<NodeView<?>>(m_model.getViews());
+        for (NodeView<?> view : views) {
             view.closeView();
         }
     }
@@ -1420,7 +1420,7 @@ public final class Node implements NodeModelWarningListener {
     // }
     /**
      * @param inSpecs The input specs, which will be forwarded to the dialog's
-     *            {@link GenericNodeDialogPane# loadSettingsFrom(NodeSettingsRO,
+     *            {@link NodeDialogPane# loadSettingsFrom(NodeSettingsRO,
      *            PortObjectSpec[])}.
      * @param scopeStack The stack of variables.
      * @return The dialog pane which holds all the settings' components. In
@@ -1433,10 +1433,10 @@ public final class Node implements NodeModelWarningListener {
      * @throws IllegalStateException If node has no dialog.
      * @see #hasDialog()
      */
-    public GenericNodeDialogPane getDialogPaneWithSettings(
+    public NodeDialogPane getDialogPaneWithSettings(
             final PortObjectSpec[] inSpecs, final ScopeObjectStack scopeStack)
         throws NotConfigurableException {
-        GenericNodeDialogPane dialogPane = getDialogPane();
+        NodeDialogPane dialogPane = getDialogPane();
         NodeSettingsRO settings = getSettingsFromNode();
         PortType[] inTypes = new PortType[getNrInPorts()];
         for (int i = 0; i < inTypes.length; i++) {
@@ -1465,7 +1465,7 @@ public final class Node implements NodeModelWarningListener {
      * @throws IllegalStateException If node has no dialog.
      * @see #hasDialog()
      */
-    public GenericNodeDialogPane getDialogPane() {
+    public NodeDialogPane getDialogPane() {
         if (m_dialogPane == null) {
             if (hasDialog()) {
                 if (m_factory.hasDialog()) {
@@ -1754,7 +1754,7 @@ public final class Node implements NodeModelWarningListener {
     /**
      * @return the <code>NodeFactory</code> that constructed this node.
      */
-    public GenericNodeFactory<GenericNodeModel> getFactory() {
+    public NodeFactory<NodeModel> getFactory() {
         return m_factory;
     }
 

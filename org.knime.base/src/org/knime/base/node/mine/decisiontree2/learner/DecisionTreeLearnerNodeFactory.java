@@ -21,8 +21,8 @@
  */
 package org.knime.base.node.mine.decisiontree2.learner;
 
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeDialogPane;
 
 /**
@@ -30,7 +30,7 @@ import org.knime.core.node.NodeDialogPane;
  *
  * @author Christoph Sieb, University of Konstanz
  */
-public class DecisionTreeLearnerNodeFactory extends GenericNodeFactory<DecisionTreeLearnerNodeModel> {
+public class DecisionTreeLearnerNodeFactory extends NodeFactory<DecisionTreeLearnerNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -52,7 +52,7 @@ public class DecisionTreeLearnerNodeFactory extends GenericNodeFactory<DecisionT
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<DecisionTreeLearnerNodeModel> createNodeView(final int i, final DecisionTreeLearnerNodeModel nodeModel) {
+    public NodeView<DecisionTreeLearnerNodeModel> createNodeView(final int i, final DecisionTreeLearnerNodeModel nodeModel) {
         return new DecTreeNodeView(nodeModel);
 
     }

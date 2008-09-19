@@ -24,9 +24,9 @@
  */
 package org.knime.base.node.io.portobject;
 
-import org.knime.core.node.GenericNodeDialogPane;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 
@@ -36,7 +36,7 @@ import org.knime.core.node.port.PortType;
  * @author M. Berthold, University of Konstanz
  */
 public class PortObjectWriterNodeFactory 
-        extends GenericNodeFactory<PortObjectWriterNodeModel> {
+        extends NodeFactory<PortObjectWriterNodeModel> {
     
     private final PortType m_type;
     
@@ -75,7 +75,7 @@ public class PortObjectWriterNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<PortObjectWriterNodeModel> createNodeView(
+    public NodeView<PortObjectWriterNodeModel> createNodeView(
             final int viewIndex, final PortObjectWriterNodeModel nodeModel) {
         return null;
     }
@@ -92,7 +92,7 @@ public class PortObjectWriterNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeDialogPane createNodeDialogPane() {
+    public NodeDialogPane createNodeDialogPane() {
         return new PortObjectWriterNodeDialog();
     }
 

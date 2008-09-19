@@ -41,7 +41,7 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeRenderer;
 import org.knime.core.data.RowKey;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
@@ -49,7 +49,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * @author Michael Berthold, University of Konstanz
  */
 public class DecTreePredictorNodeView 
-        extends GenericNodeView<DecTreePredictorNodeModel> {
+        extends NodeView<DecTreePredictorNodeModel> {
 
     private JTree m_jTree;
 

@@ -23,9 +23,9 @@
  */
 package org.knime.base.node.meta.looper.condition;
 
-import org.knime.core.node.GenericNodeDialogPane;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  * This factory creates all necessary classes for the condition loop head node.
@@ -33,13 +33,13 @@ import org.knime.core.node.GenericNodeView;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ConditionLoopTailNodeFactory extends
-        GenericNodeFactory<ConditionLoopTailNodeModel> {
+        NodeFactory<ConditionLoopTailNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected GenericNodeDialogPane createNodeDialogPane() {
+    protected NodeDialogPane createNodeDialogPane() {
         return new ConditionLoopTailNodeDialog();
     }
 
@@ -55,7 +55,7 @@ public class ConditionLoopTailNodeFactory extends
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<ConditionLoopTailNodeModel> createNodeView(
+    public NodeView<ConditionLoopTailNodeModel> createNodeView(
             final int viewIndex, final ConditionLoopTailNodeModel nodeModel) {
         return null;
     }

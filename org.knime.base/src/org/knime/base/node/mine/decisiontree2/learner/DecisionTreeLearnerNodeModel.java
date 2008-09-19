@@ -54,7 +54,6 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
@@ -76,7 +75,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
  *
  * @see DecisionTreeLearnerNodeFactory
  */
-public class DecisionTreeLearnerNodeModel extends GenericNodeModel {
+public class DecisionTreeLearnerNodeModel extends NodeModel {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(DecisionTreeLearnerNodeModel.class);

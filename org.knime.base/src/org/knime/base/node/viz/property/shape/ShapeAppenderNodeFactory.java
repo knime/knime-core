@@ -24,9 +24,9 @@
  */
 package org.knime.base.node.viz.property.shape;
 
-import org.knime.core.node.GenericNodeDialogPane;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  * Factory to create <i>Shape Appender</i> node.
@@ -34,7 +34,7 @@ import org.knime.core.node.GenericNodeView;
  * @author Thomas Gabriel, University of Konstanz
  */
 public class ShapeAppenderNodeFactory 
-        extends GenericNodeFactory<ShapeAppenderNodeModel> {
+        extends NodeFactory<ShapeAppenderNodeModel> {
     
     /**
      * {@inheritDoc}
@@ -56,7 +56,7 @@ public class ShapeAppenderNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<ShapeAppenderNodeModel> createNodeView(
+    public NodeView<ShapeAppenderNodeModel> createNodeView(
             final int viewIndex, final ShapeAppenderNodeModel nm) {
         return null;
     }
@@ -73,7 +73,7 @@ public class ShapeAppenderNodeFactory
      * {@inheritDoc}
      */
     @Override
-    protected GenericNodeDialogPane createNodeDialogPane() {
+    protected NodeDialogPane createNodeDialogPane() {
         return new ShapeAppenderNodeDialogPane();
     }
 }

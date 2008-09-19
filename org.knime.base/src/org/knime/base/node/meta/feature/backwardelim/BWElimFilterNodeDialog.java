@@ -52,7 +52,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -66,7 +66,7 @@ import org.knime.core.util.Pair;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class BWElimFilterNodeDialog extends GenericNodeDialogPane {
+public class BWElimFilterNodeDialog extends NodeDialogPane {
     private static class MyTableModel implements TableModel {
         private final CopyOnWriteArrayList<TableModelListener> m_listeners =
                 new CopyOnWriteArrayList<TableModelListener>();

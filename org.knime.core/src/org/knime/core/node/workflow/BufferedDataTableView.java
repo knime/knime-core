@@ -24,7 +24,7 @@ import javax.swing.JComponent;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.tableview.TableView;
 
 /**
@@ -57,7 +57,7 @@ public class BufferedDataTableView extends JComponent {
         m_table = table;
 
         setLayout(new BorderLayout());
-        setBackground(GenericNodeView.COLOR_BACKGROUND);
+        setBackground(NodeView.COLOR_BACKGROUND);
 
         m_dataView = new TableView();
         m_dataView.getHeaderTable().setShowColorInfo(false);

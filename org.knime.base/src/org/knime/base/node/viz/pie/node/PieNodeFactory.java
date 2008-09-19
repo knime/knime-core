@@ -25,7 +25,7 @@
 
 package org.knime.base.node.viz.pie.node;
 
-import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeDialogPane;
 
 import org.knime.base.node.viz.pie.datamodel.PieVizModel;
@@ -39,7 +39,7 @@ import org.knime.base.node.viz.pie.datamodel.PieVizModel;
  */
 public abstract class PieNodeFactory<D extends PieVizModel,
 M extends PieNodeModel<D>, V extends PieNodeView>
-extends GenericNodeFactory<M> {
+extends NodeFactory<M> {
 
     /**
      * {@inheritDoc}

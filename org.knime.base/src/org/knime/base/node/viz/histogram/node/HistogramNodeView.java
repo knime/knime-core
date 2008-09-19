@@ -25,7 +25,7 @@
 package org.knime.base.node.viz.histogram.node;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramPlotter;
@@ -37,7 +37,7 @@ import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramPr
  * @author Tobias Koetter, University of Konstanz
  *
  */
-public class HistogramNodeView extends GenericNodeView<HistogramNodeModel> {
+public class HistogramNodeView extends NodeView<HistogramNodeModel> {
 
     private InteractiveHistogramPlotter m_plotter;
 

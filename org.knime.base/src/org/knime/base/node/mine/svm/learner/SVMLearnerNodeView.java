@@ -29,7 +29,7 @@ import java.awt.Dimension;
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeModel;
 
 /**
@@ -38,7 +38,7 @@ import org.knime.core.node.NodeModel;
  *
  * @author cebron, University of Konstanz
  */
-public class SVMLearnerNodeView extends GenericNodeView<SVMLearnerNodeModel> {
+public class SVMLearnerNodeView extends NodeView<SVMLearnerNodeModel> {
 
     /*
      * Output is printed in a JEditorPane

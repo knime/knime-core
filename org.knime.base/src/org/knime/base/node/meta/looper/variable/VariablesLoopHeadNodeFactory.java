@@ -25,8 +25,8 @@
 package org.knime.base.node.meta.looper.variable;
 
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.port.PortType;
 
@@ -35,7 +35,7 @@ import org.knime.core.node.port.PortType;
  * @author wiswedel, University of Konstanz
  */
 public class VariablesLoopHeadNodeFactory 
-    extends GenericNodeFactory<VariablesLoopHeadNodeModel> {
+    extends NodeFactory<VariablesLoopHeadNodeModel> {
     
     private final PortType m_inOutType;
     
@@ -69,7 +69,7 @@ public class VariablesLoopHeadNodeFactory
 
     /** {@inheritDoc} */
     @Override
-    public GenericNodeView<VariablesLoopHeadNodeModel> createNodeView(
+    public NodeView<VariablesLoopHeadNodeModel> createNodeView(
             final int index, final VariablesLoopHeadNodeModel model) {
         return null;
     }

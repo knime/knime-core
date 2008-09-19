@@ -26,8 +26,8 @@ package org.knime.base.node.mine.mds;
 
 import org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeDialog;
 import org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeModel;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeDialogPane;
 
 /**
@@ -37,7 +37,7 @@ import org.knime.core.node.NodeDialogPane;
  * @deprecated replace by completely new implementation
  */
 public class MDSPivotDataNodeFactory 
-        extends GenericNodeFactory<MDSProjectionNodeModel> {
+        extends NodeFactory<MDSProjectionNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -59,7 +59,7 @@ public class MDSPivotDataNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<MDSProjectionNodeModel> createNodeView(
+    public NodeView<MDSProjectionNodeModel> createNodeView(
             final int viewIndex,
             final MDSProjectionNodeModel nodeModel) {
         return null;

@@ -34,8 +34,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeLogger;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
@@ -143,7 +143,7 @@ public class NodeTemplateDropTargetListener2 implements
                     .getRootEditPart().getContents();
                 m_viewer.getEditDomain().getCommandStack().execute(
                         new CreateNodeCommand(root.getWorkflowManager(),
-                                (GenericNodeFactory<? extends GenericNodeModel>)
+                                (NodeFactory<? extends NodeModel>)
                                     factory.getNewObject(),
                                 getDropLocation(event)));
                 NodeUsageRegistry.addNode(template);

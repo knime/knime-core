@@ -45,7 +45,7 @@ import javax.swing.tree.TreePath;
 
 import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteListener;
 import org.knime.core.node.property.hilite.KeyEvent;
 
@@ -53,7 +53,7 @@ import org.knime.core.node.property.hilite.KeyEvent;
 /**
  * @author Michael Berthold, University of Konstanz
  */
-public class ClusterNodeView extends GenericNodeView<ClusterNodeModel>
+public class ClusterNodeView extends NodeView<ClusterNodeModel>
     implements HiLiteListener {
 
     // private static final NodeLogger LOGGER = NodeLogger.getLogger(

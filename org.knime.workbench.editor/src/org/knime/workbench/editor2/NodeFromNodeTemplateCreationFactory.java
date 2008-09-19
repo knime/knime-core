@@ -25,8 +25,8 @@
 package org.knime.workbench.editor2;
 
 import org.eclipse.gef.requests.CreationFactory;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
 import org.knime.workbench.repository.model.NodeTemplate;
 
 /**
@@ -43,7 +43,7 @@ import org.knime.workbench.repository.model.NodeTemplate;
  * @author Florian Georg, University of Konstanz
  */
 public class NodeFromNodeTemplateCreationFactory implements CreationFactory {
-    private Class<GenericNodeFactory<? extends GenericNodeModel>> m_factory;
+    private Class<NodeFactory<? extends NodeModel>> m_factory;
 
     /**
      * New factory for the given template.
@@ -63,7 +63,7 @@ public class NodeFromNodeTemplateCreationFactory implements CreationFactory {
     @SuppressWarnings("unchecked")
     public Object getNewObject() {
         try {
-            return (GenericNodeFactory<? extends GenericNodeModel>) 
+            return (NodeFactory<? extends NodeModel>) 
                 m_factory.newInstance();
         } catch (Exception e) {
             throw new RuntimeException("Can't instantiate NodeFactory "
@@ -75,6 +75,6 @@ public class NodeFromNodeTemplateCreationFactory implements CreationFactory {
      * {@inheritDoc}
      */
     public Object getObjectType() {
-        return GenericNodeFactory.class;
+        return NodeFactory.class;
     }
 }

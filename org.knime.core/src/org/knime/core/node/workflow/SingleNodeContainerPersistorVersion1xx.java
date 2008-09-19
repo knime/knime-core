@@ -39,8 +39,8 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
@@ -138,7 +138,7 @@ public class SingleNodeContainerPersistorVersion1xx
             }
             throw new InvalidSettingsException(error, e);
         }
-        GenericNodeFactory<GenericNodeModel> nodeFactory;
+        NodeFactory<NodeModel> nodeFactory;
         
         try {
             nodeFactory = loadNodeFactory(nodeFactoryClassName);
@@ -234,22 +234,22 @@ public class SingleNodeContainerPersistorVersion1xx
     }
 
     @SuppressWarnings("unchecked")
-    protected GenericNodeFactory<GenericNodeModel> loadNodeFactory(
+    protected NodeFactory<NodeModel> loadNodeFactory(
             final String factoryClassName) throws InvalidSettingsException,
             InstantiationException, IllegalAccessException,
             ClassNotFoundException {
         // use global Class Creator utility for Eclipse "compatibility"
         try {
-            GenericNodeFactory<GenericNodeModel> f = (GenericNodeFactory<GenericNodeModel>)((GlobalClassCreator
+            NodeFactory<NodeModel> f = (NodeFactory<NodeModel>)((GlobalClassCreator
                     .createClass(factoryClassName)).newInstance());
             return f;
         } catch (ClassNotFoundException ex) {
             String[] x = factoryClassName.split("\\.");
             String simpleClassName = x[x.length - 1];
 
-            for (String s : GenericNodeFactory.getLoadedNodeFactories()) {
+            for (String s : NodeFactory.getLoadedNodeFactories()) {
                 if (s.endsWith("." + simpleClassName)) {
-                    GenericNodeFactory<GenericNodeModel> f = (GenericNodeFactory<GenericNodeModel>)((GlobalClassCreator
+                    NodeFactory<NodeModel> f = (NodeFactory<NodeModel>)((GlobalClassCreator
                             .createClass(s)).newInstance());
                     LOGGER.warn("Substituted '" + f.getClass().getName()
                             + "' for unknown factory '" + factoryClassName

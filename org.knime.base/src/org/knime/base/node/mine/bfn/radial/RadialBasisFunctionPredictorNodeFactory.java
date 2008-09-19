@@ -22,8 +22,8 @@
 package org.knime.base.node.mine.bfn.radial;
 
 import org.knime.base.node.mine.bfn.BasisFunctionPredictorNodeDialog;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeDialogPane;
 
 /**
@@ -31,7 +31,7 @@ import org.knime.core.node.NodeDialogPane;
  * @author Thomas Gabriel, University of Konstanz
  */
 public class RadialBasisFunctionPredictorNodeFactory 
-        extends GenericNodeFactory<RadialBasisFunctionPredictorNodeModel> {
+        extends NodeFactory<RadialBasisFunctionPredictorNodeModel> {
     
     /**
      * {@inheritDoc}
@@ -53,7 +53,7 @@ public class RadialBasisFunctionPredictorNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<RadialBasisFunctionPredictorNodeModel> 
+    public NodeView<RadialBasisFunctionPredictorNodeModel> 
             createNodeView(final int i, 
             final RadialBasisFunctionPredictorNodeModel nodeModel) {
         return null;

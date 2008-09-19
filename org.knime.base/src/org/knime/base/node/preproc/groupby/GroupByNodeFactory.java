@@ -24,8 +24,8 @@
  */
 package org.knime.base.node.preproc.groupby;
 
-import org.knime.core.node.GenericNodeDialogPane;
-import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
@@ -33,13 +33,13 @@ import org.knime.core.node.NodeView;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class GroupByNodeFactory extends GenericNodeFactory<GroupByNodeModel> {
+public class GroupByNodeFactory extends NodeFactory<GroupByNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected GenericNodeDialogPane createNodeDialogPane() {
+    protected NodeDialogPane createNodeDialogPane() {
         return new GroupByNodeDialog();
     }
 

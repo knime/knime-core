@@ -35,7 +35,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
@@ -74,7 +74,7 @@ import javax.swing.event.ChangeListener;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public abstract class AbstractHistogramNodeModel extends GenericNodeModel {
+public abstract class AbstractHistogramNodeModel extends NodeModel {
     private static final NodeLogger LOGGER = NodeLogger
         .getLogger(AbstractHistogramNodeModel.class);
     /**Default number of rows to use.*/

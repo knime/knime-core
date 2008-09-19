@@ -24,7 +24,7 @@
  */
 package org.knime.base.node.mine.svm.learner;
 
-import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeDialogPane;
 
 /**
@@ -33,7 +33,7 @@ import org.knime.core.node.NodeDialogPane;
  * @author cebron, University of Konstanz
  */
 public class SVMLearnerNodeFactory extends
-        GenericNodeFactory<SVMLearnerNodeModel> {
+        NodeFactory<SVMLearnerNodeModel> {
 
     /**
      * {@inheritDoc}

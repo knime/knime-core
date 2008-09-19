@@ -22,8 +22,8 @@
  */
 package org.knime.base.node.io.filereader;
 
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeDialogPane;
 
 /**
@@ -31,7 +31,7 @@ import org.knime.core.node.NodeDialogPane;
  * @author ohl, University of Konstanz
  */
 public class VariableFileReaderNodeFactory extends
-        GenericNodeFactory<VariableFileReaderNodeModel> {
+        NodeFactory<VariableFileReaderNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -53,7 +53,7 @@ public class VariableFileReaderNodeFactory extends
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<VariableFileReaderNodeModel> createNodeView(
+    public NodeView<VariableFileReaderNodeModel> createNodeView(
             final int index, final VariableFileReaderNodeModel model) {
         return null;
     }

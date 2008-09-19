@@ -43,7 +43,7 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.ModelContentRO;
 
 /**
@@ -121,7 +121,7 @@ public final class ModelContentOutPortView extends JComponent {
            }
         });
         setLayout(new BorderLayout());
-        setBackground(GenericNodeView.COLOR_BACKGROUND);
+        setBackground(NodeView.COLOR_BACKGROUND);
         add(new JScrollPane(m_tree), BorderLayout.CENTER);
         update();
     }

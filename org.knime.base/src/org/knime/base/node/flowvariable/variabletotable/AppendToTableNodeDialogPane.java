@@ -33,7 +33,7 @@ import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
 import org.knime.base.util.scopevariable.ScopeVariableListCellRenderer;
-import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -46,7 +46,7 @@ import org.knime.core.util.Pair;
  * 
  * @author wiswedel, University of Konstanz
  */
-class AppendToTableNodeDialogPane extends GenericNodeDialogPane {
+class AppendToTableNodeDialogPane extends NodeDialogPane {
 
     private final JList m_list;
 

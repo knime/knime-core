@@ -25,7 +25,7 @@
 package org.knime.base.node.viz.condbox;
 
 import org.knime.base.node.viz.plotter.box.BoxPlotter;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeModel;
 
 /**
@@ -34,7 +34,7 @@ import org.knime.core.node.NodeModel;
  * @author Stephan Sellien, University of Konstanz
  * 
  */
-public class ConditionalBoxPlotNodeView extends GenericNodeView<NodeModel> {
+public class ConditionalBoxPlotNodeView extends NodeView<NodeModel> {
 
     private final BoxPlotter m_plotter = new BoxPlotter();
 

@@ -24,8 +24,8 @@
  */
 package org.knime.base.node.viz.property.color;
 
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeDialogPane;
 
 /**
@@ -34,7 +34,7 @@ import org.knime.core.node.NodeDialogPane;
  * @author Thomas Gabriel, University of Konstanz
  */
 public class ColorAppender2NodeFactory 
-    extends GenericNodeFactory<ColorAppender2NodeModel> {
+    extends NodeFactory<ColorAppender2NodeModel> {
     /**
      * {@inheritDoc}
      */
@@ -55,7 +55,7 @@ public class ColorAppender2NodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<ColorAppender2NodeModel> 
+    public NodeView<ColorAppender2NodeModel> 
         createNodeView(final int viewIndex, final ColorAppender2NodeModel nm) {
         assert false;
         return null;

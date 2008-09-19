@@ -21,8 +21,8 @@
  */
 package org.knime.base.node.preproc.filter.column;
 
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeDialogPane;
 
 /**
@@ -33,7 +33,7 @@ import org.knime.core.node.NodeDialogPane;
  * @author Christoph Sieb, University of Konstanz
  */
 public class FilterColumnNodeFactory 
-        extends GenericNodeFactory<FilterColumnNodeModel> {
+        extends NodeFactory<FilterColumnNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -55,7 +55,7 @@ public class FilterColumnNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<FilterColumnNodeModel> createNodeView(final int i, 
+    public NodeView<FilterColumnNodeModel> createNodeView(final int i, 
             final FilterColumnNodeModel nodeModel) {
         return null;
     }

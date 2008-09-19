@@ -70,7 +70,7 @@ import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 import org.knime.core.data.renderer.DoubleGrayValueRenderer;
 import org.knime.core.data.renderer.DoubleValueRenderer;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.tableview.TableContentModel;
 import org.knime.core.node.tableview.TableContentView;
 import org.knime.core.node.tableview.TableView;
@@ -79,7 +79,7 @@ import org.knime.core.node.tableview.TableView;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class PMCCNodeView extends GenericNodeView<PMCCNodeModel> {
+public class PMCCNodeView extends NodeView<PMCCNodeModel> {
 
     private final TableView m_tableView;
     private String m_currentRendererID = ColorRender.DESCRIPTION;

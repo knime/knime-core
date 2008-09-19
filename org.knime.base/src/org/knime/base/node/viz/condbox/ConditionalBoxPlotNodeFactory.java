@@ -24,8 +24,8 @@
  */
 package org.knime.base.node.viz.condbox;
 
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeModel;
 
@@ -36,7 +36,7 @@ import org.knime.core.node.NodeModel;
  * 
  */
 public class ConditionalBoxPlotNodeFactory 
-    extends GenericNodeFactory<NodeModel> {
+    extends NodeFactory<NodeModel> {
     /**
      * {@inheritDoc}
      */
@@ -57,7 +57,7 @@ public class ConditionalBoxPlotNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<NodeModel> createNodeView(final int viewIndex,
+    public NodeView<NodeModel> createNodeView(final int viewIndex,
             final NodeModel nodeModel) {
         return new ConditionalBoxPlotNodeView(
                 (ConditionalBoxPlotNodeModel)nodeModel);

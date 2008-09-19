@@ -18,8 +18,8 @@
  */
 package org.knime.base.node.preproc.colsort;
 
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeDialogPane;
 
 /**
@@ -27,7 +27,7 @@ import org.knime.core.node.NodeDialogPane;
  * @author schweize, University of Konstanz
  */
 public class ColumnResorterNodeFactory 
-    extends GenericNodeFactory<ColumnResorterNodeModel> {
+    extends NodeFactory<ColumnResorterNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -49,7 +49,7 @@ public class ColumnResorterNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<ColumnResorterNodeModel> createNodeView(
+    public NodeView<ColumnResorterNodeModel> createNodeView(
             final int viewIndex, final ColumnResorterNodeModel nodeModel) {
         return null;
     }

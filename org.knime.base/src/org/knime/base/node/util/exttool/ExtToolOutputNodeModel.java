@@ -38,7 +38,6 @@ import java.util.Observer;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.port.PortType;
 
@@ -58,7 +57,7 @@ import org.knime.core.node.port.PortType;
  *
  * @author Kilian Thiel, University of Konstanz
  */
-public abstract class ExtToolOutputNodeModel extends GenericNodeModel implements
+public abstract class ExtToolOutputNodeModel extends NodeModel implements
         Observer {
 
     // StdOut, StdErr Buffers

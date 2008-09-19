@@ -30,7 +30,7 @@ import javax.swing.JScrollPane;
 import org.knime.base.node.mine.regression.linear.LinearRegressionContent;
 import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 
 /**
  * View on the linear regression learner node. It only has a text pane where
@@ -39,7 +39,7 @@ import org.knime.core.node.GenericNodeView;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class LinRegLearnerNodeView 
-    extends GenericNodeView<LinRegLearnerNodeModel> {
+    extends NodeView<LinRegLearnerNodeModel> {
     
     /** The text pane that holds the information. */
     private final JEditorPane m_pane;

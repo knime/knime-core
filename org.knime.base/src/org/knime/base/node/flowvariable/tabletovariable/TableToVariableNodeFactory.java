@@ -25,8 +25,8 @@
 package org.knime.base.node.flowvariable.tabletovariable;
 
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.port.PortType;
 
@@ -36,7 +36,7 @@ import org.knime.core.node.port.PortType;
  * @author wiswedel, University of Konstanz
  */
 public class TableToVariableNodeFactory 
-    extends GenericNodeFactory<TableToVariableNodeModel> {
+    extends NodeFactory<TableToVariableNodeModel> {
     
     private final PortType m_inOutType;
     
@@ -70,7 +70,7 @@ public class TableToVariableNodeFactory
 
     /** {@inheritDoc} */
     @Override
-    public GenericNodeView<TableToVariableNodeModel> createNodeView(
+    public NodeView<TableToVariableNodeModel> createNodeView(
             final int index, final TableToVariableNodeModel model) {
         return null;
     }

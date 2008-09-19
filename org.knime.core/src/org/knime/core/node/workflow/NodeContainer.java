@@ -36,9 +36,9 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeDialogPane;
-import org.knime.core.node.GenericNodeModel;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeDialog;
@@ -47,7 +47,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.GenericNodeFactory.NodeType;
+import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -502,7 +502,7 @@ public abstract class NodeContainer {
      * @return A dialog pane for the corresponding node.
      * @throws NotConfigurableException if node can not be configured
      */
-    public GenericNodeDialogPane getDialogPaneWithSettings()
+    public NodeDialogPane getDialogPaneWithSettings()
         throws NotConfigurableException {
         if (!hasDialog()) {
             throw new IllegalStateException(
@@ -559,10 +559,10 @@ public abstract class NodeContainer {
 
     public abstract boolean hasDialog();
 
-    abstract GenericNodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs)
+    abstract NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs)
             throws NotConfigurableException;
 
-    abstract GenericNodeDialogPane getDialogPane();
+    abstract NodeDialogPane getDialogPane();
 
     public abstract boolean areDialogAndNodeSettingsEqual();
 
@@ -594,7 +594,7 @@ public abstract class NodeContainer {
 
     public abstract String getViewName(final int i);
 
-    public abstract GenericNodeView<GenericNodeModel> getView(final int i);
+    public abstract NodeView<NodeModel> getView(final int i);
 
 
 

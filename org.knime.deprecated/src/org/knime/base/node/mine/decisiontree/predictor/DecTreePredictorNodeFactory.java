@@ -26,8 +26,8 @@ package org.knime.base.node.mine.decisiontree.predictor;
 
 import org.knime.base.node.mine.decisiontree2.predictor.DecTreePredictorNodeModel;
 import org.knime.base.node.mine.decisiontree2.predictor.DecTreePredictorNodeView;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
@@ -37,7 +37,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
  *
  * @author Michael Berthold, University of Konstanz
  */
-public class DecTreePredictorNodeFactory extends GenericNodeFactory<DecTreePredictorNodeModel> {
+public class DecTreePredictorNodeFactory extends NodeFactory<DecTreePredictorNodeModel> {
     /**
      * {@inheritDoc}
      */
@@ -58,7 +58,7 @@ public class DecTreePredictorNodeFactory extends GenericNodeFactory<DecTreePredi
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<DecTreePredictorNodeModel> createNodeView(final int viewIndex,
+    public NodeView<DecTreePredictorNodeModel> createNodeView(final int viewIndex,
             final DecTreePredictorNodeModel nodeModel) {
         return new DecTreePredictorNodeView(nodeModel);
     }

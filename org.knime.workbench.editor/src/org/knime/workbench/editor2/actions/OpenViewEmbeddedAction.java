@@ -31,7 +31,7 @@ import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.Workbench;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.ui.views.EmbeddedNodeView;
@@ -77,7 +77,7 @@ public class OpenViewEmbeddedAction extends OpenViewAction {
             if (part != null) {
                 EmbeddedNodeView view = (EmbeddedNodeView)part;
 
-                GenericNodeView<?> nodeView = m_container.getView(m_viewIndex);
+                NodeView<?> nodeView = m_container.getView(m_viewIndex);
 
                 // sets the Node-view to the Eclipse-View...
                 view.setNodeView(nodeView);

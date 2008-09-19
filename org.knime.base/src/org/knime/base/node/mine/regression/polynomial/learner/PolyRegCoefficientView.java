@@ -21,7 +21,7 @@
  */
 package org.knime.base.node.mine.regression.polynomial.learner;
 
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 
 /**
  * This view show a simple table with all the coefficients for each attributed
@@ -30,7 +30,7 @@ import org.knime.core.node.GenericNodeView;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class PolyRegCoefficientView extends
-        GenericNodeView<PolyRegLearnerNodeModel> {
+        NodeView<PolyRegLearnerNodeModel> {
     private final CoefficientTable m_coeffTable;
 
     /**

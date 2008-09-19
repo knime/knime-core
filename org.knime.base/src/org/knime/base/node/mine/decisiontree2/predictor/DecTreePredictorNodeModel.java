@@ -47,7 +47,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
@@ -63,7 +63,7 @@ import org.knime.core.node.port.PortType;
  *
  * @author Michael Berthold, University of Konstanz
  */
-public class DecTreePredictorNodeModel extends GenericNodeModel {
+public class DecTreePredictorNodeModel extends NodeModel {
     /** Index of input data port. */
     public static final int INDATAPORT = 1;
 

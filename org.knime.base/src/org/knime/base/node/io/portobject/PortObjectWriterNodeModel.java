@@ -30,7 +30,7 @@ import java.io.IOException;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -46,7 +46,7 @@ import org.knime.core.node.port.PortUtil;
  * 
  * @author M. Berthold, University of Konstanz
  */
-class PortObjectWriterNodeModel extends GenericNodeModel {
+class PortObjectWriterNodeModel extends NodeModel {
 
     /** key for filename entry in config object. */
     static final String FILENAME = "filename";

@@ -28,8 +28,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.ui.views.properties.IPropertySource;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
 import org.knime.workbench.repository.model.props.NodePropertySource;
 
 /**
@@ -83,7 +83,7 @@ public class NodeTemplate extends AbstractSimpleObject {
         TYPES.add(TYPE_OTHER);
     }
 
-    private Class<GenericNodeFactory<? extends GenericNodeModel>> m_factory;
+    private Class<NodeFactory<? extends NodeModel>> m_factory;
 
     private String m_type;
     
@@ -103,7 +103,7 @@ public class NodeTemplate extends AbstractSimpleObject {
      * @return Returns the factory.
      */
     @SuppressWarnings("unchecked")
-    public Class<GenericNodeFactory<? extends GenericNodeModel>> getFactory() {
+    public Class<NodeFactory<? extends NodeModel>> getFactory() {
         return m_factory;
     }
 
@@ -112,7 +112,7 @@ public class NodeTemplate extends AbstractSimpleObject {
      */
     @SuppressWarnings("unchecked")
     public void setFactory(
-            final Class<GenericNodeFactory<? extends GenericNodeModel>> 
+            final Class<NodeFactory<? extends NodeModel>> 
             factory) {
         m_factory = factory;
     }

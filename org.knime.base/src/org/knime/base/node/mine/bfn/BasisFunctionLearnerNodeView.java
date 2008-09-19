@@ -27,7 +27,7 @@ package org.knime.base.node.mine.bfn;
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
@@ -42,7 +42,7 @@ import org.knime.core.node.NodeLogger;
  */
 public class BasisFunctionLearnerNodeView
     <T extends BasisFunctionLearnerNodeModel> 
-        extends GenericNodeView<T> {
+        extends NodeView<T> {
     
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(BasisFunctionLearnerNodeView.class);

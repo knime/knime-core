@@ -21,9 +21,9 @@
  */
 package org.knime.base.node.viz.property.shape;
 
-import org.knime.core.node.GenericNodeDialogPane;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  * The shape manager factory which creates a
@@ -35,7 +35,7 @@ import org.knime.core.node.GenericNodeView;
  * @author Thomas Gabriel, University of Konstanz
  */
 public class ShapeManagerNodeFactory 
-        extends GenericNodeFactory<ShapeManagerNodeModel> {
+        extends NodeFactory<ShapeManagerNodeModel> {
     
     /**
      * Empty default constructor.
@@ -64,7 +64,7 @@ public class ShapeManagerNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeDialogPane createNodeDialogPane() {
+    public NodeDialogPane createNodeDialogPane() {
         return new ShapeManagerNodeDialogPane();
     }
 
@@ -80,7 +80,7 @@ public class ShapeManagerNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<ShapeManagerNodeModel> createNodeView(
+    public NodeView<ShapeManagerNodeModel> createNodeView(
             final int index, final ShapeManagerNodeModel nodeModel) {
         return null;
     }

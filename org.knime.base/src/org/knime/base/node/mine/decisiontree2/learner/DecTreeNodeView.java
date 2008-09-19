@@ -37,8 +37,8 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeRenderer;
 import org.knime.core.data.RowKey;
-import org.knime.core.node.GenericNodeModel;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
@@ -47,7 +47,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  *
  * @author mb, University of Konstanz
  */
-public class DecTreeNodeView extends GenericNodeView<DecisionTreeLearnerNodeModel> {
+public class DecTreeNodeView extends NodeView<DecisionTreeLearnerNodeModel> {
 
     private JTree m_jTree;
 
@@ -85,7 +85,7 @@ public class DecTreeNodeView extends GenericNodeView<DecisionTreeLearnerNodeMode
      */
     @Override
     protected void modelChanged() {
-        GenericNodeModel model = this.getNodeModel();
+        NodeModel model = this.getNodeModel();
         DecisionTree dt = ((DecisionTreeLearnerNodeModel)model).
                                 getDecisionTree();
         if (dt != null) {

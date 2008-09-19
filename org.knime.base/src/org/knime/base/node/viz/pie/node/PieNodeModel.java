@@ -25,6 +25,17 @@
 
 package org.knime.base.node.viz.pie.node;
 
+import java.awt.Color;
+import java.io.File;
+import java.io.IOException;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.pie.datamodel.PieVizModel;
+import org.knime.base.node.viz.pie.util.PieColumnFilter;
+import org.knime.base.node.viz.pie.util.TooManySectionsException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -34,7 +45,6 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
@@ -49,25 +59,13 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.ColumnFilter;
 import org.knime.core.node.util.DataValueColumnFilter;
 
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.pie.datamodel.PieVizModel;
-import org.knime.base.node.viz.pie.util.PieColumnFilter;
-import org.knime.base.node.viz.pie.util.TooManySectionsException;
-
-import java.awt.Color;
-import java.io.File;
-import java.io.IOException;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 /**
  * The abstract pie chart implementation of the{@link NodeModel} class.
  * @author Tobias Koetter, University of Konstanz
  * @param <D> the {@link PieVizModel} implementation
  */
 public abstract class PieNodeModel<D extends PieVizModel>
-extends GenericNodeModel {
+extends NodeModel {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(PieNodeModel.class);

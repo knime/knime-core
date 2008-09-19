@@ -21,7 +21,7 @@
  */
 package org.knime.base.node.mine.cluster.kmeans;
 
-import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeDialogPane;
 
 /**
@@ -29,7 +29,7 @@ import org.knime.core.node.NodeDialogPane;
  * 
  * @author Michael Berthold, University of Konstanz
  */
-public class ClusterNodeFactory extends GenericNodeFactory<ClusterNodeModel> {
+public class ClusterNodeFactory extends NodeFactory<ClusterNodeModel> {
     /**
      * {@inheritDoc}
      */

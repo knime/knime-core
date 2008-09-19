@@ -29,7 +29,7 @@ import java.io.IOException;
 import javax.swing.JComponent;
 
 import org.knime.core.internal.SerializerMethodLoader.Serializer;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeModel;
 
 /**
  * General interface for object specifications that are passed along node
@@ -37,7 +37,7 @@ import org.knime.core.node.GenericNodeModel;
  * {@link org.knime.core.data.DataTableSpec}, which is used to represent table
  * specification. <code>PortObjectSpec</code> objects represent the
  * information that is necessary during a node's
- * {@link GenericNodeModel#configure(PortObjectSpec[]) configuration step}.
+ * {@link NodeModel#configure(PortObjectSpec[]) configuration step}.
  * They are assumed to be fairly small objects (usually reside in memory) and
  * describe the general structure of {@link PortObject} objects (which are
  * passed along the connections during a node's execution). Both the class of a

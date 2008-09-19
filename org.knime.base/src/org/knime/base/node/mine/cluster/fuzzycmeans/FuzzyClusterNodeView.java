@@ -27,7 +27,7 @@ package org.knime.base.node.mine.cluster.fuzzycmeans;
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 
 /**
  * The FuzzyClusterNodeView provides the user with information about the quality
@@ -36,7 +36,7 @@ import org.knime.core.node.GenericNodeView;
  * @author Nicolas Cebron, University of Konstanz
  */
 public class FuzzyClusterNodeView extends
-        GenericNodeView<FuzzyClusterNodeModel> {
+        NodeView<FuzzyClusterNodeModel> {
     /*
      * The underlying FuzzyClusterNodeModel
      */

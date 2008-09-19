@@ -44,7 +44,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
@@ -64,7 +64,7 @@ import org.knime.core.node.port.viewproperty.ColorHandlerPortObject;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class ColorManager2NodeModel extends GenericNodeModel {
+class ColorManager2NodeModel extends NodeModel {
         
     /** Logger for this package. */
     static final NodeLogger LOGGER = NodeLogger.getLogger("Color Manager");

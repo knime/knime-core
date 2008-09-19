@@ -36,14 +36,14 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.workflow.LoopStartNode;
+import org.knime.core.node.workflow.LoopStartNodeWhileDo;
 
 /**
  * 
  * @author mb, University of Konstanz
  */
 public class LoopingFileReaderNodeModel extends FileReaderNodeModel implements
-        LoopStartNode {
+        LoopStartNodeWhileDo {
 
     private int m_currentIteration = 0;
 
@@ -120,6 +120,14 @@ public class LoopingFileReaderNodeModel extends FileReaderNodeModel implements
         return super.execute(data, exec);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean terminateLoop() {
+        return m_currentIteration > m_fileArray.length;
+    }
+    
     /**
      * {@inheritDoc}
      */

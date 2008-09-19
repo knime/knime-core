@@ -35,7 +35,6 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
@@ -52,7 +51,7 @@ import org.knime.core.util.DuplicateKeyException;
  *
  * @author ohl, University of Konstanz
  */
-public class VariableFileReaderNodeModel extends GenericNodeModel {
+public class VariableFileReaderNodeModel extends NodeModel {
 
     /** The node logger fot this class. */
     private static final NodeLogger LOGGER =

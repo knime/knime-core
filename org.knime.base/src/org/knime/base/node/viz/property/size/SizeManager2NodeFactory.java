@@ -24,8 +24,8 @@
  */
 package org.knime.base.node.viz.property.size;
 
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeDialogPane;
 
 /**
@@ -33,7 +33,7 @@ import org.knime.core.node.NodeDialogPane;
  * @author Thomas Gabriel, University of Konstanz
  */
 public class SizeManager2NodeFactory 
-        extends GenericNodeFactory<SizeManager2NodeModel> {
+        extends NodeFactory<SizeManager2NodeModel> {
     
     /**
      * Empty default constructor.
@@ -78,7 +78,7 @@ public class SizeManager2NodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<SizeManager2NodeModel> createNodeView(
+    public NodeView<SizeManager2NodeModel> createNodeView(
             final int index, final SizeManager2NodeModel nodeModel) {
         return null;
     }

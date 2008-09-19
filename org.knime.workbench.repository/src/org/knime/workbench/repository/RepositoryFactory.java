@@ -36,8 +36,8 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.repository.model.Category;
@@ -91,17 +91,17 @@ public final class RepositoryFactory {
         node.setAfterID(str(element.getAttribute("after"), ""));
 
         // Try to load the node factory class...
-        GenericNodeFactory<? extends GenericNodeModel> factory;
+        NodeFactory<? extends NodeModel> factory;
         try {
 
             // this ensures that the class is loaded by the correct eclipse
             // classloaders
             factory =
-                    (GenericNodeFactory<? extends GenericNodeModel>)element
+                    (NodeFactory<? extends NodeModel>)element
                             .createExecutableExtension("factory-class");
 
             node.setFactory(
-                    (Class<GenericNodeFactory<? extends GenericNodeModel>>)
+                    (Class<NodeFactory<? extends NodeModel>>)
                     factory.getClass());
         } catch (Throwable e) {
             throw new IllegalArgumentException(
@@ -126,7 +126,7 @@ public final class RepositoryFactory {
             // get default image if null
             if (icon == null) {
                 icon = ImageRepository.getScaledImage(
-                        GenericNodeFactory.getDefaultIcon(), 16, 16);
+                        NodeFactory.getDefaultIcon(), 16, 16);
             }
             // FIXME dispose this somewhere !!
             node.setIcon(icon);

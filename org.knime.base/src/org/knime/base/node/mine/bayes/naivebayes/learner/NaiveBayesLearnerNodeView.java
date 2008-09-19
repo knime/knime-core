@@ -23,7 +23,7 @@
 
 package org.knime.base.node.mine.bayes.naivebayes.learner;
 
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeView;
 
 import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
 
@@ -37,7 +37,7 @@ import javax.swing.JScrollPane;
  * @author Tobias Koetter
  */
 public class NaiveBayesLearnerNodeView
-extends GenericNodeView<NaiveBayesLearnerNodeModel> {
+extends NodeView<NaiveBayesLearnerNodeModel> {
 
 
     private NaiveBayesModel m_model;

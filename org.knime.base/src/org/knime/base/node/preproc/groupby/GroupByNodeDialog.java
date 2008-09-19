@@ -26,7 +26,7 @@
 package org.knime.base.node.preproc.groupby;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -62,7 +62,7 @@ import javax.swing.event.ChangeListener;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class GroupByNodeDialog extends GenericNodeDialogPane {
+public class GroupByNodeDialog extends NodeDialogPane {
 
     /**The width of the default component.*/
     public static final int COMPONENT_WIDTH = 680;

@@ -40,7 +40,7 @@ import javax.swing.JTextField;
 
 import org.knime.base.node.meta.looper.condition.ConditionLoopTailSettings.Operator;
 import org.knime.base.util.scopevariable.ScopeVariableListCellRenderer;
-import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -55,7 +55,7 @@ import org.knime.core.node.workflow.ScopeVariable.Type;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ConditionLoopTailNodeDialog extends GenericNodeDialogPane {
+public class ConditionLoopTailNodeDialog extends NodeDialogPane {
     private static final Object[] NUMERIC_OPERATORS =
             {Operator.EQ, Operator.LE, Operator.LT, Operator.GE, Operator.GT,
                     Operator.NE};

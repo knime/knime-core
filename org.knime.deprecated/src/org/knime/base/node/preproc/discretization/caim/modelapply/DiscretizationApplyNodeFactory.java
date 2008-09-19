@@ -24,8 +24,8 @@
 package org.knime.base.node.preproc.discretization.caim.modelapply;
 
 import org.knime.base.node.preproc.discretization.caim2.modelapply.DiscretizationApplyNodeModel;
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeDialogPane;
 
 /**
@@ -34,7 +34,7 @@ import org.knime.core.node.NodeDialogPane;
  * @author Christoph Sieb, University of Konstanz
  */
 public class DiscretizationApplyNodeFactory 
-        extends GenericNodeFactory<DiscretizationApplyNodeModel> {
+        extends NodeFactory<DiscretizationApplyNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -56,7 +56,7 @@ public class DiscretizationApplyNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<DiscretizationApplyNodeModel> createNodeView(
+    public NodeView<DiscretizationApplyNodeModel> createNodeView(
             final int i, final DiscretizationApplyNodeModel nodeModel) {
         return null;
     }

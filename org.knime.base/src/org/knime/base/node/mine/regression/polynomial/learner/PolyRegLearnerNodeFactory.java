@@ -21,8 +21,8 @@
  */
 package org.knime.base.node.mine.regression.polynomial.learner;
 
-import org.knime.core.node.GenericNodeFactory;
-import org.knime.core.node.GenericNodeView;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeDialogPane;
 
 /**
@@ -32,7 +32,7 @@ import org.knime.core.node.NodeDialogPane;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class PolyRegLearnerNodeFactory extends
-        GenericNodeFactory<PolyRegLearnerNodeModel> {
+        NodeFactory<PolyRegLearnerNodeModel> {
     /**
      * {@inheritDoc}
      */
@@ -53,7 +53,7 @@ public class PolyRegLearnerNodeFactory extends
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<PolyRegLearnerNodeModel> createNodeView(
+    public NodeView<PolyRegLearnerNodeModel> createNodeView(
             final int viewIndex, final PolyRegLearnerNodeModel nodeModel) {
         if (viewIndex == 0) {
             return new PolyRegCoefficientView(nodeModel);
