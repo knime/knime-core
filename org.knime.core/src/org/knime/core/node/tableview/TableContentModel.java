@@ -42,6 +42,7 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
@@ -313,6 +314,9 @@ public class TableContentModel extends AbstractTableModel
         m_data = data;
         m_cachedRows = null;
         m_hilitSet = null;
+        if (m_iterator instanceof CloseableRowIterator) {
+            ((CloseableRowIterator)m_iterator).close();
+        }
         m_iterator = null;
         m_rowCountOfInterestInIterator = 0;
         m_rowCountOfInterest = 0;
@@ -989,6 +993,9 @@ public class TableContentModel extends AbstractTableModel
     protected void clearCache() {
         if (!hasData()) {
             return;
+        }
+        if (m_iterator instanceof CloseableRowIterator) {
+            ((CloseableRowIterator)m_iterator).close();
         }
         m_iterator = m_data.iterator();
         m_rowCountInIterator = 0;
