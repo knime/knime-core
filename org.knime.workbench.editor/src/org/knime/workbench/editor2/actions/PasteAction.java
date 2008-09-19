@@ -50,6 +50,8 @@ import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 public class PasteAction extends AbstractClipboardAction {
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(PasteAction.class);
+    
+    private static final int OFFSET = 120;
 
     /**
      * Constructs a new clipboard paste action.
@@ -146,75 +148,6 @@ public class PasteAction extends AbstractClipboardAction {
         // Give focus to the editor again. Otherwise the actions (selection)
         // is not updated correctly.
         getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
-        
-        // TODO: functionality disabled
-        /*
-        // cast the clipboard object representing a sub workflow
-        NodeSettings copySettings = (NodeSettings)clipboardContent.getContent();
-        int[][] newPartIds = null;
-        try {
-            newPartIds = manager.createSubWorkflow(copySettings);
-
-            int[] shift = calculateShift(newPartIds[0]);
-            for (int i = 0; i < newPartIds[0].length; i++) {
-                NodeContainer nc =
-                        manager.getNodeContainerById(newPartIds[0][i]);
-                // finaly change the extra info so that the copies are
-                // located differently (if not null)
-                NodeExtraInfo extraInfo = nc.getExtraInfo();
-                
-                if (extraInfo != null) {
-                    extraInfo.changePosition(shift);
-                    nc.setExtraInfo(extraInfo);
-                    // this is a bit dirty but
-                    // needed to trigger the re-layout of the node
-                }
-            }
-            // now process the connections
-            for (int i = 0; i < newPartIds[1].length; i++) {
-                ConnectionContainer cc =
-                        manager.getConnectionContainerById(newPartIds[1][i]);
-                // finaly change the extra info so that the copies are
-                // located differently (if not null)
-                ModellingConnectionExtraInfo extraInfo =
-                        (ModellingConnectionExtraInfo)cc.getExtraInfo();
-                if (extraInfo != null) {
-                    extraInfo.changePosition(shift);
-                    cc.setExtraInfo(extraInfo);
-                }
-
-            }
-        } catch (Exception ex) {
-            LOGGER.error("Could not copy nodes", ex);
-        }
-
-        EditPartViewer partViewer = getEditor().getViewer();
-
-        // deselect the current selection and select the new pasted parts
-        for (NodeContainerEditPart nodePart : nodeParts) {
-            partViewer.deselect(nodePart);
-        }
-
-        for (ConnectionContainerEditPart connectionPart 
-        : getSelectedConnectionParts()) {
-            partViewer.deselect(connectionPart);
-        }
-
-        // get the new ediparts and select them
-        List<AbstractWorkflowEditPart> newParts =
-                getEditPartsById(newPartIds[0], newPartIds[1]);
-
-        for (AbstractWorkflowEditPart newPart : newParts) {
-            partViewer.appendSelection(newPart);
-        }
-
-        // update the actions
-        getEditor().updateActions();
-
-        // Give focus to the editor again. Otherwise the actions (selection)
-        // is not updated correctly.
-        getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
-    */
     }
 
     /**
@@ -223,10 +156,13 @@ public class PasteAction extends AbstractClipboardAction {
      * @return
      */
     protected int[] calculateShift(NodeID[] ids) {
-        int x = getEditor().getSelectionTool().getXLocation();
-        int y = getEditor().getSelectionTool().getYLocation();
+        // simply return the offset 
+        // the uiInfo.changePosition(moveDist); adds the distance to the 
+        // current location of the node
         int counter = getEditor().getClipboardContent().getRetrievalCounter();
         counter += 1;
-        return new int[] {x * counter, y * counter};
+        int newX = (OFFSET * counter);
+        int newY = (OFFSET * counter);
+        return new int[] {newX, newY};
     }
 }
