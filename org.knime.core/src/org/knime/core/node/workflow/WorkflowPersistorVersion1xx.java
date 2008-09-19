@@ -57,8 +57,7 @@ import org.knime.core.node.port.PortType;
 class WorkflowPersistorVersion1xx implements WorkflowPersistor {
 
     /** The node logger for this class. */
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(WorkflowPersistorVersion1xx.class);
+    private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
     
     private static final PortType FALLBACK_PORTTYPE = 
         new PortType(PortObject.class);
@@ -102,6 +101,10 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         m_nodeContainerLoaderMap = 
             new TreeMap<Integer, NodeContainerPersistor>();
         m_connectionSet = new HashSet<ConnectionContainerTemplate>();
+    }
+    
+    protected NodeLogger getLogger() {
+        return m_logger;
     }
     
     /** {@inheritDoc} */
@@ -205,7 +208,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             m_loadVersion = loadVersion(m_workflowSett);
         } catch (InvalidSettingsException e) {
             String error = "Unable to load version string: " + e.getMessage();
-            LOGGER.debug(error, e);
+            getLogger().debug(error, e);
             loadResult.addError(error);
             // this will enforce the WFM to save everything from scratch
             m_loadVersion = "1.3.0";
@@ -215,7 +218,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             m_name = loadWorkflowName(m_workflowSett);
         } catch (InvalidSettingsException e) {
             String error = "Unable to load workflow name: " + e.getMessage();
-            LOGGER.debug(error, e);
+            getLogger().debug(error, e);
             loadResult.addError(error);
             m_name = "Workflow";
         }
@@ -234,7 +237,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             }
         } catch (InvalidSettingsException e) {
             String error = "Can't load workflow ports, config not found";
-            LOGGER.debug(error, e);
+            getLogger().debug(error, e);
             loadResult.addError(error);
             setNeedsResetAfterLoad();
         }
@@ -248,7 +251,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             } catch (InvalidSettingsException e) {
                 String error = "Can't load workflow inport (internal ID \""
                     + key + "\", skipping it: " + e.getMessage();
-                LOGGER.debug(error, e);
+                getLogger().debug(error, e);
                 loadResult.addError(error);
                 setNeedsResetAfterLoad();
                 continue;
@@ -283,7 +286,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         } catch (InvalidSettingsException e) {
             String error = "Can't load workflow out ports, config not found: "
                 + e.getMessage();
-            LOGGER.debug(error, e);
+            getLogger().debug(error, e);
             loadResult.addError(error);
             setNeedsResetAfterLoad();
         }
@@ -297,7 +300,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             } catch (InvalidSettingsException e) {
                 String error = "Can't load workflow outport (internal ID \""
                     + key + "\", skipping it: " + e.getMessage();
-                LOGGER.debug(error, e);
+                getLogger().debug(error, e);
                 loadResult.addError(error);
                 setNeedsResetAfterLoad();
                 continue;
@@ -341,7 +344,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         } catch (InvalidSettingsException e) {
             String error = "Can't load nodes in workflow, config not found: "
                 + e.getMessage();
-            LOGGER.debug(error, e);
+            getLogger().debug(error, e);
             loadResult.addError(error);
             setNeedsResetAfterLoad();
             // stop loading here
@@ -356,7 +359,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             } catch (InvalidSettingsException e) {
                 String error = "Unable to load settings for node with internal "
                     + "id \"" + nodeKey + "\": " + e.getMessage();
-                LOGGER.debug(error, e);
+                getLogger().debug(error, e);
                 loadResult.addError(error);
                 continue;
             }
@@ -371,7 +374,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 String error = "Unable to load node ID (internal id \""
                     + nodeKey + "\"), trying random number " + nodeIDSuffix
                     + "instead: " + e.getMessage();
-                LOGGER.debug(error, e);
+                getLogger().debug(error, e);
                 loadResult.addError(error);
             }
             boolean isMeta;
@@ -381,7 +384,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 String error = "Can't retrieve meta flag for contained node "
                     + "with id suffix " + nodeIDSuffix + ", attempting to read"
                     + "ordinary (not-meta) node: " + e.getMessage();
-                LOGGER.debug(error, e);
+                getLogger().debug(error, e);
                 loadResult.addError(error);
                 isMeta = false;
             }
@@ -399,7 +402,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 String error = "Unable to load UI information class name "
                     + "to node with ID suffix " + nodeIDSuffix
                     + ", no UI information available: " + e.getMessage();
-                LOGGER.debug(error, e);
+                getLogger().debug(error, e);
                 loadResult.addError(error);
                 uiInfoClassName = null;
             }
@@ -414,7 +417,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                         + uiInfoClassName + "\" to node with ID suffix " 
                         + nodeIDSuffix + ", no UI information available: "
                         + e.getMessage();
-                    LOGGER.debug(error, e);
+                    getLogger().debug(error, e);
                     loadResult.addError(error);
                     uiInfo = null;
                 }
@@ -426,7 +429,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                             + "node with ID suffix " + nodeIDSuffix
                             + ", no UI information available: " 
                             + e.getMessage();
-                        LOGGER.debug(error, e);
+                        getLogger().debug(error, e);
                         loadResult.addError(error);
                         uiInfo = null;
                     }
@@ -438,7 +441,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             } catch (InvalidSettingsException e) {
                 String error = "Unable to load settings for node " 
                     + "with ID suffix " + nodeIDSuffix + ": " + e.getMessage();
-                LOGGER.debug(error, e);
+                getLogger().debug(error, e);
                 loadResult.addError(error);
                 continue;
             }
@@ -458,9 +461,9 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                         + e.getMessage();
                 if (e instanceof InvalidSettingsException 
                         || e instanceof IOException) {
-                    LOGGER.debug(error, e);
+                    getLogger().debug(error, e);
                 } else {
-                    LOGGER.error(error, e);
+                    getLogger().error(error, e);
                 }
                 loadResult.addError(error);
                 continue;
@@ -489,7 +492,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         } catch (InvalidSettingsException e) {
             String error = "Can't load workflow connections, config not found: "
                 + e.getMessage();
-            LOGGER.debug(error, e);
+            getLogger().debug(error, e);
             loadResult.addError(error);
             connections = EMPTY_SETTINGS;
         }
@@ -500,7 +503,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             } catch (InvalidSettingsException e) {
                 String error = "Can't load connection with internal ID \""
                     + connectionKey + "\": " + e.getMessage();
-                LOGGER.debug(error, e);
+                getLogger().debug(error, e);
                 loadResult.addError(error);
                 continue;
             }
@@ -547,7 +550,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             String error =
                 "Unable to load class name for inport bar's "
                     + "UI information: " + e.getMessage();
-            LOGGER.debug(error, e);
+            getLogger().debug(error, e);
             loadResult.addError(error);
         }
         if (uiInfoClassName != null) {
@@ -560,7 +563,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 String error =
                     "Unable to load inport bar's UI information: "
                     + e.getMessage();
-                LOGGER.debug(error, e);
+                getLogger().debug(error, e);
                 loadResult.addError(error);
                 inPortsBarUIInfo = null;
             }
@@ -571,7 +574,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     String error =
                         "Unable to load inport bar's UI information: "
                         + e.getMessage();
-                    LOGGER.debug(error, e);
+                    getLogger().debug(error, e);
                     loadResult.addError(error);
                     inPortsBarUIInfo = null;
                 }
@@ -591,7 +594,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     "Unable to load class name for outport bar's UI information"
                             + ", no UI information available: "
                             + e.getMessage();
-            LOGGER.debug(error, e);
+            getLogger().debug(error, e);
             loadResult.addError(error);
         }
         if (uiInfoClassName != null) {
@@ -606,7 +609,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                                 + "class \"" + uiInfoClassName
                                 + "\", no UI information available: "
                                 + e.getMessage();
-                LOGGER.debug(error, e);
+                getLogger().debug(error, e);
                 loadResult.addError(error);
                 outPortsBarUIInfo = null;
             }
@@ -617,7 +620,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     String error = 
                         "Unable to load outport bar's UI information: "
                         + e.getMessage();
-                    LOGGER.debug(error, e);
+                    getLogger().debug(error, e);
                     loadResult.addError(error);
                     outPortsBarUIInfo = null;
                 }
@@ -671,7 +674,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             return (UIInformation)(GlobalClassCreator
                     .createClass(className).newInstance());
         } catch (Exception e) {
-            LOGGER.warn("UIInfo class \"" + className 
+            getLogger().warn("UIInfo class \"" + className 
                     + "\" could not be loaded", e);
             return null;
         }
@@ -760,11 +763,12 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 loadUIInfoSettings(uiInfo, settings);
             }
         } catch (InvalidSettingsException ise) {
-            LOGGER.debug("Could not load UI information for connection "
+            getLogger().debug("Could not load UI information for connection "
                     + "between nodes " + sourceID + " and " + destID);
         } catch (Throwable t) {
-            LOGGER.warn("Exception while loading connection UI information "
-                    + "between nodes " + sourceID + " and " + destID, t);
+            getLogger().warn("Exception while loading connection UI " 
+                    + "information between nodes " + sourceID + " and " 
+                    + destID, t);
         }
         return new ConnectionContainerTemplate(sourceID, sourcePort, destID,
                 destPort, isDeletable, uiInfo);

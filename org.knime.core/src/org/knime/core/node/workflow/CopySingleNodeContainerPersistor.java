@@ -47,23 +47,22 @@ final class CopySingleNodeContainerPersistor implements
     
     private final SingleNodeContainer m_original;
     private final Node m_node;
+    private final boolean m_preserveDeletableFlag;
     
     /**
      * 
      */
     public CopySingleNodeContainerPersistor(
-            final SingleNodeContainer original) {
+            final SingleNodeContainer original, 
+            final boolean preserveDeletableFlag) {
         m_original = original;
         m_node = new Node(m_original.getNode());
+        m_preserveDeletableFlag = preserveDeletableFlag;
     }
 
     /** {@inheritDoc} */
     @Override
     public Node getNode() {
-        if (m_node == null) {
-            throw new IllegalStateException(
-                    "Copied node is null, call preLoadNodeContainer first");
-        }
         return m_node;
     }
 
@@ -82,7 +81,8 @@ final class CopySingleNodeContainerPersistor implements
     /** {@inheritDoc} */
     @Override
     public NodeContainerMetaPersistor getMetaPersistor() {
-        return new CopyNodeContainerMetaPersistor(m_original);
+        return new CopyNodeContainerMetaPersistor(
+                m_original, m_preserveDeletableFlag);
     }
 
     /** {@inheritDoc} */

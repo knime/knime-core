@@ -38,7 +38,6 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -73,9 +72,6 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
     
     private MetaNodeType m_metaNodeType = MetaNodeType.ORDINARY;
     
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            ObsoleteMetaNodeWorkflowPersistorVersion1xx.class);
-    
     public ObsoleteMetaNodeWorkflowPersistorVersion1xx(
             final HashMap<Integer, ContainerTable> globalRep) {
         super(globalRep);
@@ -91,7 +87,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         if (!setFile.getName().equals("settings.xml")) {
             String warn = "Settings file of obsolete meta node is not "
                     + "named settings.xml: " + setFile.getName();
-            LOGGER.warn(warn);
+            getLogger().warn(warn);
             result.addError(warn);
         }
         ReferencedFile parent = nodeFileRef.getParent();
@@ -216,8 +212,9 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         PortType type;
         if ("data".equals(stype)) {
             type = BufferedDataTable.TYPE;
-//        } else if ("model".equals(stype)) {
-//            type = NodeModel.OLDSTYLEMODELPORTTYPE;
+        } else if ("model".equals(stype)) {
+            throw new InvalidSettingsException("1.x model ports no longer " 
+                    + "supported: " + stype);
         } else {
             throw new InvalidSettingsException("Unknown port: " + stype);
         }
@@ -333,11 +330,12 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
                 loadUIInfoSettings(uiInfo, settings);
             }
         } catch (InvalidSettingsException ise) {
-            LOGGER.debug("Could not load UI information for connection "
+            getLogger().debug("Could not load UI information for connection "
                     + "between nodes " + sourceID + " and " + destID);
         } catch (Throwable t) {
-            LOGGER.warn("Exception while loading connection UI information "
-                    + "between nodes " + sourceID + " and " + destID, t);
+            getLogger().warn("Exception while loading connection UI " +
+            		"information between nodes " + sourceID + " and " 
+            		+ destID, t);
         }
         return new ConnectionContainerTemplate(sourceID, sourcePort, destID,
                 destPort, /*isDeletable*/true, uiInfo);

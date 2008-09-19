@@ -780,12 +780,14 @@ public final class SingleNodeContainer extends NodeContainer
         m_node.ensureOutputDataIsRead();
         super.setDirty();
     }
-
+    
     /** {@inheritDoc} */
     @Override
     protected NodeContainerPersistor getCopyPersistor(
-            final HashMap<Integer, ContainerTable> tableRep) {
-        return new CopySingleNodeContainerPersistor(this);
+            final HashMap<Integer, ContainerTable> tableRep,
+            final boolean preserveDeletableFlags) {
+        return new CopySingleNodeContainerPersistor(
+                this, preserveDeletableFlags);
     }
 
 }

@@ -58,8 +58,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 public class SingleNodeContainerPersistorVersion1xx 
     implements SingleNodeContainerPersistor {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(SingleNodeContainerPersistorVersion1xx.class);
+    private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
     private Node m_node;
     
@@ -72,6 +71,15 @@ public class SingleNodeContainerPersistorVersion1xx
     private List<ScopeObject> m_scopeObjects;
     private LoadNodeModelSettingsFailPolicy m_settingsFailPolicy;
     
+    SingleNodeContainerPersistorVersion1xx(
+            WorkflowPersistorVersion1xx workflowPersistor) {
+        m_wfmPersistor = workflowPersistor;
+    }
+    
+    protected NodeLogger getLogger() {
+        return m_logger;
+    }
+    
     /** {@inheritDoc} */
     public boolean needsResetAfterLoad() {
         return m_needsResetAfterLoad;
@@ -80,12 +88,6 @@ public class SingleNodeContainerPersistorVersion1xx
     /** Indicate that node should be reset after load (due to load problems). */
     public void setNeedsResetAfterLoad() {
         m_needsResetAfterLoad = true;
-    }
-
-    
-    SingleNodeContainerPersistorVersion1xx(
-            WorkflowPersistorVersion1xx workflowPersistor) {
-        m_wfmPersistor = workflowPersistor;
     }
 
     public NodeContainerMetaPersistor getMetaPersistor() {
@@ -172,7 +174,7 @@ public class SingleNodeContainerPersistorVersion1xx
                     + m_metaPersistor.getNodeIDSuffix() + " (node \""
                     + m_node.getName() + "\"): " + e.getMessage();
             result.addError(error);
-            LOGGER.debug(error, e);
+            getLogger().debug(error, e);
             return result;
         }
         ReferencedFile nodeFile = new ReferencedFile(m_nodeDir, nodeFileName);
@@ -187,7 +189,7 @@ public class SingleNodeContainerPersistorVersion1xx
             result.addError(nodeLoadResult);
         } catch (final Exception e) {
             String error = "Error loading node content: " + e.getMessage();
-            LOGGER.debug(error, e);
+            getLogger().debug(error, e);
             needsResetAfterLoad();
             result.addError(error);
         }
@@ -197,7 +199,7 @@ public class SingleNodeContainerPersistorVersion1xx
             m_scopeObjects = Collections.emptyList();
             String error = "Error loading scope objects (flow variables): "
                 + e.getMessage();
-            LOGGER.debug(error, e);
+            getLogger().debug(error, e);
             result.addError(error);
             needsResetAfterLoad();
         }
@@ -251,7 +253,7 @@ public class SingleNodeContainerPersistorVersion1xx
                 if (s.endsWith("." + simpleClassName)) {
                     NodeFactory<NodeModel> f = (NodeFactory<NodeModel>)((GlobalClassCreator
                             .createClass(s)).newInstance());
-                    LOGGER.warn("Substituted '" + f.getClass().getName()
+                    getLogger().warn("Substituted '" + f.getClass().getName()
                             + "' for unknown factory '" + factoryClassName
                             + "'");
                     return f;

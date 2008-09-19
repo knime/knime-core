@@ -90,7 +90,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         private final int m_destSuffix;
         // not final, may be fixed later (puzzling port IDs in 1.x.x)
         private int m_destPort;
-        private final boolean m_isDeletable;
+        private boolean m_isDeletable;
         private final UIInformation m_uiInfo;
         
         ConnectionContainerTemplate(final int source, final int sourcePort, 
@@ -159,6 +159,13 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
          */
         boolean isDeletable() {
             return m_isDeletable;
+        }
+        
+        /**
+         * @param isDeletable the isDeletable to set
+         */
+        public void setDeletable(final boolean isDeletable) {
+            m_isDeletable = isDeletable;
         }
         
         /** @param destPort the destPort to set */

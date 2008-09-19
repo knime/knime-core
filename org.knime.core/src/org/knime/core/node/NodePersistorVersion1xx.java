@@ -44,8 +44,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 public class NodePersistorVersion1xx implements NodePersistor {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(NodePersistorVersion1xx.class);
+    private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
     private SingleNodeContainerPersistorVersion1xx 
         m_sncPersistor;
@@ -88,6 +87,10 @@ public class NodePersistorVersion1xx implements NodePersistor {
     public NodePersistorVersion1xx(
             final SingleNodeContainerPersistorVersion1xx sncPersistor) {
         m_sncPersistor = sncPersistor;
+    }
+    
+    protected NodeLogger getLogger() {
+        return m_logger;
     }
     
     protected boolean loadIsExecuted(final NodeSettingsRO settings)
@@ -150,16 +153,13 @@ public class NodePersistorVersion1xx implements NodePersistor {
                 setPortObjectSpec(i, spec);
             }
             if (m_isExecuted) {
-                PortObject object = null;
+                PortObject object;
                 if (isDataPort) {
                     object = loadBufferedDataTable(
                             node, settings, execPort, loadTblRep, i, tblRep);
-//                } else {
-//                    object = loadModelContent(node, settings, execPort, i);
-//                    // no separate spec for models in 1.x.x
-//                    if (object != null) {
-//                        setPortObjectSpec(i, object.getSpec());
-//                    }
+                } else {
+                    throw new IOException("Can't restore model ports of old 1.x " +
+                    		"workflows. Execute node again.");
                 }
                 String summary = object != null ? object.getSummary() : null;
                 setPortObject(i, object);
@@ -407,7 +407,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load node message: " + ise.getMessage();
             result.addError(e);
-            LOGGER.warn(e, ise);
+            getLogger().warn(e, ise);
         }
     
         m_modelSettings = settings;
@@ -417,14 +417,14 @@ public class NodePersistorVersion1xx implements NodePersistor {
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load hasContent flag: " + ise.getMessage();
             result.addError(e);
-            LOGGER.warn(e, ise);
+            getLogger().warn(e, ise);
             setNeedsResetAfterLoad();
         }
         
         try {
             m_isExecuted = loadIsExecuted(settings);
             if (m_isExecuted && shouldLoadAsNotExecuted(node)) {
-                LOGGER.debug("Setting executed flag of node \"" 
+                getLogger().debug("Setting executed flag of node \"" 
                         + node.getFactory().getClass().getSimpleName()
                         + "\" to false due to version bump (loaded as true)");
                 m_isExecuted = false;
@@ -432,7 +432,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load execution flag: " + ise.getMessage();
             result.addError(e);
-            LOGGER.warn(e, ise);
+            getLogger().warn(e, ise);
             setNeedsResetAfterLoad();
         }
     
@@ -441,7 +441,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load configuration flag: " + ise.getMessage();
             result.addError(e);
-            LOGGER.warn(e, ise);
+            getLogger().warn(e, ise);
             setNeedsResetAfterLoad();
         }
     
@@ -453,7 +453,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             } catch (InvalidSettingsException ise) {
                 String e = "Unable to load internals directory";
                 result.addError(e);
-                LOGGER.warn(e, ise);
+                getLogger().warn(e, ise);
             }
         }
         settingsExec.setProgress(1.0);
@@ -463,16 +463,16 @@ public class NodePersistorVersion1xx implements NodePersistor {
         } catch (Exception e) {
             if (!(e instanceof InvalidSettingsException)
                     && !(e instanceof IOException)) {
-                LOGGER.error("Unexpected \"" + e.getClass().getSimpleName() 
+                getLogger().error("Unexpected \"" + e.getClass().getSimpleName() 
                         + "\" encountered");
             }
             String err = "Unable to load port content for node \"" 
                 + node.getName() + "\": " + e.getMessage();
             result.addError(err, true);
             if (mustWarnOnDataLoadError()) {
-                LOGGER.warn(err, e);
+                getLogger().warn(err, e);
             } else {
-                LOGGER.debug(err);
+                getLogger().debug(err);
             }
             setNeedsResetAfterLoad();
         }
@@ -483,16 +483,16 @@ public class NodePersistorVersion1xx implements NodePersistor {
         } catch (Exception e) {
             if (!(e instanceof InvalidSettingsException)
                     && !(e instanceof IOException)) {
-                LOGGER.error("Unexpected \"" + e.getClass().getSimpleName() 
+                getLogger().error("Unexpected \"" + e.getClass().getSimpleName() 
                         + "\" encountered");
             }
             String err = "Unable to load internally held tables for node \"" 
                 + node.getName() + "\": " + e.getMessage();
             result.addError(err, true);
             if (mustWarnOnDataLoadError()) {
-                LOGGER.warn(err, e);
+                getLogger().warn(err, e);
             } else {
-                LOGGER.debug(err);
+                getLogger().debug(err);
             }
             setNeedsResetAfterLoad();
         }

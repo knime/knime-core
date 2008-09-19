@@ -168,6 +168,7 @@ public class ConnectionContainer {
     @Override
     public String toString() {
         return getType() + "[" + getSource() + "(" + getSourcePort() + ") -> "
-            + getDest() + "( " + getDestPort() + ")]";
+            + getDest() + "( " + getDestPort() + ")]" 
+            + (isDeletable() ? "" : " non deletable");
     }
 }

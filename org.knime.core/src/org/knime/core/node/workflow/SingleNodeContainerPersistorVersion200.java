@@ -35,7 +35,6 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodePersistorVersion1xx;
 import org.knime.core.node.NodePersistorVersion200;
 import org.knime.core.node.NodeSettings;
@@ -220,8 +219,7 @@ public class SingleNodeContainerPersistorVersion200 extends
                 NodeSettingsWO sub = stackSet.addNodeSettings("Loop_" + c);
                 sub.addString("type", "loopcontext");
             } else {
-                NodeLogger.getLogger(getClass()).error(
-                    "Saving of scope objects of type \"" 
+                getLogger().error("Saving of scope objects of type \"" 
                         + s.getClass().getSimpleName() +  "\" not implemented");
             }
             c += 1;

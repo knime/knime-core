@@ -682,9 +682,13 @@ public abstract class NodeContainer {
 
     /** Get a new persistor that is used to copy this node (copy& paste action).
      * @param tableRep Table repository of the destination.
+     * @param preserveDeletableFlags Whether the "isdeleteable" annotation 
+     * should be copied also (false when individual nodes are copied
+     * but true when an entire meta node is copied).
      * @return A new persistor for copying. */
     protected abstract NodeContainerPersistor getCopyPersistor(
-            final HashMap<Integer, ContainerTable> tableRep);
+            final HashMap<Integer, ContainerTable> tableRep, 
+            final boolean preserveDeletableFlags);
 
     /**
      * @param directory the nodeContainerDirectory to set

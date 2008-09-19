@@ -55,7 +55,8 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final HashMap<Integer, ContainerTable> m_tableRep;
     
     CopyWorkflowPersistor(final WorkflowManager original, 
-            final HashMap<Integer, ContainerTable> tableRep) {
+            final HashMap<Integer, ContainerTable> tableRep,
+            final boolean preserveDeletableFlags) {
         m_inportUIInfo = original.getInPortsBarUIInfo() != null 
             ? original.getInPortsBarUIInfo().clone() : null;
         m_outportUIInfo = original.getOutPortsBarUIInfo() != null 
@@ -73,7 +74,8 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
                 new WorkflowPortTemplate(i, in.getPortType());
         }
         m_name = original.getName();
-        m_metaPersistor = new CopyNodeContainerMetaPersistor(original);
+        m_metaPersistor = new CopyNodeContainerMetaPersistor(
+                original, preserveDeletableFlags);
         if (m_outportTemplates.length == 0 && m_inportTemplates.length == 0) {
             m_tableRep = new HashMap<Integer, ContainerTable>();
         } else {
@@ -82,11 +84,13 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         m_ncs = new LinkedHashMap<Integer, NodeContainerPersistor>();
         m_cons = new LinkedHashSet<ConnectionContainerTemplate>();
         for (NodeContainer nc : original.getNodeContainers()) {
-            m_ncs.put(nc.getID().getIndex(), nc.getCopyPersistor(m_tableRep));
+            m_ncs.put(nc.getID().getIndex(), nc.getCopyPersistor(
+                    m_tableRep, true));
         }
         
         for (ConnectionContainer cc : original.getConnectionContainers()) {
-            m_cons.add(new ConnectionContainerTemplate(cc));
+            ConnectionContainerTemplate t = new ConnectionContainerTemplate(cc);
+            m_cons.add(t);
         }
     }
     

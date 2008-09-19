@@ -40,12 +40,15 @@ final class CopyNodeContainerMetaPersistor implements
         NodeContainerMetaPersistor {
     
     private final NodeContainer m_original;
+    private final boolean m_preserveDeletableFlag;
     
     /**
      * 
      */
-    CopyNodeContainerMetaPersistor(final NodeContainer original) {
+    CopyNodeContainerMetaPersistor(final NodeContainer original, 
+            final boolean preserveDeletableFlag) {
         m_original = original;
+        m_preserveDeletableFlag = preserveDeletableFlag;
     }
 
     /** {@inheritDoc} */
@@ -96,7 +99,7 @@ final class CopyNodeContainerMetaPersistor implements
     /** {@inheritDoc} */
     @Override
     public boolean isDeletable() {
-        return m_original.isDeletable();
+        return !m_preserveDeletableFlag || m_original.isDeletable();
     }
 
     /** {@inheritDoc} */

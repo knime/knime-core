@@ -39,8 +39,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
  */
 class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(SingleNodeContainerPersistorVersion1xx.class);
+    private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
     private String m_customDescription;
 
@@ -60,6 +59,10 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
      */
     NodeContainerMetaPersistorVersion1xx(final ReferencedFile baseDir) {
         m_nodeContainerDirectory = baseDir;
+    }
+    
+    protected NodeLogger getLogger() {
+        return m_logger;
     }
 
     /** {@inheritDoc} */
@@ -127,7 +130,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
         } catch (InvalidSettingsException e) {
             String error = "Invalid custom name in settings: " + e.getMessage();
             loadResult.addError(error);
-            LOGGER.debug(error, e);
+            getLogger().debug(error, e);
             m_customName = null;
         }
         try {
@@ -136,7 +139,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             String error = 
                 "Invalid custom description in settings: " + e.getMessage();
             loadResult.addError(error);
-            LOGGER.debug(error, e);
+            getLogger().debug(error, e);
             m_customDescription = null;
         }
         try {
@@ -145,7 +148,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             String error = "Can't restore node's state, fallback to " 
                 + State.IDLE + ": " + e.getMessage();
             loadResult.addError(error);
-            LOGGER.debug(error, e);
+            getLogger().debug(error, e);
             m_state = State.IDLE;
         }
         m_isDeletable = loadIsDeletable(settings);
