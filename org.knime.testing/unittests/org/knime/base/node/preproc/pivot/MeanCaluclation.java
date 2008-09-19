@@ -43,8 +43,8 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeSettings;
 
 /**
@@ -237,7 +237,7 @@ public class MeanCaluclation extends TestCase {
         assertTrue(Arrays.equals(reference, means));
         // group by
         Node groupByNode = new Node(
-                (GenericNodeFactory)new GroupByNodeFactory());
+                (NodeFactory)new GroupByNodeFactory());
         ExecutionContext exec = new ExecutionContext(
                 new DefaultNodeProgressMonitor(),
                 groupByNode);
@@ -365,7 +365,7 @@ public class MeanCaluclation extends TestCase {
         double[] means = statsTable.getMean();
         assertTrue(Arrays.equals(reference, means));
         // group by
-        Node groupByNode = new Node((GenericNodeFactory)new GroupByNodeFactory());
+        Node groupByNode = new Node((NodeFactory)new GroupByNodeFactory());
         ExecutionContext exec = new ExecutionContext(
                 new DefaultNodeProgressMonitor(),
                 groupByNode);
