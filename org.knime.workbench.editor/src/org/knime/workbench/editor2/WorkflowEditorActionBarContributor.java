@@ -27,8 +27,6 @@ package org.knime.workbench.editor2;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.ui.actions.ActionBarContributor;
 import org.eclipse.gef.ui.actions.DeleteRetargetAction;
-import org.eclipse.gef.ui.actions.RedoRetargetAction;
-import org.eclipse.gef.ui.actions.UndoRetargetAction;
 import org.eclipse.gef.ui.actions.ZoomComboContributionItem;
 import org.eclipse.gef.ui.actions.ZoomInRetargetAction;
 import org.eclipse.gef.ui.actions.ZoomOutRetargetAction;
@@ -48,10 +46,9 @@ public class WorkflowEditorActionBarContributor extends ActionBarContributor {
      */
     @Override
     protected void buildActions() {
-        addRetargetAction(new UndoRetargetAction());
-        addRetargetAction(new RedoRetargetAction());
+//        addRetargetAction(new UndoRetargetAction());
+//        addRetargetAction(new RedoRetargetAction());
         addRetargetAction(new DeleteRetargetAction());
-
         addRetargetAction(new ZoomInRetargetAction());
         addRetargetAction(new ZoomOutRetargetAction());
     }
@@ -65,7 +62,7 @@ public class WorkflowEditorActionBarContributor extends ActionBarContributor {
         addGlobalActionKey(ActionFactory.SELECT_ALL.getId());
         addGlobalActionKey(ActionFactory.PASTE.getId());
         addGlobalActionKey(ActionFactory.COPY.getId());
-        addGlobalActionKey(ActionFactory.CUT.getId());
+//        addGlobalActionKey(ActionFactory.CUT.getId());
     }
 
     /**
@@ -73,8 +70,8 @@ public class WorkflowEditorActionBarContributor extends ActionBarContributor {
      */
     @Override
     public void contributeToToolBar(final IToolBarManager tbm) {
-        tbm.add(getAction(ActionFactory.UNDO.getId()));
-        tbm.add(getAction(ActionFactory.REDO.getId()));
+//        tbm.add(getAction(ActionFactory.UNDO.getId()));
+//        tbm.add(getAction(ActionFactory.REDO.getId()));
 
         tbm.add(new Separator());
         String[] zoomStrings = new String[] {ZoomManager.FIT_ALL,
