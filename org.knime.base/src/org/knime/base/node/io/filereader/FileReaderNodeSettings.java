@@ -148,30 +148,32 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * @param clonee the settings object to copy the settings values from.
      */
     FileReaderNodeSettings(final FileReaderNodeSettings clonee) {
-       super(clonee);
+        super(clonee);
 
-       m_columnProperties =
-           new Vector<ColProperty>(clonee.m_columnProperties.size());
-       m_columnProperties.setSize(clonee.m_columnProperties.size());
-       for (int i = 0; i < m_columnProperties.size(); i++) {
-           m_columnProperties.set(i,
-                   (ColProperty)clonee.m_columnProperties.get(i).clone());
-       }
+        m_columnProperties =
+                new Vector<ColProperty>(clonee.m_columnProperties.size());
+        m_columnProperties.setSize(clonee.m_columnProperties.size());
+        for (int i = 0; i < m_columnProperties.size(); i++) {
+            if (clonee.m_columnProperties.get(i) != null) {
+                m_columnProperties.set(i,
+                        (ColProperty)clonee.m_columnProperties.get(i).clone());
+            }
+        }
 
-       m_numOfColumns = clonee.m_numOfColumns;
+        m_numOfColumns = clonee.m_numOfColumns;
 
-       m_hasColHeadersIsSet = clonee.m_hasColHeadersIsSet;
-       m_hasRowHeadersIsSet = clonee.m_hasRowHeadersIsSet;
-       m_ignoreEmptyLinesIsSet = clonee.m_ignoreEmptyLinesIsSet;
-       m_ignoreDelimsAtEndOfRowIsSet = clonee.m_ignoreDelimsAtEndOfRowIsSet;
-       m_decimalSeparatorIsSet = clonee.m_decimalSeparatorIsSet;
-       m_delimsAtEOLUserValue = clonee.m_delimsAtEOLUserValue;
-       m_commentIsSet = clonee.m_commentIsSet;
-       m_quoteIsSet = clonee.m_quoteIsSet;
-       m_delimIsSet = clonee.m_delimIsSet;
-       m_whiteIsSet = clonee.m_whiteIsSet;
-       m_analyzedAllRows = clonee.m_analyzedAllRows;
-       m_preserveSettings = clonee.m_preserveSettings;
+        m_hasColHeadersIsSet = clonee.m_hasColHeadersIsSet;
+        m_hasRowHeadersIsSet = clonee.m_hasRowHeadersIsSet;
+        m_ignoreEmptyLinesIsSet = clonee.m_ignoreEmptyLinesIsSet;
+        m_ignoreDelimsAtEndOfRowIsSet = clonee.m_ignoreDelimsAtEndOfRowIsSet;
+        m_decimalSeparatorIsSet = clonee.m_decimalSeparatorIsSet;
+        m_delimsAtEOLUserValue = clonee.m_delimsAtEOLUserValue;
+        m_commentIsSet = clonee.m_commentIsSet;
+        m_quoteIsSet = clonee.m_quoteIsSet;
+        m_delimIsSet = clonee.m_delimIsSet;
+        m_whiteIsSet = clonee.m_whiteIsSet;
+        m_analyzedAllRows = clonee.m_analyzedAllRows;
+        m_preserveSettings = clonee.m_preserveSettings;
 
     }
 
@@ -856,10 +858,10 @@ public class FileReaderNodeSettings extends FileReaderSettings {
             if ((cName != null) && !cProp.getSkipThisColumn()) {
                 Integer prevCol = colNames.put(cName, c);
                 if (prevCol != null) {
-                    status.addError("Columns with index " + c
-                            + " and " + prevCol
-                            + " have the same name ('" + cName
-                            + "')");
+                    status
+                            .addError("Columns with index " + c + " and "
+                                    + prevCol + " have the same name ('"
+                                    + cName + "')");
                 }
             } // if (cName != null)
 
@@ -876,8 +878,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
                         if (cType != null) {
                             if (!cType.isASuperTypeOf(val.getType())) {
                                 status.addError("Incompatible possible "
-                                        + "value specified for column "
-                                        + c);
+                                        + "value specified for column " + c);
                             }
                         }
                     }
