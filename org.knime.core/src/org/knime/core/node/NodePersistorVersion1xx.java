@@ -242,34 +242,6 @@ public class NodePersistorVersion1xx implements NodePersistor {
         }
     }
 
-//    private ModelContentWrapper loadModelContent(final Node node,
-//            final NodeSettingsRO settings, final ExecutionMonitor execMon,
-//            final int index) throws InvalidSettingsException, IOException,
-//            CanceledExecutionException {
-//        // load models
-//        int modelIndex = index - countDataOutPorts(node);
-//        NodeSettingsRO model = settings.getNodeSettings(CFG_MODEL_FILES);
-//        String modelName = model.getString(CFG_OUTPUT_PREFIX + modelIndex);
-//        File targetFile = new File(m_nodeDirectory.getFile(), modelName);
-//    
-//        // in an earlier version the model settings were written
-//        // directly (without zipping); now the settings are
-//        // zipped (see save()); to be backward compatible
-//        // both ways are tried
-//        InputStream in = null;
-//        try {
-//            in = new GZIPInputStream(new BufferedInputStream(
-//                    new FileInputStream(targetFile)));
-//        } catch (IOException ioe) {
-//            // if a gz input stream could not be created
-//            // we use read directly from the file via the
-//            // previously created buffered input stream
-//            in = new BufferedInputStream(new FileInputStream(targetFile));
-//        }
-//        ModelContentRO pred = ModelContent.loadFromXML(in);
-//        return new ModelContentWrapper((ModelContent)pred);
-//    }
-
     private PortObjectSpec loadPortObjectSpec(final Node node,
             final NodeSettingsRO settings, final int index)
             throws InvalidSettingsException, IOException {
@@ -592,17 +564,5 @@ public class NodePersistorVersion1xx implements NodePersistor {
     public NodeMessage getNodeMessage() {
         return m_nodeMessage;
     }
-    
-//    private static int countDataOutPorts(final Node node) {
-//        int dataPortsCount = 0;
-//        for (int i = 0; i < node.getNrOutPorts(); i++) {
-//            PortType type = node.getOutputType(i);
-//            if (BufferedDataTable.class.isAssignableFrom(
-//                    type.getPortObjectClass())) {
-//                dataPortsCount += 1;
-//            }
-//        }
-//        return dataPortsCount;
-//    }
     
 }
