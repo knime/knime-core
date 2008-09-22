@@ -39,6 +39,8 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     
     private String m_afterID;
 
+    private boolean m_isExpertNode;
+    
     /**
      * Default implementation, provides no adapters.
      * 
@@ -136,6 +138,20 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
      */
     public void setAfterID(final String id) {
         m_afterID = id;
+    }
+
+    /**
+     * @return the isExpertNode
+     */
+    public boolean isExpertNode() {
+        return m_isExpertNode;
+    }
+
+    /**
+     * @param isExpertNode the isExpertNode to set
+     */
+    public void setExpertNode(final boolean isExpertNode) {
+        m_isExpertNode = isExpertNode;
     }
 
     /**

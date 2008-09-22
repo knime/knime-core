@@ -37,12 +37,14 @@ a data &quot;workflow&quot;
              workflowDir="metanode_templates/Cross Validation/">
        </PersistedMetaNode>
        <PersistedMetaNode
+             expert-flag="true"
              icon="icons/meta_nodes/looper.png"
              id="variables_loop"
              name="Variables Loop"
              workflowDir="metanode_templates/Variables Loop/">
        </PersistedMetaNode>
        <PersistedMetaNode
+             expert-flag="true"
              icon="icons/meta_nodes/looper_db.png"
              id="variables_loop_db"
              name="Variables Loop (DB)"

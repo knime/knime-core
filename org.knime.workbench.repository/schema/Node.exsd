@@ -80,6 +80,13 @@
                </documentation>
             </annotation>
          </attribute>
+         <attribute name="expert-flag" type="boolean" use="default" value="false">
+            <annotation>
+               <documentation>
+                  Set &lt;i&gt;true&lt;/i&gt; if the node should only appear in the node repository if the expert flag is set (changable in preference page). If unsure, leave empty as it defaults to &lt;i&gt;false&lt;/i&gt;.
+               </documentation>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 
