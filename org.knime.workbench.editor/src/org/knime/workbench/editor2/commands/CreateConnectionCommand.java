@@ -244,7 +244,9 @@ public class CreateConnectionCommand extends Command {
         // check whether it is the same connection
         ConnectionContainer conn = m_manager.getIncomingConnectionFor(
                 m_targetNode.getNodeContainer().getID(), m_targetPortID);
-        if (conn.getSource().equals(m_sourceNode.getNodeContainer().getID()) 
+        if (conn != null 
+                && conn.getSource().equals(
+                        m_sourceNode.getNodeContainer().getID()) 
                 && conn.getSourcePort() == m_sourcePortID
                 && conn.getDest().equals(
                         m_targetNode.getNodeContainer().getID())
