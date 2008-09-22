@@ -65,6 +65,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -278,13 +279,15 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         JScrollPane pane = new JScrollPane(m_colList);
         pane.setBorder(BorderFactory.createTitledBorder(" Column List "));
         varSplitPane.setTopComponent(pane);
-        pane = new JScrollPane(m_scopeVarsList);
-        pane.setBorder(BorderFactory.createTitledBorder(
-                " Flow Variable List "));
-        varSplitPane.setBottomComponent(pane);
-        varSplitPane.setOneTouchExpandable(true);
-        varSplitPane.setResizeWeight(0.9);
-    
+        // set variable panel only if expert mode is enabled.
+        if (Boolean.getBoolean(KNIMEConstants.ENV_VARIABLE_EXPERT_MODE)) {
+            pane = new JScrollPane(m_scopeVarsList);
+            pane.setBorder(BorderFactory.createTitledBorder(
+            " Flow Variable List "));
+            varSplitPane.setBottomComponent(pane);
+            varSplitPane.setOneTouchExpandable(true);
+            varSplitPane.setResizeWeight(0.9);
+        }
         JPanel centerPanel = new JPanel(new GridLayout(0, 1));
         JSplitPane mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         mainSplitPane.setLeftComponent(varSplitPane);
