@@ -4,29 +4,8 @@ Bundle-SymbolicName: org.knime.core
 Bundle-Version: 2.0.0.0016392
 Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
 Bundle-ClassPath: knime-core-patches.jar,
- lib/log4j.jar,
  knime-core.jar
 Provide-Package: log4j,
- org.apache.log4j,
- org.apache.log4j.chainsaw,
- org.apache.log4j.config,
- org.apache.log4j.helpers,
- org.apache.log4j.jdbc,
- org.apache.log4j.jmx,
- org.apache.log4j.lf5,
- org.apache.log4j.lf5.config,
- org.apache.log4j.lf5.util,
- org.apache.log4j.lf5.viewer,
- org.apache.log4j.lf5.viewer.categoryexplorer,
- org.apache.log4j.lf5.viewer.configure,
- org.apache.log4j.lf5.viewer.images,
- org.apache.log4j.net,
- org.apache.log4j.nt,
- org.apache.log4j.or,
- org.apache.log4j.or.sax,
- org.apache.log4j.spi,
- org.apache.log4j.varia,
- org.apache.log4j.xml,
  org.knime.core,
  org.knime.core.data,
  org.knime.core.data.collection,
@@ -48,6 +27,7 @@ Provide-Package: log4j,
  org.knime.core.node.port.database,
  org.knime.core.node.port.flowvariable,
  org.knime.core.node.port.pmml,
+ org.knime.core.node.port.pmml.schemata,
  org.knime.core.node.port.viewproperty,
  org.knime.core.node.property.hilite,
  org.knime.core.node.tableview,
@@ -57,5 +37,5 @@ Provide-Package: log4j,
  org.knime.core.xml
 Bundle-Activator: org.knime.core.internal.CorePlugin
 Require-Bundle: org.eclipse.core.runtime;reprovide=true,
- org.apache.xerces
+ org.apache.log4j
 Eclipse-LazyStart: true

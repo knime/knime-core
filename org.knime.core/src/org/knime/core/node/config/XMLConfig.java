@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,9 +18,9 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
- *   17.01.2006(sieb, ohl): reviewed 
+ *   17.01.2006(sieb, ohl): reviewed
  */
 package org.knime.core.node.config;
 
@@ -49,34 +49,36 @@ import org.xml.sax.XMLReader;
  * This implementation uses a SAX Parser to create and save the xml files. This
  * got necessary since predictive params may get big and using a DOM parser
  * keeps the entire xml-tree in memory.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 final class XMLConfig {
-    private static SAXParserFactory parserFactory;
-    private static SAXTransformerFactory transformerFactory;
-    
+    private static final SAXParserFactory parserFactory;
+
+    private static final SAXTransformerFactory transformerFactory;
+
     static {
-        parserFactory = SAXParserFactory.newInstance();
-        parserFactory.setValidating(true);
-
-        transformerFactory =
-                (SAXTransformerFactory)TransformerFactory.newInstance();
-    }
-    
-    private XMLConfig() {
-
+        try {
+            transformerFactory =
+                    (SAXTransformerFactory)TransformerFactory.newInstance();
+            parserFactory = SAXParserFactory.newInstance();
+            parserFactory.setValidating(false);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     /** dtd name from class name. */
     static final String DTD_NAME = XMLConfig.class.getName().replace('.', '/')
             + ".dtd";
 
-    /** The old DTD name from the 1.0.0 release. */
-    static final String OLD_DTD_NAME = XMLConfig.class.getName().replace('.',
-            '/').replace("org/knime/", "de/unikn/knime/") + ".dtd";
+    private XMLConfig() {
 
-    /** Reads from the given input stream into the given config object.
+    }
+
+    /**
+     * Reads from the given input stream into the given config object.
+     *
      * @param c Where to put the results.
      * @param in Where to read from, stream will be closed when done.
      * @throws SAXException If stream can't be properly parsed.
@@ -84,21 +86,21 @@ final class XMLConfig {
      * @throws ParserConfigurationException If not properly configured.
      * @throws NullPointerException If any argument is <code>null</code>.
      */
-    static void load(final Config c, final InputStream in)
-            throws SAXException, IOException, ParserConfigurationException {
+    static void load(final Config c, final InputStream in) throws SAXException,
+            IOException, ParserConfigurationException {
         SAXParser saxParser = parserFactory.newSAXParser();
         XMLReader reader = saxParser.getXMLReader();
-        XMLContentHandler xmlContentHandler = new XMLContentHandler(c, in
-                .toString());
+        XMLContentHandler xmlContentHandler =
+                new XMLContentHandler(c, in.toString());
         reader.setContentHandler(xmlContentHandler);
         reader.setEntityResolver(xmlContentHandler);
-        reader.setErrorHandler(xmlContentHandler);        
+        reader.setErrorHandler(xmlContentHandler);
         reader.parse(new InputSource(in));
     }
 
     /**
      * Saves given Config into an XML stream. The stream is closed at the end.
-     * 
+     *
      * @param config The Config the save.
      * @param os The stream to write Config as XML to.
      * @throws IOException If te Config could not be stored.
@@ -110,11 +112,11 @@ final class XMLConfig {
             tfh = transformerFactory.newTransformerHandler();
         } catch (TransformerConfigurationException ex) {
             throw new RuntimeException(ex);
-        }        
+        }
         Transformer t = tfh.getTransformer();
 
         t.setOutputProperty(OutputKeys.METHOD, "xml");
-        t.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, DTD_NAME);
+        // t.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, DTD_NAME);
         t.setOutputProperty(OutputKeys.INDENT, "yes");
 
         tfh.setResult(new StreamResult(os));
@@ -122,8 +124,9 @@ final class XMLConfig {
         try {
             XMLContentHandler.asXML(config, tfh);
         } catch (SAXException se) {
-            IOException ioe = new IOException("Saving xml to " + os.toString()
-                    + " failed: " + se.getMessage());
+            IOException ioe =
+                    new IOException("Saving xml to " + os.toString()
+                            + " failed: " + se.getMessage());
             ioe.initCause(se);
             throw ioe;
         } finally {
