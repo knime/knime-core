@@ -359,7 +359,9 @@ public abstract class NodeDialogPane {
                 inDataSpecs[i] = (DataTableSpec)specs[i];
             } catch (ClassCastException cce) {
                 throw new NotConfigurableException("Input Port " + i
-                        + " does not hold data table specs!");
+                        + " does not hold data table specs. "
+                        + "Likely reason: wrong version"
+                        + " of loadSettingsFrom() overwritten!");
             }
         }
         // (2) call old-fashioned, data-only loadSettingsFrom

@@ -537,8 +537,10 @@ public abstract class NodeModel {
             try {
                 inTables[i] = (BufferedDataTable)inData[i];
             } catch (ClassCastException cce) {
-                throw new IOException("Input Port " + i + " does not hold "
-                    + "data table!");
+                throw new IOException("Input Port " + i
+                        + " does not hold data table specs. "
+                        + "Likely reason: wrong version"
+                        + " of NodeModel.execute() overwritten!");
             }
         }
         // (2) call old-fashioned, data-only execute
@@ -843,7 +845,9 @@ public abstract class NodeModel {
                 inDataSpecs[i] = (DataTableSpec)inSpecs[i];
             } catch (ClassCastException cce) {
                 throw new InvalidSettingsException("Input Port " + i
-                        + " does not hold data table specs!");
+                        + " does not hold data table specs. "
+                        + "Likely reason: wrong version"
+                        + " of NodeModel.configure() overwritten!");
             }
         }
         // (2) call old-fashioned, data-only configure
