@@ -162,6 +162,14 @@ implements LoopStartNode {
     protected void reset() {
         m_partNumbers = null;
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean terminateLoop() {
+        return m_currIteration >= m_nrIterations;
+    }
 
     /**
      * {@inheritDoc}

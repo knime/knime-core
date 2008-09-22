@@ -110,6 +110,14 @@ public class ConditionLoopHeadNodeModel extends NodeModel implements
     protected void reset() {
         m_iteration = 0;
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean terminateLoop() {
+        return false;
+    }
 
     /**
      * {@inheritDoc}

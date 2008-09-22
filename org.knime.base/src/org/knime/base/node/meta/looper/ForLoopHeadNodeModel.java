@@ -30,14 +30,14 @@ import java.io.IOException;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.LoopStartNodeWhileDo;
+import org.knime.core.node.workflow.LoopStartNode;
 
 /**
  * This model is the head node of a for loop.
@@ -45,7 +45,7 @@ import org.knime.core.node.workflow.LoopStartNodeWhileDo;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ForLoopHeadNodeModel extends NodeModel
-implements LoopStartNodeWhileDo {
+implements LoopStartNode {
 
     private int m_iteration;
 

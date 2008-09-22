@@ -136,6 +136,14 @@ public class BWElimHeadNodeModel extends NodeModel implements
 
         return outTables;
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean terminateLoop() {
+        return false;
+    }
 
     /**
      * {@inheritDoc}

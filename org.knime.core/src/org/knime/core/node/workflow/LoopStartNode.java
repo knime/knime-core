@@ -20,14 +20,23 @@
  * ---------------------------------------------------------------------
  * 
  * History
- *   Apr 16, 2008 (berthold): created
+ *   Apr 16, 2008 (mb): created
+ *   Sep 22, 2008 (mb): added loop termination criterion.
  */
 package org.knime.core.node.workflow;
 
 /**
  * 
- * @author berthold, University of Konstanz
+ * @author M. Berthold, University of Konstanz
  */
 public interface LoopStartNode {
+
+    /**
+     * @return true if this was the last iteration of the loop, i.e. the
+     *   tail node must not trigger re-execution of the loop. Some nodes
+     *   may not be able to provide this and return false all the time.
+     *   It will be the end node's responsibility to terminate the loop then.
+     */
+    boolean terminateLoop();
 
 }

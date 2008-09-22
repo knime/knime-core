@@ -44,8 +44,8 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
@@ -53,7 +53,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
-import org.knime.core.node.workflow.LoopStartNodeWhileDo;
+import org.knime.core.node.workflow.LoopStartNode;
 
 /** Start of loop: pushes variables in input datatable columns
  * onto stack, taking the values from one row per iteration.
@@ -61,7 +61,7 @@ import org.knime.core.node.workflow.LoopStartNodeWhileDo;
  * @author M. Berthold, University of Konstanz
  */
 public class VariableLoopStartNodeModel extends NodeModel
-implements LoopStartNodeWhileDo {
+implements LoopStartNode {
 
     // remember which iteration we are in:
     private int m_currentIteration = -1;

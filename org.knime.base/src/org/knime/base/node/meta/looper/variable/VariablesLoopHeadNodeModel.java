@@ -70,6 +70,7 @@ public class VariablesLoopHeadNodeModel extends TableToVariableNodeModel
         if (m_variablesIterator == null) {
             m_variablesIterator = variables.iterator();
             m_maxIterations = variables.getRowCount();
+            m_iteration = 0;
         }
         if (!m_variablesIterator.hasNext()) {
             throw new Exception("No more iterations (variables table has "
@@ -79,6 +80,14 @@ public class VariablesLoopHeadNodeModel extends TableToVariableNodeModel
         pushVariables(variables.getDataTableSpec(), m_currentVariables);
         m_iteration += 1;
         return new PortObject[]{inData[0]};
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean terminateLoop() {
+        return m_iteration >= m_maxIterations;
     }
     
     /** {@inheritDoc} */

@@ -44,7 +44,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.LoopEndNode;
-import org.knime.core.node.workflow.LoopStartNodeWhileDo;
+import org.knime.core.node.workflow.LoopStartNode;
 
 /**
  * This model is the tail node of a for loop.
@@ -88,7 +88,7 @@ public class ForLoopTailNodeModel extends NodeModel implements LoopEndNode {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
 
-        if (!(this.getLoopStartNode() instanceof LoopStartNodeWhileDo)) {
+        if (!(this.getLoopStartNode() instanceof LoopStartNode)) {
             throw new IllegalStateException("Loop end is not connected"
                    + " to matching/corresponding loop start node!");
         }
@@ -108,7 +108,7 @@ public class ForLoopTailNodeModel extends NodeModel implements LoopEndNode {
         }
 
         boolean terminateLoop = 
-            ((LoopStartNodeWhileDo)this.getLoopStartNode()).terminateLoop();
+            ((LoopStartNode)this.getLoopStartNode()).terminateLoop();
         if (terminateLoop) {
             // this was the last iteration - close container and continue
             m_resultContainer.close();
@@ -116,7 +116,7 @@ public class ForLoopTailNodeModel extends NodeModel implements LoopEndNode {
             m_resultContainer.close();
             m_resultContainer = null;
             m_count = 0;
-            return new BufferedDataTable[]{ outTable };
+            return new BufferedDataTable[]{outTable};
         } else {
             continueLoop();
             m_count++;
