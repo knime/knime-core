@@ -24,17 +24,13 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.workbench.editor2.ClipboardObject;
+import org.knime.workbench.editor2.ClipboardWorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
@@ -49,7 +45,7 @@ public class CopyAction extends AbstractClipboardAction {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(CopyAction.class);
 
-    private final List<NodeID>m_copiedNodeIDs = new ArrayList<NodeID>();
+//    private final List<NodeID>m_copiedNodeIDs = new ArrayList<NodeID>();
     
     /**
      * Constructs a new clipboard copy action.
@@ -108,10 +104,17 @@ public class CopyAction extends AbstractClipboardAction {
         LOGGER.debug("Clipboard copy action invoked for " + nodeParts.length
                 + " node(s)");
 
-        m_copiedNodeIDs.clear();
-        for (NodeContainerEditPart nodeEP : nodeParts) {
-            m_copiedNodeIDs.add(nodeEP.getNodeContainer().getID());
+//        m_copiedNodeIDs.clear();
+        
+        NodeID[] ids = new NodeID[nodeParts.length];
+        
+        for (int i = 0; i < nodeParts.length; i++) {
+            NodeContainerEditPart nodeEP = nodeParts[i];
+//            m_copiedNodeIDs.add(nodeEP.getNodeContainer().getID());
+            ids[i] = nodeEP.getNodeContainer().getID();
         }
+        
+        ClipboardWorkflowManager.put(getManager(), ids);
         // create the settings object to put in the clipboard
 
         // the information about the nodes is stored in the config XML format
@@ -120,11 +123,12 @@ public class CopyAction extends AbstractClipboardAction {
         // new Object[]{getNodeSettings(nodeParts,
         // connectionParts)},
         // new Transfer[]{ResourceTransfer.getInstance()});
+        /*
         getEditor()
                 .setClipboardContent(
                         new ClipboardObject(getManager(), 
                                 Collections.unmodifiableList(m_copiedNodeIDs)));
-
+        */
         // update the actions
         getEditor().updateActions();
 

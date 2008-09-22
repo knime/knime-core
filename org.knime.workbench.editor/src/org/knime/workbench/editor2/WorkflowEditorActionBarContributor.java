@@ -62,7 +62,7 @@ public class WorkflowEditorActionBarContributor extends ActionBarContributor {
         addGlobalActionKey(ActionFactory.SELECT_ALL.getId());
         addGlobalActionKey(ActionFactory.PASTE.getId());
         addGlobalActionKey(ActionFactory.COPY.getId());
-//        addGlobalActionKey(ActionFactory.CUT.getId());
+        addGlobalActionKey(ActionFactory.CUT.getId());
     }
 
     /**

@@ -24,7 +24,7 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import java.util.List;
+import java.util.Collection;
 
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -34,8 +34,7 @@ import org.eclipse.ui.actions.ActionFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.editor2.ClipboardObject;
+import org.knime.workbench.editor2.ClipboardWorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -52,6 +51,7 @@ public class PasteAction extends AbstractClipboardAction {
             NodeLogger.getLogger(PasteAction.class);
     
     private static final int OFFSET = 120;
+    
 
     /**
      * Constructs a new clipboard paste action.
@@ -95,11 +95,12 @@ public class PasteAction extends AbstractClipboardAction {
      */
     @Override
     protected boolean calculateEnabled() {
-        ClipboardObject clipboardContent = getEditor().getClipboardContent();
-        if (clipboardContent == null) {
-            return false;
-        }
-        return clipboardContent.getNodeIDs().size() > 0;
+//        ClipboardObject clipboardContent = getEditor().getClipboardContent();
+//        if (clipboardContent == null) {
+//            return false;
+//        }
+//        return clipboardContent.getNodeIDs().size() > 0;
+        return ClipboardWorkflowManager.get().size() > 0;
     }
 
     /**
@@ -107,27 +108,29 @@ public class PasteAction extends AbstractClipboardAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        ClipboardObject clipboardContent = getEditor().getClipboardContent();
-        List<NodeID>nodeIDs = clipboardContent.getNodeIDs();
-        WorkflowManager sourceWF = clipboardContent.getSourceWorkflow();
-        NodeID[] copiedNodes = getManager().copy(sourceWF, nodeIDs.toArray(
-                new NodeID[nodeIDs.size()]));
+        Collection<NodeContainer>containers = ClipboardWorkflowManager.get(); 
+        NodeID[] ids = new NodeID[containers.size()];
+        int index = 0;
+        for (NodeContainer container : containers) {
+            ids[index++] = container.getID();
+        }
+        NodeID[] copiedNodes = getManager().copy(
+                ClipboardWorkflowManager.getSourceWorkflowManager(), ids);
         
         int[] moveDist = calculateShift(copiedNodes);
         LOGGER.debug("copied nodes:");
         for (NodeID id : copiedNodes) {
             LOGGER.debug(id);
+            ModellingNodeExtraInfo uiInfo;
             NodeContainer nc = getManager().getNodeContainer(id);
-            ModellingNodeExtraInfo uiInfo = (ModellingNodeExtraInfo)nc
-                .getUIInformation();
+                uiInfo = (ModellingNodeExtraInfo)nc.getUIInformation();
+            LOGGER.debug("pasting node at: "  + uiInfo.toString());
             uiInfo.changePosition(moveDist);
             nc.setUIInformation(uiInfo);
         }
-        
-        getEditor().getClipboardContent().incrementRetrievalCounter();
+        ClipboardWorkflowManager.incrementRetrievalCounter();
         
         // change selection (from copied ones to pasted ones)
-        
         EditPartViewer partViewer = getEditor().getViewer();
 
         // deselect the current selection and select the new pasted parts
@@ -149,17 +152,22 @@ public class PasteAction extends AbstractClipboardAction {
         // is not updated correctly.
         getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
     }
+    
 
     /**
-     * 
-     * @param ids
-     * @return
+     * @param ids the ids of the nodes for which the shift should be 
+     *  calculated (in normal {@link PasteAction} the offset is fixed, but in
+     *  {@link PasteActionContextMenu} the position of the nodes is set relative
+     *  to the mouse position
+     *  
+     * @return the offset to add to the current node position, which is done by 
+     *  the {@link ModellingNodeExtraInfo#changePosition(int[])}
      */
-    protected int[] calculateShift(NodeID[] ids) {
+    protected int[] calculateShift(final NodeID[] ids) {
         // simply return the offset 
         // the uiInfo.changePosition(moveDist); adds the distance to the 
         // current location of the node
-        int counter = getEditor().getClipboardContent().getRetrievalCounter();
+        int counter = ClipboardWorkflowManager.getRetrievalCounter();
         counter += 1;
         int newX = (OFFSET * counter);
         int newY = (OFFSET * counter);

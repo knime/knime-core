@@ -28,7 +28,9 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.workbench.editor2.ClipboardWorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
 /**
@@ -39,9 +41,10 @@ import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
  * @author Christoph Sieb, University of Konstanz
  */
 public class PasteActionContextMenu extends PasteAction {
-    // private static final NodeLogger LOGGER =
-    // NodeLogger.getLogger(PasteActionContextMenu.class);
+//     private static final NodeLogger LOGGER =
+//         NodeLogger.getLogger(PasteActionContextMenu.class);
 
+    /** ID for this action. */
     public static final String ID = "PasteActionContext";
 
     /**
@@ -60,10 +63,23 @@ public class PasteActionContextMenu extends PasteAction {
     public String getId() {
         return ID;
     }
-
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
     @Override
-    protected int[] calculateShift(NodeID[] ids) {
-        
+    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+        super.runOnNodes(nodeParts);
+        ClipboardWorkflowManager.resetRetrievalCounter();
+    }
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    protected int[] calculateShift(final NodeID[] ids) {
         int x = getEditor().getSelectionTool().getXLocation();
         int y = getEditor().getSelectionTool().getYLocation();
         int smallestX = Integer.MAX_VALUE;

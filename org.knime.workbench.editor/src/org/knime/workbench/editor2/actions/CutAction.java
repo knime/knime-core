@@ -30,7 +30,6 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
-
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.DeleteNodeContainerCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -86,7 +85,7 @@ public class CutAction extends AbstractClipboardAction {
     /**
      * At least one node must be selected.
      * 
-     * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
+     * {@inheritDoc}
      */
     @Override
     protected boolean calculateEnabled() {
@@ -98,8 +97,7 @@ public class CutAction extends AbstractClipboardAction {
     /**
      * Invokes the copy action followed by the delete command.
      * 
-     * @see org.knime.workbench.editor2.actions.AbstractNodeAction
-     *  #runOnNodes(org.knime.workbench.editor2.editparts.NodeContainerEditPart[])
+     * {@inheritDoc}
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
@@ -114,7 +112,8 @@ public class CutAction extends AbstractClipboardAction {
         WorkflowManager manager = getEditor().getWorkflowManager();
 
         for (NodeContainerEditPart nodePart : nodeParts) {
-
+            
+            
             // create a delete command
             DeleteNodeContainerCommand delete = new DeleteNodeContainerCommand(
                     nodePart, manager);
@@ -124,6 +123,7 @@ public class CutAction extends AbstractClipboardAction {
                 
                 delete.execute();
             }
+            
         }
 
         // update the actions
