@@ -39,3 +39,4 @@ Bundle-Activator: org.knime.core.internal.CorePlugin
 Require-Bundle: org.eclipse.core.runtime;reprovide=true,
  org.apache.log4j
 Eclipse-LazyStart: true
+Eclipse-RegisterBuddy: org.apache.log4j
