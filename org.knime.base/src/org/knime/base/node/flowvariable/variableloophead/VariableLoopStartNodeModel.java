@@ -170,6 +170,7 @@ implements LoopStartNode {
         // and add information about loop progress
         pushScopeVariableInt("maxIterations", m_maxNrIterations);
         pushScopeVariableInt("currentIteration", m_currentIteration);
+        m_currentIteration++;
         return new PortObject[]{new FlowVariablePortObject()};
     }
 
