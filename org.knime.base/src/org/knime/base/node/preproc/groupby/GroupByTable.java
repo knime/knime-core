@@ -70,8 +70,6 @@ public class GroupByTable {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(GroupByTable.class);
 
-    private static final String ROW_KEY_PREFIX = "Row";
-
     private final List<String> m_groupCols;
 
     private final int m_maxUniqueVals;
@@ -253,7 +251,7 @@ public class GroupByTable {
 
     private DataRow createTableRow(final DataCell[] groupVals,
             final int groupCounter) {
-        final String rowKey = ROW_KEY_PREFIX + groupCounter;
+        final RowKey rowKey = RowKey.createRowKey(groupCounter);
         final DataCell[] rowVals =
             new DataCell[groupVals.length + m_colAggregators.length];
         //add the group values first
