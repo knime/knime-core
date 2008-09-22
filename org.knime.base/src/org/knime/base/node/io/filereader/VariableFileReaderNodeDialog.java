@@ -79,6 +79,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.tableview.TableView;
 import org.knime.core.node.util.ConvenientComboBoxRenderer;
 import org.knime.core.node.util.ViewUtils;
@@ -1043,7 +1044,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
 
         /*
          * TODO: We need to synchronize the NodeSettings object
@@ -1071,7 +1072,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
      * lot of GUI components.
      */
     private void loadSettingsFromInternal(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) {
+            final PortObjectSpec[] specs) {
         assert (settings != null && specs != null);
 
         // loading of the variable names would trigger an item changed event.
