@@ -242,6 +242,12 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
                     opType = "continuous";
                 } else if (colSpec.getType().isCompatible(NominalValue.class)) {
                     opType = "categorical";
+                } else {
+                    throw new SAXException(
+                            "Type " + colSpec.getType() + " is not supported" 
+                            + " by PMML. Allowed types are only all " 
+                            + "double-compatible and all nominal value " 
+                            + "compatible types.");
                 }
                 attr.addAttribute(null, null, "optype", CDATA, opType);
                 // data type
