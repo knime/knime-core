@@ -32,7 +32,8 @@ package org.knime.workbench.ui.preferences;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class PreferenceConstants {
+public interface PreferenceConstants {
+    
     /** Peference constant: select default view mode. */
     public static final String P_CHOICE_VIEWMODE = "choice.view.mode";
 

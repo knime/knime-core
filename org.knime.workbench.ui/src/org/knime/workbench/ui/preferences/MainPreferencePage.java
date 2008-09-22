@@ -26,13 +26,18 @@ package org.knime.workbench.ui.preferences;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.jface.preference.RadioGroupFieldEditor;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.eclipse.ui.internal.Workbench;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger.LEVEL;
-import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
@@ -48,18 +53,22 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
  * @author Florian Georg, University of Konstanz
  */
 public class MainPreferencePage extends FieldEditorPreferencePage implements
-        IWorkbenchPreferencePage {
+IWorkbenchPreferencePage {
 
-    private IntegerFieldEditor m_freqHistorySizeEditor;
-    private IntegerFieldEditor m_usedHistorySizeEditor; 
+    private boolean m_apply;
+    private boolean m_isExpertMode;
+    
 
     /**
      * Constructor .
      */
     public MainPreferencePage() {
         super(GRID);
-
-//        setDescription("KNIME GUI preferences");
+        IPreferenceStore store =
+                KNIMEUIPlugin.getDefault().getPreferenceStore();
+        m_isExpertMode = 
+            store.getBoolean(KNIMEConstants.ENV_VARIABLE_EXPERT_MODE);
+//      setDescription("KNIME GUI preferences");
     }
 
 
@@ -84,7 +93,7 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
                         {"&WARN", LEVEL.WARN.name()},
 
                         {"&ERROR", LEVEL.ERROR.name()} },
-                parent));
+                        parent));
 
 
         addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_RESET, 
@@ -92,58 +101,103 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
 
         addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_DELETE, 
                 "Confirm Node/Connection Deletion", parent));
-        
+
         addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_RECONNECT,
                 "Confirm reconnection of already connected nodes", parent));
-       
-        
-        m_freqHistorySizeEditor = new IntegerFieldEditor(
+
+
+        IntegerFieldEditor freqHistorySizeEditor = new IntegerFieldEditor(
                 PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE,
                 "Maximal size for most frequently used nodes", parent, 3);
-        m_freqHistorySizeEditor.setValidRange(1, 50);
-        m_freqHistorySizeEditor.setTextLimit(3);
-        m_freqHistorySizeEditor.load();
-        
-        m_usedHistorySizeEditor = new IntegerFieldEditor(
+        freqHistorySizeEditor.setValidRange(1, 50);
+        freqHistorySizeEditor.setTextLimit(3);
+        freqHistorySizeEditor.load();
+
+        IntegerFieldEditor usedHistorySizeEditor = new IntegerFieldEditor(
                 PreferenceConstants.P_FAV_LAST_USED_SIZE,
                 "Maximal size for last used nodes", parent, 3);
-        m_usedHistorySizeEditor.setValidRange(1, 50);
-        m_usedHistorySizeEditor.setTextLimit(3);
-        m_usedHistorySizeEditor.load();
-        
-        addField(m_usedHistorySizeEditor);
-        addField(m_freqHistorySizeEditor);
+        usedHistorySizeEditor.setValidRange(1, 50);
+        usedHistorySizeEditor.setTextLimit(3);
+        usedHistorySizeEditor.load();
+
+        addField(usedHistorySizeEditor);
+        addField(freqHistorySizeEditor);
+
+        // variable expert mode
+        RadioGroupFieldEditor expert = new RadioGroupFieldEditor(
+                KNIMEConstants.ENV_VARIABLE_EXPERT_MODE, 
+                "Variables Expert Mode:", 2, 
+                new String[][] {{"&on", Boolean.toString(true)},
+                        {"o&ff", Boolean.toString(false)} }, parent);
+        addField(expert);
     }
-    
+
     /**
-     * 
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean performOk() {
-        super.performOk();
-        getPreferenceStore().setValue(
-                PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE, 
-                m_freqHistorySizeEditor.getIntValue());
-        getPreferenceStore().setValue(
-                PreferenceConstants.P_FAV_LAST_USED_SIZE, 
-                m_usedHistorySizeEditor.getIntValue());
-        
-        NodeUsageRegistry.setMaxFrequentSize(
-                m_freqHistorySizeEditor.getIntValue());
-        
-        NodeUsageRegistry.setMaxLastUsedSize(
-                m_usedHistorySizeEditor.getIntValue());
-        return true;
-    }
-    
-    /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     protected void performApply() {
-        performOk();
+        m_apply = true;
+        super.performApply();
+    }
+
+    /**
+     * Overridden to display a message box in case the temp directory was
+     * changed.
+     *
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean performOk() {
+        boolean result = super.performOk();
+        checkChanges();
+        return result;
+    }
+
+    /**
+     * Overridden to react when the users applies but then presses cancel.
+     *
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean performCancel() {
+        boolean result = super.performCancel();
+
+        checkChanges();
+
+        return result;
+    }
+
+    private void checkChanges() {
+        boolean apply = m_apply;
+        m_apply = false;
+        if (apply) {
+            return;
+        }
+
+        // get the preference store for the UI plugin
+        IPreferenceStore store = 
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        boolean currentExpertMode = 
+            store.getBoolean(KNIMEConstants.ENV_VARIABLE_EXPERT_MODE);
+        
+        boolean expertModeChanged = m_isExpertMode != currentExpertMode;
+        if (expertModeChanged) {
+            m_isExpertMode = currentExpertMode;
+            MessageBox mb =
+                new MessageBox(Display.getDefault().getActiveShell(),
+                        SWT.ICON_QUESTION | SWT.YES | SWT.NO);
+            mb.setText("Restart workbench...");
+            mb.setMessage("Changes to the \"expert mode\" flag are "
+                    + "available after restarting the workbench.\n"
+                    + "Do you want to restart the workbench now?");
+            if (mb.open() != SWT.YES) {
+                return;
+            }
+
+            Workbench.getInstance().restart();
+        }
     }
 
     /**

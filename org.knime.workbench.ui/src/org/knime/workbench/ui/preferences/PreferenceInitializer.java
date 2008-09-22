@@ -26,7 +26,7 @@ package org.knime.workbench.ui.preferences;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
-
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
@@ -56,8 +56,13 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         
         store.setDefault(PreferenceConstants.P_CONFIRM_DELETE, true);
         
+        store.setDefault(PreferenceConstants.P_CONFIRM_RECONNECT, true);
+        
         store.setDefault(PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE, 10);
         
         store.setDefault(PreferenceConstants.P_FAV_LAST_USED_SIZE, 10);
+        
+        store.setDefault(KNIMEConstants.ENV_VARIABLE_EXPERT_MODE,
+                Boolean.toString(false));
     }
 }

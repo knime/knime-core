@@ -33,8 +33,4 @@ public interface HeadlessPreferencesConstants {
     /** Preference constant: directory for temporary files. */
     public static final String P_TEMP_DIR = "knime.tempDir";
 
-    /** Preference constant: expert mode for variables ("true" or "false" -
-     * actually Boolean.toString(true) or Boolean.toString(false)). */
-    public static final String P_VAR_EXPERT_MODE = "knime.variables.expert";
-
 }

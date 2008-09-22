@@ -99,16 +99,6 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
 
         addField(tempDirEditor);
 
-        // variable expert mode
-        RadioGroupFieldEditor expert = new RadioGroupFieldEditor(
-                HeadlessPreferencesConstants.P_VAR_EXPERT_MODE,
-                "Variables Expert Mode:",
-                2, new String[][] {
-                        {"&on", Boolean.toString(true)},
-
-                        {"o&ff", Boolean.toString(false)} },
-                parent);
-        addField(expert);
     }
 
     /**

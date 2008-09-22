@@ -104,15 +104,49 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
         KnimeEncryption.setEncryptionKeySupplier(
                 MasterKeyPreferencePage.SUPPLIER);
 
+        IPreferenceStore prefStore = getPreferenceStore();
         getImageRegistry().put("knime",
                 imageDescriptorFromPlugin(PLUGIN_ID, "/icons/knime.png"));
-        int freqHistorySize = getPreferenceStore().getInt(
+        int freqHistorySize = prefStore.getInt(
                 PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE);
-        int usedHistorySize = getPreferenceStore().getInt(
+        int usedHistorySize = prefStore.getInt(
                 PreferenceConstants.P_FAV_LAST_USED_SIZE);
+        boolean isExpertMode = 
+            prefStore.getBoolean(KNIMEConstants.ENV_VARIABLE_EXPERT_MODE);
+        // expose as global variable, so node dialogs can read it.
+        // this "technique" may change in the future if the core classes
+        // get to know eclipse preferences...
+        System.setProperty(KNIMEConstants.ENV_VARIABLE_EXPERT_MODE, 
+                Boolean.toString(isExpertMode));
         
-        getPreferenceStore().setDefault(PreferenceConstants.P_CONFIRM_RECONNECT,
-                true);
+        prefStore.addPropertyChangeListener(new IPropertyChangeListener() {
+            @Override
+            public void propertyChange(final PropertyChangeEvent event) {
+                String prop = event.getProperty();
+                if (PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE.equals(
+                        prop)) {
+                    int count;
+                    try {
+                        count = (Integer)event.getNewValue();
+                        NodeUsageRegistry.setMaxFrequentSize(count);
+                    } catch (Exception e) {
+                        LOGGER.warn("Unable to set maximum number of " 
+                                + "frequently used nodes", e);
+                    }
+                } else if (PreferenceConstants.P_FAV_LAST_USED_SIZE.equals(
+                        prop)) {
+                    int count;
+                    try {
+                        count = (Integer)event.getNewValue();
+                        NodeUsageRegistry.setMaxLastUsedSize(count);
+                    } catch (Exception e) {
+                        LOGGER.warn("Unable to set maximum number of " 
+                                + "last used nodes", e);
+                    }
+                }
+            }
+        });
+
         try {
             NodeUsageRegistry.setMaxFrequentSize(freqHistorySize);
             NodeUsageRegistry.setMaxLastUsedSize(usedHistorySize);

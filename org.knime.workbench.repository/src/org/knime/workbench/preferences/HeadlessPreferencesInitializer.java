@@ -45,8 +45,6 @@ public class HeadlessPreferencesInitializer extends
 
         store.setDefault(HeadlessPreferencesConstants.P_LOGLEVEL_LOG_FILE,
                 LEVEL.DEBUG.name());
-        store.setDefault(HeadlessPreferencesConstants.P_VAR_EXPERT_MODE,
-                Boolean.toString(false));
     }
 
 }

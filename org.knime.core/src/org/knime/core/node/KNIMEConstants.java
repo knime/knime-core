@@ -33,9 +33,8 @@ import org.knime.core.internal.KNIMEPath;
 import org.knime.core.util.ThreadPool;
 
 /**
- * Class that hold static values about the knime platform. So far only the knime
- * directory, which is located in <code>$HOME$/.knime</code>, the welcome
- * message, and a icon are provided.
+ * Class that hold static values about the knime platform. This includes, 
+ * among others, the welcome message and an icon.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
@@ -57,6 +56,14 @@ public final class KNIMEConstants {
 
     /** The build date, is set automatically by the build scripts. */
     public static final String BUILD_DATE = "June 20, 2008";
+    
+    /** Name of the environment variable that is used to identify whether
+     * we are in expert mode or not (e.g. whether to show loop nodes or not).
+     * This field is also used for the preference pages. 
+     * <p>Values of this field must be either "true" or "false". */
+    public static final String ENV_VARIABLE_EXPERT_MODE = 
+        "knime.expert.mode";
+        
     
     /**
      * The name of the system property whose value is - if set - used as knime
