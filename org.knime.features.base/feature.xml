@@ -364,20 +364,6 @@ terms of this License.
          version="0.0.0"/>
 
    <plugin
-         id="org.apache.xerces"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.apache.xml.resolver"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
          id="org.knime.product"
          download-size="0"
          install-size="0"
@@ -389,5 +375,12 @@ terms of this License.
          install-size="0"
          version="0.0.0"
          fragment="true"/>
+
+   <plugin
+         id="org.apache.log4j"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
 
 </feature>
