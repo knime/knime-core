@@ -83,10 +83,20 @@ public class CreateConnectionCommand extends Command {
 
     }
     
+    /**
+     * 
+     * @param confirm if the replacement of  an existing connection should be 
+     *  confirmed by the user
+     */
     public void setConfirm(final boolean confirm) {
         m_confirm = confirm;
     }
-    
+
+    /**
+     * 
+     * @return true if the replacement of  an existing connection should be 
+     *  confirmed by the user
+     */
     public boolean doConfirm() {
         return m_confirm;
     }
@@ -231,6 +241,18 @@ public class CreateConnectionCommand extends Command {
                     + " " + m_targetNode);
             return;
         }
+        // check whether it is the same connection
+        ConnectionContainer conn = m_manager.getIncomingConnectionFor(
+                m_targetNode.getNodeContainer().getID(), m_targetPortID);
+        if (conn.getSource().equals(m_sourceNode.getNodeContainer().getID()) 
+                && conn.getSourcePort() == m_sourcePortID
+                && conn.getDest().equals(
+                        m_targetNode.getNodeContainer().getID())
+                && conn.getDestPort() == m_targetPortID) {
+            // it is the very same connection -> do nothing
+            return; 
+        }
+        
 //        LOGGER.info("source node: " + m_sourceNode.getNodeContainer());
 //        LOGGER.info("target node: " + m_targetNode.getNodeContainer());
         // let check the workflow manager if the connection can be created
