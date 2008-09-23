@@ -31,6 +31,8 @@ import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionEvent;
@@ -73,6 +75,8 @@ public class AddMetaNodePage extends WizardPage {
     private String m_template;
     
     private boolean m_wasVisible = false;
+    
+    private boolean m_nameCustomized = false;
 
     /**
      * Creates the page and sets title and description.
@@ -249,7 +253,7 @@ public class AddMetaNodePage extends WizardPage {
         }
         // set the name
         if (!m_template.equals(SelectMetaNodePage.CUSTOM)) {
-            m_name.setText("Meta " + nrInPorts + " : " + nrOutPorts);
+            m_name.setText("MetaNode " + nrInPorts + " : " + nrOutPorts);
         } else {
             m_name.setText("Customized MetaNode");
         }
@@ -258,9 +262,11 @@ public class AddMetaNodePage extends WizardPage {
     
     
     private void updateMetaNodeName() {
-        int nrInPorts = m_inPortList.size();
-        int nrOutPorts = m_outPortList.size();
-        m_name.setText("Meta " + nrInPorts + " : " + nrOutPorts);
+        if (!m_nameCustomized) {
+            int nrInPorts = m_inPortList.size();
+            int nrOutPorts = m_outPortList.size();
+            m_name.setText("Meta " + nrInPorts + " : " + nrOutPorts);
+        }
     }
     
     /**
@@ -451,6 +457,14 @@ public class AddMetaNodePage extends WizardPage {
         label.setLayoutData(gridData);
         // text field
         m_name = new Text(composite, SWT.BORDER);
+        m_name.addModifyListener(new ModifyListener() {
+
+            @Override
+            public void modifyText(ModifyEvent e) {
+                m_nameCustomized = true;
+            }
+            
+        });
         gridData = new GridData(
                 GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_HORIZONTAL
                 | GridData.VERTICAL_ALIGN_CENTER);
