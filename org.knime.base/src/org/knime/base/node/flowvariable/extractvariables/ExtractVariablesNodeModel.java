@@ -22,7 +22,7 @@
  * History
  *   Apr 28, 2008 (wiswedel): created
  */
-package org.knime.base.node.flowvariable.ejectvariables;
+package org.knime.base.node.flowvariable.extractvariables;
 
 import java.io.File;
 import java.io.IOException;
