@@ -110,7 +110,7 @@ public class DenseBitVectorCell extends DataCell implements BitVectorValue {
      */
     @Override
     public String toString() {
-        return m_bitVector.toString();
+        return m_bitVector.toBinaryString();
     }
 
     /**
@@ -119,6 +119,14 @@ public class DenseBitVectorCell extends DataCell implements BitVectorValue {
     @Override
     public String toHexString() {
         return m_bitVector.toHexString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toBinaryString() {
+        return m_bitVector.toBinaryString();
     }
 
     /**

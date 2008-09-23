@@ -54,8 +54,6 @@ public class BitVectorValueStringRenderer extends DefaultDataValueRenderer {
         BIT
     };
 
-    private StringBuilder m_stringBuilder;
-
     private final Type m_type;
 
     /**
@@ -81,15 +79,7 @@ public class BitVectorValueStringRenderer extends DefaultDataValueRenderer {
                 val = bv.toHexString();
                 break;
             case BIT:
-                int max = (int)Math.min(bv.length(), Integer.MAX_VALUE);
-                if (m_stringBuilder == null) {
-                    m_stringBuilder = new StringBuilder(max);
-                }
-                m_stringBuilder.setLength(0);
-                for (int i = 0; i < max; i++) {
-                    m_stringBuilder.append(bv.get(i) ? '1' : '0');
-                }
-                val = m_stringBuilder.toString();
+                val = bv.toBinaryString();
                 break;
             default:
                 throw new InternalError("Unknown type: " + m_type);

@@ -122,6 +122,19 @@ public interface BitVectorValue extends DataValue {
      */
     public String toHexString();
 
+    /**
+     * Returns the binary string representation of the bits in this vector. Each
+     * character in the result represents one bit - a '1' stands for a set bit,
+     * a '0' represents a cleared bit. The character at string position
+     * <code>(length - 1)</code> holds the bit with index 0, the character at
+     * position 0 represents the bits with the largest index in the vector. If
+     * the length of the vector is larger than ({@link Integer#MAX_VALUE} - 3)
+     * (i.e. 2147483644), the result is truncated (and ends with ...).
+     *
+     * @return the binary (0/1) representation of this bit vector.
+     */
+    public String toBinaryString();
+
     /** Implementations of the meta information of this value class. */
     public static class BitVectorUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */

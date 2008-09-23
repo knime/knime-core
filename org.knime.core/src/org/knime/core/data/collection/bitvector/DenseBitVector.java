@@ -136,20 +136,25 @@ public class DenseBitVector {
 
     /**
      * Initializes the created bit vector from the hex representation in the
-     * passed string. Only characters <code>'0' - '9'</code> and
-     * <code>'A' - 'F'</code> are allowed. The character at string position
-     * <code>(length - 1)</code> represents the bits with index 0 to 3 in the
-     * vector. The character at position 0 represents the bits with the highest
-     * indices. The length of the vector created is the length of the string
-     * times 4 (as each character represents four bits).
+     * passed string. Only characters <code>'0' - '9'</code>,
+     * <code>'A' - 'F'</code>and <code>'a' - 'f'</code> are allowed. The
+     * character at string position <code>(length - 1)</code> represents the
+     * bits with index 0 to 3 in the vector. The character at position 0
+     * represents the bits with the highest indices. The length of the vector
+     * created is the length of the string times 4 (as each character represents
+     * four bits).
      *
      * @param hexString containing the hex value to initialize the vector with
      * @throws IllegalArgumentException if <code>hexString</code> contains
      *             characters other then the hex characters (i.e.
-     *             <code>0 - 9, A - F</code>)
+     *             <code>0 - 9, A - F, and 'a' - 'f'</code>)
      */
     public DenseBitVector(final String hexString) {
         this(hexString.length() << 2); // four bits for each character
+
+        if (hexString.length() == 0) {
+            return;
+        }
 
         int maxAddr = ((hexString.length() - 1) << 2) >> STORAGE_ADDRBITS;
 
@@ -165,15 +170,16 @@ public class DenseBitVector {
                     break;
                 }
                 long cVal = hexString.charAt((i * 16) + n);
-                if (cVal < '0' || cVal > 'F' || (cVal > '9' && cVal < 'A')) {
-                    throw new IllegalArgumentException(
-                            "Invalid character in hex" + " number ('"
-                                    + hexString.charAt(i + n) + "')");
-                }
-                if (cVal > '9') {
-                    cVal -= 'A' - 10;
-                } else {
+                if (cVal >= '0' && cVal <= '9') {
                     cVal -= '0';
+                } else if (cVal >= 'A' && cVal <= 'F') {
+                    cVal -= 'A' - 10;
+                } else if (cVal >= 'a' && cVal <= 'f') {
+                    cVal -= 'a' - 10;
+                } else {
+                    throw new IllegalArgumentException(
+                            "Invalid character in hex number ('"
+                                    + hexString.charAt(i + n) + "')");
                 }
                 // cVal must only use the lower four bits
                 assert (cVal & 0xFFFFFFFFFFFFFFF0L) == 0L;
@@ -185,6 +191,8 @@ public class DenseBitVector {
             }
             m_storage[i] = value;
         }
+        m_firstAddr = findFirstBitAddress();
+        m_lastAddr = findLastBitAddress();
         assert checkConsistency() == null;
     }
 
@@ -1088,13 +1096,13 @@ public class DenseBitVector {
      */
     public String toHexString() {
         // the number of bits we store in the string
-        long max = (int)Math.min(m_length, (Integer.MAX_VALUE - 1) << 2);
+        long max = Math.min(m_length, ((long)(Integer.MAX_VALUE - 12)) << 2);
 
         // 4 bits are combined to one character
         StringBuilder result = new StringBuilder((int)(max >> 2));
 
         // the last storage might not be fully used
-        int leftOver = (int)(m_length % STORAGE_BITS);
+        int leftOver = (int)(max % STORAGE_BITS);
 
         // start with the highest bits
 
@@ -1124,6 +1132,51 @@ public class DenseBitVector {
             }
             // a 64bit word stores 16 nibbles
             nibbleIdx = 15;
+            storageAddr--;
+        }
+
+        if (max < m_length) {
+            result.insert(0, "...");
+        }
+        return result.toString();
+
+    }
+
+    /**
+     * Returns the binary string representation of the bits in this vector. Each
+     * character in the result represents one bit - a '1' stands for a set bit,
+     * a '0' represents a cleared bit. The character at string position
+     * <code>(length - 1)</code> holds the bit with index 0, the character at
+     * position 0 represents the bits with the largest index in the vector. If
+     * the length of the vector is larger than ({@link Integer#MAX_VALUE} - 3)
+     * (i.e. 2147483644), the result is truncated (and ends with ...).
+     *
+     * @return the binary (0/1) representation of this bit vector.
+     */
+    public String toBinaryString() {
+        // the number of bits we store in the string
+        int max = (int)Math.min(m_length, Integer.MAX_VALUE - 4);
+
+        StringBuilder result = new StringBuilder(max);
+        if (max == 0) {
+            return result.toString();
+        }
+
+        // start with the highest bits
+        int storageAddr = (max - 1 >> STORAGE_ADDRBITS);
+        int storageIdx = (max - 1 % STORAGE_BITS);
+
+        while (storageAddr >= 0) {
+
+            while (storageIdx >= 0) {
+                if ((m_storage[storageAddr] & (1 << storageIdx)) == 0) {
+                    result.append('0');
+                } else {
+                    result.append('1');
+                }
+                storageIdx--;
+            }
+            storageIdx = STORAGE_BITS - 1;
             storageAddr--;
         }
 

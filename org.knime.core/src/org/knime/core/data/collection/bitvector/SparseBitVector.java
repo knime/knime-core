@@ -156,17 +156,18 @@ public class SparseBitVector {
 
     /**
      * Initializes the created bit vector from the hex representation in the
-     * passed string. Only characters <code>'0' - '9'</code> and
-     * <code>'A' - 'F'</code> are allowed. The character at string position
-     * <code>(length - 1)</code> represents the bits with index 0 to 3 in the
-     * vector. The character at position 0 represents the bits with the highest
-     * indices. The length of the vector created is the length of the string
-     * times 4 (as each character represents four bits).
+     * passed string. Only characters <code>'0' - '9'</code>,
+     * <code>'A' - 'F'</code> and <code>'a' - 'f'</code> are allowed. The
+     * character at string position <code>(length - 1)</code> represents the
+     * bits with index 0 to 3 in the vector. The character at position 0
+     * represents the bits with the highest indices. The length of the vector
+     * created is the length of the string times 4 (as each character represents
+     * four bits).
      *
      * @param hexString containing the hex value to initialize the vector with
      * @throws IllegalArgumentException if <code>hexString</code> contains
      *             characters other then the hex characters (i.e.
-     *             <code>0 - 9, A - F</code>)
+     *             <code>0 - 9, A - F, and a - f</code>)
      */
     public SparseBitVector(final String hexString) {
         // capacity must be at least 4 so that doubling it creates 4 new spaces
@@ -176,15 +177,16 @@ public class SparseBitVector {
 
         for (int c = hexString.length() - 1; c >= 0; c--) {
             int cVal = hexString.charAt(c);
-            if (cVal < '0' || cVal > 'F' || (cVal > '9' && cVal < 'A')) {
+            if (cVal >= '0' && cVal <= '9') {
+                cVal -= '0';
+            } else if (cVal >= 'A' && cVal <= 'F') {
+                cVal -= 'A' - 10;
+            } else if (cVal >= 'a' && cVal <= 'f') {
+                cVal -= 'a' - 10;
+            } else {
                 throw new IllegalArgumentException(
                         "Invalid character in hex number ('"
                                 + hexString.charAt(c) + "')");
-            }
-            if (cVal > '9') {
-                cVal -= 'A' - 10;
-            } else {
-                cVal -= '0';
             }
             // cVal must only use the lower four bits
             assert (cVal & 0xFFFFFFF0L) == 0L;
@@ -865,6 +867,50 @@ public class SparseBitVector {
         }
         // done, return hex representation
         return buf.toString();
+    }
+
+    /**
+     * Returns the binary string representation of the bits in this vector. Each
+     * character in the result represents one bit - a '1' stands for a set bit,
+     * a '0' represents a cleared bit. The character at string position
+     * <code>(length - 1)</code> holds the bit with index 0, the character at
+     * position 0 represents the bits with the largest index in the vector. If
+     * the length of the vector is larger than ({@link Integer#MAX_VALUE} - 3)
+     * (i.e. 2147483644), the result is truncated (and ends with ...).
+     *
+     * @return the binary (0/1) representation of this bit vector.
+     */
+    public String toBinaryString() {
+        // the number of bits we store in the string
+        int max = (int)Math.min(m_length, Integer.MAX_VALUE - 4);
+
+        StringBuilder result = new StringBuilder(max);
+        if (max == 0) {
+            return result.toString();
+        }
+
+        // TODO: might be faster to add sequences of '0's
+        // of length bitIdx - m_idxStorage[storageIdx]
+        int storageIdx = m_lastIdx;
+        for (int bitIdx = max - 1; bitIdx >= 0; bitIdx--) {
+            if (storageIdx < 0) {
+                result.append('0');
+            } else {
+                if (bitIdx > m_idxStorage[storageIdx]) {
+                    result.append('0');
+                } else {
+                    assert bitIdx == m_idxStorage[storageIdx];
+                    result.append('1');
+                    storageIdx--;
+                }
+            }
+        }
+
+        if (max < m_length) {
+            result.append("...");
+        }
+        return result.toString();
+
     }
 
     /**
