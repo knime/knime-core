@@ -148,10 +148,6 @@ public class ConditionLoopTailNodeModel extends NodeModel implements
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        if (!(getLoopStartNode() instanceof ConditionLoopHeadNodeModel)) {
-            throw new IllegalArgumentException("Loop head has wrong type!");
-        }
-
         int count = peekScopeVariableInt("currentIteration");
         exec.setMessage("Iteration " + count);
         if (count == 0) {
@@ -177,7 +173,7 @@ public class ConditionLoopTailNodeModel extends NodeModel implements
         }
 
         boolean stop = checkCondition();
-
+        
         if ((m_settings.addLastRows() && !m_settings.addLastRowsOnly())
                 || ((stop == m_settings.addLastRows()) && (stop == m_settings
                         .addLastRowsOnly()))) {
