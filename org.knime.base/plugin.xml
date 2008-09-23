@@ -693,7 +693,7 @@
        <node
              category-path="/loopsupport"
              expert-flag="true"
-             factory-class="org.knime.base.node.flowvariable.variabletotable.AppendVariableToTableNodeFactory"
+             factory-class="org.knime.base.node.flowvariable.appendvariabletotable.AppendVariableToTableNodeFactory"
              id="org.knime.base.node.flowvariable.variabletotable.AppendVariableToTableNodeFactory">
        </node>
        <node

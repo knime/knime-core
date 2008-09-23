@@ -22,7 +22,7 @@
  * History
  *   May 1, 2008 (wiswedel): created
  */
-package org.knime.base.node.flowvariable.variabletotable;
+package org.knime.base.node.flowvariable.appendvariabletotable;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,6 +53,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.workflow.ScopeVariable;
 import org.knime.core.util.Pair;
 
@@ -66,7 +67,8 @@ public class AppendVariableToTableNodeModel extends NodeModel {
     
     /** One input, one output. */
     public AppendVariableToTableNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE},
+        super(new PortType[]{FlowVariablePortObject.TYPE,
+                BufferedDataTable.TYPE},
               new PortType[]{BufferedDataTable.TYPE});
         m_settings = new AppendVariableToTableSettings();
     }
@@ -75,7 +77,7 @@ public class AppendVariableToTableNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        BufferedDataTable t = (BufferedDataTable)inData[0];
+        BufferedDataTable t = (BufferedDataTable)inData[1];
         DataTableSpec ts = t.getSpec();
         ColumnRearranger ar = createColumnRearranger(ts);
         BufferedDataTable out = exec.createColumnRearrangeTable(t, ar, exec);
@@ -86,7 +88,7 @@ public class AppendVariableToTableNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        ColumnRearranger ar = createColumnRearranger((DataTableSpec)inSpecs[0]);
+        ColumnRearranger ar = createColumnRearranger((DataTableSpec)inSpecs[1]);
         return new DataTableSpec[]{ar.createSpec()};
     }
     

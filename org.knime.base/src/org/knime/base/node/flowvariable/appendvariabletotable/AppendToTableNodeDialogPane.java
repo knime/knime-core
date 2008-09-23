@@ -22,7 +22,7 @@
  * History
  *   May 1, 2008 (wiswedel): created
  */
-package org.knime.base.node.flowvariable.variabletotable;
+package org.knime.base.node.flowvariable.appendvariabletotable;
 
 import java.util.Arrays;
 import java.util.Map;
