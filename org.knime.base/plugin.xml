@@ -166,7 +166,14 @@
       <category
             level-id="features"
             name="Feature Selection"
-            path="/meta">
+            path="/loopsupport">
+      </category>
+      <category
+            description="nodes for manual assembly of loops"
+            icon="src/org/knime/base/node/meta/looper/looper.png"
+            level-id="loopsupport"
+            name="Loop Support"
+            path="/">
       </category>
    </extension>
             
@@ -590,25 +597,25 @@
             id="org.knime.base.node.viz.roc.ROCNodeFactory">
       </node>
       <node
-            category-path="/meta"
+            category-path="/loopsupport"
             expert-flag="true"
             factory-class="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory"
             id="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory">
       </node>
       <node
-            category-path="/meta"
+            category-path="/loopsupport"
             expert-flag="true"
             factory-class="org.knime.base.node.meta.xvalidation.AggregateOutputNodeFactory"
             id="org.knime.base.node.meta.xvalidation.AggregateOutputNodeFactory">
       </node>
       <node
-            category-path="/meta"
+            category-path="/loopsupport"
             expert-flag="true"
             factory-class="org.knime.base.node.meta.looper.ForLoopHeadNodeFactory"
             id="org.knime.base.node.meta.looper.ForLoopHeadNodeFactory">
       </node>
       <node
-            category-path="/meta"
+            category-path="/loopsupport"
             expert-flag="true"
             factory-class="org.knime.base.node.meta.looper.ForLoopTailNodeFactory"
             id="org.knime.base.node.meta.looper.ForLoopTailNodeFactory">
@@ -650,13 +657,13 @@
             factory-class="org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeFactory"
             id="org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeFactory"/>
       <node
-            category-path="/meta"
+            category-path="/loopsupport"
             expert-flag="true"
             factory-class="org.knime.base.node.meta.looper.variable.VariablesLoopHeadNodeFactory"
             id="org.knime.base.node.meta.looper.variable.VariablesLoopHeadNodeFactory">
       </node>
       <node
-            category-path="/meta"
+            category-path="/loopsupport"
             expert-flag="true"
             factory-class="org.knime.base.node.meta.looper.variable.VariablesLoopDBHeadNodeFactory"
             id="org.knime.base.node.meta.looper.variable.VariablesLoopDBHeadNodeFactory">
@@ -673,37 +680,37 @@
       </node>
       <node
             after="File Reader"
-            category-path="/io/read"
+            category-path="/loopsupport"
             expert-flag="true"
             factory-class="org.knime.base.node.io.filereader.LooperFileReaderNodeFactory"
             id="org.knime.base.node.io.filereader.LooperFileReaderNodeFactory">
       </node>
       <node
-            category-path="/meta/features"
+            category-path="/loopsupport/features"
             expert-flag="true"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimHead1NodeFactory"
             id="org.knime.base.node.meta.feature.backwardelim.BWElimHeadNodeFactory">
       </node>
       <node
-            category-path="/meta/features"
+            category-path="/loopsupport/features"
             expert-flag="true"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimHead2NodeFactory"
             id="org.knime.base.node.meta.feature.backwardelim.BWElimHead2NodeFactory">
       </node>
       <node
-            category-path="/meta/features"
+            category-path="/loopsupport/features"
             expert-flag="true"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimTailNodeFactory"
             id="org.knime.base.node.meta.feature.backwardelim.BWElimTailNodeFactory">
       </node>
       <node
-            category-path="/meta/features"
+            category-path="/loopsupport/features"
             expert-flag="true"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimFilterNodeFactory"
             id="org.knime.base.node.meta.feature.backwardelim.BWElimFilterNodeFactory">
       </node>
        <node
-             category-path="/misc"
+             category-path="/loopsupport"
              expert-flag="true"
              factory-class="org.knime.base.node.flowvariable.variabletotable.AppendVariableToTableNodeFactory"
              id="org.knime.base.node.flowvariable.variabletotable.AppendVariableToTableNodeFactory">
@@ -726,13 +733,13 @@
             id="org.knime.base.node.io.PMMLReaderNodeFactory">
       </node>
       <node
-            category-path="/misc"
+            category-path="/loopsupport"
             expert-flag="true"
             factory-class="org.knime.base.node.flowvariable.tabletovariable.TableToVariableNodeFactory"
             id="org.knime.base.node.flowvariable.tabletovariable.TableToVariableNodeFactory">
       </node>
       <node
-            category-path="/misc"
+            category-path="/loopsupport"
             expert-flag="true"
             factory-class="org.knime.base.node.flowvariable.tabletovariable.TableToVariableDBNodeFactory"
             id="org.knime.base.node.flowvariable.tabletovariable.TableToVariableDBNodeFactory">
@@ -743,13 +750,13 @@
             id="org.knime.base.node.preproc.regexsplit.RegexSplitNodeFactory">
       </node>
       <node
-            category-path="/meta"
+            category-path="/loopsupport"
             expert-flag="true"
             factory-class="org.knime.base.node.meta.looper.condition.ConditionLoopHeadNodeFactory"
             id="org.knime.base.node.meta.looper.condition.ConditionLoopHeadNodeFactory">
       </node>
       <node
-            category-path="/meta"
+            category-path="/loopsupport"
             expert-flag="true"
             factory-class="org.knime.base.node.meta.looper.condition.ConditionLoopTailNodeFactory"
             id="org.knime.base.node.meta.looper.condition.ConditionLoopTailNodeFactory">
@@ -770,13 +777,13 @@
             id="org.knime.base.node.viz.liftchart.LiftChartNodeFactory">
       </node>
       <node
-            category-path="/meta"
+            category-path="/loopsupport"
             expert-flag="true"
             factory-class="org.knime.base.node.flowvariable.variableloophead.VariableLoopStartNodeFactory"
             id="org.knime.base.node.flowvariable.variableloophead.VariableLoopStartNodeFactory">
       </node>
       <node
-            category-path="/misc"
+            category-path="/loopsupport"
             expert-flag="true"
             factory-class="org.knime.base.node.io.filereader.VariableFileReaderNodeFactory"
             id="org.knime.base.node.io.filereader.VariableFileReaderNodeFactory">
