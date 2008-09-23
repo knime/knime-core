@@ -774,6 +774,18 @@
             factory-class="org.knime.base.node.preproc.setoperator.SetOperatorNodeFactory"
             id="org.knime.base.node.preproc.setoperator.SetOperatorNodeFactory">
       </node>
+      <node
+            category-path="/loopsupport"
+            expert-flag="true"
+            factory-class="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesNodeFactory"
+            id="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesNodeFactory">
+      </node>
+      <node
+            category-path="/loopsupport"
+            expert-flag="true"
+            factory-class="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesDBNodeFactory"
+            id="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesDBNodeFactory">
+      </node>
       
    </extension>
       <extension

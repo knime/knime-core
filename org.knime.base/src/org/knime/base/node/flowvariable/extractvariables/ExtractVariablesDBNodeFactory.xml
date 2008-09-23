@@ -16,6 +16,6 @@
     <ports>
         <dataIn index="0" name="Database connection">
           Port object holding database connection (and variables).</dataIn>
-        <dataOut index="0" name="Variable port">The variable values.</dataIn>
+        <dataOut index="0" name="Variable port">The variable values.</dataOut>
     </ports>
 </knimeNode>
