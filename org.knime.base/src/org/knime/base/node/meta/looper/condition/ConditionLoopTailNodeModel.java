@@ -48,6 +48,8 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.LoopEndNode;
+import org.knime.core.node.workflow.LoopStartNode;
+import org.knime.core.node.workflow.LoopStartNodeTerminator;
 import org.knime.core.node.workflow.ScopeVariable;
 import org.knime.core.node.workflow.ScopeVariable.Type;
 
@@ -172,8 +174,12 @@ public class ConditionLoopTailNodeModel extends NodeModel implements
                             .variableName()))));
         }
 
-        boolean stop = checkCondition();
-        
+        LoopStartNode lsn = getLoopStartNode();
+
+        boolean stop = checkCondition()
+            || ((lsn instanceof LoopStartNodeTerminator)
+                    && ((LoopStartNodeTerminator) lsn).terminateLoop());
+
         if ((m_settings.addLastRows() && !m_settings.addLastRowsOnly())
                 || ((stop == m_settings.addLastRows()) && (stop == m_settings
                         .addLastRowsOnly()))) {
