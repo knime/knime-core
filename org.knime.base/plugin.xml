@@ -657,18 +657,6 @@
             factory-class="org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeFactory"
             id="org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeFactory"/>
       <node
-            category-path="/loopsupport"
-            expert-flag="true"
-            factory-class="org.knime.base.node.meta.looper.variable.VariablesLoopHeadNodeFactory"
-            id="org.knime.base.node.meta.looper.variable.VariablesLoopHeadNodeFactory">
-      </node>
-      <node
-            category-path="/loopsupport"
-            expert-flag="true"
-            factory-class="org.knime.base.node.meta.looper.variable.VariablesLoopDBHeadNodeFactory"
-            id="org.knime.base.node.meta.looper.variable.VariablesLoopDBHeadNodeFactory">
-      </node>
-      <node
             category-path="/manipulation/column"
             factory-class="org.knime.base.node.preproc.filter.columnref.ColumnFilterRefNodeFactory"
             id="org.knime.base.node.preproc.filter.columnref.ColumnFilterRefNodeFactory">
@@ -677,13 +665,6 @@
             category-path="/manipulation/row"
             factory-class="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory"
             id="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory">
-      </node>
-      <node
-            after="File Reader"
-            category-path="/loopsupport"
-            expert-flag="true"
-            factory-class="org.knime.base.node.io.filereader.LooperFileReaderNodeFactory"
-            id="org.knime.base.node.io.filereader.LooperFileReaderNodeFactory">
       </node>
       <node
             category-path="/loopsupport/features"

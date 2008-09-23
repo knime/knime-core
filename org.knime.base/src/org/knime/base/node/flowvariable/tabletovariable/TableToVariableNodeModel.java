@@ -26,31 +26,18 @@ package org.knime.base.node.flowvariable.tabletovariable;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
-import org.knime.core.data.StringValue;
-import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.StringCell;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 
 /**
  * 
@@ -61,7 +48,7 @@ public class TableToVariableNodeModel extends NodeModel {
     /** Two inputs, one output.
      * @param inOutType Type of first input and the outport. */
     protected TableToVariableNodeModel(final PortType inOutType) {
-        super(new PortType[]{inOutType, BufferedDataTable.TYPE},
+        super(new PortType[]{inOutType, FlowVariablePortObject.TYPE},
                 new PortType[]{inOutType});
     }
 
@@ -69,82 +56,19 @@ public class TableToVariableNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        pushVariables((DataTableSpec)inSpecs[1], null);
+        // nothing to do: the merging of the variable stacks on both
+        // inports is done by the WFM itself
+        // simply forward the spec of the relevant input port
         return new PortObjectSpec[]{inSpecs[0]};
-    }
-    
-    /** Pushes the variable as given by the row argument onto the stack. 
-     * @param variablesSpec The spec (for names and types)
-     * @param currentVariables The values of the variables.
-     */
-    protected void pushVariables(final DataTableSpec variablesSpec,
-            final DataRow currentVariables) {
-        int colCount = variablesSpec.getNumColumns();
-        DataCell[] cells = new DataCell[variablesSpec.getNumColumns()];
-        for (int i = 0; i < cells.length; i++) {
-            DataColumnSpec c = variablesSpec.getColumnSpec(i);
-            if (c.getType().isCompatible(IntValue.class)) {
-                cells[i] = new IntCell(0);
-            } else if (c.getType().isCompatible(DoubleValue.class)) {
-                cells[i] = new DoubleCell(0);
-            } else {
-                cells[i] = new StringCell("");
-            }
-        }
-        DataRow defaultRow = new DefaultRow("Default Vars", cells);
-        // column names starting with "knime." are uniquified as they represent
-        // global constants. 
-        HashSet<String> variableNames = new HashSet<String>();
-        for (int i = 0; i < colCount; i++) {
-            DataColumnSpec spec = variablesSpec.getColumnSpec(i);
-            DataType type = spec.getType();
-            String name = spec.getName();
-            if (name.equals("knime.")) {
-                name = "column_" + i;
-            } else if (name.startsWith("knime.")) {
-                name = name.substring("knime.".length());
-            }
-            int uniquifier = 1;
-            String basename = name;
-            while (!variableNames.add(name)) {
-                name = basename + "(#" + (uniquifier++) + ")";
-            }
-            DataCell cell = currentVariables == null 
-                ? defaultRow.getCell(i) : currentVariables.getCell(i);
-            if (cell.isMissing()) {
-                cell = defaultRow.getCell(i);
-            }
-            if (type.isCompatible(IntValue.class)) {
-                pushScopeVariableInt(name, ((IntValue)cell).getIntValue());
-            } else if (type.isCompatible(DoubleValue.class)) {
-                pushScopeVariableDouble(
-                        name, ((DoubleValue)cell).getDoubleValue());
-            } else if (type.isCompatible(StringValue.class)) {
-                pushScopeVariableString(
-                        name, ((StringValue)cell).getStringValue());
-            }
-        }
     }
     
     /** {@inheritDoc} */
     @Override
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        BufferedDataTable variables = (BufferedDataTable)inData[1];
-        DataRow row = null;
-        for (DataRow r : variables) {
-            row = r;
-            break;
-        }
-        if (row == null) {
-            throw new Exception("No rows in input table");
-        }
-        int rowCount = variables.getRowCount();
-        if (rowCount > 1) {
-            setWarningMessage("Table has " + rowCount + " rows, ignored all " 
-                    + "rows except the first one");
-        }
-        pushVariables(variables.getDataTableSpec(), row);
+        // nothing to do: the merging of the variable stacks on both
+        // inports is done by the WFM itself
+        // simply forward the data of the relevant input port
         return new PortObject[]{inData[0]};
     }
     

@@ -27,6 +27,7 @@ package org.knime.base.node.meta.looper;
 import java.io.File;
 import java.io.IOException;
 
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -55,8 +56,8 @@ implements LoopStartNode {
      * Creates a new model with one input and one output port.
      */
     public ForLoopHeadNodeModel() {
-        super(new PortType[] {new PortType(PortObject.class)},
-                new PortType[] {new PortType(PortObject.class)});
+        super(new PortType[] {BufferedDataTable.TYPE},
+                new PortType[] {BufferedDataTable.TYPE});
     }
 
     /**

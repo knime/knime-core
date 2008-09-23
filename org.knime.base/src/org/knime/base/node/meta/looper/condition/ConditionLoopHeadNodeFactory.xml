@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="condlooper.png" type="LoopStart">
-    <name>Variable Condition Loop (Start)</name>
+    <name>Generic Loop Start</name>
 
-    <shortDescription>Loop start node for a variable condition loop</shortDescription>
+    <shortDescription>Generic loop start node with no termination criterion.</shortDescription>
 
     <fullDescription>
         <intro>
-            In combination with a "Variable Condition Loop (End)" node, you can build a loop whise body is executed
+            In combination with a "Variable Condition Loop (End)" node, you can build a loop while body is executed
             until a certain condition on one of the flow variables is met. The condition must be set in the loop's end
             node.
         </intro>
