@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./variable2table.png" type="Other">
+	<name>Variables To Table Row</name>
+	
+	<shortDescription>
+	    Extracts variables and puts them into a single row table.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
+	    Extracts scope variables and puts them into a single row table.
+		</intro>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Variables input">Variables Connection</dataIn>
+		<dataOut index="0" name="Variable table">Table containing single row 
+		with current values of flow variables</dataOut>
+	</ports>	
+</knimeNode>
