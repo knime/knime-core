@@ -119,7 +119,7 @@ public class DataColumnPropertiesView extends JPanel {
     @Override
     public String getName() {
         int numOfCols = m_tableSpec.getNumColumns();
-        return "Data Column Properties: " 
+        return "DataColumnProperties: " 
             + numOfCols + " Column" + (numOfCols > 1 ? "s" : "");
     }
     
