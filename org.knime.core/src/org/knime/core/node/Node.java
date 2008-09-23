@@ -1831,7 +1831,11 @@ public final class Node implements NodeModelWarningListener {
         if (head == null) {
             m_model.setLoopStartNode(null);
         } else {
-            m_model.setLoopStartNode(head.m_model);
+            if (!(head.m_model instanceof LoopStartNode)) {
+                throw new ClassCastException("Node.setLoopStartNode called with"
+                    + "wrong argument. Not a LoopStartNode!");
+            }
+            m_model.setLoopStartNode((LoopStartNode)head.m_model);
         }
     }
 

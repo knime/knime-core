@@ -40,6 +40,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteHandlerAdapter;
+import org.knime.core.node.workflow.LoopStartNode;
 import org.knime.core.node.workflow.ScopeLoopContext;
 import org.knime.core.node.workflow.ScopeObjectStack;
 import org.knime.core.node.workflow.ScopeVariable;
@@ -1040,13 +1041,13 @@ public abstract class NodeModel {
         m_loopEndNode = end;
     }
 
-    private NodeModel m_loopStartNode = null;
+    private LoopStartNode m_loopStartNode = null;
     
-    protected final NodeModel getLoopStartNode() {
+    protected final LoopStartNode getLoopStartNode() {
         return m_loopStartNode;
     }
     
-    public void setLoopStartNode(final NodeModel start) {
+    public void setLoopStartNode(final LoopStartNode start) {
         m_loopStartNode = start;
     }
 
