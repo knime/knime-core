@@ -706,8 +706,12 @@
              factory-class="org.knime.base.collection.list.split.CollectionSplitNodeFactory"
              id="org.knime.base.collection.list.split.CollectionSplitNodeFactory">
        </node>
-
-
+       <node
+             category-path="/loopsupport"
+             expert-flag="true"
+             factory-class="org.knime.base.node.flowvariable.variabletotable.VariableToTableNodeFactory"
+             id="org.knime.base.node.flowvariable.variabletotable.VariableToTableNodeFactory">
+       </node>
       <node
             category-path="/io/read"
             factory-class="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory"
