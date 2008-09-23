@@ -166,41 +166,6 @@ public abstract class NodeDialogPane {
         addTab(TAB_NAME_MISCELLANEOUS, m_miscTab);
     }
 
-
-// TODO (tg,po) has been removed temporarily and has to be called from the WFM
-//    /**
-//     * Reads and applies the settings from the XML stream into this dialog's
-//     * pane.
-//     *
-//     * @param is The XML stream to read the settings from.
-//     * @throws IOException If the stream is not valid.
-//     * @throws NotConfigurableException if the dialog cannot be opened because
-//     * of real invalid settings or if any pre-conditions are not fulfilled,
-//     * e.g. no predecessor node, no nominal column in input table, etc.
-//     */
-//    public final void loadSettings(final InputStream is)
-//    throws IOException, NotConfigurableException {
-//        DataTableSpec[] specs = m_node.getInDataTableSpecs();
-//        loadSettingsFrom(NodeSettings.loadFromXML(is), specs);
-//    }
-//
-//    /**
-//     * Saves this dialog's settings into the given output stream by the
-//     * specified name.
-//     *
-//     * @param os The stream to write to.
-//     * @param name The name of this settings.
-//     * @throws InvalidSettingsException If the current dialog settings are
-//     *             invalid.
-//     * @throws IOException If the stream could not be written.
-//     */
-//    public final void saveSettings(final OutputStream os, final String name)
-//            throws InvalidSettingsException, IOException {
-//        NodeSettings sett = new NodeSettings(name);
-//        saveSettingsTo(sett);
-//        sett.saveToXML(os);
-//    }
-
     /**
      * @return The underlying dialog panel which keeps the tabbed pane.
      */
@@ -369,8 +334,7 @@ public abstract class NodeDialogPane {
     }
 
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException
-    {
+            final DataTableSpec[] specs) throws NotConfigurableException {
         throw new NotConfigurableException(
             "NodeDialogPane.loadSettingsFrom() implementation missing!");
     }
