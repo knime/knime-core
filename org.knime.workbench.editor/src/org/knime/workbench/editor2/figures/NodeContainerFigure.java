@@ -572,7 +572,9 @@ public class NodeContainerFigure extends RectangleFigure {
                         // replace with a fixed size of 16? pixel
                         + m_progressFigure.getPreferredSize().height
                         + m_statusFigure.getPreferredSize().height
-                        + m_name.getPreferredSize().height;
+                        + m_name.getPreferredSize().height
+                        // plus a fixed size for the info error warn panel
+                        + 20;
                         
         return new Dimension(prefWidth, prefHeight);
         
