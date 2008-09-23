@@ -31,10 +31,10 @@ import org.knime.core.node.port.database.DatabasePortObject;
  * 
  * @author wiswedel, University of Konstanz
  */
-public class TableToVariableDBNodeFactory extends TableToVariableNodeFactory {
+public class InjectVariablesDBNodeFactory extends InjectVariablesNodeFactory {
     
     /** Creates factory for {@link DatabasePortObject} type ports. */
-    public TableToVariableDBNodeFactory() {
+    public InjectVariablesDBNodeFactory() {
         super(DatabasePortObject.TYPE);
     }
     

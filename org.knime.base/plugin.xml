@@ -716,13 +716,13 @@
       <node
             category-path="/loopsupport"
             expert-flag="true"
-            factory-class="org.knime.base.node.flowvariable.injectvariables.TableToVariableNodeFactory"
+            factory-class="org.knime.base.node.flowvariable.injectvariables.InjectVariablesNodeFactory"
             id="org.knime.base.node.flowvariable.tabletovariable.TableToVariableNodeFactory">
       </node>
       <node
             category-path="/loopsupport"
             expert-flag="true"
-            factory-class="org.knime.base.node.flowvariable.injectvariables.TableToVariableDBNodeFactory"
+            factory-class="org.knime.base.node.flowvariable.injectvariables.InjectVariablesDBNodeFactory"
             id="org.knime.base.node.flowvariable.tabletovariable.TableToVariableDBNodeFactory">
       </node>
       <node

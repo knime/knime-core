@@ -43,11 +43,11 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class TableToVariableNodeModel extends NodeModel {
+public class InjectVariablesNodeModel extends NodeModel {
 
     /** Two inputs, one output.
      * @param inOutType Type of first input and the outport. */
-    protected TableToVariableNodeModel(final PortType inOutType) {
+    protected InjectVariablesNodeModel(final PortType inOutType) {
         super(new PortType[]{inOutType, FlowVariablePortObject.TYPE},
                 new PortType[]{inOutType});
     }

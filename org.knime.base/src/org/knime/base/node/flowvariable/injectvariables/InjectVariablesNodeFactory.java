@@ -35,13 +35,13 @@ import org.knime.core.node.port.PortType;
  * 
  * @author wiswedel, University of Konstanz
  */
-public class TableToVariableNodeFactory 
-    extends NodeFactory<TableToVariableNodeModel> {
+public class InjectVariablesNodeFactory 
+    extends NodeFactory<InjectVariablesNodeModel> {
     
     private final PortType m_inOutType;
     
     /** Creates factory for {@link BufferedDataTable} type ports. */
-    public TableToVariableNodeFactory() {
+    public InjectVariablesNodeFactory() {
         this(BufferedDataTable.TYPE);
     }
     
@@ -49,7 +49,7 @@ public class TableToVariableNodeFactory
      * only output port are typed to the argument.
      * @param inOutType The type of the (passed through) port.
      */
-    public TableToVariableNodeFactory(final PortType inOutType) {
+    public InjectVariablesNodeFactory(final PortType inOutType) {
         if (inOutType == null) {
             throw new NullPointerException("PortType must not be null");
         }
@@ -64,14 +64,14 @@ public class TableToVariableNodeFactory
 
     /** {@inheritDoc} */
     @Override
-    public TableToVariableNodeModel createNodeModel() {
-        return new TableToVariableNodeModel(m_inOutType);
+    public InjectVariablesNodeModel createNodeModel() {
+        return new InjectVariablesNodeModel(m_inOutType);
     }
 
     /** {@inheritDoc} */
     @Override
-    public NodeView<TableToVariableNodeModel> createNodeView(
-            final int index, final TableToVariableNodeModel model) {
+    public NodeView<InjectVariablesNodeModel> createNodeView(
+            final int index, final InjectVariablesNodeModel model) {
         return null;
     }
 
