@@ -22,7 +22,7 @@
  * History
  *   Apr 28, 2008 (wiswedel): created
  */
-package org.knime.base.node.flowvariable.tabletovariable;
+package org.knime.base.node.flowvariable.injectvariables;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeFactory;

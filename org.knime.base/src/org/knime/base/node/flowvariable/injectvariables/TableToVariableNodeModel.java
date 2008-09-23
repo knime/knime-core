@@ -22,7 +22,7 @@
  * History
  *   Apr 28, 2008 (wiswedel): created
  */
-package org.knime.base.node.flowvariable.tabletovariable;
+package org.knime.base.node.flowvariable.injectvariables;
 
 import java.io.File;
 import java.io.IOException;
