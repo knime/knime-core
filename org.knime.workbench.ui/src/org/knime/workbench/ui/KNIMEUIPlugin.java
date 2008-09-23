@@ -111,13 +111,6 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
                 PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE);
         int usedHistorySize = prefStore.getInt(
                 PreferenceConstants.P_FAV_LAST_USED_SIZE);
-        boolean isExpertMode = 
-            prefStore.getBoolean(KNIMEConstants.ENV_VARIABLE_EXPERT_MODE);
-        // expose as global variable, so node dialogs can read it.
-        // this "technique" may change in the future if the core classes
-        // get to know eclipse preferences...
-        System.setProperty(KNIMEConstants.ENV_VARIABLE_EXPERT_MODE, 
-                Boolean.toString(isExpertMode));
         
         prefStore.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override

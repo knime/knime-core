@@ -40,6 +40,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.workbench.core.EclipseClassCreator;
 import org.knime.workbench.core.WorkbenchErrorLogger;
@@ -179,6 +180,9 @@ public final class RepositoryManager {
         m_root = new Root();
         IExtension[] nodeExtensions = this.getExtensions(ID_NODE);
         IExtension[] categoryExtensions = this.getExtensions(ID_CATEGORY);
+        
+        boolean isInExpertMode = 
+            Boolean.getBoolean(KNIMEConstants.ENV_VARIABLE_EXPERT_MODE);
 
         IExtension[] metanodeExtensions = getExtensions(ID_META_NODE);
         //
@@ -268,8 +272,16 @@ public final class RepositoryManager {
 
                 try {
                     NodeTemplate node = RepositoryFactory.createNode(e);
-                    LOGGER.debug("Found node extension '" + node.getID()
-                            + "': " + node.getName());
+                    boolean skip = !isInExpertMode && node.isExpertNode();
+                    if (skip) {
+                        LOGGER.debug("Skipping node extension '" + node.getID()
+                                + "': " + node.getName() 
+                                + " (not in expert mode)");
+                        continue;
+                    } else {
+                        LOGGER.debug("Found node extension '" + node.getID()
+                                + "': " + node.getName());
+                    }
                     String nodeName = node.getID();
                     nodeName = nodeName
                             .substring(nodeName.lastIndexOf('.') + 1);
@@ -327,6 +339,19 @@ public final class RepositoryManager {
                     try {
                         MetaNodeTemplate metaNode =
                             RepositoryFactory.createMetaNode(mnConfig);
+                        boolean skip = !isInExpertMode 
+                            && metaNode.isExpertNode();
+                        if (skip) {
+                            LOGGER.debug("Skipping meta node definition '" 
+                                    + metaNode.getID() + "': " 
+                                    + metaNode.getName() 
+                                    + " (not in expert mode)");
+                            continue;
+                        } else {
+                            LOGGER.debug("Found meta node definition '" 
+                                    + metaNode.getID() + "': " 
+                                    + metaNode.getName());
+                        }
                         IContainerObject parentContainer =
                             m_root.findContainer(metaNode.getCategoryPath());
                         // If parent category is illegal, log an error and 
