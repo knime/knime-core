@@ -40,7 +40,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.LoopStartNode;
+import org.knime.core.node.workflow.LoopStartNodeTerminator;
 
 /**
  * This class is the model for the backward elimination head node.
@@ -48,7 +48,7 @@ import org.knime.core.node.workflow.LoopStartNode;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class BWElimHeadNodeModel extends NodeModel implements
-        LoopStartNode {
+        LoopStartNodeTerminator {
     private int m_iteration;
 
     private List<String> m_inputColumns = new ArrayList<String>();

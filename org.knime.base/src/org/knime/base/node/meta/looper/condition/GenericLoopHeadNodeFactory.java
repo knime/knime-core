@@ -32,8 +32,8 @@ import org.knime.core.node.NodeView;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ConditionLoopHeadNodeFactory extends
-        NodeFactory<ConditionLoopHeadNodeModel> {
+public class GenericLoopHeadNodeFactory extends
+        NodeFactory<GenericLoopHeadNodeModel> {
     /**
      * {@inheritDoc}
      */
@@ -46,16 +46,16 @@ public class ConditionLoopHeadNodeFactory extends
      * {@inheritDoc}
      */
     @Override
-    public ConditionLoopHeadNodeModel createNodeModel() {
-        return new ConditionLoopHeadNodeModel();
+    public GenericLoopHeadNodeModel createNodeModel() {
+        return new GenericLoopHeadNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView<ConditionLoopHeadNodeModel> createNodeView(
-            final int viewIndex, final ConditionLoopHeadNodeModel nodeModel) {
+    public NodeView<GenericLoopHeadNodeModel> createNodeView(
+            final int viewIndex, final GenericLoopHeadNodeModel nodeModel) {
         return null;
     }
 

@@ -36,7 +36,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.LoopStartNode;
+import org.knime.core.node.workflow.LoopStartNodeTerminator;
 
 /**
  * This is the cross validation partitioning node model that divides the input
@@ -46,7 +46,7 @@ import org.knime.core.node.workflow.LoopStartNode;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class XValidatePartitionModel extends NodeModel
-implements LoopStartNode {
+implements LoopStartNodeTerminator {
     private final XValidateSettings m_settings = new XValidateSettings();
 
     private short[] m_partNumbers;

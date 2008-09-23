@@ -43,14 +43,14 @@ import org.knime.core.node.workflow.LoopStartNode;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ConditionLoopHeadNodeModel extends NodeModel implements
+public class GenericLoopHeadNodeModel extends NodeModel implements
         LoopStartNode {
     private int m_iteration;
 
     /**
      * Creates a new model.
      */
-    public ConditionLoopHeadNodeModel() {
+    public GenericLoopHeadNodeModel() {
         super(1, 1);
     }
 
@@ -111,14 +111,6 @@ public class ConditionLoopHeadNodeModel extends NodeModel implements
         m_iteration = 0;
     }
     
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean terminateLoop() {
-        return false;
-    }
-
     /**
      * {@inheritDoc}
      */

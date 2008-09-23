@@ -1,9 +1,8 @@
-/*
- * ------------------------------------------------------------------ *
+/* ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2007
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -20,15 +19,23 @@
  * ---------------------------------------------------------------------
  * 
  * History
- *   Apr 16, 2008 (mb): created
- *   Sep 22, 2008 (mb): added loop termination criterion.
+ *   Sep 23, 2008 (mb): created
  */
 package org.knime.core.node.workflow;
 
-/**
+/** Interface for the start node of a loop which provides information
+ * about the termination of the loop.
  * 
  * @author M. Berthold, University of Konstanz
  */
-public interface LoopStartNode {
+public interface LoopStartNodeTerminator extends LoopStartNode {
+
+    /**
+     * @return true if this was the last iteration of the loop, i.e. the
+     *   tail node must not trigger re-execution of the loop. Some nodes
+     *   may not be able to provide this and return false all the time.
+     *   It will be the end node's responsibility to terminate the loop then.
+     */
+    boolean terminateLoop();
 
 }

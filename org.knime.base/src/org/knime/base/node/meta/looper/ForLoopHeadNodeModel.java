@@ -38,7 +38,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.LoopStartNode;
+import org.knime.core.node.workflow.LoopStartNodeTerminator;
 
 /**
  * This model is the head node of a for loop.
@@ -46,7 +46,7 @@ import org.knime.core.node.workflow.LoopStartNode;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ForLoopHeadNodeModel extends NodeModel
-implements LoopStartNode {
+implements LoopStartNodeTerminator {
 
     private int m_iteration;
 

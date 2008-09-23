@@ -733,7 +733,7 @@
       <node
             category-path="/loopsupport"
             expert-flag="true"
-            factory-class="org.knime.base.node.meta.looper.condition.ConditionLoopHeadNodeFactory"
+            factory-class="org.knime.base.node.meta.looper.condition.GenericLoopHeadNodeFactory"
             id="org.knime.base.node.meta.looper.condition.ConditionLoopHeadNodeFactory">
       </node>
       <node

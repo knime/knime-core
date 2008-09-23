@@ -44,7 +44,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.LoopEndNode;
-import org.knime.core.node.workflow.LoopStartNode;
+import org.knime.core.node.workflow.LoopStartNodeTerminator;
 
 /**
  * This model is the tail node of a for loop.
@@ -88,9 +88,10 @@ public class ForLoopTailNodeModel extends NodeModel implements LoopEndNode {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
 
-        if (!(this.getLoopStartNode() instanceof LoopStartNode)) {
+        if (!(this.getLoopStartNode() instanceof LoopStartNodeTerminator)) {
             throw new IllegalStateException("Loop end is not connected"
-                   + " to matching/corresponding loop start node!");
+                   + " to matching/corresponding loop start node. You"
+                   + "are trying to create an infinite loop!");
         }
         if (m_resultContainer == null) {
             // first time we are getting to this: open container
@@ -108,7 +109,7 @@ public class ForLoopTailNodeModel extends NodeModel implements LoopEndNode {
         }
 
         boolean terminateLoop = 
-            ((LoopStartNode)this.getLoopStartNode()).terminateLoop();
+            ((LoopStartNodeTerminator)this.getLoopStartNode()).terminateLoop();
         if (terminateLoop) {
             // this was the last iteration - close container and continue
             m_resultContainer.close();
