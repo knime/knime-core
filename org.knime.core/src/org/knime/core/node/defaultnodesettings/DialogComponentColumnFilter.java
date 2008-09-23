@@ -37,6 +37,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ColumnFilterPanel;
 
 /**
@@ -130,7 +131,12 @@ public class DialogComponentColumnFilter extends DialogComponent {
         if (!update) {
             // update if the current spec and the spec we last updated with
             // are different
-            final DataTableSpec currSpec = getLastTableSpec(m_inPortIndex);
+            final PortObjectSpec currPOSpec = getLastTableSpec(m_inPortIndex);
+            if (!(currPOSpec instanceof DataTableSpec)) {
+                throw new RuntimeException("Wrong type of PortObject for"
+                        + " ColumnFilterPanel, expecting DataTableSpec!");
+            }
+            DataTableSpec currSpec = (DataTableSpec)currPOSpec;
             if (currSpec == null) {
                 update = (m_specInFilter != null);
             } else {
@@ -154,7 +160,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
             }
         }
         if (update) {
-            m_specInFilter = getLastTableSpec(m_inPortIndex);
+            m_specInFilter = (DataTableSpec)getLastTableSpec(m_inPortIndex);
             m_columnFilter.update(m_specInFilter, true, filterModel
                     .getExcludeList());
         }
@@ -193,7 +199,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final PortObjectSpec[] specs)
             throws NotConfigurableException {
         // currently we open the dialog even with an empty spec - causing the
         // panel to be empty.

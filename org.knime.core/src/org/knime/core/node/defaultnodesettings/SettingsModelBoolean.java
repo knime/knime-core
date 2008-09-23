@@ -24,11 +24,11 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * A settingsmodel for boolean default components.
@@ -111,7 +111,7 @@ public class SettingsModelBoolean extends SettingsModel {
      */
     @Override
     protected void loadSettingsForDialog(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
         // use the current value, if no value is stored in the settings
         setBooleanValue(settings.getBoolean(m_configName, m_value));
     }

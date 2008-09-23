@@ -23,6 +23,9 @@
  */
 package org.knime.base.node.preproc.rowkey;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -36,9 +39,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelectio
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+import org.knime.core.node.port.PortObjectSpec;
 
 
 /**
@@ -194,10 +195,14 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
      */
     @Override
     public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
         super.loadAdditionalSettingsFrom(settings, specs);
         if (specs.length > 0) {
-            m_tableSpec = specs[0];
+            if (!(specs[0] instanceof DataTableSpec)) {
+                throw new NotConfigurableException("Expecting DataTableSpec"
+                        + " for spec[0] in RowKeyNodeDialog!");
+            }
+            m_tableSpec = (DataTableSpec)specs[0];
         }
     }
 

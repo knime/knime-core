@@ -33,12 +33,12 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * Default implementation for a NodeDialogPane that allows to add standard
@@ -241,7 +241,7 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
      */
     @Override
     public final void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
         assert settings != null;
         assert specs != null;
 
@@ -280,7 +280,7 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
      */
     @SuppressWarnings("unused")
     public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
         assert settings != null;
         assert specs != null;
     }

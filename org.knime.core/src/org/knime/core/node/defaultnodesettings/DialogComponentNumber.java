@@ -36,9 +36,9 @@ import javax.swing.JSpinner.DefaultEditor;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * Provide a standard component for a dialog that allows to edit number value.
@@ -282,7 +282,7 @@ public class DialogComponentNumber extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final PortObjectSpec[] specs)
             throws NotConfigurableException {
         // we're always good - independent of the incoming spec
     }

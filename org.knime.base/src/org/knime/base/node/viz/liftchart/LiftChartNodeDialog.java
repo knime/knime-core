@@ -40,6 +40,7 @@ import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * Class for an configuration dialog for the lift chart node.
@@ -132,17 +133,23 @@ public class LiftChartNodeDialog extends DefaultNodeSettingsPane {
      */
     @Override
     public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
         super.loadAdditionalSettingsFrom(settings, specs);
 
-        if (specs == null || specs.length == 0 || specs[0] == null
-                || specs[0].getNumColumns() == 0) {
+        if (specs == null || specs.length == 0 || specs[0] == null) {
             throw new NotConfigurableException("No column specs given.");
         }
-
+        if (!(specs[0] instanceof DataTableSpec)) {
+            throw new NotConfigurableException("Wrong column specs given."
+                    + " Port 0 is not a DataTableSpec!");
+        }
+        DataTableSpec specNull = (DataTableSpec)specs[0];
+        if (specNull.getNumColumns() == 0) {
+            throw new NotConfigurableException("No column specs given.");
+        }
         boolean foundColumn = false;
-        for (int col = 0; col < specs[0].getNumColumns(); col++) {
-            DataColumnSpec cs = specs[0].getColumnSpec(col);
+        for (int col = 0; col < specNull.getNumColumns(); col++) {
+            DataColumnSpec cs = specNull.getColumnSpec(col);
             if (cs.getType().isCompatible(NominalValue.class)
                     && cs.getDomain().hasValues()) {
                 foundColumn = true;
@@ -155,7 +162,7 @@ public class LiftChartNodeDialog extends DefaultNodeSettingsPane {
                             + " Please use the domain calculator first.");
         }
 
-        m_dataTableSpec = specs[0];
+        m_dataTableSpec = specNull;
 
         m_signDC.replaceListItems(getPossibleLabels(m_responseColumn
                 .getStringValue()), null);

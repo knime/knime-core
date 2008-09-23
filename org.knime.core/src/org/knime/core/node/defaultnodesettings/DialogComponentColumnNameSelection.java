@@ -38,6 +38,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ColumnFilter;
 import org.knime.core.node.util.ColumnSelectionPanel;
 import org.knime.core.node.util.DataValueColumnFilter;
@@ -261,7 +262,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
             classCol = "** Unknown column **";
         }
         try {
-            m_chooser.update(getLastTableSpec(m_specIndex), classCol);
+            m_chooser.update((DataTableSpec)getLastTableSpec(m_specIndex), classCol);
             if (getModel() instanceof SettingsModelColumnName
                     && ((SettingsModelColumnName)getModel()).useRowID()) {
                 m_chooser.setRowIDSelected();
@@ -293,7 +294,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final PortObjectSpec[] specs)
             throws NotConfigurableException {
         /*
          * this is a bit of code duplication: if the selection panel is set to
@@ -307,7 +308,13 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
                     + "configure dialog. Configure or execute predecessor "
                     + "nodes.");
         }
-        final DataTableSpec spec = specs[m_specIndex];
+        DataTableSpec spec;
+        try {
+            spec = (DataTableSpec)specs[m_specIndex];
+        } catch (ClassCastException cce) {
+            throw new NotConfigurableException("Wrong type of PortObject for"
+                    + " ColumnNameSelectio, expecting DataTableSpec!");
+        }
         if (spec == null) {
             throw new NotConfigurableException("Need input table spec to "
                     + "configure dialog. Configure or execute predecessor "

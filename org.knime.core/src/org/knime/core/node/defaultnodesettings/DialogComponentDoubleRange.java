@@ -36,9 +36,9 @@ import javax.swing.JSpinner.DefaultEditor;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * Allows the user to enter a floating point number range. It shows two spinners
@@ -159,7 +159,7 @@ public class DialogComponentDoubleRange extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final PortObjectSpec[] specs)
             throws NotConfigurableException {
         // Nothing to check, we don't care about the specs.
     }

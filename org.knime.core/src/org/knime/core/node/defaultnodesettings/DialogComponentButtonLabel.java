@@ -35,9 +35,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EtchedBorder;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * Provides a component containing a button and a label. The label's and 
@@ -124,7 +124,7 @@ public class DialogComponentButtonLabel extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final PortObjectSpec[] specs)
             throws NotConfigurableException {
         // Nothing to do ...
     }

@@ -32,6 +32,7 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ColumnFilter;
 
 
@@ -85,7 +86,7 @@ public class AggregationColumnDialogComponent extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs) {
+    protected void checkConfigurabilityBeforeLoad(final PortObjectSpec[] specs) {
         // nothing to do
     }
 
@@ -113,10 +114,17 @@ public class AggregationColumnDialogComponent extends DialogComponent {
         SettingsModelColorNameColumns colModel =
             (SettingsModelColorNameColumns)getModel();
         final ColorColumn[] inclCols = colModel.getColorNameColumns();
+        DataTableSpec thisSpec = null;
+        try {
+            thisSpec = (DataTableSpec)getLastTableSpec(0);
+        } catch (ClassCastException cce) {
+            throw new RuntimeException("Expected DataTableSpec at port 0 of"
+                    + " AggregationColumnDialogComponent!");
+        }
         if (inclCols == null) {
-            m_panel.update(getLastTableSpec(0), new ColorColumn[0]);
+            m_panel.update(thisSpec, new ColorColumn[0]);
         } else {
-            m_panel.update(getLastTableSpec(0), inclCols);
+            m_panel.update(thisSpec, inclCols);
         }
         // update the enable status
         setEnabledComponents(colModel.isEnabled());

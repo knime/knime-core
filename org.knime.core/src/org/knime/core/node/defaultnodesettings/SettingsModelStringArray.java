@@ -27,11 +27,11 @@ package org.knime.core.node.defaultnodesettings;
 import java.util.Arrays;
 import java.util.List;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * 
@@ -90,7 +90,7 @@ public class SettingsModelStringArray extends SettingsModel {
      */
     @Override
     protected void loadSettingsForDialog(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
         try {
             // use the current value, if no value is stored in the settings
             setStringArrayValue(settings.getStringArray(m_configName, m_value));

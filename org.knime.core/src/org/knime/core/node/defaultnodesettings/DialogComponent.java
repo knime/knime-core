@@ -39,6 +39,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * Abstract implementation of a component handling a standard type in a
@@ -71,7 +72,7 @@ public abstract class DialogComponent {
     /**
      * the specs that came with the last loadSettings. Could be null.
      */
-    private DataTableSpec[] m_lastSpecs;
+    private PortObjectSpec[] m_lastSpecs;
 
     /**
      * Abstract constructor expecting the model for this component.
@@ -108,7 +109,7 @@ public abstract class DialogComponent {
      *         call to loadSettings. Could be null!
      * @see #loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
      */
-    protected final DataTableSpec getLastTableSpec(final int portID) {
+    protected final PortObjectSpec getLastTableSpec(final int portID) {
         if (m_lastSpecs == null) {
             return null;
         }
@@ -121,7 +122,7 @@ public abstract class DialogComponent {
      * @see #loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
      */
 
-    protected final DataTableSpec[] getLastTableSpecs() {
+    protected final PortObjectSpec[] getLastTableSpecs() {
         return m_lastSpecs;
     }
 
@@ -136,7 +137,7 @@ public abstract class DialogComponent {
      *             the given specs lack some important columns or column types.
      */
     public final void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
 
         m_lastSpecs = specs;
 
@@ -213,7 +214,7 @@ public abstract class DialogComponent {
      *             opened.)
      */
     protected abstract void checkConfigurabilityBeforeLoad(
-            final DataTableSpec[] specs) throws NotConfigurableException;
+            final PortObjectSpec[] specs) throws NotConfigurableException;
 
     /**
      * Sets the enabled status of the component. Disabled components don't take
@@ -423,7 +424,7 @@ public abstract class DialogComponent {
          */
         @Override
         protected void loadSettingsForDialog(final NodeSettingsRO settings,
-                final DataTableSpec[] specs) throws NotConfigurableException {
+                final PortObjectSpec[] specs) throws NotConfigurableException {
             // not loading nor saving any settings
         }
 

@@ -29,12 +29,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.config.Config;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * Abstract implementation of an encapsulating class holding a (usually rather
@@ -148,7 +148,7 @@ public abstract class SettingsModel {
      * 
      */
     protected abstract void loadSettingsForDialog(
-            final NodeSettingsRO settings, final DataTableSpec[] specs)
+            final NodeSettingsRO settings, final PortObjectSpec[] specs)
             throws NotConfigurableException;
 
     /**
@@ -162,7 +162,7 @@ public abstract class SettingsModel {
      *             settings for this model
      */
     final void dlgLoadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
 
         try {
 

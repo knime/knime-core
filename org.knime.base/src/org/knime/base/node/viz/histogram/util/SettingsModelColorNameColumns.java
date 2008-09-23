@@ -31,12 +31,12 @@ import java.util.List;
 
 import javax.swing.event.ChangeListener;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
+import org.knime.core.node.port.PortObjectSpec;
 
 
 /**
@@ -99,7 +99,7 @@ public class SettingsModelColorNameColumns extends SettingsModel {
      */
     @Override
     protected void loadSettingsForDialog(final NodeSettingsRO settings, 
-            final DataTableSpec[] specs) {
+            final PortObjectSpec[] specs) {
         try {
             final ColorColumn[] columns = 
                 loadColorColumns(m_configName, settings);

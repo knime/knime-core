@@ -52,9 +52,9 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ConvenientComboBoxRenderer;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.SimpleFileFilter;
@@ -457,7 +457,7 @@ public class DialogComponentFileChooser extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final PortObjectSpec[] specs)
             throws NotConfigurableException {
         // we're always good - independent of the incoming spec
     }

@@ -42,8 +42,8 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.DefaultStringIconOption;
 import org.knime.core.node.util.StringIconListCellRenderer;
 import org.knime.core.node.util.StringIconOption;
@@ -363,7 +363,7 @@ public final class DialogComponentStringListSelection extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs) {
+    protected void checkConfigurabilityBeforeLoad(final PortObjectSpec[] specs) {
         // we are always good.
     }
 

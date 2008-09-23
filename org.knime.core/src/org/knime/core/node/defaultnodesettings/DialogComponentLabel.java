@@ -28,9 +28,9 @@ import java.awt.FlowLayout;
 
 import javax.swing.JLabel;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * Provides a component containing a label. The label's text can be set 
@@ -70,7 +70,7 @@ public class DialogComponentLabel extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final PortObjectSpec[] specs)
             throws NotConfigurableException {
         // Nothing to do ...
     }

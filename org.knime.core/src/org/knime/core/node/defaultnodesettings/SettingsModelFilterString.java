@@ -30,12 +30,12 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.config.Config;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * Implements a settings model that provides include and exclude lists. These
@@ -159,7 +159,7 @@ public class SettingsModelFilterString extends SettingsModel {
      */
     @Override
     protected void loadSettingsForDialog(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
         try {
             Config lists = settings.getConfig(m_configName);
             // the way we do this, partially correct settings will be parially

@@ -24,11 +24,11 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * Settings model for a double range [min, max]. It stores two floating point
@@ -173,7 +173,7 @@ public class SettingsModelDoubleRange extends SettingsModel {
      */
     @Override
     protected void loadSettingsForDialog(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
         try {
             NodeSettingsRO mySettings = settings.getNodeSettings(m_configName);
             double min = mySettings.getDouble("MIN");

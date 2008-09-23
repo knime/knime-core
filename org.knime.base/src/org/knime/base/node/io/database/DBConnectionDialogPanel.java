@@ -26,7 +26,6 @@ import java.awt.BorderLayout;
 
 import javax.swing.JPanel;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -35,6 +34,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ButtonGroupEnumInterface;
 
 /**
@@ -133,7 +133,7 @@ final class DBConnectionDialogPanel extends JPanel {
      * @throws NotConfigurableException if the settings are not applicable
      */
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
         m_group.loadSettingsFrom(settings, specs);
         m_cacheRows.loadSettingsFrom(settings, specs);
     }
