@@ -50,6 +50,27 @@ a data &quot;workflow&quot;
              name="Variables Loop (DB)"
              workflowDir="metanode_templates/Variables Loop (DB)/">
        </PersistedMetaNode>
+       <PersistedMetaNode
+             category-path="/meta"
+             description="Backward Feature Elimination"
+             id="feature_elimination"
+             name="Feature Elimination"
+             workflowDir="metanode_templates/Feature Elimination/">
+       </PersistedMetaNode>
+       <PersistedMetaNode
+             category-path="/meta"
+             description="Iteratively executes the contained flow on a list of files. The list of files needs to be defined by the input table, whereby each row represents one individual file location."
+             id="iterate_list_of_files"
+             name="Iterate List of Files"
+             workflowDir="metanode_templates/Iterate list of files/">
+       </PersistedMetaNode>
+       <PersistedMetaNode
+             category-path="/meta"
+             description="Executes the contained workflow multiple times. Aggregation method and termination criteration must be set using the loop start and end node contained in the workflow."
+             id="looper"
+             name="Loop x-times"
+             workflowDir="metanode_templates/Looper/">
+       </PersistedMetaNode>
     </extension>
 
 </plugin>
