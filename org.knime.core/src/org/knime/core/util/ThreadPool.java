@@ -36,6 +36,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.JobExecutor;
@@ -192,7 +193,8 @@ public class ThreadPool implements JobExecutor {
 
     private final Queue<Worker> m_availableWorkers;
 
-    private volatile int m_maxThreads, m_invisibleThreads;
+    private final AtomicInteger m_maxThreads = new AtomicInteger();
+    private final AtomicInteger m_invisibleThreads = new AtomicInteger();
 
     private final ThreadPool m_parent;
 
@@ -206,7 +208,7 @@ public class ThreadPool implements JobExecutor {
      * @param maxThreads the maximum number of threads
      */
     public ThreadPool(final int maxThreads) {
-        m_maxThreads = maxThreads;
+        m_maxThreads.set(maxThreads);
         m_parent = null;
         m_queuedFutures = new LinkedList<MyFuture<?>>();
         m_availableWorkers = new ConcurrentLinkedQueue<Worker>();
@@ -220,7 +222,7 @@ public class ThreadPool implements JobExecutor {
      */
     protected ThreadPool(final int maxThreads, final ThreadPool parent) {
         m_parent = parent;
-        m_maxThreads = maxThreads;
+        m_maxThreads.set(maxThreads);
         m_queuedFutures = m_parent.m_queuedFutures;
         m_availableWorkers = null;
     }
@@ -317,7 +319,7 @@ public class ThreadPool implements JobExecutor {
 
     private Worker wakeupWorker(final Runnable task, final ThreadPool pool) {
         synchronized (m_runningWorkers) {
-            if (m_runningWorkers.size() - m_invisibleThreads < m_maxThreads) {
+            if (m_runningWorkers.size() - m_invisibleThreads.get() < m_maxThreads.get()) {
                 Worker w;
                 if (m_parent == null) {
                     w = m_availableWorkers.poll();
@@ -345,7 +347,7 @@ public class ThreadPool implements JobExecutor {
      * @return the maximum thread number
      */
     public int getMaxThreads() {
-        return m_maxThreads;
+        return m_maxThreads.get();
     }
 
     /**
@@ -355,7 +357,7 @@ public class ThreadPool implements JobExecutor {
      * @return the number of running threads
      */
     public int getRunningThreads() {
-        return m_runningWorkers.size() - m_invisibleThreads;
+        return m_runningWorkers.size() - m_invisibleThreads.get();
     }
 
     /**
@@ -389,7 +391,7 @@ public class ThreadPool implements JobExecutor {
                 throw new IllegalThreadStateException("The current thread is "
                         + "not taken out of this thread pool");
             }
-            m_invisibleThreads++;
+            m_invisibleThreads.incrementAndGet();
             checkQueue();
 
             try {
@@ -397,7 +399,7 @@ public class ThreadPool implements JobExecutor {
             } catch (Exception ex) {
                 throw new ExecutionException(ex);
             } finally {
-                m_invisibleThreads--;
+                m_invisibleThreads.decrementAndGet();
             }
         }
 
@@ -412,8 +414,8 @@ public class ThreadPool implements JobExecutor {
      */
     public void setMaxThreads(final int newValue) {
         if (m_parent == null) {
-            if (newValue < m_maxThreads) {
-                for (int i = (m_maxThreads - newValue); i >= 0; i--) {
+            if (newValue < m_maxThreads.get()) {
+                for (int i = (m_maxThreads.get() - newValue); i >= 0; i--) {
                     Worker w = m_availableWorkers.poll();
                     if (w != null) {
                         w.interrupt();
@@ -421,7 +423,7 @@ public class ThreadPool implements JobExecutor {
                 }
             }
         }
-        m_maxThreads = newValue;
+        m_maxThreads.set(newValue);
     }
 
     /**
@@ -501,7 +503,7 @@ public class ThreadPool implements JobExecutor {
     public void waitForTermination() throws InterruptedException {
         synchronized (m_runningWorkers) {
             if (currentPool() != null) {
-                m_invisibleThreads++;
+                m_invisibleThreads.incrementAndGet();
             }
             try {
                 while (!m_runningWorkers.isEmpty()) {
@@ -509,7 +511,7 @@ public class ThreadPool implements JobExecutor {
                 }
             } finally {
                 if (currentPool() != null) {
-                    m_invisibleThreads--;
+                    m_invisibleThreads.decrementAndGet();
                 }
             }
         }
