@@ -18,54 +18,59 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.meta.looper;
 
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
+import org.knime.core.node.NodeDialogPane;
 
 /**
- * Settings for the looper node.
- * 
+ * This factory create all necessary classes for the for-loop head node.
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ForLoopHeadSettings {
-    private int m_loops = 10;
-    
+public class LoopStartCountNodeFactory extends
+        NodeFactory<LoopStartCountNodeModel> {
     /**
-     * Sets the number of times the inner workflow should be executed.
-     * @param loops the number loops, which must be > 0
+     * {@inheritDoc}
      */
-    public void loops(final int loops) {
-        m_loops = loops;
-    }
-    
-    /**
-     * Returns the number of loops.
-     * @return the number of loops.
-     */
-    public int loops() {
-        return m_loops;
-    }
-    
-    
-    /**
-     * Loads the settings from the node settings object.
-     * 
-     * @param settings a node settings object
-     */
-    public void loadSettingsFrom(final NodeSettingsRO settings) {
-        m_loops = settings.getInt("loops", 10);
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new LoopStartCountNodeDialog();
     }
 
-    
     /**
-     * Writes the settings into the node settings object.
-     * 
-     * @param settings a node settings object
+     * {@inheritDoc}
      */
-    public void saveSettingsTo(final NodeSettingsWO settings) {
-        settings.addInt("loops", m_loops);
+    @Override
+    public LoopStartCountNodeModel createNodeModel() {
+        return new LoopStartCountNodeModel();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<LoopStartCountNodeModel> createNodeView(
+            final int index, final LoopStartCountNodeModel model) {
+        return null;
     }
 }

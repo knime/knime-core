@@ -45,17 +45,17 @@ import org.knime.core.node.workflow.LoopStartNodeTerminator;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ForLoopHeadNodeModel extends NodeModel
+public class LoopStartCountNodeModel extends NodeModel
 implements LoopStartNodeTerminator {
 
     private int m_iteration;
 
-    private final ForLoopHeadSettings m_settings = new ForLoopHeadSettings();
+    private final LoopStartCountSettings m_settings = new LoopStartCountSettings();
 
     /**
      * Creates a new model with one input and one output port.
      */
-    public ForLoopHeadNodeModel() {
+    public LoopStartCountNodeModel() {
         super(new PortType[] {BufferedDataTable.TYPE},
                 new PortType[] {BufferedDataTable.TYPE});
     }
@@ -91,7 +91,7 @@ implements LoopStartNodeTerminator {
             assert m_iteration > 0;
             // otherwise we do this again, and we increment our counter
             // and we can do a quick sanity check
-            if (!(getLoopEndNode() instanceof ForLoopTailNodeModel)) {
+            if (!(getLoopEndNode() instanceof LoopEndNodeModel)) {
                 throw new IllegalArgumentException("Loop tail has wrong type!");
             }
         }
@@ -160,6 +160,6 @@ implements LoopStartNodeTerminator {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        new ForLoopHeadSettings().loadSettingsFrom(settings);
+        new LoopStartCountSettings().loadSettingsFrom(settings);
     }
 }

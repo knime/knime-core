@@ -1,5 +1,5 @@
 /*
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -17,36 +17,37 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
+ * History
+ *   13.02.2008 (thor): created
  */
 package org.knime.base.node.meta.looper;
 
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.NodeDialogPane;
 
 /**
  * This factory create all necessary classes for the for-loop head node.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ForLoopHeadNodeFactory extends
-        NodeFactory<ForLoopHeadNodeModel> {
+public class LoopEndNodeFactory extends NodeFactory<LoopEndNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new ForLoopHeadNodeDialog();
+        return null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ForLoopHeadNodeModel createNodeModel() {
-        return new ForLoopHeadNodeModel();
+    public LoopEndNodeModel createNodeModel() {
+        return new LoopEndNodeModel();
     }
 
     /**
@@ -62,15 +63,15 @@ public class ForLoopHeadNodeFactory extends
      */
     @Override
     protected boolean hasDialog() {
-        return true;
+        return false;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView<ForLoopHeadNodeModel> createNodeView(
-            final int index, final ForLoopHeadNodeModel model) {
+    public NodeView<LoopEndNodeModel> createNodeView(final int index,
+            final LoopEndNodeModel model) {
         return null;
     }
 }

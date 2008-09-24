@@ -34,7 +34,7 @@ import org.knime.core.node.workflow.ScopeVariable.Type;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ConditionLoopTailSettings {
+public class LoopEndConditionSettings {
     /** All comparison operators the user can choose from in the dialog. */
     public enum Operator {
         /** Numeric greater than. */

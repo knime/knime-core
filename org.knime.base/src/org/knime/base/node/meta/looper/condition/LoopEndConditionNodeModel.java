@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.util.NoSuchElementException;
 
 import org.knime.base.data.append.column.AppendedColumnRow;
-import org.knime.base.node.meta.looper.condition.ConditionLoopTailSettings.Operator;
+import org.knime.base.node.meta.looper.condition.LoopEndConditionSettings.Operator;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -60,10 +60,10 @@ import org.knime.core.node.workflow.ScopeVariable.Type;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ConditionLoopTailNodeModel extends NodeModel implements
+public class LoopEndConditionNodeModel extends NodeModel implements
         LoopEndNode {
-    private final ConditionLoopTailSettings m_settings =
-            new ConditionLoopTailSettings();
+    private final LoopEndConditionSettings m_settings =
+            new LoopEndConditionSettings();
 
     private BufferedDataContainer m_collectContainer;
 
@@ -96,7 +96,7 @@ public class ConditionLoopTailNodeModel extends NodeModel implements
     /**
      * Creates a new node model.
      */
-    public ConditionLoopTailNodeModel() {
+    public LoopEndConditionNodeModel() {
         super(1, 2);
     }
 
@@ -302,7 +302,7 @@ public class ConditionLoopTailNodeModel extends NodeModel implements
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        ConditionLoopTailSettings s = new ConditionLoopTailSettings();
+        LoopEndConditionSettings s = new LoopEndConditionSettings();
         s.loadSettings(settings);
 
         if (s.operator() == null) {

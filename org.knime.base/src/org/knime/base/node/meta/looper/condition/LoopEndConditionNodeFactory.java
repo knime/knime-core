@@ -1,5 +1,4 @@
-/*
- * ------------------------------------------------------------------
+/* ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -20,34 +19,45 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   13.02.2008 (thor): created
+ *   02.09.2008 (thor): created
  */
-package org.knime.base.node.meta.looper;
+package org.knime.base.node.meta.looper.condition;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * This factory create all necessary classes for the for-loop head node.
+ * This factory creates all necessary classes for the condition loop head node.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ForLoopTailNodeFactory extends NodeFactory<ForLoopTailNodeModel> {
+public class LoopEndConditionNodeFactory extends
+        NodeFactory<LoopEndConditionNodeModel> {
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return null;
+        return new LoopEndConditionNodeDialog();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ForLoopTailNodeModel createNodeModel() {
-        return new ForLoopTailNodeModel();
+    public LoopEndConditionNodeModel createNodeModel() {
+        return new LoopEndConditionNodeModel();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<LoopEndConditionNodeModel> createNodeView(
+            final int viewIndex, final LoopEndConditionNodeModel nodeModel) {
+        return null;
     }
 
     /**
@@ -63,15 +73,6 @@ public class ForLoopTailNodeFactory extends NodeFactory<ForLoopTailNodeModel> {
      */
     @Override
     protected boolean hasDialog() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<ForLoopTailNodeModel> createNodeView(final int index,
-            final ForLoopTailNodeModel model) {
-        return null;
+        return true;
     }
 }

@@ -1,4 +1,5 @@
-/* ------------------------------------------------------------------
+/*
+ * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -17,62 +18,58 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- *
+ * 
  * History
- *   02.09.2008 (thor): created
+ *   Sept 17, 2008 (mb): created
  */
-package org.knime.base.node.meta.looper.condition;
+package org.knime.base.node.flowvariable.variableloophead;
 
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
+import org.knime.core.node.NodeDialogPane;
+
 
 /**
- * This factory creates all necessary classes for the condition loop head node.
- *
- * @author Thorsten Meinl, University of Konstanz
+ * 
+ * @author M. Berthold, University of Konstanz
  */
-public class ConditionLoopTailNodeFactory extends
-        NodeFactory<ConditionLoopTailNodeModel> {
-
-    /**
-     * {@inheritDoc}
+public class LoopStartVariableNodeFactory 
+    extends NodeFactory<LoopStartVariableNodeModel> {
+    
+    /** Create factory, that instantiates nodes.
      */
+    public LoopStartVariableNodeFactory() {
+    }
+
+    /** {@inheritDoc} */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new ConditionLoopTailNodeDialog();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ConditionLoopTailNodeModel createNodeModel() {
-        return new ConditionLoopTailNodeModel();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<ConditionLoopTailNodeModel> createNodeView(
-            final int viewIndex, final ConditionLoopTailNodeModel nodeModel) {
         return null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
+    @Override
+    public LoopStartVariableNodeModel createNodeModel() {
+        return new LoopStartVariableNodeModel();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public NodeView<LoopStartVariableNodeModel> createNodeView(
+            final int index, final LoopStartVariableNodeModel model) {
+        return null;
+    }
+
+    /** {@inheritDoc} */
     @Override
     protected int getNrNodeViews() {
         return 0;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected boolean hasDialog() {
-        return true;
+        return false;
     }
+
 }

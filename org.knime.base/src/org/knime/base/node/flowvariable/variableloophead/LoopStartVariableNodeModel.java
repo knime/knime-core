@@ -43,7 +43,7 @@ import org.knime.core.node.workflow.LoopStartNodeTerminator;
  * 
  * @author M. Berthold, University of Konstanz
  */
-public class VariableLoopStartNodeModel extends TableToVariableNodeModel
+public class LoopStartVariableNodeModel extends TableToVariableNodeModel
 implements LoopStartNodeTerminator {
 
     // remember which iteration we are in:
@@ -52,7 +52,7 @@ implements LoopStartNodeTerminator {
     
     /** One input, one output.
      */
-    protected VariableLoopStartNodeModel() {
+    protected LoopStartVariableNodeModel() {
     }
 
     /** {@inheritDoc} */

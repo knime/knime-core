@@ -1,5 +1,4 @@
-/*
- * ------------------------------------------------------------------
+/* ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -18,58 +17,61 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
- *   Sept 17, 2008 (mb): created
+ *   02.09.2008 (thor): created
  */
-package org.knime.base.node.flowvariable.variableloophead;
+package org.knime.base.node.meta.looper.condition;
 
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.NodeDialogPane;
-
 
 /**
- * 
- * @author M. Berthold, University of Konstanz
+ * This factory creates all necessary classes for the condition loop head node.
+ *
+ * @author Thorsten Meinl, University of Konstanz
  */
-public class VariableLoopStartNodeFactory 
-    extends NodeFactory<VariableLoopStartNodeModel> {
-    
-    /** Create factory, that instantiates nodes.
+public class LoopStartGenericNodeFactory extends
+        NodeFactory<LoopStartGenericNodeModel> {
+    /**
+     * {@inheritDoc}
      */
-    public VariableLoopStartNodeFactory() {
-    }
-
-    /** {@inheritDoc} */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
         return null;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public VariableLoopStartNodeModel createNodeModel() {
-        return new VariableLoopStartNodeModel();
+    public LoopStartGenericNodeModel createNodeModel() {
+        return new LoopStartGenericNodeModel();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public NodeView<VariableLoopStartNodeModel> createNodeView(
-            final int index, final VariableLoopStartNodeModel model) {
+    public NodeView<LoopStartGenericNodeModel> createNodeView(
+            final int viewIndex, final LoopStartGenericNodeModel nodeModel) {
         return null;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected int getNrNodeViews() {
         return 0;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected boolean hasDialog() {
         return false;
     }
-
 }

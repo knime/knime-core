@@ -611,14 +611,14 @@
       <node
             category-path="/loopsupport"
             expert-flag="true"
-            factory-class="org.knime.base.node.meta.looper.ForLoopHeadNodeFactory"
-            id="org.knime.base.node.meta.looper.ForLoopHeadNodeFactory">
+            factory-class="org.knime.base.node.meta.looper.LoopStartCountNodeFactory"
+            id="org.knime.base.node.meta.looper.LoopStartCountNodeFactory">
       </node>
       <node
             category-path="/loopsupport"
             expert-flag="true"
-            factory-class="org.knime.base.node.meta.looper.ForLoopTailNodeFactory"
-            id="org.knime.base.node.meta.looper.ForLoopTailNodeFactory">
+            factory-class="org.knime.base.node.meta.looper.LoopEndNodeFactory"
+            id="org.knime.base.node.meta.looper.LoopEndNodeFactory">
       </node>
        <node
             category-path="/database"
@@ -743,14 +743,14 @@
       <node
             category-path="/loopsupport"
             expert-flag="true"
-            factory-class="org.knime.base.node.meta.looper.condition.GenericLoopHeadNodeFactory"
-            id="org.knime.base.node.meta.looper.condition.ConditionLoopHeadNodeFactory">
+            factory-class="org.knime.base.node.meta.looper.condition.LoopStartGenericNodeFactory"
+            id="org.knime.base.node.meta.looper.condition.LoopStartGenericNodeFactory">
       </node>
       <node
             category-path="/loopsupport"
             expert-flag="true"
-            factory-class="org.knime.base.node.meta.looper.condition.ConditionLoopTailNodeFactory"
-            id="org.knime.base.node.meta.looper.condition.ConditionLoopTailNodeFactory">
+            factory-class="org.knime.base.node.meta.looper.condition.LoopEndConditionNodeFactory"
+            id="org.knime.base.node.meta.looper.condition.LoopEndConditionNodeFactory">
       </node>
       <node
             category-path="/io/write"
@@ -770,8 +770,8 @@
       <node
             category-path="/loopsupport"
             expert-flag="true"
-            factory-class="org.knime.base.node.flowvariable.variableloophead.VariableLoopStartNodeFactory"
-            id="org.knime.base.node.flowvariable.variableloophead.VariableLoopStartNodeFactory">
+            factory-class="org.knime.base.node.flowvariable.variableloophead.LoopStartVariableNodeFactory"
+            id="org.knime.base.node.flowvariable.variableloophead.LoopStartVariableNodeFactory">
       </node>
       <node
             category-path="/loopsupport"

@@ -38,7 +38,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import org.knime.base.node.meta.looper.condition.ConditionLoopTailSettings.Operator;
+import org.knime.base.node.meta.looper.condition.LoopEndConditionSettings.Operator;
 import org.knime.base.util.scopevariable.ScopeVariableListCellRenderer;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
@@ -55,15 +55,15 @@ import org.knime.core.node.workflow.ScopeVariable.Type;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ConditionLoopTailNodeDialog extends NodeDialogPane {
+public class LoopEndConditionNodeDialog extends NodeDialogPane {
     private static final Object[] NUMERIC_OPERATORS =
             {Operator.EQ, Operator.LE, Operator.LT, Operator.GE, Operator.GT,
                     Operator.NE};
 
     private static final Object[] STRING_OPERATORS = {Operator.EQ, Operator.NE};
 
-    private final ConditionLoopTailSettings m_settings =
-            new ConditionLoopTailSettings();
+    private final LoopEndConditionSettings m_settings =
+            new LoopEndConditionSettings();
 
     private final DefaultComboBoxModel m_variablesModel =
             new DefaultComboBoxModel();
@@ -85,7 +85,7 @@ public class ConditionLoopTailNodeDialog extends NodeDialogPane {
     /**
      * Creates a new dialog.
      */
-    public ConditionLoopTailNodeDialog() {
+    public LoopEndConditionNodeDialog() {
         final JPanel p = new JPanel(new GridBagLayout());
 
         GridBagConstraints c = new GridBagConstraints();

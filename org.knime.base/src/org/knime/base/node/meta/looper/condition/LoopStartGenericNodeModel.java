@@ -1,5 +1,4 @@
-/*
- * ------------------------------------------------------------------
+/* ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -20,21 +19,14 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   13.02.2008 (thor): created
+ *   02.09.2008 (thor): created
  */
-package org.knime.base.node.meta.looper;
+package org.knime.base.node.meta.looper.condition;
 
 import java.io.File;
 import java.io.IOException;
 
-import org.knime.base.data.append.column.AppendedColumnRow;
-import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowKey;
-import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -43,23 +35,22 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.LoopEndNode;
-import org.knime.core.node.workflow.LoopStartNodeTerminator;
+import org.knime.core.node.workflow.LoopStartNode;
 
 /**
- * This model is the tail node of a for loop.
+ * This class is the model for the condition loop head node. It just puts the
+ * current iteration number on the context stack.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ForLoopTailNodeModel extends NodeModel implements LoopEndNode {
-
-    private BufferedDataContainer m_resultContainer;
-    private int m_count;
+public class LoopStartGenericNodeModel extends NodeModel implements
+        LoopStartNode {
+    private int m_iteration;
 
     /**
      * Creates a new model.
      */
-    public ForLoopTailNodeModel() {
+    public LoopStartGenericNodeModel() {
         super(1, 1);
     }
 
@@ -69,16 +60,9 @@ public class ForLoopTailNodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        return new DataTableSpec[]{createSpec(inSpecs[0])};
-    }
-
-    private static DataTableSpec createSpec(final DataTableSpec inSpec) {
-        DataColumnSpecCreator crea =
-                new DataColumnSpecCreator(DataTableSpec.getUniqueColumnName(
-                        inSpec, "Iteration"), IntCell.TYPE);
-        DataTableSpec newSpec = new DataTableSpec(crea.createSpec());
-
-        return new DataTableSpec(inSpec, newSpec);
+        assert m_iteration == 0;
+        pushScopeVariableInt("currentIteration", m_iteration);
+        return inSpecs;
     }
 
     /**
@@ -87,42 +71,19 @@ public class ForLoopTailNodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-
-        if (!(this.getLoopStartNode() instanceof LoopStartNodeTerminator)) {
-            throw new IllegalStateException("Loop end is not connected"
-                   + " to matching/corresponding loop start node. You"
-                   + "are trying to create an infinite loop!");
-        }
-        if (m_resultContainer == null) {
-            // first time we are getting to this: open container
-            m_resultContainer =
-                    exec.createDataContainer(createSpec(inData[0]
-                            .getDataTableSpec()));
-        }
-
-        IntCell currIterCell = new IntCell(m_count);
-        for (DataRow row : inData[0]) {
-            AppendedColumnRow newRow =
-                    new AppendedColumnRow(new DefaultRow(new RowKey(row.getKey()
-                    + "#" + m_count), row), currIterCell);
-            m_resultContainer.addRowToTable(newRow);
-        }
-
-        boolean terminateLoop = 
-            ((LoopStartNodeTerminator)this.getLoopStartNode()).terminateLoop();
-        if (terminateLoop) {
-            // this was the last iteration - close container and continue
-            m_resultContainer.close();
-            BufferedDataTable outTable = m_resultContainer.getTable();
-            m_resultContainer.close();
-            m_resultContainer = null;
-            m_count = 0;
-            return new BufferedDataTable[]{outTable};
+        // let's see if we have access to the tail: if we do, it's not the
+        // first time we are doing this...
+        if (getLoopEndNode() == null) {
+            assert m_iteration == 0;
         } else {
-            continueLoop();
-            m_count++;
-            return new BufferedDataTable[1];
+            assert m_iteration > 0;
+            if (!(getLoopEndNode() instanceof LoopEndConditionNodeModel)) {
+                throw new IllegalArgumentException("Loop tail has wrong type!");
+            }
         }
+        pushScopeVariableInt("currentIteration", m_iteration);
+        m_iteration++;
+        return inData;
     }
 
     /**
@@ -147,10 +108,9 @@ public class ForLoopTailNodeModel extends NodeModel implements LoopEndNode {
      */
     @Override
     protected void reset() {
-        m_resultContainer = null;
-        m_count = 0;
+        m_iteration = 0;
     }
-
+    
     /**
      * {@inheritDoc}
      */

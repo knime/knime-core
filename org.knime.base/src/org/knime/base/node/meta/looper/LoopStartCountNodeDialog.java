@@ -42,16 +42,16 @@ import org.knime.core.node.NotConfigurableException;
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ForLoopHeadNodeDialog extends NodeDialogPane {
+public class LoopStartCountNodeDialog extends NodeDialogPane {
     private final JSpinner m_loops = new JSpinner(new SpinnerNumberModel(10, 1,
             Integer.MAX_VALUE, 1));
 
-    private final ForLoopHeadSettings m_settings = new ForLoopHeadSettings();
+    private final LoopStartCountSettings m_settings = new LoopStartCountSettings();
 
     /**
      * Creates a new dialog for the looper node.
      */
-    public ForLoopHeadNodeDialog() {
+    public LoopStartCountNodeDialog() {
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         
