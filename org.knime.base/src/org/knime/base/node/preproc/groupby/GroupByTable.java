@@ -408,6 +408,9 @@ public class GroupByTable {
             new DataColumnSpec[noOfCols];
         int colIdx = 0;
         //add the group columns first
+
+        final Map<String, MutableInteger> colNameCount =
+            new HashMap<String, MutableInteger>(noOfCols);
         for (final String colName : groupColNames) {
             final DataColumnSpec colSpec = spec.getColumnSpec(colName);
             if (colSpec == null) {
@@ -415,10 +418,9 @@ public class GroupByTable {
                         "No column spec found for name: " + colName);
             }
             colSpecs[colIdx++] = colSpec;
+            colNameCount.put(colName, new MutableInteger(1));
         }
         //add the aggregation columns
-        final Map<String, MutableInteger> aggrColNameCount =
-            new HashMap<String, MutableInteger>(noOfCols);
         for (final ColumnAggregator aggrCol : columnAggregators) {
             final DataColumnSpec origSpec =
                 spec.getColumnSpec(aggrCol.getColName());
@@ -436,12 +438,12 @@ public class GroupByTable {
             }
             //since a column could be used several times create a unique name
             final String uniqueName;
-            if (aggrColNameCount.containsKey(colName)) {
-                final MutableInteger counter = aggrColNameCount.get(colName);
+            if (colNameCount.containsKey(colName)) {
+                final MutableInteger counter = colNameCount.get(colName);
                 uniqueName = colName + "_" + counter.intValue();
                 counter.inc();
             } else {
-                aggrColNameCount.put(colName, new MutableInteger(1));
+                colNameCount.put(colName, new MutableInteger(1));
                 uniqueName = colName;
             }
             final DataColumnSpec newSpec =
