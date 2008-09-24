@@ -37,6 +37,9 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.database.DatabaseConnectionSettings;
+import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
+import org.knime.core.node.port.database.DatabaseReaderConnection;
 
 /**
  * 
@@ -48,16 +51,14 @@ final class DBReaderNodeModel extends NodeModel {
     
     private String m_query = null;
     
-    private final DBConnection m_conn;
+    private final DatabaseReaderConnection m_load = 
+        new DatabaseReaderConnection();
     
     /**
-     * Creates a new database reader.
-     * @param nrDataIns number of data inputs
-     * @param nrDataOuts number of data outputs
+     * Creates a new database reader with one data out-port.
      */
-    DBReaderNodeModel(final int nrDataIns, final int nrDataOuts) {
-        super(nrDataIns, nrDataOuts);
-        m_conn = new DBConnection();
+    DBReaderNodeModel() {
+        super(0, 1);
     }
 
     /**
@@ -69,15 +70,18 @@ final class DBReaderNodeModel extends NodeModel {
             throws CanceledExecutionException, Exception {
         exec.setProgress("Opening database connection...");
         try {
-            DBReaderConnection load = new DBReaderConnection(
-                    new DBQueryConnection(m_conn, m_query, Integer.MAX_VALUE));
-            m_lastSpec = load.getDataTableSpec();
+            m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(
+                    m_load.getQueryConnection(), m_query));
+            m_lastSpec = m_load.getDataTableSpec();
             exec.setProgress("Reading data from database...");
-            return new BufferedDataTable[]{load.createTable(exec)};
+            return new BufferedDataTable[]{m_load.createTable(exec)};
+        } catch (Exception e) {
+            m_lastSpec = null;
+            throw e;
         } catch (Throwable t) {
             m_lastSpec = null;
             throw new RuntimeException(t);
-        }
+        }   
     }
 
     /**
@@ -136,9 +140,9 @@ final class DBReaderNodeModel extends NodeModel {
             return new DataTableSpec[]{m_lastSpec};
         }
         try {
-            DBReaderConnection conn = new DBReaderConnection(
-                    new DBQueryConnection(m_conn, m_query, Integer.MAX_VALUE));
-            m_lastSpec = conn.getDataTableSpec();
+            m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(
+                    m_load.getQueryConnection(), m_query));
+            m_lastSpec = m_load.getDataTableSpec();
             return new DataTableSpec[]{m_lastSpec};
         } catch (InvalidSettingsException e) {
             m_lastSpec = null;
@@ -155,14 +159,17 @@ final class DBReaderNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        String query = settings.getString(DBConnection.CFG_STATEMENT);
-        if (query != null 
-                && query.contains(DBQueryConnection.TABLE_PLACEHOLDER)) {
+        String query = settings.getString(
+                DatabaseConnectionSettings.CFG_STATEMENT);
+        if (query != null && query.contains(
+                DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER)) {
             throw new InvalidSettingsException(
                     "Database table place holder (" 
-                    + DBQueryConnection.TABLE_PLACEHOLDER + ") not replaced.");
+                    + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER 
+                    + ") not replaced.");
         }
-        m_conn.validateConnection(settings);
+        // validates the current settings on a temp. connection
+        new DatabaseQueryConnectionSettings(settings);
     }
 
     /**
@@ -171,10 +178,18 @@ final class DBReaderNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        String query = settings.getString(DBConnection.CFG_STATEMENT);
-        if (m_conn.loadValidatedConnection(settings)
-                || query == null || !query.equals(m_query)) {
+        String query = settings.getString(
+                DatabaseConnectionSettings.CFG_STATEMENT);
+        DatabaseQueryConnectionSettings conn = m_load.getQueryConnection();
+        if (conn == null || !conn.loadValidatedConnection(settings)
+                || query == null || m_query == null || !query.equals(m_query)) {
             m_lastSpec = null;
+            try {
+                m_load.setDBQueryConnection(
+                        new DatabaseQueryConnectionSettings(settings));
+            } catch (Throwable t) {
+                throw new InvalidSettingsException(t);
+            }
         }
         m_query = query;
     }
@@ -184,7 +199,10 @@ final class DBReaderNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_conn.saveConnection(settings);
-        settings.addString(DBConnection.CFG_STATEMENT, m_query);
+        DatabaseQueryConnectionSettings conn = m_load.getQueryConnection();
+        if (conn != null) {
+            conn.saveConnection(settings);
+        }
+        settings.addString(DatabaseConnectionSettings.CFG_STATEMENT, m_query);
     }
 }

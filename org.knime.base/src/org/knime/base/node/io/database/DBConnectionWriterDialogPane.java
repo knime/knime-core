@@ -47,7 +47,7 @@ final class DBConnectionWriterDialogPane extends DefaultNodeSettingsPane {
      * @return string model for table name
      */
     static final SettingsModelString createTableNameModel() {
-        return new SettingsModelString("table_name", "<table_name>");
+        return new SettingsModelString("table_name", "");
     }
     
 }

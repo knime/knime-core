@@ -22,10 +22,6 @@
  */
 package org.knime.base.node.io.database;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -58,14 +54,7 @@ final class DBReaderConnectionDialogPane extends DBReaderDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
         super.loadSettingsFrom(settings, specs);
-        List<DataTableSpec> specList = new ArrayList<DataTableSpec>();
-        for (PortObjectSpec spec : specs) {
-            if (spec instanceof DataTableSpec) {
-                specList.add((DataTableSpec) spec);
-            }
-        }
-        m_panel.loadSettingsFrom(settings, 
-                specList.toArray(new DataTableSpec[specList.size()]));
+        m_panel.loadSettingsFrom(settings, specs);
     }
     
     /**

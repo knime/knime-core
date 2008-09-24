@@ -45,12 +45,12 @@ import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.util.StringHistory;
+import org.knime.core.node.port.database.DatabaseConnectionSettings;
+import org.knime.core.node.port.database.DatabaseDriverLoader;
 import org.knime.core.util.KnimeEncryption;
 import org.knime.core.util.SimpleFileFilter;
 
@@ -81,18 +81,6 @@ final class DBDialogPane extends JPanel {
     /** Default font used for all components within the database dialogs. */
     static final Font FONT = new Font("Monospaced", Font.PLAIN, 12);
     
-    /** Keeps the history of all loaded driver and its order. */
-    static final StringHistory DRIVER_ORDER = StringHistory.getInstance(
-            "database_drivers");
-    
-    /** Keeps the history of all driver URLs. */
-    static final StringHistory DRIVER_URLS = StringHistory.getInstance(
-            "driver_urls");
-    
-    /** Keeps the history of all database URLs. */
-    static final StringHistory DATABASE_URLS = StringHistory.getInstance(
-            "database_urls");
-    
     /** Default user place holder, <code>&ltuser&gt</code>. */
     static final String DFT_USER_TAG = "<user>";
     
@@ -112,7 +100,7 @@ final class DBDialogPane extends JPanel {
                 if (ret == JFileChooser.APPROVE_OPTION) {
                     File file = chooser.getSelectedFile();
                     try {
-                        DBDriverLoader.loadDriver(file);
+                        DatabaseDriverLoader.loadDriver(file);
                         updateDriver();
                     } catch (Throwable t) {
                         LOGGER.info("Could not load driver from file \"" 
@@ -182,7 +170,7 @@ final class DBDialogPane extends JPanel {
             m_chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
             m_chooser.setAcceptAllFileFilterUsed(false);
             m_chooser.setFileFilter(
-                    new SimpleFileFilter(DBDriverLoader.EXTENSIONS));
+                    new SimpleFileFilter(DatabaseDriverLoader.EXTENSIONS));
         }
         return m_chooser;
     }
@@ -197,7 +185,8 @@ final class DBDialogPane extends JPanel {
         // database driver and name
         m_driver.removeAllItems();
         m_db.removeAllItems();
-        for (String databaseURL : DATABASE_URLS.getHistory()) {
+        for (String databaseURL 
+                : DatabaseConnectionSettings.DATABASE_URLS.getHistory()) {
             m_db.addItem(databaseURL);   
         }
         String dbName = settings.getString("database", null);
@@ -215,7 +204,7 @@ final class DBDialogPane extends JPanel {
                 new String[0]);
         for (String driver : loadedDriver) {
             try {
-                DBDriverLoader.loadDriver(new File(driver));
+                DatabaseDriverLoader.loadDriver(new File(driver));
             } catch (Throwable t) {
                 LOGGER.warn("Could not load driver \"" + driver + "\", reason: "
                         + t.getMessage(), t);
@@ -230,8 +219,9 @@ final class DBDialogPane extends JPanel {
     private void updateDriver() {
         m_driver.removeAllItems();
         Set<String> driverNames = new HashSet<String>(
-                DBDriverLoader.getLoadedDriver());
-        for (String driverName : DRIVER_ORDER.getHistory()) {
+                DatabaseDriverLoader.getLoadedDriver());
+        for (String driverName 
+                : DatabaseConnectionSettings.DRIVER_ORDER.getHistory()) {
             if (driverNames.contains(driverName)) {
                 m_driver.addItem(driverName);
                 driverNames.remove(driverName);
@@ -245,24 +235,12 @@ final class DBDialogPane extends JPanel {
     /**
      * Save settings.
      * @param settings to save into
-     * @throws InvalidSettingsException if settings are invalid
      */
-    protected void saveSettingsTo(final NodeSettingsWO settings) 
-            throws InvalidSettingsException {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
         String driverName = m_driver.getSelectedItem().toString();
         settings.addString("driver", driverName);
         String url = m_db.getEditor().getItem().toString();
-        settings.addString("database", url);
-        try {
-            if (!DBDriverLoader.getWrappedDriver(driverName).acceptsURL(url)) {
-                throw new InvalidSettingsException("Driver \"" + driverName 
-                        + "\" does not accept URL: " + url);
-            }
-        } catch (Throwable t) {
-            throw new InvalidSettingsException(
-                    "Couldn't test connection to URL \"" + url + "\" "
-                            + " with driver \"" + driverName + "\".", t);
-        }        
+        settings.addString("database", url);     
         settings.addString("user", m_user.getText().trim());
         if (m_passwordChanged) {
             try {

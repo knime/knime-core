@@ -23,8 +23,8 @@
 package org.knime.base.node.io.database;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
@@ -59,11 +59,11 @@ final class DBColumnFilterNodeDialogPane extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final PortObjectSpec[] specs) throws NotConfigurableException {
-        DataTableSpec spec =
-            ((DatabasePortObjectSpec) specs[0]).getDataTableSpec();
-        m_panel.loadSettingsFrom(settings, new DataTableSpec[]{spec});
-        m_tableOptions.loadSettingsFrom(settings, new DataTableSpec[]{spec});
+            final PortObjectSpec[] ports) throws NotConfigurableException {
+        DatabasePortObjectSpec dbSpec = (DatabasePortObjectSpec) ports[0];
+        DataTableSpec[] specs = new DataTableSpec[]{dbSpec.getDataTableSpec()};
+        m_panel.loadSettingsFrom(settings, specs);
+        m_tableOptions.loadSettingsFrom(settings, specs);
     }
 
     /**

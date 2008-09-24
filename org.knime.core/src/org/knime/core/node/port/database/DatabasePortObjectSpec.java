@@ -60,6 +60,13 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
      */
     public DatabasePortObjectSpec(final DataTableSpec spec, 
             final ModelContentRO conn) {
+        if (spec == null) {
+            throw new NullPointerException("DataTableSpec must not be null.");
+        }
+        if (conn == null) {
+            throw new NullPointerException(
+                    "Database Connection must not be null.");
+        }
         m_spec = spec;
         m_conn = conn;
     }
@@ -155,8 +162,9 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
     @Override
     public JComponent[] getViews() {
         JComponent connPanel = new ModelContentOutPortView(m_conn);
+        connPanel.setName("DatabaseConnection");
         JComponent specPanel = new DataTableSpecView(m_spec);
-        return new JComponent[]{connPanel, specPanel};
+        return new JComponent[]{specPanel, connPanel};
     }
     
 }

@@ -20,19 +20,23 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.base.node.io.database;
+package org.knime.core.node.port.database;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
+import java.sql.DriverPropertyInfo;
+import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
@@ -48,10 +52,10 @@ import org.knime.core.node.util.StringHistory;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-final class DBDriverLoader {
+public final class DatabaseDriverLoader {
     
     private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(DBDriverLoader.class);
+        NodeLogger.getLogger(DatabaseDriverLoader.class);
     
     /** Map from driver file to driver class. */
     private static final Map<String, String> DRIVERFILE_TO_DRIVERCLASS
@@ -92,7 +96,7 @@ final class DBDriverLoader {
     /**
      * Allowed file extensions, jar and zip only.
      */
-    static final String[] EXTENSIONS = {".jar", ".zip"};
+    public static final String[] EXTENSIONS = {".jar", ".zip"};
 
     private static final ClassLoader CLASS_LOADER = ClassLoader
             .getSystemClassLoader();
@@ -142,21 +146,24 @@ final class DBDriverLoader {
      * Hide (empty) constructor.
      *
      */
-    private DBDriverLoader() {
+    private DatabaseDriverLoader() {
 
     }
     
     /**
      * Registers given <code>Driver</code> at the <code>DriverManager</code>.
      * @param driver to register
+     * @return SQL Driver 
      * @throws InvalidSettingsException if the database drivers could not
      *             registered
      */
-    static void registerDriver(final String driver) 
-        throws InvalidSettingsException {
+    static Driver registerDriver(final String driver) 
+            throws InvalidSettingsException {
         try {
-            DriverManager.registerDriver(DBDriverLoader
-                    .getWrappedDriver(driver));
+            Driver wrappedDriver = 
+                DatabaseDriverLoader.getWrappedDriver(driver);
+            DriverManager.registerDriver(wrappedDriver);
+            return wrappedDriver;
         } catch (Throwable t) {
             throw new InvalidSettingsException("Could not register database"
                   + " driver \"" + driver + "\", reason: " + t.getMessage(), t);
@@ -169,7 +176,7 @@ final class DBDriverLoader {
      * @param file Load driver from.
      * @throws IOException {@link IOException}
      */
-    static final void loadDriver(final File file) throws IOException {
+    public static final void loadDriver(final File file) throws IOException {
         String fileName = file.getAbsolutePath();
         if (file.isDirectory()) {
             // not yet supported
@@ -210,7 +217,7 @@ final class DBDriverLoader {
     /**
      * @return A set if loaded driver names.
      */
-    static Set<String> getLoadedDriver() {
+    public static Set<String> getLoadedDriver() {
         return DRIVER_MAP.keySet();
     }
 
@@ -219,7 +226,7 @@ final class DBDriverLoader {
      * @param driverName The driver name.
      * @return The <code>WrappedDriver</code> for the given driver name.
      */
-    static WrappedDriver getWrappedDriver(final String driverName) {
+    public static WrappedDriver getWrappedDriver(final String driverName) {
         return DRIVER_MAP.get(driverName);
     }
 
@@ -238,7 +245,7 @@ final class DBDriverLoader {
      * @return an String containing protocol, port, host, and database name
      *      place holder 
      */
-    static final String getURLForDriver(final String driver) {
+    public static final String getURLForDriver(final String driver) {
         String url = DRIVER_TO_URL.get(driver);
         if (url == null) {
             return "<protocol>://<host>:<port>/<database_name>";
@@ -252,8 +259,87 @@ final class DBDriverLoader {
      * @param driverClass driver class name
      * @return driver file location
      */
-    static final String getDriverFileForDriverClass(final String driverClass) {
+    public static final String getDriverFileForDriverClass(
+            final String driverClass) {
         return DRIVERFILE_TO_DRIVERCLASS.get(driverClass);
+    }
+    
+    /**
+     * Wraps a Driver object.
+     * 
+     * @author Thomas Gabriel, University of Konstanz
+     */
+    private static final class WrappedDriver implements Driver {
+        private final Driver m_d;
+
+        /**
+         * Create wrapper.
+         * 
+         * @param d For this <code>Driver</code>.
+         */
+        WrappedDriver(final Driver d) {
+            m_d = d;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public Connection connect(final String url, final Properties info)
+                throws SQLException {
+            return m_d.connect(url, info);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public boolean acceptsURL(final String url) throws SQLException {
+            return m_d.acceptsURL(url);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public DriverPropertyInfo[] getPropertyInfo(final String url,
+                final Properties info) throws SQLException {
+            return m_d.getPropertyInfo(url, info);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public int getMajorVersion() {
+            return m_d.getMajorVersion();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public int getMinorVersion() {
+            return m_d.getMinorVersion();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public boolean jdbcCompliant() {
+            return m_d.jdbcCompliant();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return m_d.getClass().getName();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return m_d.hashCode();
+        }
     }
     
 }

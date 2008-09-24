@@ -30,12 +30,14 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.database.DatabaseConnectionSettings;
+import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 
 
 /**
@@ -55,7 +57,7 @@ class DBReaderDialogPane extends NodeDialogPane {
         super();
         m_statmnt.setFont(DBDialogPane.FONT);
         m_statmnt.setText("SELECT * FROM " 
-                + DBQueryConnection.TABLE_PLACEHOLDER);
+                + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER);
         final JScrollPane scrollPane = new JScrollPane(m_statmnt,
                 ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -72,13 +74,14 @@ class DBReaderDialogPane extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final PortObjectSpec[] specs) throws NotConfigurableException {
-        m_loginPane.loadSettingsFrom(settings, specs);
+            final PortObjectSpec[] ports) throws NotConfigurableException {
+        m_loginPane.loadSettingsFrom(settings, ports);
         // statement
         String statement = 
-            settings.getString(DBConnection.CFG_STATEMENT, null); 
+            settings.getString(DatabaseConnectionSettings.CFG_STATEMENT, null); 
         m_statmnt.setText(statement == null 
-                ? "SELECT * FROM " + DBQueryConnection.TABLE_PLACEHOLDER 
+                ? "SELECT * FROM " 
+                        + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER 
                 : statement);
     }
 
@@ -89,7 +92,7 @@ class DBReaderDialogPane extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         m_loginPane.saveSettingsTo(settings);
-        settings.addString(DBConnection.CFG_STATEMENT, 
+        settings.addString(DatabaseConnectionSettings.CFG_STATEMENT, 
                 m_statmnt.getText().trim());
     }
 }

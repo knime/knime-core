@@ -30,14 +30,15 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 
@@ -67,7 +68,8 @@ final class DBConnectionWriterNodeModel extends NodeModel {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
         exec.setProgress("Opening database connection...");
         String tableName = m_tableName.getStringValue();
-        DBQueryConnection conn = new DBQueryConnection(
+        DatabaseQueryConnectionSettings conn = 
+            new DatabaseQueryConnectionSettings(
                 dbObj.getConnectionModel());
         try {
             conn.execute("DROP TABLE " + tableName);
@@ -111,9 +113,15 @@ final class DBConnectionWriterNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) 
             throws InvalidSettingsException {
+        String table = m_tableName.getStringValue();
+        if (table == null || table.trim().isEmpty()) {
+            throw new InvalidSettingsException(
+                    "Configure node and enter a valid table name.");
+        }
         try {
             DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
-            DBQueryConnection conn = new DBQueryConnection(
+            DatabaseQueryConnectionSettings conn = 
+                new DatabaseQueryConnectionSettings(
                     spec.getConnectionModel());
             conn.createConnection();
         } catch (InvalidSettingsException ise) {
@@ -121,8 +129,10 @@ final class DBConnectionWriterNodeModel extends NodeModel {
         } catch (Throwable t) {
             throw new InvalidSettingsException(t);
         }
-        super.setWarningMessage("Existing table \"" 
-                + m_tableName.getStringValue() + "\" will be dropped!");
+        if (table != null) {
+            super.setWarningMessage("Existing table \"" 
+                    + table + "\" will be dropped!");
+        }
         return new DataTableSpec[0];
     }
     

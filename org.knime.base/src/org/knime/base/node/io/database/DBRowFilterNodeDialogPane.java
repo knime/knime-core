@@ -30,8 +30,8 @@ import javax.swing.JPanel;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
@@ -109,13 +109,13 @@ final class DBRowFilterNodeDialogPane extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final PortObjectSpec[] specs) throws NotConfigurableException {
-        DataTableSpec spec = 
-            ((DatabasePortObjectSpec) specs[0]).getDataTableSpec();
-        m_column.loadSettingsFrom(settings, new DataTableSpec[]{spec});
-        m_operator.loadSettingsFrom(settings, new DataTableSpec[]{spec});
-        m_value.loadSettingsFrom(settings, new DataTableSpec[]{spec});
-        m_tableOptions.loadSettingsFrom(settings, new DataTableSpec[]{spec});
+            final PortObjectSpec[] ports) throws NotConfigurableException {
+        DatabasePortObjectSpec dbSpec = (DatabasePortObjectSpec) ports[0];
+        DataTableSpec[] specs = new DataTableSpec[]{dbSpec.getDataTableSpec()};
+        m_column.loadSettingsFrom(settings, specs);
+        m_operator.loadSettingsFrom(settings, specs);
+        m_value.loadSettingsFrom(settings, specs);
+        m_tableOptions.loadSettingsFrom(settings, specs);
     }
     
     /**

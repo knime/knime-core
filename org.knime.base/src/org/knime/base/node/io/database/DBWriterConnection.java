@@ -41,6 +41,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.port.database.DatabaseConnectionSettings;
 
 
 /**
@@ -69,9 +70,10 @@ final class DBWriterConnection {
      * @throws Exception if connection could not be established
      * @throws CanceledExecutionException If canceled.
      */
-    static final String writeData(final DBConnection dbConn, final String table,
-            final BufferedDataTable data, final boolean appendData,
-            final ExecutionMonitor exec, final Map<String, String> sqlTypes) 
+    static final String writeData(final DatabaseConnectionSettings dbConn,
+            final String table, final BufferedDataTable data, 
+            final boolean appendData, final ExecutionMonitor exec, 
+            final Map<String, String> sqlTypes) 
             throws Exception, CanceledExecutionException {
         Connection conn = dbConn.createConnection();
         DataTableSpec spec = data.getDataTableSpec();

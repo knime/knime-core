@@ -20,7 +20,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.base.node.io.database;
+package org.knime.core.node.port.database;
 
 import java.awt.Component;
 import java.sql.Driver;
@@ -34,13 +34,13 @@ import javax.swing.JFileChooser;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-final class DBDriverLoaderTest {
+final class DatabaseDriverLoaderTest {
 
-    private DBDriverLoaderTest() throws Exception {
+    private DatabaseDriverLoaderTest() throws Exception {
         JFileChooser chooser = new JFileChooser();
         int ret = chooser.showOpenDialog((Component)null);
         if (ret == JFileChooser.APPROVE_OPTION) {
-            DBDriverLoader.loadDriver(chooser.getSelectedFile());
+            DatabaseDriverLoader.loadDriver(chooser.getSelectedFile());
         }
         Enumeration<Driver> drivers = DriverManager.getDrivers();
         while (drivers.hasMoreElements()) {
@@ -55,6 +55,6 @@ final class DBDriverLoaderTest {
      * @throws Exception If happening.
      */
     public static void main(final String[] args) throws Exception {
-        new DBDriverLoaderTest();
+        new DatabaseDriverLoaderTest();
     }
 }

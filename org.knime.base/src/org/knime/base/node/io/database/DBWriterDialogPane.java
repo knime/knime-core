@@ -48,7 +48,7 @@ final class DBWriterDialogPane extends NodeDialogPane {
     
     private final DBDialogPane m_loginPane = new DBDialogPane();
     
-    private final JTextField m_table = new JTextField("<table_name>");
+    private final JTextField m_table = new JTextField("");
     
     private final JCheckBox m_append = 
         new JCheckBox("... to existing table (if any!)");

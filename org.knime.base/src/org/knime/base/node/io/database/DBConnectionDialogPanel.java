@@ -35,6 +35,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.util.ButtonGroupEnumInterface;
 
 /**
@@ -119,23 +120,24 @@ final class DBConnectionDialogPanel extends JPanel {
     }
     
     /**
-     * @return new settings model to resrict number of cached rows
+     * @return new settings model to restrict number of cached rows
      */
     static final SettingsModelIntegerBounded createCachedRowsModel() {
         return new SettingsModelIntegerBounded(
-                "no_cached_rows", 100, 0, Integer.MAX_VALUE);
+                DatabaseQueryConnectionSettings.NO_ROWS_CACHED, 
+                100, 0, Integer.MAX_VALUE);
     }
 
     /**
      * Loads dialog settings. 
      * @param settings to load
-     * @param specs input spec 
+     * @param ports input spec 
      * @throws NotConfigurableException if the settings are not applicable
      */
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final PortObjectSpec[] specs) throws NotConfigurableException {
-        m_group.loadSettingsFrom(settings, specs);
-        m_cacheRows.loadSettingsFrom(settings, specs);
+            final PortObjectSpec[] ports) throws NotConfigurableException {
+        m_group.loadSettingsFrom(settings, ports);
+        m_cacheRows.loadSettingsFrom(settings, ports);
     }
     
     /**

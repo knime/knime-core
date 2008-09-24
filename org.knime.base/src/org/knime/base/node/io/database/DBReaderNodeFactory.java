@@ -38,7 +38,7 @@ public final class DBReaderNodeFactory
      */
     @Override
     public DBReaderNodeModel createNodeModel() {
-        return new DBReaderNodeModel(0, 1);
+        return new DBReaderNodeModel();
     }
 
     /**

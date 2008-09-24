@@ -20,12 +20,13 @@
  * --------------------------------------------------------------------- *
  * 
  */
-package org.knime.base.node.io.database;
+package org.knime.core.node.port.database;
 
 import java.io.File;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -39,19 +40,32 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
+import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.KnimeEncryption;
 
 /**
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class DBConnection {
+public class DatabaseConnectionSettings {
     
     private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(DBConnection.class);
+        NodeLogger.getLogger(DatabaseConnectionSettings.class);
     
     /** Config for SQL statement. */
-    static final String CFG_STATEMENT = "statement";
+    public static final String CFG_STATEMENT = "statement";
+    
+    /** Keeps the history of all loaded driver and its order. */
+    public static final StringHistory DRIVER_ORDER = StringHistory.getInstance(
+            "database_drivers");
+    
+    /** Keeps the history of all driver URLs. */
+    public static final StringHistory DRIVER_URLS = StringHistory.getInstance(
+            "driver_urls");
+    
+    /** Keeps the history of all database URLs. */
+    public static final StringHistory DATABASE_URLS = StringHistory.getInstance(
+            "database_urls");
 
     private String m_driver;
     private String m_dbName;
@@ -60,17 +74,17 @@ class DBConnection {
 
     /**
      */
-    DBConnection() {
+    public DatabaseConnectionSettings() {
         // init default driver with the first from the driver list
         // or use Java JDBC-ODBC as default
-        String[] history = DBDialogPane.DRIVER_ORDER.getHistory();
+        String[] history = DRIVER_ORDER.getHistory();
         if (history != null && history.length > 0) {
             m_driver = history[0];
         } else {
-            m_driver = DBDriverLoader.JDBC_ODBC_DRIVER;
+            m_driver = DatabaseDriverLoader.JDBC_ODBC_DRIVER;
         }
         // create database name from driver class
-        m_dbName = DBDriverLoader.getURLForDriver(m_driver);
+        m_dbName = DatabaseDriverLoader.getURLForDriver(m_driver);
     }
     
     /**
@@ -78,7 +92,7 @@ class DBConnection {
      * object.
      * @param conn connection used to copy settings from
      */
-    DBConnection(final DBConnection conn) {
+    public DatabaseConnectionSettings(final DatabaseConnectionSettings conn) {
         this();
         m_driver = conn.m_driver;
         m_dbName = conn.m_dbName;
@@ -96,7 +110,8 @@ class DBConnection {
      * @throws InvalidKeyException {@link InvalidKeyException}
      * @throws IOException {@link IOException}
      */
-    Connection createConnection() throws InvalidSettingsException, SQLException,
+    public Connection createConnection() 
+            throws InvalidSettingsException, SQLException,
             BadPaddingException, IllegalBlockSizeException,
             InvalidKeyException, IOException {
         if (m_dbName == null || m_user == null || m_pass == null
@@ -104,19 +119,11 @@ class DBConnection {
             throw new InvalidSettingsException("No settings available "
                     + "to create database connection.");
         }
-        WrappedDriver wDriver = DBDriverLoader.getWrappedDriver(m_driver);
-        try {
-            DriverManager.registerDriver(wDriver);
-            if (!wDriver.acceptsURL(m_dbName)) {
-                throw new InvalidSettingsException("Driver \"" + wDriver 
-                        + "\" does not accept URL: " + m_dbName);
-            }
-        } catch (Throwable t) {
-            throw new InvalidSettingsException("Could not register database"
-                    + " driver \"" + wDriver + "\", reason: " 
-                    + t.getMessage(), t);
+        Driver d = DatabaseDriverLoader.registerDriver(m_driver);
+        if (!d.acceptsURL(m_dbName)) {
+            throw new InvalidSettingsException("Driver \"" + d 
+                    + "\" does not accept URL: " + m_dbName);
         }
-        DBDriverLoader.registerDriver(m_driver);
         String password = KnimeEncryption.decrypt(m_pass);
         DriverManager.setLoginTimeout(5);
         return DriverManager.getConnection(m_dbName, m_user, password);
@@ -126,15 +133,15 @@ class DBConnection {
      * Load settings.
      * @param settings connection settings
      */
-    void saveConnection(final ConfigWO settings) {
+    public void saveConnection(final ConfigWO settings) {
         settings.addString("driver", m_driver);
         settings.addString("database", m_dbName);
         settings.addString("user", m_user);
         settings.addString("password", m_pass);
         settings.addString("loaded_driver", 
-                DBDriverLoader.getDriverFileForDriverClass(m_driver));
-        DBDialogPane.DRIVER_ORDER.add(m_driver);
-        DBDialogPane.DRIVER_URLS.add(m_dbName);
+                DatabaseDriverLoader.getDriverFileForDriverClass(m_driver));
+        DRIVER_ORDER.add(m_driver);
+        DRIVER_URLS.add(m_dbName);
     }
 
     /**
@@ -142,7 +149,7 @@ class DBConnection {
      * @param settings to validate
      * @throws InvalidSettingsException if the settings are not valid
      */
-    void validateConnection(final ConfigRO settings)
+    public void validateConnection(final ConfigRO settings)
             throws InvalidSettingsException {
         loadConnection(settings, false);
     }
@@ -153,7 +160,7 @@ class DBConnection {
      * @return true, if settings have changed
      * @throws InvalidSettingsException if settings are invalid
      */
-    boolean loadValidatedConnection(final ConfigRO settings)
+    public boolean loadValidatedConnection(final ConfigRO settings)
             throws InvalidSettingsException {
         return loadConnection(settings, true);
     }
@@ -175,7 +182,7 @@ class DBConnection {
         // write settings or skip it
         if (write) {
             m_driver = driver;
-            DBDialogPane.DRIVER_ORDER.add(m_driver);
+            DRIVER_ORDER.add(m_driver);
             boolean changed = false;
             if (m_user != null && m_dbName != null && m_pass != null) { 
                 if (!user.equals(m_user) || !database.equals(m_dbName)
@@ -184,13 +191,13 @@ class DBConnection {
                 }
             }
             m_dbName = database;
-            DBDialogPane.DATABASE_URLS.add(m_dbName);
-            DBDialogPane.DRIVER_URLS.add(m_dbName);
+            DATABASE_URLS.add(m_dbName);
+            DRIVER_URLS.add(m_dbName);
             m_user = user;
             m_pass = password;
             for (String fileName : loadedDriver) {
                 try {
-                    DBDriverLoader.loadDriver(new File(fileName));
+                    DatabaseDriverLoader.loadDriver(new File(fileName));
                 } catch (Throwable t) {
                     LOGGER.info("Could not load driver from file \"" 
                             + fileName + "\".", t);
@@ -211,7 +218,7 @@ class DBConnection {
      * @throws InvalidKeyException {@link InvalidKeyException}
      * @throws IOException {@link IOException}
      */
-    void execute(final String statement) throws InvalidKeyException,
+    public void execute(final String statement) throws InvalidKeyException,
             BadPaddingException, IllegalBlockSizeException,
             InvalidSettingsException,
             SQLException, IOException {
@@ -236,7 +243,7 @@ class DBConnection {
      * connection.
      * @return database connection model
      */
-    ModelContentRO createConnectionModel() {
+    public ModelContentRO createConnectionModel() {
         ModelContent cont = new ModelContent("database_connection_model");
         saveConnection(cont);
         return cont;

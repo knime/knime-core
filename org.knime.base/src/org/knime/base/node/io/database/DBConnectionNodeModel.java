@@ -32,14 +32,16 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
+import org.knime.core.node.port.database.DatabaseReaderConnection;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 
@@ -49,7 +51,7 @@ import org.knime.core.node.port.database.DatabasePortObjectSpec;
  */
 final class DBConnectionNodeModel extends NodeModel {
     
-    private DBReaderConnection m_load = null;
+    private DatabaseReaderConnection m_load = null;
     private DataTableSpec m_lastSpec = null;
     
     /** Config key to write last processed spec. */
@@ -74,9 +76,10 @@ final class DBConnectionNodeModel extends NodeModel {
             if (m_load == null || m_lastSpec == null) {
                 exec.setProgress("Opening database connection...");
                 DatabasePortObject dbObj = (DatabasePortObject) inData[0];
-                DBQueryConnection conn = new DBQueryConnection(
+                DatabaseQueryConnectionSettings conn = 
+                    new DatabaseQueryConnectionSettings(
                         dbObj.getConnectionModel());
-                m_load = new DBReaderConnection(conn);
+                m_load = new DatabaseReaderConnection(conn);
                 m_lastSpec = m_load.getDataTableSpec();
             }
             exec.setProgress("Reading data from database...");
@@ -142,9 +145,10 @@ final class DBConnectionNodeModel extends NodeModel {
             if (m_load == null || m_lastSpec == null) {
                 DatabasePortObjectSpec dbSpec = 
                     (DatabasePortObjectSpec) inSpecs[0];
-                DBQueryConnection conn = new DBQueryConnection(
+                DatabaseQueryConnectionSettings conn = 
+                    new DatabaseQueryConnectionSettings(
                         dbSpec.getConnectionModel());
-                m_load = new DBReaderConnection(conn);
+                m_load = new DatabaseReaderConnection(conn);
                 m_lastSpec = m_load.getDataTableSpec();
             }
             return new DataTableSpec[]{m_lastSpec};

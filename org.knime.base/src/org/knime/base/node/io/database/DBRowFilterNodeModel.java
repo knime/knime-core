@@ -22,11 +22,17 @@
  */
 package org.knime.base.node.io.database;
 
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
+import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 
 /**
@@ -48,6 +54,8 @@ final class DBRowFilterNodeModel extends DBNodeModel {
      * Creates a new database reader.
      */
     DBRowFilterNodeModel() {
+        super(new PortType[]{DatabasePortObject.TYPE}, 
+                new PortType[]{DatabasePortObject.TYPE});
     }
 
     /**
@@ -81,6 +89,25 @@ final class DBRowFilterNodeModel extends DBNodeModel {
         m_operator.loadSettingsFrom(settings);
         m_value.loadSettingsFrom(settings);
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected final PortObject[] execute(final PortObject[] inData,
+            final ExecutionContext exec) 
+            throws CanceledExecutionException, Exception {
+        DatabasePortObject dbObj = (DatabasePortObject) inData[0];
+        DatabaseQueryConnectionSettings conn = 
+            new DatabaseQueryConnectionSettings(
+                dbObj.getConnectionModel(), getNumCachedRows());
+        String newQuery = createQuery(conn.getQuery(), getTableID());
+        conn = createDBQueryConnection(dbObj.getSpec(), newQuery);
+        DatabasePortObject outObj = new DatabasePortObject(
+                new DatabasePortObjectSpec(dbObj.getSpec().getDataTableSpec(),
+                        conn.createConnectionModel()));
+        return new PortObject[]{outObj};
+    }
 
     /**
      * {@inheritDoc}
@@ -93,14 +120,16 @@ final class DBRowFilterNodeModel extends DBNodeModel {
             throw new InvalidSettingsException("Can't filter according to "
                     + "selected column \"" + m_column.getStringValue() + "\".");
         }
-        return super.configure(inSpecs);
+        DatabaseQueryConnectionSettings conn = 
+            new DatabaseQueryConnectionSettings(
+                spec.getConnectionModel(), getNumCachedRows());
+        String newQuery = createQuery(conn.getQuery(), getTableID());
+        conn = createDBQueryConnection(spec, newQuery);
+        return new PortObjectSpec[]{new DatabasePortObjectSpec(
+                spec.getDataTableSpec(), conn.createConnectionModel())};
     }
     
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String createQuery(final String query, final String tableID) {
+    private String createQuery(final String query, final String tableID) {
         String buf = m_column.getStringValue()
             + " " + m_operator.getStringValue()
             + " " + m_value.getStringValue();

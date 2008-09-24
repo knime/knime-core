@@ -39,6 +39,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectZipInputStream;
@@ -54,7 +55,10 @@ import org.knime.core.node.workflow.BufferedDataTableView;
  */
 public class DatabasePortObject implements PortObject {
     
-    private DataTable m_data = null;
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            DatabasePortObject.class);
+    
+    private DataTable m_data;
     
     private final DatabasePortObjectSpec m_spec;
 
@@ -101,7 +105,19 @@ public class DatabasePortObject implements PortObject {
     /**
      * @return underlying data
      */
-    public DataTable getDataTable() {
+    private DataTable getDataTable() {
+        if (m_data == null) {
+            try {
+                DatabaseReaderConnection load = new DatabaseReaderConnection(
+                    new DatabaseQueryConnectionSettings(
+                           m_spec.getConnectionModel()));
+                m_data = load.createTable();
+            } catch (Throwable t) {
+                LOGGER.error("Could not fetch data from database, reason: "
+                        + t.getMessage(), t);
+                m_data = null;
+            }
+        }
         return m_data;
     }
     
@@ -147,8 +163,9 @@ public class DatabasePortObject implements PortObject {
             final PortObjectZipInputStream in, 
             final DatabasePortObjectSpec spec,
             final ExecutionMonitor exec) throws IOException {
+        assert exec == exec;
         ZipEntry ze = in.getNextEntry();
-        if (ze.getName().equals(KEY_PREVIEW_TABLE)) {
+        if (ze != null && ze.getName().equals(KEY_PREVIEW_TABLE)) {
             ContainerTable data = DataContainer.readFromStream(
                     new NonClosableInputStream.Zip(in));
             return new DatabasePortObject(spec, data);
@@ -173,11 +190,20 @@ public class DatabasePortObject implements PortObject {
     public JComponent[] getViews() {
         JComponent[] specPanels = m_spec.getViews();
         JComponent[] panels = new JComponent[specPanels.length + 1];
-        for (int i = 0; i < specPanels.length; i++) {
-            panels[i] = specPanels[i];
+        panels[0] = new BufferedDataTableView(getDataTable());
+        for (int i = 1; i < panels.length; i++) {
+            panels[i] = specPanels[i - 1];
         }
-        panels[panels.length - 1] = new BufferedDataTableView(m_data);
         return panels;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        m_data = null;
     }
     
 }

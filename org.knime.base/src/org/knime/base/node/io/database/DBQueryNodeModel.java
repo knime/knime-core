@@ -22,10 +22,20 @@
  */
 package org.knime.base.node.io.database;
 
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
+import org.knime.core.node.port.database.DatabaseReaderConnection;
+import org.knime.core.node.port.database.DatabasePortObject;
+import org.knime.core.node.port.database.DatabasePortObjectSpec;
 
 /**
  * 
@@ -43,7 +53,8 @@ final class DBQueryNodeModel extends DBNodeModel {
      * Creates a new database reader.
      */
     DBQueryNodeModel() {
-
+        super(new PortType[]{DatabasePortObject.TYPE}, 
+                new PortType[]{DatabasePortObject.TYPE});
     }
 
     /**
@@ -52,6 +63,7 @@ final class DBQueryNodeModel extends DBNodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_query.saveSettingsTo(settings);
+        super.saveSettingsTo(settings);
     }
 
     /**
@@ -68,6 +80,7 @@ final class DBQueryNodeModel extends DBNodeModel {
                     "Database view place holder (" + TABLE_PLACE_HOLDER 
                     + ") must not be replaced.");
         }
+        super.validateSettings(settings);
     }
 
     /**
@@ -77,13 +90,59 @@ final class DBQueryNodeModel extends DBNodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_query.loadSettingsFrom(settings);
+        super.loadValidatedSettingsFrom(settings);
     }
     
     /**
      * {@inheritDoc}
      */
     @Override
-    protected String createQuery(final String query, final String tableID) {
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
+            throws InvalidSettingsException {
+        DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
+        DatabaseQueryConnectionSettings conn = 
+            new DatabaseQueryConnectionSettings(
+                spec.getConnectionModel(), getNumCachedRows());
+        String newQuery = createQuery(conn.getQuery(), getTableID());
+        conn = new DatabaseQueryConnectionSettings(conn, newQuery,
+                getNumCachedRows());
+        try {
+            DatabaseReaderConnection reader = 
+                new DatabaseReaderConnection(conn);
+            DataTableSpec outSpec = reader.getDataTableSpec();
+            DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(
+                    outSpec, conn.createConnectionModel());
+            return new PortObjectSpec[]{dbSpec};
+        } catch (InvalidSettingsException ise) {
+            throw ise;
+        } catch (Throwable t) {
+            throw new InvalidSettingsException(t);
+        }
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected final PortObject[] execute(final PortObject[] inData,
+            final ExecutionContext exec) 
+            throws CanceledExecutionException, Exception {
+        DatabasePortObject dbObj = (DatabasePortObject) inData[0];
+        DatabaseQueryConnectionSettings conn = 
+                new DatabaseQueryConnectionSettings(
+                dbObj.getSpec().getConnectionModel(), getNumCachedRows());
+        String newQuery = createQuery(conn.getQuery(), getTableID());
+        conn = new DatabaseQueryConnectionSettings(conn, newQuery,
+                getNumCachedRows());
+        DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
+        DataTableSpec outSpec = load.getDataTableSpec();
+        DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(
+                outSpec, conn.createConnectionModel());
+        DatabasePortObject outObj = new DatabasePortObject(dbSpec);
+        return new PortObject[]{outObj};
+    }
+    
+    private String createQuery(final String query, final String tableID) {
         return m_query.getStringValue().replaceAll(
                 TABLE_PLACE_HOLDER, "(" + query + ") " + tableID);
     }

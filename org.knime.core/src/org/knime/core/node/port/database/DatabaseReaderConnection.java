@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * ----------------------------------------------------------------------------
  */
-package org.knime.base.node.io.database;
+package org.knime.core.node.port.database;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -47,6 +47,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -62,18 +63,22 @@ import org.knime.core.node.NodeLogger;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-final class DBReaderConnection {
+public final class DatabaseReaderConnection {
 
     private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(DBReaderConnection.class);
+            NodeLogger.getLogger(DatabaseReaderConnection.class);
     
-    private BufferedDataTable m_table = null;
+    private DataTable m_table;
 
-    private final DataTableSpec m_spec;
+    private DataTableSpec m_spec;
     
-    private final DBQueryConnection m_conn;
+    private DatabaseQueryConnectionSettings m_conn;
     
-    private final PreparedStatement m_stmt;
+    private PreparedStatement m_stmt;
+    
+    public DatabaseReaderConnection() {
+        
+    }
     
     /**
      * Create connection to database and read meta info.
@@ -85,14 +90,24 @@ final class DBReaderConnection {
      * @throws InvalidKeyException {@link InvalidKeyException}
      * @throws IOException {@link IOException}
      */
-    DBReaderConnection(final DBQueryConnection conn) 
+    public DatabaseReaderConnection(final DatabaseQueryConnectionSettings conn) 
+            throws SQLException, InvalidSettingsException, 
+            IllegalBlockSizeException, BadPaddingException, InvalidKeyException,
+            IOException {
+        setDBQueryConnection(conn);
+    }
+    
+    public void setDBQueryConnection(final DatabaseQueryConnectionSettings conn)
             throws SQLException, InvalidSettingsException, 
             IllegalBlockSizeException, BadPaddingException, InvalidKeyException,
             IOException {
         PreparedStatement stmt = null;
+        m_conn = conn;
+        m_table = null;
         try {
-            String pQuery = 
-                "SELECT * FROM (" + conn.getQuery() + ") WHERE 1 = 0";
+            String tableID = "table_" + hashCode();
+            String pQuery = "SELECT * FROM (" + conn.getQuery() + ") " 
+                + tableID + " WHERE 1 = 0";
             stmt = conn.createConnection().prepareStatement(pQuery);
             stmt.execute();
             m_spec = createTableSpec(stmt.getMetaData());
@@ -100,20 +115,20 @@ final class DBReaderConnection {
             if (stmt != null) {
                 stmt.close();
             }
+            m_stmt = null;
             throw sql;
         }
-        m_conn = conn;
         m_stmt = stmt;
     }
     
-    DBQueryConnection getQueryConnection() {
+    public DatabaseQueryConnectionSettings getQueryConnection() {
         return m_conn;
     }
 
     /**
      *
      */
-    DataTableSpec getDataTableSpec() {
+    public DataTableSpec getDataTableSpec() {
         return m_spec;
     }
     
@@ -122,19 +137,21 @@ final class DBReaderConnection {
      * @param exec
      * @return buffered data table read from database
      * @throws CanceledExecutionException
+     * @throws SQLException
      */
-    BufferedDataTable createTable(final ExecutionContext exec)
+    public BufferedDataTable createTable(final ExecutionContext exec)
             throws CanceledExecutionException, SQLException {
         if (m_table == null) {
             String query;
             if (m_conn.getRowCacheSize() < 0) {
                 query = m_conn.getQuery();
             } else {
-                query = "SELECT * FROM (" + m_conn.getQuery() 
-                    + ") WHERE ROWNUM <= " + m_conn.getRowCacheSize();
+                String tableID = "table_" + hashCode();
+                query = "SELECT * FROM (" + m_conn.getQuery() + ") " + tableID; 
+                m_stmt.setMaxRows(m_conn.getRowCacheSize());
             }
             m_stmt.execute(query);
-            final ResultSet result = m_stmt.getResultSet(); 
+            final ResultSet result = m_stmt.getResultSet();
             m_table = exec.createBufferedDataTable(new DataTable() {
                 /**
                  * {@inheritDoc}
@@ -153,6 +170,38 @@ final class DBReaderConnection {
                 }
 
             }, exec);
+            result.close();
+            m_stmt.close();
+        }
+        if (!(m_table instanceof BufferedDataTable)) {
+            m_table = exec.createBufferedDataTable(m_table, exec);
+        }
+        return (BufferedDataTable) m_table;
+    }
+    
+    /**
+     * @return buffered data table read from database
+     * @throws SQLException
+     */
+    public DataTable createTable() throws SQLException {
+        if (m_table == null) {
+            String query;
+            if (m_conn.getRowCacheSize() < 0) {
+                query = m_conn.getQuery();
+            } else {
+                String tableID = "table_" + hashCode();
+                query = "SELECT * FROM (" + m_conn.getQuery() + ") " + tableID; 
+                m_stmt.setMaxRows(m_conn.getRowCacheSize());
+            }
+            m_stmt.execute(query);
+            final ResultSet result = m_stmt.getResultSet();
+            DBRowIterator it = new DBRowIterator(result);
+            DataContainer buf = new DataContainer(m_spec);
+            while (it.hasNext()) {
+                buf.addRowToTable(it.next());
+            }
+            buf.close();
+            m_table = buf.getTable();
             result.close();
             m_stmt.close();
         }
@@ -190,12 +239,14 @@ final class DBReaderConnection {
                     newType = StringCell.TYPE;
             }
             if (spec == null) {
-                spec = new DataTableSpec(new DataColumnSpecCreator(
+                spec = new DataTableSpec("database", 
+                        new DataColumnSpecCreator(
                         name, newType).createSpec());
             } else {
                 name = DataTableSpec.getUniqueColumnName(spec, name);
-                spec = new DataTableSpec(spec, new DataTableSpec(
-                       new DataColumnSpecCreator(name, newType).createSpec()));
+                spec = new DataTableSpec("database", spec, 
+                       new DataTableSpec(new DataColumnSpecCreator(
+                               name, newType).createSpec()));
             }
         }
         return spec;

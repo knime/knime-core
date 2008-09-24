@@ -39,6 +39,9 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.database.DatabaseConnectionSettings;
+import org.knime.core.node.port.database.DatabaseDriverLoader;
+import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 
 /**
  * Database writer model which creates a new table and adds the entire table to
@@ -57,7 +60,7 @@ final class DBWriterNodeModel extends NodeModel {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(DBWriterNodeModel.class);
     
-    private final DBConnection m_conn;
+    private final DatabaseConnectionSettings m_conn;
 
     private String m_table = null;
     
@@ -83,7 +86,7 @@ final class DBWriterNodeModel extends NodeModel {
      */
     DBWriterNodeModel() {
         super(1, 0);
-        m_conn = new DBConnection();
+        m_conn = new DatabaseConnectionSettings();
     }
 
     /**
@@ -129,7 +132,7 @@ final class DBWriterNodeModel extends NodeModel {
         // write settings or skip it
         if (write) {
             if (table != null && table.contains(
-                    DBQueryConnection.TABLE_PLACEHOLDER)) {
+                    DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER)) {
                 throw new InvalidSettingsException(
                     "Database table place holder not replaced.");
             }
@@ -140,7 +143,7 @@ final class DBWriterNodeModel extends NodeModel {
                     new String[0]);
             for (String fileName : loadedDriver) {
                 try {
-                    DBDriverLoader.loadDriver(new File(fileName));
+                    DatabaseDriverLoader.loadDriver(new File(fileName));
                 } catch (Throwable t) {
                     LOGGER.info("Could not load driver from file \"" 
                             + fileName + "\".", t);
@@ -208,6 +211,10 @@ final class DBWriterNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        if (m_table == null || m_table.trim().isEmpty()) {
+            throw new InvalidSettingsException(
+                    "Configure node and enter a valid table name.");
+        }
         // copy map to ensure only columns which are with the data
         Map<String, String> map = new LinkedHashMap<String, String>();
         // check that each column has a assigned type

@@ -39,7 +39,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * Panel which allows tp specify an SQL type for each column.
+ * Panel which allows to specify an SQL type for each column.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */

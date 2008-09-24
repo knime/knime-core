@@ -20,7 +20,7 @@
  * --------------------------------------------------------------------- *
  * 
  */
-package org.knime.base.node.io.database;
+package org.knime.core.node.port.database;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
@@ -32,10 +32,12 @@ import org.knime.core.node.config.ConfigWO;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-final class DBQueryConnection extends DBConnection {
+public final class DatabaseQueryConnectionSettings extends DatabaseConnectionSettings {
     
     /** Place holder <code>&lttable&gt</code>. */
-    static final String TABLE_PLACEHOLDER = "<table>"; 
+    public static final String TABLE_PLACEHOLDER = "<table>";
+    
+    public static final String NO_ROWS_CACHED = "row_cache_size";
     
     private final String m_query;
     
@@ -44,11 +46,21 @@ final class DBQueryConnection extends DBConnection {
     /**
      * Create a new connection with an empty query object.
      */
-    DBQueryConnection(final ConfigRO settings) throws InvalidSettingsException {
+    public DatabaseQueryConnectionSettings(final ConfigRO settings) 
+            throws InvalidSettingsException {
+        this(settings, -1);
+    }
+    
+    /**
+     * Create a new connection with an empty query object.
+     */
+    public DatabaseQueryConnectionSettings(final ConfigRO settings,
+            final int cachedNoRows) 
+            throws InvalidSettingsException {
         super();
-        m_query = settings.getString(DBConnection.CFG_STATEMENT);
-        m_cacheNoRows = settings.getInt("row_cache_size");
+        m_query = settings.getString(DatabaseConnectionSettings.CFG_STATEMENT);
         super.loadValidatedConnection(settings);
+        m_cacheNoRows = cachedNoRows;
     }
     
     /**
@@ -56,9 +68,11 @@ final class DBQueryConnection extends DBConnection {
      * string.
      * @param conn connection to copy
      * @param query the SQL query
+     * @param cacheNoRows number of rows to cache for review
      */
-    DBQueryConnection(final DBConnection conn, final String query,
-            final int cacheNoRows) {
+    public DatabaseQueryConnectionSettings(
+            final DatabaseConnectionSettings conn, 
+            final String query, final int cacheNoRows) {
         super(conn);
         m_query = query;
         m_cacheNoRows = cacheNoRows;
@@ -70,8 +84,9 @@ final class DBQueryConnection extends DBConnection {
      * @param conn connection to copy
      * @param query the SQL query
      */
-    DBQueryConnection(final DBConnection conn, final String query) {
-        this(conn, query, Integer.MAX_VALUE);
+    public DatabaseQueryConnectionSettings(
+            final DatabaseConnectionSettings conn, final String query) {
+        this(conn, query, -1);
     }
     
     /**
@@ -95,18 +110,18 @@ final class DBQueryConnection extends DBConnection {
     @Override
     public void saveConnection(final ConfigWO settings) {
         settings.addString(CFG_STATEMENT, m_query);
-        settings.addInt("row_cache_size", m_cacheNoRows);
+        settings.addInt(NO_ROWS_CACHED, m_cacheNoRows);
         super.saveConnection(settings);
     }
     
     /**
      * @return SQL statement 
      */
-    String getQuery() {
+    public String getQuery() {
         return m_query;
     }
     
-    int getRowCacheSize() {
+    public int getRowCacheSize() {
         return m_cacheNoRows;
     }
     
