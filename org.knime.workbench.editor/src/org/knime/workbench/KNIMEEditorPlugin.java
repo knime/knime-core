@@ -30,6 +30,8 @@ import java.util.ResourceBundle;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.util.KnimeEncryption;
+import org.knime.workbench.ui.masterkey.MasterKeyPreferencePage;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -71,6 +73,10 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
+        // create a knime encryption supplier that reads in an encryption key
+        // from the user via a dialog or directly from the preference page
+        KnimeEncryption.setEncryptionKeySupplier(
+                MasterKeyPreferencePage.SUPPLIER);
     }
 
     /**

@@ -40,10 +40,8 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
-import org.knime.core.util.KnimeEncryption;
 import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.ui.favorites.FavoriteNodesManager;
-import org.knime.workbench.ui.masterkey.MasterKeyPreferencePage;
 import org.knime.workbench.ui.metanodes.MetaNodeTemplateRepositoryView;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.osgi.framework.BundleContext;
@@ -98,11 +96,6 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
     public void start(final BundleContext context) throws Exception {
         super.start(context);
         readAndSetPreferences();
-        
-        // create a knime encryption supplier that reads in an encryption key
-        // from the user via a dialog
-        KnimeEncryption.setEncryptionKeySupplier(
-                MasterKeyPreferencePage.SUPPLIER);
 
         IPreferenceStore prefStore = getPreferenceStore();
         getImageRegistry().put("knime",
