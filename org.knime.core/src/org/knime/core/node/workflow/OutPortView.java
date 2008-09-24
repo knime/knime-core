@@ -150,9 +150,12 @@ public class OutPortView extends JFrame {
         new Thread() {
             @Override
             public void run() {
-                if (portObject != null && portObject.getViews() != null) {
-                    for (JComponent comp : portObject.getViews()) {
-                        views.put(comp.getName(), comp);
+                if (portObject != null) {
+                    JComponent[] poViews = portObject.getViews();
+                    if (poViews != null) {
+                        for (JComponent comp : poViews) {
+                            views.put(comp.getName(), comp);
+                        }
                     }
                 } else {
                     // what to display, if no port object is available?
