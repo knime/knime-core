@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="condlooper.png" type="LoopStart">
+<knimeNode icon="loop_start_generic.png" type="LoopStart">
     <name>Generic Loop Start</name>
 
     <shortDescription>Generic loop start node with no termination criterion.</shortDescription>

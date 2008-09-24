@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="LoopStart">
+<knimeNode icon="tablerow2variable_loop.png" type="LoopStart">
     <name>Row To Variable Loop Start</name>
     
     <shortDescription>

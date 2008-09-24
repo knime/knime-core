@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="" type="Meta">
+<knimeNode icon="feature_elimination.png" type="Meta">
     <name>Backward Feature Elimination Filter</name>
 
     <shortDescription>Applies a feature filter model built during backward feature elimination</shortDescription>

@@ -164,6 +164,7 @@
             path="/mining">
       </category>
       <category
+            icon="icons/16x16/category_feature_elimination.png"
             level-id="features"
             name="Feature Selection"
             path="/loopsupport">

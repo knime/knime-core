@@ -31,7 +31,7 @@ a data &quot;workflow&quot;
           point="org.knime.workbench.repository.metanode">
        <PersistedMetaNode
              description="Provides a skeleton of nodes necessary for cross validation"
-             icon="icons/meta_nodes/cross_validation.png"
+             icon="icons/meta_nodes/cross_validation_flow.png"
              id="cross_validation"
              name="CrossValidation"
              workflowDir="metanode_templates/Cross Validation/">
@@ -53,6 +53,7 @@ a data &quot;workflow&quot;
        <PersistedMetaNode
              category-path="/meta"
              description="Backward Feature Elimination"
+             icon="icons/meta_nodes/feature_elimination_flow.png"
              id="feature_elimination"
              name="Feature Elimination"
              workflowDir="metanode_templates/Feature Elimination/">
@@ -60,6 +61,7 @@ a data &quot;workflow&quot;
        <PersistedMetaNode
              category-path="/meta"
              description="Iteratively executes the contained flow on a list of files. The list of files needs to be defined by the input table, whereby each row represents one individual file location."
+             icon="icons/meta_nodes/looping_file_reader_flow.png"
              id="iterate_list_of_files"
              name="Iterate List of Files"
              workflowDir="metanode_templates/Iterate list of files/">
@@ -67,6 +69,7 @@ a data &quot;workflow&quot;
        <PersistedMetaNode
              category-path="/meta"
              description="Executes the contained workflow multiple times. Aggregation method and termination criteration must be set using the loop start and end node contained in the workflow."
+             icon="icons/meta_nodes/loop_x_times_flow.png"
              id="looper"
              name="Loop x-times"
              workflowDir="metanode_templates/Looper/">

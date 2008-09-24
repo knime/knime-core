@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="looper.png" type="LoopStart">
+<knimeNode icon="loop_start_count.png" type="LoopStart">
 	<name>Counting Loop Start</name>
 	
 	<shortDescription>
