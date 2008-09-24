@@ -50,7 +50,7 @@ import org.knime.core.util.ThreadPool;
  * @author Thorsten Meinl, University of Konstanz
  */
 public abstract class ThreadedColAppenderNodeModel extends NodeModel {
-    private class Submitter implements Runnable {
+    private class Submitter implements Callable<Void> {
         private final BufferedDataTable[] m_data;
 
         private final ExtendedCellFactory[] m_cellFacs;
@@ -81,7 +81,7 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
         /**
          * {@inheritDoc}
          */
-        public void run() {
+        public Void call() throws Exception {
             final double max = m_data[0].getRowCount();
             final int chunkSize =
                     (int)Math.ceil(max / (4.0 * m_workers.getMaxThreads()));
@@ -89,22 +89,14 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
             BufferedDataContainer container = null;
             int count = 0, chunks = 0;
             while (chunkSize > 0) {
-                try {
-                    m_exec.checkCanceled();
-                } catch (CanceledExecutionException ex) {
-                    return;
-                }
+                m_exec.checkCanceled();
 
                 if ((count++ % chunkSize == 0) || !it.hasNext()) {
                     if (container != null) {
                         container.close();
-                        try {
-                            chunks++;
-                            m_futures.add(m_workers.submit(createCallable(
-                                    container.getTable(), chunkSize, max)));
-                        } catch (InterruptedException ex) {
-                            return;
-                        }
+                        chunks++;
+                        m_futures.add(m_workers.submit(createCallable(
+                                container.getTable(), chunkSize, max)));
                     }
                     if (!it.hasNext()) {
                         break;
@@ -116,6 +108,7 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
                 }
                 container.addRowToTable(it.next());
             }
+            return null;
         }
 
         private Callable<BufferedDataContainer[]> createCallable(
@@ -233,7 +226,7 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
         } catch (IllegalThreadStateException ex) {
             // this node has not been started by a thread from a thread pool.
             // This is odd, but may happen
-            submitter.run();
+            submitter.call();
         }
 
         final BufferedDataTable[] combinedResults =

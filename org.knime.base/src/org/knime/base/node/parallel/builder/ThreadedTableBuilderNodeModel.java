@@ -1,4 +1,4 @@
-/*  
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 13, 2006 (thor): created
  */
@@ -46,18 +46,18 @@ import org.knime.core.util.ThreadPool;
 /**
  * This model is an extension of the {@link NodeModel} that allows you to easily
  * process data in parallel. In contrast to the
- * {@link org.knime.base.node.parallel.appender.ThreadedColAppenderNodeModel}, 
+ * {@link org.knime.base.node.parallel.appender.ThreadedColAppenderNodeModel},
  * this model is suitable for creating completely new output tables.
- * 
+ *
  * All you have to do is create the output table specs in the
  * {@link #prepareExecute(DataTable[])} method and then implement the
  * {@link #processRow(DataRow, BufferedDataTable[], RowAppender[])} method
  * to produce one or more (or even no) output row(s) for each input row.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
-    private class Submitter implements Runnable {
+    private class Submitter implements Callable<Void> {
         private final BufferedDataTable[] m_additionalData;
 
         private final BufferedDataTable[] m_data;
@@ -88,7 +88,7 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
                 final double max) {
             return new Callable<BufferedDataContainer[]>() {
                 public BufferedDataContainer[] call() throws Exception {
-                    BufferedDataContainer[] result = 
+                    BufferedDataContainer[] result =
                         new BufferedDataContainer[m_specs.length];
                     for (int i = 0; i < result.length; i++) {
                         result[i] = m_exec.createDataContainer(m_specs[i]);
@@ -115,7 +115,7 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
             };
         }
 
-        public void run() {
+        public Void call() throws Exception {
             final double max = m_data[0].getRowCount();
             final int chunkSize =
                     (int)Math.ceil(max / (4.0 * m_workers.getMaxThreads()));
@@ -123,22 +123,14 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
             BufferedDataContainer container = null;
             int count = 0, chunks = 0;
             while (chunkSize > 0) {
-                try {
-                    m_exec.checkCanceled();
-                } catch (CanceledExecutionException ex) {
-                    return;
-                }
+                m_exec.checkCanceled();
 
                 if ((count++ % chunkSize == 0) || !it.hasNext()) {
                     if (container != null) {
                         container.close();
-                        try {
-                            chunks++;
-                            m_futures.add(m_workers.submit(createCallable(
-                                    container.getTable(), chunkSize, max)));
-                        } catch (InterruptedException ex) {
-                            return;
-                        }
+                        chunks++;
+                        m_futures.add(m_workers.submit(createCallable(
+                                container.getTable(), chunkSize, max)));
                     }
                     if (!it.hasNext()) {
                         break;
@@ -149,6 +141,7 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
                 }
                 container.addRowToTable(it.next());
             }
+            return null;
         }
     }
 
@@ -157,7 +150,7 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
 
     /**
      * Creates a new AbstractParallelNodeModel. The model
-     * 
+     *
      * @param nrDataIns The number of {@link DataTable} elements expected as
      *            inputs.
      * @param nrDataOuts The number of {@link DataTable} objects expected at the
@@ -176,7 +169,7 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
 
     /**
      * Creates a new AbstractParallelNodeModel.
-     * 
+     *
      * @param nrDataIns The number of {@link DataTable} elements expected as
      *            inputs.
      * @param nrDataOuts The number of {@link DataTable} objects expected at the
@@ -221,14 +214,14 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
                 new BufferedDataTable[Math.max(0, data.length - 1)];
         System.arraycopy(data, 1, additionalTables, 0, additionalTables.length);
 
-        final Runnable submitter = new Submitter(data, futures, outSpecs, exec);
+        final Callable<?> submitter = new Submitter(data, futures, outSpecs, exec);
 
         try {
             m_workers.runInvisible(submitter);
         } catch (IllegalThreadStateException ex) {
             // this node has not been started by a thread from a thread pool.
             // This is odd, but may happen
-            submitter.run();
+            submitter.call();
         }
 
         final BufferedDataTable[][] tempTables =
@@ -272,7 +265,7 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
      * because the {@link RowAppender} passed to
      * {@link #processRow(DataRow, BufferedDataTable[], RowAppender[])} must be
      * constructed accordingly.
-     * 
+     *
      * @param data the input data tables
      * @return the table spec(s) of the result table(s) in the right order. The
      *         result and none of the table specs must be null!
@@ -286,11 +279,11 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
      * remaining tables are passed completely in the second argument. The
      * output rows must then be written into the row appender(s). There is a
      * row appender for each output table.
-     * 
+     *
      * Please note that this method is called by many threads at the same time,
      * so do NOT synchronize it and make sure that write access to global
      * data does not mess up things.
-     * 
+     *
      * @param inRow an input row
      * @param additionalData the complete tables of additional data
      * @param outputTables data containers for the output tables where the

@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 19, 2006 (thor): created
  */
@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
+import org.knime.base.data.append.row.AppendedRowsTable;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
@@ -42,8 +43,6 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeModel;
 import org.knime.core.util.ThreadPool;
 
-import org.knime.base.data.append.row.AppendedRowsTable;
-
 /**
  * This class is an extension of a normal {@link org.knime.core.node.NodeModel}
  * that offers parallel processing of {@link DataTable}s. Therefore the
@@ -52,12 +51,12 @@ import org.knime.base.data.append.row.AppendedRowsTable;
  * called with a {@link DataTable} containing only a part of the input rows as
  * often as necessary. A default value for the maximal chunk size (i.e. the
  * number of rows in the chunked data table) is given in the constructor.<br />
- * 
+ *
  * If the node has more than one input table only the first input table is
  * chunked, the remaining ones are passed to {@link #executeByChunk(
  * BufferedDataTable, BufferedDataTable[], RowAppender[], ExecutionMonitor)}
  * completely.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public abstract class AbstractParallelNodeModel extends NodeModel {
@@ -68,7 +67,7 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
 
     /**
      * Creates a new AbstractParallelNodeModel.
-     * 
+     *
      * @param nrDataIns The number of {@link DataTable} elements expected as
      *            inputs.
      * @param nrDataOuts The number of {@link DataTable} objects expected at the
@@ -92,7 +91,7 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
      * because the {@link RowAppender} passed to {@link #executeByChunk(
      * BufferedDataTable, BufferedDataTable[], RowAppender[], ExecutionMonitor)}
      * must be constructed accordingly.
-     * 
+     *
      * @param data the input data tables
      * @return the table spec(s) of the result table(s) in the right order. The
      *         result and none of the table specs must be null!
@@ -134,65 +133,53 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
 
         final double max = data[0].getRowCount();
 
-        final Runnable submitter = new Runnable() {
-            public void run() {
+        final Callable<Void> submitter = new Callable<Void>() {
+            public Void call() throws Exception {
                 final RowIterator it = data[0].iterator();
                 BufferedDataContainer container = null;
                 int count = 0, chunks = 0;
                 while (true) {
                     if ((count++ % m_chunkSize == 0) || !it.hasNext()) {
-                        try {
-                            exec.checkCanceled();
-                        } catch (CanceledExecutionException ex) {
-                            return;
-                        }
+                        exec.checkCanceled();
 
                         if (container != null) {
                             container.close();
                             final BufferedDataContainer temp = container;
-                            try {
-                                chunks++;
-                                final int temp2 = chunks;
-                                futures
-                                        .add(m_workers
-                                                .submit(new Callable<DataContainer[]>() {
-                                                    public DataContainer[] call()
-                                                            throws Exception {
-                                                        ExecutionMonitor subProg =
-                                                                exec
-                                                                        .createSilentSubProgress((m_chunkSize > max) ? 1
-                                                                                : m_chunkSize
-                                                                                        / max);
-                                                        exec
-                                                                .setMessage("Processing chunk "
-                                                                        + temp2);
-                                                        DataContainer[] result =
-                                                                new DataContainer[outSpecs.length];
-                                                        for (int i = 0; i < outSpecs.length; i++) {
-                                                            result[i] =
-                                                                    new DataContainer(
-                                                                            outSpecs[i],
-                                                                            true, 0);
-                                                        }
+                            chunks++;
+                            final int temp2 = chunks;
+                            futures.add(m_workers
+                                    .submit(new Callable<DataContainer[]>() {
+                                        public DataContainer[] call()
+                                                throws Exception {
+                                            ExecutionMonitor subProg =
+                                                    exec
+                                                            .createSilentSubProgress((m_chunkSize > max) ? 1
+                                                                    : m_chunkSize
+                                                                            / max);
+                                            exec.setMessage("Processing chunk "
+                                                    + temp2);
+                                            DataContainer[] result =
+                                                    new DataContainer[outSpecs.length];
+                                            for (int i = 0; i < outSpecs.length; i++) {
+                                                result[i] =
+                                                        new DataContainer(
+                                                                outSpecs[i],
+                                                                true, 0);
+                                            }
 
-                                                        executeByChunk(
-                                                                temp.getTable(),
-                                                                additionalTables,
-                                                                result, subProg);
+                                            executeByChunk(temp.getTable(),
+                                                    additionalTables, result,
+                                                    subProg);
 
-                                                        for (DataContainer c : result) {
-                                                            c.close();
-                                                        }
+                                            for (DataContainer c : result) {
+                                                c.close();
+                                            }
 
-                                                        exec.setProgress(temp2
-                                                                * m_chunkSize
-                                                                / max);
-                                                        return result;
-                                                    }
-                                                }));
-                            } catch (InterruptedException ex) {
-                                return;
-                            }
+                                            exec.setProgress(temp2
+                                                    * m_chunkSize / max);
+                                            return result;
+                                        }
+                                    }));
                         }
                         if (!it.hasNext()) {
                             break;
@@ -204,6 +191,7 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
                     }
                     container.addRowToTable(it.next());
                 }
+                return null;
             }
         };
 
@@ -212,7 +200,7 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
         } catch (IllegalThreadStateException ex) {
             // this node has not been started by a thread from a thread pool.
             // This is odd, but may happen
-            submitter.run();
+            submitter.call();
         }
 
         final DataTable[][] tempTables =
@@ -257,7 +245,7 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
      * <code>maxChunkSize</code> rows from the the first table in the array
      * passed to {@link #execute(BufferedDataTable[], ExecutionContext)}, the
      * <code>additionalData</code>-tables are passed completely.
-     * 
+     *
      * @param inDataChunk the chunked input data table
      * @param additionalData the complete tables of additional data
      * @param outputTables data containers for the output tables where the
@@ -272,7 +260,7 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
 
     /**
      * Sets the chunk size of the split data tables.
-     * 
+     *
      * @param newValue the new value which is number of rows
      */
     public void setChunkSize(final int newValue) {
@@ -281,7 +269,7 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
 
     /**
      * Returns the current chunk size.
-     * 
+     *
      * @return the chunk size in number of rows
      */
     public int getChunkSize() {

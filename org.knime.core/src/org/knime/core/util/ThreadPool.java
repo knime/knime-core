@@ -33,6 +33,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
@@ -367,8 +368,10 @@ public class ThreadPool implements JobExecutor {
      * @param r a Runnable to execute
      * @throws IllegalThreadStateException if the current thread is not taken
      *             out of a thread pool
+     * @throws ExecutionException if the callable could not be executed for some
+     *             reason
      */
-    public void runInvisible(final Runnable r) {
+    public void runInvisible(final Callable<?> r) throws ExecutionException {
         if (!(Thread.currentThread() instanceof Worker)) {
             throw new IllegalThreadStateException("The current thread is not"
                     + "taken out of a thread pool");
@@ -390,7 +393,9 @@ public class ThreadPool implements JobExecutor {
             checkQueue();
 
             try {
-                r.run();
+                r.call();
+            } catch (Exception ex) {
+                throw new ExecutionException(ex);
             } finally {
                 m_invisibleThreads--;
             }
@@ -495,8 +500,17 @@ public class ThreadPool implements JobExecutor {
      */
     public void waitForTermination() throws InterruptedException {
         synchronized (m_runningWorkers) {
-            while (!m_runningWorkers.isEmpty()) {
-                m_runningWorkers.wait();
+            if (currentPool() != null) {
+                m_invisibleThreads++;
+            }
+            try {
+                while (!m_runningWorkers.isEmpty()) {
+                    m_runningWorkers.wait();
+                }
+            } finally {
+                if (currentPool() != null) {
+                    m_invisibleThreads--;
+                }
             }
         }
     }

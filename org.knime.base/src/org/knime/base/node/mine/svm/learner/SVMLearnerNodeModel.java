@@ -36,6 +36,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimerTask;
 import java.util.Vector;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.knime.base.node.mine.svm.PMMLSVMPortObject;
@@ -56,9 +58,9 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
@@ -350,18 +352,22 @@ public class SVMLearnerNodeModel extends NodeModel {
             fut[i] = pool.enqueue(bst[i]);
         }
 
-        boolean alldone = false;
-        while (!alldone) {
-            alldone = true;
-            for (int i = 0; i < fut.length; ++i) {
-                if (!fut[i].isDone()) {
-                    alldone = false;
-                } else {
-                    bst[i].ok();
-                    m_svms[i] = bst[i].getSvm();
+        try {
+            pool.runInvisible(new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    for (int i = 0; i < fut.length; ++i) {
+                        fut[i].get();
+                        bst[i].ok();
+                        m_svms[i] = bst[i].getSvm();
+                    }
+                    return null;
                 }
-            }
+            });
+        } catch (ExecutionException ex) {
+            throw (Exception) ex.getCause();
         }
+
         if (errormessage.length() > 0) {
             // remove last ','
             int pos = errormessage.length();
