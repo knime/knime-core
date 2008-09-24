@@ -44,7 +44,7 @@ public class KNIMESplashHandler extends BasicSplashHandler {
 
     private static final int MAX_IMAGE_HEIGHT = 50;
 
-    private static final int SPLASH_SCREEN_BEVEL = 5;
+    private static final int SPLASH_SCREEN_BEVEL = 8;
 
     private static final Rectangle PROGRESS_RECT =
             new Rectangle(5, 295, 445, 15);
