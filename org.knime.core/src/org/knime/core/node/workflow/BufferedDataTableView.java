@@ -85,7 +85,7 @@ public class BufferedDataTableView extends JComponent {
     @Override
     public String getName() {
         if (m_table == null) {
-            return "DataTable: null";
+            return "No data available";
         }
         StringBuilder result = new StringBuilder("");
         String tableName = m_table.getDataTableSpec().getName(); 
