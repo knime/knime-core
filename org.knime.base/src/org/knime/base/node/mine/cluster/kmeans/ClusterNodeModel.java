@@ -578,9 +578,11 @@ public class ClusterNodeModel extends NodeModel {
      * 
      * @param inSpecs the specifications of the input port(s) - should be one
      * @return the copied input spec
+     * @throws InvalidSettingsException if PMML incompatible type was found
      */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) {
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) 
+        throws InvalidSettingsException {
         // make sure we are a 1-input
         assert (inSpecs.length == 1);
         m_spec = (DataTableSpec)inSpecs[0];
@@ -667,7 +669,8 @@ public class ClusterNodeModel extends NodeModel {
         }
     }
     
-    private PMMLPortObjectSpec createPMMLSpec(final DataTableSpec tableSpec) {
+    private PMMLPortObjectSpec createPMMLSpec(final DataTableSpec tableSpec) 
+        throws InvalidSettingsException {
         PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
                 tableSpec);
         Set<String>activeCols = new LinkedHashSet<String>();

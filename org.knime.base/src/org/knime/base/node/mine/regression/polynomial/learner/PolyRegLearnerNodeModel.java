@@ -140,7 +140,8 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
                 createModelSpec(tableSpec)};
     }
 
-    private PMMLPortObjectSpec createModelSpec(final DataTableSpec inSpec) {
+    private PMMLPortObjectSpec createModelSpec(final DataTableSpec inSpec) 
+        throws InvalidSettingsException {
         DataColumnSpec[] usedColumns =
                 new DataColumnSpec[m_settings.selectedColumns().size() + 1];
         int k = 0;
@@ -296,7 +297,8 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
         return bdt;
     }
 
-    private PMMLRegressionPortObject createPMMLModel(final DataTableSpec inSpec) {
+    private PMMLRegressionPortObject createPMMLModel(final DataTableSpec inSpec)
+        throws InvalidSettingsException {
         NumericPredictor[] preds = new NumericPredictor[m_betas.length - 1];
 
         int deg = m_settings.getDegree();

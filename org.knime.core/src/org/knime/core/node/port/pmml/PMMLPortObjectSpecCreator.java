@@ -24,6 +24,9 @@ import java.util.Set;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.NominalValue;
+import org.knime.core.node.InvalidSettingsException;
 
 /**
  *
@@ -45,8 +48,11 @@ public class PMMLPortObjectSpecCreator {
      * learning columns.
      *
      * @param tableSpec equivalent to the data dictionary
+     * @throws InvalidSettingsException if a data column type is not compatible 
+     *  with double or nominal value (not supported by PMML)
      */
-    public PMMLPortObjectSpecCreator(final DataTableSpec tableSpec) {
+    public PMMLPortObjectSpecCreator(final DataTableSpec tableSpec) 
+        throws InvalidSettingsException {
         m_dataTableSpec = tableSpec;
         m_learningCols = new LinkedHashSet<String>();
         m_ignoredCols = new LinkedHashSet<String>();
@@ -54,6 +60,13 @@ public class PMMLPortObjectSpecCreator {
         // add all columns as learning columns
         Set<String>colNames = new LinkedHashSet<String>();
         for (DataColumnSpec colSpec : tableSpec) {
+            if (!colSpec.getType().isCompatible(DoubleValue.class)
+                    && !colSpec.getType().isCompatible(NominalValue.class)) {
+                colNames.clear();
+                throw new InvalidSettingsException(
+                        "Only double and nominal value compatible columns " 
+                        + "are yet supported for PMML models!");
+            }
             colNames.add(colSpec.getName());
         }
         setLearningColsNames(colNames);

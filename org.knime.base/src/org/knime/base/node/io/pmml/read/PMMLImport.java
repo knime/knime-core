@@ -43,6 +43,7 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.InvalidRegistryObjectException;
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.DataDictionaryContentHandler;
 import org.knime.core.node.port.pmml.ExtractModelTypeHandler;
@@ -331,6 +332,8 @@ public class PMMLImport {
             throw new SAXException(e);
         } catch (ParserConfigurationException pce) {
             throw new SAXException(pce);
+        } catch (InvalidSettingsException ise) {
+            throw new SAXException(ise);
         }
     }
     

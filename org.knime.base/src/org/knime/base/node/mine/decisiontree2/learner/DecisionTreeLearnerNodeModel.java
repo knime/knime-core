@@ -757,7 +757,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         return new PortObjectSpec[]{createPMMLSpec(inSpec)};
     }
 
-    private PMMLPortObjectSpec createPMMLSpec(final DataTableSpec spec){
+    private PMMLPortObjectSpec createPMMLSpec(final DataTableSpec spec) 
+        throws InvalidSettingsException {
         PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(spec);
         Set<String> targetCols = new HashSet<String>();
         targetCols.add(m_classifyColumn);

@@ -107,7 +107,8 @@ public final class LinearRegressionContent {
         m_spec = spec;
     }
 
-    public PMMLRegressionPortObject createPortObject() {
+    public PMMLRegressionPortObject createPortObject() 
+        throws InvalidSettingsException {
         PMMLPortObjectSpec spec = createPortObjectSpec(m_spec);
         PMMLRegressionContentHandler c = new PMMLRegressionContentHandler(spec);
         c.setAlgorithmName("LinearRegression");
@@ -130,9 +131,10 @@ public final class LinearRegressionContent {
      *            created.
      *
      * @return a PMML port object spec
+     * @throws InvalidSettingsException if PMML incompatible type was found
      */
     public static PMMLPortObjectSpec createPortObjectSpec(
-            final DataTableSpec spec) {
+            final DataTableSpec spec) throws InvalidSettingsException {
         PMMLPortObjectSpecCreator c = new PMMLPortObjectSpecCreator(spec);
         c.setTargetCols(Collections.singleton(
                 spec.getColumnSpec(spec.getNumColumns() - 1)));
