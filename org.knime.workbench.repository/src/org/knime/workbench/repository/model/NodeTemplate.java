@@ -165,6 +165,33 @@ public class NodeTemplate extends AbstractSimpleObject {
      * {@inheritDoc}
      */
     @Override
+    public int hashCode() {
+        return m_factory.hashCode();
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof NodeTemplate)) {
+            return false;
+        }
+        return m_factory.equals(((NodeTemplate)obj).getFactory());
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
     public String toString() {
         if (m_factory == null) {
             return super.toString();
