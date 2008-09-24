@@ -40,6 +40,8 @@ public enum PMMLModelType {
         AssociationModel,
         /** PMML SequenceModel. */
         SequenceModel,
+        /** PMML Support Vector Machine Model. */
+        SupportVectorMachineModel,
         /** 
          * PMML Extension fur own model implementation if PMML standard 
          * models don't fit. 
