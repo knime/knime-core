@@ -91,6 +91,7 @@ Uses: Java, GEF, Log4J
       <feature id="org.knime.features.ext.poi" version="2.0.0.0016392"/>
       <feature id="org.knime.features.ext.exttool" version="2.0.0.0016392"/>
       <feature id="org.knime.features.timeseries" version="2.0.0.0016392"/>
+      <feature id="org.knime.features.ext.r.bin" version="2.0.0.0016392"/>
    </features>
 
 </product>
