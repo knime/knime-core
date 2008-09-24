@@ -34,6 +34,7 @@ import javax.xml.transform.sax.TransformerHandler;
 
 import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLModelType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.xml.sax.SAXException;
@@ -60,7 +61,7 @@ public final class PMMLRegressionPortObject extends PMMLPortObject {
      */
     public PMMLRegressionPortObject(final PMMLPortObjectSpec spec,
             final PMMLRegressionContentHandler p) {
-        super(spec);
+        super(spec, PMMLModelType.RegressionModel);
         try {
             p.checkValidity();
         } catch (IllegalStateException e) {

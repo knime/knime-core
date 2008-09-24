@@ -31,6 +31,7 @@ import javax.xml.transform.sax.TransformerHandler;
 import org.knime.base.node.mine.subgroupminer.freqitemset.AssociationRule;
 import org.knime.base.node.mine.subgroupminer.freqitemset.FrequentItemSet;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLModelType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.xml.sax.SAXException;
@@ -67,7 +68,7 @@ public class PMMLAssociationRulePortObject extends PMMLPortObject {
             final double minSupport,
             final double minConfidence, final int nrOfTransactions,
             final int nrOfItems, final Collection<FrequentItemSet>itemsets) {
-        super(spec);
+        super(spec, PMMLModelType.AssociationModel);
         m_minSupport = minSupport;
         m_minConfidence = minConfidence;
         m_nrOfTransactions = nrOfTransactions;
@@ -84,7 +85,7 @@ public class PMMLAssociationRulePortObject extends PMMLPortObject {
             final double minConfidence, 
             final int nrOfTransactions,
             final int nrOfItems) {
-        super(spec);
+        super(spec, PMMLModelType.AssociationModel);
         m_minSupport = minSupport;
         m_minConfidence = minConfidence;
         m_nrOfTransactions = nrOfTransactions;

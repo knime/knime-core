@@ -58,7 +58,11 @@ public class PMMLPortObjectView extends JComponent {
         setLayout(new BorderLayout());
         setBackground(NodeView.COLOR_BACKGROUND);
         m_portObject = portObject;
-        setName("PMML: " + portObject.getModelType().name());
+        if (portObject.getModelType() == null) {            
+            setName("Unknown PMML model");
+        } else {
+            setName("PMML: " + portObject.getModelType().name());
+        }
         m_tree = new JTree();
         create();
     }

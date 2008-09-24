@@ -38,6 +38,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLModelType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.xml.sax.SAXException;
@@ -76,7 +77,7 @@ public class PMMLNeuralNetworkPortObject extends PMMLPortObject {
      */
     public PMMLNeuralNetworkPortObject(final PMMLPortObjectSpec spec,
             final MultiLayerPerceptron mlp) {
-        super(spec);
+        super(spec, PMMLModelType.NeuralNetwork);
         m_mlp = mlp;
     }
 

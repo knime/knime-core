@@ -42,6 +42,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLModelType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.xml.sax.SAXException;
@@ -73,7 +74,7 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
      */
     public PMMLDecisionTreePortObject(final DecisionTree tree,
             final PMMLPortObjectSpec spec) {
-        super(spec);
+        super(spec, PMMLModelType.TreeModel);
         m_tree = tree;
     }
 

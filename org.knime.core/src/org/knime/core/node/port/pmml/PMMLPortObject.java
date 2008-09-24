@@ -123,10 +123,12 @@ public abstract class PMMLPortObject implements PortObject {
     
     /**
      * @param spec the referring {@link PMMLPortObjectSpec}
+     * @param type the type of the PMML model
      */
-    public PMMLPortObject(final PMMLPortObjectSpec spec) {
+    public PMMLPortObject(final PMMLPortObjectSpec spec, PMMLModelType type) {
         m_spec = spec;
         m_masterHandler = new PMMLMasterContentHandler();
+        m_modelType = type;
     }
     
     /**
@@ -287,6 +289,7 @@ public abstract class PMMLPortObject implements PortObject {
      */
     protected abstract void writePMMLModel(final TransformerHandler handler)
         throws SAXException;
+    
     
     /**
      * 

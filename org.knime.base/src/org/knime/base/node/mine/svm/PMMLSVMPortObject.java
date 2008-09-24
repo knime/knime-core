@@ -37,6 +37,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLModelType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.xml.sax.SAXException;
@@ -107,7 +108,7 @@ public class PMMLSVMPortObject extends PMMLPortObject {
      */
     public PMMLSVMPortObject(final PMMLPortObjectSpec spec,
             final Kernel kernel, final Svm... svms) {
-        super(spec);
+        super(spec, PMMLModelType.SupportVectorMachineModel);
         m_kernel = kernel;
 
         ArrayList<String> usedColsList = new ArrayList<String>();
