@@ -37,15 +37,15 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.port.PortObject;
@@ -448,7 +448,14 @@ public final class SingleNodeContainer extends NodeContainer
                 setState(State.CONFIGURED);
                 break;
             case QUEUED:
+                // m_executionFuture has not yet started or if it has started,
+                // it will not hand off to node implementation (otherwise it
+                // would be executing)
+                m_executionFuture.cancel(true);
+                setState(State.CONFIGURED);
+                break;
             case EXECUTING:
+                // future is running in thread pool, use ordinary cancel policy
                 m_executionFuture.cancel(true);
                 break;
             case EXECUTED:
@@ -541,9 +548,18 @@ public final class SingleNodeContainer extends NodeContainer
         // TODO: the progress monitor should not be accessible from the
         // public world.
         ec.getProgressMonitor().reset();
+        boolean success = !caughtContextStackException;
+        try {
+            ec.checkCanceled();
+        } catch (CanceledExecutionException e) {
+            errorString = "Execution canceled";
+            LOGGER.warn(errorString);
+            m_node.notifyMessageListeners(
+                    new NodeMessage(NodeMessage.Type.WARNING, errorString));
+            success = false;
+        }
         // execute node outside any synchronization!
-        boolean success = !caughtContextStackException
-            && m_node.execute(inObjects, ec);
+        success = success && m_node.execute(inObjects, ec);
         if (success) {
             // output tables are made publicly available (for blobs)
             putOutputTablesIntoGlobalRepository(ec);
