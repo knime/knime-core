@@ -150,7 +150,7 @@ public class OutPortView extends JFrame {
         new Thread() {
             @Override
             public void run() {
-                if (portObject != null) {
+                if (portObject != null && portObject.getViews() != null) {
                     for (JComponent comp : portObject.getViews()) {
                         views.put(comp.getName(), comp);
                     }
@@ -166,7 +166,8 @@ public class OutPortView extends JFrame {
                     noDataPanel.setName("No data available");
                     views.put("No data available", noDataPanel);
                 }
-                if (portObjectSpec != null) {
+                if (portObjectSpec != null 
+                        && portObjectSpec.getViews() != null) {
                     for (JComponent comp : portObjectSpec.getViews()) {
                         views.put(comp.getName(), comp);
                     }
