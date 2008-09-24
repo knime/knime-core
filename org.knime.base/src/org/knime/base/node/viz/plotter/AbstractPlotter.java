@@ -912,9 +912,16 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     /**
      * Reset all local data which depends on the input data provided by the data
      * provider.
-     *
      */
     public abstract void reset();
+
+    /**
+     * Notifies the plotter that it is not needed any more and can clean up
+     * all data and references it holds.
+     */
+    public void dispose() {
+        m_dataProvider = null;
+    }
 
     /* -------------- mouse listeners ------------------ */
 

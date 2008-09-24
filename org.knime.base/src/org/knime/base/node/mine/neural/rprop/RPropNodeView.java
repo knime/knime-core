@@ -67,7 +67,7 @@ public class RPropNodeView extends NodeView<RPropNodeModel> {
      */
     @Override
     protected void onClose() {
-        // empty.
+        m_errorplotter.dispose();
     }
 
     /**

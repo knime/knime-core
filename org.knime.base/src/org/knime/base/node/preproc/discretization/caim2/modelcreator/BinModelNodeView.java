@@ -44,7 +44,7 @@ public class BinModelNodeView extends
 
     private JTabbedPane m_tabs;
 
-    private List<AbstractPlotter> m_plotters;
+    private final List<AbstractPlotter> m_plotters;
 
     private int m_plotterCounter = 1;
 
@@ -127,16 +127,14 @@ public class BinModelNodeView extends
         }
 
         HiLiteHandler hiliteHandler = model.getInHiLiteHandler(0);
-        if (m_plotters != null) {
-            for (AbstractPlotter plotter : m_plotters) {
-                plotter.reset();
-                plotter.setHiLiteHandler(hiliteHandler);
-                ((BinModelPlotter)plotter)
-                        .setDiscretizationModel((model)
-                                .getDiscretizationModel());
-                plotter.updatePaintModel();
-                plotter.getDrawingPane().repaint();
-            }
+        for (AbstractPlotter plotter : m_plotters) {
+            plotter.reset();
+            plotter.setHiLiteHandler(hiliteHandler);
+            ((BinModelPlotter)plotter)
+                .setDiscretizationModel((model)
+                            .getDiscretizationModel());
+            plotter.updatePaintModel();
+            plotter.getDrawingPane().repaint();
         }
     }
 
@@ -145,7 +143,9 @@ public class BinModelNodeView extends
      */
     @Override
     protected void onClose() {
-        // empty.
+        for (AbstractPlotter plotter : m_plotters) {
+            plotter.dispose();
+        }
     }
 
     /**

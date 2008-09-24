@@ -1,5 +1,5 @@
 /*
- * ------------------------------------------------------------------- 
+ * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 
 package org.knime.base.node.mine.cluster.hierarchical;
@@ -45,31 +45,31 @@ import org.knime.core.node.NodeModel;
 /**
  * This view displays the scoring results.
  * It needs to be hooked up with a scoring model.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
 
     private DendrogramPlotter m_dendroPlotter;
-    
+
     private ScatterPlotter m_distancePlotter;
-    
+
     private DistancePlotProperties m_properties;
-    
+
     private int m_thickness = 1;
 
     /**
      * creates a new ScorerNodeView with scroll bars.
-     * 
-     * The view consists of the table with the example data and the 
+     *
+     * The view consists of the table with the example data and the
      * appropriate scoring in the upper part and the summary of correct
      * and wrong classified examples in the lower part.
-     * 
+     *
      * @param nodeModel The underlying <code>NodeModel</code>.
      * @param dendrogramPlotter the dendrogram plotter.
      */
-    public HierarchicalClusterNodeView(final NodeModel nodeModel, 
-            final DendrogramPlotter dendrogramPlotter) { 
+    public HierarchicalClusterNodeView(final NodeModel nodeModel,
+            final DendrogramPlotter dendrogramPlotter) {
         super(nodeModel, dendrogramPlotter, "Dendrogram");
         m_dendroPlotter = dendrogramPlotter;
         m_properties = new DistancePlotProperties();
@@ -90,13 +90,13 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
             public void unHiLiteSelected() {
                 // nothing: no hilite supported
             }
-            
+
         };
-        // no selection should be possible so remove the selection listener 
+        // no selection should be possible so remove the selection listener
         m_distancePlotter.removeMouseListener(
                 AbstractPlotter.SelectionMouseListener.class);
-        
-        
+
+
         m_properties.getDotSizeSpinner().addChangeListener(
                 new ChangeListener() {
                     public void stateChanged(final ChangeEvent e) {
@@ -105,7 +105,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
                                 m_properties.getDotSizeSpinner().getValue());
                         m_distancePlotter.getDrawingPane().repaint();
                     }
-            
+
         });
         m_properties.getThicknessSpinner().addChangeListener(
                 new ChangeListener() {
@@ -114,7 +114,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
                             .getThicknessSpinner().getValue();
                         modelChanged();
                     }
-            
+
         });
         m_properties.getShowHideCheckbox().addChangeListener(
                 new ChangeListener() {
@@ -124,8 +124,8 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
                                 .isSelected());
                         m_distancePlotter.updatePaintModel();
                     }
-            
-        });        
+
+        });
         addVisualization(m_distancePlotter, "Distance");
     }
 
@@ -135,7 +135,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
      */
     @Override
     public void modelChanged() {
-        if (getNodeModel() == null 
+        if (getNodeModel() == null
                 || ((DataProvider)getNodeModel()).getDataArray(0) == null
                 || ((DataProvider)getNodeModel()).getDataArray(0).size() == 0) {
             return;
@@ -166,14 +166,14 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
                                 .getColumnSpec(1).getDomain().getUpperBound())
                                 .getDoubleValue());
         ((BasicDrawingPane)m_distancePlotter.getDrawingPane()).clearPlot();
-        m_distancePlotter.addLine(distanceTable, 0, 1, Color.BLACK, 
+        m_distancePlotter.addLine(distanceTable, 0, 1, Color.BLACK,
                 new BasicStroke(m_thickness));
-        
+
 //        m_distancePlotter.getXAxis().getCoordinate().setPolicy(
 //                DescendingNumericTickPolicyStrategy.getInstance());
-        
+
         m_distancePlotter.updatePaintModel();
-        
+
         m_dendroPlotter.updatePaintModel();
     }
 
@@ -182,7 +182,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
      */
     @Override
     protected void onClose() {
-        // nothing to do
+        m_distancePlotter.dispose();
     }
 
     /**
@@ -190,7 +190,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
      */
     @Override
     protected void onOpen() {
-        // do nothing here        
+        // do nothing here
     }
 
 }
