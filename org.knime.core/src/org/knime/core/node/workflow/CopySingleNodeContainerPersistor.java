@@ -26,6 +26,7 @@ package org.knime.core.node.workflow;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -69,8 +70,13 @@ final class CopySingleNodeContainerPersistor implements
     /** {@inheritDoc} */
     @Override
     public List<ScopeObject> getScopeObjects() {
-        List<ScopeObject> objs = m_original.getScopeObjectStack()
-            .getScopeObjectsOwnedBy(m_original.getID());
+        ScopeObjectStack stack = m_original.getScopeObjectStack();
+        List<ScopeObject> objs;
+        if (stack != null) {
+            objs = stack.getScopeObjectsOwnedBy(m_original.getID());
+        } else {
+            objs = Collections.emptyList();
+        }
         List<ScopeObject> clones = new ArrayList<ScopeObject>(objs.size());
         for (ScopeObject o : objs) {
             clones.add(o.cloneAndUnsetOwner());
