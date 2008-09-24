@@ -3085,7 +3085,7 @@ public final class WorkflowManager extends NodeContainer {
             t.ensureOpen();
         }
     }
-
+    
     //////////////////////////////////////
     // NodeContainer implementations
     // (WorkflowManager acts as meta node)
@@ -3127,6 +3127,20 @@ public final class WorkflowManager extends NodeContainer {
             setDirty();
             m_name = name;
         }
+    }
+    
+    /** Renames the underlying workflow directory to the new name.
+     * @param newName The name of the directory.
+     * @return Whether that was successful.
+     * @throws IllegalStateException If the worklow has not been saved yet 
+     * (has no corresponding node directory). 
+     */
+    public boolean renameWorkflowDirectory(final String newName) {
+        ReferencedFile file = getNodeContainerDirectory();
+        if (file == null) {
+            throw new IllegalStateException("Worklow has not yet been saved");
+        }
+        return file.rename(newName);
     }
 
     /** {@inheritDoc} */
