@@ -712,6 +712,12 @@
              factory-class="org.knime.base.node.flowvariable.variabletotablerow.VariableToTableNodeFactory"
              id="org.knime.base.node.flowvariable.variabletotablerow.VariableToTableNodeFactory">
        </node>
+       <node
+             category-path="/loopsupport"
+             expert-flag="true"
+             factory-class="org.knime.base.node.flowvariable.tablerowtovariable.TableToVariableNodeFactory"
+             id="org.knime.base.node.flowvariable.tablerowtovariable.TableToVariableNodeFactory">
+       </node>
       <node
             category-path="/io/read"
             factory-class="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory"
