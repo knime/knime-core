@@ -1281,7 +1281,12 @@ public final class Node implements NodeModelWarningListener {
                 pushOntoStack(newVariables);
                 success = true;
             } catch (InvalidSettingsException ise) {
-                createWarningMessageAndNotify(ise.getMessage());
+                Throwable cause = ise.getCause();
+                if (cause == null) {
+                    createWarningMessageAndNotify(ise.getMessage());
+                } else {
+                    createWarningMessageAndNotify(ise.getMessage(), ise);
+                }
             } catch (Throwable t) {
                 String error = "Configure failed (" 
                     + t.getClass().getSimpleName() + "): " 
