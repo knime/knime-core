@@ -24,7 +24,6 @@
 package org.knime.core.node.property.hilite;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -71,18 +70,18 @@ public class HiLiteTranslator {
          */
         public void hiLite(final KeyEvent event) {
             if (m_mapper != null && m_targetHandlers.size() > 0) {
-                HashSet<RowKey> fireSet = new HashSet<RowKey>();
+                Set<RowKey> fireSet = new LinkedHashSet<RowKey>();
                 for (RowKey key : event.keys()) {
-                    if (key != null) {
-                        Set<RowKey> s = m_mapper.getKeys(key);
-                        if (s != null && !s.isEmpty()) {
-                            fireSet.addAll(s);
-                        }
-                    }     
+                    Set<RowKey> s = m_mapper.getKeys(key);
+                    if (s != null && !s.isEmpty()) {
+                        fireSet.addAll(s);
+                    }  
                 }
                 if (!fireSet.isEmpty()) {
                     for (HiLiteHandler h : m_targetHandlers) {
-                        h.fireHiLiteEvent(fireSet);
+                        //if (h != event.getSource()) {
+                            h.fireHiLiteEvent(fireSet);
+                        //}
                     }
                 }
             }
@@ -93,18 +92,18 @@ public class HiLiteTranslator {
          */
         public void unHiLite(final KeyEvent event) {
             if (m_mapper != null && m_targetHandlers.size() > 0) {
-                HashSet<RowKey> fireSet = new HashSet<RowKey>();
+                Set<RowKey> fireSet = new LinkedHashSet<RowKey>();
                 for (RowKey key : event.keys()) {
-                    if (key != null) {
-                        Set<RowKey> s = m_mapper.getKeys(key);
-                        if (s != null && !s.isEmpty()) {
-                            fireSet.addAll(s);
-                        }
-                    }     
+                    Set<RowKey> s = m_mapper.getKeys(key);
+                    if (s != null && !s.isEmpty()) {
+                        fireSet.addAll(s);
+                    }
                 }
                 if (!fireSet.isEmpty()) {
                     for (HiLiteHandler h : m_targetHandlers) {
-                        h.fireUnHiLiteEvent(fireSet);
+                        //if (h != event.getSource()) {
+                            h.fireUnHiLiteEvent(fireSet);
+                        //}
                     }
                 }
             }
@@ -115,11 +114,9 @@ public class HiLiteTranslator {
          */
         public void unHiLiteAll(final KeyEvent event) {
             for (HiLiteHandler h : m_targetHandlers) {
-                // to avoid that the event travels forth and back
-                // do a check here if there is still something to unhilite
-                if (h.getHiLitKeys().size() > 0) {
+                //if (h != event.getSource()) {
                     h.fireClearHiLiteEvent();
-                }
+                //}
             }
         }
     };
@@ -130,52 +127,64 @@ public class HiLiteTranslator {
      */
     private final HiLiteListener m_targetListener = new HiLiteListener() {
         /**
-         * Ignored.
          * {@inheritDoc}
          */
         public void hiLite(final KeyEvent event) {
-//            // set with all hilit and to be hilit keys
-//            Set<RowKey> all = new HashSet<RowKey>(event.keys());
-//            for (HiLiteHandler hdl : m_toHandlers) {
-//                all.addAll(hdl.getHiLitKeys());
-//            }
-//            // check overlap with all mappings  
-//            for (RowKey key : m_mapper.keySet()) {
-//                Set<RowKey> keys = m_mapper.getKeys(key);
-//                // if all mapped keys are hilit fire event
-//                if (all.containsAll(keys)) {
-//                    m_fromHandler.fireHiLiteEvent(key);
-//                }
-//            }
+            if (m_mapper != null) {
+                try {
+                    // remove source listener temporarily to ensure that the 
+                    // fired event is not propagates back to this target handler
+                    m_sourceHandler.removeHiLiteListener(m_sourceListener);
+                    // add all hilite keys from the event and all hilit keys
+                    // from the target hilite handlers
+                    final Set<RowKey> all = new LinkedHashSet<RowKey>(
+                            event.keys());
+                    for (HiLiteHandler hdl : m_targetHandlers) {
+                        all.addAll(hdl.getHiLitKeys());
+                    }
+                    // check overlap with all mappings  
+                    for (RowKey key : m_mapper.keySet()) {
+                        final Set<RowKey> keys = m_mapper.getKeys(key);
+                        // if all mapped keys are hilit then fire event
+                        if (all.containsAll(keys)) {
+                            m_sourceHandler.fireHiLiteEvent(key);
+                        }
+                    }
+                } finally {
+                    m_sourceHandler.addHiLiteListener(m_sourceListener);
+                }
+            }
         }
         /**
-         * Ignored.
          * {@inheritDoc}
          */
         public void unHiLite(final KeyEvent event) {
-//            // set with all currently hilit keys
-//            Set<RowKey> all = new HashSet<RowKey>(event.keys());
-//            // check all mappings
-//            for (RowKey key : m_mapper.keySet()) {
-//                Set<RowKey> keys = m_mapper.getKeys(key);
-//                // if at least one item is unhilit and fire event
-//                for (RowKey hilite : all) {
-//                    if (keys.contains(hilite)) {
-//                        m_fromHandler.fireUnHiLiteEvent(key);
-//                        break;
-//                    }
-//                }
-//            }
+            if (m_mapper != null) {
+                try {
+                    // remove source listener temporarily to ensure that the 
+                    // fired event is not propagates back to this target handler
+                    m_sourceHandler.removeHiLiteListener(m_sourceListener);
+                    // check all mappings
+                    for (RowKey key : m_mapper.keySet()) {
+                        final Set<RowKey> keys = m_mapper.getKeys(key);
+                        // if at least one item is unhilit then fire event
+                        for (RowKey hilite : event.keys()) {
+                            if (keys.contains(hilite)) {
+                                m_sourceHandler.fireUnHiLiteEvent(key);
+                                break;
+                            }
+                        }
+                    }
+                } finally {
+                    m_sourceHandler.addHiLiteListener(m_sourceListener);
+                }
+            }
         }
         /**
          * {@inheritDoc}
          */
         public void unHiLiteAll(final KeyEvent event) {
-            // to avoid that the event travels forth and back
-            // do a check here if there is still something to unhilite
-            if (m_sourceHandler.getHiLitKeys().size() > 0) {
-                m_sourceHandler.fireClearHiLiteEvent();
-            }
+            m_sourceHandler.fireClearHiLiteEvent();
         }
     };
     

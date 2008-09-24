@@ -51,18 +51,13 @@ public class KeyEvent extends EventObject {
      * @param src the object on which the event initially occurred
      * @param ids an array of  <code>RowKey</code> elements for which this 
      *         event is created.
-     * @throws IllegalArgumentException if the source is <code>null</code> or
-     *         the ids empty
-     * 
+     * @throws NullPointerException if the key array is null
+     * @throws IllegalArgumentException if key array contains null elements
+     *
      * @see java.util.EventObject#EventObject(Object)
      */
     public KeyEvent(final Object src, final RowKey... ids) {
-        super(src);
-        if (ids.length == 0) {
-            throw new IllegalArgumentException("KeyEvent can not be empty.");
-        }
-        Set<RowKey> set = new LinkedHashSet<RowKey>(Arrays.asList(ids));
-        m_keys = Collections.unmodifiableSet(set);
+        this(src, new LinkedHashSet<RowKey>(Arrays.asList(ids)));
     }
     
     /** 
@@ -71,17 +66,18 @@ public class KeyEvent extends EventObject {
      * @param src the object on which the event initially occurred
      * @param ids a set of <code>RowKey</code> row IDs for which the 
      *         event is created.
-     * @throws IllegalArgumentException if the source is <code>null</code>, or
-     *         the ids are <code>null</code> or empty
+     * @throws NullPointerException if the key set is null
+     * @throws IllegalArgumentException if key array contains null elements
      *
      * @see java.util.EventObject#EventObject(Object)
      */
     public KeyEvent(final Object src, final Set<RowKey> ids) {
         super(src);
-        if (ids == null || ids.size() == 0) {
-            throw new IllegalArgumentException("KeyEvent can not be empty.");
-        }       
-        m_keys = Collections.unmodifiableSet(new LinkedHashSet<RowKey>(ids));
+        if (ids.contains(null)) {
+            throw new IllegalArgumentException(
+                    "KeyEvent must not contains null elements.");
+        }
+        m_keys = Collections.unmodifiableSet(ids);
     }
 
     /** 
@@ -92,6 +88,13 @@ public class KeyEvent extends EventObject {
      */
     public Set<RowKey> keys() { 
         return m_keys;
+    }
+    
+    /**
+     * @return true, if the key event does not contain any keys
+     */
+    public boolean isEmpty() {
+        return m_keys.isEmpty();
     }
     
 }
