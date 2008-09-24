@@ -709,8 +709,8 @@
        <node
              category-path="/loopsupport"
              expert-flag="true"
-             factory-class="org.knime.base.node.flowvariable.variabletotable.VariableToTableNodeFactory"
-             id="org.knime.base.node.flowvariable.variabletotable.VariableToTableNodeFactory">
+             factory-class="org.knime.base.node.flowvariable.variabletotablerow.VariableToTableNodeFactory"
+             id="org.knime.base.node.flowvariable.variabletotablerow.VariableToTableNodeFactory">
        </node>
       <node
             category-path="/io/read"
@@ -721,7 +721,7 @@
             category-path="/loopsupport"
             expert-flag="true"
             factory-class="org.knime.base.node.flowvariable.injectvariables.InjectVariablesNodeFactory"
-            id="org.knime.base.node.flowvariable.tabletovariable.TableToVariableNodeFactory">
+            id="org.knime.base.node.flowvariable.injectvariables.InjectVariablesNodeFactory">
       </node>
       <node
             category-path="/loopsupport"
