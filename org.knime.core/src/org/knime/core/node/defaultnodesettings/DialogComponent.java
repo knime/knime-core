@@ -34,7 +34,6 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -107,7 +106,7 @@ public abstract class DialogComponent {
      * @param portID the id of the port the spec should be returned for
      * @return the spec for the specified port that came in through the last
      *         call to loadSettings. Could be null!
-     * @see #loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
+     * @see #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])
      */
     protected final PortObjectSpec getLastTableSpec(final int portID) {
         if (m_lastSpecs == null) {
@@ -119,7 +118,7 @@ public abstract class DialogComponent {
     /**
      * @return the specs that came in through the last call to loadSettings.
      *         Could be null!
-     * @see #loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
+     * @see #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])
      */
 
     protected final PortObjectSpec[] getLastTableSpecs() {
