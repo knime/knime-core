@@ -46,7 +46,7 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class BWElimTailNodeDialog extends NodeDialogPane {
+public class BWElimLoopEndNodeDialog extends NodeDialogPane {
     @SuppressWarnings("unchecked")
     private final ColumnSelectionComboxBox m_targetColumn =
             new ColumnSelectionComboxBox((Border)null, DataValue.class);
@@ -55,12 +55,12 @@ public class BWElimTailNodeDialog extends NodeDialogPane {
     private final ColumnSelectionComboxBox m_predictionColumn =
             new ColumnSelectionComboxBox((Border)null, DataValue.class);
 
-    private final BWElimTailSettings m_settings = new BWElimTailSettings();
+    private final BWElimLoopEndSettings m_settings = new BWElimLoopEndSettings();
 
     /**
      * Creates a new dialog.
      */
-    public BWElimTailNodeDialog() {
+    public BWElimLoopEndNodeDialog() {
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 

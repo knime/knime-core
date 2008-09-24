@@ -669,20 +669,20 @@
       <node
             category-path="/loopsupport/features"
             expert-flag="true"
-            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimHead1NodeFactory"
-            id="org.knime.base.node.meta.feature.backwardelim.BWElimHeadNodeFactory">
+            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart1NodeFactory"
+            id="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart1NodeFactory">
       </node>
       <node
             category-path="/loopsupport/features"
             expert-flag="true"
-            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimHead2NodeFactory"
-            id="org.knime.base.node.meta.feature.backwardelim.BWElimHead2NodeFactory">
+            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart2NodeFactory"
+            id="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart2NodeFactory">
       </node>
       <node
             category-path="/loopsupport/features"
             expert-flag="true"
-            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimTailNodeFactory"
-            id="org.knime.base.node.meta.feature.backwardelim.BWElimTailNodeFactory">
+            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopEndNodeFactory"
+            id="org.knime.base.node.meta.feature.backwardelim.BWElimLoopEndNodeFactory">
       </node>
       <node
             category-path="/loopsupport/features"

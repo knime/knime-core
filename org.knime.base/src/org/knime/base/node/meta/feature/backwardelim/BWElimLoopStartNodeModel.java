@@ -47,7 +47,7 @@ import org.knime.core.node.workflow.LoopStartNodeTerminator;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class BWElimHeadNodeModel extends NodeModel implements
+public class BWElimLoopStartNodeModel extends NodeModel implements
         LoopStartNodeTerminator {
     private int m_iteration;
 
@@ -58,7 +58,7 @@ public class BWElimHeadNodeModel extends NodeModel implements
      *
      * @param ports the number of in- and output ports
      */
-    public BWElimHeadNodeModel(final int ports) {
+    public BWElimLoopStartNodeModel(final int ports) {
         super(ports, ports);
     }
 
@@ -77,7 +77,7 @@ public class BWElimHeadNodeModel extends NodeModel implements
 
         if (getLoopEndNode() != null) {
             ColumnRearranger crea =
-                    createRearranger((BWElimTailNodeModel)getLoopEndNode(),
+                    createRearranger((BWElimLoopEndNodeModel)getLoopEndNode(),
                             inSpecs[0]);
             DataTableSpec[] outSpecs = new DataTableSpec[inSpecs.length];
             for (int i = 0; i < outSpecs.length; i++) {
@@ -104,7 +104,7 @@ public class BWElimHeadNodeModel extends NodeModel implements
      * @return a column rearranger
      */
     private static ColumnRearranger createRearranger(
-            final BWElimTailNodeModel tail, final DataTableSpec inSpec) {
+            final BWElimLoopEndNodeModel tail, final DataTableSpec inSpec) {
         ColumnRearranger crea = new ColumnRearranger(inSpec);
         List<String> remove = new ArrayList<String>(tail.excludedColumns());
         remove.add(tail.includedColumns().get(tail.excludedFeatureIndex()));
@@ -125,7 +125,7 @@ public class BWElimHeadNodeModel extends NodeModel implements
         }
 
         ColumnRearranger crea =
-                createRearranger((BWElimTailNodeModel)getLoopEndNode(),
+                createRearranger((BWElimLoopEndNodeModel)getLoopEndNode(),
                         inData[0].getDataTableSpec());
         BufferedDataTable[] outTables = new BufferedDataTable[inData.length];
         for (int i = 0; i < outTables.length; i++) {

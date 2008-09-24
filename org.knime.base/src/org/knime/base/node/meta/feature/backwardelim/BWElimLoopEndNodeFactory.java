@@ -34,14 +34,14 @@ import org.knime.core.node.NodeDialogPane;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class BWElimTailNodeFactory extends
-        NodeFactory<BWElimTailNodeModel> {
+public class BWElimLoopEndNodeFactory extends
+        NodeFactory<BWElimLoopEndNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new BWElimTailNodeDialog();
+        return new BWElimLoopEndNodeDialog();
     }
 
     /**
@@ -64,16 +64,16 @@ public class BWElimTailNodeFactory extends
      * {@inheritDoc}
      */
     @Override
-    public BWElimTailNodeModel createNodeModel() {
-        return new BWElimTailNodeModel();
+    public BWElimLoopEndNodeModel createNodeModel() {
+        return new BWElimLoopEndNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView<BWElimTailNodeModel> createNodeView(
-            final int viewIndex, final BWElimTailNodeModel nodeModel) {
+    public NodeView<BWElimLoopEndNodeModel> createNodeView(
+            final int viewIndex, final BWElimLoopEndNodeModel nodeModel) {
         return null;
     }
 }

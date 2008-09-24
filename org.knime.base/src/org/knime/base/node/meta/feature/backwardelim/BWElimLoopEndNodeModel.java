@@ -63,10 +63,10 @@ import org.knime.core.node.workflow.LoopEndNode;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class BWElimTailNodeModel extends NodeModel 
+public class BWElimLoopEndNodeModel extends NodeModel 
         implements LoopEndNode {
     
-    private final BWElimTailSettings m_settings = new BWElimTailSettings();
+    private final BWElimLoopEndSettings m_settings = new BWElimLoopEndSettings();
 
     private final List<String> m_includedColumns = new ArrayList<String>();
 
@@ -111,7 +111,7 @@ public class BWElimTailNodeModel extends NodeModel
      * Creates a new model having one table input port, one table output port
      * and a model output port.
      */
-    public BWElimTailNodeModel() {
+    public BWElimLoopEndNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{
                 BufferedDataTable.TYPE, BWElimModel.TYPE});
     }
@@ -196,7 +196,7 @@ public class BWElimTailNodeModel extends NodeModel
         }
 
         if (m_excludedFeatureIndex == -1) {
-            m_includedColumns.addAll(((BWElimHeadNodeModel)getLoopStartNode())
+            m_includedColumns.addAll(((BWElimLoopStartNodeModel)getLoopStartNode())
                     .inputColumns());
             m_includedColumns.remove(m_settings.targetColumn());
             // first iteration with all columns for reference
@@ -342,7 +342,7 @@ public class BWElimTailNodeModel extends NodeModel
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        BWElimTailSettings s = new BWElimTailSettings();
+        BWElimLoopEndSettings s = new BWElimLoopEndSettings();
         s.loadSettings(settings);
     }
 

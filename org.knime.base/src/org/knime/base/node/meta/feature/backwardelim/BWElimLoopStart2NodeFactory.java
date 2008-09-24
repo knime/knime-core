@@ -32,7 +32,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class BWElimHead2NodeFactory extends NodeFactory<BWElimHeadNodeModel> {
+public class BWElimLoopStart2NodeFactory extends NodeFactory<BWElimLoopStartNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -46,16 +46,16 @@ public class BWElimHead2NodeFactory extends NodeFactory<BWElimHeadNodeModel> {
      * {@inheritDoc}
      */
     @Override
-    public BWElimHeadNodeModel createNodeModel() {
-        return new BWElimHeadNodeModel(2);
+    public BWElimLoopStartNodeModel createNodeModel() {
+        return new BWElimLoopStartNodeModel(2);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView<BWElimHeadNodeModel> createNodeView(final int index,
-            final BWElimHeadNodeModel model) {
+    public NodeView<BWElimLoopStartNodeModel> createNodeView(final int index,
+            final BWElimLoopStartNodeModel model) {
         return null;
     }
 

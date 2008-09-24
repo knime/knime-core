@@ -33,7 +33,7 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class BWElimHeadSettings {
+public class BWElimLoopStartSettings {
     private String m_targetColumn;
 
     /**

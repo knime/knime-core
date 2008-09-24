@@ -33,7 +33,7 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class BWElimTailSettings {
+public class BWElimLoopEndSettings {
     private String m_predictionColumn;
     private String m_targetColumn;
 
