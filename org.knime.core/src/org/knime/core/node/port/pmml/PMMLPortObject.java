@@ -254,6 +254,9 @@ public abstract class PMMLPortObject implements PortObject {
         ExtractModelTypeHandler hdl = (ExtractModelTypeHandler)m_masterHandler
             .getDefaultHandler(ExtractModelTypeHandler.ID);
         m_modelType = hdl.getModelType();
+        if (m_modelType == null) {
+            m_modelType = PMMLModelType.None;
+        }
         m_spec = spec;        
     }
     
