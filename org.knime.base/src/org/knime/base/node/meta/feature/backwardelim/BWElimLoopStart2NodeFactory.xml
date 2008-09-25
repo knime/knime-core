@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="feature_elimination.png" type="LoopStart">
+<knimeNode icon="feature_elimination_loop_start.png" type="LoopStart">
     <name>Backward Feature Elimination Start (2:2)</name>
 
     <shortDescription>Start node for a backward feature elimination loop</shortDescription>

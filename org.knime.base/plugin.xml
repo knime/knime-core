@@ -171,7 +171,7 @@
       </category>
       <category
             description="nodes for manual assembly of loops"
-            icon="src/org/knime/base/node/meta/looper/looper.png"
+            icon="icons/16x16/category_loop_support.png"
             level-id="loopsupport"
             name="Loop Support"
             path="/">
