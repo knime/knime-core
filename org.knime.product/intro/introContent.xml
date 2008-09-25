@@ -8,7 +8,7 @@
         <group id="links-background">
         <group id="page-links">
         
-            <link label="Go to KNIME" url="http://org.eclipse.ui.intro/switchToLaunchBar" 
+            <link label="Open KNIME workbench" url="http://org.eclipse.ui.intro/switchToLaunchBar" 
                 id="launch">                
                 <text>Closes this intro page and starts the KNIME workbench.</text>
             </link>

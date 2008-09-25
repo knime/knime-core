@@ -11,18 +11,18 @@
    </extension>
    <extension id="KNIME_PRODUCT" name="KNIME Workbench - Standalone Version" point="org.eclipse.core.runtime.products">
       <product application="org.knime.product.KNIME_APPLICATION" description="An Integrated and Extensible Data Analysis Workbench" name="KNIME">
-         <property name="windowImage" value="icons/knime.png"/>
+         <property name="windowImage" value="icons/gif/knime16.gif"/>
          <property
                name="aboutText"
                value="Welcome to KNIME v2.0.0.0016392&#x0A;the Konstanz Information Miner&#x0A;Copyright, 2003 - 2008&#x0A;email: contact@knime.org&#x0A;&#x0A;This version of KNIME is licensed under the Aladdin Open Source &#x0A;License. Please see the license file in the installation directory and &#x0A;contact us if you cannot locate it. More details can be found at&#x0A;http://www.knime.org&#x0A;&#x0A;Based on Eclipse, www.eclipse.org &#x0A;Uses: Java, GEF, Log4J"/>
-         <property name="aboutImage" value="icons/knime64.gif"/>
+         <property name="aboutImage" value="icons/gif/knime128.gif"/>
          <property name="appName" value="KNIME">
          </property>
          <property name="preferenceCustomization" value="plugin_customization.ini">
          </property>
          <property
                name="windowImages"
-               value="icons/knime.gif,icons/knime32.gif,icons/knime64.gif">
+               value="icons/gif/knime16.gif,icons/gif/knime32.gif,icons/gif/knime64.gif">
          </property>
       </product>
    </extension>
