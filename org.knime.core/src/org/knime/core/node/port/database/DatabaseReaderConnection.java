@@ -159,7 +159,6 @@ public final class DatabaseReaderConnection {
 
         }, exec);
         result.close();
-        m_stmt.close();
         return table;
     }
     
