@@ -44,8 +44,10 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.workbench.core.EclipseClassCreator;
 import org.knime.workbench.core.WorkbenchErrorLogger;
+import org.knime.workbench.repository.model.AbstractContainerObject;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IContainerObject;
+import org.knime.workbench.repository.model.IRepositoryObject;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
 import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.repository.model.Root;
@@ -391,6 +393,8 @@ public final class RepositoryManager {
                 }
         }
         
+        // remove all empty catories
+        removeEmptyCategories((AbstractContainerObject)m_root);
         m_lock.release();
 
         // if errors occured show an information box
@@ -422,6 +426,19 @@ public final class RepositoryManager {
             }
         }
 
+    }
+    
+    private void removeEmptyCategories(final AbstractContainerObject treeNode) {
+        for (IRepositoryObject object : treeNode.getChildren()) {
+            if (object instanceof AbstractContainerObject) {
+                AbstractContainerObject cat = (AbstractContainerObject)object;
+                removeEmptyCategories(cat);
+                if (!cat.hasChildren() && cat.getParent() != null) {
+                    cat.getParent().removeChild(
+                            (AbstractContainerObject)object);
+                }
+            }
+        }
     }
 
     private void showErrorMessage(final String errorMessage) {
