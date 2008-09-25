@@ -67,8 +67,6 @@ public final class DatabaseReaderConnection {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(DatabaseReaderConnection.class);
-    
-    private DataTable m_table;
 
     private DataTableSpec m_spec;
     
@@ -103,7 +101,6 @@ public final class DatabaseReaderConnection {
             IOException {
         PreparedStatement stmt = null;
         m_conn = conn;
-        m_table = null;
         try {
             String tableID = "table_" + hashCode();
             String pQuery = "SELECT * FROM (" + conn.getQuery() + ") " 
@@ -141,71 +138,56 @@ public final class DatabaseReaderConnection {
      */
     public BufferedDataTable createTable(final ExecutionContext exec)
             throws CanceledExecutionException, SQLException {
-        if (m_table == null) {
-            String query;
-            if (m_conn.getRowCacheSize() < 0) {
-                query = m_conn.getQuery();
-            } else {
-                String tableID = "table_" + hashCode();
-                query = "SELECT * FROM (" + m_conn.getQuery() + ") " + tableID; 
-                m_stmt.setMaxRows(m_conn.getRowCacheSize());
+        m_stmt.execute(m_conn.getQuery());
+        final ResultSet result = m_stmt.getResultSet();
+        BufferedDataTable table = exec.createBufferedDataTable(new DataTable() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public DataTableSpec getDataTableSpec() {
+                return m_spec;
             }
-            m_stmt.execute(query);
-            final ResultSet result = m_stmt.getResultSet();
-            m_table = exec.createBufferedDataTable(new DataTable() {
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public DataTableSpec getDataTableSpec() {
-                    return m_spec;
-                }
 
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public RowIterator iterator() {
-                    return new DBRowIterator(result);
-                }
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public RowIterator iterator() {
+                return new DBRowIterator(result);
+            }
 
-            }, exec);
-            result.close();
-            m_stmt.close();
-        }
-        if (!(m_table instanceof BufferedDataTable)) {
-            m_table = exec.createBufferedDataTable(m_table, exec);
-        }
-        return (BufferedDataTable) m_table;
+        }, exec);
+        result.close();
+        m_stmt.close();
+        return table;
     }
     
     /**
      * @return buffered data table read from database
      * @throws SQLException
      */
-    public DataTable createTable() throws SQLException {
-        if (m_table == null) {
-            String query;
-            if (m_conn.getRowCacheSize() < 0) {
-                query = m_conn.getQuery();
-            } else {
-                String tableID = "table_" + hashCode();
-                query = "SELECT * FROM (" + m_conn.getQuery() + ") " + tableID; 
-                m_stmt.setMaxRows(m_conn.getRowCacheSize());
-            }
-            m_stmt.execute(query);
-            final ResultSet result = m_stmt.getResultSet();
-            DBRowIterator it = new DBRowIterator(result);
-            DataContainer buf = new DataContainer(m_spec);
-            while (it.hasNext()) {
-                buf.addRowToTable(it.next());
-            }
-            buf.close();
-            m_table = buf.getTable();
-            result.close();
-            m_stmt.close();
+    DataTable createTable(final int cachedNoRows) throws SQLException {
+        String query;
+        if (cachedNoRows < 0) {
+            query = m_conn.getQuery();
+        } else {
+            String tableID = "table_" + hashCode();
+            query = "SELECT * FROM (" + m_conn.getQuery() + ") " + tableID; 
+            m_stmt.setMaxRows(cachedNoRows);
         }
-        return m_table;
+        m_stmt.execute(query);
+        final ResultSet result = m_stmt.getResultSet();
+        DBRowIterator it = new DBRowIterator(result);
+        DataContainer buf = new DataContainer(m_spec);
+        while (it.hasNext()) {
+            buf.addRowToTable(it.next());
+        }
+        buf.close();
+        DataTable table = buf.getTable();
+        result.close();
+        m_stmt.close();
+        return table;
     }
 
     private DataTableSpec createTableSpec(final ResultSetMetaData meta)

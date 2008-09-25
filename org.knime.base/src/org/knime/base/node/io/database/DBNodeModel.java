@@ -34,11 +34,10 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
+import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 
 /**
  * 
@@ -51,9 +50,6 @@ class DBNodeModel extends NodeModel {
     
     private final SettingsModelString m_tableOption =
         DBConnectionDialogPanel.createTableModel();
-
-    private final SettingsModelIntegerBounded m_cachedRows =
-        DBConnectionDialogPanel.createCachedRowsModel();
     
     private DatabaseQueryConnectionSettings m_conn;
 
@@ -82,7 +78,6 @@ class DBNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_tableOption.saveSettingsTo(settings);
-        m_cachedRows.saveSettingsTo(settings);
     }
 
     /**
@@ -92,7 +87,6 @@ class DBNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_tableOption.validateSettings(settings);
-        m_cachedRows.validateSettings(settings);
     }
 
     /**
@@ -102,7 +96,6 @@ class DBNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_tableOption.loadSettingsFrom(settings);
-        m_cachedRows.loadSettingsFrom(settings);
     }
 
     /**
@@ -161,7 +154,7 @@ class DBNodeModel extends NodeModel {
             throws InvalidSettingsException {
         DatabaseQueryConnectionSettings conn = 
             new DatabaseQueryConnectionSettings(
-                spec.getConnectionModel(), getNumCachedRows());
+                spec.getConnectionModel());
         if (DBTableOptions.CREATE_TABLE.getActionCommand().equals(
                 m_tableOption.getStringValue())) {
             try {
@@ -172,20 +165,10 @@ class DBNodeModel extends NodeModel {
                         + t.getMessage(), t);
             }
             return new DatabaseQueryConnectionSettings(
-                    conn, "SELECT * FROM " + m_tableId, 
-                    m_cachedRows.getIntValue());
+                    conn, "SELECT * FROM " + m_tableId);
         } else {
-            return new DatabaseQueryConnectionSettings(conn, newQuery,
-                    m_cachedRows.getIntValue());
+            return new DatabaseQueryConnectionSettings(conn, newQuery);
         }
     }
-    
-    /**
-     * @return number of rows to cache for review table
-     */
-    final int getNumCachedRows() {
-        return m_cachedRows.getIntValue();
-    }
-    
         
 }

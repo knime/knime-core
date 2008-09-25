@@ -91,8 +91,7 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
             throws CanceledExecutionException, Exception {
         DatabasePortObjectSpec spec = ((DatabasePortObject)inData[0]).getSpec();
         DatabaseQueryConnectionSettings conn = 
-            new DatabaseQueryConnectionSettings(spec.getConnectionModel(),
-                    getNumCachedRows());
+            new DatabaseQueryConnectionSettings(spec.getConnectionModel());
         String newQuery = createQuery(conn.getQuery(), getTableID());
         conn = createDBQueryConnection(spec, newQuery);
         ColumnRearranger colre = new ColumnRearranger(spec.getDataTableSpec());
@@ -122,7 +121,7 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
         }
         DatabaseQueryConnectionSettings conn = 
             new DatabaseQueryConnectionSettings(
-                spec.getConnectionModel(), getNumCachedRows());
+                spec.getConnectionModel());
         String newQuery = createQuery(conn.getQuery(), getTableID());
         conn = createDBQueryConnection(spec, newQuery);
         ColumnRearranger colre = new ColumnRearranger(spec.getDataTableSpec());

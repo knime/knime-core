@@ -32,10 +32,10 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
-import org.knime.core.node.port.database.DatabaseReaderConnection;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
+import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
+import org.knime.core.node.port.database.DatabaseReaderConnection;
 
 /**
  * 
@@ -102,10 +102,9 @@ final class DBQueryNodeModel extends DBNodeModel {
         DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
         DatabaseQueryConnectionSettings conn = 
             new DatabaseQueryConnectionSettings(
-                spec.getConnectionModel(), getNumCachedRows());
+                spec.getConnectionModel());
         String newQuery = createQuery(conn.getQuery(), getTableID());
-        conn = new DatabaseQueryConnectionSettings(conn, newQuery,
-                getNumCachedRows());
+        conn = new DatabaseQueryConnectionSettings(conn, newQuery);
         try {
             DatabaseReaderConnection reader = 
                 new DatabaseReaderConnection(conn);
@@ -130,10 +129,9 @@ final class DBQueryNodeModel extends DBNodeModel {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
         DatabaseQueryConnectionSettings conn = 
                 new DatabaseQueryConnectionSettings(
-                dbObj.getSpec().getConnectionModel(), getNumCachedRows());
+                dbObj.getSpec().getConnectionModel());
         String newQuery = createQuery(conn.getQuery(), getTableID());
-        conn = new DatabaseQueryConnectionSettings(conn, newQuery,
-                getNumCachedRows());
+        conn = new DatabaseQueryConnectionSettings(conn, newQuery);
         DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
         DataTableSpec outSpec = load.getDataTableSpec();
         DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(

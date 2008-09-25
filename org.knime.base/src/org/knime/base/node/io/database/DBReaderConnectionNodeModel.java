@@ -82,7 +82,7 @@ final class DBReaderConnectionNodeModel extends DBNodeModel {
             throws InvalidSettingsException {
         super.loadValidatedSettingsFrom(settings);
         DatabaseQueryConnectionSettings conn = 
-            new DatabaseQueryConnectionSettings(settings, getNumCachedRows());
+            new DatabaseQueryConnectionSettings(settings);
         try {
             m_load.setDBQueryConnection(conn);
         } catch (Exception e) {

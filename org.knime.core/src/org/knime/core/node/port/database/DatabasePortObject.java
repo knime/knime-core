@@ -24,17 +24,19 @@
  */
 package org.knime.core.node.port.database;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.util.zip.ZipEntry;
 
+import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import org.knime.core.data.DataTable;
-import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.container.DataContainer;
-import org.knime.core.data.util.NonClosableInputStream;
-import org.knime.core.data.util.NonClosableOutputStream;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -57,8 +59,6 @@ public class DatabasePortObject implements PortObject {
     
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             DatabasePortObject.class);
-    
-    private DataTable m_data;
     
     private final DatabasePortObjectSpec m_spec;
 
@@ -86,39 +86,27 @@ public class DatabasePortObject implements PortObject {
      * @throws NullPointerException if one of the arguments is null
      */
     public DatabasePortObject(final DatabasePortObjectSpec spec) {
-        this(spec, null);
-    }
-    
-    /**
-     *
-     */
-    private DatabasePortObject(final DatabasePortObjectSpec spec,
-            final DataTable data) {
-        if (spec == null) {
+      if (spec == null) {
             throw new NullPointerException(
                     "DatabasePortObjectSpec must not be null!");
         }
         m_spec = spec;
-        m_data = data;
     }
     
     /**
      * @return underlying data
      */
-    private DataTable getDataTable() {
-        if (m_data == null) {
-            try {
-                DatabaseReaderConnection load = new DatabaseReaderConnection(
-                    new DatabaseQueryConnectionSettings(
-                           m_spec.getConnectionModel()));
-                m_data = load.createTable();
-            } catch (Throwable t) {
-                LOGGER.error("Could not fetch data from database, reason: "
-                        + t.getMessage(), t);
-                m_data = null;
-            }
+    private DataTable getDataTable(final int cacheNoRows) {
+        try {
+            DatabaseReaderConnection load = new DatabaseReaderConnection(
+                new DatabaseQueryConnectionSettings(
+                       m_spec.getConnectionModel()));
+            return load.createTable(cacheNoRows);
+        } catch (Throwable t) {
+            LOGGER.error("Could not fetch data from database, reason: "
+                    + t.getMessage(), t);
+            return null;
         }
-        return m_data;
     }
     
     /**
@@ -141,7 +129,6 @@ public class DatabasePortObject implements PortObject {
                     final PortObjectZipOutputStream out, 
                     final ExecutionMonitor exec)
                     throws IOException, CanceledExecutionException {
-                save(out, exec, portObject);
 
             }
             
@@ -152,35 +139,9 @@ public class DatabasePortObject implements PortObject {
                     final PortObjectSpec spec, 
                     final ExecutionMonitor exec)
                     throws IOException, CanceledExecutionException {
-                return load(in, (DatabasePortObjectSpec) spec, exec);
+                return new DatabasePortObject((DatabasePortObjectSpec) spec);
             }
         };
-    }
-    
-    private static final String KEY_PREVIEW_TABLE = "preview_table.zip";
-    
-    private static DatabasePortObject load(
-            final PortObjectZipInputStream in, 
-            final DatabasePortObjectSpec spec,
-            final ExecutionMonitor exec) throws IOException {
-        assert exec == exec;
-        ZipEntry ze = in.getNextEntry();
-        if (ze != null && ze.getName().equals(KEY_PREVIEW_TABLE)) {
-            ContainerTable data = DataContainer.readFromStream(
-                    new NonClosableInputStream.Zip(in));
-            return new DatabasePortObject(spec, data);
-        }
-        return new DatabasePortObject(spec, null);
-    }
-    
-    private static void save(final PortObjectZipOutputStream out, 
-            final ExecutionMonitor em, final DatabasePortObject portObject) 
-            throws IOException, CanceledExecutionException {
-        if (portObject.m_data != null) {
-            out.putNextEntry(new ZipEntry(KEY_PREVIEW_TABLE));
-            BufferedDataContainer.writeToStream(portObject.m_data, 
-                    new NonClosableOutputStream.Zip(out), em);
-        }
     }
 
     /**
@@ -189,21 +150,45 @@ public class DatabasePortObject implements PortObject {
     @Override
     public JComponent[] getViews() {
         JComponent[] specPanels = m_spec.getViews();
-        JComponent[] panels = new JComponent[specPanels.length + 1];
-        panels[0] = new BufferedDataTableView(getDataTable());
+        final JComponent[] panels = new JComponent[specPanels.length + 1];
+        final BufferedDataTableView dataView = new BufferedDataTableView(null);
+        JButton b = new JButton("Cache no. of rows: ");
+        final JPanel p = new JPanel(new FlowLayout());
+        final JTextField cacheRows = new JTextField("100");
+        cacheRows.setMinimumSize(new Dimension(50, 20));
+        cacheRows.setPreferredSize(new Dimension(50, 20));
+        p.add(b);
+        p.add(cacheRows);
+        panels[0] = new JPanel(new BorderLayout());
+        panels[0].setName(dataView.getName());
+        panels[0].add(p, BorderLayout.NORTH);
+        panels[0].add(dataView, BorderLayout.CENTER);
+        b.addActionListener(new ActionListener() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                panels[0].removeAll();
+                int value = 100;
+                try {
+                    value = Integer.parseInt(cacheRows.getText().trim());
+                } catch (NumberFormatException nfe) {
+                    cacheRows.setText("100");
+                }
+                BufferedDataTableView dataView2 = new BufferedDataTableView(
+                        getDataTable(value));
+                panels[0].add(p, BorderLayout.NORTH);
+                panels[0].add(dataView2, BorderLayout.CENTER);
+                panels[0].setName(dataView2.getName());
+                panels[0].repaint();
+                panels[0].revalidate();
+            }
+        });
         for (int i = 1; i < panels.length; i++) {
             panels[i] = specPanels[i - 1];
         }
         return panels;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
-        m_data = null;
     }
     
 }

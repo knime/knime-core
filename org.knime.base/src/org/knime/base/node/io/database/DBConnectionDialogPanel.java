@@ -31,11 +31,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.util.ButtonGroupEnumInterface;
 
 /**
@@ -45,8 +42,6 @@ import org.knime.core.node.util.ButtonGroupEnumInterface;
 final class DBConnectionDialogPanel extends JPanel {
     
     private final DialogComponentButtonGroup m_group;
-    
-    private final DialogComponentNumber m_cacheRows;
     
     /**
      * Options the handle incoming SQL statement.
@@ -106,9 +101,6 @@ final class DBConnectionDialogPanel extends JPanel {
         m_group = new DialogComponentButtonGroup(createTableModel(), null, true,
                 DBTableOptions.values());
         super.add(m_group.getComponentPanel(), BorderLayout.NORTH);
-        m_cacheRows = new DialogComponentNumber(createCachedRowsModel(), 
-                "No. of row to cache: ", 100);
-        super.add(m_cacheRows.getComponentPanel(), BorderLayout.CENTER);
     }
     
     /**
@@ -120,15 +112,6 @@ final class DBConnectionDialogPanel extends JPanel {
     }
     
     /**
-     * @return new settings model to restrict number of cached rows
-     */
-    static final SettingsModelIntegerBounded createCachedRowsModel() {
-        return new SettingsModelIntegerBounded(
-                DatabaseQueryConnectionSettings.NO_ROWS_CACHED, 
-                100, 0, Integer.MAX_VALUE);
-    }
-
-    /**
      * Loads dialog settings. 
      * @param settings to load
      * @param ports input spec 
@@ -137,7 +120,6 @@ final class DBConnectionDialogPanel extends JPanel {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] ports) throws NotConfigurableException {
         m_group.loadSettingsFrom(settings, ports);
-        m_cacheRows.loadSettingsFrom(settings, ports);
     }
     
     /**
@@ -148,7 +130,6 @@ final class DBConnectionDialogPanel extends JPanel {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         m_group.saveSettingsTo(settings);
-        m_cacheRows.saveSettingsTo(settings);
     }
     
 }
