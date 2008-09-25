@@ -8,7 +8,6 @@ import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -16,7 +15,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.eclipse.ui.splash.BasicSplashHandler;
 
@@ -56,7 +54,7 @@ public class KNIMESplashHandler extends BasicSplashHandler {
 
     private Composite m_iconPanel;
 
-    private Text m_installedExtensions;
+    private Label m_installedExtensions;
 
     /**
      * {@inheritDoc}
@@ -151,10 +149,8 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         m_iconPanel.setLayout(layout);
 
         if (m_images.size() > 0) {
-            m_installedExtensions = new Text(splash, SWT.NONE);
+            m_installedExtensions = new Label(splash, SWT.NONE);
             m_installedExtensions.setText("Installed Extensions:");
-            m_installedExtensions.setFont(new Font(splash.getDisplay(),
-                    "SansSerif", 10, SWT.NONE));
             m_installedExtensions.setBounds(SPLASH_SCREEN_BEVEL, 195, 200, 20);
         }
     }
