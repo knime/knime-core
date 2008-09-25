@@ -21,18 +21,17 @@
  * History
  *   Aug 26, 2008 (wiswedel): created
  */
-package org.knime.base.util.scopevariable;
+package org.knime.core.node.util;
 
 import java.awt.Component;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JList;
 
 import org.knime.core.data.DataValue;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
-import org.knime.core.data.StringValue;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ScopeVariable;
 
 /**
@@ -42,6 +41,40 @@ import org.knime.core.node.workflow.ScopeVariable;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class ScopeVariableListCellRenderer extends DefaultListCellRenderer {
+    
+    public static final Icon SCOPE_VAR_DOUBLE_ICON;
+    public static final Icon SCOPE_VAR_INT_ICON;
+    public static final Icon SCOPE_VAR_STRING_ICON;
+    
+    static {
+        SCOPE_VAR_DOUBLE_ICON = loadIcon(
+                ScopeVariable.class, "../scopevar_double.png");
+        SCOPE_VAR_INT_ICON = loadIcon(
+                ScopeVariable.class, "../scopevar_integer.png");
+        SCOPE_VAR_STRING_ICON = loadIcon(
+                ScopeVariable.class, "../scopevar_string.png");
+    }
+    
+    private static Icon loadIcon(
+            final Class<?> className, final String path) {
+        ImageIcon icon;
+        try {
+            ClassLoader loader = className.getClassLoader(); 
+            String packagePath = 
+                className.getPackage().getName().replace('.', '/');
+            String correctedPath = path;
+            if (!path.startsWith("/")) {
+                correctedPath = "/" + path;
+            }
+            icon = new ImageIcon(
+                    loader.getResource(packagePath + correctedPath));
+        } catch (Exception e) {
+            NodeLogger.getLogger(DataValue.class).debug(
+                    "Unable to load icon at path " + path, e);
+            icon = null;
+        }
+        return icon;
+    }        
     
     /** {@inheritDoc} */
     @Override
@@ -58,15 +91,15 @@ public class ScopeVariableListCellRenderer extends DefaultListCellRenderer {
             String curValue;
             switch (v.getType()) {
             case DOUBLE:
-                icon = DoubleValue.UTILITY.getIcon();
+                icon = SCOPE_VAR_DOUBLE_ICON;
                 curValue = Double.toString(v.getDoubleValue());
                 break;
             case INTEGER:
-                icon = IntValue.UTILITY.getIcon();
+                icon = SCOPE_VAR_INT_ICON;
                 curValue = Integer.toString(v.getIntValue());
                 break;
             case STRING:
-                icon = StringValue.UTILITY.getIcon();
+                icon = SCOPE_VAR_STRING_ICON;
                 curValue = v.getStringValue();
                 break;
             default:

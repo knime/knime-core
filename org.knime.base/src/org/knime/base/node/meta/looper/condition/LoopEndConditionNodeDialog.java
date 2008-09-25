@@ -39,13 +39,13 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import org.knime.base.node.meta.looper.condition.LoopEndConditionSettings.Operator;
-import org.knime.base.util.scopevariable.ScopeVariableListCellRenderer;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.ScopeVariableListCellRenderer;
 import org.knime.core.node.workflow.ScopeVariable;
 import org.knime.core.node.workflow.ScopeVariable.Type;
 
