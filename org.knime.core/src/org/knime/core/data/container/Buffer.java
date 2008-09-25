@@ -626,12 +626,20 @@ class Buffer implements KNIMEStreamConstants {
             } else {
                 BlobDataCell bc;
                 if (isWrapperCell) {
-                    bc = ((BlobWrapperDataCell)cell).getCell();
+                    DataCell c = ((BlobWrapperDataCell)cell).getCell();
+                    bc = c.isMissing() ? null : (BlobDataCell)c;
                 } else {
                     bc = (BlobDataCell)cell;
                 }
-                writeBlobDataCell(
-                        bc, rewrite, getSerializerForDataCell(cl));
+                // the null case can only happen if there were problems reading
+                // the persisted blob (caught exception and returned missing 
+                // cell) - reading the the blob that is "not saved" here will 
+                // also cause trouble ("no such file"), which is ok as we need
+                // to take an error along
+                if (bc != null) {
+                    writeBlobDataCell(
+                            bc, rewrite, getSerializerForDataCell(cl));
+                }
             }
             wc = new BlobWrapperDataCell(this, rewrite, cl);
         } else {
@@ -1261,24 +1269,23 @@ class Buffer implements KNIMEStreamConstants {
         zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_DATA));
         Class<? extends DataCell>[] shortCutsLookup;
         if (!usesOutFile() || m_version < IVERSION) {
+            // need to use new buffer since we otherwise write properties
+            // of this buffer, which prevents it from further reading (version 
+            // conflict) - see bug #1364
+            Buffer copy = new Buffer(0, getBufferID(), 
+                    getGlobalRepository(), getLocalRepository());
             DCObjectOutputVersion2 outStream =
-                initOutFile(new NonClosableOutputStream.Zip(zipOut));
+                copy.initOutFile(new NonClosableOutputStream.Zip(zipOut));
             int count = 1;
             for (RowIterator it = iterator(); it.hasNext();) {
                 BlobSupportDataRow row = (BlobSupportDataRow)it.next();
                 exec.setProgress(count / (double)size(), "Writing row "
                         + count + " (\"" + row.getKey() + "\")");
                 exec.checkCanceled();
-                writeRow(row, outStream);
+                copy.writeRow(row, outStream);
                 count++;
             }
-            // if the table contains no rows at all, the shortcut
-            // table may be null!
-            if (m_typeShortCuts == null) {
-                m_typeShortCuts =
-                    new HashMap<Class<? extends DataCell>, Byte>();
-            }
-            shortCutsLookup = closeFile(outStream);
+            shortCutsLookup = copy.closeFile(outStream);
         } else {
             // no need for BufferedInputStream here as the copy method
             // does the buffering itself

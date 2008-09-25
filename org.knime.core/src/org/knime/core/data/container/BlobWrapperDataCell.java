@@ -28,7 +28,9 @@ import java.io.IOException;
 import java.lang.ref.SoftReference;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
+import org.knime.core.node.NodeLogger;
 
 /**
  * Wrapper for {@link BlobDataCell}. We explicitly wrap those cells in this
@@ -43,6 +45,9 @@ import org.knime.core.data.container.BlobDataCell.BlobAddress;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class BlobWrapperDataCell extends DataCell {
+    
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(BlobWrapperDataCell.class);
     
     private Buffer m_buffer;
     private BlobAddress m_blobAddress;
@@ -78,10 +83,13 @@ public final class BlobWrapperDataCell extends DataCell {
     }
     
     /**
-     * Fetches the content of the blob cell. May last long.
+     * Fetches the content of the blob cell. May last long. The returned 
+     * DataCell is an instance of BlobDataCell unless there were problems 
+     * retrieving the blob from the file system, in which case a missing cell
+     * is returned (and a warning message is logged to the logging system).
      * @return The blob Data cell being read.
      */
-    public BlobDataCell getCell() {
+    public DataCell getCell() {
         if (m_hardCellRef != null) {
             return m_hardCellRef;
         }
@@ -91,7 +99,15 @@ public final class BlobWrapperDataCell extends DataCell {
                 cell = m_buffer.readBlobDataCell(m_blobAddress, m_blobClass);
                 m_cellRef = new SoftReference<BlobDataCell>(cell);
             } catch (IOException ioe) {
-                throw new RuntimeException(ioe);
+                String error = ioe.getMessage();
+                Throwable cause = ioe.getCause();
+                if (cause != null) {
+                    error = error.concat(" (caused by \"" 
+                            + cause.getClass().getSimpleName() + ": " 
+                            + cause.getMessage() + ")");
+                }
+                LOGGER.warn(error, ioe);
+                return DataType.getMissingCell();
             }
         }
         return cell;
@@ -156,5 +172,5 @@ public final class BlobWrapperDataCell extends DataCell {
     public String toString() {
         return getCell().toString();
     }
-
+    
 }
