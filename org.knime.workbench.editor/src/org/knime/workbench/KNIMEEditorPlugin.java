@@ -72,6 +72,8 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
+        // TODO: temporary hug for preference page, to ensure that the 
+        // MasterKeySupplier is set correctly before the editor is started
         KNIMEUIPlugin.getDefault().getPreferenceStore();
     }
 
