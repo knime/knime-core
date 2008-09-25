@@ -166,7 +166,8 @@ public class NodeTemplate extends AbstractSimpleObject {
      */
     @Override
     public int hashCode() {
-        return m_factory.hashCode();
+        // see equals method for comment on this
+        return m_factory.getCanonicalName().hashCode();
     }
     
     /**
@@ -184,7 +185,12 @@ public class NodeTemplate extends AbstractSimpleObject {
         if (!(obj instanceof NodeTemplate)) {
             return false;
         }
-        return m_factory.equals(((NodeTemplate)obj).getFactory());
+        // avoid duplicate nodes in favorite nodes view
+        // to be sure only check for the full class name
+        // seems that different built versions of the class have led to 
+        // duplicates
+        return m_factory.getCanonicalName().equals(
+                ((NodeTemplate)obj).getFactory().getCanonicalName());
     }
     
     /**
@@ -197,5 +203,9 @@ public class NodeTemplate extends AbstractSimpleObject {
             return super.toString();
         }
         return m_factory.getName();
+    }
+    
+    public static void main(String[] args) {
+        System.out.println(NodeTemplate.class.getCanonicalName());
     }
 }
