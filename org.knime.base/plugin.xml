@@ -833,6 +833,12 @@
             factory-class="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesDBNodeFactory"
             id="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesDBNodeFactory">
       </node>
+      <node
+            category-path="manipulation/row"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.filter.nominal.NominalValueRowFilterNodeFactory"
+            id="org.knime.base.node.preproc.filter.nominal.NominalValueRowFilterNodeFactory">
+      </node>
       
    </extension>
       <extension
