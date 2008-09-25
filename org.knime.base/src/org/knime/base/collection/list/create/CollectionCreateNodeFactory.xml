@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Manipulator">
+<knimeNode icon="collectioncreate.png" type="Manipulator">
 	<name>Create Collection Column</name>
 	<shortDescription>
 		Combines multiple columns into a new collection column.
