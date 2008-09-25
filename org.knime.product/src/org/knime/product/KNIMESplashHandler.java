@@ -8,6 +8,7 @@ import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -15,6 +16,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.eclipse.ui.splash.BasicSplashHandler;
 
@@ -53,6 +55,8 @@ public class KNIMESplashHandler extends BasicSplashHandler {
             new Rectangle(7, 272, 445, 20);
 
     private Composite m_iconPanel;
+
+    private Text m_installedExtensions;
 
     /**
      * {@inheritDoc}
@@ -140,11 +144,19 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         int actualColumnCount = Math.min(m_images.size(), maxColumnCount);
         // Configure the layout
         GridLayout layout = new GridLayout(actualColumnCount, true);
-        layout.horizontalSpacing = 5;
+        layout.horizontalSpacing = 10;
         layout.verticalSpacing = 0;
         layout.marginHeight = 0;
         layout.marginWidth = 0;
         m_iconPanel.setLayout(layout);
+
+        if (m_images.size() > 0) {
+            m_installedExtensions = new Text(splash, SWT.NONE);
+            m_installedExtensions.setText("Installed Extensions:");
+            m_installedExtensions.setFont(new Font(splash.getDisplay(),
+                    "SansSerif", 10, SWT.NONE));
+            m_installedExtensions.setBounds(SPLASH_SCREEN_BEVEL, 195, 200, 20);
+        }
     }
 
     private void configureUICompositeIconPanelBounds() {
@@ -153,12 +165,10 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         Point panelSize =
                 m_iconPanel.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
 
-        int xCoord =
-                getSplash().getSize().x - SPLASH_SCREEN_BEVEL - panelSize.x;
         int xWidth = panelSize.x;
         int yWidth = panelSize.y;
 
-        m_iconPanel.setBounds(xCoord, 210, xWidth, yWidth);
+        m_iconPanel.setBounds(SPLASH_SCREEN_BEVEL, 225, xWidth, yWidth);
     }
 
     private int getUsableSplashScreenWidth() {
