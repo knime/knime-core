@@ -85,7 +85,8 @@ public class OpenPortViewAction extends Action {
      */
     @Override
     public String getText() {
-        return m_index + m_nodeContainer.getOutPort(m_index).getPortName();
+        return m_index + " " 
+            + m_nodeContainer.getOutPort(m_index).getPortName();
     }
 
     /**
