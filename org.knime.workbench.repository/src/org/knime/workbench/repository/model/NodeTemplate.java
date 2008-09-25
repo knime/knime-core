@@ -205,7 +205,4 @@ public class NodeTemplate extends AbstractSimpleObject {
         return m_factory.getName();
     }
     
-    public static void main(String[] args) {
-        System.out.println(NodeTemplate.class.getCanonicalName());
-    }
 }
