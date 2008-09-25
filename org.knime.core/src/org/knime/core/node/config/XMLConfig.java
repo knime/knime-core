@@ -104,18 +104,20 @@ final class XMLConfig {
         // we may remove this part if no DTD-based XMLConfigs exist any more.
         // If some one messed with the file by hand, this may fail!
         BufferedReader buf = new BufferedReader(new InputStreamReader(in));
-        String line = buf.readLine().trim(); // this must be the XML declaration
-        if (!"<?xml version=\"1.0\" encoding=\"UTF-8\"?>".equals(line)) {
-            throw new IOException("No valid XML file");
-        }
-        buf.mark(2048);
-        line = buf.readLine().trim();
-        if (line.startsWith("<!")) {
-            while (!line.endsWith(">")) {
-                line = buf.readLine().trim();
+        String line = buf.readLine(); // this must be the XML declaration
+        if (line != null) {
+            if (!"<?xml version=\"1.0\" encoding=\"UTF-8\"?>".equals(line.trim())) {
+                throw new IOException("No valid XML file");
             }
-        } else {
-            buf.reset();
+            buf.mark(2048);
+            line = buf.readLine();
+            if ((line != null) && line.trim().startsWith("<!")) {
+                while ((line != null) && !line.trim().endsWith(">")) {
+                    line = buf.readLine();
+                }
+            } else {
+                buf.reset();
+            }
         }
         // ====================================================================
 
