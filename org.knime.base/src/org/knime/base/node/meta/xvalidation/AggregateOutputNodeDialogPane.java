@@ -24,10 +24,10 @@
  */
 package org.knime.base.node.meta.xvalidation;
 
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 
-import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
@@ -56,7 +56,7 @@ public class AggregateOutputNodeDialogPane extends NodeDialogPane {
                     DoubleValue.class);
 
     @SuppressWarnings("unchecked")
-    private final ColumnSelectionComboxBox m_predictColumn =
+    private final ColumnSelectionComboxBox m_predictionColumn =
             new ColumnSelectionComboxBox((Border)null, NominalValue.class,
                     DoubleValue.class);
 
@@ -66,20 +66,24 @@ public class AggregateOutputNodeDialogPane extends NodeDialogPane {
      * Creates a new dialog.
      */
     public AggregateOutputNodeDialogPane() {
-        JPanel p = new JPanel(new GridLayout(0, 2));
-        JLabel l1 = new JLabel("Target Column ");
-        p.add(getInFlowLayout(l1));
-        p.add(getInFlowLayout(m_targetColumn));
-        JLabel l2 = new JLabel("Prediction Column ");
-        p.add(getInFlowLayout(l2));
-        p.add(getInFlowLayout(m_predictColumn));
-        addTab("Column Selection", p);
-    }
+        JPanel p = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
 
-    private static JPanel getInFlowLayout(final JComponent c) {
-        JPanel result = new JPanel(new FlowLayout());
-        result.add(c);
-        return result;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(2, 1, 2, 1);
+        p.add(new JLabel("Target column   "), c);
+        c.gridx = 1;
+        p.add(m_targetColumn, c);
+
+        c.gridx = 0;
+        c.gridy++;
+        p.add(new JLabel("Prediction column   "), c);
+        c.gridx = 1;
+        p.add(m_predictionColumn, c);
+
+        addTab("Standard settings", p);
     }
 
     /**
@@ -93,7 +97,7 @@ public class AggregateOutputNodeDialogPane extends NodeDialogPane {
         m_settings.targetColumn(m_settings.targetColumn());
         m_settings.predictionColumn(m_settings.predictionColumn());
         m_targetColumn.update(specs[0], m_settings.targetColumn());
-        m_predictColumn.update(specs[0], m_settings.predictionColumn());
+        m_predictionColumn.update(specs[0], m_settings.predictionColumn());
     }
 
     /**
@@ -103,7 +107,7 @@ public class AggregateOutputNodeDialogPane extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         m_settings.targetColumn(m_targetColumn.getSelectedColumn());
-        m_settings.predictionColumn(m_predictColumn.getSelectedColumn());
+        m_settings.predictionColumn(m_predictionColumn.getSelectedColumn());
         m_settings.saveSettings(settings);
     }
 }

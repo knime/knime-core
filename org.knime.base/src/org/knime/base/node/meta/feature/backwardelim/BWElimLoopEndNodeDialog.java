@@ -26,6 +26,7 @@ package org.knime.base.node.meta.feature.backwardelim;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -66,6 +67,8 @@ public class BWElimLoopEndNodeDialog extends NodeDialogPane {
 
         c.gridx = 0;
         c.gridy = 0;
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(2, 1, 2, 1);
         p.add(new JLabel("Target column   "), c);
         c.gridx = 1;
         p.add(m_targetColumn, c);

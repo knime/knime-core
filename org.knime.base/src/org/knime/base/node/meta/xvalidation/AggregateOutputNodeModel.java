@@ -27,6 +27,7 @@ package org.knime.base.node.meta.xvalidation;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.knime.core.data.DataCell;
@@ -38,7 +39,6 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.StringValue;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -69,14 +69,12 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
                             .createSpec());
 
     private static final DataTableSpec NUMERIC_STATISTICS_SPEC =
-        new DataTableSpec(
-                new DataColumnSpecCreator("Total mean squarred error",
-                        DoubleCell.TYPE).createSpec(),
-                new DataColumnSpecCreator("Mean squarred error per row",
-                        DoubleCell.TYPE).createSpec(),
-                new DataColumnSpecCreator("Size of Test Set",
-                        IntCell.TYPE).createSpec());
-
+            new DataTableSpec(new DataColumnSpecCreator(
+                    "Total mean squarred error", DoubleCell.TYPE).createSpec(),
+                    new DataColumnSpecCreator("Mean squarred error per row",
+                            DoubleCell.TYPE).createSpec(),
+                    new DataColumnSpecCreator("Size of Test Set", IntCell.TYPE)
+                            .createSpec());
 
     private final AggregateSettings m_settings = new AggregateSettings();
 
@@ -98,57 +96,61 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        DataTableSpec in = inSpecs[0];
+        DataTableSpec inSpec = inSpecs[0];
         if ((m_settings.targetColumn() == null)
                 && (m_settings.predictionColumn() == null)) {
-            // try to guess columns
-            for (int i = in.getNumColumns() - 1; i >= 0; i--) {
-                DataColumnSpec c = in.getColumnSpec(i);
-                if (c.getType().isCompatible(StringValue.class)) {
-                    if (m_settings.predictionColumn() == null) {
-                        m_settings.predictionColumn(c.getName());
-                    } else {
-                        assert m_settings.targetColumn() == null;
-                        m_settings.targetColumn(c.getName());
-                        break; // both columns assigned
+            List<DataColumnSpec> colSpecs = new ArrayList<DataColumnSpec>();
+            for (int i = 0; i < inSpec.getNumColumns(); i++) {
+                colSpecs.add(inSpec.getColumnSpec(i));
+            }
+
+            outer: for (int i = colSpecs.size() - 1; i >= 0; i--) {
+                for (int j = i - 1; j >= 0; j--) {
+                    DataType commonType =
+                            DataType.getCommonSuperType(colSpecs.get(i)
+                                    .getType(), colSpecs.get(j).getType());
+                    if ((commonType.getValueClasses().size() > 1)
+                            || (commonType.getValueClasses().get(0) != DataValue.class)) {
+                        m_settings.predictionColumn(colSpecs.get(i).getName());
+                        m_settings.targetColumn(colSpecs.get(j).getName());
+                        setWarningMessage("Selected columns '"
+                                + m_settings.predictionColumn() + "' and '"
+                                + m_settings.targetColumn() + "' as prediction"
+                                + " and target columns");
+                        break outer;
                     }
                 }
             }
-            if (m_settings.targetColumn() == null) {
-                throw new InvalidSettingsException(
-                        "Invalid input: Need at least two string columns.");
-            }
-            setWarningMessage("Auto configuration: Using \""
-                    + m_settings.targetColumn() + "\" as target and \""
-                    + m_settings.predictionColumn() + "\" as prediction");
         }
 
-        int targetColIndex = in.findColumnIndex(m_settings.targetColumn());
+        int targetColIndex = inSpec.findColumnIndex(m_settings.targetColumn());
         if (targetColIndex < 0) {
             throw new InvalidSettingsException("No such column: "
                     + m_settings.targetColumn());
         }
 
-        int predictColIndex = in.findColumnIndex(m_settings.predictionColumn());
+        int predictColIndex =
+                inSpec.findColumnIndex(m_settings.predictionColumn());
         if (predictColIndex < 0) {
             throw new InvalidSettingsException("No such column: "
                     + m_settings.predictionColumn());
         }
 
-        DataType commonType = DataType.getCommonSuperType(
-                in.getColumnSpec(targetColIndex).getType(),
-                in.getColumnSpec(predictColIndex).getType());
+        DataType commonType =
+                DataType.getCommonSuperType(inSpec
+                        .getColumnSpec(targetColIndex).getType(), inSpec
+                        .getColumnSpec(predictColIndex).getType());
         if ((commonType.getValueClasses().size() == 1)
                 && (commonType.getValueClasses().get(0) == DataValue.class)) {
             throw new InvalidSettingsException("Target and prediction column "
                     + "are not of compatible type");
         }
 
-        if (in.getColumnSpec(targetColIndex).getType()
-                .isCompatible(DoubleValue.class)) {
-            return new DataTableSpec[]{in, NUMERIC_STATISTICS_SPEC};
+        if (inSpec.getColumnSpec(targetColIndex).getType().isCompatible(
+                DoubleValue.class)) {
+            return new DataTableSpec[]{inSpec, NUMERIC_STATISTICS_SPEC};
         } else {
-            return new DataTableSpec[]{in, NOMINAL_STATISTICS_SPEC};
+            return new DataTableSpec[]{inSpec, NOMINAL_STATISTICS_SPEC};
         }
     }
 
@@ -169,8 +171,8 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
             throw new Exception("No matching Loop Start node!", e);
         }
         if (count < 0 || count >= maxCount) {
-            throw new Exception("Conflicting loop variables, count is " 
-                    + count + " and max count is " + maxCount);
+            throw new Exception("Conflicting loop variables, count is " + count
+                    + " and max count is " + maxCount);
         }
         if (count == 0) {
             m_predictionTable =
@@ -186,12 +188,12 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
                 in.getDataTableSpec().findColumnIndex(
                         m_settings.predictionColumn());
 
-        final boolean numericMode = in.getDataTableSpec()
-                .getColumnSpec(predictColIndex).getType()
-                .isCompatible(DoubleValue.class);
+        final boolean numericMode =
+                in.getDataTableSpec().getColumnSpec(predictColIndex).getType()
+                        .isCompatible(DoubleValue.class);
 
         ExecutionMonitor subExec =
-            exec.createSubProgress(count == maxCount - 1 ? 0.9 : 1);
+                exec.createSubProgress(count == maxCount - 1 ? 0.9 : 1);
         if (numericMode) {
             double errorSum = 0;
             int r = 0;
@@ -211,11 +213,11 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
 
             errorSum = Math.sqrt(errorSum);
 
-            DataRow stats = new DefaultRow(
+            DataRow stats =
+                    new DefaultRow(
                             new RowKey("fold " + m_foldStatistics.size()),
-                            new DoubleCell(errorSum),
-                            new DoubleCell(errorSum / rowCount),
-                            new IntCell(rowCount));
+                            new DoubleCell(errorSum), new DoubleCell(errorSum
+                                    / rowCount), new IntCell(rowCount));
             m_foldStatistics.add(stats);
         } else {
             int correct = 0;
@@ -238,23 +240,22 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
                 subExec.checkCanceled();
             }
 
-            DataRow stats = new DefaultRow(
+            DataRow stats =
+                    new DefaultRow(
                             new RowKey("fold " + m_foldStatistics.size()),
                             new DoubleCell(100.0 * incorrect / rowCount),
                             new IntCell(rowCount), new IntCell(incorrect));
             m_foldStatistics.add(stats);
         }
 
-
-
         if (count < maxCount - 1) {
             continueLoop();
             return new BufferedDataTable[2];
         } else {
             BufferedDataContainer cont =
-                    exec.createDataContainer(numericMode
-                            ? NUMERIC_STATISTICS_SPEC
-                            : NOMINAL_STATISTICS_SPEC);
+                    exec
+                            .createDataContainer(numericMode ? NUMERIC_STATISTICS_SPEC
+                                    : NOMINAL_STATISTICS_SPEC);
             for (DataRow row : m_foldStatistics) {
                 cont.addRowToTable(row);
             }

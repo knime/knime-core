@@ -47,8 +47,8 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
@@ -63,10 +63,10 @@ import org.knime.core.node.workflow.LoopEndNode;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class BWElimLoopEndNodeModel extends NodeModel 
-        implements LoopEndNode {
-    
-    private final BWElimLoopEndSettings m_settings = new BWElimLoopEndSettings();
+public class BWElimLoopEndNodeModel extends NodeModel implements LoopEndNode {
+
+    private final BWElimLoopEndSettings m_settings =
+            new BWElimLoopEndSettings();
 
     private final List<String> m_includedColumns = new ArrayList<String>();
 
@@ -122,8 +122,33 @@ public class BWElimLoopEndNodeModel extends NodeModel
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-
         DataTableSpec inSpec = (DataTableSpec)inSpecs[0];
+        if ((m_settings.predictionColumn() == null)
+                && (m_settings.targetColumn() == null)) {
+            List<DataColumnSpec> colSpecs = new ArrayList<DataColumnSpec>();
+            for (int i = 0; i < inSpec.getNumColumns(); i++) {
+                colSpecs.add(inSpec.getColumnSpec(i));
+            }
+
+            outer: for (int i = colSpecs.size() - 1; i >= 0; i--) {
+                for (int j = i - 1; j >= 0; j--) {
+                    DataType commonType =
+                            DataType.getCommonSuperType(colSpecs.get(i)
+                                    .getType(), colSpecs.get(j).getType());
+                    if ((commonType.getValueClasses().size() > 1)
+                            || (commonType.getValueClasses().get(0) != DataValue.class)) {
+                        m_settings.predictionColumn(colSpecs.get(i).getName());
+                        m_settings.targetColumn(colSpecs.get(j).getName());
+                        setWarningMessage("Selected columns '"
+                                + m_settings.predictionColumn() + "' and '"
+                                + m_settings.targetColumn() + "' as prediction"
+                                + " and target columns");
+                        break outer;
+                    }
+                }
+            }
+        }
+
         int pIndex = inSpec.findColumnIndex(m_settings.predictionColumn());
         if (pIndex == -1) {
             throw new InvalidSettingsException("Prediction column '"
@@ -149,11 +174,12 @@ public class BWElimLoopEndNodeModel extends NodeModel
                 DoubleValue.class)) {
             return new PortObjectSpec[]{
                     new DataTableSpec(NR_FEATURES, SQUARED_ERROR,
-                            REMOVED_FEATURE), null};
+                            REMOVED_FEATURE),
+                    new BWElimModel(m_settings.targetColumn())};
         } else {
             return new PortObjectSpec[]{
                     new DataTableSpec(NR_FEATURES, ERROR_RATE, REMOVED_FEATURE),
-                    null};
+                    new BWElimModel(m_settings.targetColumn())};
         }
     }
 
@@ -196,8 +222,9 @@ public class BWElimLoopEndNodeModel extends NodeModel
         }
 
         if (m_excludedFeatureIndex == -1) {
-            m_includedColumns.addAll(((BWElimLoopStartNodeModel)getLoopStartNode())
-                    .inputColumns());
+            m_includedColumns
+                    .addAll(((BWElimLoopStartNodeModel)getLoopStartNode())
+                            .inputColumns());
             m_includedColumns.remove(m_settings.targetColumn());
             // first iteration with all columns for reference
             m_resultTable.addRowToTable(new DefaultRow(new RowKey("All"),
@@ -277,8 +304,7 @@ public class BWElimLoopEndNodeModel extends NodeModel
                 throw new RuntimeException(
                         "This node cannot handle missing values");
             }
-            if (!row.getCell(predictionIndex).equals(
-                    row.getCell(targetIndex))) {
+            if (!row.getCell(predictionIndex).equals(row.getCell(targetIndex))) {
                 wrong++;
             }
 
