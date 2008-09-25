@@ -87,6 +87,7 @@ public final class SingleNodeContainer extends NodeContainer
             final NodeID id) {
         super(parent, id);
         m_node = n;
+        setPortNames();
         m_node.addMessageListener(this);
     }
 
@@ -104,8 +105,19 @@ public final class SingleNodeContainer extends NodeContainer
         assert m_node != null : persistor.getClass().getSimpleName()
             + " did not provide Node instance for " + getClass().getSimpleName()
             + " with id \"" + id + "\"";
+        setPortNames();
         m_node.addMessageListener(this);
-
+    }
+    
+    private void setPortNames() {
+        for (int i = 0; i < getNrOutPorts(); i++) {
+            getOutPort(i).setPortName(
+                    m_node.getFactory().getOutportDescription(i));
+        }
+        for (int i = 0; i < getNrInPorts(); i++) {
+            getInPort(i).setPortName(
+                    m_node.getFactory().getInportDescription(i));
+        }
     }
 
     /**
