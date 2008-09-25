@@ -57,11 +57,11 @@ final class DBReaderConnectionNodeModel extends DBNodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        super.saveSettingsTo(settings);
         DatabaseQueryConnectionSettings conn = m_load.getQueryConnection();
         if (conn != null) {
             conn.saveConnection(settings);
         }
-        super.saveSettingsTo(settings);
     }
 
     /**
@@ -70,8 +70,8 @@ final class DBReaderConnectionNodeModel extends DBNodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        new DatabaseQueryConnectionSettings(settings);
         super.validateSettings(settings);
+        new DatabaseQueryConnectionSettings(settings);
     }
 
     /**
@@ -80,6 +80,7 @@ final class DBReaderConnectionNodeModel extends DBNodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        super.loadValidatedSettingsFrom(settings);
         DatabaseQueryConnectionSettings conn = 
             new DatabaseQueryConnectionSettings(settings, getNumCachedRows());
         try {
@@ -87,7 +88,6 @@ final class DBReaderConnectionNodeModel extends DBNodeModel {
         } catch (Exception e) {
             throw new InvalidSettingsException(e);
         }
-        super.loadValidatedSettingsFrom(settings);
     }
 
     /**

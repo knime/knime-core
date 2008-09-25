@@ -58,8 +58,8 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_filter.saveSettingsTo(settings);
         super.saveSettingsTo(settings);
+        m_filter.saveSettingsTo(settings);
     }
 
     /**
@@ -68,8 +68,8 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_filter.validateSettings(settings);
         super.validateSettings(settings);
+        m_filter.validateSettings(settings);
     }
 
     /**
@@ -78,8 +78,8 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_filter.loadSettingsFrom(settings);
         super.loadValidatedSettingsFrom(settings);
+        m_filter.loadSettingsFrom(settings);
     }
     
     /**

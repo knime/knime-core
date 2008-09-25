@@ -63,6 +63,7 @@ final class DBRowFilterNodeModel extends DBNodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        super.saveSettingsTo(settings);
         m_column.saveSettingsTo(settings);
         m_operator.saveSettingsTo(settings);
         m_value.saveSettingsTo(settings);
@@ -74,6 +75,7 @@ final class DBRowFilterNodeModel extends DBNodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        super.validateSettings(settings);
         m_column.validateSettings(settings);
         m_operator.validateSettings(settings);
         m_value.validateSettings(settings);
@@ -85,6 +87,7 @@ final class DBRowFilterNodeModel extends DBNodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        super.loadValidatedSettingsFrom(settings);
         m_column.loadSettingsFrom(settings);
         m_operator.loadSettingsFrom(settings);
         m_value.loadSettingsFrom(settings);

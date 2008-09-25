@@ -62,8 +62,8 @@ final class DBQueryNodeModel extends DBNodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_query.saveSettingsTo(settings);
         super.saveSettingsTo(settings);
+        m_query.saveSettingsTo(settings);
     }
 
     /**
@@ -72,6 +72,7 @@ final class DBQueryNodeModel extends DBNodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        super.validateSettings(settings);
         SettingsModelString query = 
             m_query.createCloneWithValidatedValue(settings);
         String queryString = query.getStringValue();
@@ -80,7 +81,6 @@ final class DBQueryNodeModel extends DBNodeModel {
                     "Database view place holder (" + TABLE_PLACE_HOLDER 
                     + ") must not be replaced.");
         }
-        super.validateSettings(settings);
     }
 
     /**
@@ -89,8 +89,8 @@ final class DBQueryNodeModel extends DBNodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_query.loadSettingsFrom(settings);
         super.loadValidatedSettingsFrom(settings);
+        m_query.loadSettingsFrom(settings);
     }
     
     /**
