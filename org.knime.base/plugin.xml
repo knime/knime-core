@@ -355,13 +355,13 @@
       <node
             after="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory"
             category-path="/io/write"
-            factory-class="org.knime.base.node.io.portobject.PortObjectWriterNodeFactory"
-            id="org.knime.base.node.io.portobject.PortObjectWriterNodeFactory"/>
+            factory-class="org.knime.base.node.io.predictor.PredictorWriterNodeFactory"
+            id="org.knime.base.node.io.predictor.PredictorWriterNodeFactory"/>
       <node
             after="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory"
             category-path="/io/read"
-            factory-class="org.knime.base.node.io.portobject.PortObjectReaderNodeFactory"
-            id="org.knime.base.node.io.portobject.PortObjectReaderNodeFactory"/>
+            factory-class="org.knime.base.node.io.predictor.PredictorReaderNodeFactory"
+            id="org.knime.base.node.io.predictor.PredictorReaderNodeFactory"/>
       <node
             category-path="/database"
             factory-class="org.knime.base.node.io.database.DBReaderNodeFactory"
@@ -634,6 +634,10 @@
             category-path="/database"
             factory-class="org.knime.base.node.io.database.DBColumnFilterNodeFactory"
             id="org.knime.base.node.io.database.DBColumnFilterNodeFactory"/>
+      <!--node
+            category-path="/database"
+            factory-class="org.knime.base.node.io.database.DBJoinerNodeFactory"
+            id="org.knime.base.node.io.database.DBJoinerNodeFactory"/-->
       <node
             category-path="/database"
             factory-class="org.knime.base.node.io.database.DBRowFilterNodeFactory"

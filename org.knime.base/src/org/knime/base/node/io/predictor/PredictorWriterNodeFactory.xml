@@ -4,17 +4,17 @@
     <name>Model Writer</name>
     
     <shortDescription>
-        Writes generic port objects to a file.
+        Writes KNIME model port objects to a file.
     </shortDescription>
     
     <fullDescription>
-        <intro>Writes generic port objects to a file, which can be read
+        <intro>Writes KNIME model port objects to a file, which can be read
         with the Model Reader node.
         </intro>
-        <option name="Selected File">The file containing the object.</option>
+        <option name="Selected File">The file containing the KNIME model.</option>
     </fullDescription>
     
     <ports>
-        <modelIn index="0" name="Object">The object to write out.</modelIn>
+        <modelIn index="0" name="Object">The KNIME model to write out.</modelIn>
     </ports>    
 </knimeNode>

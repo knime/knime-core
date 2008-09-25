@@ -4,17 +4,17 @@
     <name>Model Reader</name>
     
     <shortDescription>
-        Reads generic port objects from a file.
+        Reads KNIME model port objects from a file.
     </shortDescription>
     
     <fullDescription>
-        <intro>Reads generic port objects that were written with the Model 
+        <intro>Reads KNIME model port objects that were written with the Model 
         Writer node.
         </intro>
-        <option name="Selected File">The file containing the port object.</option>
+        <option name="Selected File">The file containing the KNIME model object.</option>
     </fullDescription>
     
     <ports>
-        <modelOut index="0" name="Object">The object just read.</modelOut>
+        <modelOut index="0" name="Object">The KNIME model just read.</modelOut>
     </ports>    
 </knimeNode>
