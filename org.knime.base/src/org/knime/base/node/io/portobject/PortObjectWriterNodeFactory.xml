@@ -9,7 +9,7 @@
 	
 	<fullDescription>
 		<intro>Writes generic port objects to a file, which can be read
-		with the PortObject reader node.
+		with the Model Reader node.
 		</intro>
         <option name="Selected File">The file containing the object.</option>
 	</fullDescription>

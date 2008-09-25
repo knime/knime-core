@@ -1,23 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Sink">
-	<name>Model Writer</name>
-	
-	<shortDescription>
-		Writes models as XML to file.
-	</shortDescription>
-	
-	<fullDescription>
-		<intro>This node saves any model into a file. Connect the input port
-	 	to a model output port of any model generating node. Enter
-	 	the destination location in the configuration dialog of the node. When
-	 	executed, the node saves the incoming model as an XML description in the
-	 	specified file.
-		</intro>
-        <option name="Selected File">The file the model is written to.</option>
-	</fullDescription>
-	
-	<ports>
-		<modelIn index="0" name="Model">The model to write out.</modelIn>
-	</ports>	
+<knimeNode icon="./pmmlWriter.png" type="Sink">
+    <name>Model Writer</name>
+    
+    <shortDescription>
+        Writes generic port objects to a file.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>Writes generic port objects to a file, which can be read
+        with the Model Reader node.
+        </intro>
+        <option name="Selected File">The file containing the object.</option>
+    </fullDescription>
+    
+    <ports>
+        <modelIn index="0" name="Object">The object to write out.</modelIn>
+    </ports>    
 </knimeNode>

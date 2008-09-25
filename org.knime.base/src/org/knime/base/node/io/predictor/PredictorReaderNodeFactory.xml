@@ -1,23 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Source">
-	<name>Model Reader</name>
-	
-	<shortDescription>
-		Reads models from an XML file.
-	</shortDescription>
-	
-	<fullDescription>
-		<intro>This node reads any model from a file. Connect the output 
-	 	port to a model input port of any model requiring node. Enter
-	 	the source location in the configuration dialog of the node. When
-	 	executed, the node reads the model from the XML description in 
-	 	to the specified file and provides it at its output port.
-		</intro>
-        <option name="Selected File">The file representing the model.</option>
-	</fullDescription>
-	
-	<ports>
-		<modelOut index="0" name="Model">The model just read.</modelOut>
-	</ports>	
+    <name>Model Reader</name>
+    
+    <shortDescription>
+        Reads generic port objects from a file.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>Reads generic port objects that were written with the Model 
+        Writer node.
+        </intro>
+        <option name="Selected File">The file containing the port object.</option>
+    </fullDescription>
+    
+    <ports>
+        <modelOut index="0" name="Object">The object just read.</modelOut>
+    </ports>    
 </knimeNode>

@@ -8,8 +8,8 @@
 	</shortDescription>
 	
 	<fullDescription>
-		<intro>Reads generic port objects that were written with the PortObject 
-		writer node.
+		<intro>Reads generic port objects that were written with the Model 
+		Writer node.
 		</intro>
         <option name="Selected File">The file containing the port object.</option>
 	</fullDescription>
