@@ -15,7 +15,7 @@
          point="org.eclipse.ui.perspectives">
       <perspective
             name="KNIME"
-            icon="icons/perspective.png"
+            icon="icons/knime_default.png"
             class="org.knime.workbench.ui.perspective.ModellerPerspectiveFactory"
             id="org.knime.workbench.ui.ModellerPerspective">
          <description>
