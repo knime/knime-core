@@ -182,7 +182,7 @@ public final class RepositoryManager {
         IExtension[] categoryExtensions = this.getExtensions(ID_CATEGORY);
         
         boolean isInExpertMode = 
-            Boolean.getBoolean(KNIMEConstants.ENV_VARIABLE_EXPERT_MODE);
+            Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE);
 
         IExtension[] metanodeExtensions = getExtensions(ID_META_NODE);
         //

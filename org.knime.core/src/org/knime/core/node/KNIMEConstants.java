@@ -61,8 +61,7 @@ public final class KNIMEConstants {
      * we are in expert mode or not (e.g. whether to show loop nodes or not).
      * This field is also used for the preference pages. 
      * <p>Values of this field must be either "true" or "false". */
-    public static final String ENV_VARIABLE_EXPERT_MODE = 
-        "knime.expert.mode";
+    public static final String PROPERTY_EXPERT_MODE = "knime.expert.mode";
         
     
     /**

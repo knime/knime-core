@@ -280,7 +280,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         pane.setBorder(BorderFactory.createTitledBorder(" Column List "));
         varSplitPane.setTopComponent(pane);
         // set variable panel only if expert mode is enabled.
-        if (Boolean.getBoolean(KNIMEConstants.ENV_VARIABLE_EXPERT_MODE)) {
+        if (Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
             pane = new JScrollPane(m_scopeVarsList);
             pane.setBorder(BorderFactory.createTitledBorder(
             " Flow Variable List "));

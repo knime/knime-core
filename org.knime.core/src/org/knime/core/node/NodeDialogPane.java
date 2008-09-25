@@ -238,7 +238,7 @@ public abstract class NodeDialogPane {
         if (m_scopeVariableTab == null) {
             m_scopeVariableTab = new ScopeVariablesTab();
             boolean isExpertMode = 
-                Boolean.getBoolean(KNIMEConstants.ENV_VARIABLE_EXPERT_MODE);
+                Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE);
             if (isExpertMode) {
                 addTab(TAB_NAME_VARIABLES, m_scopeVariableTab);
                 m_pane.addChangeListener(new ChangeListener() {
