@@ -53,11 +53,9 @@ import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.editor2.editparts.SubworkflowEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
-import org.knime.workbench.ui.metanodes.CreateMetaNodeTemplateAction;
 
 /**
  * Provider for the Workflow editor's context menus.
@@ -182,6 +180,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     }
                 }
             }
+            /*
             if (p instanceof SubworkflowEditPart) {
                 // meta node -> add to template repository action
                 SubworkflowEditPart metaNode = (SubworkflowEditPart)p;
@@ -191,6 +190,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP,
                         action);
             }
+            */
             if (p instanceof NodeContainerEditPart) {
 
                 NodeContainer container = null;
