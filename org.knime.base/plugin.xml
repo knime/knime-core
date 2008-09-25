@@ -605,32 +605,6 @@
             factory-class="org.knime.base.node.viz.roc.ROCNodeFactory"
             id="org.knime.base.node.viz.roc.ROCNodeFactory">
       </node>
-      <node
-            category-path="/loopsupport/crossvalidation"
-            expert-flag="true"
-            factory-class="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory"
-            id="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory">
-      </node>
-      <node
-            after="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory"
-            category-path="/loopsupport/crossvalidation"
-            expert-flag="true"
-            factory-class="org.knime.base.node.meta.xvalidation.AggregateOutputNodeFactory"
-            id="org.knime.base.node.meta.xvalidation.AggregateOutputNodeFactory">
-      </node>
-      <node
-            category-path="/loopsupport"
-            expert-flag="true"
-            factory-class="org.knime.base.node.meta.looper.LoopStartCountNodeFactory"
-            id="org.knime.base.node.meta.looper.LoopStartCountNodeFactory">
-      </node>
-      <node
-            after="org.knime.base.node.flowvariable.variableloophead.LoopStartVariableNodeFactory"
-            category-path="/loopsupport"
-            expert-flag="true"
-            factory-class="org.knime.base.node.meta.looper.LoopEndNodeFactory"
-            id="org.knime.base.node.meta.looper.LoopEndNodeFactory">
-      </node>
        <node
             category-path="/database"
             factory-class="org.knime.base.node.io.database.DBConnectionNodeFactory"
@@ -677,6 +651,72 @@
             factory-class="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory"
             id="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory">
       </node>
+       <node
+             category-path="/misc"
+             factory-class="org.knime.base.collection.list.create.CollectionCreateNodeFactory"
+             id="org.knime.base.collection.list.create.CollectionCreateNodeFactory">
+       </node>
+       <node
+             category-path="/misc"
+             factory-class="org.knime.base.collection.list.split.CollectionSplitNodeFactory"
+             id="org.knime.base.collection.list.split.CollectionSplitNodeFactory">
+       </node>
+      <node
+            category-path="/io/read"
+            factory-class="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory"
+            id="org.knime.base.node.io.PMMLReaderNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.regexsplit.RegexSplitNodeFactory"
+            id="org.knime.base.node.preproc.regexsplit.RegexSplitNodeFactory">
+      </node>
+      <node
+            category-path="/io/write"
+            factory-class="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory"
+            id="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory">
+      </node>
+      <node
+            category-path="manipulation/column"
+            factory-class="org.knime.base.node.preproc.colsort.ColumnResorterNodeFactory"
+            id="org.knime.base.node.preproc.colsort.ColumnResorterNodeFactory">
+      </node>
+      <node
+            category-path="/view"
+            factory-class="org.knime.base.node.viz.liftchart.LiftChartNodeFactory"
+            id="org.knime.base.node.viz.liftchart.LiftChartNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.setoperator.SetOperatorNodeFactory"
+            id="org.knime.base.node.preproc.setoperator.SetOperatorNodeFactory">
+      </node>
+      <node
+            category-path="/loopsupport/crossvalidation"
+            expert-flag="true"
+            factory-class="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory"
+            id="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory">
+      </node>
+      <node
+            after="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory"
+            category-path="/loopsupport/crossvalidation"
+            expert-flag="true"
+            factory-class="org.knime.base.node.meta.xvalidation.AggregateOutputNodeFactory"
+            id="org.knime.base.node.meta.xvalidation.AggregateOutputNodeFactory">
+      </node>
+      <node
+            category-path="/loopsupport"
+            expert-flag="true"
+            factory-class="org.knime.base.node.meta.looper.LoopStartCountNodeFactory"
+            id="org.knime.base.node.meta.looper.LoopStartCountNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.flowvariable.variableloophead.LoopStartVariableNodeFactory"
+            category-path="/loopsupport"
+            expert-flag="true"
+            factory-class="org.knime.base.node.meta.looper.LoopEndNodeFactory"
+            id="org.knime.base.node.meta.looper.LoopEndNodeFactory">
+      </node>
       <node
             category-path="/loopsupport/features"
             expert-flag="true"
@@ -712,16 +752,6 @@
              id="org.knime.base.node.flowvariable.variabletotable.AppendVariableToTableNodeFactory">
        </node>
        <node
-             category-path="/misc"
-             factory-class="org.knime.base.collection.list.create.CollectionCreateNodeFactory"
-             id="org.knime.base.collection.list.create.CollectionCreateNodeFactory">
-       </node>
-       <node
-             category-path="/misc"
-             factory-class="org.knime.base.collection.list.split.CollectionSplitNodeFactory"
-             id="org.knime.base.collection.list.split.CollectionSplitNodeFactory">
-       </node>
-       <node
              after="org.knime.base.node.flowvariable.tablerowtovariable.TableToVariableNodeFactory"
              category-path="/loopsupport"
              expert-flag="true"
@@ -736,11 +766,6 @@
              id="org.knime.base.node.flowvariable.tablerowtovariable.TableToVariableNodeFactory">
        </node>
       <node
-            category-path="/io/read"
-            factory-class="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory"
-            id="org.knime.base.node.io.PMMLReaderNodeFactory">
-      </node>
-      <node
             after="org.knime.base.node.io.filereader.VariableFileReaderNodeFactory"
             category-path="/loopsupport"
             expert-flag="true"
@@ -753,11 +778,6 @@
             expert-flag="true"
             factory-class="org.knime.base.node.flowvariable.injectvariables.InjectVariablesDBNodeFactory"
             id="org.knime.base.node.flowvariable.injectvariables.InjectVariablesDBNodeFactory">
-      </node>
-      <node
-            category-path="/manipulation/column"
-            factory-class="org.knime.base.node.preproc.regexsplit.RegexSplitNodeFactory"
-            id="org.knime.base.node.preproc.regexsplit.RegexSplitNodeFactory">
       </node>
       <node
             after="org.knime.base.node.meta.looper.LoopStartCountNodeFactory"
@@ -774,21 +794,6 @@
             id="org.knime.base.node.meta.looper.condition.LoopEndConditionNodeFactory">
       </node>
       <node
-            category-path="/io/write"
-            factory-class="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory"
-            id="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory">
-      </node>
-      <node
-            category-path="manipulation/column"
-            factory-class="org.knime.base.node.preproc.colsort.ColumnResorterNodeFactory"
-            id="org.knime.base.node.preproc.colsort.ColumnResorterNodeFactory">
-      </node>
-      <node
-            category-path="/view"
-            factory-class="org.knime.base.node.viz.liftchart.LiftChartNodeFactory"
-            id="org.knime.base.node.viz.liftchart.LiftChartNodeFactory">
-      </node>
-      <node
             after="org.knime.base.node.meta.looper.condition.LoopStartGenericNodeFactory"
             category-path="/loopsupport"
             expert-flag="true"
@@ -801,11 +806,6 @@
             expert-flag="true"
             factory-class="org.knime.base.node.io.filereader.VariableFileReaderNodeFactory"
             id="org.knime.base.node.io.filereader.VariableFileReaderNodeFactory">
-      </node>
-      <node
-            category-path="/manipulation/column"
-            factory-class="org.knime.base.node.preproc.setoperator.SetOperatorNodeFactory"
-            id="org.knime.base.node.preproc.setoperator.SetOperatorNodeFactory">
       </node>
       <node
             after="org.knime.base.node.flowvariable.injectvariables.InjectVariablesDBNodeFactory"
