@@ -196,5 +196,4 @@ Export-Package: org.knime.base.collection.list.create,
  org.knime.base.util.coordinate,
  org.knime.base.util.kdtree,
  org.knime.base.util.math,
- org.knime.base.util.pmml.samples,
- org.knime.base.util.scopevariable
+ org.knime.base.util.pmml.samples
