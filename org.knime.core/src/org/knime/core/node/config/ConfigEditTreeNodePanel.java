@@ -49,11 +49,9 @@ import javax.swing.JTextField;
 import javax.swing.border.Border;
 
 import org.knime.core.data.DataValue;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
-import org.knime.core.data.StringValue;
 import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
 import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.node.util.ScopeVariableListCellRenderer;
 import org.knime.core.node.workflow.ScopeObjectStack;
 import org.knime.core.node.workflow.ScopeVariable;
 import org.knime.core.node.workflow.ScopeVariable.Type;
@@ -67,9 +65,12 @@ import org.knime.core.node.workflow.ScopeVariable.Type;
  */
 public class ConfigEditTreeNodePanel extends JPanel {
     
-    private static final Icon ICON_STRING = StringValue.UTILITY.getIcon();
-    private static final Icon ICON_INT = IntValue.UTILITY.getIcon();
-    private static final Icon ICON_DOUBLE = DoubleValue.UTILITY.getIcon();
+    private static final Icon ICON_STRING = 
+        ScopeVariableListCellRenderer.SCOPE_VAR_STRING_ICON;
+    private static final Icon ICON_INT = 
+        ScopeVariableListCellRenderer.SCOPE_VAR_INT_ICON;
+    private static final Icon ICON_DOUBLE = 
+        ScopeVariableListCellRenderer.SCOPE_VAR_DOUBLE_ICON;
     private static final Icon ICON_UNKNOWN = DataValue.UTILITY.getIcon();
     
     private static final Dimension LABEL_DIMENSION = new Dimension(100, 20);

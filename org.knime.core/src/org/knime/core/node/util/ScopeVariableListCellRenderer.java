@@ -42,17 +42,20 @@ import org.knime.core.node.workflow.ScopeVariable;
  */
 public class ScopeVariableListCellRenderer extends DefaultListCellRenderer {
     
+    /** Icon representing double scope variables. */
     public static final Icon SCOPE_VAR_DOUBLE_ICON;
+    /** Icon representing integer scope variables. */
     public static final Icon SCOPE_VAR_INT_ICON;
+    /** Icon representing string scope variables. */
     public static final Icon SCOPE_VAR_STRING_ICON;
     
     static {
         SCOPE_VAR_DOUBLE_ICON = loadIcon(
-                ScopeVariable.class, "../scopevar_double.png");
+                ScopeVariable.class, "../icon/scopevar_double.png");
         SCOPE_VAR_INT_ICON = loadIcon(
-                ScopeVariable.class, "../scopevar_integer.png");
+                ScopeVariable.class, "../icon/scopevar_integer.png");
         SCOPE_VAR_STRING_ICON = loadIcon(
-                ScopeVariable.class, "../scopevar_string.png");
+                ScopeVariable.class, "../icon/scopevar_string.png");
     }
     
     private static Icon loadIcon(
