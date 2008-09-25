@@ -44,29 +44,14 @@ import org.knime.core.node.workflow.UIInformation;
  * @author Florian Georg, University of Konstanz
  */
 public class ModellingNodeExtraInfo implements UIInformation {
-    /** Version id of this extra info implementation. */
-    public static final String VERSION = "1.0";
+    /** TODO: Version id of this extra info implementation. */
+    // private static final String VERSION = "1.0";
 
-    /** The key under which the type is registered. * */
-    public static final String KEY_VERSION = "extrainfo.node.version";
+    /** TODO: The key under which the type is registered. * */
+    // private static final String KEY_VERSION = "extrainfo.node.version";
 
     /** The key under which the bounds are registered. * */
-    public static final String KEY_BOUNDS = "extrainfo.node.bounds";
-
-    /** The key under which the factory name is registered. * */
-    public static final String KEY_FACTORY = "extrainfo.node.factory";
-
-    /** The key under which the pluginID is registered. * */
-    public static final String KEY_PLUGIN = "extrainfo.node.pluginID";
-
-    /** The key under which the icon path is registered. * */
-    public static final String KEY_ICON = "extrainfo.node.icon";
-
-    /** The key under which the type is registered. * */
-    public static final String KEY_TYPE = "extrainfo.node.type";
-
-    /** The key under which the description is registered. * */
-    public static final String KEY_DESCRIPTION = "extrainfo.node.description";
+    private static final String KEY_BOUNDS = "extrainfo.node.bounds";
 
     private int[] m_bounds = new int[]{0, 0, -1, -1};
 
