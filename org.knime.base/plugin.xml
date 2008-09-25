@@ -291,6 +291,7 @@
             factory-class="org.knime.base.node.preproc.split.SplitNodeFactory"
             id="org.knime.base.node.preproc.split.SplitNodeFactory"/>
       <node
+            after="org.knime.base.node.io.csvwriter.CSVWriterNodeFactory"
             factory-class="org.knime.base.node.io.arffwriter.ARFFWriterNodeFactory"
             category-path="/io/write"
             id="org.knime.base.node.io.arffwriter.ARFFWriterNodeFactory"/>
@@ -299,6 +300,7 @@
             factory-class="org.knime.base.node.preproc.sorter.SorterNodeFactory"
             id="org.knime.base.node.preproc.sorter.SorterNodeFactory"/>
       <node
+            after="org.knime.base.node.io.filereader.FileReaderNodeFactory"
             factory-class="org.knime.base.node.io.arffreader.ARFFReaderNodeFactory"
             category-path="/io/read"
             id="org.knime.base.node.io.arffreader.ARFFReaderNodeFactory"/>
@@ -351,10 +353,12 @@
             factory-class="org.knime.base.node.mine.neural.mlp.MLPPredictorNodeFactory"
             id="org.knime.base.node.mine.neural.mlp.MLPPredictorNodeFactory"/>
       <node
+            after="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory"
             category-path="/io/write"
             factory-class="org.knime.base.node.io.predictor.PredictorWriterNodeFactory"
             id="org.knime.base.node.io.predictor.PredictorWriterNodeFactory"/>
       <node
+            after="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory"
             category-path="/io/read"
             factory-class="org.knime.base.node.io.predictor.PredictorReaderNodeFactory"
             id="org.knime.base.node.io.predictor.PredictorReaderNodeFactory"/>
@@ -399,10 +403,12 @@
 	          factory-class="org.knime.base.node.mine.scorer.entrop.NewEntropyNodeFactory"
 	          id="org.knime.base.node.mine.scorer.entrop.NewEntropyNodeFactory"/>
 	    <node
+	          after="org.knime.base.node.io.arffreader.ARFFReaderNodeFactory"
 	          category-path="/io/read"
 	          factory-class="org.knime.base.node.io.table.read.ReadTableNodeFactory"
 	          id="org.knime.base.node.io.table.read.ReadTableNodeFactory"/>
 	    <node
+	          after="org.knime.base.node.io.arffwriter.ARFFWriterNodeFactory"
 	          category-path="/io/write"
 	          factory-class="org.knime.base.node.io.table.write.WriteTableNodeFactory"
 	          id="org.knime.base.node.io.table.write.WriteTableNodeFactory"/>
@@ -662,6 +668,7 @@
              id="org.knime.base.collection.list.split.CollectionSplitNodeFactory">
        </node>
       <node
+            after="org.knime.base.node.io.table.read.ReadTableNodeFactory"
             category-path="/io/read"
             factory-class="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory"
             id="org.knime.base.node.io.PMMLReaderNodeFactory">
@@ -672,6 +679,7 @@
             id="org.knime.base.node.preproc.regexsplit.RegexSplitNodeFactory">
       </node>
       <node
+            after="org.knime.base.node.io.table.write.WriteTableNodeFactory"
             category-path="/io/write"
             factory-class="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory"
             id="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory">
