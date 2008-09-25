@@ -355,13 +355,13 @@
       <node
             after="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory"
             category-path="/io/write"
-            factory-class="org.knime.base.node.io.predictor.PredictorWriterNodeFactory"
-            id="org.knime.base.node.io.predictor.PredictorWriterNodeFactory"/>
+            factory-class="org.knime.base.node.io.portobject.PortObjectWriterNodeFactory"
+            id="org.knime.base.node.io.portobject.PortObjectWriterNodeFactory"/>
       <node
             after="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory"
             category-path="/io/read"
-            factory-class="org.knime.base.node.io.predictor.PredictorReaderNodeFactory"
-            id="org.knime.base.node.io.predictor.PredictorReaderNodeFactory"/>
+            factory-class="org.knime.base.node.io.portobject.PortObjectReaderNodeFactory"
+            id="org.knime.base.node.io.portobject.PortObjectReaderNodeFactory"/>
       <node
             category-path="/database"
             factory-class="org.knime.base.node.io.database.DBReaderNodeFactory"
