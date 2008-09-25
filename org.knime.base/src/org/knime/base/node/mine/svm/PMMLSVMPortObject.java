@@ -360,7 +360,25 @@ public class PMMLSVMPortObject extends PMMLPortObject {
      */
     protected void addSVMs(final TransformerHandler handler, final Svm[] svms)
             throws SAXException {
+        if (svms.length == 0) {
+            // create empty support vector machine model
+            for (String target : m_targetValues) {
+                AttributesImpl atts = new AttributesImpl();
+                atts.addAttribute(null, null, "targetCategory", CDATA, target);
+                handler.startElement(null, null, "SupportVectorMachine", atts);
 
+                // add coefficients
+                atts = new AttributesImpl();
+                atts.addAttribute(null, null, "numberOfCoefficients", CDATA,
+                        "" + 0);
+                handler.startElement(null, null, "Coefficients", atts);
+                atts = new AttributesImpl();
+                handler.startElement(null, null, "Coefficient", atts);
+                handler.endElement(null, null, "Coefficient");
+                handler.endElement(null, null, "Coefficients");
+                handler.endElement(null, null, "SupportVectorMachine");
+            }
+        }
         for (int s = 0; s < svms.length; s++) {
             AttributesImpl atts = new AttributesImpl();
             atts.addAttribute(null, null, "targetCategory", CDATA, svms[s]
