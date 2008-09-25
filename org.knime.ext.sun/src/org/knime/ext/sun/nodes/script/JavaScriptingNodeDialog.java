@@ -60,7 +60,6 @@ import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import org.knime.base.util.scopevariable.ScopeVariableListCellRenderer;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
@@ -73,6 +72,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionPanel;
 import org.knime.core.node.util.ConvenientComboBoxRenderer;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
+import org.knime.core.node.util.ScopeVariableListCellRenderer;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.node.workflow.ScopeVariable;
 import org.knime.core.util.SimpleFileFilter;
