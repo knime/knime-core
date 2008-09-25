@@ -598,6 +598,9 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 final HashMap<Integer, ContainerTable> rep);
     }
     
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public JComponent[] getViews() {
         return new JComponent[] {new BufferedDataTableView(this)};
