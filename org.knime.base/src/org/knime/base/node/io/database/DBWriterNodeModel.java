@@ -246,11 +246,6 @@ final class DBWriterNodeModel extends NodeModel {
                     + m_table + "\" will be dropped!");
         }
         
-        try {
-            m_conn.createConnection();
-        } catch (Throwable t) {
-            throw new InvalidSettingsException(t);
-        }
         return new DataTableSpec[0];
     }
 }
