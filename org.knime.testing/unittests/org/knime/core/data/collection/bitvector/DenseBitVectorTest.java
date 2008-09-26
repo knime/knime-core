@@ -76,6 +76,14 @@ public class DenseBitVectorTest extends TestCase {
 
     }
 
+    public void testHexConstructor() {
+        DenseBitVector bv = new DenseBitVector("1FE");
+        assertTrue(bv.getAllBits()[0] == 0x1FEL);
+        bv = new DenseBitVector("1FE0345efd027eabCef9d3");
+        assertTrue(bv.getAllBits()[0] == 0x5efd027eabCef9d3L);
+        assertTrue(bv.getAllBits()[1] == 0x1FE034L);
+    }
+
     /**
      * Makes sure vectors of length zero work.
      */
@@ -923,5 +931,23 @@ public class DenseBitVectorTest extends TestCase {
         bv.set(381966);
         assertEquals(bv.toString(), "{18, 700, 7645, 381966}");
 
+    }
+
+    public void testToBinaryString() {
+        DenseBitVector bv = new DenseBitVector("1F03");
+        assertEquals(bv.toBinaryString(), "0001111100000011");
+    }
+
+    public void testToHexString() {
+        DenseBitVector bv = new DenseBitVector("1F03");
+        assertEquals(bv.toHexString(), "1F03");
+        bv = new DenseBitVector("1F0329384abedf7cA7FC29FF0");
+        assertEquals(bv.toHexString(), "1F0329384ABEDF7CA7FC29FF0");
+        bv = new DenseBitVector("");
+        assertEquals(bv.toHexString(), "");
+        bv = new DenseBitVector(13L);
+        bv.set(8);
+        bv.set(3);
+        assertEquals(bv.toHexString(), "108");
     }
 }
