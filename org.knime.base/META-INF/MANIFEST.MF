@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-Name: KNIME Base Nodes
 Bundle-SymbolicName: org.knime.base;singleton:=true
 Bundle-ManifestVersion: 2
-Bundle-Version: 2.0.0.0016392
+Bundle-Version: 2.0.0.0017855
 Bundle-ClassPath: knime-base-patches.jar,
  knime-base.jar
 Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
