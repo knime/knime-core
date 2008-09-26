@@ -1250,6 +1250,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @author Florian Georg, University of Konstanz
      */
     private class MyResourceDeltaVisitor implements IResourceDeltaVisitor {
+        /*
         private String getTypeString(final IResourceDelta delta) {
             StringBuffer buffer = new StringBuffer();
 
@@ -1306,15 +1307,16 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
             return buffer.toString();
         }
+        */
 
         /**
          * {@inheritDoc}
          */
         public boolean visit(final IResourceDelta delta) throws CoreException {
 
-            LOGGER.debug("Path: " + delta.getResource().getName() + "Parent: "
-                    + m_fileResource.getProject() + " Deltat type: "
-                    + getTypeString(delta));
+//            LOGGER.debug("Path: " + delta.getResource().getName() + "Parent: "
+//                    + m_fileResource.getProject() + " Deltat type: "
+//                    + getTypeString(delta));
             // Parent project removed? close this editor....
             if (m_fileResource.getProject().equals(delta.getResource())) {
 
