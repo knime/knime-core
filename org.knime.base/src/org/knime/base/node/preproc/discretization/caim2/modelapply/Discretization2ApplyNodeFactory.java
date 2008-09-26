@@ -29,7 +29,7 @@ import org.knime.core.node.NodeDialogPane;
  *
  * @author Christoph Sieb, University of Konstanz
  */
-public class DiscretizationApplyNodeFactory extends
+public class Discretization2ApplyNodeFactory extends
         NodeFactory<DiscretizationApplyNodeModel> {
 
     /**

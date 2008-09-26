@@ -48,7 +48,7 @@ import org.knime.core.node.port.PortType;
  *
  * @author Christoph Sieb, University of Konstanz
  *
- * @see DiscretizationApplyNodeFactory
+ * @see Discretization2ApplyNodeFactory
  */
 public class DiscretizationApplyNodeModel extends NodeModel {
 
