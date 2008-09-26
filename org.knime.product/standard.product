@@ -35,7 +35,8 @@ Uses: Java, GEF, Log4J
    <launcher name="knime">
       <linux icon="/org.knime.product/icons/knime.xpm"/>
       <solaris/>
-      <win useIco="false">
+      <win useIco="true">
+         <ico path="/org.knime.product/icons/knime_icon.ico"/>
          <bmp
             winSmallHigh="/org.knime.product/icons/knime16x16_32bit.bmp"
             winSmallLow="/org.knime.product/icons/knime16x16_8bit.bmp"
