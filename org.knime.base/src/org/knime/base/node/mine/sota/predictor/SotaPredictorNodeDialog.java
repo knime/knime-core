@@ -44,7 +44,7 @@ public class SotaPredictorNodeDialog extends DefaultNodeSettingsPane {
     public SotaPredictorNodeDialog() {
         addDialogComponent(new DialogComponentColumnFilter(
                 new SettingsModelFilterString(
-                        SotaPredictorConfigKeys.CFG_KEY_FILTERED_COLS), 0, 
+                        SotaPredictorConfigKeys.CFG_KEY_FILTERED_COLS), 1, 
                         DoubleValue.class, FuzzyIntervalValue.class, 
                         IntValue.class));
     }
