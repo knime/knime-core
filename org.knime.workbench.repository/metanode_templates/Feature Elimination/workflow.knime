@@ -59,7 +59,7 @@
 <config key="connection_0">
 <entry key="sourceID" type="xint" value="-1"/>
 <entry key="destID" type="xint" value="2"/>
-<entry key="sourcePort" type="xint" value="0"/>
+<entry key="sourcePort" type="xint" value="1"/>
 <entry key="destPort" type="xint" value="1"/>
 <entry key="isDeletable" type="xboolean" value="false"/>
 <entry key="ui_classname" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo"/>
@@ -109,6 +109,13 @@
 <config key="inport_0">
 <entry key="index" type="xint" value="0"/>
 <entry key="name" type="xstring" value="Inport 0"/>
+<config key="type">
+<entry key="object_class" type="xstring" value="org.knime.core.node.BufferedDataTable"/>
+</config>
+</config>
+<config key="inport_1">
+<entry key="index" type="xint" value="1"/>
+<entry key="name" type="xstring" value="Inport 1"/>
 <config key="type">
 <entry key="object_class" type="xstring" value="org.knime.core.node.BufferedDataTable"/>
 </config>
