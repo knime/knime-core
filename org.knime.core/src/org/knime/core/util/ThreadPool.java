@@ -180,7 +180,7 @@ public class ThreadPool implements JobExecutor {
          */
         public boolean wakeup(final Runnable r, final ThreadPool pool) {
             synchronized (m_lock) {
-                if (m_stopped) {
+                if (m_stopped || !isAlive()) {
                     return false;
                 }
                 m_runnable = r;
@@ -408,7 +408,8 @@ public class ThreadPool implements JobExecutor {
     /**
      * Sets the maximum number of threads in the pool. If the new value is
      * smaller than the old value running surplus threads will not be
-     * interrupted.
+     * interrupted. If the new value is bigger than the old one, waiting
+     * jobs will be started immediately.
      *
      * @param newValue the new maximum thread number
      */
@@ -424,6 +425,7 @@ public class ThreadPool implements JobExecutor {
             }
         }
         m_maxThreads.set(newValue);
+        checkQueue();
     }
 
     /**
