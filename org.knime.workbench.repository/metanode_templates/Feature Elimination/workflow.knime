@@ -83,22 +83,20 @@
 <entry key="sourceID" type="xint" value="2"/>
 <entry key="destID" type="xint" value="-1"/>
 <entry key="sourcePort" type="xint" value="0"/>
-<entry key="destPort" type="xint" value="0"/>
+<entry key="destPort" type="xint" value="1"/>
 <entry key="isDeletable" type="xboolean" value="false"/>
-<entry key="ui_classname" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo"/>
-<config key="ui_settings">
-<entry key="extrainfo.conn.bendpoints_size" type="xint" value="1"/>
-<config key="extrainfo.conn.bendpoints_0">
-<entry key="array-size" type="xint" value="2"/>
-<entry key="0" type="xint" value="867"/>
-<entry key="1" type="xint" value="605"/>
-</config>
-</config>
 </config>
 <config key="connection_3">
 <entry key="sourceID" type="xint" value="3"/>
 <entry key="destID" type="xint" value="2"/>
 <entry key="sourcePort" type="xint" value="1"/>
+<entry key="destPort" type="xint" value="0"/>
+<entry key="isDeletable" type="xboolean" value="false"/>
+</config>
+<config key="connection_4">
+<entry key="sourceID" type="xint" value="3"/>
+<entry key="destID" type="xint" value="-1"/>
+<entry key="sourcePort" type="xint" value="0"/>
 <entry key="destPort" type="xint" value="0"/>
 <entry key="isDeletable" type="xboolean" value="false"/>
 </config>
@@ -128,6 +126,13 @@
 <config key="outport_0">
 <entry key="index" type="xint" value="0"/>
 <entry key="name" type="xstring" value="Outport 0"/>
+<config key="type">
+<entry key="object_class" type="xstring" value="org.knime.core.node.BufferedDataTable"/>
+</config>
+</config>
+<config key="outport_1">
+<entry key="index" type="xint" value="1"/>
+<entry key="name" type="xstring" value="Outport 1"/>
 <config key="type">
 <entry key="object_class" type="xstring" value="org.knime.core.node.BufferedDataTable"/>
 </config>
