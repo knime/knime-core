@@ -281,7 +281,7 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
             throws ParserConfigurationException, SAXException, IOException {
         PMMLDecisionTreeHandler hdl = new PMMLDecisionTreeHandler();
         super.addPMMLContentHandler("TreeModel", hdl);
-        super.loadFrom(spec, stream, PMMLPortObject.PMML_V3_1);
+        super.loadFrom(spec, stream, version);
         hdl = (PMMLDecisionTreeHandler)super.getPMMLContentHandler("TreeModel");
         m_tree = hdl.getDecisionTree();
         LOGGER.info("Loaded tree port object");
