@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde version="3.1"?>
 
-<product name="Eclipse platform" id="org.eclipse.sdk.ide" application="org.eclipse.ui.ide.workbench" useFeatures="true">
+<product application="org.eclipse.ui.ide.workbench" id="org.eclipse.sdk.ide" name="Eclipse platform" useFeatures="true">
    <configIni use="default"/>
 
    <launcherArgs>
@@ -14,11 +14,7 @@ org.eclipse.platform</programArgs>
 
    <windowImages/>
 
-   <splash
-      location="org.eclipse.platform"
-      startupProgressRect="5,275,445,15"
-      startupMessageRect="7,252,445,20"
-      startupForegroundColor="000000" />
+   <splash location="org.eclipse.platform" startupForegroundColor="000000" startupMessageRect="7,252,445,20" startupProgressRect="5,275,445,15"/>
    <launcher name="eclipse">
       <solaris/>
       <win useIco="false">
@@ -39,19 +35,19 @@ org.eclipse.platform</programArgs>
       <feature id="org.eclipse.jdt" version="0.0.0"/>
       <feature id="org.eclipse.pde" version="0.0.0"/>
       <feature id="org.eclipse.sdk" version="0.0.0"/>
-      <feature id="org.knime.features.base" version="2.0.0.0016392"/>
-      <feature id="org.knime.features.wizard" version="2.0.0.0016392"/>
-      <feature id="org.knime.features.product" version="2.0.0.0016392"/>
-      <feature id="org.knime.features.ext.r" version="2.0.0.0016392"/>
-      <feature id="org.knime.features.chem.types" version="2.0.0.0016392"/>
-      <feature id="org.knime.features.ext.birt" version="2.0.0.0016392"/>
-      <feature id="org.knime.features.ext.chem.cdk" version="2.0.0.0016392"/>
-      <feature id="org.knime.features.ext.chem.tools" version="2.0.0.0016392"/>
-      <feature id="org.knime.features.ext.exttool" version="2.0.0.0014635"/>
-      <feature id="org.knime.features.ext.jfreechart" version="2.0.0.0016392"/>
-      <feature id="org.knime.features.ext.jython" version="2.0.0.0016392"/>
-      <feature id="org.knime.features.ext.poi" version="2.0.0.0016392"/>
-      <feature id="org.knime.features.ext.weka" version="2.0.0.0016392"/>
+      <feature id="org.knime.features.base" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.wizard" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.product" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.r" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.chem.types" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.birt" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.chem.cdk" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.chem.tools" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.exttool" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.jfreechart" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.jython" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.poi" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.weka" version="2.0.0.0017855"/>
       <feature id="org.eclipse.birt" version="2.2.1.v20070709-8M7M7A3OP2Mz-yAItil64r9z0tw0"/>
       <feature id="org.eclipse.birt.chart.runtime" version="2.2.1.v20070718-7Y8l77MVg3v_6uC7shL5o"/>
       <feature id="org.eclipse.birt.cshelp" version="2.2.1.r22x_v20070913-11--w31181733"/>
