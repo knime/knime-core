@@ -145,7 +145,7 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
             // return original spec,
             // only the rows are affected
         }
-        return new DataTableSpec[]{inSpecs[0], inSpecs[0]};
+        return new DataTableSpec[]{inSpecs[0]};
     }
 
     /**
