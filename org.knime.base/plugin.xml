@@ -662,12 +662,12 @@
             id="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory">
       </node>
        <node
-             category-path="/misc"
+             category-path="/manipulation/column"
              factory-class="org.knime.base.collection.list.create.CollectionCreateNodeFactory"
              id="org.knime.base.collection.list.create.CollectionCreateNodeFactory">
        </node>
        <node
-             category-path="/misc"
+             category-path="/manipulation/column"
              factory-class="org.knime.base.collection.list.split.CollectionSplitNodeFactory"
              id="org.knime.base.collection.list.split.CollectionSplitNodeFactory">
        </node>
