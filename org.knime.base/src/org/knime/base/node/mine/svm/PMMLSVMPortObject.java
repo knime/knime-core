@@ -367,7 +367,18 @@ public class PMMLSVMPortObject extends PMMLPortObject {
                 atts.addAttribute(null, null, "targetCategory", CDATA, target);
                 handler.startElement(null, null, "SupportVectorMachine", atts);
 
-                // add coefficients
+                // add an empty support vector
+                atts = new AttributesImpl();
+                atts.addAttribute(null, null, "numberOfSupportVectors", CDATA,
+                        "" + 0);
+                handler.startElement(null, null, "SupportVectors", atts);
+                atts = new AttributesImpl();
+                atts.addAttribute(null, null, "vectorId", CDATA, "dummy");
+                handler.startElement(null, null, "SupportVector", atts);
+                handler.endElement(null, null, "SupportVector");
+                handler.endElement(null, null, "SupportVectors");
+
+                // add an empty coefficient
                 atts = new AttributesImpl();
                 atts.addAttribute(null, null, "numberOfCoefficients", CDATA,
                         "" + 0);
