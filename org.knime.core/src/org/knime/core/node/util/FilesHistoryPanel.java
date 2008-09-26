@@ -295,4 +295,14 @@ public final class FilesHistoryPanel extends JPanel {
                     isSelected, cellHasFocus);
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setEnabled(final boolean enabled) {
+        super.setEnabled(enabled);
+        m_chooseButton.setEnabled(enabled);
+        m_textBox.setEnabled(enabled);
+    }
 }
