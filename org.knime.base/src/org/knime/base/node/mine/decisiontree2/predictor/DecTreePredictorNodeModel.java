@@ -58,6 +58,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 /**
  *
@@ -223,6 +224,15 @@ public class DecTreePredictorNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+        PMMLPortObjectSpec treeSpec = (PMMLPortObjectSpec)inSpecs[0];
+        DataTableSpec inSpec = (DataTableSpec)inSpecs[1];
+        for (String learnColName : treeSpec.getLearningFields()) {
+            if (!inSpec.containsName(learnColName)) {
+                throw new InvalidSettingsException(
+                        "Learning column not found in input " 
+                        + "data to be predicted");
+            }
+        }
         return new PortObjectSpec[]{
                 createOutTableSpec((DataTableSpec)inSpecs[INDATAPORT])};
     }
