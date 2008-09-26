@@ -65,6 +65,9 @@ public class BitVectorValuePixelRenderer extends
             return;
         }
         int length = (int)Math.min(Integer.MAX_VALUE, m_bitVector.length());
+        if (length == 0) {
+            return;
+        }
         Insets ins = getInsets();
         int xOff = ins.left;
         int size = getWidth() - ins.left - ins.right;
