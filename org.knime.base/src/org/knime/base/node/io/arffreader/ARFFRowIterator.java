@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   09.02.2005 (ohl): created
  */
@@ -46,7 +46,7 @@ import org.knime.base.node.io.filetokenizer.FileTokenizer;
 import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
 
 /**
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class ARFFRowIterator extends RowIterator {
@@ -77,7 +77,7 @@ public class ARFFRowIterator extends RowIterator {
     /**
      * Create a new row iterator reading the rows from an ARFF file at the
      * specified location.
-     * 
+     *
      * @param fileLocation valid URL of the file to read
      * @param tSpec the structure of the table to create
      * @param rowKeyPrefix row keys are constructed like rowKeyPrefix + lineNo
@@ -161,7 +161,7 @@ public class ARFFRowIterator extends RowIterator {
         }
 
         // create a row ID cell
-        String rowID = m_rowPrefix + m_rowNo;
+        String rowID = m_rowPrefix + (m_rowNo - 1);
 
         // Now, read the columns until we have enough or see a row delimiter
         DataCell[] rowCells = new DataCell[m_tSpec.getNumColumns()];
@@ -227,9 +227,9 @@ public class ARFFRowIterator extends RowIterator {
             }
 
             // now get that new cell (it throws something at us if it couldn't)
-            rowCells[createdCols] = 
+            rowCells[createdCols] =
                 createNewDataCellOfType(
-                        m_tSpec.getColumnSpec(createdCols).getType(), token, 
+                        m_tSpec.getColumnSpec(createdCols).getType(), token,
                                 isMissingCell);
 
             createdCols++;
