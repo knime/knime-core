@@ -28,9 +28,9 @@ import java.util.Arrays;
  * Stores Zeros and Ones in a vector, i.e. with fixed positions. The vector has
  * a fixed length. <br />
  * Implementation stores the bits in a collection of longs (64 bit words). Thus
- * it can be used for well populated vectors. Its length is restricted to ({@link Integer#MAX_VALUE} -
- * 1) * 64 (i.e. 137438953344, in which case it uses around 16GigaByte of
- * memory).<br />
+ * it can be used for well populated vectors. Its length is restricted to
+ * ({@link Integer#MAX_VALUE} - 1) * 64 (i.e. 137438953344, in which case it
+ * uses around 16GigaByte of memory).<br />
  * The implementation is not thread-safe.
  *
  * @author ohl, University of Konstanz
@@ -156,41 +156,27 @@ public class DenseBitVector {
             return;
         }
 
-        int maxAddr = ((hexString.length() - 1) << 2) >> STORAGE_ADDRBITS;
-
-        /*
-         * take chunks of 16 character and store them in one storage qword.
-         */
-        for (int i = 0; i <= maxAddr; i += 16) {
-            long value = 0;
-            for (int n = 0; n < 16; n++) {
-                if ((i * 16) + n >= hexString.length()) {
-                    // the string is not a multiple of 16 characters.
-                    // we leave the high-bits zero/cleared
-                    break;
-                }
-                long cVal = hexString.charAt((i * 16) + n);
-                if (cVal >= '0' && cVal <= '9') {
-                    cVal -= '0';
-                } else if (cVal >= 'A' && cVal <= 'F') {
-                    cVal -= 'A' - 10;
-                } else if (cVal >= 'a' && cVal <= 'f') {
-                    cVal -= 'a' - 10;
-                } else {
-                    throw new IllegalArgumentException(
-                            "Invalid character in hex number ('"
-                                    + hexString.charAt(i + n) + "')");
-                }
-                // cVal must only use the lower four bits
-                assert (cVal & 0xFFFFFFFFFFFFFFF0L) == 0L;
-                // shift the value in its nibble position
-                cVal <<= (n << 2);
-                // OR it onto the previous nibbles
-                value |= cVal;
-
+        int len = hexString.length();
+        for (int c = 0; c < len; c++) {
+            long cVal = hexString.charAt(len - c - 1);
+            if (cVal >= '0' && cVal <= '9') {
+                cVal -= '0';
+            } else if (cVal >= 'A' && cVal <= 'F') {
+                cVal -= 'A' - 10;
+            } else if (cVal >= 'a' && cVal <= 'f') {
+                cVal -= 'a' - 10;
+            } else {
+                throw new IllegalArgumentException(
+                        "Invalid character in hex number ('"
+                                + hexString.charAt(len - c - 1) + "')");
             }
-            m_storage[i] = value;
+            // cVal must only use the lower four bits
+            assert (cVal & 0xFFFFFFFFFFFFFFF0L) == 0L;
+
+            // sixteen characters go into one qword - each provides four bits
+            m_storage[c >> 4] |= cVal << ((c % 16) * 4);
         }
+
         m_firstAddr = findFirstBitAddress();
         m_lastAddr = findLastBitAddress();
         assert checkConsistency() == null;
@@ -322,7 +308,8 @@ public class DenseBitVector {
      * @param endIdx the index of the last bit to set to the new value
      * @param value if set to true the bits are set to one, otherwise to zero
      */
-    public void set(final long startIdx, final long endIdx, final boolean value) {
+    public void set(final long startIdx, final long endIdx,
+            final boolean value) {
         if (value) {
             set(startIdx, endIdx);
         } else {
@@ -1113,7 +1100,7 @@ public class DenseBitVector {
         if (leftOver == 0) {
             nibbleIdx = 15;
         } else {
-            nibbleIdx = leftOver >> 2;
+            nibbleIdx = (leftOver >> 2) - 1;
         }
         while (storageAddr >= 0) {
 
