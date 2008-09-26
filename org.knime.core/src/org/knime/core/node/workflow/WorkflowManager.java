@@ -3232,7 +3232,7 @@ public final class WorkflowManager extends NodeContainer {
      * @param inPortsBarUIInfo The new UI info.
      */
     public void setInPortsBarUIInfo(final UIInformation inPortsBarUIInfo) {
-        if (ConvenienceMethods.areEqual(m_inPortsBarUIInfo, inPortsBarUIInfo)) {
+        if (!ConvenienceMethods.areEqual(m_inPortsBarUIInfo, inPortsBarUIInfo)) {
             m_inPortsBarUIInfo = inPortsBarUIInfo;
             setDirty();
         }
@@ -3243,7 +3243,7 @@ public final class WorkflowManager extends NodeContainer {
      * @param outPortsBarUIInfo The new UI info.
      */
     public void setOutPortsBarUIInfo(final UIInformation outPortsBarUIInfo) {
-        if (ConvenienceMethods.areEqual(
+        if (!ConvenienceMethods.areEqual(
                 m_outPortsBarUIInfo, outPortsBarUIInfo)) {
             m_outPortsBarUIInfo = outPortsBarUIInfo;
             setDirty();
