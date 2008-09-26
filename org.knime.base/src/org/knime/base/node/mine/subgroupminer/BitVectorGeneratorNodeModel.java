@@ -32,10 +32,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.knime.base.data.bitvector.BitString2BitVectorCellFactory;
-import org.knime.base.data.bitvector.BitVectorCell;
 import org.knime.base.data.bitvector.BitVectorCellFactory;
 import org.knime.base.data.bitvector.Hex2BitVectorCellFactory;
 import org.knime.base.data.bitvector.IdString2BitVectorCellFactory;
+import org.knime.base.data.bitvector.Numeric2BitVectorMeanCellFactory;
+import org.knime.base.data.bitvector.Numeric2BitVectorThresholdCellFactory;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -44,6 +45,7 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.collection.bitvector.DenseBitVectorCell;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.node.BufferedDataContainer;
@@ -225,7 +227,13 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         m_stringColumn.loadSettingsFrom(settings);
         m_useMean = settings.getBoolean(CFG_USE_MEAN);
         m_meanPercentage = settings.getInt(CFG_MEAN_THRESHOLD);
-        m_type = STRING_TYPES.valueOf(settings.getString(CFG_STRING_TYPE));
+        String type = settings.getString(CFG_STRING_TYPE);
+        try {
+            m_type = STRING_TYPES.valueOf(type);
+        } catch (IllegalArgumentException iae) {
+            throw new InvalidSettingsException("Illegal conversion type: '"
+                    + type + "'");
+        }
         m_replace = settings.getBoolean(CFG_REPLACE, false);
     }
 
@@ -263,10 +271,11 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                     inData[0], stringColumnPos, exec);
             if (!m_factory.wasSuccessful() && inData[0].getRowCount() > 0) {
                 throw new IllegalArgumentException(
-                        "Nothing to convert in String column: "
+                        "Errors during conversion of data in column '"
                         + inData[0].getDataTableSpec().getColumnSpec(
                                 stringColumnPos).getName()
-                        + ". Check NodeDescription for correct input formats!");
+                        + "'. Check node description for supported input "
+                        + "formats!");
             }
             return bfdt;
 
@@ -388,7 +397,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         DataColumnSpecCreator creator = new DataColumnSpecCreator(
                 spec.getColumnSpec(colIdx));
         creator.setDomain(null);
-        creator.setType(BitVectorCell.TYPE);
+        creator.setType(DenseBitVectorCell.TYPE);
         if (!m_replace) {
             String colName = spec.getColumnSpec(colIdx).getName() + "_bits";
             creator.setName(colName);
@@ -495,7 +504,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                     .getName().toString());
         }
         DataColumnSpecCreator creator = new DataColumnSpecCreator(
-                name, BitVectorCell.TYPE);
+                name, DenseBitVectorCell.TYPE);
         creator.setElementNames(nameMapping.toArray(
                 new String[nameMapping.size()]));
         return creator.createSpec();

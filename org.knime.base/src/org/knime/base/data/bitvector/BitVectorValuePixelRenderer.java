@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 4, 2007 (wiswedel): created
  */
@@ -32,14 +32,19 @@ import java.util.BitSet;
 import org.knime.core.data.renderer.AbstractPainterDataValueRenderer;
 
 /**
- * Paints {@link BitVectorValue} elements. Each bit is represented by a 
- * little bar, which is either painted (bit = set) or not.
+ * Paints {@link BitVectorValue} elements. Each bit is represented by a little
+ * bar, which is either painted (bit = set) or not.
+ *
  * @author Bernd Wiswedel, University of Konstanz
+ * @deprecated use the
+ *             {@link org.knime.core.data.renderer.BitVectorValuePixelRenderer}
+ *             from the core plug-in instead
  */
-final class BitVectorValuePixelRenderer extends 
-    AbstractPainterDataValueRenderer {
-    
+final class BitVectorValuePixelRenderer extends
+        AbstractPainterDataValueRenderer {
+
     private BitSet m_bitSet;
+
     private int m_length;
 
     /** {@inheritDoc} */
@@ -53,13 +58,13 @@ final class BitVectorValuePixelRenderer extends
             m_length = -1;
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public String getDescription() {
         return "Bit Scratch";
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected void paintComponent(final Graphics g) {
@@ -106,8 +111,8 @@ final class BitVectorValuePixelRenderer extends
             int pix = 0;
             for (int i = 0; i < m_length; i++) {
                 int sizeInPix = pixelPerBit;
-                if (pix > 0 && missingPixelProcessed / (double)pix 
-                        < missingPixelRatio) {
+                if (pix > 0
+                        && missingPixelProcessed / (double)pix < missingPixelRatio) {
                     sizeInPix += 1;
                     missingPixelProcessed += 1;
                 }
@@ -119,5 +124,5 @@ final class BitVectorValuePixelRenderer extends
             }
         }
     }
-    
+
 }

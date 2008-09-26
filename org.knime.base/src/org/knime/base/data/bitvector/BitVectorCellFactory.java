@@ -17,8 +17,8 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * --------------------------------------------------------------------- 
- * 
+ * ---------------------------------------------------------------------
+ *
  * History
  *   13.02.2007 (Fabian Dill): created
  */
@@ -28,22 +28,22 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.container.SingleCellFactory;
 
 /**
- * 
+ * Base class for all cell factories converting strings to bitvectors.
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public abstract class BitVectorCellFactory extends SingleCellFactory {
-    
-    
+
     private int m_nrOfProcessedRows;
 
     /**
-     * 
+     *
      * @param columnSpec the column spec of the new column
      */
     public BitVectorCellFactory(final DataColumnSpec columnSpec) {
         super(columnSpec);
     }
-    
+
     /**
      * Increments the number of processed rows.
      *
@@ -51,33 +51,32 @@ public abstract class BitVectorCellFactory extends SingleCellFactory {
     public void incrementNrOfRows() {
         m_nrOfProcessedRows++;
     }
-    
+
     /**
      * Returns the number of processed rows.
-     * 
+     *
      * @return the number of processed rows.
      */
     public int getNrOfProcessedRows() {
         return m_nrOfProcessedRows;
     }
-    
+
     /**
-     * 
+     *
      * @return the number of set bits.
      */
     public abstract int getNumberOfSetBits();
-    
+
     /**
-     * 
+     *
      * @return the number of not set bits.
      */
     public abstract int getNumberOfNotSetBits();
-    
-    
+
     /**
-     * 
+     *
      * @return true if at least one conversion was successful, false otherwise.
      */
-    public abstract boolean wasSuccessful();    
+    public abstract boolean wasSuccessful();
 
 }

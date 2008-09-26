@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 4, 2007 (wiswedel): created
  */
@@ -30,22 +30,29 @@ import java.util.BitSet;
 import org.knime.core.data.renderer.DefaultDataValueRenderer;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
+ * @deprecated use the
+ *             {@link org.knime.core.data.renderer.BitVectorValueStringRenderer}
+ *             from the core plug-in instead.
  */
 final class BitVectorValueStringRenderer extends DefaultDataValueRenderer {
-    
+
     /** Possible types for string representation. */
     static enum Type {
         /** Hex string representation. */
-        HEX, 
+        HEX,
         /** Bit string representation. */
-        BIT };
+        BIT
+    };
+
     private StringBuilder m_stringBuilder;
-    
+
     private final Type m_type;
-    
-    /** Constructs new renderer. 
+
+    /**
+     * Constructs new renderer.
+     *
      * @param type The type to use.
      */
     BitVectorValueStringRenderer(final Type type) {
@@ -54,7 +61,7 @@ final class BitVectorValueStringRenderer extends DefaultDataValueRenderer {
         }
         m_type = type;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected void setValue(final Object value) {
@@ -62,7 +69,9 @@ final class BitVectorValueStringRenderer extends DefaultDataValueRenderer {
         if (value instanceof BitVectorValue) {
             BitVectorValue bv = (BitVectorValue)value;
             switch (m_type) {
-            case HEX: val = bv.toHexString(); break;
+            case HEX:
+                val = bv.toHexString();
+                break;
             case BIT:
                 if (m_stringBuilder == null) {
                     m_stringBuilder = new StringBuilder(bv.getNumBits());
@@ -74,24 +83,28 @@ final class BitVectorValueStringRenderer extends DefaultDataValueRenderer {
                 }
                 val = m_stringBuilder.toString();
                 break;
-            default: throw new InternalError("Unknown type: " + m_type);
+            default:
+                throw new InternalError("Unknown type: " + m_type);
             }
         } else {
             val = value;
         }
         super.setValue(val);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public String getDescription() {
         switch (m_type) {
-        case HEX: return "Hex String";
-        case BIT: return "Bit String";
-        default: throw new InternalError("Unknown type: " + m_type);
+        case HEX:
+            return "Hex String";
+        case BIT:
+            return "Bit String";
+        default:
+            throw new InternalError("Unknown type: " + m_type);
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public Dimension getPreferredSize() {

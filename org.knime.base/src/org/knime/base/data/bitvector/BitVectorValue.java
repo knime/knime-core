@@ -1,5 +1,5 @@
-/* 
- * 
+/*
+ *
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -19,7 +19,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   07.07.2005 (mb): created
  */
@@ -36,18 +36,20 @@ import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 
-
 /**
  * Interface of a {@link BitVectorCell}, forces method to return
  * {@link java.util.BitSet}.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
+ * @deprecated use the
+ *             {@link org.knime.core.data.collection.bitvector.BitVectorValue}
+ *             in the core plug-in instead.
  */
 public interface BitVectorValue extends DataValue {
-    
+
     /** Utility factory for bitvector value. */
     public static final UtilityFactory UTILITY = new BitVectorUtilityFactory();
-    
+
     /**
      * @return number of bits actually used
      */
@@ -62,12 +64,12 @@ public interface BitVectorValue extends DataValue {
      * @return hex string of this bitvector
      */
     String toHexString();
-    
+
     /** Utility Factory for Bit Vector values. */
     static class BitVectorUtilityFactory extends UtilityFactory {
-        
-        private static final Icon ICON = 
-            loadIcon(BitVectorValue.class, "/bitvectoricon.png");
+
+        private static final Icon ICON =
+                loadIcon(BitVectorValue.class, "/bitvectoricon.png");
 
         /** {@inheritDoc} */
         @Override
@@ -75,16 +77,16 @@ public interface BitVectorValue extends DataValue {
             return new DataValueComparator() {
                 /** {@inheritDoc} */
                 @Override
-                protected int compareDataValues(
-                        final DataValue v1, final DataValue v2) {
+                protected int compareDataValues(final DataValue v1,
+                        final DataValue v2) {
                     BitVectorValue bv1 = (BitVectorValue)v1;
                     BitVectorValue bv2 = (BitVectorValue)v2;
-                    return bv1.getBitSet().cardinality() 
-                        - bv2.getBitSet().cardinality();
+                    return bv1.getBitSet().cardinality()
+                            - bv2.getBitSet().cardinality();
                 }
             };
         }
-        
+
         /** {@inheritDoc} */
         @Override
         protected DataValueRendererFamily getRendererFamily(
@@ -94,12 +96,12 @@ public interface BitVectorValue extends DataValue {
                     new BitVectorValueStringRenderer(Type.HEX),
                     new BitVectorValuePixelRenderer());
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public Icon getIcon() {
             return ICON;
         }
     }
-    
+
 }

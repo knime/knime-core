@@ -18,51 +18,49 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   11.07.2006 (Fabian Dill): created
  */
 package org.knime.base.data.bitvector;
-
-import java.util.BitSet;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.collection.bitvector.DenseBitVector;
+import org.knime.core.data.collection.bitvector.DenseBitVectorCellFactory;
 import org.knime.core.node.NodeLogger;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class IdString2BitVectorCellFactory extends BitVectorColumnCellFactory {
-    
-    /** 
+
+    /**
      * Create new cell factory that provides one column given by newColSpec.
-     *  
+     *
      * @param colSpec the spec of the new column
      * @param columnIndex index of the column to be replaced
      */
-    public IdString2BitVectorCellFactory(final DataColumnSpec colSpec, 
+    public IdString2BitVectorCellFactory(final DataColumnSpec colSpec,
             final int columnIndex) {
         super(colSpec, columnIndex);
     }
-    
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(IdString2BitVectorCellFactory.class);
+
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(IdString2BitVectorCellFactory.class);
 
     private int m_nrOfSetBits = 0;
-    
+
     private int m_maxPos = Integer.MIN_VALUE;
-    
-    private boolean m_hasPrintedWarning = false;
-    
-    private boolean m_wasSuccessful = false;
+
+    private boolean m_wasSuccessful = true;
 
     /**
-     * 
+     *
      * @param maxPos the actual length of the bit set - the max position
      */
     public void setMaxPos(final int maxPos) {
@@ -77,49 +75,56 @@ public class IdString2BitVectorCellFactory extends BitVectorColumnCellFactory {
         incrementNrOfRows();
         if (!row.getCell(getColumnIndex()).getType().isCompatible(
                 StringValue.class)) {
-            LOGGER.warn(row.getCell(getColumnIndex())
-                    + " is not a String value!"
-                    + " Replacing it with missing value!");
+            m_wasSuccessful = false;
+            printError(LOGGER, "Cell in column " + getColumnIndex()
+                    + " is not a string value!");
             return DataType.getMissingCell();
         }
         if (row.getCell(getColumnIndex()).isMissing()) {
             return DataType.getMissingCell();
         }
         String toParse =
-            ((StringValue)row.getCell(getColumnIndex()))
-                    .getStringValue();
+                ((StringValue)row.getCell(getColumnIndex())).getStringValue();
+        toParse = toParse.trim();
+
         try {
             int newlySetBits = 0;
-            BitSet currBitSet = new BitSet();
-            String[] numbers = toParse.split("\\s");
-            for (int i = 0; i < numbers.length; i++) {
-                int pos = Integer.parseInt(numbers[i].trim());
-                if (pos < 0) {
-                    return DataType.getMissingCell(); 
-                }
-                if (!currBitSet.get(pos)) {
-                    currBitSet.set(pos);
-                    newlySetBits++;
+            DenseBitVector currBitSet = new DenseBitVector(m_maxPos);
+            if (!toParse.isEmpty()) {
+                String[] numbers = toParse.split("\\s");
+                for (int i = 0; i < numbers.length; i++) {
+                    int pos = Integer.parseInt(numbers[i].trim());
+                    if (pos < 0) {
+                        m_wasSuccessful = false;
+                        printError(LOGGER,
+                                "Invalid negative index in index string: "
+                                        + toParse);
+                        return DataType.getMissingCell();
+                    }
+                    if (!currBitSet.get(pos)) {
+                        currBitSet.set(pos);
+                        newlySetBits++;
+                    }
                 }
             }
             m_nrOfSetBits += newlySetBits;
-            m_wasSuccessful = true;
-            return new BitVectorCell(currBitSet, m_maxPos);
+            DenseBitVectorCellFactory fact =
+                    new DenseBitVectorCellFactory(currBitSet);
+            return fact.createDataCell();
         } catch (NumberFormatException nfe) {
+            String nfeMsg = nfe.getMessage();
+            if (nfeMsg == null) {
+                nfeMsg = "<sorry, no further details>";
+            }
             String message =
                     "Unable to convert \"" + toParse + "\" to "
-                            + "bit vector: " + nfe.getMessage();
-            if (m_hasPrintedWarning) {
-                LOGGER.debug(message);
-            } else {
-                LOGGER.warn(message + " (Suppress further warnings!)");
-                m_hasPrintedWarning = true;
-            }
+                            + "bit vector: " + nfeMsg;
+            m_wasSuccessful = false;
+            printError(LOGGER, message);
             return DataType.getMissingCell();
         }
     }
 
-    
     /**
      * {@inheritDoc}
      */
@@ -127,8 +132,9 @@ public class IdString2BitVectorCellFactory extends BitVectorColumnCellFactory {
     public boolean wasSuccessful() {
         return m_wasSuccessful;
     }
+
     /**
-     * 
+     *
      * @return the number of set bits.
      */
     @Override
@@ -137,7 +143,7 @@ public class IdString2BitVectorCellFactory extends BitVectorColumnCellFactory {
     }
 
     /**
-     * 
+     *
      * @return the number of not set bits.
      */
     @Override

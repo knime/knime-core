@@ -18,41 +18,39 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   11.07.2006 (Fabian Dill): created
  */
 package org.knime.base.data.bitvector;
-
-import java.util.BitSet;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.collection.bitvector.DenseBitVector;
+import org.knime.core.data.collection.bitvector.DenseBitVectorCellFactory;
 import org.knime.core.node.NodeLogger;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class BitString2BitVectorCellFactory extends BitVectorColumnCellFactory {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(BitString2BitVectorCellFactory.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(BitString2BitVectorCellFactory.class);
 
     private int m_nrOfSetBits = 0;
 
     private int m_nrOfNotSetBits = 0;
 
-    private boolean m_hasPrintedWarning = false;
-    
-    private boolean m_wasSuccessful = false;
+    private boolean m_wasSuccessful = true;
 
     /**
      * Create new cell factory that provides one column given by newColSpec.
-     * 
+     *
      * @param colSpec the spec of the new column
      * @param columnIndex index of the column to be replaced
      */
@@ -67,48 +65,44 @@ public class BitString2BitVectorCellFactory extends BitVectorColumnCellFactory {
     @Override
     public DataCell getCell(final DataRow row) {
         incrementNrOfRows();
-        BitSet bitSet;
+        DenseBitVector bitVector;
         String bitString;
         DataCell cell = row.getCell(getColumnIndex());
-        if (!cell.getType().isCompatible(StringValue.class)) {
-            LOGGER.warn(cell + " is not a String! "
-                    + "Replacing it with missing value");
+        if (cell.isMissing()) {
             return DataType.getMissingCell();
-        } else if (cell.isMissing()) {
-            return DataType.getMissingCell();
-        } else {
-            bitString = ((StringValue)cell).getStringValue();
-            bitSet = new BitSet(bitString.length());
-            int pos = 0;
-            int numberOf0s = 0;
-            int numberOf1s = 0;
-            for (int i = 0; i < bitString.length(); i++) {
-                char c = bitString.charAt(i);
-                if (c == '0') {
-                    pos++;
-                    numberOf0s++;
-                } else if (c == '1') {
-                    bitSet.set(pos++);
-                    numberOf1s++;
-                } else {
-                    if (m_hasPrintedWarning) {
-                        LOGGER.debug("Found invalid character: " + c
-                                + ". Returning missing cell!");
-                    } else {
-                        m_hasPrintedWarning = true;
-                        LOGGER.warn("Found invalid character: " + c
-                                + ". Returning missing cell!"
-                                + " (Suppress further warnings!)");
-                    }
-                    return DataType.getMissingCell();
-
-                }
-            }
-            m_nrOfNotSetBits += numberOf0s;
-            m_nrOfSetBits += numberOf1s;
         }
-        m_wasSuccessful = true;
-        return new BitVectorCell(bitSet, bitString.length());
+        if (!cell.getType().isCompatible(StringValue.class)) {
+            m_wasSuccessful = false;
+            printError(LOGGER, "Cell in column " + getColumnIndex()
+                    + " is not of type string.");
+            return DataType.getMissingCell();
+        }
+        bitString = ((StringValue)cell).getStringValue().trim();
+        bitVector = new DenseBitVector(bitString.length());
+        int pos = 0;
+        int numberOf0s = 0;
+        int numberOf1s = 0;
+        for (int i = bitString.length() - 1; i >= 0; i--) {
+            char c = bitString.charAt(i);
+            if (c == '0') {
+                pos++;
+                numberOf0s++;
+            } else if (c == '1') {
+                bitVector.set(pos++);
+                numberOf1s++;
+            } else {
+                m_wasSuccessful = false;
+                printError(LOGGER, "Invalid character ('" + c
+                        + "') in bitvector string");
+                return DataType.getMissingCell();
+            }
+        }
+        m_nrOfNotSetBits += numberOf0s;
+        m_nrOfSetBits += numberOf1s;
+
+        DenseBitVectorCellFactory cellFactory =
+                new DenseBitVectorCellFactory(bitVector);
+        return cellFactory.createDataCell();
     }
 
     /**
@@ -120,7 +114,7 @@ public class BitString2BitVectorCellFactory extends BitVectorColumnCellFactory {
     }
 
     /**
-     * 
+     *
      * @return the number of set bits.
      */
     @Override
@@ -129,7 +123,7 @@ public class BitString2BitVectorCellFactory extends BitVectorColumnCellFactory {
     }
 
     /**
-     * 
+     *
      * @return the number of not set bits.
      */
     @Override

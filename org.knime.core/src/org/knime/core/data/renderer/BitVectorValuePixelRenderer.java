@@ -81,7 +81,7 @@ public class BitVectorValuePixelRenderer extends
             int pix = 0;
             int nextPixelBitCount = bitsPerPixel;
             int missingBitsProcessed = 0;
-            for (int i = 0; i < length; i++) {
+            for (int i = length - 1; i >= 0; i--) {
                 if (curIndex == nextPixelBitCount) {
                     float ratio = 1.0f - (onCount / (float)nextPixelBitCount);
                     g.setColor(new Color(ratio, ratio, ratio));
@@ -105,7 +105,7 @@ public class BitVectorValuePixelRenderer extends
             double missingPixelRatio = missingPixelCount / (double)size;
             int missingPixelProcessed = 0;
             int pix = 0;
-            for (int i = 0; i < length; i++) {
+            for (int i = length - 1; i >= 0; i--) {
                 int sizeInPix = pixelPerBit;
                 if (pix > 0
                         && missingPixelProcessed / (double)pix < missingPixelRatio) {

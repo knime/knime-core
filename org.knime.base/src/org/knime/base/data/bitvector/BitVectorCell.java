@@ -1,5 +1,5 @@
-/* 
- * 
+/*
+ *
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -19,7 +19,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   01.12.2004 (berthold): created
  */
@@ -36,15 +36,16 @@ import org.knime.core.node.config.Config;
 
 /**
  * An implementation of a cell holding an entire vector of bits.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  */
+@Deprecated
 public class BitVectorCell extends DataCell implements BitVectorValue {
 
     /**
      * Convenience access member for
      * <code>DataType.getType(BitVectorCell.class)</code>.
-     * 
+     *
      * @see DataType#getType(Class)
      */
     public static final DataType TYPE = DataType.getType(BitVectorCell.class);
@@ -52,7 +53,7 @@ public class BitVectorCell extends DataCell implements BitVectorValue {
     /**
      * Preferred value class of a BitVectorCell is BitVectorValue. This method
      * is called per reflection.
-     * 
+     *
      * @return BitVectorValue.class
      * @see DataCell
      */
@@ -73,7 +74,7 @@ public class BitVectorCell extends DataCell implements BitVectorValue {
      * Create new BitVectorCell with a predefined value, read from a string
      * which holds a hexadecimal representation. Resulting bit vector assumes
      * lowest-to-highest order in blocks of 32 bits.
-     * 
+     *
      * @param hex the hexadecimal representation of the bit vector's value
      * @throws NumberFormatException if that fails
      */
@@ -141,7 +142,7 @@ public class BitVectorCell extends DataCell implements BitVectorValue {
     /**
      * Creates a new BitVectorCell based on a BitSet and a fixed length for the
      * bits.
-     * 
+     *
      * @param bits the bit set to be put in the cell
      * @param nrOfBits the number for the fixed length of the cell
      */
@@ -156,7 +157,7 @@ public class BitVectorCell extends DataCell implements BitVectorValue {
     /**
      * Provide inverse routing, converting a bit vector into the corresponding
      * hexadecimal representation.
-     * 
+     *
      * @return hex representation
      */
     public String toHexString() {
@@ -199,7 +200,7 @@ public class BitVectorCell extends DataCell implements BitVectorValue {
      * highest-to-lowest order, that is, the bits for the 2^3 will be left-most
      * in each group of 4 bits. Other than that the 4-bit groups will follow the
      * order of hex characters.
-     * 
+     *
      * @param hex the hexadecimal representation of the bit vector's value
      * @return the corresponding bit set
      */
@@ -271,7 +272,7 @@ public class BitVectorCell extends DataCell implements BitVectorValue {
 
     /**
      * Returns cardinality of this bit vector.
-     * 
+     *
      * @see org.knime.core.data.IntValue#getIntValue()
      * @return cardinality of this bit vector
      */
@@ -281,12 +282,12 @@ public class BitVectorCell extends DataCell implements BitVectorValue {
 
     /**
      * Check if two BitVectorCells are equal.
-     * 
+     *
      * @param o the other object to check
      * @return <code>true</code> if this instance and the given object are
      *         instances of the same class and their string representations are
      *         equal
-     * 
+     *
      * @see java.lang.Object#equals(Object)
      */
     @Override
@@ -329,9 +330,9 @@ public class BitVectorCell extends DataCell implements BitVectorValue {
 
     /**
      * Saves this cell to the config.
-     * 
+     *
      * @param config to write into it
-     * 
+     *
      * @see #toString()
      */
     public void save(final Config config) {
@@ -340,7 +341,7 @@ public class BitVectorCell extends DataCell implements BitVectorValue {
 
     /**
      * Loads a new cell using the properties from the given config.
-     * 
+     *
      * @param config the config to get String from and inits this cell
      * @return a new bit vector cell
      * @throws InvalidSettingsException if the value is not available
