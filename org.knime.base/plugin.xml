@@ -859,5 +859,9 @@
             PMMLPortObject="org.knime.base.node.mine.neural.mlp.PMMLNeuralNetworkPortObject"
             modeltype="NeuralNetwork">
       </PMMLModel>
+      <PMMLModel
+            PMMLPortObject="org.knime.base.node.mine.decisiontree2.PMMLDecisionTreePortObject"
+            modeltype="TreeModel">
+      </PMMLModel>
    </extension>
 </plugin>
