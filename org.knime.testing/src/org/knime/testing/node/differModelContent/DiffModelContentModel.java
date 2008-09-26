@@ -53,7 +53,7 @@ public class DiffModelContentModel extends NodeModel {
      * Creates a model with two model inports.
      */
     public DiffModelContentModel() {
-        super(new PortType[0], new PortType[]{PORTTYPE, PORTTYPE});
+        super(new PortType[]{PORTTYPE, PORTTYPE}, new PortType[0]);
     }
 
     /**
