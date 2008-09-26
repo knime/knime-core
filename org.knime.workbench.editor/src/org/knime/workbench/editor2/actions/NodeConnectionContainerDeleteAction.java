@@ -89,8 +89,11 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
             NodeContainerEditPart nodePart = nodeParts.get(0);
             String name = nodePart.getNodeContainer().getName();
             String customName = nodePart.getNodeContainer().getCustomName();
-
-            String text = customName + " - " + name
+            String text = "";
+            if (customName != null) {
+                text = customName + " - ";
+            }
+            text += name
                 + " (#" + nodePart.getNodeContainer().getID() + ")";
 
             String dialogText = "Do you really want to delete "
