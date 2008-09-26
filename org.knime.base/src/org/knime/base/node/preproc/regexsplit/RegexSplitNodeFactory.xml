@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd" >
-<knimeNode type="Manipulator">
+<knimeNode icon="regexsplit.png" type="Manipulator">
 	<name>Regex Split</name>
 	<shortDescription>
 		Splits an input string (column) into multiple groups according
