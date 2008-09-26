@@ -120,12 +120,13 @@ public class Rule2DNodeModel extends NodeModel implements Rule2DDataProvider {
         DataTableSpec ruleSpec = inSpecs[RULES_INPORT];
         List<String>validColummNames = new ArrayList<String>();
         for (int i = 0; i < dataSpec.getNumColumns(); i++) {
-            if (ruleSpec.getColumnSpec(i) != null
+            String colName = dataSpec.getColumnSpec(i).getName();
+            if (ruleSpec.findColumnIndex(colName) >= 0
                 && dataSpec.getColumnSpec(i).getName().equals(
-                        ruleSpec.getColumnSpec(i).getName())
-                        && ruleSpec.getColumnSpec(i).getType()
+                        ruleSpec.getColumnSpec(colName).getName())
+                        && ruleSpec.getColumnSpec(colName).getType()
                             .isCompatible(FuzzyIntervalValue.class)) {
-                    validColummNames.add(dataSpec.getColumnSpec(i).getName());
+                    validColummNames.add(colName);
             }
         }
         if (validColummNames.size() == 0) {
