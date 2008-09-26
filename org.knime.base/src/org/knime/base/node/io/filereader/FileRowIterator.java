@@ -300,7 +300,7 @@ class FileRowIterator extends RowIterator {
         // first, create a row header.
         // This will also read it from file, if supposed to.
         try {
-            rowHeader = createRowHeader(m_rowNumber);
+            rowHeader = createRowHeader(m_rowNumber - 1);
         } catch (FileTokenizerException fte) {
             throw prepareForException(fte.getMessage() + " (line: "
                     + m_tokenizer.getLineNumber() + " source: '"
