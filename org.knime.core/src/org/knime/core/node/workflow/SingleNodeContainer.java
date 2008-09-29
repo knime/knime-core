@@ -463,11 +463,13 @@ public final class SingleNodeContainer extends NodeContainer
                 // m_executionFuture has not yet started or if it has started,
                 // it will not hand off to node implementation (otherwise it
                 // would be executing)
+                m_progressMonitor.setExecuteCanceled();
                 m_executionFuture.cancel(true);
                 setState(State.CONFIGURED);
                 break;
             case EXECUTING:
                 // future is running in thread pool, use ordinary cancel policy
+                m_progressMonitor.setExecuteCanceled();
                 m_executionFuture.cancel(true);
                 break;
             case EXECUTED:
