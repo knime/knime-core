@@ -38,6 +38,21 @@ public abstract class AbstractSimpleObject extends AbstractRepositoryObject
     
     private String m_categoryPath;
     
+    private String m_pluginID;
+    /**
+     * @return Returns the pluginID.
+     */
+    public String getPluginID() {
+        return m_pluginID;
+    }
+
+    /**
+     * @param pluginID The pluginID to set.
+     */
+    public void setPluginID(final String pluginID) {
+        m_pluginID = pluginID;
+    }
+    
     /**
      * @return Returns the icon.
      */

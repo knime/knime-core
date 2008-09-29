@@ -26,9 +26,9 @@ package org.knime.workbench.repository.view;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IRepositoryObject;
+import org.knime.workbench.repository.model.MetaNodeTemplate;
 import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.repository.model.Root;
 
@@ -91,7 +91,23 @@ public class RepositoryViewFilter extends ViewerFilter {
                 }
                 temp = temp.getParent();
             }
-
+        } else 
+        // MetaNodeTemplate: check agains name and names of contained nodes
+        if (element instanceof MetaNodeTemplate) {
+            selectThis = match(((MetaNodeTemplate)element).getName())
+                || match(((MetaNodeTemplate)element).getManager().getName());
+            if (selectThis) {
+                return true;
+            } 
+            /*
+             * enable if advanced search in NodeRepository is available
+            for (NodeContainer cont : ((MetaNodeTemplate)element).getManager()
+                    .getNodeContainers()) {
+                if (match(cont.getName())) {
+                    return true;
+                }
+            }
+            */
         } else
         // Category: Match against name and children
         if (element instanceof Category) {

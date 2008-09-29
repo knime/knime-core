@@ -87,8 +87,6 @@ public class NodeTemplate extends AbstractSimpleObject {
 
     private String m_type;
     
-    private String m_pluginID;
-    
 
     /**
      * Constructs a new NodeTemplate.
@@ -144,20 +142,6 @@ public class NodeTemplate extends AbstractSimpleObject {
     public void setType(final String type) {
         assert TYPES.contains(type) : "Illegal node type: " + type;
         m_type = type;
-    }
-
-    /**
-     * @return Returns the pluginID.
-     */
-    public String getPluginID() {
-        return m_pluginID;
-    }
-
-    /**
-     * @param pluginID The pluginID to set.
-     */
-    public void setPluginID(final String pluginID) {
-        m_pluginID = pluginID;
     }
     
     /**

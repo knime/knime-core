@@ -165,6 +165,7 @@ public final class RepositoryFactory {
         }
         MetaNodeTemplate template = new MetaNodeTemplate(
                 id, name, manager);
+        template.setPluginID(configuration.getContributor().getName());
         if (after != null && !after.isEmpty()) {
             template.setAfterID(after);
         }
