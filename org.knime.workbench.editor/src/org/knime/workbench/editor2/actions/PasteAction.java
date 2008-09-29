@@ -32,14 +32,12 @@ import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.editor2.ClipboardWorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
 /**
@@ -129,21 +127,6 @@ public class PasteAction extends AbstractClipboardAction {
             LOGGER.debug("pasting node at: "  + uiInfo.toString());
             uiInfo.changePosition(moveDist);
             nc.setUIInformation(uiInfo);
-            // check if connection contains bend points
-            for (ConnectionContainer conn : getManager()
-                        .getConnectionContainers()) {
-                if (conn.getDest().equals(id) || conn.getSource().equals(id)) {
-                    if (conn.getUIInfo() != null) {
-                        ModellingConnectionExtraInfo connUIInfo 
-                            = (ModellingConnectionExtraInfo)conn.getUIInfo();
-                        LOGGER.debug("old bend point of " + conn +  
-                                + connUIInfo.getBendpoint(0)[0] + " "
-                                + connUIInfo.getBendpoint(0)[1]);
-                        connUIInfo.changePosition(moveDist);
-                        conn.setUIInfo(connUIInfo);
-                    }
-                }
-            }
         }
         ClipboardWorkflowManager.incrementRetrievalCounter();
         
