@@ -26,7 +26,9 @@ package org.knime.workbench.editor2.editparts;
 
 import java.util.ArrayList;
 import java.util.EventObject;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.LayoutManager;
@@ -43,6 +45,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -74,6 +77,16 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     
     private WorkflowPortBar m_inBar;
     private WorkflowPortBar m_outBar;
+    
+    // TODO: maybe also connections, workflow ports, etc, should be stored
+    /*
+     * This stores the node ids from the PasteAction. If 
+     * the NodeContainer with the referring NodeID is created through createChild, 
+     * the referring EditPart is selected and removed from
+     * this set. If this set is empty, the selection is cleared before the 
+     * new EditPart is added (normal addition of nodes). 
+     */
+    private final Set<NodeID> m_futureSelection = new LinkedHashSet<NodeID>();
 
     /**
      * @return The <code>WorkflowManager</code> that is used as model for this
@@ -83,6 +96,20 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         return (WorkflowManager)getModel();
     }
 
+    
+    /**
+     * Sets the NodeIDs from a set of nodes that are added to the editor and 
+     * should be selected as soon as they appear.
+     * 
+     * @param ids node ids of the {@link NodeContainerEditPart}s that should be
+     * selected as soon as their {@link NodeContainerEditPart}s are created.
+     */
+    public void setFutureSelection(final NodeID[] ids) {
+        m_futureSelection.clear();
+        for (NodeID id : ids) {
+            m_futureSelection.add(id);
+        }
+    }
 
     /**
      *
@@ -274,6 +301,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
                 refreshTargetConnections();
 
                 // update out port (workflow in port) tooltips
+                
                 for (Object part : getChildren()) {
 
                     if (part instanceof NodeOutPortEditPart
@@ -287,7 +315,6 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
                 // always refresh visuals
                 getFigure().revalidate();
                 refreshVisuals();
-
             }
         });
     
@@ -319,5 +346,29 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         m_toolTipHelper = new ProgressToolTipHelper(getViewer().getControl(),
                 zoomManager);
         ((WorkflowFigure)getFigure()).setProgressToolTipHelper(m_toolTipHelper);
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    protected EditPart createChild(final Object model) {
+        EditPart part = super.createChild(model);
+        LOGGER.debug("part: " + part);
+        if (part instanceof NodeContainerEditPart) {
+            NodeID id = ((NodeContainerEditPart)part).getNodeContainer()
+                .getID();
+            if (m_futureSelection.isEmpty()) {
+                // select only this element
+                getViewer().select(part);
+            } else if (m_futureSelection.contains(id)) {
+                // append this element to the current selection
+                getViewer().getSelectionManager().appendSelection(part);
+                m_futureSelection.remove(id);
+            }
+        }
+        // connections are selected in workflowChanged
+        return part;
     }
 }
