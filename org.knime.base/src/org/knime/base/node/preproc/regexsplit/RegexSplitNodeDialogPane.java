@@ -23,11 +23,13 @@
  */
 package org.knime.base.node.preproc.regexsplit;
 
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
@@ -61,6 +63,10 @@ final class RegexSplitNodeDialogPane extends NodeDialogPane {
         m_patternPanel = new StringHistoryPanel("regexsplitNodeDialog");
         m_patternPanel.setPrototypeDisplayValue(
                 "#######################################");
+        JComboBox box = m_patternPanel.getComboBox();
+        Font font = box.getFont();
+        box.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 
+                (font == null ? 12 : font.getSize())));
         m_caseInsensitiveChecker = new JCheckBox(
                 "Ignore Case (Case Insensitive)");
         m_muliLineChecker = new JCheckBox("Multiline");

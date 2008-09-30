@@ -117,6 +117,14 @@ public final class StringHistoryPanel extends JPanel {
         Dimension newMin = new Dimension(0, getPreferredSize().height);
         setMinimumSize(newMin);
     }
+    
+    /** Access to combo box component. This method allows one to change
+     * the font being used, for instance.
+     * @return The used combo box component.
+     */
+    public JComboBox getComboBox() {
+        return m_textBox;
+    }
 
     /** renderer that also supports to show customized tooltip. */
     private static class MyComboBoxRenderer extends BasicComboBoxRenderer {
