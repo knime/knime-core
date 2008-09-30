@@ -1244,6 +1244,16 @@ class Buffer implements KNIMEStreamConstants {
     boolean containsBlobCells() {
         return m_containsBlobs;
     }
+    
+    /** Creates a clone of this buffer for writing the content to a stream
+     * that is of the current version. 
+     * @return A new buffer with the same ID, which is only used locally to
+     * update the stream.
+     */
+    Buffer createLocalCloneForWriting() {
+        return new Buffer(0, getBufferID(), 
+                getGlobalRepository(), getLocalRepository());
+    }
 
     /**
      * Method that's been called from the {@link ContainerTable}
@@ -1272,8 +1282,7 @@ class Buffer implements KNIMEStreamConstants {
             // need to use new buffer since we otherwise write properties
             // of this buffer, which prevents it from further reading (version 
             // conflict) - see bug #1364
-            Buffer copy = new Buffer(0, getBufferID(), 
-                    getGlobalRepository(), getLocalRepository());
+            Buffer copy = createLocalCloneForWriting();
             DCObjectOutputVersion2 outStream =
                 copy.initOutFile(new NonClosableOutputStream.Zip(zipOut));
             int count = 1;
