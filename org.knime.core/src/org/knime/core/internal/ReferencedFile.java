@@ -209,7 +209,7 @@ public final class ReferencedFile {
     
     /** Represents the parent of all hierarchical files. */
     private static final class RootFileDelegate extends ReferencedFileDelegate {
-        private final File m_rootFile;
+        private File m_rootFile;
         private final ReentrantReadWriteLock m_lock;
         
         /** @param root root directory of the hierarchy */
@@ -236,7 +236,11 @@ public final class ReferencedFile {
         /** {@inheritDoc} */
         @Override
         boolean rename(final String name) {
-            return renameFile(getFile(), name);
+            boolean result = renameFile(getFile(), name);
+            if (result) {
+                m_rootFile = new File(getFile().getParentFile(), name);
+            }
+            return result;
         }
 
         /** {@inheritDoc} */
