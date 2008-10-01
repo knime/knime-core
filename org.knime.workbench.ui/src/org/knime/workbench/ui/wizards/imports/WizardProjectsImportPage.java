@@ -14,7 +14,6 @@
 package org.knime.workbench.ui.wizards.imports;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -89,9 +88,6 @@ import org.knime.core.node.NodeLogger;
 public class WizardProjectsImportPage extends WizardPage implements
         IOverwriteQuery {
 
-    // ------------ KNIME change,
-    public static final String IMPORT_MARKER_FILE_NAME = "ImportMarker";
-    
     /**
 	 * The name of the folder containing metadata information for the workspace.
 	 */
@@ -1088,34 +1084,12 @@ public class WizardProjectsImportPage extends WizardPage implements
                         createExistingProject((ProjectRecord)selected[i],
                                 new SubProgressMonitor(monitor, 1));
 
-                        // -------------- Import Marking ----------------------
-                        // KNIME code (dirty fix to avoid error logs during
-                        // editor opening)
-                        // also possible to put it to the KNIME subclass
                         final IWorkspace workspace =
-                                ResourcesPlugin.getWorkspace();
+                            ResourcesPlugin.getWorkspace();
                         String projectName =
-                                ((ProjectRecord)selected[i]).projectName;
+                            ((ProjectRecord)selected[i]).projectName;
                         final IProject project =
-                                workspace.getRoot().getProject(projectName);
-
-                        final File file =
-                                new File(project.getProjectRelativePath()
-                                        .makeAbsolute().toFile(),
-                                        IMPORT_MARKER_FILE_NAME);
-                        if (!file.exists()) {
-                            byte[] buf = {100};
-
-                            try {
-                                FileOutputStream fos =
-                                        new FileOutputStream(file);
-                                fos.write(buf);
-                                fos.close();
-                            } catch (Throwable t) {
-                                // do nothging
-                            }
-                        }
-                        // -------------- Import Marking End -----------------
+                            workspace.getRoot().getProject(projectName);
                         // -------------- Rename Change KNIME ----------------
                         // Renames the project
                         // Necessary if the imported project was renamed as
