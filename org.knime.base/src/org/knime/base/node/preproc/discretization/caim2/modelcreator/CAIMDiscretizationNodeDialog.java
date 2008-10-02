@@ -46,10 +46,7 @@ public class CAIMDiscretizationNodeDialog extends DefaultNodeSettingsPane {
     @SuppressWarnings("unchecked")
     public CAIMDiscretizationNodeDialog() {
 
-        super();
-
-        // create the default components
-        // the class column selector
+        // create the default components the class column selector
         DialogComponentColumnNameSelection classColumn =
                 new DialogComponentColumnNameSelection(
                         CAIMDiscretizationNodeModel.createClassColModel(),
