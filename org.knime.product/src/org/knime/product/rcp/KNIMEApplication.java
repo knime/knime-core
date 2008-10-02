@@ -88,6 +88,7 @@ public class KNIMEApplication implements IApplication {
                     shell.dispose();
                 }
             }
+            checkXULRunner();
 
             // create the workbench with this advisor and run it until it exits
             // N.B. createWorkbench remembers the advisor, and also registers
@@ -432,6 +433,38 @@ public class KNIMEApplication implements IApplication {
         } catch (IOException e) {
             // cannot log because instance area has not been set
             return null;
+        }
+    }
+    
+    /** Checks whether we are running linux and if so, we set the
+     * "org.eclipse.swt.browser.XULRunnerPath" property. The property
+     * points to the "xulrunner" directory in the installation dir (if that
+     * dir does not exist, this method does nothing). 
+     * This is one suggested workaround for bug 
+     * https://bugs.eclipse.org/bugs/show_bug.cgi?id=236724#c22
+     * (eclipse 3.3.2 crashes on linux with firefox 3.0 installed).
+     */
+    private void checkXULRunner() {
+        if (!"linux".equalsIgnoreCase(System.getProperty("os.name"))) {
+            return;
+        }
+        if (System.getProperty(
+                "org.eclipse.swt.browser.XULRunnerPath") != null) {
+            return;
+        }
+        Location instanceLoc = Platform.getInstallLocation();
+        if (instanceLoc == null || !instanceLoc.isSet()) {
+            return;
+        }
+        URL url = instanceLoc.getURL();
+        String path = url != null ? url.getPath() : null;
+        if (path == null) {
+            return;
+        }
+        File xulrunnerDir = new File(new File(path), "xulrunner");
+        if (xulrunnerDir.isDirectory()) {
+            System.setProperty("org.eclipse.swt.browser.XULRunnerPath", 
+                    xulrunnerDir.getAbsolutePath());
         }
     }
 
