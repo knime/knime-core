@@ -247,7 +247,7 @@ class ShapeManagerNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        String column = settings.getString(SELECTED_COLUMN, null);
+        String column = settings.getString(SELECTED_COLUMN);
         if (column != null) {
             DataCell[] values = settings.getDataCellArray(VALUES);
             for (DataCell val : values) {
@@ -258,6 +258,8 @@ class ShapeManagerNodeModel extends NodeModel {
                     settings.getString(val.toString());
                 }
             }
+        } else {
+            throw new InvalidSettingsException("No column selected");
         }
     }
 

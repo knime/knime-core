@@ -381,7 +381,7 @@ class ColorManager2NodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings) 
             throws InvalidSettingsException {
-        String column = settings.getString(SELECTED_COLUMN, null);
+        String column = settings.getString(SELECTED_COLUMN);
         if (column != null) {
             boolean nominalSelected = settings.getBoolean(IS_NOMINAL);
             if (nominalSelected) {
@@ -394,6 +394,8 @@ class ColorManager2NodeModel extends NodeModel {
                 new Color(settings.getInt(MIN_COLOR));
                 new Color(settings.getInt(MAX_COLOR));
             }
+        } else {
+            throw new InvalidSettingsException("No column selected");
         }
     }
     
