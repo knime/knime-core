@@ -22,6 +22,7 @@
 package org.knime.product.rcp;
 
 import java.io.File;
+import java.net.URL;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
@@ -32,6 +33,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.internal.ide.ChooseWorkspaceData;
+import org.eclipse.ui.internal.ide.ChooseWorkspaceDialog;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 import org.knime.core.util.FileLocker;
 
@@ -71,6 +74,31 @@ public class KNIMEApplication implements IApplication {
         }
 
         try {
+            Location workspace = Platform.getInstanceLocation();
+            if (!workspace.isSet()) {
+                boolean forcePrompt = false;
+                do {
+                    ChooseWorkspaceData data =
+                            new ChooseWorkspaceData(workspace.getDefault());
+                    ChooseWorkspaceDialog dialog =
+                            new ChooseWorkspaceDialog(Display.getDefault()
+                                    .getActiveShell(), data, false, true);
+                    dialog.prompt(forcePrompt);
+                    String loc = data.getSelection();
+                    if (loc == null) {
+                        return EXIT_OK;
+                    }
+                    if (loc.length() < 1) {
+                        forcePrompt = true;
+                        continue;
+                    }
+                    File f = new File(loc);
+                    URL wsUrl = f.toURI().toURL();
+                    workspace.setURL(wsUrl, true);
+                    break;
+                } while (true);
+            }
+
             int returnCode =
                     PlatformUI.createAndRunWorkbench(display,
                             new KNIMEApplicationWorkbenchAdvisor());
@@ -90,9 +118,12 @@ public class KNIMEApplication implements IApplication {
             // return IPlatformRunnable.EXIT_RESTART;
             // }
             // return IPlatformRunnable.EXIT_OK;
+        } catch (Exception ex) {
+            ex.printStackTrace();
         } finally {
             display.dispose();
         }
+        return EXIT_OK;
     }
 
     private boolean lockWorkspace() throws Exception {
