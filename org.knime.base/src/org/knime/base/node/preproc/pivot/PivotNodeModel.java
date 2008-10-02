@@ -43,13 +43,13 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -61,7 +61,6 @@ import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
 import org.knime.core.util.Pair;
-
 
 /**
  * The pivoting node uses on column as grouping (row header) and one as pivoting
@@ -90,8 +89,8 @@ public class PivotNodeModel extends NodeModel {
     private final SettingsModelBoolean m_hiliting =
         PivotNodeDialogPane.createSettingsEnableHiLite();
     
-    private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(PivotNodeModel.class);
+    private final SettingsModelBoolean m_ignoreMissValues =
+        PivotNodeDialogPane.createSettingsMissingValues();
 
     /**
      * Node returns a new hilite handler instance.
@@ -101,7 +100,7 @@ public class PivotNodeModel extends NodeModel {
 
 
     /**
-     * Creates a new pivot model with one in- and outport.
+     * Creates a new pivot model with one in- and out-port.
      */
     public PivotNodeModel() {
         super(1, 1);
@@ -133,7 +132,11 @@ public class PivotNodeModel extends NodeModel {
         if (!cspec.getDomain().hasValues()) {
             return new DataTableSpec[1];
         } else {
-            final Set<DataCell> vals = cspec.getDomain().getValues();
+            final Set<DataCell> vals = new LinkedHashSet<DataCell>(
+                    cspec.getDomain().getValues());
+            if (!m_ignoreMissValues.getBooleanValue()) {
+                vals.add(DataType.getMissingCell());
+            }
             return new DataTableSpec[]{initSpec(vals)};
         }
     }
@@ -147,10 +150,17 @@ public class PivotNodeModel extends NodeModel {
     private DataTableSpec initSpec(final Set<DataCell> vals) {
         final String[] names = new String[vals.size()];
         final DataType[] types = new DataType[vals.size()];
+        final DataType setType;
+        if (m_makeAgg.getStringValue().equals(
+                PivotNodeDialogPane.MAKE_AGGREGATION[0])) {
+            setType = IntCell.TYPE;
+        } else {
+            setType = DoubleCell.TYPE;
+        }
         int idx = 0;
         for (final DataCell val : vals) {
             names[idx] = val.toString();
-            types[idx] = DoubleCell.TYPE;
+            types[idx] = setType;
             idx++;
         }
         return new DataTableSpec(names, types);
@@ -191,6 +201,7 @@ public class PivotNodeModel extends NodeModel {
         final double nrRows = inData[0].getRowCount();
         int rowCnt = 0;
         ExecutionContext subExec = exec.createSubExecutionContext(0.75);
+        boolean containsMissing = false;
         // final all group, pivot pair and aggregate the values of each group
         for (final DataRow row : inData[0]) {
             subExec.checkCanceled();
@@ -200,6 +211,13 @@ public class PivotNodeModel extends NodeModel {
             final DataCell groupCell = row.getCell(group);
             groupList.add(groupCell);
             final DataCell pivotCell = row.getCell(pivot);
+            // if missing values should be ignored
+            if (pivotCell.isMissing()) {
+                if (m_ignoreMissValues.getBooleanValue()) {
+                    containsMissing = true;
+                    continue;
+                }
+            }
             pivotList.add(pivotCell);
             final Pair<DataCell, DataCell> pair =
                 new Pair<DataCell, DataCell>(groupCell, pivotCell);
@@ -224,18 +242,10 @@ public class PivotNodeModel extends NodeModel {
                 set.add(row.getKey());
             }
         }
-        // check pivoted elements
-        if (pivotSpec.getDomain().hasValues()) {
-            Set<DataCell> pivots = pivotSpec.getDomain().getValues();
-            if (!pivots.containsAll(pivotList)) {
-                LinkedHashSet<DataCell> copy = 
-                    new LinkedHashSet<DataCell>(pivotList);
-                copy.removeAll(pivots);
-                String warning = "Some pivot values \"" + copy 
-                        + "\" are not present in data table spec.";
-                LOGGER.coding(warning);
-                setWarningMessage(warning);
-            }
+        // check pivoted elements for missing values
+        if (containsMissing) {
+            setWarningMessage("Pivot column \"" + m_pivot.getStringValue() 
+                + "\" contains missing values which are ignored.");
         }
 
         final DataTableSpec outspec = initSpec(pivotList);
@@ -300,6 +310,7 @@ public class PivotNodeModel extends NodeModel {
         m_aggMethod.loadSettingsFrom(settings);
         m_makeAgg.loadSettingsFrom(settings);
         m_hiliting.loadSettingsFrom(settings);
+        m_ignoreMissValues.loadSettingsFrom(settings);
     }
 
     /**
@@ -337,6 +348,7 @@ public class PivotNodeModel extends NodeModel {
         m_aggMethod.saveSettingsTo(settings);
         m_makeAgg.saveSettingsTo(settings);
         m_hiliting.saveSettingsTo(settings);
+        m_ignoreMissValues.saveSettingsTo(settings);
     }
 
     /**
@@ -351,6 +363,7 @@ public class PivotNodeModel extends NodeModel {
         m_aggMethod.validateSettings(settings);
         m_makeAgg.validateSettings(settings);
         m_hiliting.validateSettings(settings);
+        m_ignoreMissValues.validateSettings(settings);
     }
 
     /**
