@@ -315,7 +315,7 @@ class ColorManager2NodeModel extends NodeModel {
         // remove all color mappings
         m_map.clear();
         // read settings and write into the map
-        m_column = settings.getString(SELECTED_COLUMN, null);
+        m_column = settings.getString(SELECTED_COLUMN);
         if (m_column != null) {
             m_isNominal = settings.getBoolean(IS_NOMINAL);
             // nominal
@@ -394,8 +394,6 @@ class ColorManager2NodeModel extends NodeModel {
                 new Color(settings.getInt(MIN_COLOR));
                 new Color(settings.getInt(MAX_COLOR));
             }
-        } else {
-            throw new InvalidSettingsException("No column selected");
         }
     }
     
