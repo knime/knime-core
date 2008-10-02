@@ -61,7 +61,9 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -87,11 +89,11 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      */
     public static final String KEY_CLASSIFYCOLUMN = "classifyColumn";
 
-    // TODO /**
-    // * Key to store the confidence threshold for tree pruning in the settings.
-    // */
-    // public static final String KEY_PRUNING_CONFIDENCE_THRESHOLD =
-    // "significanceTh";
+    /**
+     * Key to store the confidence threshold for tree pruning in the settings.
+     */
+    public static final String KEY_PRUNING_CONFIDENCE_THRESHOLD =
+         "significanceTh";
 
     /**
      * Key to store the confidence threshold for tree pruning in the settings.
@@ -152,7 +154,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
     /**
      * The minimum number records expected per node.
      */
-    public static final double DEFAULT_MIN_NUM_RECORDS_PER_NODE = 2;
+    public static final int DEFAULT_MIN_NUM_RECORDS_PER_NODE = 2;
 
     /**
      * The default whether to use the average as the split point is false.
@@ -164,10 +166,10 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      */
     public static final String PRUNING_MDL = "MDL";
 
-    // TODO /**
-    // * The constant for estimated error pruning.
-    // */
-    // public static final String PRUNING_ESTIMATED_ERROR = "Estimated error";
+    /**
+     * The constant for estimated error pruning.
+     */
+    public static final String PRUNING_ESTIMATED_ERROR = "Estimated error";
 
     /**
      * The constant for estimated error pruning.
@@ -238,35 +240,32 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
     /**
      * The column which contains the classification Information.
      */
-    private String m_classifyColumn;
+    private final SettingsModelString m_classifyColumn =
+        DecisionTreeLearnerNodeDialog.createSettingsClassColumn();
 
-    // TODO /**
-    // * The pruning confidence threshold.
-    // */
-    // private double m_pruningConfidenceThreshold =
-    // DEFAULT_PRUNING_CONFIDENCE_THRESHOLD;
+//     /**
+//      * The pruning confidence threshold.
+//      */
+//     private SettingsModelDoubleBounded m_pruningConfidenceThreshold =
+//         DecisionTreeLearnerNodeDialog.createSettingsConfidenceValue();
 
     /**
      * The pruning method used for pruning.
      */
-    private String m_pruningMethod = DEFAULT_PRUNING_METHOD;
+    private final SettingsModelString m_pruningMethod = 
+        DecisionTreeLearnerNodeDialog.createSettingsPruningMethod();
 
     /**
      * The quality measure to determine the split point.
      */
-    private String m_splitQualityMeasureType = DEFAULT_SPLIT_QUALITY_MEASURE;
-
-    /**
-     * The quality measure to determine the split point.
-     */
-    private SplitQualityMeasure m_splitQualityMeasure;
+    private final SettingsModelString m_splitQualityMeasureType = 
+        DecisionTreeLearnerNodeDialog.createSettingsQualityMeasure();
 
     /**
      * The number of records stored for the view.
      */
-    private SettingsModelIntegerBounded m_numberRecordsStoredForView =
-            new SettingsModelIntegerBounded(KEY_NUMBER_VIEW_RECORDS,
-                    DEFAULT_NUMBER_RECORDS_FOR_VIEW, 0, Integer.MAX_VALUE);
+    private final SettingsModelIntegerBounded m_numberRecordsStoredForView =
+            DecisionTreeLearnerNodeDialog.createSettingsNumberRecordsForView();
 
     /**
      * The number of attributes of the input data table.
@@ -287,14 +286,14 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
     private double m_alloverRowCount;
 
-    private double m_minNumberRecordsPerNode = DEFAULT_MIN_NUM_RECORDS_PER_NODE;
+    private final SettingsModelIntegerBounded m_minNumberRecordsPerNode = 
+        DecisionTreeLearnerNodeDialog.createSettingsMinNumRecords();
 
-    private boolean m_buildInMemory = true;
+    private final SettingsModelBoolean m_averageSplitpoint = 
+        DecisionTreeLearnerNodeDialog.createSettingsSplitPoint();
 
-    private boolean m_averageSplitpoint = DEFAULT_SPLIT_AVERAGE;
-
-    private boolean m_binaryNominalSplitMode =
-            DEFAULT_BINARY_NOMINAL_SPLIT_MODE;
+    private final SettingsModelBoolean m_binaryNominalSplitMode =
+            DecisionTreeLearnerNodeDialog.createSettingsBinaryNominalSplit();
 
     /**
      * The maximum number of nominal values for which all subsets are calculated
@@ -302,11 +301,11 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      * <code>binaryNominalSplits</code> is <code>true</code>; if the number
      * of nominal values is higher, a heuristic is applied.
      */
-    private int m_maxNumNominalsForCompleteComputation =
-            DEFAULT_MAX_BIN_NOMINAL_SPLIT_COMPUTATION;
+    private final SettingsModelIntegerBounded m_maxNumNominalsForCompleteComputation =
+            DecisionTreeLearnerNodeDialog.createSettingsMaxNominalValues();
 
-    private ParallelProcessing m_parallelProcessing =
-            new ParallelProcessing(DEFAULT_NUM_PROCESSORS);
+    private final SettingsModelIntegerBounded m_parallelProcessing =
+            DecisionTreeLearnerNodeDialog.createSettingsNumProcessors();
 
     /**
      * The decision tree model to be induced by the execute method.
@@ -338,17 +337,16 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             final ExecutionContext exec) throws CanceledExecutionException,
             IllegalArgumentException, IllegalAccessException {
 
-        // stringbuilder that holds the warning message displayed after
-        // execution
+        // holds the warning message displayed after execution
         StringBuilder warningMessageSb = new StringBuilder();
-        // reset the number available threads
-        m_parallelProcessing.reset();
+        ParallelProcessing parallelProcessing = new ParallelProcessing(
+                m_parallelProcessing.getIntValue());
 
         long completeTime = System.currentTimeMillis();
         LOGGER.info("Number available threads: "
-                + m_parallelProcessing.getMaxNumberThreads()
+                + parallelProcessing.getMaxNumberThreads()
                 + " used threads: "
-                + m_parallelProcessing.getCurrentThreadsInUse());
+                + parallelProcessing.getCurrentThreadsInUse());
 
         // TODO
         // if (LOGGER.isDebugEnabled()) {
@@ -370,8 +368,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         }
 
         // get class column index
-        int classColumnIndex =
-                inData.getDataTableSpec().findColumnIndex(m_classifyColumn);
+        int classColumnIndex = inData.getDataTableSpec().findColumnIndex(
+                m_classifyColumn.getStringValue());
         assert classColumnIndex > -1;
 
         // create initial In-Memory table
@@ -380,7 +378,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         long timer = System.currentTimeMillis();
         InMemoryTableCreator tableCreator =
                 new InMemoryTableCreator(inData, classColumnIndex,
-                        m_minNumberRecordsPerNode);
+                        m_minNumberRecordsPerNode.getIntValue());
         InMemoryTable initialTable =
                 tableCreator.createInMemoryTable(exec
                         .createSubExecutionContext(0.05));
@@ -396,7 +394,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             warningMessageSb
                     .append(" rows removed due to missing class value;");
         }
-        // the allover row count is used to report progress
+        // the all over row count is used to report progress
         m_alloverRowCount = initialTable.getSumOfWeights();
 
         // set the finishing counter
@@ -409,10 +407,12 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         m_numberAttributes = initialTable.getNumAttributes();
 
         // create the quality measure
-        if (m_splitQualityMeasureType.equals(SPLIT_QUALITY_GINI)) {
-            m_splitQualityMeasure = new SplitQualityGini();
+        final SplitQualityMeasure splitQualityMeasure;
+        if (m_splitQualityMeasureType.getStringValue().equals(
+                SPLIT_QUALITY_GINI)) {
+            splitQualityMeasure = new SplitQualityGini();
         } else {
-            m_splitQualityMeasure = new SplitQualityGainRatio();
+            splitQualityMeasure = new SplitQualityGainRatio();
         }
 
         // build the tree
@@ -423,19 +423,21 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         timer = System.currentTimeMillis();
 
         DecisionTreeNode root = null;
-        root = buildTree(initialTable, exec, 0, m_splitQualityMeasure);
+        root = buildTree(initialTable, exec, 0, splitQualityMeasure, parallelProcessing);
 
         LOGGER.info("Tree built in (ms) "
                 + (System.currentTimeMillis() - timer));
 
-        // the decision tree will be saved after execution in the method
-        // "saveModelContent()"
-        m_decisionTree = new DecisionTree(root, m_classifyColumn);
+        // the decision tree model saved as PMML at the second out-port
+        m_decisionTree = new DecisionTree(root, 
+                m_classifyColumn.getStringValue());
 
         // prune the tree
         timer = System.currentTimeMillis();
-        exec.setMessage("Prune tree with " + m_pruningMethod + "...");
-        LOGGER.info("Pruning tree with " + m_pruningMethod + "...");
+        exec.setMessage("Prune tree with " 
+                + m_pruningMethod.getStringValue() + "...");
+        LOGGER.info("Pruning tree with " 
+                + m_pruningMethod.getStringValue() + "...");
         pruneTree();
         LOGGER.info("Tree pruned in (ms) "
                 + (System.currentTimeMillis() - timer));
@@ -456,7 +458,11 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         if (warningMessageSb.length() > 0) {
             setWarningMessage(warningMessageSb.toString());
         }
-
+        
+        // reset the number available threads
+        parallelProcessing.reset();        
+        parallelProcessing = null;
+        
         // no data out table is created -> return an empty table array
         exec.setMessage("Creating PMML decision tree model...");
         return new PortObject[]{
@@ -472,14 +478,13 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             learnCols.add(spec.getColumnSpec(i).getName());
         }
         Set<String> targetSet = new LinkedHashSet<String>();
-        targetSet.add(m_classifyColumn);
+        targetSet.add(m_classifyColumn.getStringValue());
         PMMLPortObjectSpec outSpec = new PMMLPortObjectSpec(
                 spec, learnCols, Collections.EMPTY_SET, targetSet);
         return new PMMLDecisionTreePortObject(m_decisionTree, outSpec);
     }
 
     private void addHiliteAndColorInfo(final BufferedDataTable inData) {
-
         try {
             // add the maximum number covered patterns for highliting
             int maxRowsForHiliting = m_numberRecordsStoredForView.getIntValue();
@@ -487,8 +492,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             Iterator<DataRow> rowIterator = inData.iterator();
             while (rowIterator.hasNext() && maxRowsForHiliting > count) {
                 DataRow row = rowIterator.next();
-                m_decisionTree
-                        .addCoveredPattern(row, inData.getDataTableSpec());
+                m_decisionTree.addCoveredPattern(row, 
+                        inData.getDataTableSpec());
                 count++;
             }
             // add the rest just for coloring
@@ -510,17 +515,17 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         Pruner.trainingErrorPruning(m_decisionTree);
 
         // now prune according to the selected pruning method
-        if (m_pruningMethod.equals(PRUNING_MDL)) {
+        if (m_pruningMethod.getStringValue().equals(PRUNING_MDL)) {
             Pruner.mdlPruning(m_decisionTree);
             // TODO } else if (m_pruningMethod.equals(PRUNING_ESTIMATED_ERROR))
             // {
             // Pruner.estimatedErrorPruning(m_decisionTree,
             // m_pruningConfidenceThreshold);
-        } else if (m_pruningMethod.equals(PRUNING_NO)) {
+        } else if (m_pruningMethod.getStringValue().equals(PRUNING_NO)) {
             // do nothing
         } else {
             throw new IllegalArgumentException("Pruning methdod "
-                    + m_pruningMethod + " not allowed.");
+                    + m_pruningMethod.getStringValue() + " not allowed.");
         }
     }
 
@@ -535,7 +540,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      */
     private DecisionTreeNode buildTree(final InMemoryTable table,
             final ExecutionContext exec, final int depth,
-            final SplitQualityMeasure splitQualityMeasure)
+            final SplitQualityMeasure splitQualityMeasure,
+            final ParallelProcessing parallelProcessing)
             throws CanceledExecutionException, IllegalAccessException {
 
         exec.checkCanceled();
@@ -560,9 +566,10 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             LOGGER.info("Finding best split...");
             SplitFinder splittFinder =
                     new SplitFinder(table, splitQualityMeasure,
-                            m_averageSplitpoint, m_minNumberRecordsPerNode,
-                            m_binaryNominalSplitMode,
-                            m_maxNumNominalsForCompleteComputation);
+                          m_averageSplitpoint.getBooleanValue(), 
+                          m_minNumberRecordsPerNode.getIntValue(),
+                          m_binaryNominalSplitMode.getBooleanValue(),
+                          m_maxNumNominalsForCompleteComputation.getIntValue());
             // check for enough memory
             checkMemory();
 
@@ -591,8 +598,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
             // partition the attribute lists according to this split
             LOGGER.info("Partition data... ");
-            Partitioner partitioner =
-                    new Partitioner(table, split, m_minNumberRecordsPerNode);
+            Partitioner partitioner = new Partitioner(table, split, 
+                    m_minNumberRecordsPerNode.getIntValue());
             LOGGER.info("Data partitioned.");
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Data partitioned in "
@@ -624,15 +631,16 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             for (InMemoryTable partitionTable : partitionTables) {
                 exec.checkCanceled();
                 if (partitionTable.getNumberDataRows() * m_numberAttributes 
-                        < 10000 || !m_parallelProcessing.isThreadAvailable()) {
+                        < 10000 || !parallelProcessing.isThreadAvailable()) {
                     children[i] = buildTree(partitionTable, exec, depth + 1,
-                            splitQualityMeasure);
+                            splitQualityMeasure, parallelProcessing);
                 } else {
                     String threadName =
                             "Build thread, node: " + nodeId + "." + i;
                     ParallelBuilding buildThread =
                             new ParallelBuilding(threadName, partitionTable,
-                                    exec, depth + 1, i);
+                                    exec, depth + 1, i, splitQualityMeasure,
+                                    parallelProcessing);
                     LOGGER.info("Start new parallel building thread: "
                             + threadName);
                     threads.add(buildThread);
@@ -712,7 +720,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
         DataTableSpec inSpec = (DataTableSpec)inSpecs[DATA_INPORT];
         // check spec with selected column
-        DataColumnSpec columnSpec = inSpec.getColumnSpec(m_classifyColumn);
+        DataColumnSpec columnSpec = inSpec.getColumnSpec(
+                m_classifyColumn.getStringValue());
         if (columnSpec == null
                 || !columnSpec.getType().isCompatible(NominalValue.class)) {
             // if no useful column is selected guess one
@@ -720,9 +729,10 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             for (int i = inSpec.getNumColumns() - 1; i >= 0; i--) {
                 if (inSpec.getColumnSpec(i).getType().isCompatible(
                         NominalValue.class)) {
-                    m_classifyColumn = inSpec.getColumnSpec(i).getName();
+                    m_classifyColumn.setStringValue(
+                            inSpec.getColumnSpec(i).getName());
                     super.setWarningMessage("Guessing target column: \""
-                            + m_classifyColumn + "\".");
+                            + m_classifyColumn.getStringValue() + "\".");
                     break;
                 }
                 throw new InvalidSettingsException("Table contains no nominal"
@@ -737,7 +747,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         throws InvalidSettingsException {
         PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(spec);
         Set<String> targetCols = new HashSet<String>();
-        targetCols.add(m_classifyColumn);
+        targetCols.add(m_classifyColumn.getStringValue());
         creator.setTargetColsNames(targetCols);
         return creator.createSpec();
     }
@@ -747,39 +757,23 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      *
      * @param settings the settings object to which the settings are stored
      * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
-     * @throws InvalidSettingsException if there occur erros during saving the
+     * @throws InvalidSettingsException if there occur errors during saving the
      *             settings
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
 
-        m_classifyColumn = settings.getString(KEY_CLASSIFYCOLUMN);
-        // TODO
-        // m_pruningConfidenceThreshold =
-        // (float)settings.getDouble(KEY_PRUNING_CONFIDENCE_THRESHOLD,
-        // DEFAULT_PRUNING_CONFIDENCE_THRESHOLD);
+        m_classifyColumn.loadSettingsFrom(settings);
+        // m_pruningConfidenceThreshold.loadSettingsFrom(settings);
         m_numberRecordsStoredForView.loadSettingsFrom(settings);
-        m_buildInMemory =
-                settings.getBoolean(KEY_MEMORY_OPTION, DEFAULT_MEMORY_OPTION);
-        m_minNumberRecordsPerNode =
-                settings.getInt(KEY_MIN_NUMBER_RECORDS_PER_NODE,
-                        (int)DEFAULT_MIN_NUM_RECORDS_PER_NODE);
-        m_pruningMethod =
-                settings.getString(KEY_PRUNING_METHOD, DEFAULT_PRUNING_METHOD);
-        m_splitQualityMeasureType =
-                settings.getString(KEY_SPLIT_QUALITY_MEASURE,
-                        DEFAULT_SPLIT_QUALITY_MEASURE);
-        m_averageSplitpoint =
-                settings.getBoolean(KEY_SPLIT_AVERAGE, DEFAULT_SPLIT_AVERAGE);
-        m_parallelProcessing.setNumberThreads(settings.getInt(
-                KEY_NUM_PROCESSORS, DEFAULT_NUM_PROCESSORS));
-        m_maxNumNominalsForCompleteComputation =
-                settings.getInt(KEY_MAX_NUM_NOMINAL_VALUES,
-                        DEFAULT_MAX_BIN_NOMINAL_SPLIT_COMPUTATION);
-        m_binaryNominalSplitMode =
-                settings.getBoolean(KEY_BINARY_NOMINAL_SPLIT_MODE,
-                        DEFAULT_BINARY_NOMINAL_SPLIT_MODE);
+        m_minNumberRecordsPerNode.loadSettingsFrom(settings);
+        m_pruningMethod.loadSettingsFrom(settings);
+        m_splitQualityMeasureType.loadSettingsFrom(settings);
+        m_averageSplitpoint.loadSettingsFrom(settings);
+        m_parallelProcessing.loadSettingsFrom(settings);
+        m_maxNumNominalsForCompleteComputation.loadSettingsFrom(settings);
+        m_binaryNominalSplitMode.loadSettingsFrom(settings);
     }
 
     /**
@@ -788,24 +782,16 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        assert (settings != null);
-        settings.addString(KEY_CLASSIFYCOLUMN, m_classifyColumn);
-        // TODO settings.addDouble(KEY_PRUNING_CONFIDENCE_THRESHOLD,
-        // m_pruningConfidenceThreshold);
+        m_classifyColumn.saveSettingsTo(settings);
+        // m_pruningConfidenceThreshold.saveSettings(settings);
         m_numberRecordsStoredForView.saveSettingsTo(settings);
-        settings.addBoolean(KEY_MEMORY_OPTION, m_buildInMemory);
-        settings.addInt(KEY_MIN_NUMBER_RECORDS_PER_NODE,
-                (int)m_minNumberRecordsPerNode);
-        settings.addString(KEY_PRUNING_METHOD, m_pruningMethod);
-        settings.addString(KEY_SPLIT_QUALITY_MEASURE, 
-                 m_splitQualityMeasureType);
-        settings.addBoolean(KEY_SPLIT_AVERAGE, m_averageSplitpoint);
-        settings.addInt(KEY_NUM_PROCESSORS, m_parallelProcessing
-                .getMaxNumberThreads());
-        settings.addInt(KEY_MAX_NUM_NOMINAL_VALUES,
-                m_maxNumNominalsForCompleteComputation);
-        settings.addBoolean(KEY_BINARY_NOMINAL_SPLIT_MODE,
-                m_binaryNominalSplitMode);
+        m_minNumberRecordsPerNode.saveSettingsTo(settings);
+        m_pruningMethod.saveSettingsTo(settings);
+        m_splitQualityMeasureType.saveSettingsTo(settings);
+        m_averageSplitpoint.saveSettingsTo(settings);
+        m_parallelProcessing.saveSettingsTo(settings);
+        m_maxNumNominalsForCompleteComputation.saveSettingsTo(settings);
+        m_binaryNominalSplitMode.saveSettingsTo(settings);
     }
 
     /**
@@ -821,19 +807,23 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        String classifyColumn = settings.getString(KEY_CLASSIFYCOLUMN);
-        if (classifyColumn == null || classifyColumn.equals("")) {
+        SettingsModelString classifyColumn = 
+            m_classifyColumn.createCloneWithValidatedValue(settings);
+        if (classifyColumn.getStringValue() == null 
+                || classifyColumn.getStringValue().equals("")) {
             throw new InvalidSettingsException(
                     "Classification column not set.");
         }
-
-        // TODO double significance =
-        // settings.getDouble(KEY_PRUNING_CONFIDENCE_THRESHOLD);
-        //
-        // if (significance < 0 || significance > 0.5) {
-        // throw new InvalidSettingsException(
-        // "Significance threshold must be in the range of 0.0 - 0.5");
-        // }
+        
+        m_averageSplitpoint.validateSettings(settings);
+        m_binaryNominalSplitMode.validateSettings(settings);
+        m_pruningMethod.validateSettings(settings);
+        m_numberRecordsStoredForView.validateSettings(settings);
+        // m_pruningConfidenceThreshold.validateSettings(settings);
+        m_minNumberRecordsPerNode.validateSettings(settings);
+        m_splitQualityMeasureType.validateSettings(settings);
+        m_maxNumNominalsForCompleteComputation.validateSettings(settings);
+        m_parallelProcessing.validateSettings(settings);
     }
 
     /**
@@ -896,27 +886,34 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
     private final class ParallelBuilding extends Thread {
 
-        private InMemoryTable m_table;
+        private final InMemoryTable m_table;
 
-        private ExecutionContext m_exec;
+        private final ExecutionContext m_exec;
 
-        private int m_depth;
+        private final int m_depth;
 
         private DecisionTreeNode m_resultNode;
 
         private Exception m_exception;
 
-        private int m_threadIndex;
+        private final int m_threadIndex;
+        
+        private final SplitQualityMeasure m_splitQM;
+        
+        private final ParallelProcessing m_parallelProcessing;
 
         private ParallelBuilding(final String name, final InMemoryTable table,
                 final ExecutionContext exec, final int depth,
-                final int threadIndex) {
+                final int threadIndex, final SplitQualityMeasure splitQM,
+                final ParallelProcessing parallelProcessing) {
             super(name);
             m_table = table;
             m_exec = exec;
             m_depth = depth;
             m_resultNode = null;
             m_threadIndex = threadIndex;
+            m_splitQM = splitQM;
+            m_parallelProcessing = parallelProcessing;
         }
 
         /**
@@ -926,7 +923,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         public void run() {
             try {
                 m_resultNode = buildTree(m_table, m_exec, m_depth,
-                        (SplitQualityMeasure)m_splitQualityMeasure.clone());
+                        (SplitQualityMeasure) m_splitQM.clone(),
+                        m_parallelProcessing);
                 LOGGER.info("Thread: " + getName() + " finished");
             } catch (Exception e) {
                 m_exception = e;

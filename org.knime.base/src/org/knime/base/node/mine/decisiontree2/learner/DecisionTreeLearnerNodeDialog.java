@@ -31,6 +31,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelectio
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
@@ -47,24 +48,18 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
      */
     public DecisionTreeLearnerNodeDialog() {
 
-        super();
-
         // class column selection
-        Class[] filter = {NominalValue.class};
         this.addDialogComponent(new DialogComponentColumnNameSelection(
-                new SettingsModelString(
-                        DecisionTreeLearnerNodeModel.KEY_CLASSIFYCOLUMN, null),
+                createSettingsClassColumn(),
                 "Class column", DecisionTreeLearnerNodeModel.DATA_INPORT,
-                filter));
+                NominalValue.class));
 
         // quality measure
         String[] qualityMethods =
                 {DecisionTreeLearnerNodeModel.SPLIT_QUALITY_GAIN_RATIO,
                         DecisionTreeLearnerNodeModel.SPLIT_QUALITY_GINI};
         this.addDialogComponent(new DialogComponentStringSelection(
-                new SettingsModelString(
-                    DecisionTreeLearnerNodeModel.KEY_SPLIT_QUALITY_MEASURE,
-                    DecisionTreeLearnerNodeModel.DEFAULT_SPLIT_QUALITY_MEASURE),
+                createSettingsQualityMeasure(),
                         "Quality measure", qualityMethods));
 
         // pruning method
@@ -73,64 +68,139 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
                  DecisionTreeLearnerNodeModel.PRUNING_MDL};
                  // DecisionTreeLearnerNodeModel.PRUNING_ESTIMATED_ERROR};
         this.addDialogComponent(new DialogComponentStringSelection(
-                new SettingsModelString(
-                        DecisionTreeLearnerNodeModel.KEY_PRUNING_METHOD,
-                        DecisionTreeLearnerNodeModel.DEFAULT_PRUNING_METHOD),
+                createSettingsPruningMethod(),
                 "Pruning method", methods));
 
         // confidence value threshold for c4.5 pruning
 //        this.addDialogComponent(new DialogComponentNumber(
-//              new SettingsModelDoubleBounded(
-//              DecisionTreeLearnerNodeModel.KEY_PRUNING_CONFIDENCE_THRESHOLD,
-//              DecisionTreeLearnerNodeModel.DEFAULT_PRUNING_CONFIDENCE_THRESHOLD,
-//              0.0, 0.5),
+//              createSettingsConfidenceValue(),
 //              "Confidence threshold (estimated error)", 0.01, 7));
 
         // min number records for a node
         // also used for determine whether a partition is useful
         // both are closely related
         this.addDialogComponent(new DialogComponentNumber(
-            new SettingsModelIntegerBounded(
-            DecisionTreeLearnerNodeModel.KEY_MIN_NUMBER_RECORDS_PER_NODE,
-            (int)DecisionTreeLearnerNodeModel.DEFAULT_MIN_NUM_RECORDS_PER_NODE,
-            1, Integer.MAX_VALUE),
-            "Min number records per node", 1));
+            createSettingsMinNumRecords(), "Min number records per node", 1));
 
         // number records to store for the view
         this.addDialogComponent(new DialogComponentNumber(
-            new SettingsModelIntegerBounded(
-                   DecisionTreeLearnerNodeModel.KEY_NUMBER_VIEW_RECORDS,
-                   DecisionTreeLearnerNodeModel.DEFAULT_NUMBER_RECORDS_FOR_VIEW,
-                   0, Integer.MAX_VALUE),
+            createSettingsNumberRecordsForView(),
                    "Number records to store for view", 100));
 
         // split point set to average value or to upper value of lower partition
         this.addDialogComponent(new DialogComponentBoolean(
-                new SettingsModelBoolean(
-                        DecisionTreeLearnerNodeModel.KEY_SPLIT_AVERAGE,
-                        DecisionTreeLearnerNodeModel.DEFAULT_SPLIT_AVERAGE),
-                "Average split point"));
+                createSettingsSplitPoint(), "Average split point"));
 
         // binary nominal split mode
         this.addDialogComponent(new DialogComponentBoolean(
-             new SettingsModelBoolean(
-                DecisionTreeLearnerNodeModel.KEY_BINARY_NOMINAL_SPLIT_MODE,
-                DecisionTreeLearnerNodeModel.DEFAULT_BINARY_NOMINAL_SPLIT_MODE),
-                        "Binary nominal splits"));
+             createSettingsBinaryNominalSplit(), "Binary nominal splits"));
 
         // max number nominal values for complete subset calculation for binary
         // nominal splits
         this.addDialogComponent(new DialogComponentNumber(
-         new SettingsModelIntegerBounded(
-         DecisionTreeLearnerNodeModel.KEY_MAX_NUM_NOMINAL_VALUES,
-         DecisionTreeLearnerNodeModel.DEFAULT_MAX_BIN_NOMINAL_SPLIT_COMPUTATION,
-                                1, 63), "Max #nominal", 1, 5));
+                createSettingsMaxNominalValues(), "Max #nominal", 1, 5));
 
         // number processors to use
         this.addDialogComponent(new DialogComponentNumber(
-                new SettingsModelIntegerBounded(
-                        DecisionTreeLearnerNodeModel.KEY_NUM_PROCESSORS,
-                        DecisionTreeLearnerNodeModel.DEFAULT_NUM_PROCESSORS, 1,
-                        Integer.MAX_VALUE), "Number threads", 1, 5));
+                createSettingsNumProcessors(), "Number threads", 1, 5));
+    }
+    
+    /**
+     * @return class column selection
+     */
+    static SettingsModelString createSettingsClassColumn() {
+        return new SettingsModelString(
+                    DecisionTreeLearnerNodeModel.KEY_CLASSIFYCOLUMN, null);
+    }
+    
+    /**
+     * @return quality measure
+     */
+    static SettingsModelString createSettingsQualityMeasure() {
+        return new SettingsModelString(
+                DecisionTreeLearnerNodeModel.KEY_SPLIT_QUALITY_MEASURE,
+                DecisionTreeLearnerNodeModel.DEFAULT_SPLIT_QUALITY_MEASURE);
+    }
+
+    /**
+     * @return pruning method
+     */
+    static SettingsModelString createSettingsPruningMethod() {
+        return new SettingsModelString(
+                    DecisionTreeLearnerNodeModel.KEY_PRUNING_METHOD,
+                    DecisionTreeLearnerNodeModel.DEFAULT_PRUNING_METHOD);
+    }
+    
+    /**
+     * @return confidence value threshold for c4.5 pruning
+     */
+    static SettingsModelDoubleBounded createSettingsConfidenceValue() {
+        return new SettingsModelDoubleBounded(
+          DecisionTreeLearnerNodeModel.KEY_PRUNING_CONFIDENCE_THRESHOLD,
+          DecisionTreeLearnerNodeModel.DEFAULT_PRUNING_CONFIDENCE_THRESHOLD,
+          0.0, 1.0);
+    }
+
+    /**
+     * @return minimum number of objects per node
+     */
+    static SettingsModelIntegerBounded createSettingsMinNumRecords() {
+        // min number records for a node also used for determine whether a 
+        // partition is useful both are closely related
+        return new SettingsModelIntegerBounded(
+                DecisionTreeLearnerNodeModel.KEY_MIN_NUMBER_RECORDS_PER_NODE,
+                DecisionTreeLearnerNodeModel.DEFAULT_MIN_NUM_RECORDS_PER_NODE,
+                1, Integer.MAX_VALUE);
+    }
+    
+    /**
+     * @return number records to store for the view
+     */
+    static SettingsModelIntegerBounded createSettingsNumberRecordsForView() {
+        return new SettingsModelIntegerBounded(
+               DecisionTreeLearnerNodeModel.KEY_NUMBER_VIEW_RECORDS,
+               DecisionTreeLearnerNodeModel.DEFAULT_NUMBER_RECORDS_FOR_VIEW,
+               0, Integer.MAX_VALUE);
+    }
+
+    /**
+     * @return split point set to average value or to upper value of lower 
+     *         partition
+     */
+    static SettingsModelBoolean createSettingsSplitPoint() {
+        return new SettingsModelBoolean(
+                    DecisionTreeLearnerNodeModel.KEY_SPLIT_AVERAGE,
+                    DecisionTreeLearnerNodeModel.DEFAULT_SPLIT_AVERAGE);
+    }
+    
+    /**
+     * @return binary nominal split mode
+     */
+    static SettingsModelBoolean createSettingsBinaryNominalSplit() {
+        return new SettingsModelBoolean(
+            DecisionTreeLearnerNodeModel.KEY_BINARY_NOMINAL_SPLIT_MODE,
+            DecisionTreeLearnerNodeModel.DEFAULT_BINARY_NOMINAL_SPLIT_MODE);
+    }
+
+    /**
+     * @return max number nominal values for complete subset calculation for 
+     *         binary nominal splits
+     */
+    static SettingsModelIntegerBounded createSettingsMaxNominalValues() {
+        return new SettingsModelIntegerBounded(
+                DecisionTreeLearnerNodeModel.KEY_MAX_NUM_NOMINAL_VALUES,
+                DecisionTreeLearnerNodeModel
+                    .DEFAULT_MAX_BIN_NOMINAL_SPLIT_COMPUTATION,
+                1, Integer.MAX_VALUE);
+    }
+    
+    /**
+     * @return number processors to use
+     */
+    static SettingsModelIntegerBounded createSettingsNumProcessors() {
+        return new SettingsModelIntegerBounded(
+                    DecisionTreeLearnerNodeModel.KEY_NUM_PROCESSORS,
+                    DecisionTreeLearnerNodeModel.DEFAULT_NUM_PROCESSORS, 1,
+                    Integer.MAX_VALUE);
     }
 }
