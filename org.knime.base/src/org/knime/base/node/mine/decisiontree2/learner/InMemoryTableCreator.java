@@ -132,9 +132,8 @@ public class InMemoryTableCreator {
                 exec.checkCanceled();
                 // check the memory size
                 DecisionTreeLearnerNodeModel.checkMemory();
-                exec
-                        .setProgress(counter / numRows, "Performing row "
-                                + (int)counter);
+                exec.setProgress(counter / numRows, "Processing row no. "
+                                + (int)counter + " of " + numRows);
             }
 
             // first get the class value

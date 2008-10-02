@@ -459,7 +459,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
         // prune the tree
         timer = System.currentTimeMillis();
-        exec.setProgress("Prune tree with " + m_pruningMethod + "...");
+        exec.setMessage("Prune tree with " + m_pruningMethod + "...");
         LOGGER.info("Pruning tree with " + m_pruningMethod + "...");
         pruneTree();
         LOGGER.info("Tree pruned in (ms) "
@@ -467,6 +467,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
         // add highlight patterns and color information
         long patternTime = System.currentTimeMillis();
+        exec.setMessage("Adding hilite and color info to tree...");
         addHiliteAndColorInfo(inData);
         LOGGER.info("Time for pattern adding: "
                 + (System.currentTimeMillis() - patternTime));
@@ -482,6 +483,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         }
 
         // no data out table is created -> return an empty table array
+        exec.setMessage("Creating PMML decision tree model...");
         return new PortObject[]{getPMMLOutPortObject(inData.getDataTableSpec())};
     }
 
@@ -573,14 +575,13 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             table.freeUnderlyingDataRows();
             double value =
                     m_finishedCounter.incrementAndGet(table.getSumOfWeights());
-            exec
-                    .setProgress(value / m_alloverRowCount, "Created node"
-                            + nodeId);
+            exec.setProgress(value / m_alloverRowCount, "Created node with id "
+                            + nodeId + " at level " + depth);
             return new DecisionTreeNodeLeaf(nodeId, majorityClass, frequencies);
         } else {
             // find the best splits for all attributes
             long time = System.currentTimeMillis();
-            LOGGER.info("Find best split...");
+            LOGGER.info("Finding best split...");
             SplitFinder splittFinder =
                     new SplitFinder(table, splitQualityMeasure,
                             m_averageSplitpoint, m_minNumberRecordsPerNode,
@@ -606,8 +607,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                 double value =
                         m_finishedCounter.incrementAndGet(table
                                 .getSumOfWeights());
-                exec.setProgress(value / m_alloverRowCount, "Created node"
-                        + nodeId);
+                exec.setProgress(value / m_alloverRowCount, 
+                       "Created node with id " + nodeId + " at level " + depth);
                 return new DecisionTreeNodeLeaf(nodeId, majorityClass,
                         frequencies);
             }
@@ -627,8 +628,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                 double value =
                         m_finishedCounter.incrementAndGet(table
                                 .getSumOfWeights());
-                exec.setProgress(value / m_alloverRowCount, "Created node"
-                        + nodeId);
+                exec.setProgress(value / m_alloverRowCount, 
+                       "Created node with id " + nodeId + " at level " + depth);
                 return new DecisionTreeNodeLeaf(nodeId, majorityClass,
                         frequencies);
             }
