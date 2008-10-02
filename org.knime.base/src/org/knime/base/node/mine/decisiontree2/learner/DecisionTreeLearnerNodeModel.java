@@ -240,11 +240,6 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      */
     private String m_classifyColumn;
 
-    /**
-     * The column index which contains the classification Information.
-     */
-    private int m_classColumnIndex;
-
     // TODO /**
     // * The pruning confidence threshold.
     // */
@@ -322,30 +317,10 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      * Inits a new Decision Tree model with one data in- and one model output
      * port.
      */
-    // public DecisionTreeLearnerNodeModel() {
-    // super(1, 0, 0, 1);
-    // reset();
-    // }
     public DecisionTreeLearnerNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE},
                 new PortType[]{PMMLDecisionTreePortObject.TYPE});
     }
-
-    // /**
-    // * Saves decision tree to model out port.
-    // *
-    // * @param index The outport index.
-    // * @param predParams holding the model afterwards.
-    // * @throws InvalidSettingsException if settings are wrong
-    // */
-    // @Override
-    // protected void saveModelContent(final int index,
-    // final ModelContentWO predParams) throws InvalidSettingsException {
-    //
-    // assert index == MODEL_OUTPORT : index;
-    //
-    // m_decisionTree.saveToPredictorParams(predParams, false);
-    // }
 
     /**
      * Start of decision tree induction.
@@ -395,16 +370,16 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         }
 
         // get class column index
-        m_classColumnIndex =
+        int classColumnIndex =
                 inData.getDataTableSpec().findColumnIndex(m_classifyColumn);
-        assert m_classColumnIndex > -1;
+        assert classColumnIndex > -1;
 
         // create initial In-Memory table
         exec.setProgress("Create initial In-Memory table...");
         LOGGER.info("Create initial In-Memory table...");
         long timer = System.currentTimeMillis();
         InMemoryTableCreator tableCreator =
-                new InMemoryTableCreator(inData, m_classColumnIndex,
+                new InMemoryTableCreator(inData, classColumnIndex,
                         m_minNumberRecordsPerNode);
         InMemoryTable initialTable =
                 tableCreator.createInMemoryTable(exec
@@ -484,7 +459,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
         // no data out table is created -> return an empty table array
         exec.setMessage("Creating PMML decision tree model...");
-        return new PortObject[]{getPMMLOutPortObject(inData.getDataTableSpec())};
+        return new PortObject[]{
+                getPMMLOutPortObject(inData.getDataTableSpec())};
     }
 
     /**
@@ -492,7 +468,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      */
     private PortObject getPMMLOutPortObject(final DataTableSpec spec) {
         Set<String> learnCols = new LinkedHashSet<String>();
-        for(int i = 0; i < spec.getNumColumns(); i++) {
+        for (int i = 0; i < spec.getNumColumns(); i++) {
             learnCols.add(spec.getColumnSpec(i).getName());
         }
         Set<String> targetSet = new LinkedHashSet<String>();
@@ -647,8 +623,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             int i = 0;
             for (InMemoryTable partitionTable : partitionTables) {
                 exec.checkCanceled();
-                if (partitionTable.getNumberDataRows() * m_numberAttributes < 10000
-                        || !m_parallelProcessing.isThreadAvailable()) {
+                if (partitionTable.getNumberDataRows() * m_numberAttributes 
+                        < 10000 || !m_parallelProcessing.isThreadAvailable()) {
                     children[i] = buildTree(partitionTable, exec, depth + 1,
                             splitQualityMeasure);
                 } else {
@@ -665,9 +641,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                 i++;
             }
 
-            // retrieve all results from the thread array
-            // the getResultNode method is a blocking method until
-            // the result is available
+            // retrieve all results from the thread array the getResultNode 
+            // method is a blocking method until the result is available
             // NOTE: the non parallel calculated children have been
             // already assigned to the child array
             for (ParallelBuilding buildThread : threads) {
@@ -822,8 +797,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         settings.addInt(KEY_MIN_NUMBER_RECORDS_PER_NODE,
                 (int)m_minNumberRecordsPerNode);
         settings.addString(KEY_PRUNING_METHOD, m_pruningMethod);
-        settings
-                .addString(KEY_SPLIT_QUALITY_MEASURE, m_splitQualityMeasureType);
+        settings.addString(KEY_SPLIT_QUALITY_MEASURE, 
+                 m_splitQualityMeasureType);
         settings.addBoolean(KEY_SPLIT_AVERAGE, m_averageSplitpoint);
         settings.addInt(KEY_NUM_PROCESSORS, m_parallelProcessing
                 .getMaxNumberThreads());
@@ -848,7 +823,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             throws InvalidSettingsException {
         String classifyColumn = settings.getString(KEY_CLASSIFYCOLUMN);
         if (classifyColumn == null || classifyColumn.equals("")) {
-            throw new InvalidSettingsException("Classification column not set.");
+            throw new InvalidSettingsException(
+                    "Classification column not set.");
         }
 
         // TODO double significance =
