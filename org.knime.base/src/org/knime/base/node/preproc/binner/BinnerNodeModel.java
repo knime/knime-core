@@ -24,6 +24,7 @@ package org.knime.base.node.preproc.binner;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -137,6 +138,15 @@ final class BinnerNodeModel extends NodeModel {
                         columnIdx, bins, appended, true);
                 colreg.append(binColumn);
             }
+            // set warning message when same bin names are used
+            Set<String> hashBinNames = new HashSet<String>();
+            for (Bin b : bins) {
+                if (hashBinNames.contains(b.getBinName())) {
+                    setWarningMessage("Bin name \"" + b.getBinName() 
+                            + "\" is used for different intervals.");
+                }
+                hashBinNames.add(b.getBinName());
+            }
         }
         return colreg;
     }
@@ -185,7 +195,7 @@ final class BinnerNodeModel extends NodeModel {
             Bin[] bins = m_columnToBins.get(columnKey);
             for (int b = 0; b < bins.length; b++) {
                 NodeSettingsWO bin = column.addNodeSettings(bins[b]
-                        .getBinName());
+                        .getBinName() + "_" + b);
                 bins[b].saveToSettings(bin);
             }
         }
