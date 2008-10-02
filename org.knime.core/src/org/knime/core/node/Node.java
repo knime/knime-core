@@ -665,8 +665,8 @@ public final class Node implements NodeModelWarningListener {
                     createWarningMessageAndNotify("Execution canceled");
                     return false;
                 } catch (Throwable e) {
-                    createErrorMessageAndNotify(
-                            "Unable to clone input data at port " + i, e);
+                    createErrorMessageAndNotify("Unable to clone input data " 
+                            + "at port " + i + ": " + e.getMessage(), e);
                     return false;
                 }
             }

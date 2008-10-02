@@ -138,7 +138,7 @@ public final class SerializerMethodLoader {
         }
         if (exception != null) {
             LOGGER.coding("Class \"" + encapsulatingClass.getSimpleName()
-                    + "\" defines method \"getPortObjectSerializer\" but there "
+                    + "\" defines method \"" + methodName + "\" but there "
                     + "was a problem invoking it", exception);
             result = null;
         }

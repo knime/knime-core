@@ -156,10 +156,21 @@ public final class KNIMEConstants {
                     + "\") as number: " + nfe.getMessage());
         }
         GLOBAL_THREAD_POOL = new ThreadPool(maxThreads);
+        boolean flag;
+        try {
+            assert false;
+            flag = false;
+        } catch (AssertionError ae) {
+            flag = true;
+        }
+        ASSERTIONS_ENABLED = flag;
     }
 
     /** The global thread pool from which all threads should be taken. */
     public static final ThreadPool GLOBAL_THREAD_POOL;
+    
+    /** Global flag indicating whether assertions are enabled or disabled. */
+    public static final boolean ASSERTIONS_ENABLED;
 
     /**
      * The directory where knime will put log files and configuration files. If

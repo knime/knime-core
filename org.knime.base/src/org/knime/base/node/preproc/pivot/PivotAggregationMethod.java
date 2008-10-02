@@ -31,6 +31,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
 
 /**
  * Factory holding a set of aggregation functions, such as COUNT, SUM,
@@ -88,9 +89,9 @@ abstract class PivotAggregationMethod {
         @Override
         public DataCell done(final Double[] agg) {
             if (agg == null) {
-                return new DoubleCell(0.0);
+                return new IntCell(0);
             } else {
-                return new DoubleCell(agg[0]);
+                return new IntCell((int) agg[0].doubleValue());
             }
         }
     };

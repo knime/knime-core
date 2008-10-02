@@ -842,9 +842,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
         // if no columns are defined to discretize, return the input spec
         if (m_includedColumnNames.getIncludeList() == null
                 || m_includedColumnNames.getIncludeList().size() == 0) {
-            setWarningMessage(WARNING_NO_COLS_SELECTED);
-            return new PortObjectSpec[]{inSpecs[DATA_INPORT],
-                    new DataTableSpec()};
+            throw new InvalidSettingsException(WARNING_NO_COLS_SELECTED);
         }
         DataTableSpec inDataSpec = (DataTableSpec)inSpecs[DATA_INPORT];
 

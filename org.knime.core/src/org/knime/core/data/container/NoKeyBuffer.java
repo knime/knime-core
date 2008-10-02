@@ -120,4 +120,11 @@ class NoKeyBuffer extends Buffer {
         return true;
     }
     
+    /** {@inheritDoc} */
+    @Override
+    Buffer createLocalCloneForWriting() {
+        return new NoKeyBuffer(0, getBufferID(), 
+                getGlobalRepository(), getLocalRepository());
+    }
+    
 }

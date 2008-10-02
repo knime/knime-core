@@ -102,10 +102,20 @@ public class PivotNodeDialogPane extends DefaultNodeSettingsPane {
         addDialogComponent(aggCheck);
         addDialogComponent(aggregation);
         addDialogComponent(aggMethod);
-        super.createNewGroup(" Hiliting ");
+        super.createNewGroup(" Advance ");
         addDialogComponent(new DialogComponentBoolean(
                 createSettingsEnableHiLite(), 
                 "Enable hiliting"));
+        addDialogComponent(new DialogComponentBoolean(
+                createSettingsMissingValues(), 
+                "Ignore missing values"));
+    }
+    
+    /**
+     * @return settings model boolean for ignoring missing values
+     */
+    static final SettingsModelBoolean createSettingsMissingValues() {
+        return new SettingsModelBoolean("missing_values", true);
     }
     
     /**

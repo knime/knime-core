@@ -363,10 +363,6 @@
             factory-class="org.knime.base.node.io.predictor.PredictorReaderNodeFactory"
             id="org.knime.base.node.io.predictor.PredictorReaderNodeFactory"/>
       <node
-            category-path="/database"
-            factory-class="org.knime.base.node.io.database.DBReaderNodeFactory"
-            id="org.knime.base.node.io.database.DBReaderNodeFactory"/>
-      <node
             category-path="/manipulation/matrix"
             factory-class="org.knime.base.node.preproc.transpose.TransposeTableNodeFactory"
             id="org.knime.base.node.preproc.transpose.TransposeTableNodeFactory"/>
@@ -412,10 +408,6 @@
 	          category-path="/io/write"
 	          factory-class="org.knime.base.node.io.table.write.WriteTableNodeFactory"
 	          id="org.knime.base.node.io.table.write.WriteTableNodeFactory"/>
-	     <node
-	          category-path="/database"
-	          factory-class="org.knime.base.node.io.database.DBWriterNodeFactory"
-	          id="org.knime.base.node.io.database.DBWriterNodeFactory"/>
      <node
            category-path="/manipulation/row"
            factory-class="org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeFactory"
@@ -613,35 +605,45 @@
       </node>
        <node
             category-path="/database"
-            factory-class="org.knime.base.node.io.database.DBConnectionNodeFactory"
-            id="org.knime.base.node.io.database.DBConnectionNodeFactory">
-   	  </node>
-      <node
-            category-path="/database"
-            factory-class="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"
-            id="org.knime.base.node.io.database.DBConnectionWriterNodeFactory">
-      </node>
-      <node
+            factory-class="org.knime.base.node.io.database.DBReaderNodeFactory"
+            id="org.knime.base.node.io.database.DBReaderNodeFactory"/>
+       <node
+            after="org.knime.base.node.io.database.DBReaderNodeFactory"
             category-path="/database"
             factory-class="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
             id="org.knime.base.node.io.database.DBReaderConnectionNodeFactory">
+   	  </node>
+      <node
+            after="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
+            category-path="/database"
+            factory-class="org.knime.base.node.io.database.DBConnectionNodeFactory"
+            id="org.knime.base.node.io.database.DBConnectionNodeFactory">
       </node>
       <node
+            after="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
+            category-path="/database"
+            factory-class="org.knime.base.node.io.database.DBRowFilterNodeFactory"
+            id="org.knime.base.node.io.database.DBRowFilterNodeFactory"/>
+      <node
+            after="org.knime.base.node.io.database.DBRowFilterNodeFactory"
             category-path="/database"
             factory-class="org.knime.base.node.io.database.DBQueryNodeFactory"
             id="org.knime.base.node.io.database.DBQueryNodeFactory"/>
       <node
+            after="org.knime.base.node.io.database.DBQueryNodeFactory"
             category-path="/database"
             factory-class="org.knime.base.node.io.database.DBColumnFilterNodeFactory"
             id="org.knime.base.node.io.database.DBColumnFilterNodeFactory"/>
-      <!--node
-            category-path="/database"
-            factory-class="org.knime.base.node.io.database.DBJoinerNodeFactory"
-            id="org.knime.base.node.io.database.DBJoinerNodeFactory"/-->
       <node
+            after="org.knime.base.node.io.database.DBColumnFilterNodeFactory"
             category-path="/database"
-            factory-class="org.knime.base.node.io.database.DBRowFilterNodeFactory"
-            id="org.knime.base.node.io.database.DBRowFilterNodeFactory"/>
+            factory-class="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"
+            id="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"/>
+      <node
+            after="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"
+            category-path="/database"
+            factory-class="org.knime.base.node.io.database.DBWriterNodeFactory"
+            id="org.knime.base.node.io.database.DBWriterNodeFactory"/>
       <node
             category-path="/manipulation/column"
             factory-class="org.knime.base.node.preproc.cellsplitbypos.CellSplitterByPosNodeFactory"

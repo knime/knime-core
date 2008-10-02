@@ -25,19 +25,23 @@
 package org.knime.workbench.editor2.actions;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
-import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.editor2.ClipboardWorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
+import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
 /**
@@ -47,8 +51,8 @@ import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
  * @author Christoph Sieb, University of Konstanz
  */
 public class PasteAction extends AbstractClipboardAction {
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(PasteAction.class);
+//    private static final NodeLogger LOGGER =
+//            NodeLogger.getLogger(PasteAction.class);
     
     private static final int OFFSET = 120;
     
@@ -116,17 +120,26 @@ public class PasteAction extends AbstractClipboardAction {
         }
         NodeID[] copiedNodes = getManager().copy(
                 ClipboardWorkflowManager.getSourceWorkflowManager(), ids);
-        
+        Set<NodeID>newIDs = new HashSet<NodeID>();
         int[] moveDist = calculateShift(copiedNodes);
-        LOGGER.debug("copied nodes:");
         for (NodeID id : copiedNodes) {
-            LOGGER.debug(id);
+            newIDs.add(id);
             ModellingNodeExtraInfo uiInfo;
             NodeContainer nc = getManager().getNodeContainer(id);
                 uiInfo = (ModellingNodeExtraInfo)nc.getUIInformation();
-            LOGGER.debug("pasting node at: "  + uiInfo.toString());
             uiInfo.changePosition(moveDist);
             nc.setUIInformation(uiInfo);
+        }
+        for (ConnectionContainer conn 
+                    : getManager().getConnectionContainers()) {
+            if (newIDs.contains(conn.getDest()) 
+                    && newIDs.contains(conn.getSource())) {
+                // get bend points and move them
+                ModellingConnectionExtraInfo uiInfo 
+                    = (ModellingConnectionExtraInfo)conn.getUIInfo().clone();
+                    uiInfo.changePosition(new int[] {moveDist[0], moveDist[1]});
+                    conn.setUIInfo(uiInfo);
+            }
         }
         ClipboardWorkflowManager.incrementRetrievalCounter();
         
@@ -137,13 +150,21 @@ public class PasteAction extends AbstractClipboardAction {
         for (NodeContainerEditPart nodePart : nodeParts) {
             partViewer.deselect(nodePart);
         }
+        
 
         for (ConnectionContainerEditPart connectionPart 
                 : getSelectedConnectionParts()) {
             partViewer.deselect(connectionPart);
         }
         
-        // TODO: select the new ones.... 
+        // select the new ones....
+        if (partViewer.getRootEditPart().getContents() != null 
+                && partViewer.getRootEditPart().getContents() 
+                instanceof WorkflowRootEditPart) {
+            ((WorkflowRootEditPart)partViewer.getRootEditPart().getContents())
+                .setFutureSelection(copiedNodes);
+        }
+        
         
         // update the actions
         getEditor().updateActions();

@@ -44,7 +44,6 @@ import org.apache.log4j.WriterAppender;
 import org.apache.log4j.varia.LevelRangeFilter;
 import org.apache.log4j.varia.NullAppender;
 import org.apache.log4j.xml.DOMConfigurator;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LogfileAppender;
 
@@ -80,19 +79,6 @@ public final class NodeLogger {
 
     /** The default log file name, <i>knime.log</i>. */
     public static final String LOG_FILE = "knime.log";
-
-    /** Assertions are on or off. */
-    private static final boolean ASSERT;
-    static {
-        boolean flag;
-        try {
-            assert false;
-            flag = false;
-        } catch (AssertionError ae) {
-            flag = true;
-        }
-        ASSERT = flag;
-    }
 
     /** Keeps set of <code>NodeLogger</code> elements by class name as key. */
     private static final HashMap<String, NodeLogger> LOGGERS =
@@ -295,7 +281,8 @@ public final class NodeLogger {
         l
                 .info("# number of CPUs="
                         + Runtime.getRuntime().availableProcessors());
-        l.info("# assertions=" + (ASSERT ? "on" : "off"));
+        l.info("# assertions=" + (KNIMEConstants.ASSERTIONS_ENABLED 
+                ? "on" : "off"));
         l.info("#############################################################");
     }
 
@@ -313,12 +300,6 @@ public final class NodeLogger {
 
     /** The Log4J logger to which all messages are logged. */
     private final Logger m_logger;
-
-    /**
-     * Ignore load data warnings, see {@link #setIgnoreLoadDataError(boolean)}
-     * for details.
-     */
-    private static boolean isIgnoreLoadDataWarning;
 
     /**
      * Hidden default constructor, logger created by
@@ -456,15 +437,8 @@ public final class NodeLogger {
      * @param t The exception to log at debug level, including its stack trace.
      */
     public void error(final Object o, final Throwable t) {
-        if (isIgnoreLoadDataWarning
-                && m_logger.getName().equals(WorkflowManager.class.getName())
-                && t != null && t.getMessage() != null
-                && t.getMessage().startsWith("No such data file: ")) {
-            debug(o, t);
-        } else {
-            this.error(o);
-            this.debug(o, t);
-        }
+        this.error(o);
+        this.debug(o, t);
     }
 
     /**
@@ -474,7 +448,7 @@ public final class NodeLogger {
      * @param m Print this message if failed.
      */
     public void assertLog(final boolean b, final String m) {
-        if (ASSERT) {
+        if (KNIMEConstants.ASSERTIONS_ENABLED) {
             m_logger.assertLog(b, "ASSERT " + m);
         }
     }
@@ -488,7 +462,7 @@ public final class NodeLogger {
      */
     public void assertLog(final boolean b, final String m,
             final AssertionError e) {
-        if (ASSERT) {
+        if (KNIMEConstants.ASSERTIONS_ENABLED) {
             m_logger.assertLog(b, "ASSERT " + m);
             // for stacktrace
             if (!b & e != null) {
@@ -685,26 +659,6 @@ public final class NodeLogger {
         } else {
             return LEVEL.ALL;
         }
-    }
-
-    /**
-     * Ignore error messages that result from loading an exported workflow
-     * without data. In the current version of KNIME, exporting a workflow
-     * without the data simply deletes the 'data' directories in the workspace
-     * dir (but the flags in the node stay set). This is a known bug which
-     * will be fixed as soon as the workflow manager is rewritten (before
-     * KNIME 1.3).
-     *
-     * <p>Setting this flag will cause the node logger to filter for one
-     * specific error message that is reported from the Node class and only
-     * print this error as debug.
-     * @param value If to ignore.
-     * @deprecated Obsolete, will be removed when WFM is rewritten.
-     */
-    @Deprecated
-    public static void setIgnoreLoadDataError(final boolean value) {
-        // FIXME: Remove when WFM is rewritten.
-        isIgnoreLoadDataWarning = value;
     }
 
 }

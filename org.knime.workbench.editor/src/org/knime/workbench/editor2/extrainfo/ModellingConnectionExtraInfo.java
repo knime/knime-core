@@ -130,6 +130,10 @@ public class ModellingConnectionExtraInfo implements UIInformation {
         }
     }
     
+    /**
+     * 
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         StringBuilder bld = new StringBuilder("bendpoints: ");
@@ -147,7 +151,11 @@ public class ModellingConnectionExtraInfo implements UIInformation {
         ModellingConnectionExtraInfo newObject 
             = new ModellingConnectionExtraInfo();
         newObject.m_bendpoints.clear();
-        newObject.m_bendpoints.addAll(this.m_bendpoints);
+        for (int [] bendpoint : this.m_bendpoints) {
+            newObject.m_bendpoints.add(new int[] {
+                    bendpoint[0], bendpoint[1]
+            });
+        }
         return newObject;
     }
 }

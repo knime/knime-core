@@ -983,7 +983,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                         throw new InvalidSettingsException("Name for bin " + j
                                 + " not set: " + item);
                     }
-                    NodeSettingsWO bin = set.addNodeSettings(binName);
+                    NodeSettingsWO bin = set.addNodeSettings(binName + "_" + j);
                     NumericBin theBin = new NumericBin(binName, item
                             .isLeftOpen(), item.getLeftValue(false), item
                             .isRightOpen(), item.getRightValue(false));
