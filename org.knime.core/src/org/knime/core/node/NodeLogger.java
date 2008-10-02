@@ -80,19 +80,6 @@ public final class NodeLogger {
     /** The default log file name, <i>knime.log</i>. */
     public static final String LOG_FILE = "knime.log";
 
-    /** Assertions are on or off. */
-    private static final boolean ASSERT;
-    static {
-        boolean flag;
-        try {
-            assert false;
-            flag = false;
-        } catch (AssertionError ae) {
-            flag = true;
-        }
-        ASSERT = flag;
-    }
-
     /** Keeps set of <code>NodeLogger</code> elements by class name as key. */
     private static final HashMap<String, NodeLogger> LOGGERS =
             new HashMap<String, NodeLogger>();
@@ -294,7 +281,8 @@ public final class NodeLogger {
         l
                 .info("# number of CPUs="
                         + Runtime.getRuntime().availableProcessors());
-        l.info("# assertions=" + (ASSERT ? "on" : "off"));
+        l.info("# assertions=" + (KNIMEConstants.ASSERTIONS_ENABLED 
+                ? "on" : "off"));
         l.info("#############################################################");
     }
 
@@ -460,7 +448,7 @@ public final class NodeLogger {
      * @param m Print this message if failed.
      */
     public void assertLog(final boolean b, final String m) {
-        if (ASSERT) {
+        if (KNIMEConstants.ASSERTIONS_ENABLED) {
             m_logger.assertLog(b, "ASSERT " + m);
         }
     }
@@ -474,7 +462,7 @@ public final class NodeLogger {
      */
     public void assertLog(final boolean b, final String m,
             final AssertionError e) {
-        if (ASSERT) {
+        if (KNIMEConstants.ASSERTIONS_ENABLED) {
             m_logger.assertLog(b, "ASSERT " + m);
             // for stacktrace
             if (!b & e != null) {

@@ -46,6 +46,7 @@ import org.knime.core.data.renderer.SetOfRendererFamilies;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.SerializerMethodLoader;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
@@ -88,7 +89,7 @@ import org.knime.core.node.util.ConvenienceMethods;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class DataType {
-
+    
     /**
      * Implementation of the missing cell. This 
      * {@link org.knime.core.data.DataCell} does not implement
@@ -305,9 +306,12 @@ public final class DataType {
             result = SerializerMethodLoader.getSerializer(
                     cl, DataCellSerializer.class, "getCellSerializer", false);
         } catch (NoSuchMethodException nsme) {
-            LOGGER.debug("Class \"" + cl.getSimpleName()
-                    + "\" does not define method \"getCellSerializer\", using " 
-                    + "ordinary (but slow) java serialization.");
+            if (KNIMEConstants.ASSERTIONS_ENABLED) {
+                LOGGER.warn("Class \"" + cl.getSimpleName() + "\" does not " 
+                        + "define method \"getCellSerializer\", using ordinary "
+                        + "(but slow) java serialization. This warning " 
+                        + "does not appear if assertions are off.", nsme);
+            }
         }
         CLASS_TO_SERIALIZER_MAP.put(cl, result);
         return result;
