@@ -274,6 +274,9 @@ public final class Node implements NodeModelWarningListener {
         boolean hasContent = loader.hasContent();
         m_model.setHasContent(hasContent);
         NodeMessage nodeMessage = loader.getNodeMessage();
+        if (nodeMessage != null) {
+            notifyMessageListeners(nodeMessage);
+        }
         try {
             // this also validates the settings
             loadSettingsFrom(loader.getSettings());
@@ -351,7 +354,7 @@ public final class Node implements NodeModelWarningListener {
             PortObjectSpec spec = loader.getPortObjectSpec(i);
             if (spec != null && !specClass.isInstance(spec)) {
                 result.addError("Loaded PortObjectSpec of class \""
-                        + spec.getClass().getSimpleName() + ", expected "
+                    + spec.getClass().getSimpleName() + ", expected "
                         + specClass.getSimpleName());
                 loader.setNeedsResetAfterLoad();
             } else {
@@ -363,7 +366,7 @@ public final class Node implements NodeModelWarningListener {
             PortObject obj = loader.getPortObject(i);
             if (obj != null && !objClass.isInstance(obj)) {
                 result.addError("Loaded PortObject of class \""
-                        + obj.getClass().getSimpleName() + ", expected "
+                    + obj.getClass().getSimpleName() + ", expected "
                         + objClass.getSimpleName());
                 loader.setNeedsResetAfterLoad();
             } else {
@@ -383,9 +386,6 @@ public final class Node implements NodeModelWarningListener {
             }
         }
         exec.setProgress(1.0);
-        if (nodeMessage != null) {
-            notifyMessageListeners(nodeMessage);
-        }
         return result;
     }
 
