@@ -78,6 +78,8 @@ public class NormalizerApplyNodeModel extends NodeModel {
             } else if (!inDataCol.getType().isCompatible(DoubleValue.class)) {
                 throw new InvalidSettingsException("Column \"" + c.getName() 
                         + "\" is to be normalized, but is not numeric");
+            } else {
+                knownCols.add(c.getName());
             }
         }
         if (!unknownCols.isEmpty()) {
