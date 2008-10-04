@@ -367,13 +367,16 @@ public class ThreadPool implements JobExecutor {
      * is allowed to run. This method should only be used if the Runnable does
      * nothing more than submitting jobs.
      *
-     * @param r a Runnable to execute
+     * @param <T> Type of the argument (result type)
+     * @param r A callable, which will be executed by the 
+     *          thread invoking this method.
+     * @return T The result of the callable.
      * @throws IllegalThreadStateException if the current thread is not taken
      *             out of a thread pool
      * @throws ExecutionException if the callable could not be executed for some
      *             reason
      */
-    public void runInvisible(final Callable<?> r) throws ExecutionException {
+    public <T> T runInvisible(final Callable<T> r) throws ExecutionException {
         if (!(Thread.currentThread() instanceof Worker)) {
             throw new IllegalThreadStateException("The current thread is not"
                     + "taken out of a thread pool");
@@ -385,7 +388,7 @@ public class ThreadPool implements JobExecutor {
                 throw new IllegalThreadStateException("The current thread is "
                         + "not taken out of this thread pool");
             }
-            thisWorker.m_startedFrom.runInvisible(r);
+            return thisWorker.m_startedFrom.runInvisible(r);
         } else {
             if (!m_runningWorkers.contains(thisWorker)) {
                 throw new IllegalThreadStateException("The current thread is "
@@ -395,7 +398,7 @@ public class ThreadPool implements JobExecutor {
             checkQueue();
 
             try {
-                r.call();
+                return r.call();
             } catch (Exception ex) {
                 throw new ExecutionException(ex);
             } finally {
