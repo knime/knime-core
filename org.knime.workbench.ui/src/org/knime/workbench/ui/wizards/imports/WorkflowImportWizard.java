@@ -36,6 +36,10 @@ import org.eclipse.ui.IWorkbench;
  * @author Christoph Sieb, University of Konstanz
  */
 public class WorkflowImportWizard extends ExternalProjectImportWizard {
+    
+    private WizardProjectsImportPage m_importPage;
+    private WizardProjectRenameDuplicatesPage m_renamePage;
+    
     /**
      * {@inheritDoc}
      */
@@ -55,21 +59,22 @@ public class WorkflowImportWizard extends ExternalProjectImportWizard {
     @Override
     public void addPages() {
         super.addPages();
-        WizardProjectsImportPage importPage =
+        m_importPage =
                 (WizardProjectsImportPage)getPages()[0];
 
-        importPage.setTitle("Knime workflow projects");
-        importPage.setDescription("This wizard imports Knime workflow projects"
-                + " given as an archive or given as a folder within"
+        m_importPage.setTitle("KNIME workflow projects");
+        m_importPage.setDescription("This wizard imports KNIME workflow " 
+                + "projects given as an archive or given as a folder within"
                 + " the file system.");
 
-        WizardProjectRenameDuplicatesPage renamePage =
-                new WizardProjectRenameDuplicatesPage(importPage);
-        renamePage.setTitle("Duplicate project names");
-        renamePage.setDescription("Shows projects which have the same name "
-                + "as a workspace project. Rename them here. Automatic " 
-                + "proposals are the appended numbers in brackets.");
-        addPage(renamePage);
+        m_renamePage =
+                new WizardProjectRenameDuplicatesPage(m_importPage);
+        // bugfix 1263
+        m_renamePage.setTitle("Duplicate project names");
+        m_renamePage.setDescription("Shows projects which have the same name "
+                + "as a workspace project. You can edit the automatic " 
+                + "proposals.");
+        addPage(m_renamePage);
     }
 
     /**
@@ -77,14 +82,14 @@ public class WorkflowImportWizard extends ExternalProjectImportWizard {
      */
     @Override
     public boolean canFinish() {
-        WizardProjectsImportPage importPage =
-                (WizardProjectsImportPage)getPages()[0];
 //        WizardProjectRenameDuplicatesPage renamePage =
 //                (WizardProjectRenameDuplicatesPage)getPages()[1];
-        if (importPage.isPageComplete()) {
-            if (!importPage.getDoublesToImport()) {
+        if (m_importPage.isPageComplete()) {
+            if (!m_importPage.getDoublesToImport()) {
                 return true;
-            } else if (importPage.getRenamePageShown()) {
+            } else if (m_importPage.getRenamePageShown()
+                    // bugfix 1263
+                    && m_renamePage.isPageComplete()) {
                 return true;
             }
         }

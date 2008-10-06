@@ -168,7 +168,7 @@ public class WizardProjectRenameDuplicatesPage extends WizardPage {
         }
 
         // now get (from the already available ones) or create all associations
-        for (ProjectRecord record : notDisplayedProjects) {
+        for (final ProjectRecord record : notDisplayedProjects) {
             ProjectTextfieldAssoc assoc = getAssoc(record);
 
             if (assoc == null) {
@@ -286,7 +286,7 @@ public class WizardProjectRenameDuplicatesPage extends WizardPage {
         assert m_previousePage.isProjectInWorkspace(projectName) : "Project "
                 + projectName + " should not be in the workspace.";
         int i = 2;
-        String extension = "(" + i + ")";
+        String extension = "_" + i;
         while (m_previousePage.isProjectInWorkspace(projectName + " "
                 + extension)) {
             i++;
@@ -319,8 +319,8 @@ public class WizardProjectRenameDuplicatesPage extends WizardPage {
                 continue;
             }
             insertAboveChild = (Text)c;
-            if (getAssoc(insertAboveChild).getRecord().projectName
-                    .compareTo(getAssoc(textfield).getRecord().projectName) > 0) {
+            if (getAssoc(insertAboveChild).getRecord().projectName.compareTo(
+                    getAssoc(textfield).getRecord().projectName) > 0) {
                 above = true;
                 break;
             }
@@ -348,7 +348,7 @@ public class WizardProjectRenameDuplicatesPage extends WizardPage {
             Text field = (Text)c;
             if (m_previousePage.isProjectInWorkspace(field.getText().trim())) {
                 setMessage(null);
-                setErrorMessage("Projectname '" + field.getText().trim()
+                setErrorMessage("Project name '" + field.getText().trim()
                         + "' is already used in the workspace.");
                 return false;
             }
