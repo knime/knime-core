@@ -209,11 +209,14 @@ public class KnimeTestCase extends TestCase {
         TimerTask timeout = new TimerTask() {
             @Override
             public void run() {
+                String error = m_manager.toString();
                 // TODO: do we get a cancelExecution() for all nodes?!?
                 for (NodeContainer nc : m_manager.getNodeContainers()) {
                     m_manager.cancelExecution(nc);
                 }
-                logger.error("Workflow canceled after " + TIMEOUT + " seconds");
+                logger.error("Workflow canceled after " + TIMEOUT 
+                        + " seconds, status follows:: ");
+                logger.error(error);
             }
         };
         try {
