@@ -29,6 +29,7 @@ import java.util.Hashtable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.def.DoubleCell;
@@ -75,8 +76,11 @@ public class MDSCellFactory implements CellFactory {
                 cells[i] = new DoubleCell(p.getElementAt(i));
             }
         } else {
-            LOGGER.warn("No MDS data point found for " 
-                    + row.getKey().getString());
+            LOGGER.warn("No MDS data point found for \"" 
+                   + row.getKey().getString() + "\", inserting missing cells.");
+            for (int i = 0; i < m_dimension; i++) {
+                cells[i] = DataType.getMissingCell();
+            }
         }
         return cells;
     }
