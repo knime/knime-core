@@ -57,8 +57,8 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
 
     private IWorkbenchAction m_preferencesAction;
 
-     private IWorkbenchAction m_introAction;
-
+//     private IWorkbenchAction m_introAction;
+     
     private IWorkbenchAction m_aboutAction;
 
     private IWorkbenchAction m_helpAction;
@@ -185,10 +185,15 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         m_showViewShortlistContributionItem = ContributionItemFactory.VIEWS_SHORTLIST
                 .create(window);
 
+        // temporarily disable due to eclipse bug 
+        // https://bugs.eclipse.org/bugs/show_bug.cgi?id=211184
+        // (Code will be enabled if bug is closed, corresponding task #1453)
         // Help Actions
+        /*
          m_introAction = ActionFactory.INTRO.create(window);
          m_introAction.setText("Show &Intro page");
          register(m_introAction);
+         */
 
         m_helpAction = ActionFactory.HELP_CONTENTS.create(window);
         register(m_helpAction);
