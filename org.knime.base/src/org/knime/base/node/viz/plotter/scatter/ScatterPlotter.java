@@ -489,15 +489,13 @@ public class ScatterPlotter extends TwoColumnPlotter {
 
                 // temp variables for the coordinates
                 int x =
-                        (int)(xCoordinate.calculateMappedValue(xCell, width,
-                                true));
+                        (int)(xCoordinate.calculateMappedValue(xCell, width));
                 // translate the x position to the right to center it at its pos
                 x += m_dotSize;
                 // need to be transformed to lower left origin later on
                 // (see below)
                 int y =
-                        (int)(yCoordinate.calculateMappedValue(yCell, height,
-                                true));
+                        (int)(yCoordinate.calculateMappedValue(yCell, height));
                 // if one of the values is not a valid one set -1 for both
                 if (x < 0 || y < 0) {
                     dots[i].setXCoord(-1);
@@ -527,7 +525,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
         // value and the same value of the other coordinate
 
         if ((xCoordinate.isNominal() || yCoordinate.isNominal())) {
-
+            getScatterPlotterProperties().getJitterSlider().setEnabled(true);
             // for jittering only 90% of the available space are used
             // to avoid that the dots of different nominal values touces each
             // other
@@ -538,6 +536,9 @@ public class ScatterPlotter extends TwoColumnPlotter {
                     (int)(Math.round(yCoordinate
                             .getUnusedDistBetweenTicks(height)) * 0.9);
             jitterDots(dots, xAxisJitterRange, yAxisJitterRange);
+        } else {
+            // bugfix 1253
+            getScatterPlotterProperties().getJitterSlider().setEnabled(false);
         }
         getScatterPlotterDrawingPane().setDotInfoArray(new DotInfoArray(dots));
     }
