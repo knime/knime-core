@@ -436,10 +436,11 @@ public class ProgressFigure extends RectangleFigure implements
 
                 // LOGGER.debug("Show message: " + m_currentProgressMessage);
 
-                if (m_currentDisplay != null) {
+                if (m_currentDisplay != null 
+                        // bugfix: 1392
+                        && !m_currentDisplay.isDisposed()) {
                     m_currentDisplay.syncExec(new Runnable() {
                         public void run() {
-
                             if (m_mouseEvent != null) {
                                 getToolTipHelper().displayToolTipNear(
                                         ProgressFigure.this,
