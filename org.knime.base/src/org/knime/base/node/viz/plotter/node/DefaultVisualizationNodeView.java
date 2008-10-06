@@ -151,15 +151,10 @@ public class DefaultVisualizationNodeView extends NodeView {
         }
         DataProvider provider = (DataProvider)model;
         HiLiteHandler hiliteHandler = model.getInHiLiteHandler(0);
-        boolean useAntiAlias = false;
-        if (model instanceof DefaultVisualizationNodeModel) {
-            useAntiAlias = ((DefaultVisualizationNodeModel)model)
-                .antiAliasingOn();
-        }
+        // do not care about antialias
         for (AbstractPlotter plotter : m_plotters) {
             plotter.reset();
             plotter.setHiLiteHandler(hiliteHandler);
-            plotter.setAntialiasing(useAntiAlias);
             plotter.setDataProvider(provider);
             plotter.updatePaintModel();
         }

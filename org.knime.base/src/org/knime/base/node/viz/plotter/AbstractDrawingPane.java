@@ -51,7 +51,7 @@ public abstract class AbstractDrawingPane extends JPanel {
     /** Flag whether the mouse is currently pressed. */
     private boolean m_isMouseDown;
     /** Flag for anti-aliasing. */
-    private boolean m_antialiasing = true;
+    private boolean m_antialiasing = false;
 
     /**
      * Turns anti-aliasing on(true) or off(false). 
