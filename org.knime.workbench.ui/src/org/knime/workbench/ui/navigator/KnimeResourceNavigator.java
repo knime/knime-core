@@ -60,7 +60,6 @@ import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
-import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * This class is a filtered view on a knime project which hides utitility files
@@ -90,15 +89,15 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         ResourcesPlugin.getWorkspace().addResourceChangeListener(
                 new KnimeResourceChangeListener(this));
 
-        WorkflowManager.ROOT.addListener(new WorkflowListener() {
+        ProjectWorkflowMap.addStateListener(this);
+        // WorkflowManager.ROOT.addListener(
+        ProjectWorkflowMap.addWorkflowListener(new WorkflowListener() {
 
             public void workflowChanged(final WorkflowEvent event) {
                 LOGGER.debug("ROOT's workflow has changed " + event.getType());
                 switch (event.getType()) {
                 case NODE_ADDED:
                     NodeContainer ncAdded = (NodeContainer)event.getNewValue(); 
-                    ncAdded.addNodeStateChangeListener(
-                            KnimeResourceNavigator.this);
                     LOGGER.debug(
                             "Workflow " + ncAdded.getNameWithID() + " added");
                     if (getViewer() != null) {
@@ -111,8 +110,6 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                     break;
                 case NODE_REMOVED:
                     NodeContainer ncRem = (NodeContainer)event.getOldValue(); 
-                    ncRem.removeNodeStateChangeListener(
-                            KnimeResourceNavigator.this);
                     LOGGER.debug("Workflow " + ncRem.getNameWithID() 
                             + " removed");
                     if (getViewer() != null) {
@@ -134,12 +131,12 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         
         // to be sure register to all existing projects (in case they are added 
         // before this constructor is called) 
-        for (NodeContainer nc : WorkflowManager.ROOT.getNodeContainers()) {
-                // register here to this nc and listen to changes
-                // on change -> update labels
-                // TODO: remove the listener?
-                nc.addNodeStateChangeListener(this);
-        }
+//        for (NodeContainer nc : WorkflowManager.ROOT.getNodeContainers()) {
+//                // register here to this nc and listen to changes
+//                // on change -> update labels
+//                // TODO: remove the listener?
+//                nc.addNodeStateChangeListener(this);
+//        }
         
     }
     
@@ -151,19 +148,22 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     public void stateChanged(final NodeStateEvent state) {
         LOGGER.debug("state changed to " + state.getState());
         Display.getDefault().asyncExec(new Runnable() {
-
             public void run() {
                 try {
-                    String name =  WorkflowManager.ROOT.getNodeContainer(
-                            state.getSource()).getName();
-                    IResource rsrc = ResourcesPlugin.getWorkspace()
-                        .getRoot().findMember(name);
-                    if (rsrc != null) {
-                        getTreeViewer().update(rsrc, null);
+                    String name =  ProjectWorkflowMap.findProjectFor(
+                            state.getSource());
+                    if (name != null) {
+                        IResource rsrc = ResourcesPlugin.getWorkspace()
+                            .getRoot().findMember(name);
+                        if (rsrc != null) {
+                            getTreeViewer().update(rsrc, null);
+                        }
+                    } else {
+                        getTreeViewer().refresh();
                     }
-                    } catch (IllegalArgumentException iae) {
-                        // node couldn't be found -> so we don't make a refresh
-                    }
+                } catch (IllegalArgumentException iae) {
+                    // node couldn't be found -> so we don't make a refresh
+                }
             }
         });
     }
@@ -207,6 +207,17 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         */
         
         return viewer;
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public void dispose() {
+        super.dispose();
+        ProjectWorkflowMap.removeStateListener(this);
+        
     }
     
     
@@ -258,7 +269,6 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 LOGGER.debug("opening: " + project.getName());
                 
                 IFile workflowFile = project.getFile("workflow.knime");
-
                 
                 if (workflowFile.exists()) {
                     StructuredSelection selection2 =

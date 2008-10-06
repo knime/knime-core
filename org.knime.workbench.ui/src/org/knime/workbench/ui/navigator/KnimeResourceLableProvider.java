@@ -24,9 +24,6 @@
  */
 package org.knime.workbench.ui.navigator;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IAdaptable;
@@ -50,10 +47,7 @@ import org.eclipse.ui.internal.util.SWTResourceUtil;
 import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.eclipse.ui.model.IWorkbenchAdapter2;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.WorkflowEvent;
-import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
@@ -81,11 +75,8 @@ public class KnimeResourceLableProvider extends LabelProvider implements
     private static final Image NODE = KNIMEUIPlugin.getDefault().getImage(
             KNIMEUIPlugin.PLUGIN_ID, "icons/node.png"); 
     
-    private static final Map<String, NodeContainer>PROJECTS 
-        = new HashMap<String, NodeContainer>();
-    
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            KnimeResourceLableProvider.class);
+//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+//            KnimeResourceLableProvider.class);
     
     
     /**
@@ -123,45 +114,8 @@ public class KnimeResourceLableProvider extends LabelProvider implements
     public KnimeResourceLableProvider() {
         PlatformUI.getWorkbench().getEditorRegistry().addPropertyListener(
                 m_editorRegistryListener);
-        queryProjects();
-        WorkflowManager.ROOT.addListener(new WorkflowListener() {
+    }
 
-            public void workflowChanged(final WorkflowEvent event) {
-                switch (event.getType()) {
-                case NODE_ADDED:
-                    NodeContainer nc = ((NodeContainer)event.getNewValue());
-                    LOGGER.debug("Node Added: " + nc.getName());
-                    if (!nc.getName().equals(WorkflowManager.ROOT.getName())) {
-                        PROJECTS.put(nc.getName(), nc);
-                    }
-                    break;
-                case NODE_REMOVED:
-                    NodeContainer removed = (NodeContainer)event.getOldValue(); 
-                    LOGGER.debug("removing: " + removed.getName());
-                    PROJECTS.remove(removed.getName());
-                    break;
-                default: // no interest in other events here
-                }
-            }
-            
-        });
-    }
-    
-    private void queryProjects() {
-        for (NodeContainer nc : WorkflowManager.ROOT
-                .getNodeContainerBreadthFirstSearch()) {
-            // TODO: bad hack to determine projects...
-            if (nc.getID().toString().lastIndexOf(":") < 2) {
-                // name is not set -> ignore it 
-                if (!nc.getName().equals(WorkflowManager.ROOT.getName())) {
-                    PROJECTS.put(nc.getName(), nc);
-                }
-            } else {
-                // if we have really a breadth first search then we are finished
-                break;
-            }
-        }
-    }
 
     /**
      * Returns an image descriptor that is based on the given descriptor, but
@@ -206,7 +160,7 @@ public class KnimeResourceLableProvider extends LabelProvider implements
         CONFIGURED.dispose();
         NODE.dispose();
         CLOSED.dispose();
-        PROJECTS.clear();
+        ProjectWorkflowMap.clearMap();
         super.dispose();
     }
 
@@ -246,26 +200,41 @@ public class KnimeResourceLableProvider extends LabelProvider implements
     @Override
     public final Image getImage(final Object element) {
         Image img = PROJECT;
-        if (element instanceof IProject) {
+        NodeContainer projectNode = null;
+        if (element instanceof IFolder) {
+            // then its a node
+            img = NODE;
+        } else if (element instanceof IProject) {
             IProject project = (IProject)element;
-            NodeContainer projectNode = PROJECTS.get(project.getName());
+            projectNode = ProjectWorkflowMap.getWorkflow(project.getName());
             if (projectNode == null) {
                 return CLOSED;
             }
-            if (projectNode.getState().equals(NodeContainer.State.EXECUTED)) {
-                img = EXECUTED;
-            } else if (projectNode.getState().equals(
-                    NodeContainer.State.EXECUTING)) {
-                img = EXECUTING;                        
-            } else if (projectNode.getState().equals(
-                    NodeContainer.State.CONFIGURED)
-                    || projectNode.getState().equals(
-                            NodeContainer.State.IDLE)) {
-                img = CONFIGURED;
-            }
-        } else if (element instanceof IFolder) {
-            // then its a node
-            img = NODE;
+        } else if (element instanceof NodeContainer) {
+            projectNode = (NodeContainer)element;
+        }
+        if (projectNode != null) { 
+                if (projectNode instanceof WorkflowManager
+                        // display state only for projects
+                        // with this check only projects (direct children of the
+                        // ROOT are displayed with state
+                        && ((WorkflowManager)projectNode).getID().hasSamePrefix(
+                                WorkflowManager.ROOT.getID())) {
+                    if (projectNode.getState().equals(
+                            NodeContainer.State.EXECUTED)) {
+                        img = EXECUTED;
+                    } else if (projectNode.getState().equals(
+                            NodeContainer.State.EXECUTING)) {
+                        img = EXECUTING;                        
+                    } else if (projectNode.getState().equals(
+                            NodeContainer.State.CONFIGURED)
+                            || projectNode.getState().equals(
+                                    NodeContainer.State.IDLE)) {
+                        img = CONFIGURED;
+                    }
+                } else {
+                    img = NODE;
+                }
         }
         return img;
     }
@@ -275,6 +244,10 @@ public class KnimeResourceLableProvider extends LabelProvider implements
      */
     @Override
     public final String getText(final Object element) {
+        if (element instanceof NodeContainer) {
+            return ((NodeContainer)element).getName() 
+                + "(#" + ((NodeContainer)element).getID().getIndex() + ")";
+        }
         // query the element for its label
         IWorkbenchAdapter adapter = getAdapter(element);
         if (adapter == null) {

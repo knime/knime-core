@@ -29,6 +29,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.ui.views.navigator.ResourcePatternFilter;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowPersistor;
 /**
  * Implements the knime resource filter for the knime resource navigator. Only
@@ -43,6 +44,9 @@ public class KnimeResourcePatternFilter extends ResourcePatternFilter {
     @Override
     public boolean select(final Viewer viewer, final Object parentElement,
             final Object element) {
+        if (element instanceof NodeContainer) {
+            return true;
+        }
         if (element instanceof IResource) {
             IResource resource = (IResource)element;
             if (resource.getType() == IResource.PROJECT) {
