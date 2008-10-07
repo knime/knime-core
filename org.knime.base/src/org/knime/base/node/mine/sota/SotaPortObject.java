@@ -82,7 +82,7 @@ public class SotaPortObject extends AbstractSimplePortObject {
     
     private String m_distance;
     
-    private SotaPortObjectSpec m_spec;
+    private PortObjectSpec m_spec;
     
     /**
      * Creates empty instance of <code>SotaPortObject</code>.
@@ -126,8 +126,10 @@ public class SotaPortObject extends AbstractSimplePortObject {
             }
             
             m_distance = model.getString(CFG_KEY_DIST);
+        } else {
+            m_sotaRoot = null;
         }
-        m_spec = (SotaPortObjectSpec) spec;
+        m_spec = spec;
     }
 
     /**
@@ -136,23 +138,8 @@ public class SotaPortObject extends AbstractSimplePortObject {
     @Override
     protected void save(final ModelContentWO model, final ExecutionMonitor exec)
             throws CanceledExecutionException {
-        if (m_sota != null) {
-            // Save tree
-            m_sota.getRoot().saveTo(model, 0);
-
-            // Save settings
-            model.addBoolean(CFG_KEY_USE_FUZZY_HIERARCHY, m_sota
-                    .isUseHierarchicalFuzzyData());
-            model.addInt(CFG_KEY_MAX_FUZZY_LEVEL, m_sota
-                    .getMaxHierarchicalLevel());
-            model.addInt(CFG_KEY_INDATA_SIZE, m_sota.getInDataContainer()
-                    .size());
-            model.addInt(CFG_KEY_ORIGDATA_SIZE, m_sota.getOriginalData()
-                    .size());
-
-            model.addString(CFG_KEY_DIST, m_sota.getDistance());
-        }
-
+        m_sotaRoot.saveTo(model, 0);
+        model.addString(CFG_KEY_DIST, m_distance);
     }
 
     /**

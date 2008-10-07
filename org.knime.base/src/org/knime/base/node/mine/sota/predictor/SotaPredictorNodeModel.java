@@ -26,7 +26,6 @@ package org.knime.base.node.mine.sota.predictor;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 import org.knime.base.node.mine.sota.SotaPortObject;
 import org.knime.base.node.mine.sota.SotaPortObjectSpec;
@@ -38,11 +37,10 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -51,11 +49,7 @@ import org.knime.core.node.port.PortType;
  * 
  * @author Kilian Thiel, University of Konstanz
  */
-public class SotaPredictorNodeModel extends NodeModel {
-    
-    private SettingsModelFilterString m_cols = new SettingsModelFilterString(
-                SotaPredictorConfigKeys.CFG_KEY_FILTERED_COLS);
-    
+public class SotaPredictorNodeModel extends NodeModel {    
     
     /**
      * Creates new instance of <code>SotaPredictorNodeModel</code>.
@@ -121,17 +115,10 @@ public class SotaPredictorNodeModel extends NodeModel {
         exec.checkCanceled();
         
         // build data table to use
-        List<String> includedCols = m_cols.getIncludeList();
-        int[] indicesOfIncludedCols = new int[includedCols.size()];
-        
-        int arrayIndex = 0;
+        int[] indicesOfIncludedCols = 
+            new int[bdt.getDataTableSpec().getNumColumns()];
         for (int i = 0; i < bdt.getDataTableSpec().getNumColumns(); i++) {
-            String colName = 
-                bdt.getDataTableSpec().getColumnSpec(i).getName();
-            if (includedCols.contains(colName)) {
-                indicesOfIncludedCols[arrayIndex] = i;
-                arrayIndex++;
-            }
+            indicesOfIncludedCols[i] = i;
         }
         
         exec.checkCanceled();
@@ -176,7 +163,6 @@ public class SotaPredictorNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_cols.saveSettingsTo(settings);
     }
 
     /**
@@ -185,7 +171,6 @@ public class SotaPredictorNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_cols.validateSettings(settings);
     }
 
     /**
@@ -194,7 +179,6 @@ public class SotaPredictorNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_cols.loadSettingsFrom(settings);
     }
     
     

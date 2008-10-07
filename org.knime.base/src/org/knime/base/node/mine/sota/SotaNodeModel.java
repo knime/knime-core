@@ -28,9 +28,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 
-import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.base.node.mine.sota.logic.SotaManager;
 import org.knime.base.node.mine.sota.logic.SotaTreeCell;
 import org.knime.base.node.mine.sota.logic.SotaUtil;
@@ -44,10 +42,10 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
@@ -95,10 +93,6 @@ public class SotaNodeModel extends NodeModel {
     
     private SotaManager m_sota;
 
-    private ArrayList<String> m_includeList;
-
-    private ArrayList<String> m_excludeList;
-
     private String m_hierarchieLevelCell;
    
     private boolean m_withOutPort = false;
@@ -130,8 +124,6 @@ public class SotaNodeModel extends NodeModel {
     public SotaNodeModel(final boolean withOutPort) {
         super(new PortType[]{BufferedDataTable.TYPE}, outPorts(withOutPort));
         m_sota = new SotaManager();
-        m_includeList = new ArrayList<String>();
-        m_excludeList = new ArrayList<String>();
         m_withOutPort = withOutPort;
     }
     
@@ -156,29 +148,20 @@ public class SotaNodeModel extends NodeModel {
         int numberCells = 0;
         int fuzzyCells = 0;
         int intCells = 0;
-        for (int i = 0; i < inDataSpec.getNumColumns(); 
-            i++) {
-            if (m_includeList.contains(inDataSpec.getColumnSpec(i).getName())) {
-                DataType type = inDataSpec.getColumnSpec(i).getType();
+        for (int i = 0; i < inDataSpec.getNumColumns(); i++) {
+            DataType type = inDataSpec.getColumnSpec(i).getType();
 
-                if (SotaUtil.isIntType(type)) {
-                    intCells++;
-                }
-                if (SotaUtil.isNumberType(type)) {
-                    numberCells++;
-                } else if (SotaUtil.isFuzzyIntervalType(type)) {
-                    fuzzyCells++;
-                }
+            if (SotaUtil.isIntType(type)) {
+                intCells++;
+            }
+            if (SotaUtil.isNumberType(type)) {
+                numberCells++;
+            } else if (SotaUtil.isFuzzyIntervalType(type)) {
+                fuzzyCells++;
             }
         }
 
         StringBuffer buffer = new StringBuffer();
-        for (int i = 0; i < m_includeList.size(); i++) {
-            if (!inDataSpec.containsName(m_includeList.get(i))) {
-                buffer.append("Column " + m_includeList.get(i)
-                        + " not found in spec.");
-            }
-        }
 
         if (numberCells > 0 && fuzzyCells > 0) {
             buffer.append("FuzzyIntervalCells and NumberCells are mixed ! ");
@@ -230,40 +213,13 @@ public class SotaNodeModel extends NodeModel {
                 bdt, 1, Integer.MAX_VALUE);
         DataTable dataTableToUse = bdt;
         int indexOfClassCol = -1;
-        
-        if (m_includeList != null) {
-            if (m_sota.isUseHierarchicalFuzzyData()) {
-                if (m_hierarchieLevelCell != null) {
-                    m_includeList.add(m_hierarchieLevelCell);
-                }
-            }
-            
-            if (m_useOutData.getBooleanValue() 
-                    && !m_includeList.contains(m_classCol.getStringValue())) {
-                m_includeList.add(m_classCol.getStringValue());
-            }
-
-            DataTable filteredDataTable = new FilterColumnTable(bdt, 
-                    m_includeList.toArray(new String[m_includeList.size()]));
-            dataTableToUse = filteredDataTable;
-        
-            // get index of column containing class information
-            if (m_useOutData.getBooleanValue()) {
-                for (int i = 0; 
-                i < filteredDataTable.getDataTableSpec().getNumColumns(); i++) {
-                    String colName = filteredDataTable.getDataTableSpec()
-                        .getColumnSpec(i).getName();
-                    if (colName.equals(m_classCol.getStringValue())) {
-                        indexOfClassCol = i;
-                        break;
-                    }
-                }
-            }
+        // get index of column containing class information
+        indexOfClassCol = dataTableToUse.getDataTableSpec().findColumnIndex(
+                m_classCol.getStringValue());
             
             m_sota.initializeTree(dataTableToUse, origRowContainer, exec, 
                     indexOfClassCol);
             m_sota.doTraining();
-        }
 
         if (m_withOutPort) {
             return new PortObject[]{new SotaPortObject(m_sota, 
@@ -300,10 +256,6 @@ public class SotaNodeModel extends NodeModel {
         m_sota.saveSettingsTo(settings);
 
         // Save ColumnFilterPanel settings
-        settings.addStringArray(SotaConfigKeys.CFGKEY_INCLUDE, m_includeList
-                .toArray(new String[m_includeList.size()]));
-        settings.addStringArray(SotaConfigKeys.CFGKEY_EXCLUDE, m_excludeList
-                .toArray(new String[m_excludeList.size()]));
         settings.addBoolean(SotaConfigKeys.CFGKEY_HIERARCHICAL_FUZZY_DATA,
                 m_sota.isUseHierarchicalFuzzyData());
         settings.addString(SotaConfigKeys.CFGKEY_HIERARCHICAL_FUZZY_LEVEL,
@@ -343,22 +295,8 @@ public class SotaNodeModel extends NodeModel {
 
         String msg = "";
 
-        //
-        // / Validate ColumnFilterPanel settings
-        //
-        String[] dataCellsEx = settings
-                .getStringArray(SotaConfigKeys.CFGKEY_EXCLUDE);
-        String[] dataCellsIn = settings
-                .getStringArray(SotaConfigKeys.CFGKEY_INCLUDE);
-
         boolean useHFD = settings
                 .getBoolean(SotaConfigKeys.CFGKEY_HIERARCHICAL_FUZZY_DATA);
-
-        // If number of input columns is less or equal 2 warn user !
-        if (dataCellsIn.length <= 0) {
-            msg += "Number of columns has to be greater than zero, not "
-                    + dataCellsIn.length;
-        }
 
         //
         // / Throw exception and warn if errors in settings
@@ -369,20 +307,6 @@ public class SotaNodeModel extends NodeModel {
 
         // now take them over - if we are supposed to.
         if (!validateOnly) {
-            // clear include column list
-            m_includeList.clear();
-            // get list of included columns
-            for (int i = 0; i < dataCellsIn.length; i++) {
-                m_includeList.add(dataCellsIn[i]);
-            }
-
-            // clear include column list
-            m_excludeList.clear();
-            // get list of included columns
-            for (int i = 0; i < dataCellsEx.length; i++) {
-                m_excludeList.add(dataCellsEx[i]);
-            }
-
             m_hierarchieLevelCell = settings
                     .getString(SotaConfigKeys.CFGKEY_HIERARCHICAL_FUZZY_LEVEL);
 

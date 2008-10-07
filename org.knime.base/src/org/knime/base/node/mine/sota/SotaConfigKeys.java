@@ -73,16 +73,6 @@ public final class SotaConfigKeys {
     public static final String CFGKEY_USE_DISTANCE = "UseDist";
 
     /**
-     * Settings object key for the include settings.
-     */
-    public static final String CFGKEY_INCLUDE = "Include";
-
-    /**
-     * Settings object key for the exclude settings.
-     */
-    public static final String CFGKEY_EXCLUDE = "Exclude";
-
-    /**
      * Settings object key for the use of hierarchical fuzzy data.
      */
     public static final String CFGKEY_HIERARCHICAL_FUZZY_DATA = "HFD";

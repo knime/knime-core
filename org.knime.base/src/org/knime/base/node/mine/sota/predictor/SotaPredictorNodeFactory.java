@@ -40,7 +40,7 @@ extends NodeFactory<SotaPredictorNodeModel> {
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new SotaPredictorNodeDialog();
+        return null;
     }
 
     /**
@@ -73,7 +73,7 @@ extends NodeFactory<SotaPredictorNodeModel> {
      */
     @Override
     protected boolean hasDialog() {
-        return true;
+        return false;
     }
 
 }
