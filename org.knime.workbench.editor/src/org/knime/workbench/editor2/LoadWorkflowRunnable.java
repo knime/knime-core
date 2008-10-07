@@ -31,6 +31,7 @@ import java.io.IOException;
 import javax.swing.UIManager;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -91,7 +92,6 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
             final WorkflowLoadResult result = WorkflowManager.loadProject(
                     m_workflowFile.getParentFile(), 
                     new ExecutionMonitor(progressMonitor));
-            
             m_editor.setWorkflowManager(result.getWorkflowManager());
             pm.subTask("Finished.");
             pm.done();
@@ -152,9 +152,18 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
                 // && createEmptyWorkflow.intValue() == 0) {
                 m_editor.setWorkflowManager(WorkflowManager.ROOT
                         .createAndAddProject());
+                // save empty project immediately
+                // bugfix 1341 -> see WorkflowEditor line 1294 
+                // (resource delta visitor movedTo)
+                Display.getDefault().syncExec(new Runnable() {
+                    @Override
+                    public void run() {                        
+                        m_editor.doSave(new NullProgressMonitor());
+                    }
+                });
                 m_editor.setIsDirty(false);
+                
             }
-
             // IMPORTANT: Remove the reference to the file and the
             // editor!!! Otherwise the memory can not be freed later
             m_editor = null;
