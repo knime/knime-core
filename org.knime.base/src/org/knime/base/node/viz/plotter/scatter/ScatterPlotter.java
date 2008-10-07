@@ -525,7 +525,10 @@ public class ScatterPlotter extends TwoColumnPlotter {
         // value and the same value of the other coordinate
 
         if ((xCoordinate.isNominal() || yCoordinate.isNominal())) {
-            getScatterPlotterProperties().getJitterSlider().setEnabled(true);
+            if (getProperties() instanceof ScatterPlotterProperties) {
+                getScatterPlotterProperties().getJitterSlider().setEnabled(
+                        true);
+            }
             // for jittering only 90% of the available space are used
             // to avoid that the dots of different nominal values touces each
             // other
@@ -538,7 +541,10 @@ public class ScatterPlotter extends TwoColumnPlotter {
             jitterDots(dots, xAxisJitterRange, yAxisJitterRange);
         } else {
             // bugfix 1253
-            getScatterPlotterProperties().getJitterSlider().setEnabled(false);
+            if (getProperties() instanceof ScatterPlotterProperties) {
+                getScatterPlotterProperties().getJitterSlider().setEnabled(
+                        false);
+            }
         }
         getScatterPlotterDrawingPane().setDotInfoArray(new DotInfoArray(dots));
     }
