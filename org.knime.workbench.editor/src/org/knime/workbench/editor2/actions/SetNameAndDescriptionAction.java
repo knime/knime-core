@@ -139,7 +139,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
         Shell parent = new Shell(editorShell, SWT.BORDER
                 | SWT.TITLE | SWT.NO_TRIM | SWT.APPLICATION_MODAL);
 
-        String initialName = "Node " + container.getID();
+        String initialName = "Node " + container.getID().getIndex();
         if (container.getCustomName() != null) {
             initialName = container.getCustomName();
         }
@@ -152,8 +152,10 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
             dialogTitle += " - " + container.getCustomName();
         }
         NameDescriptionDialog dialog =
-            new NameDescriptionDialog(parent, initialName,
-                    initialDescr, dialogTitle);
+            new NameDescriptionDialog(parent, dialogTitle, 
+                    initialName, initialDescr,
+                    // (bugfix 1402)
+                    container.getID());
 
         Point relativeLocation =  new Point(
                 nodeParts[0].getFigure().getBounds().x,
