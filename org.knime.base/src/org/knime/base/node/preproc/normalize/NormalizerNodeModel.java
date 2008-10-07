@@ -42,8 +42,8 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
@@ -83,7 +83,7 @@ public class NormalizerNodeModel extends NodeModel {
     public static final int DECIMALSCALING_MODE = 3;
 
     /** Default mode is NONORM mode. */
-    private int m_mode = NONORM_MODE;
+    private int m_mode = ZSCORE_MODE;
 
     /** Default minimum zero. */
     private double m_min = 0;
@@ -108,8 +108,8 @@ public class NormalizerNodeModel extends NodeModel {
      * model).
      */
     public NormalizerNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE}, 
-                new PortType[]{BufferedDataTable.TYPE, 
+        super(new PortType[]{BufferedDataTable.TYPE},
+                new PortType[]{BufferedDataTable.TYPE,
                 NormalizerPortObject.TYPE});
     }
 
@@ -128,7 +128,7 @@ public class NormalizerNodeModel extends NodeModel {
         if (m_mode == NONORM_MODE) {
             return new PortObjectSpec[]{spec, new DataTableSpec()};
         }
-        DataTableSpec modelSpec = 
+        DataTableSpec modelSpec =
             FilterColumnTable.createFilterTableSpec(spec, m_columns);
         return new PortObjectSpec[]{
                 Normalizer.generateNewSpec(spec, m_columns), modelSpec};
@@ -137,7 +137,7 @@ public class NormalizerNodeModel extends NodeModel {
     private String[] numericColumnSelection(final DataTableSpec spec)
             throws InvalidSettingsException {
         // if the node has not been configured before OR all columns have been
-        // selected in the dialog, then return all numeric columns from the 
+        // selected in the dialog, then return all numeric columns from the
         // input spec
         if (m_columns == null || m_allNumericColumns) {
             String[] allNumColumns = findAllNumericColumns(spec);
@@ -145,16 +145,17 @@ public class NormalizerNodeModel extends NodeModel {
             if (m_mode == NONORM_MODE) {
                 super.setWarningMessage("No normalization mode set.");
             } else {
-                // set warning when the node has not been configured (all
-                // columns are used by default) OR all columns have been 
-                // selected previously in the dialog AND the current spec 
-                // contains more or less columns
+            // set warning when the node has not been configured (all
+            // columns are used by default) OR all columns have been
+            // selected previously in the dialog AND the current spec
+            // contains more or less columns
                 if (m_columns == null || (m_allNumericColumns 
                         && !Arrays.deepEquals(m_columns, allNumColumns))) {
                     super.setWarningMessage(
                         "All numeric columns are used for normalization.");
                 }
             }
+
             return allNumColumns;
         }
         // sanity check: selected columns in actual spec?
@@ -203,6 +204,7 @@ public class NormalizerNodeModel extends NodeModel {
         // extract selected numeric columns
         m_columns = numericColumnSelection(inSpec);
         Normalizer ntable = new Normalizer(inTable, m_columns);
+
         int rowcount = inTable.getRowCount();
         ExecutionMonitor prepareExec = exec.createSubProgress(0.3);
         AffineTransTable outTable;
@@ -228,10 +230,14 @@ public class NormalizerNodeModel extends NodeModel {
             // something went wrong, report and throw an exception
             throw new Exception(outTable.getErrorMessage());
         }
-        DataTableSpec modelSpec = 
+        if (ntable.getErrorMessage() != null) {
+            // something went wrong during initialization, report.
+            setWarningMessage(ntable.getErrorMessage());
+        }
+        DataTableSpec modelSpec =
             FilterColumnTable.createFilterTableSpec(inSpec, m_columns);
         AffineTransConfiguration configuration = outTable.getConfiguration();
-        NormalizerPortObject modelPO = 
+        NormalizerPortObject modelPO =
             new NormalizerPortObject(modelSpec, configuration);
 
         ExecutionMonitor normExec = exec.createSubProgress(.7);
@@ -240,7 +246,7 @@ public class NormalizerNodeModel extends NodeModel {
         int count = 1;
         for (DataRow row : outTable) {
             normExec.checkCanceled();
-            normExec.setProgress(count / (double)rowcount, 
+            normExec.setProgress(count / (double)rowcount,
                     "Normalizing row no. " + count + " of " + rowcount
                     + " (\"" + row.getKey() + "\")");
             container.addRowToTable(row);
