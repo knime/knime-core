@@ -90,6 +90,8 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
     
     private boolean m_fade;
     
+    private boolean m_hide;
+    
     private boolean m_drawCurves;
     
     private static final String MISSING = "missing values";
@@ -179,6 +181,14 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
      */
     public void setFadeUnhilited(final boolean fade) {
         m_fade = fade;
+    }
+    
+    /**
+     * 
+     * @param hide true if only hilite rows should be displayed
+     */
+    public void setHideUnhilited(final boolean hide) {
+        m_hide = hide;
     }
     
     /**
@@ -428,9 +438,12 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
             } else {
                 g.setColor(ColorAttr.INACTIVE);
             }
-        } else {
+        } else if (!m_hide && !m_fade) {
             g.setColor(line.getColor().getColor(line.isSelected(),
                 line.isHilite()));
+        } else {
+            // bugfix : 1278
+            g.setColor(line.getColor().getColor(line.isSelected(), false));
         }
         int lineSize = getStrokeSize(line.getSize());
         Stroke selectionStroke = new BasicStroke(lineSize, 
@@ -460,7 +473,7 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
             }
             // backup
             Color backupColor = g.getColor();
-            if (line.isHilite()) {
+            if (line.isHilite() && !m_hide && !m_fade) {
                 // draw additional "hilite" line#
                 Stroke backupStroke = ((Graphics2D)g).getStroke();
                 ((Graphics2D)g).setStroke(new BasicStroke(2 * lineSize));
@@ -505,20 +518,24 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
             GeneralPath path = null;
             Point ctrl = null;
 //            Point newCtrl = null;
-            g.setColor(line.getColor().getColor(line.isSelected(), 
-                    line.isHilite()));
-            int lineSize = getStrokeSize(line.getSize());
-            Stroke selectionStroke = new BasicStroke(lineSize, 
-                    BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 1.0f, 
-                    new float[]{DASH}, 0);
-            ((Graphics2D)g).setStroke(new BasicStroke(lineSize));
             if (m_fade && !line.isHilite()) {
                 if (line.isSelected()) {
                     g.setColor(ColorAttr.INACTIVE_SELECTED);
                 } else {
                     g.setColor(ColorAttr.INACTIVE);
                 }
+            } else if (!m_hide && !m_fade) {
+                g.setColor(line.getColor().getColor(line.isSelected(),
+                    line.isHilite()));
+            } else {
+                // bugfix : 1278
+                g.setColor(line.getColor().getColor(line.isSelected(), false));
             }
+            int lineSize = getStrokeSize(line.getSize());
+            Stroke selectionStroke = new BasicStroke(lineSize, 
+                    BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 1.0f, 
+                    new float[]{DASH}, 0);
+            ((Graphics2D)g).setStroke(new BasicStroke(lineSize));
             // for all points
             for (int i = 0; i < line.getPoints().size() - 1; i++) {
                 Point p1 = line.getPoints().get(i);
@@ -543,7 +560,7 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
                 ctrl = secondCtrl;
             }
             Color backupColor = g.getColor();
-            if (line.isHilite()) {
+            if (line.isHilite() && !m_hide && !m_fade) {
                 // draw additional "hilite" line
                 g.setColor(ColorAttr.HILITE);
                 Stroke backupStroke = g.getStroke();
@@ -585,8 +602,13 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
             return;
         }
         ShapeFactory.Shape shape = line.getShape();
+        // bugfix : 1278
+        boolean hilite = line.isHilite();
+        if (m_hide || m_fade) {
+            hilite = false;
+        }
         shape.paint(g, p.x, p.y, 2 * size, line.getColor().getColor(),
-                line.isHilite(), line.isSelected(), 
+                hilite, line.isSelected(), 
                 m_fade && !line.isHilite());
     }
 
