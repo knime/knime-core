@@ -27,7 +27,6 @@
 			Displays statistics and the parameters of the resulting
 			hyperplane.
 		</view>
-		<!-- temporarily disabled
 		<view index="1" name="Linear Regression Scatterplot View">
 			Displays the input data along with the regression line in a 
 			scatterplot. The y-coordinate is fixed to the response column
@@ -36,6 +35,6 @@
 			variables, this view is only an approximation. It will fix the value
 			of each variable that is not shown in the view to its mean. Thus, 
 			this view generally only makes sense if you only have a few input variables.
-		</view> -->
+		</view>
 	</views>
 </knimeNode>
