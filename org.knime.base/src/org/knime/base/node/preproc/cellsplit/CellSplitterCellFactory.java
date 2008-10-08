@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 19, 2007 (ohl): created
  */
@@ -27,6 +27,7 @@ package org.knime.base.node.preproc.cellsplit;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Arrays;
 
 import org.knime.base.node.io.filetokenizer.FileTokenizer;
 import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
@@ -51,7 +52,7 @@ import org.knime.core.node.NodeSettings;
 
 /**
  * Creates the data cells for the new columns of the cell splitter.
- * 
+ *
  * @author ohl, University of Konstanz
  */
 class CellSplitterCellFactory implements CellFactory {
@@ -65,10 +66,12 @@ class CellSplitterCellFactory implements CellFactory {
     private final int m_colIdx;
 
     private final FileTokenizerSettings m_tokenizerSettings;
+    
+    private static final StringCell EMPTY_STRINGCELL = new StringCell("");
 
     /**
-     * Constucteur.
-     * 
+     * Constructor.
+     *
      * @param inSpec the spec from the underlying input table
      * @param settings the settings object containing the user settings.
      */
@@ -138,15 +141,27 @@ class CellSplitterCellFactory implements CellFactory {
             throw new IllegalStateException("Incorrect user settings");
         }
 
-        String inputString = "";
-        DataCell inputCell = row.getCell(m_colIdx);
+        int numOfCols = m_settings.getNumOfCols();
+        if (m_settings.isGuessNumOfCols()) {
+            numOfCols = m_settings.getNumOfColsGuessed();
+        }
+        DataCell[] result = new DataCell[numOfCols];
 
-        if (!inputCell.isMissing()) {
-            if (inputCell instanceof StringValue) {
-                inputString = ((StringValue)inputCell).getStringValue();
+        DataCell inputCell = row.getCell(m_colIdx);
+        if (inputCell.isMissing()) {
+            if (m_settings.isUseEmptyString()) {
+                Arrays.fill(result, EMPTY_STRINGCELL);
             } else {
-                inputString = inputCell.toString();
+                Arrays.fill(result, DataType.getMissingCell());
             }
+            return result;
+        }
+
+        final String inputString;
+        if (inputCell instanceof StringValue) {
+            inputString = ((StringValue)inputCell).getStringValue();
+        } else {
+            inputString = inputCell.toString();
         }
 
         // init the tokenizer
@@ -158,12 +173,6 @@ class CellSplitterCellFactory implements CellFactory {
         tokenizer.setSettings(m_tokenizerSettings);
 
         // tokenize the column value and create new output cells
-        int numOfCols = m_settings.getNumOfCols();
-        if (m_settings.isGuessNumOfCols()) {
-            numOfCols = m_settings.getNumOfColsGuessed();
-        }
-        DataCell[] result = new DataCell[numOfCols];
-
         for (int col = 0; col < result.length; col++) {
 
             String token = null;
@@ -171,17 +180,11 @@ class CellSplitterCellFactory implements CellFactory {
             if (col == result.length - 1) {
                 /*
                  * this is the last column - if there is more than one token
-                 * left in the stream we need to store the entire rest (incl.
-                 * this token) in the column.
+                 * left in the stream we need to store the entire rest
+                 * (including this token) in the column.
                  */
                 // mark the stream in case we need to read the rest of it
                 try {
-                    // // I can't think (right now - until this goes off) why
-                    // the
-                    // // tokenizer should have buffered characters after
-                    // reading
-                    // // a delimiter.
-                    // assert !tokenizer.hasBufferedCharacters();
 
                     inputReader.mark(0);
                     token = tokenizer.nextToken();
@@ -200,15 +203,19 @@ class CellSplitterCellFactory implements CellFactory {
                 token = tokenizer.nextToken();
 
             }
+
             if (token == null) {
-                // create empty string cells - not missing cells.
-                token = "";
+                if (m_settings.isUseEmptyString()) {
+                    // create empty string cells - not missing cells.
+                    result[col] = EMPTY_STRINGCELL;
+                } else {
+                    result[col] = DataType.getMissingCell();
+                }
+            } else {
+                result[col] =
+                        createDataCell(token.trim(), m_settings
+                                .getTypeOfColumn(col));
             }
-
-            result[col] =
-                    createDataCell(token.trim(), m_settings
-                            .getTypeOfColumn(col));
-
         }
 
         return result;
@@ -342,7 +349,7 @@ class CellSplitterCellFactory implements CellFactory {
 
     /**
      * Changes the specified col name to a name not contained in the table spec.
-     * 
+     *
      * @param colName the name to change
      * @param tableSpec the spec to check the name against
      * @return the same string, if the spec doesn't contain a column named
@@ -368,8 +375,8 @@ class CellSplitterCellFactory implements CellFactory {
     public void setProgress(final int curRowNr, final int rowCount,
             final RowKey lastKey, final ExecutionMonitor exec) {
         exec.setProgress((double)curRowNr / (double)rowCount,
-                "processing row #" + curRowNr + " of " + rowCount + " (" 
-                + lastKey.getString() + ")");
+                "processing row #" + curRowNr + " of " + rowCount + " ("
+                        + lastKey.getString() + ")");
     }
 
     /**
@@ -382,7 +389,7 @@ class CellSplitterCellFactory implements CellFactory {
      * selected column, stores the maximum number of parts received, and tries
      * to convert each part into an int (first), then into a double, and if both
      * fails it sets string type for the corresponding column.
-     * 
+     *
      * @param table the table with the column to examine (can be null, if no
      *            type guessing is required)
      * @param userSettings user settings
@@ -488,7 +495,7 @@ class CellSplitterCellFactory implements CellFactory {
                     // done with that input string from that row
                     break;
                 }
-                
+
                 token = token.trim();
 
                 DataType colType = IntCell.TYPE;

@@ -42,6 +42,9 @@
 		the number of columns needed to hold all parts of the split. In addition
 		it determines the column type of the new columns. 
 		</option>
+		<option name="Missing Value Handling">If select, the node creates 
+		empty string cell instead of missing value cells. 
+        </option>
 	</fullDescription>
 	
 	<ports>

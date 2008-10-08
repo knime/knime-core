@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 19, 2007 (ohl): created
  */
@@ -33,6 +33,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -53,7 +54,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
- * 
+ *
  * @author ohl, University of Konstanz
  */
 public class CellSplitterNodeDialogPane extends NodeDialogPane {
@@ -70,8 +71,12 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
     private final JRadioButton m_fixedSize = new JRadioButton("set array size");
 
     private final JRadioButton m_guessSize =
-            new JRadioButton("guess size and column types (requires additional "
-                    + "data table scan)");
+            new JRadioButton(
+                    "guess size and column types (requires additional "
+                            + "data table scan)");
+
+    private final JCheckBox m_useEmptyString =
+            new JCheckBox("Create empty cells instead of missing cells");
 
     /**
      * Creates a new panel for the dialog and inits all components.
@@ -127,7 +132,7 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         ButtonGroup bg = new ButtonGroup();
         bg.add(m_fixedSize);
         bg.add(m_guessSize);
-        m_fixedSize.setSelected(true); 
+        m_fixedSize.setSelected(true);
         m_columnNumber.setEnabled(true);
         m_fixedSize.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
@@ -141,7 +146,7 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         m_columnNumber.setMinimumSize(new Dimension(50, 25));
         m_columnNumber.setPreferredSize(new Dimension(100, 25));
         JSpinner.DefaultEditor editor =
-            (JSpinner.DefaultEditor)m_columnNumber.getEditor();
+                (JSpinner.DefaultEditor)m_columnNumber.getEditor();
         editor.getTextField().setColumns(4);
         editor.getTextField().setFocusLostBehavior(JFormattedTextField.COMMIT);
         Box sizeBox = Box.createVerticalBox();
@@ -156,14 +161,25 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         sizeBox.add(fixSizeBox);
         sizeBox.add(Box.createVerticalStrut(3));
         sizeBox.add(guessSizeBox);
-        
+
         settingsBox.add(Box.createVerticalStrut(7));
         settingsBox.add(sizeBox);
         settingsBox.add(Box.createVerticalGlue());
 
+        // the missing value handling box
+        m_useEmptyString.setToolTipText("If checked, empty string cells are "
+                + "created for missing or short input cells");
+        Box missValBox = Box.createHorizontalBox();
+        missValBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Missing Value Handling"));
+        missValBox.add(m_useEmptyString);
+        missValBox.add(Box.createHorizontalGlue());
+
         pane.add(colSelBox);
         pane.add(Box.createVerticalStrut(7));
         pane.add(settingsBox);
+        pane.add(Box.createVerticalStrut(7));
+        pane.add(missValBox);
 
         addTab("Settings", pane);
     }
@@ -190,6 +206,7 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
             csSettings.setNumOfCols(6);
             csSettings.setQuotePattern("\"");
             csSettings.setRemoveQuotes(true);
+            csSettings.setUseEmptyString(false);
             // set the first string column as default column
             for (DataColumnSpec cSpec : specs[0]) {
                 if (cSpec.getType().isCompatible(StringValue.class)) {
@@ -223,6 +240,7 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         } else {
             m_fixedSize.setSelected(true);
         }
+        m_useEmptyString.setSelected(csSettings.isUseEmptyString());
 
     }
 
@@ -261,6 +279,7 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         }
 
         csSettings.setGuessNumOfCols(m_guessSize.isSelected());
+        csSettings.setUseEmptyString(m_useEmptyString.isSelected());
 
         csSettings.saveSettingsTo(settings);
 
