@@ -25,8 +25,8 @@
 package org.knime.base.node.viz.condbox;
 
 import org.knime.base.node.viz.plotter.box.BoxPlotter;
-import org.knime.core.node.NodeView;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeView;
 
 /**
  * Class for a view of the conditional box plot.
@@ -65,6 +65,7 @@ public class ConditionalBoxPlotNodeView extends NodeView<NodeModel> {
             m_plotter.setAntialiasing(true);
             m_plotter.setDataProvider(nodemodel);
             m_plotter.updatePaintModel();
+            m_plotter.fitToScreen();
         }
     }
 
@@ -79,7 +80,6 @@ public class ConditionalBoxPlotNodeView extends NodeView<NodeModel> {
      * {@inheritDoc}
      */
     @Override
-    protected void onOpen() {
+    protected void onOpen() {   
     }
-
 }
