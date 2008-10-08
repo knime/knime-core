@@ -149,10 +149,27 @@ public class NormalizerNodeModel extends NodeModel {
             // columns are used by default) OR all columns have been
             // selected previously in the dialog AND the current spec
             // contains more or less columns
-                if (m_columns == null || (m_allNumericColumns 
+                if (m_columns == null || (m_allNumericColumns
                         && !Arrays.deepEquals(m_columns, allNumColumns))) {
-                    super.setWarningMessage(
-                        "All numeric columns are used for normalization.");
+                    String mode;
+                    switch (m_mode) {
+                    case NONORM_MODE:
+                        mode = "No Normalization";
+                        break;
+                    case MINMAX_MODE:
+                        mode = "Min-Max Normalization";
+                        break;
+                    case ZSCORE_MODE:
+                        mode = "Z-Score Normalization";
+                        break;
+                    case DECIMALSCALING_MODE:
+                        mode = "Normalization by Decimal Scaling";
+                        break;
+                    default:
+                        throw new InvalidSettingsException("No mode set");
+                    }
+                    super.setWarningMessage("All numeric columns are used "
+                            + "for normalization. Mode: " + mode);
                 }
             }
 
@@ -263,7 +280,7 @@ public class NormalizerNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-
+        // empty
     }
 
     /**
@@ -273,7 +290,7 @@ public class NormalizerNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-
+        // empty
     }
 
     /**
@@ -294,6 +311,7 @@ public class NormalizerNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
+        // empty
     }
 
     /**
