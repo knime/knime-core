@@ -281,8 +281,12 @@ public class StatisticsTable implements DataTable {
                 m_varianceValues[j] = Double.NaN;
             } else {
                 m_meanValues[j] = sum[j] / validCount[j];
-                m_varianceValues[j] = (sumsquare[j] - ((sum[j] * sum[j]) 
-                        / validCount[j])) / (validCount[j] - 1);
+                if (validCount[j] > 1) {
+                    m_varianceValues[j] = (sumsquare[j] - ((sum[j] * sum[j]) 
+                            / validCount[j])) / (validCount[j] - 1);
+                } else {
+                    m_varianceValues[j] = 0.0;
+                }
                 // unreported bug fix: in cases in which a column contains 
                 // almost only one value (for instance 1.0) but one single 
                 // 'outlier' whose value is, for instance 0.9999998, we get 
