@@ -26,7 +26,6 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -106,15 +105,13 @@ public class CancelAction extends AbstractNodeAction {
 
         // enable if we have at least one executing or queued node in our
         // selection
-        boolean atLeastOneNodeIsCancelable = false;
         for (int i = 0; i < parts.length; i++) {
-            atLeastOneNodeIsCancelable |=
-                    parts[i].getNodeContainer().getState().equals(
-                            NodeContainer.State.QUEUED);
-            atLeastOneNodeIsCancelable |= parts[i].getNodeContainer()
-            .getState().equals(NodeContainer.State.EXECUTING);
+            // bugfix 1478
+            if (parts[i].getNodeContainer().getState().executionInProgress()) {
+                return true;
+            }
         }
-        return atLeastOneNodeIsCancelable;
+        return false;
 
     }
 
