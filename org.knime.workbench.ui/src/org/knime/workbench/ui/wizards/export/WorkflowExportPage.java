@@ -73,8 +73,8 @@ public class WorkflowExportPage extends WizardPage {
      */
     public WorkflowExportPage(final ISelection selection) {
         super("wizardPage");
-        setTitle("Knime Workflow project");
-        setDescription("This wizard exports a Knime workflow project.");
+        setTitle("KNIME Workflow project");
+        setDescription("This wizard exports a KNIME workflow project.");
         this.m_selection = selection;
     }
 
@@ -185,7 +185,7 @@ public class WorkflowExportPage extends WizardPage {
 
         ContainerSelectionDialog dialog = new ContainerSelectionDialog(
                 getShell(), ResourcesPlugin.getWorkspace().getRoot(), false,
-                "Select Knime project");
+                "Select KNIME project");
         if (dialog.open() == Window.OK) {
             Object[] result = dialog.getResult();
             if (result.length == 1) {
@@ -245,12 +245,12 @@ public class WorkflowExportPage extends WizardPage {
         String fileName = getFileName();
 
         if (getContainerName().length() == 0) {
-            updateStatus("Knime project must be specified");
+            updateStatus("KNIME project must be specified");
             return;
         }
 
         if (container == null) {
-            updateStatus("Knime project must exist");
+            updateStatus("KNIME project must exist");
             return;
         }
 

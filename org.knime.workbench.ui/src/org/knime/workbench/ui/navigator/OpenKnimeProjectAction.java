@@ -51,12 +51,12 @@ public class OpenKnimeProjectAction extends Action {
         int numberSelections = selection.size();
         String actionText;
         if (numberSelections <= 1) {
-            actionText = "Open Knime workflow";
+            actionText = "Open KNIME workflow";
             if (numberSelections < 1) {
                 setEnabled(false);
             }
         } else {
-            actionText = "Open " + numberSelections + " Knime workflows";
+            actionText = "Open " + numberSelections + " KNIME workflows";
         }
         setText(actionText);
     }

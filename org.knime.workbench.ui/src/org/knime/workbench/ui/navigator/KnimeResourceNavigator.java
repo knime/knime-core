@@ -84,7 +84,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     public KnimeResourceNavigator() {
         super(); 
 
-        LOGGER.debug("Knime resource navigator created");
+        LOGGER.debug("KNIME resource navigator created");
         
         ResourcesPlugin.getWorkspace().addResourceChangeListener(
                 new KnimeResourceChangeListener(this));

@@ -271,7 +271,7 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
                     new MessageBox(Display.getDefault().getActiveShell(),
                             SWT.ICON_WARNING | SWT.OK);
             mb.setText("Export could not be completed...");
-            mb.setMessage("Knime project could not be exported.\n Reason: "
+            mb.setMessage("KNIME project could not be exported.\n Reason: "
                     + t.getMessage());
         }
 
