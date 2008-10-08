@@ -238,6 +238,7 @@ public class RowFilterRefNodeModel extends NodeModel {
             m_referenceTableCol.loadSettingsFrom(settings);
         } catch (final InvalidSettingsException e) {
             //the previous version had no column options use the rowkey for both
+            //Introduced in KNIME 2.0
             m_dataTableCol.setSelection(null, true);
             m_referenceTableCol.setSelection(null, true);
         }
@@ -277,7 +278,11 @@ public class RowFilterRefNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_inexcludeRows.validateSettings(settings);
-        m_dataTableCol.validateSettings(settings);
-        m_referenceTableCol.validateSettings(settings);
+        /*
+         * No validation of the dataTableCol and referenceTableCol settings
+         * since they were introduced in KNIME 2.0
+         * m_dataTableCol.validateSettings(settings);
+         * m_referenceTableCol.validateSettings(settings);
+         * */
     }
 }
