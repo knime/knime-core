@@ -2752,7 +2752,7 @@ public final class WorkflowManager extends NodeContainer {
         }
         // set dirty if this wm should be reset (for instance when the state
         // of the workflow can't be properly read from the workflow.knime)
-        if (persistor.needsResetAfterLoad()) {
+        if (persistor.needsResetAfterLoad() || persistor.isDirtyAfterLoad()) {
             setDirty();
         }
         return loadResult;
@@ -2826,7 +2826,9 @@ public final class WorkflowManager extends NodeContainer {
             subResult.addError(cont.loadContent(
                     containerPersistor, tblRep, inStack, sub2));
             sub2.setProgress(1.0);
-            
+            if (containerPersistor.isDirtyAfterLoad()) {
+                cont.setDirty();
+            }
             boolean hasPredecessorFailed = false;
             for (ConnectionContainer cc : m_connectionsByDest.get(bfsID)) {
                 if (failedNodes.contains(cc.getSource())) {
@@ -2896,6 +2898,9 @@ public final class WorkflowManager extends NodeContainer {
             translationMap.put(suffix, subId);
             NodeContainer container = pers.getNodeContainer(this, subId);
             addNodeContainer(container, false);
+            if (pers.isDirtyAfterLoad()) {
+                container.setDirty();
+            }
         }
 
         for (ConnectionContainerTemplate c : connections) {

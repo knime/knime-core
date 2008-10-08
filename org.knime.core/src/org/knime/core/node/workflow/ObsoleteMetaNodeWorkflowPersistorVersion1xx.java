@@ -36,7 +36,6 @@ import java.util.List;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -80,8 +79,8 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
     /** {@inheritDoc} */
     @Override
     public LoadResult preLoadNodeContainer(final ReferencedFile nodeFileRef,
-            final NodeSettingsRO parentSettings) throws IOException, 
-            CanceledExecutionException, InvalidSettingsException {
+            final NodeSettingsRO parentSettings) 
+    throws IOException, InvalidSettingsException {
         LoadResult result = new LoadResult();
         File setFile = nodeFileRef.getFile();
         if (!setFile.getName().equals("settings.xml")) {

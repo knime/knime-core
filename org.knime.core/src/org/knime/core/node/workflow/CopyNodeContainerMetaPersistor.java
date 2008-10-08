@@ -24,10 +24,7 @@
  */
 package org.knime.core.node.workflow;
 
-import java.io.IOException;
-
 import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -104,9 +101,14 @@ final class CopyNodeContainerMetaPersistor implements
 
     /** {@inheritDoc} */
     @Override
-    public LoadResult load(final NodeSettingsRO settings) throws IOException,
-            CanceledExecutionException {
+    public LoadResult load(final NodeSettingsRO settings) {
         return new LoadResult();
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public boolean isDirtyAfterLoad() {
+        return false;
     }
 
     /** {@inheritDoc} */

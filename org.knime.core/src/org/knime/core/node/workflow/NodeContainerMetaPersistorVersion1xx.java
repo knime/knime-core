@@ -24,8 +24,6 @@
  */
 package org.knime.core.node.workflow;
 
-import java.io.IOException;
-
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
@@ -52,6 +50,8 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     private State m_state = State.IDLE;
     
     private boolean m_isDeletable = true;
+    
+    private boolean m_isDirtyAfterLoad;
     
     private final ReferencedFile m_nodeContainerDirectory;
     
@@ -106,6 +106,17 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
         return m_isDeletable;
     }
     
+    /** {@inheritDoc} */
+    @Override
+    public boolean isDirtyAfterLoad() {
+        return m_isDirtyAfterLoad;
+    }
+    
+    /** Mark node as dirty. */
+    protected void setDirtyAfterLoad() {
+        m_isDirtyAfterLoad = true;
+    }
+    
     /** Sets the state. This is needed to load workflows written in 1.x.x as
      * the state information was saved in the node itself (not the node 
      * container).
@@ -123,7 +134,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     }
 
    /** {@inheritDoc} */
-    public LoadResult load(final NodeSettingsRO settings) throws IOException {
+    public LoadResult load(final NodeSettingsRO settings) {
         LoadResult loadResult = new LoadResult();
         try {
             m_customName = loadCustomName(settings);
@@ -131,6 +142,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             String error = "Invalid custom name in settings: " + e.getMessage();
             loadResult.addError(error);
             getLogger().debug(error, e);
+            setDirtyAfterLoad();
             m_customName = null;
         }
         try {
@@ -140,6 +152,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
                 "Invalid custom description in settings: " + e.getMessage();
             loadResult.addError(error);
             getLogger().debug(error, e);
+            setDirtyAfterLoad();
             m_customDescription = null;
         }
         try {
@@ -149,6 +162,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
                 + State.IDLE + ": " + e.getMessage();
             loadResult.addError(error);
             getLogger().debug(error, e);
+            setDirtyAfterLoad();
             m_state = State.IDLE;
         }
         m_isDeletable = loadIsDeletable(settings);

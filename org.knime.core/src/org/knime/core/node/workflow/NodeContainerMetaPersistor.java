@@ -24,10 +24,7 @@
  */
 package org.knime.core.node.workflow;
 
-import java.io.IOException;
-
 import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -56,9 +53,10 @@ interface NodeContainerMetaPersistor {
     
     boolean isDeletable();
     
+    boolean isDirtyAfterLoad();
+    
     void setUIInfo(final UIInformation uiInfo);
     
-    LoadResult load(final NodeSettingsRO settings) 
-        throws IOException, CanceledExecutionException;
+    LoadResult load(final NodeSettingsRO settings);
     
 }

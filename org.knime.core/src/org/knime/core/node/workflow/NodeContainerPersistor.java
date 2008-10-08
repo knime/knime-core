@@ -46,11 +46,12 @@ public interface NodeContainerPersistor {
     NodeContainerMetaPersistor getMetaPersistor();
 
     boolean needsResetAfterLoad();
-
+    
+    boolean isDirtyAfterLoad();
+    
     LoadResult preLoadNodeContainer(final ReferencedFile nodeFileRef,
             final NodeSettingsRO parentSettings)
-            throws InvalidSettingsException, CanceledExecutionException,
-            IOException;
+            throws InvalidSettingsException, IOException;
 
     LoadResult loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec)
             throws InvalidSettingsException, CanceledExecutionException,
