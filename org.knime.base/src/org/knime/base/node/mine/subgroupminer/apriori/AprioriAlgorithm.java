@@ -24,11 +24,11 @@
  */
 package org.knime.base.node.mine.subgroupminer.apriori;
 
-import java.util.BitSet;
 import java.util.List;
 
 import org.knime.base.node.mine.subgroupminer.freqitemset.AssociationRule;
 import org.knime.base.node.mine.subgroupminer.freqitemset.FrequentItemSet;
+import org.knime.core.data.collection.bitvector.BitVectorValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 
@@ -52,7 +52,7 @@ public interface AprioriAlgorithm {
      * @param exec the execution monitor
      * @throws CanceledExecutionException if the execution was cancelled
      */
-    public void findFrequentItemSets(List<BitSet> transactions, 
+    public void findFrequentItemSets(List<BitVectorValue> transactions, 
             double minSupport, int maxDepth, FrequentItemSet.Type type, 
             ExecutionMonitor exec)
             throws CanceledExecutionException;

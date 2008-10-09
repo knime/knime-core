@@ -27,7 +27,6 @@ package org.knime.base.node.mine.subgroupminer;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -38,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.knime.base.data.bitvector.BitVectorValue;
 import org.knime.base.node.mine.subgroupminer.apriori.AprioriAlgorithm;
 import org.knime.base.node.mine.subgroupminer.apriori.AprioriAlgorithmFactory;
 import org.knime.base.node.mine.subgroupminer.freqitemset.AssociationRule;
@@ -55,6 +53,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.collection.bitvector.BitVectorValue;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
@@ -217,28 +216,34 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
         m_underlyingStruct.loadSettingsFrom(settings);
     }
 
-    private List<BitSet> preprocess(final DataTable inData,
+    private List<BitVectorValue> preprocess(final DataTable inData,
             final ExecutionMonitor exec) throws CanceledExecutionException {
         // TODO: check in configure that only Double values are in the table
         m_tidRowKeyMapping = new HashMap<Integer, RowKey>();
         m_nrOfRows = 0;
         int totalNrRows = ((BufferedDataTable)inData).getRowCount();
         m_maxBitsetLength = 0;
-        List<BitSet> bitSets = new ArrayList<BitSet>();
+        List<BitVectorValue> bitSets = new ArrayList<BitVectorValue>();
         int bitVectorIndex = inData.getDataTableSpec().findColumnIndex(
                 m_bitVectorColumn.getStringValue());
         if (bitVectorIndex < 0) {
-            return new ArrayList<BitSet>();
+            return new ArrayList<BitVectorValue>();
         }
         for (RowIterator itr = inData.iterator(); itr.hasNext();) {
             exec.checkCanceled();
             DataRow currRow = itr.next();
             BitVectorValue currCell = ((BitVectorValue)currRow
                     .getCell(bitVectorIndex));
-            BitSet currBitSet = currCell.getBitSet();
-            m_maxBitsetLength = Math.max(m_maxBitsetLength, currCell
-                    .getNumBits());
-            bitSets.add(currBitSet);
+            if (currCell.length() > Integer.MAX_VALUE) {
+                throw new IllegalArgumentException(
+                        "bit vector in row " + currRow.getKey().getString()
+                        + " is too long: " + currCell.length()
+                        + ". Only bit vectors up to " + Integer.MAX_VALUE
+                        + " are supported by this node.");
+            }
+            m_maxBitsetLength = Math.max(m_maxBitsetLength, (int)currCell
+                    .length());
+            bitSets.add(currCell);
             m_tidRowKeyMapping.put(m_nrOfRows, currRow.getKey());
             m_nrOfRows++;
 
@@ -258,7 +263,7 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
         DataTable input = (BufferedDataTable)inData[0];
         ExecutionMonitor exec1 = exec.createSubProgress(0.5);
         ExecutionMonitor exec2 = exec.createSubProgress(0.5);
-        List<BitSet> transactions = preprocess(input, exec1);
+        List<BitVectorValue> transactions = preprocess(input, exec1);
 
         m_nameMapping = input.getDataTableSpec().getColumnSpec(
                 m_bitVectorColumn.getStringValue()).getElementNames();
