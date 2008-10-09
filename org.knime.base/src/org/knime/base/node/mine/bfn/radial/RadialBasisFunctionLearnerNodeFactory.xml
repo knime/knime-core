@@ -86,7 +86,7 @@
 	</ports>
 	
 	<views>
-		<view index="0" name="PNN Learner Statistics">
+		<view index="0" name="Learner Statistics">
 			Displays a summary of the learning process.
 		</view>
 	</views>
