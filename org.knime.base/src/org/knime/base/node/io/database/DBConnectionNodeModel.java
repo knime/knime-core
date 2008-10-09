@@ -33,6 +33,8 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContent;
+import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -40,10 +42,10 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
-import org.knime.core.node.port.database.DatabaseReaderConnection;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
+import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
+import org.knime.core.node.port.database.DatabaseReaderConnection;
 
 /**
  * 
@@ -52,6 +54,7 @@ import org.knime.core.node.port.database.DatabasePortObjectSpec;
 final class DBConnectionNodeModel extends NodeModel {
     
     private DatabaseReaderConnection m_load = null;
+    
     private DataTableSpec m_lastSpec = null;
     
     /** Config key to write last processed spec. */
@@ -73,15 +76,15 @@ final class DBConnectionNodeModel extends NodeModel {
             final ExecutionContext exec) 
             throws CanceledExecutionException, Exception {
         try {
-            if (m_load == null || m_lastSpec == null) {
+            if (m_load == null) {
                 exec.setProgress("Opening database connection...");
                 DatabasePortObject dbObj = (DatabasePortObject) inData[0];
                 DatabaseQueryConnectionSettings conn = 
                     new DatabaseQueryConnectionSettings(
                         dbObj.getConnectionModel());
                 m_load = new DatabaseReaderConnection(conn);
-                m_lastSpec = m_load.getDataTableSpec();
             }
+            m_lastSpec = m_load.getDataTableSpec();
             exec.setProgress("Reading data from database...");
             return new BufferedDataTable[]{m_load.createTable(exec)};
         } catch (Throwable t) {
@@ -138,19 +141,22 @@ final class DBConnectionNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) 
             throws InvalidSettingsException {
-        if (m_lastSpec != null) {
-            return new DataTableSpec[]{m_lastSpec};
+        DatabasePortObjectSpec dbSpec = 
+            (DatabasePortObjectSpec) inSpecs[0];
+        ModelContentRO newConn = dbSpec.getConnectionModel();
+        if (m_load != null) {
+            ModelContent oldConn = new ModelContent(
+                    "database_query_connection_model");
+            m_load.getQueryConnection().saveConnection(oldConn);
+            if (oldConn.equals(newConn)) {
+                return new DataTableSpec[]{m_lastSpec};
+            }
         }
         try {
-            if (m_load == null || m_lastSpec == null) {
-                DatabasePortObjectSpec dbSpec = 
-                    (DatabasePortObjectSpec) inSpecs[0];
-                DatabaseQueryConnectionSettings conn = 
-                    new DatabaseQueryConnectionSettings(
-                        dbSpec.getConnectionModel());
-                m_load = new DatabaseReaderConnection(conn);
-                m_lastSpec = m_load.getDataTableSpec();
-            }
+            DatabaseQueryConnectionSettings conn = 
+                new DatabaseQueryConnectionSettings(newConn);
+            m_load = new DatabaseReaderConnection(conn);
+            m_lastSpec = m_load.getDataTableSpec();
             return new DataTableSpec[]{m_lastSpec};
         } catch (InvalidSettingsException ise) {
             m_lastSpec = null;
