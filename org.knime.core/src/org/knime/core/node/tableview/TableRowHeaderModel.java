@@ -224,6 +224,19 @@ public class TableRowHeaderModel extends AbstractTableModel {
         m_contentInterface.addTableModelListener(m_contentListener);
         fireTableDataChanged();
     }
+    
+    /** Return <code>false</code> if the underlying table is an instance
+     * of {@link TableContentModel} and its row count is not final (indicating
+     * that the table has not been traversed to the very end). In all other 
+     * cases return <code>true</code>.
+     * @return Whether there are (not) more rows to see. 
+     */
+    boolean isRowCountFinal() {
+        if (!(m_contentInterface instanceof TableContentModel)) {
+            return true;
+        }
+        return ((TableContentModel)m_contentInterface).isRowCountFinal();
+    }
 
     
     /** 
