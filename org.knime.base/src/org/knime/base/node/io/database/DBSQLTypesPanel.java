@@ -61,12 +61,15 @@ final class DBSQLTypesPanel extends JPanel {
      * mapping read from spec and settings object. If no type is available
      * to default types are used.
      * @param settings Settings object to read specified SQL-types from.
-     * @param specs The data spec to retrive all column names and types.
+     * @param specs The data spec to retrieve all column names and types.
      */
     void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) {
         m_map.clear();
         super.removeAll();
+        if (specs == null || specs[0] == null) {
+            return;
+        }
         for (int i = 0; i < specs[0].getNumColumns(); i++) {
             JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 15));
             DataColumnSpec cspec = specs[0].getColumnSpec(i);
