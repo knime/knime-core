@@ -1736,6 +1736,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         newSettings.setDataFileLocationAndUpdateTableName(m_frSettings
                 .getDataFileLocation());
         m_frSettings = newSettings;
+        m_firstColProp = null;
         // don't load location - don't trigger analysis
         loadSettings(false);
     }
