@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Konstanz Information Miner
 Bundle-SymbolicName: org.knime.product;singleton:=true
-Bundle-Version: 2.0.0.0017855
+Bundle-Version: 2.1.0.0018128
 Bundle-ClassPath: knime-product-patches.jar,
  knime-product.jar
 Bundle-Activator: org.knime.product.ProductPlugin
