@@ -67,7 +67,7 @@ public class OutPortView extends JFrame {
     
     private final LoadingPanel m_loadingPanel = new LoadingPanel();
     
-    private final static ExecutorService UPDATE_EXECUTOR = 
+    private static final ExecutorService UPDATE_EXECUTOR = 
         Executors.newCachedThreadPool(new ThreadFactory() {
         private final AtomicInteger m_counter = new AtomicInteger();
         @Override
@@ -182,8 +182,8 @@ public class OutPortView extends JFrame {
                     boexle.add(new JLabel("No data available!"));
                     boexle.add(Box.createHorizontalGlue());
                     noDataPanel.add(boexle, BorderLayout.CENTER);
-                    noDataPanel.setName("No data available");
-                    views.put("No data available", noDataPanel);
+                    noDataPanel.setName("No Table");
+                    views.put("No Table", noDataPanel);
                 }
                 JComponent[] posViews = portObjectSpec == null 
                     ? new JComponent[0] : portObjectSpec.getViews();

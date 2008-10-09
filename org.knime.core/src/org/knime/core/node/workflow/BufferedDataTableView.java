@@ -85,22 +85,14 @@ public class BufferedDataTableView extends JComponent {
     @Override
     public String getName() {
         if (m_table == null) {
-            return "No data available";
+            return "No Table";
         }
         StringBuilder result = new StringBuilder("");
         String tableName = m_table.getDataTableSpec().getName(); 
         if (tableName != null) {
-            result.append("Table: " + tableName);
+            result.append("Table \"" + tableName + "\"");
         } else {
             result.append("");
-        }
-        Integer numOfColumns = null;
-        if (m_table != null) {
-            numOfColumns = m_table.getDataTableSpec().getNumColumns();
-        }
-        if (numOfColumns != null) {
-            result.append(", Column" + (numOfColumns > 1 ? "s" : "")
-                    + ": " + numOfColumns);
         }
         if (m_table instanceof BufferedDataTable) {
             String numOfRows = null;
@@ -108,7 +100,7 @@ public class BufferedDataTableView extends JComponent {
                 numOfRows = "" + ((BufferedDataTable) m_table).getRowCount();
             }
             if (numOfRows != null) {
-                result.append(", Rows: " + numOfRows);
+                result.append(" - Rows: " + numOfRows);
             }
         }
         return result.toString();

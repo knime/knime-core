@@ -99,13 +99,12 @@ public class DataTableSpecView extends JPanel {
             m_specView.setDataTable(createTableSpecTable(m_tableSpec));
             // display the number of columns in the upper left corner
             if (m_tableSpec != null) {
-                int numOfCols = m_tableSpec.getNumColumns();
-                m_specView.getHeaderTable().setColumnName("" + numOfCols
-                        + " Column" + (numOfCols > 1 ? "s" : ""));
-                setName(createWindowTitle(m_tableSpec
-                        .getName(), m_tableSpec.getNumColumns(), null));
+                String title = createWindowTitle(m_tableSpec.getNumColumns());
+                m_specView.getHeaderTable().setColumnName(title);
+                setName("Spec - " + title);
             } else {
                 m_specView.getHeaderTable().setColumnName("");
+                setName("No Spec");
             }
         }
     }
@@ -298,22 +297,8 @@ public class DataTableSpecView extends JPanel {
     }
     
     
-    private static String createWindowTitle(final String tableName,
-            final Integer numOfCols, final Integer numOfRows) {
-        StringBuilder result = new StringBuilder("");
-        if (tableName != null) {
-            result.append("DataTableSpec: " + tableName);
-        } else {
-            result.append("");
-        }
-        if (numOfCols != null) {
-            result.append(", Column" + (numOfCols > 1 ? "s" : "")
-                    + ": " + numOfCols);
-        }
-        if (numOfRows != null) {
-            result.append(", Rows: " + numOfRows);
-        }
-        return result.toString();
+    private static String createWindowTitle(final int numOfCols) {
+        return "Column" + (numOfCols > 1 ? "s: " : ": ") + numOfCols;
     }
 
     
