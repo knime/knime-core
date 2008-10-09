@@ -322,16 +322,14 @@ public class WrappedNodeDialog extends Dialog {
                 return true;
             }
         } catch (InvalidSettingsException ise) {
-            LOGGER.warn("failed to configure: " + ise.getMessage(),  ise);
-            showErrorMessage("Invalid Settings\n" + ise.getMessage());
+            LOGGER.warn("failed to apply settings: " + ise.getMessage(),  ise);
+            showWarningMessage("Invalid settings:\n" + ise.getMessage());
 
         } catch (IllegalStateException ex) {
-            LOGGER.error("failed to configure: " + ex.getMessage(), ex);
-            showErrorMessage("You cannot apply node settings if the workflow"
-                    + " is executing. Please stop execution or wait until all"
-                    + " nodes have been finished.");            
+            LOGGER.warn("failed to apply settings: " + ex.getMessage(), ex);
+            showWarningMessage("Invalid node state:\n" + ex.getMessage());
         } catch (Throwable t) {
-            LOGGER.error("failed to configure: " + t.getMessage(), t);
+            LOGGER.error("failed to apply settings: " + t.getMessage(), t);
             showErrorMessage(t.getClass().getSimpleName() + ": "
                     + t.getMessage());
         }
@@ -344,13 +342,25 @@ public class WrappedNodeDialog extends Dialog {
      * 
      * @param message The error string.
      */
-    protected void showErrorMessage(final String message) {
+    private void showErrorMessage(final String message) {
         MessageBox box = new MessageBox(getShell(), SWT.ICON_ERROR);
         box.setText("Error");
         box.setMessage(message != null ? message : "(no message)");
         box.open();
     }
 
+    /**
+     * Shows the latest error message of the dialog in a MessageBox.
+     * 
+     * @param message The error string.
+     */
+    private void showWarningMessage(final String message) {
+        MessageBox box = new MessageBox(getShell(), SWT.ICON_WARNING);
+        box.setText("Warning");
+        box.setMessage(message != null ? message : "(no message)");
+        box.open();
+    }
+    
     /**
      * Show confirm dialog before applying settings.
      * 
