@@ -24,17 +24,22 @@
  */
 package org.knime.workbench.editor2.actions.delegates;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorActionDelegate;
 import org.eclipse.ui.IEditorPart;
-import org.knime.core.node.workflow.WorkflowEvent;
-import org.knime.core.node.workflow.WorkflowListener;
-
+import org.knime.core.node.workflow.NodeStateChangeListener;
+import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
+import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
  * Abstract base class for Editor Actions.
@@ -42,11 +47,17 @@ import org.knime.workbench.editor2.actions.AbstractNodeAction;
  * @author Florian Georg, University of Konstanz
  */
 public abstract class AbstractEditorAction implements IEditorActionDelegate,
-        WorkflowListener {
+        NodeStateChangeListener {
+    
+//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+//            AbstractEditorAction.class);
 
     private WorkflowEditor m_editor;
 
     private AbstractNodeAction m_decoratedAction;
+    
+    private final List<NodeContainerEditPart> m_currentSelection 
+        = new ArrayList<NodeContainerEditPart>();
 
     /**
      * {@inheritDoc}
@@ -57,7 +68,7 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
         if (targetEditor instanceof WorkflowEditor) {
 
             m_editor = (WorkflowEditor)targetEditor;
-            m_editor.getWorkflowManager().addListener(this);
+            m_editor.getWorkflowManager().addNodeStateChangeListener(this);
             m_decoratedAction = createAction(m_editor);
 
         } else {
@@ -66,7 +77,8 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
             }
             m_decoratedAction = null;
             if (m_editor != null) {
-                m_editor.getWorkflowManager().removeListener(this);
+                m_editor.getWorkflowManager().removeNodeStateChangeListener(
+                        this);
             }
             m_editor = null;
         }
@@ -89,10 +101,32 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
         if (m_decoratedAction != null) {
             m_decoratedAction.dispose();
             m_decoratedAction = null;
+            // and unregister from old selection
+            for (NodeContainerEditPart cont : m_currentSelection) {
+                cont.getNodeContainer().removeNodeStateChangeListener(
+                        this);
+            }
+            m_currentSelection.clear();
         }
 
         if (m_editor != null) {
             m_decoratedAction = createAction(m_editor);
+            if (m_decoratedAction instanceof AbstractNodeAction) {
+                StructuredSelection sel = ((StructuredSelection)selection);
+                if (sel != null) {
+                    // register to new selection
+                    for (Iterator itr = sel.iterator(); itr.hasNext();) {
+                        Object o = itr.next();
+                        if (o instanceof NodeContainerEditPart) {
+                            NodeContainerEditPart ncEP 
+                                = (NodeContainerEditPart)o;
+                            m_currentSelection.add(ncEP);
+                            ncEP.getNodeContainer().addNodeStateChangeListener(
+                                    this);
+                        }
+                    }
+                }
+            }
             action.setEnabled(m_decoratedAction.isEnabled());
         }
 
@@ -107,6 +141,11 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
          * execute/reset nodes quickly (and frequently). There where 
          * many (> 500000) runnables in the async-queue. */
         private boolean m_isQueued;
+        /**
+         * 
+         * {@inheritDoc}
+         */
+        @Override
         public void run() {
             m_isQueued = false;
             ISelectionProvider p = m_editor.getSite().getSelectionProvider();
@@ -121,10 +160,13 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
         }
     }
 
+
     /**
+     * 
      * {@inheritDoc}
      */
-    public void workflowChanged(final WorkflowEvent event) {
+    @Override
+    public void stateChanged(final NodeStateEvent state) {
         m_selectionRunnable.asyncExec();
     }
 
