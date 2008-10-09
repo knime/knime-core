@@ -68,8 +68,12 @@ final class DBQueryNodeDialogPane extends DefaultNodeSettingsPane {
     public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
         DatabasePortObjectSpec dbSpec = (DatabasePortObjectSpec) specs[0];
-        DataTableSpec[] dataSpecs = 
-            new DataTableSpec[]{dbSpec.getDataTableSpec()};
+        final DataTableSpec[] dataSpecs; 
+        if (dbSpec == null) {
+            dataSpecs = new DataTableSpec[]{null};
+        } else {
+            dataSpecs = new DataTableSpec[]{dbSpec.getDataTableSpec()};
+        }
         super.loadAdditionalSettingsFrom(settings, dataSpecs);
         m_panel.loadSettingsFrom(settings, dataSpecs);
     }

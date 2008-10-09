@@ -140,8 +140,13 @@ final class DBReaderNodeModel extends NodeModel {
             return new DataTableSpec[]{m_lastSpec};
         }
         try {
+            DatabaseQueryConnectionSettings conn = m_load.getQueryConnection();
+            if (conn == null) {
+                throw new InvalidSettingsException(
+                        "No database connection available.");
+            }
             m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(
-                    m_load.getQueryConnection(), m_query));
+                    conn, m_query));
             m_lastSpec = m_load.getDataTableSpec();
             return new DataTableSpec[]{m_lastSpec};
         } catch (InvalidSettingsException e) {

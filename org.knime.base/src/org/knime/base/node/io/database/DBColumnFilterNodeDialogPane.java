@@ -61,7 +61,12 @@ final class DBColumnFilterNodeDialogPane extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] ports) throws NotConfigurableException {
         DatabasePortObjectSpec dbSpec = (DatabasePortObjectSpec) ports[0];
-        DataTableSpec[] specs = new DataTableSpec[]{dbSpec.getDataTableSpec()};
+        final DataTableSpec[] specs; 
+        if (dbSpec == null) {
+            specs = new DataTableSpec[]{(DataTableSpec)null};
+        } else {
+            specs = new DataTableSpec[]{dbSpec.getDataTableSpec()};
+        }
         m_panel.loadSettingsFrom(settings, specs);
         m_tableOptions.loadSettingsFrom(settings, specs);
     }
