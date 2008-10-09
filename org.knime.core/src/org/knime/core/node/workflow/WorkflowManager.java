@@ -921,8 +921,8 @@ public final class WorkflowManager extends NodeContainer {
                 nc.loadSettings(settings);
                 configureNodeAndSuccessors(id, true, true);
             } else {
-                throw new IllegalStateException("Can not load settings into running"
-                        + " node.");
+                throw new IllegalStateException(
+                        "Cannot load settings into running node.");
             }
         }
     }
