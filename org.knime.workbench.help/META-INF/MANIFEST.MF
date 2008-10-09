@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Workbench Help
 Bundle-SymbolicName: org.knime.workbench.help;singleton:=true
-Bundle-Version: 2.0.0.0017855
+Bundle-Version: 2.1.0.0018128
 Bundle-ClassPath: workbench-help-patches.jar,
  workbench-help.jar
 Bundle-Activator: org.knime.workbench.help.KNIMEHelpPlugin

@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Deprecated KNIME nodes
 Bundle-SymbolicName: org.knime.deprecated
-Bundle-Version: 2.0.0.0017855
+Bundle-Version: 2.1.0.0018128
 Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
 Fragment-Host: org.knime.base;bundle-version="2.0.0"
 Require-Bundle: org.knime.core
