@@ -34,9 +34,13 @@ import org.knime.base.data.normalize.AffineTransConfiguration;
 import org.knime.base.data.normalize.AffineTransTable;
 import org.knime.base.data.normalize.Normalizer;
 import org.knime.base.data.normalize.NormalizerPortObject;
+import org.knime.core.data.DataColumnDomainCreator;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -225,13 +229,14 @@ public class NormalizerNodeModel extends NodeModel {
         int rowcount = inTable.getRowCount();
         ExecutionMonitor prepareExec = exec.createSubProgress(0.3);
         AffineTransTable outTable;
-
+        boolean fixDomainBounds = false;
         switch (m_mode) {
         case NONORM_MODE:
             NormalizerPortObject p = new NormalizerPortObject(
                     new DataTableSpec(), new AffineTransConfiguration());
             return new PortObject[]{inTable, p};
         case MINMAX_MODE:
+            fixDomainBounds = true;
             outTable = ntable.doMinMaxNorm(m_max, m_min, prepareExec);
             break;
         case ZSCORE_MODE:
@@ -257,9 +262,32 @@ public class NormalizerNodeModel extends NodeModel {
         NormalizerPortObject modelPO =
             new NormalizerPortObject(modelSpec, configuration);
 
+        DataTableSpec spec = outTable.getDataTableSpec();
+        // fix the domain to min/max in case of MINMAX_MODE; fixes bug #1187
+        // ideally this goes into the AffineTransConfiguration/AffineTransTable,
+        // but that will not work with the applier node (which will apply 
+        // the same transformation, which is not guaranteed to snap to min/max) 
+        if (fixDomainBounds) {
+            DataColumnSpec[] newColSpecs = 
+                new DataColumnSpec[spec.getNumColumns()];
+            for (int i = 0; i < newColSpecs.length; i++) {
+                newColSpecs[i] = spec.getColumnSpec(i);
+            }
+            for (int i = 0; i < m_columns.length; i++) {
+                int index = spec.findColumnIndex(m_columns[i]);
+                DataColumnSpecCreator creator = 
+                    new DataColumnSpecCreator(newColSpecs[index]);
+                DataColumnDomainCreator domCreator =
+                    new DataColumnDomainCreator(newColSpecs[index].getDomain());
+                domCreator.setLowerBound(new DoubleCell(m_min));
+                domCreator.setUpperBound(new DoubleCell(m_max));
+                creator.setDomain(domCreator.createDomain());
+                newColSpecs[index] = creator.createSpec();
+            }
+            spec = new DataTableSpec(spec.getName(), newColSpecs);
+        }
         ExecutionMonitor normExec = exec.createSubProgress(.7);
-        BufferedDataContainer container =
-                exec.createDataContainer(outTable.getDataTableSpec());
+        BufferedDataContainer container = exec.createDataContainer(spec);
         int count = 1;
         for (DataRow row : outTable) {
             normExec.checkCanceled();
