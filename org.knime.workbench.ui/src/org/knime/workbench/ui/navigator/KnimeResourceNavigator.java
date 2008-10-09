@@ -153,12 +153,15 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                     String name =  ProjectWorkflowMap.findProjectFor(
                             state.getSource());
                     if (name != null) {
+                        // we have to find the resource again, hence we cannot 
+                        // put the project's name with toLowercase into the map
                         IResource rsrc = ResourcesPlugin.getWorkspace()
                             .getRoot().findMember(name);
                         if (rsrc != null) {
                             getTreeViewer().update(rsrc, null);
                         }
                     } else {
+                        LOGGER.debug("didn't found project name - do refresh");
                         getTreeViewer().refresh();
                     }
                 } catch (IllegalArgumentException iae) {

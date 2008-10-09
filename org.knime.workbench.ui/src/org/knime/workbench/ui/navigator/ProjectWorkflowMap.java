@@ -160,10 +160,9 @@ public final class ProjectWorkflowMap {
      * {@link WorkflowManager} is stored in the map.
      */
     public static void remove(final String name) {
-        WorkflowManager manager = (WorkflowManager)PROJECTS.get(
-                name.toLowerCase());
+        WorkflowManager manager = (WorkflowManager)PROJECTS.get(name);
         if (manager != null) {            
-            PROJECTS.remove(name.toLowerCase());
+            PROJECTS.remove(name);
             WF_LISTENER.workflowChanged(new WorkflowEvent(
                     WorkflowEvent.Type.NODE_REMOVED, manager.getID(), 
                     manager, null));
@@ -183,7 +182,7 @@ public final class ProjectWorkflowMap {
     public static void putWorkflow(final String name, 
             final WorkflowManager manager) {
         LOGGER.debug("putting " + name + " onto map");
-        PROJECTS.put(name.toLowerCase(), manager);
+        PROJECTS.put(name, manager);
         manager.addNodeStateChangeListener(NSC_LISTENER);
         manager.addListener(WF_LISTENER);
         WF_LISTENER.workflowChanged(new WorkflowEvent(
@@ -206,7 +205,7 @@ public final class ProjectWorkflowMap {
      * workflow manager is not registered under the passed name. 
      */
     public static NodeContainer getWorkflow(final String projectName) {
-        return PROJECTS.get(projectName.toLowerCase());
+        return PROJECTS.get(projectName);
     }
     
     /**
