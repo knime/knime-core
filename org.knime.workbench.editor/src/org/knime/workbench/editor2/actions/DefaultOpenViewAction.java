@@ -140,11 +140,9 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
                         try {
-                            String title = cont.getID().toString();
-                            if (cont.getCustomName() != null) {
-                                title = cont.getCustomName();
-                            }
-                            title += cont.getViewName(0);
+                            final String title = cont.getViewName(0) + " - " 
+                                + cont.getName() + " #" 
+                                + cont.getID().getIndex();
                             cont.getView(0).createFrame(title);
                         } catch (Throwable t) {
                             MessageBox mb = new MessageBox(

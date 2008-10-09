@@ -66,7 +66,7 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
  * JFace implementation of a dialog containing the wrapped Panel from the
  * original node dialog.
  * 
- * @author Florian Georg, University of Konstanz
+ * @author Fabian Dill, University of Konstanz
  */
 public class WrappedNodeDialog extends Dialog {
     private Composite m_container;
@@ -185,7 +185,8 @@ public class WrappedNodeDialog extends Dialog {
         // + " the '" + m_nodeContainer.getNodeName() + "' node.");
 
         // create the dialogs' panel and pass it to the SWT wrapper composite
-        getShell().setText("Dialog - " + m_nodeContainer.getNameWithID());
+        getShell().setText("Dialog - " + m_nodeContainer.getName() + " #"
+                + m_nodeContainer.getID().getIndex());
 
         JPanel p = m_dialogPane.getPanel();
         m_wrapper = new Panel2CompositeWrapper(m_container, p, SWT.EMBEDDED);
@@ -244,7 +245,7 @@ public class WrappedNodeDialog extends Dialog {
                 IDialogConstants.CANCEL_ID, 
                 IDialogConstants.CANCEL_LABEL, false);
 
-        // Register listeneres that notify the content object, which
+        // Register listeners that notify the content object, which
         // in turn notify the dialog about the particular event.
         btnOK.addSelectionListener(new SelectionAdapter() {
             @Override
