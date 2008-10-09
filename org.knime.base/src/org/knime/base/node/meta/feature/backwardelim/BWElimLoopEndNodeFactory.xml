@@ -22,7 +22,7 @@
     <ports>
         <dataIn index="0" name="Table with prediction">The result table of a predictor inside the loop</dataIn>
         <dataOut index="0" name="Levels">Elimination levels and corresponding error rates and left out columns</dataOut>
-        <modelOut index="0" name="Elimination model">
+        <modelOut index="0" name="Elimination Model">
             The elimination levels as model that can be used in a backward elimination filter node
         </modelOut>
     </ports>

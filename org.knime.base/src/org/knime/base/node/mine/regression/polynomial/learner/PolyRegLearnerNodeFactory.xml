@@ -18,21 +18,21 @@
     </fullDescription>
 
     <ports>
-        <dataIn name="Trainig data" index="0">
+        <dataIn name="Training data" index="0">
             The input samples, which of the columns are used as independent variables can be configured in the dialog.
              The input must not contain missing values, you have to fix them by e.g. using the Missing Values node.
         </dataIn>
         <dataOut name="Data with training error" index="0">
             Training data classified with the learned model and the corresponding errors.
         </dataOut>
-        <modelOut name="Regression coefficients" index="0">
+        <modelOut name="Regression Coefficients" index="0">
             The computed regression coefficients as a model for use in the Polynomial Regression Predictor.
         </modelOut>
     </ports>
 
     <views>
-        <view index="0" name="Learned coefficients">Shows all learned coefficients all attributes.</view>
-        <view index="1" name="Scatterplot view">
+        <view index="0" name="Learned Coefficients">Shows all learned coefficients all attributes.</view>
+        <view index="1" name="Scatter Plot">
             Shows the data points and the regression function in one dimension.
         </view>
     </views>

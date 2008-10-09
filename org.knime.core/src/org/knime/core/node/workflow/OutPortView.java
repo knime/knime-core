@@ -79,18 +79,16 @@ public class OutPortView extends JFrame {
         };
     });
 
-//    private final Object m_updateLock = new Object();
-
     /**
      * A view showing the data stored in the specified output port.
      *
-     * @param nodeName The name of the node the inspected port belongs to
+     * @param nodeNameWithID The name of the node the inspected port belongs to
      * @param portName name of the port which is also displayed in the title
      */
-    OutPortView(final String nodeName, final String portName) {
-        super(nodeName + " (" + portName + ")");
+    OutPortView(final String nodeNameWithID, final String portName) {
+        super(portName + " - " + nodeNameWithID);
         // init frame
-        super.setName(nodeName + " - " + portName + " View");
+        super.setName(getTitle());
         if (KNIMEConstants.KNIME16X16 != null) {
             super.setIconImage(KNIMEConstants.KNIME16X16.getImage());
         }

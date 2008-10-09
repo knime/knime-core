@@ -49,7 +49,7 @@ import org.knime.core.data.RowKey;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public interface HiLiteHandler {
+public abstract class HiLiteHandler {
     
     /**
      * Constant for the Menu entry 'HiLite'.
@@ -77,19 +77,19 @@ public interface HiLiteHandler {
      * 
      * @param listener the hilite listener to add
      */
-    void addHiLiteListener(final HiLiteListener listener);
+    public abstract void addHiLiteListener(final HiLiteListener listener);
 
     /**
      * Removes the <code>HiLiteListener</code> from the list.
      * 
      * @param listener the hilite listener to remove from the list
      */
-    void removeHiLiteListener(final HiLiteListener listener);
+    public abstract void removeHiLiteListener(final HiLiteListener listener);
 
     /**
      * Removes all hilite listeners from this handler.
      */
-    void removeAllHiLiteListeners();
+    public abstract void removeAllHiLiteListeners();
 
     /**
      * Checks if the given row IDs have been hilit.
@@ -98,28 +98,28 @@ public interface HiLiteHandler {
      * @return <code>true</code> if all IDs are hilit, <code>false</code>
      * otherwise
      */
-    boolean isHiLit(final RowKey... ids);
+    public abstract boolean isHiLit(final RowKey... ids);
 
     /**
      * Returns an unmodifiable set of hilit keys.
      * 
      * @return a set of hilit keys.
      */
-    Set<RowKey> getHiLitKeys();
+    public abstract Set<RowKey> getHiLitKeys();
 
     /**
      * Hilites the given items and fires an event to all registered listeners.
      * 
      * @param ids an array of row IDs to hilite
      */
-    void fireHiLiteEvent(final RowKey... ids);
+    public abstract void fireHiLiteEvent(final RowKey... ids);
 
     /**
      * Hilites the given keys and fires an event to all registered listeners.
      * 
      * @param ids the set of row keys to hilite
      */
-    void fireHiLiteEvent(final Set<RowKey> ids);
+    public abstract void fireHiLiteEvent(final Set<RowKey> ids);
 
     /**
      * Unhilites the given items and fires the event to all registered
@@ -127,17 +127,35 @@ public interface HiLiteHandler {
      * 
      * @param ids an array of row IDs to reset hilite status
      */
-    void fireUnHiLiteEvent(final RowKey... ids);
+    public abstract void fireUnHiLiteEvent(final RowKey... ids);
 
     /**
      * Unhilites the given keys and fires an event to all registered listeners.
      * 
      * @param ids the set of row IDs to unhilite
      */
-    void fireUnHiLiteEvent(final Set<RowKey> ids);
+    public abstract void fireUnHiLiteEvent(final Set<RowKey> ids);
 
     /**
      * Unhilites all hilit items and fires an event.
      */
-    void fireClearHiLiteEvent();
+    public abstract void fireClearHiLiteEvent();
+    
+    /**
+     * Internal fire hilite method used to fire specific hilite events.
+     * @param event the event to fire
+     */
+    protected abstract void fireHiLiteEventInternal(final KeyEvent event);
+    
+    /**
+     * Internal fire hilite method used to fire specific unhilite events.
+     * @param event the event to fire
+     */
+    protected abstract void fireUnHiLiteEventInternal(final KeyEvent event);
+    
+    /**
+     * Internal fire hilite method used to fire specific clear hilite events.
+     * @param event the event to fire
+     */
+    protected abstract void fireClearHiLiteEventInternal(final KeyEvent event);
 }

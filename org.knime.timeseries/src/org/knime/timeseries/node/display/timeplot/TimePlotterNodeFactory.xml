@@ -79,7 +79,7 @@
 		<dataIn index="0" name="Display data">Datatable with data to display</dataIn>
 	</ports>	
 	<views>
-		<view index="0" name="Timeplot">
+		<view index="0" name="Time Plot">
 			The time plot displaying the data.
 		</view>
 	</views>

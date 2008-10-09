@@ -60,6 +60,9 @@ public class HiLiteTranslator {
     /** Contains the mapping between aggregation and single items. */
     private HiLiteMapper m_mapper;
     
+    /** Event source used to indicate hilite events fired by this translator. */
+    private final Object m_eventSource = this;
+    
     /** 
      * Listener on the source handler used to forward events  
      * to all registered target handlers.
@@ -69,6 +72,9 @@ public class HiLiteTranslator {
          * {@inheritDoc}
          */
         public void hiLite(final KeyEvent event) {
+            if (event.getSource() == m_eventSource) {
+                return;
+            }
             if (m_mapper != null && m_targetHandlers.size() > 0) {
                 Set<RowKey> fireSet = new LinkedHashSet<RowKey>();
                 for (RowKey key : event.keys()) {
@@ -79,9 +85,8 @@ public class HiLiteTranslator {
                 }
                 if (!fireSet.isEmpty()) {
                     for (HiLiteHandler h : m_targetHandlers) {
-                        //if (h != event.getSource()) {
-                            h.fireHiLiteEvent(fireSet);
-                        //}
+                        h.fireHiLiteEventInternal(
+                                new KeyEvent(m_eventSource, fireSet));
                     }
                 }
             }
@@ -91,6 +96,9 @@ public class HiLiteTranslator {
          * {@inheritDoc}
          */
         public void unHiLite(final KeyEvent event) {
+            if (event.getSource() == m_eventSource) {
+                return;
+            }
             if (m_mapper != null && m_targetHandlers.size() > 0) {
                 Set<RowKey> fireSet = new LinkedHashSet<RowKey>();
                 for (RowKey key : event.keys()) {
@@ -101,9 +109,8 @@ public class HiLiteTranslator {
                 }
                 if (!fireSet.isEmpty()) {
                     for (HiLiteHandler h : m_targetHandlers) {
-                        //if (h != event.getSource()) {
-                            h.fireUnHiLiteEvent(fireSet);
-                        //}
+                        h.fireUnHiLiteEventInternal(
+                                new KeyEvent(m_eventSource, fireSet));
                     }
                 }
             }
@@ -113,10 +120,12 @@ public class HiLiteTranslator {
          * {@inheritDoc}
          */
         public void unHiLiteAll(final KeyEvent event) {
+            if (event.getSource() == m_eventSource) {
+                return;
+            }
             for (HiLiteHandler h : m_targetHandlers) {
-                //if (h != event.getSource()) {
-                    h.fireClearHiLiteEvent();
-                //}
+                h.fireClearHiLiteEventInternal(
+                        new KeyEvent(m_eventSource));
             }
         }
     };
@@ -130,28 +139,25 @@ public class HiLiteTranslator {
          * {@inheritDoc}
          */
         public void hiLite(final KeyEvent event) {
+            if (event.getSource() == m_eventSource) {
+                return;
+            }
             if (m_mapper != null) {
-                try {
-                    // remove source listener temporarily to ensure that the 
-                    // fired event is not propagates back to this target handler
-                    m_sourceHandler.removeHiLiteListener(m_sourceListener);
-                    // add all hilite keys from the event and all hilit keys
-                    // from the target hilite handlers
-                    final Set<RowKey> all = new LinkedHashSet<RowKey>(
-                            event.keys());
-                    for (HiLiteHandler hdl : m_targetHandlers) {
-                        all.addAll(hdl.getHiLitKeys());
+                // add all hilite keys from the event and all hilit keys
+                // from the target hilite handlers
+                final Set<RowKey> all = new LinkedHashSet<RowKey>(
+                        event.keys());
+                for (HiLiteHandler hdl : m_targetHandlers) {
+                    all.addAll(hdl.getHiLitKeys());
+                }
+                // check overlap with all mappings  
+                for (RowKey key : m_mapper.keySet()) {
+                    final Set<RowKey> keys = m_mapper.getKeys(key);
+                    // if all mapped keys are hilit then fire event
+                    if (all.containsAll(keys)) {
+                        m_sourceHandler.fireHiLiteEventInternal(
+                                new KeyEvent(m_eventSource, key));
                     }
-                    // check overlap with all mappings  
-                    for (RowKey key : m_mapper.keySet()) {
-                        final Set<RowKey> keys = m_mapper.getKeys(key);
-                        // if all mapped keys are hilit then fire event
-                        if (all.containsAll(keys)) {
-                            m_sourceHandler.fireHiLiteEvent(key);
-                        }
-                    }
-                } finally {
-                    m_sourceHandler.addHiLiteListener(m_sourceListener);
                 }
             }
         }
@@ -159,24 +165,21 @@ public class HiLiteTranslator {
          * {@inheritDoc}
          */
         public void unHiLite(final KeyEvent event) {
+            if (event.getSource() == m_eventSource) {
+                return;
+            }
             if (m_mapper != null) {
-                try {
-                    // remove source listener temporarily to ensure that the 
-                    // fired event is not propagates back to this target handler
-                    m_sourceHandler.removeHiLiteListener(m_sourceListener);
-                    // check all mappings
-                    for (RowKey key : m_mapper.keySet()) {
-                        final Set<RowKey> keys = m_mapper.getKeys(key);
-                        // if at least one item is unhilit then fire event
-                        for (RowKey hilite : event.keys()) {
-                            if (keys.contains(hilite)) {
-                                m_sourceHandler.fireUnHiLiteEvent(key);
-                                break;
-                            }
+                // check all mappings
+                for (RowKey key : m_mapper.keySet()) {
+                    final Set<RowKey> keys = m_mapper.getKeys(key);
+                    // if at least one item is unhilit then fire event
+                    for (RowKey hilite : event.keys()) {
+                        if (keys.contains(hilite)) {
+                            m_sourceHandler.fireUnHiLiteEventInternal(
+                                    new KeyEvent(m_eventSource, key));
+                            break;
                         }
                     }
-                } finally {
-                    m_sourceHandler.addHiLiteListener(m_sourceListener);
                 }
             }
         }
@@ -184,7 +187,11 @@ public class HiLiteTranslator {
          * {@inheritDoc}
          */
         public void unHiLiteAll(final KeyEvent event) {
-            m_sourceHandler.fireClearHiLiteEvent();
+            if (event.getSource() == m_eventSource) {
+                return;
+            }
+            m_sourceHandler.fireClearHiLiteEventInternal(
+                    new KeyEvent(m_eventSource));
         }
     };
     

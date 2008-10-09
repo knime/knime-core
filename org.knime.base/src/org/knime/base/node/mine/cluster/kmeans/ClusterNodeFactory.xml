@@ -26,7 +26,7 @@
         numerical values and only these are considered for clustering.</dataIn>
         <dataOut index="0" name="Labeled input">The input data labeled with the 
         cluster they are contained in.</dataOut>
-        <modelOut index="0" name="PMML cluster model">PMML cluster model</modelOut>
+        <modelOut index="0" name="PMML Cluster Model">PMML cluster model</modelOut>
 	</ports>
 	
 	<views>

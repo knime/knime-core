@@ -77,7 +77,7 @@
 		<dataIn index="0" name="Display data">Data to display</dataIn>
 	</ports>	
 	<views>
-		<view index="0" name="Lineplot">
+		<view index="0" name="Line Plot">
 			The line plot displaying the data.
 		</view>
 	</views>

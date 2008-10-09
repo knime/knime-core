@@ -28,6 +28,6 @@
         <dataOut index="0" name="Ranked Data">Data table sorted by probability</dataOut>
     </ports>
     <views>
-        <view index="0" name="Lift chart">The lift chart</view>
+        <view index="0" name="Lift Chart">The lift chart</view>
     </views>
 </knimeNode>

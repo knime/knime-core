@@ -42,6 +42,6 @@
         </dataOut>
     </ports>
     <views>
-        <view index="0" name="ROC curves">ROC curves</view>
+        <view index="0" name="ROC Curves">ROC curves</view>
     </views>
 </knimeNode>

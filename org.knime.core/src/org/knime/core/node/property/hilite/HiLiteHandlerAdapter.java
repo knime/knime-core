@@ -35,11 +35,19 @@ import org.knime.core.data.RowKey;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class HiLiteHandlerAdapter implements HiLiteHandler {
+public class HiLiteHandlerAdapter extends HiLiteHandler {
+    
+    /**
+     * Create default hilite handler.
+     */
+    public HiLiteHandlerAdapter() {
+        super();
+    }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void addHiLiteListener(final HiLiteListener listener) {
 
     }
@@ -47,6 +55,7 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void fireClearHiLiteEvent() {
 
     }
@@ -54,6 +63,7 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void fireHiLiteEvent(final RowKey... ids) {
 
     }
@@ -61,6 +71,7 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void fireHiLiteEvent(final Set<RowKey> ids) {
 
     }
@@ -68,6 +79,7 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void fireUnHiLiteEvent(final RowKey... ids) {
 
     }
@@ -75,6 +87,7 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void fireUnHiLiteEvent(final Set<RowKey> ids) {
 
     }
@@ -82,6 +95,7 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<RowKey> getHiLitKeys() {
         return Collections.emptySet();
     }
@@ -89,6 +103,7 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isHiLit(final RowKey... ids) {
         return false;
     }
@@ -96,6 +111,7 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void removeAllHiLiteListeners() {
 
     }
@@ -103,8 +119,33 @@ public class HiLiteHandlerAdapter implements HiLiteHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void removeHiLiteListener(final HiLiteListener listener) {
 
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void fireClearHiLiteEventInternal(final KeyEvent event) {
+        
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void fireHiLiteEventInternal(final KeyEvent event) {
+        
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void fireUnHiLiteEventInternal(final KeyEvent event) {
+        
     }
 
 }

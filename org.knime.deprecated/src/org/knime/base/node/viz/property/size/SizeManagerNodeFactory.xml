@@ -29,6 +29,6 @@
 	<ports>
 		<dataIn index="0" name="Input for size information">Datatable with column for size assignment</dataIn>
 		<dataOut index="0" name="Input with Sizes">Datatable with size information set.</dataOut>
-		<modelOut index="0" name="Size model">Sizes applied to the input table</modelOut>
+		<modelOut index="0" name="Size Model">Sizes applied to the input table</modelOut>
 	</ports>	
 </knimeNode>
