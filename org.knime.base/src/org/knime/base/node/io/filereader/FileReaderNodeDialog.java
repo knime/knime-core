@@ -1188,7 +1188,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         // if no valid settings exist, we need to analyze the file.
         if (m_frSettings.getNumberOfColumns() < 0) {
             setErrorLabelText("Waiting for file analysis to finish..."
-                    + "Click \"Stop\" to cut it short.");
+                    + "Click \"Quick Scan\" to cut it short.");
 
             waitForAnalyzeAction();
             // the analysis thread should override the error label
@@ -1632,6 +1632,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      */
     private void setPreviewTable(final FileReaderPreviewTable table) {
 
+        final FileReaderPreviewTable oldTable = m_previewTable;
+
         // register a listener for error messages with the new table
         if (table != null) {
             table.addChangeListener(new ChangeListener() {
@@ -1644,16 +1646,23 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             });
         }
 
-        // set the new table in the view
-        m_previewTableView.setDataTable(table);
-
-        // properly dispose of the old table
-        if (m_previewTable != null) {
-            m_previewTable.removeAllChangeListeners();
-            m_previewTable.dispose();
-        }
-
+        // set this - even before displaying it
         m_previewTable = table;
+
+
+        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+            @Override
+            public void run() {
+                // set the new table in the view
+                m_previewTableView.setDataTable(table);
+
+                // properly dispose of the old table
+                if (oldTable != null) {
+                    oldTable.removeAllChangeListeners();
+                    oldTable.dispose();
+                }
+            }
+        });
 
     }
 
