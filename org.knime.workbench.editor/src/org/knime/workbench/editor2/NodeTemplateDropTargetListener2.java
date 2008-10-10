@@ -95,6 +95,12 @@ public class NodeTemplateDropTargetListener2 implements
         // do nothing
     }
 
+    /**
+     * 
+     * @param event drop target event containing the position 
+     *  (relative to whole display)
+     * @return point converted to the editor coordinates
+     */
     protected Point getDropLocation(final DropTargetEvent event) {
         event.x = event.display.getCursorLocation().x;
         event.y = event.display.getCursorLocation().y;
@@ -147,6 +153,8 @@ public class NodeTemplateDropTargetListener2 implements
                                     factory.getNewObject(),
                                 getDropLocation(event)));
                 NodeUsageRegistry.addNode(template);
+                // bugfix: 1500
+                m_viewer.getControl().setFocus();
             }
         }
     }
