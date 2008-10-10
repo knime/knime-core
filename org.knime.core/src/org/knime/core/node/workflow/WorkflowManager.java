@@ -1257,7 +1257,7 @@ public final class WorkflowManager extends NodeContainer {
     /** call-back from SingleNodeContainer called before node is actually
      * executed.
      *
-     * @param snc SingleNodeContainer which finished execution in a JobExecutor
+     * @param snc SingleNodeContainer which finished execution in a NodeExecutionJobManager
      * @throws IllegalContextStackObjectException If loop end nodes have 
      * problems identifying their start node
      */

@@ -32,7 +32,7 @@ import java.util.concurrent.FutureTask;
  *
  * @author M. Berthold & B. Wiswedel, University of Konstanz
  */
-public class SimpleJobExecutor implements JobExecutor {
+public class SimpleJobExecutor implements NodeExecutionJobManager {
     /**
      * {@inheritDoc}
      */

@@ -32,6 +32,6 @@ import java.util.concurrent.Future;
  *
  * @author M. Berthold & B. Wiswedel, University of Konstanz
  */
-public interface JobExecutor {
+public interface NodeExecutionJobManager {
     Future<?> submitJob(NodeExecutionJob r);
 }

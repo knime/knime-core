@@ -69,7 +69,7 @@ public final class SingleNodeContainer extends NodeContainer
     /** underlying node. */
     private final Node m_node;
 
-    /** remember ID of the job when this node is submitted to a JobExecutor. */
+    /** remember ID of the job when this node is submitted to a NodeExecutionJobManager. */
     private Future<?> m_executionFuture;
 
     /** progress monitor. */
@@ -229,12 +229,12 @@ public final class SingleNodeContainer extends NodeContainer
     }
 
     /**
-     * Set a new JobExecutor for this node but before check for valid state.
+     * Set a new NodeExecutionJobManager for this node but before check for valid state.
      *
-     * @param je the new JobExecutor.
+     * @param je the new NodeExecutionJobManager.
      */
     @Override
-    public void setJobExecutor(final JobExecutor je) {
+    public void setJobExecutor(final NodeExecutionJobManager je) {
         if (getState().equals(State.EXECUTING)
                 || getState().equals(State.QUEUED)) {
             throw new IllegalStateException("Illegal state " + getState()
@@ -420,7 +420,7 @@ public final class SingleNodeContainer extends NodeContainer
 
     /**
      * Change state of marked (for execution) node to queued once it has been
-     * assigned to a JobExecutor.
+     * assigned to a NodeExecutionJobManager.
      *
      * @param inData the incoming data for the execution
      * @throws IllegalStateException in case of illegal entry state.

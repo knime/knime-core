@@ -95,7 +95,7 @@ public abstract class NodeContainer {
 
     private final WorkflowManager m_parent;
 
-    private JobExecutor m_jobExecutor;
+    private NodeExecutionJobManager m_jobExecutor;
 
     private boolean m_isDeletable;
 
@@ -178,21 +178,21 @@ public abstract class NodeContainer {
     }
 
     /**
-     * Set a new JobExecutor for this node and all it's children.
+     * Set a new NodeExecutionJobManager for this node and all it's children.
      *
-     * @param je the new JobExecutor.
+     * @param je the new NodeExecutionJobManager.
      */
-    public void setJobExecutor(final JobExecutor je) {
+    public void setJobExecutor(final NodeExecutionJobManager je) {
         if (je == null) {
-            throw new NullPointerException("JobExecutor must not be null.");
+            throw new NullPointerException("NodeExecutionJobManager must not be null.");
         }
         m_jobExecutor = je;
     }
 
     /**
-     * @return JobExecutor responsible for this node and all its children.
+     * @return NodeExecutionJobManager responsible for this node and all its children.
      */
-    protected final JobExecutor findJobExecutor() {
+    protected final NodeExecutionJobManager findJobExecutor() {
         if (m_jobExecutor == null) {
             assert m_parent != null;
             return ((NodeContainer)m_parent).findJobExecutor();

@@ -39,7 +39,7 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.JobExecutor;
+import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeExecutionJob;
 
 /**
@@ -47,7 +47,7 @@ import org.knime.core.node.workflow.NodeExecutionJob;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ThreadPool implements JobExecutor {
+public class ThreadPool implements NodeExecutionJobManager {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(ThreadPool.class);
