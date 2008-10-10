@@ -36,7 +36,7 @@ public class SimpleJobExecutor implements JobExecutor {
     /**
      * {@inheritDoc}
      */
-    public Future<?> submitJob(final JobRunnable r) {
+    public Future<?> submitJob(final NodeExecutionJob r) {
         FutureTask<?> ft = new FutureTask<Object>(r, null);
         ft.run();
         return ft;

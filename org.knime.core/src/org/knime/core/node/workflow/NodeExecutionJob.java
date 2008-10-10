@@ -26,13 +26,13 @@ package org.knime.core.node.workflow;
 
 import org.knime.core.node.ExecutionContext;
 
-public abstract class JobRunnable implements Runnable {
+public abstract class NodeExecutionJob implements Runnable {
 
     private JobID m_id;
 
     private final ExecutionContext m_execContext;
 
-    public JobRunnable(final ExecutionContext ec) {
+    public NodeExecutionJob(final ExecutionContext ec) {
         m_execContext = ec;
     }
 

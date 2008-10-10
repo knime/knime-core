@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.JobExecutor;
-import org.knime.core.node.workflow.JobRunnable;
+import org.knime.core.node.workflow.NodeExecutionJob;
 
 /**
  * Implements a sophisticated thread pool.
@@ -593,7 +593,7 @@ public class ThreadPool implements JobExecutor {
      * {@inheritDoc}
      */
     @Override
-    public Future<?> submitJob(final JobRunnable r) {
+    public Future<?> submitJob(final NodeExecutionJob r) {
         return enqueue(r);
     }
 }
