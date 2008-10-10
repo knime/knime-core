@@ -31,8 +31,6 @@ import org.knime.core.node.port.PortObject;
 
 public abstract class NodeExecutionJob implements Runnable {
 
-    private JobID m_id;
-
     private final SingleNodeContainer m_snc;
     private final PortObject[] m_data;
     private final ExecutionContext m_execContext;
@@ -62,14 +60,6 @@ public abstract class NodeExecutionJob implements Runnable {
 
     public final void triggerCancel() {
         m_execContext.getProgressMonitor().setExecuteCanceled();
-    }
-
-    JobID getJobID() {
-        return m_id;
-    }
-
-    void setJobID(final JobID id) {
-        m_id = id;
     }
 
 }
