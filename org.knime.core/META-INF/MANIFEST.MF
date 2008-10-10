@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Core API
-Bundle-SymbolicName: org.knime.core
+Bundle-SymbolicName: org.knime.core;singleton=true
 Bundle-Version: 2.1.0.0018128
 Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
 Bundle-ClassPath: knime-core-patches.jar,
