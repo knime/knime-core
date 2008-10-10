@@ -25,13 +25,13 @@
 package org.knime.base.node.mine.subgroupminer.apriori;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 
 import org.knime.base.node.mine.subgroupminer.freqitemset.AssociationRule;
 import org.knime.base.node.mine.subgroupminer.freqitemset.FrequentItemSet;
 import org.knime.base.node.mine.subgroupminer.freqitemset.TIDFrequentItemSet;
+import org.knime.core.data.collection.bitvector.BitVectorValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
@@ -78,18 +78,20 @@ public class TIDApriori implements AprioriAlgorithm {
      * @param exec the execution monitor
      * @throws CanceledExecutionException if user cancels execution
      */
-    public void findFrequentItems(final List<BitSet> transactions,
+    public void findFrequentItems(final List<BitVectorValue> transactions,
             final ExecutionMonitor exec) throws CanceledExecutionException {
         m_frequentItems = new ArrayList<TIDItem>();
         int transactionNr = 0;
-        for (BitSet transaction : transactions) {
+        for (BitVectorValue transaction : transactions) {
             double progress = transactionNr / (double)m_dbsize; 
             exec.setProgress(progress,
                     "detecting frequent items. Transaction nr: "
                             + transactionNr);
             exec.checkCanceled();
-            for (int item = transaction.nextSetBit(0); item >= 0; 
-                item = transaction.nextSetBit(item + 1)) {
+            // this type cast is save since the maximum length was checked in 
+            // SubgroupMinerModel#preprocess
+            for (int item = (int)transaction.nextSetBit(0); item >= 0; 
+                item = (int)transaction.nextSetBit(item + 1)) {
                 /*
                  * iterate over every set bit, but!!! if: counterSoFar (what we
                  * got yet) + (dbsize - transaction#) (what is still possible) <
@@ -224,7 +226,7 @@ public class TIDApriori implements AprioriAlgorithm {
     /**
      * {@inheritDoc}
      */
-    public void findFrequentItemSets(final List<BitSet> transactions,
+    public void findFrequentItemSets(final List<BitVectorValue> transactions,
             final double minSupport, final int maxDepth,
             final FrequentItemSet.Type type, final ExecutionMonitor exec)
             throws CanceledExecutionException {

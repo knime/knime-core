@@ -29,6 +29,7 @@ import java.awt.Dimension;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -56,6 +57,8 @@ public class DefaultTab extends PropertiesTab {
     private final JColorChooser m_chooser;
 
     private final JButton m_chooseBackground;
+    
+    private final JCheckBox m_antialias;
 
     /**
      * Default Tab with mouse mode selection, fit to screen button and
@@ -70,6 +73,8 @@ public class DefaultTab extends PropertiesTab {
         m_chooser = new JColorChooser();
         m_chooser.setPreviewPanel(new JPanel());
         m_chooseBackground = new JButton("Background Color");
+        m_antialias = new JCheckBox("Use anti-aliasing");
+        
         Box compositeBox = Box.createHorizontalBox();
         compositeBox.setBorder(BorderFactory
                 .createEtchedBorder(EtchedBorder.RAISED));
@@ -81,6 +86,8 @@ public class DefaultTab extends PropertiesTab {
         compositeBox.add(m_fitToScreenBtn);
         compositeBox.add(Box.createHorizontalStrut(SPACE));
         compositeBox.add(m_chooseBackground);
+        compositeBox.add(Box.createHorizontalStrut(SPACE));
+        compositeBox.add(m_antialias);
         compositeBox.add(Box.createHorizontalStrut(SMALL_SPACE));
         add(compositeBox);
     }
@@ -123,6 +130,14 @@ public class DefaultTab extends PropertiesTab {
      */
     public JButton getFitToScreenButton() {
         return m_fitToScreenBtn;
+    }
+    
+    /**
+     * 
+     * @return the check box for anti-aliasing
+     */
+    public JCheckBox getAntiAliasButton() {
+        return m_antialias;
     }
 
 }

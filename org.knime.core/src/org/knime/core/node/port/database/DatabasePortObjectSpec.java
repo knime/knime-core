@@ -162,7 +162,7 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
     @Override
     public JComponent[] getViews() {
         JComponent connPanel = new ModelContentOutPortView(m_conn);
-        connPanel.setName("DatabaseConnection");
+        connPanel.setName("Connection");
         JComponent specPanel = new DataTableSpecView(m_spec);
         return new JComponent[]{specPanel, connPanel};
     }

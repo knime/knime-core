@@ -47,7 +47,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 class HierarchicalClusterNodeDialog extends DefaultNodeSettingsPane {
     
     /**
-     * An array with the available dist functions names.
+     * An array with the available distance functions names.
      */   
     public static final DistanceFunction[] DISTANCE_FUNCTIONS 
             = new DistanceFunction[]{
@@ -85,32 +85,52 @@ class HierarchicalClusterNodeDialog extends DefaultNodeSettingsPane {
     HierarchicalClusterNodeDialog() {
         
         addDialogComponent(new DialogComponentNumber(
-                new SettingsModelIntegerBounded(
-                HierarchicalClusterNodeModel.NRCLUSTERS_KEY, 3, 1, 1000),
+                createSettingsNumberOfClusters(),
                 "Number output cluster:", 1));
         
         addDialogComponent(new DialogComponentStringSelection(
-                new SettingsModelString(
-                        HierarchicalClusterNodeModel.DISTFUNCTION_KEY,
-                        EuclideanDist.EUCLIDEAN_DISTANCE.toString()),
+                createSettingsDistanceFunction(),
                         "Distance function:", distanceFunctionNames));        
         
         addDialogComponent(new DialogComponentStringSelection(
-                new SettingsModelString(
-                        HierarchicalClusterNodeModel.LINKAGETYPE_KEY,
-                        HierarchicalClusterNodeModel.Linkage.SINGLE.name()),
+                createSettingsLinkageType(),
                         "Linkage type:", linkageTypes)); 
 
         addDialogComponent(new DialogComponentBoolean(
-                new SettingsModelBoolean(
-                        HierarchicalClusterNodeModel.USE_CACHE_KEY, true),
-                        "Cache distances"));
+                createSettingsCacheKeys(), "Cache distances"));
         
         Class[] allowedTypes = {DoubleValue.class, IntValue.class};
         addDialogComponent(new DialogComponentColumnFilter(
-                new SettingsModelFilterString(
-                        HierarchicalClusterNodeModel.SELECTED_COLUMNS_KEY), 0,
-                allowedTypes));
-    }  
+                createSettingsColumns(), 0, allowedTypes));
+    }
+    
+    static SettingsModelIntegerBounded createSettingsNumberOfClusters() {
+        return new SettingsModelIntegerBounded(
+          HierarchicalClusterNodeModel.NRCLUSTERS_KEY, 3, 1, Integer.MAX_VALUE);
+    }
+    
+    static SettingsModelString createSettingsDistanceFunction() {
+        return new SettingsModelString(
+                HierarchicalClusterNodeModel.DISTFUNCTION_KEY,
+                distanceFunctionNames[0]);   
+    }
+    
+    static SettingsModelString createSettingsLinkageType() {
+        return new SettingsModelString(
+                HierarchicalClusterNodeModel.LINKAGETYPE_KEY,
+                HierarchicalClusterNodeModel.Linkage.SINGLE.name());
+    }
+    
+    static SettingsModelBoolean createSettingsCacheKeys() {
+        return new SettingsModelBoolean(
+                HierarchicalClusterNodeModel.USE_CACHE_KEY, true);
+    }
+    
+    static SettingsModelFilterString createSettingsColumns() {
+        return new SettingsModelFilterString(
+                HierarchicalClusterNodeModel.SELECTED_COLUMNS_KEY);
+    }
+        
+        
 
-}    // HierarchicalClusterNodeDialog
+}

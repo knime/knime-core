@@ -135,10 +135,14 @@ public class PasteAction extends AbstractClipboardAction {
             if (newIDs.contains(conn.getDest()) 
                     && newIDs.contains(conn.getSource())) {
                 // get bend points and move them
-                ModellingConnectionExtraInfo uiInfo 
-                    = (ModellingConnectionExtraInfo)conn.getUIInfo().clone();
-                    uiInfo.changePosition(new int[] {moveDist[0], moveDist[1]});
-                    conn.setUIInfo(uiInfo);
+                if (conn.getUIInfo() != null) {
+                    ModellingConnectionExtraInfo uiInfo 
+                        = (ModellingConnectionExtraInfo)conn.getUIInfo()
+                        .clone();
+                        uiInfo.changePosition(new int[] {moveDist[0], 
+                                moveDist[1]});
+                        conn.setUIInfo(uiInfo);
+                }
             }
         }
         ClipboardWorkflowManager.incrementRetrievalCounter();

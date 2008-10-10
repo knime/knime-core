@@ -488,7 +488,8 @@ public final class FileAnalyzer {
             if (userSettings.getFileHasColumnHeaders()) {
                 // use the headers we read in
                 if ((columnHeaders.length > 0)
-                        && (columnHeaders[columnHeaders.length - 1] == null)) {
+                        && (columnHeaders[columnHeaders.length - 1] == null)
+                        && rowHeader != null) {
                     // okay, we got one too few, use row header
                     String[] colNames = new String[result.getNumberOfColumns()];
                     colNames[0] = rowHeader;

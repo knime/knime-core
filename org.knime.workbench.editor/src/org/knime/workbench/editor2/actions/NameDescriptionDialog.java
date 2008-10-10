@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
@@ -47,6 +48,8 @@ public class NameDescriptionDialog extends Dialog {
     private final String m_initName;
 
     private final String m_initDescription;
+    
+    private Label m_nodeIdLabel;
 
     private Text m_nameField;
 
@@ -58,22 +61,25 @@ public class NameDescriptionDialog extends Dialog {
 
     private final String m_title;
 
+    private NodeID m_nodeID;
 
     /**
      * Creates a dialog to ask for the user specified node name and the
      * description.
      *
      * @param parent the parent shell for this dialog
-     * @param nameInit the initial name for the node
-     * @param descriptionInit the initial description
      * @param dialogTitle title for the dialog (node name, id, custom name)
+     * @param initialName the custom name of the node or null
+     * @param descriptionInit the initial description
+     * @param nodeID the initial name for the node
      */
-    public NameDescriptionDialog(final Shell parent, final String nameInit,
-            final String descriptionInit, final String dialogTitle) {
+    public NameDescriptionDialog(final Shell parent, final String dialogTitle,
+            final String initialName, final String descriptionInit,  
+            final NodeID nodeID) {
         super(parent);
 //        this.setShellStyle(SWT.APPLICATION_MODAL);
-
-        m_initName = nameInit;
+        m_nodeID = nodeID;
+        m_initName = initialName;
         m_initDescription = descriptionInit;
         m_title = dialogTitle;
     }
@@ -96,12 +102,24 @@ public class NameDescriptionDialog extends Dialog {
         Composite content = new Composite(newShell, SWT.NONE);
         content.setLayout(gridLayout);
 
-        Label nameLabel = new Label(content, SWT.RIGHT);
-        nameLabel.setText("User name:");
-
+        // NodeID label (bugfix 1402)
+        Label idLabel = new Label(content, SWT.LEFT);
+        idLabel.setText("NodeID: ");
+        
         GridData nameData = new GridData();
         nameData.minimumWidth = 300;
         nameData.grabExcessHorizontalSpace = true;
+   
+        // NodeID value (bugfix 1402)
+        m_nodeIdLabel = new Label(content, SWT.LEFT | SWT.READ_ONLY);
+        m_nodeIdLabel.setText(m_nodeID.getIDWithoutRoot());
+        m_nodeIdLabel.setLayoutData(nameData);
+             
+        // Name label
+        Label nameLabel = new Label(content, SWT.RIGHT);
+        nameLabel.setText("User name:");
+
+        // Name value
         m_nameField = new Text(content, SWT.SINGLE);
         m_nameField.setLayoutData(nameData);
         if (m_initName == null) {
@@ -109,10 +127,10 @@ public class NameDescriptionDialog extends Dialog {
         } else {
             m_nameField.setText(m_initName);
         }
-
+        // Description label
         Label descriptionLabel = new Label(content, SWT.RIGHT);
         descriptionLabel.setText("User description:");
-
+        // Description value
         GridData descrData = new GridData(GridData.GRAB_HORIZONTAL
                 | GridData.GRAB_VERTICAL);
         descrData.minimumHeight = 200;

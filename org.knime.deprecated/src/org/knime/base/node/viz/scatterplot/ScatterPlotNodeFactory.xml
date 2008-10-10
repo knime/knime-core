@@ -47,7 +47,7 @@
 		<dataIn index="0" name="Display data">Datatable with data to display</dataIn>
 	</ports>	
 	<views>
-		<view index="0" name="Scatterplot">
+		<view index="0" name="Scatter Plot">
 			The scatterplot displaying the data.
 		</view>
 	</views>

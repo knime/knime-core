@@ -18,9 +18,10 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 19, 2007 (ohl): created
+ *   Oct 06, 2008 (ohl): added missing value/empty cell option
  */
 package org.knime.base.node.preproc.cellsplit;
 
@@ -33,7 +34,7 @@ import org.knime.core.node.NodeSettingsWO;
 /**
  * Holds all user settings needed for the cell splitter. Provides methods for
  * saving and a constructor taking a NodeSettingRO object.
- * 
+ *
  * @author ohl, University of Konstanz
  */
 public class CellSplitterUserSettings {
@@ -53,6 +54,8 @@ public class CellSplitterUserSettings {
 
     private static final String CFG_DELIMITER = "delimiter";
 
+    private static final String CFG_USEEMPTYSTRING = "useEmptyString";
+
     private String m_columnName = null;
 
     private String m_delimiter = null;
@@ -65,6 +68,8 @@ public class CellSplitterUserSettings {
 
     private boolean m_guessNumOfCols = true;
 
+    private boolean m_useEmptyStrings = false;
+
     /**
      * Creates a new settings object with no (or default) settings.
      */
@@ -74,11 +79,11 @@ public class CellSplitterUserSettings {
 
     /**
      * Creates a new settings object with the value from the specified settings
-     * object. If the values in there incomplete it throws an Exception. The
+     * object. If the values in there are incomplete it throws an Exception. The
      * values can be validated (checked for consistency and validity) with the
      * getStatus method.
-     * 
-     * 
+     *
+     *
      * @param settings the config object to read the settings values from
      * @throws InvalidSettingsException if the values in the settings object are
      *             incomplete.
@@ -91,11 +96,15 @@ public class CellSplitterUserSettings {
         m_numOfCols = settings.getInt(CFG_NUMOFCOLS);
         m_quotePattern = settings.getString(CFG_QUOTES);
         m_removeQuotes = settings.getBoolean(CFG_REMOVEQUOTES);
+
+        // the default value is true here for backward compatibility.
+        // the node used to create empty cells instead of missing cells.
+        m_useEmptyStrings = settings.getBoolean(CFG_USEEMPTYSTRING, true);
     }
 
     /**
      * Stores the settings values in the specified object.
-     * 
+     *
      * @param settings the config object to save the values in
      */
     void saveSettingsTo(final NodeSettingsWO settings) {
@@ -105,6 +114,7 @@ public class CellSplitterUserSettings {
         settings.addInt(CFG_NUMOFCOLS, m_numOfCols);
         settings.addString(CFG_QUOTES, m_quotePattern);
         settings.addBoolean(CFG_REMOVEQUOTES, m_removeQuotes);
+        settings.addBoolean(CFG_USEEMPTYSTRING, m_useEmptyStrings);
     }
 
     /**
@@ -231,6 +241,27 @@ public class CellSplitterUserSettings {
      */
     void setRemoveQuotes(final boolean removeQuotes) {
         m_removeQuotes = removeQuotes;
+    }
+
+    /**
+     * @return true, if an empty string cell is introduced instead of a missing
+     *         cell (in case of in missing input cell, or missing split
+     *         results).
+     */
+    boolean isUseEmptyString() {
+        return m_useEmptyStrings;
+    }
+
+    /**
+     * If set to true, the node creates an empty cell in case of a missing input
+     * cell or a missing split. Otherwise, if set false, it introduces a missing
+     * cell instead.
+     *
+     * @param useEmptyString set to true to create empty string cells instead of
+     *            missing cells.
+     */
+    void setUseEmptyString(final boolean useEmptyString) {
+        m_useEmptyStrings = useEmptyString;
     }
 
 }

@@ -62,6 +62,7 @@ public class BoxPlotNodeView extends NodeView {
             m_plotter.setAntialiasing(true);
             m_plotter.setDataProvider((DataProvider)model);
             m_plotter.updatePaintModel();
+            m_plotter.fitToScreen();
         }
     }
 
@@ -79,6 +80,14 @@ public class BoxPlotNodeView extends NodeView {
      */
     @Override
     protected void onOpen() {
+        /*
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                m_plotter.fitToScreen();
+            }
+        });
+        */
     }
 
 }

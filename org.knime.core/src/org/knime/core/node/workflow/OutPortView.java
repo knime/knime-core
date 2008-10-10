@@ -25,6 +25,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.Box;
 import javax.swing.JComponent;
@@ -62,19 +66,29 @@ public class OutPortView extends JFrame {
     private final JTabbedPane m_tabbedPane;
     
     private final LoadingPanel m_loadingPanel = new LoadingPanel();
-
-//    private final Object m_updateLock = new Object();
+    
+    private static final ExecutorService UPDATE_EXECUTOR = 
+        Executors.newCachedThreadPool(new ThreadFactory() {
+        private final AtomicInteger m_counter = new AtomicInteger();
+        @Override
+        public Thread newThread(final Runnable r) {
+            Thread t = new Thread(r, "OutPortView-Updater-" 
+                    + m_counter.incrementAndGet());
+            t.setDaemon(true);
+            return t;
+        };
+    });
 
     /**
      * A view showing the data stored in the specified output port.
      *
-     * @param nodeName The name of the node the inspected port belongs to
+     * @param nodeNameWithID The name of the node the inspected port belongs to
      * @param portName name of the port which is also displayed in the title
      */
-    OutPortView(final String nodeName, final String portName) {
-        super(nodeName + " (" + portName + ")");
+    OutPortView(final String nodeNameWithID, final String portName) {
+        super(portName + " - " + nodeNameWithID);
         // init frame
-        super.setName(nodeName + " - " + portName + " View");
+        super.setName(getTitle());
         if (KNIMEConstants.KNIME16X16 != null) {
             super.setIconImage(KNIMEConstants.KNIME16X16.getImage());
         }
@@ -147,7 +161,7 @@ public class OutPortView extends JFrame {
         // add all port object tabs
         final Map<String, JComponent> views 
             = new LinkedHashMap<String, JComponent>();
-        new Thread() {
+        UPDATE_EXECUTOR.execute(new Runnable() {
             @Override
             public void run() {
                 if (portObject != null) {
@@ -166,14 +180,13 @@ public class OutPortView extends JFrame {
                     boexle.add(new JLabel("No data available!"));
                     boexle.add(Box.createHorizontalGlue());
                     noDataPanel.add(boexle, BorderLayout.CENTER);
-                    noDataPanel.setName("No data available");
-                    views.put("No data available", noDataPanel);
+                    noDataPanel.setName("No Table");
+                    views.put("No Table", noDataPanel);
                 }
-                if (portObjectSpec != null 
-                        && portObjectSpec.getViews() != null) {
-                    for (JComponent comp : portObjectSpec.getViews()) {
-                        views.put(comp.getName(), comp);
-                    }
+                JComponent[] posViews = portObjectSpec == null 
+                    ? new JComponent[0] : portObjectSpec.getViews();
+                for (JComponent comp : posViews) {
+                    views.put(comp.getName(), comp);
                 }
                 ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
                     @Override
@@ -192,7 +205,7 @@ public class OutPortView extends JFrame {
                     }
                 });
             }
-        } .start();
+        });
 
     }
 }

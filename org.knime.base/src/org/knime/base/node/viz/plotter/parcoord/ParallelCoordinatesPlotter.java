@@ -218,7 +218,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
      * Sets the axes, the selected data points, the selected columns and the 
      * calculated lines <code>null</code>, triggers a repaint in the 
      * {@link org.knime.base.node.viz.plotter.parcoord
-     * .ParallelCoordinateDrawingPane}
+     * .ParallelCoordinateDrawingPane}.
      * 
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#reset()
      */
@@ -247,6 +247,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                 m_hide = false;
                 if (getDrawingPane() instanceof ParallelCoordinateDrawingPane) {
                     getParCoordDrawinPane().setFadeUnhilited(false);
+                    getParCoordDrawinPane().setHideUnhilited(false);
                 }   
                 updatePaintModel();
             }
@@ -267,6 +268,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                 m_hide = true;
                 if (getDrawingPane() instanceof ParallelCoordinateDrawingPane) {
                     getParCoordDrawinPane().setFadeUnhilited(false);
+                    getParCoordDrawinPane().setHideUnhilited(true);
                 }
                 updatePaintModel();
             } 
@@ -287,6 +289,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                 m_hide = false;
                 if (getDrawingPane() instanceof ParallelCoordinateDrawingPane) {
                     getParCoordDrawinPane().setFadeUnhilited(true);
+                    getParCoordDrawinPane().setHideUnhilited(false);
                 }
                 updatePaintModel();
             };
@@ -540,7 +543,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                 domainValues.add(value);
                 int x = (int)getXAxis().getCoordinate().calculateMappedValue(
                         new StringCell(axis.getName()), 
-                        getDrawingPaneDimension().width, true);
+                        getDrawingPaneDimension().width);
                 int y = MISSING;
                 if (!value.isMissing()) {
                     y = getDrawingPaneDimension().height 
@@ -584,7 +587,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                     axis.setXPosition((int)getXAxis().getCoordinate()
                                     .calculateMappedValue(
                                             new StringCell(axis.getName()),
-                                            width, true));
+                                            width));
                     axis.setHeight(height);
                 }
                 ((ParallelCoordinateDrawingPane)getDrawingPane()).setAxes(axes);
@@ -627,9 +630,9 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         public void mouseDragged(final MouseEvent e) {
             m_dragged = true;
             if (m_axis != null) {
-            	m_axis.setXPosition(e.getX());
-            	calculateLines();
-            	getDrawingPane().repaint();
+                m_axis.setXPosition(e.getX());
+                calculateLines();
+                getDrawingPane().repaint();
             }
         }
 
@@ -668,7 +671,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
             }
             // no axis was selected
             if (m_axis == null) {
-            	return;
+                return;
             }
             // update x axis and axis xpos
             m_axis.setXPosition(e.getX());
@@ -677,7 +680,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
 //                .getUnusedDistBetweenTicks(width);
 //            int index = (int)(e.getX() / tickSpace);
             CoordinateMapping[] mappings = getXAxis().getCoordinate()
-                .getTickPositions(width, true);
+                .getTickPositions(width);
             // 
             int index = -1;
             for (int i = 0; i < mappings.length - 1; i++) {

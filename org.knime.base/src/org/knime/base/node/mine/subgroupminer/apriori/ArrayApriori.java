@@ -25,7 +25,6 @@
 package org.knime.base.node.mine.subgroupminer.apriori;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -35,6 +34,7 @@ import java.util.List;
 import org.knime.base.node.mine.subgroupminer.freqitemset.AssociationRule;
 import org.knime.base.node.mine.subgroupminer.freqitemset.FrequentItemSet;
 import org.knime.base.node.mine.subgroupminer.freqitemset.FrequentItemSet.Type;
+import org.knime.core.data.collection.bitvector.BitVectorValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 
@@ -108,13 +108,16 @@ public class ArrayApriori implements AprioriAlgorithm {
      * 
      * @param transactions the database as bitsets
      */
-    public void findFrequentItems(final List<BitSet> transactions) {
+    public void findFrequentItems(final List<BitVectorValue> transactions) {
         int[] items = new int[m_bitSetLength + 1];
         m_mapping = new int[m_bitSetLength + 1];
 
         List<Integer> frequentItems = new ArrayList<Integer>();
-        for (BitSet s : transactions) {
-            for (int i = s.nextSetBit(0); i >= 0; i = s.nextSetBit(i + 1)) {
+        for (BitVectorValue s : transactions) {
+            // this type cast is save because the maximum length is checked in 
+            // SubgroupMinerNodeModel#preprocess
+            for (int i = (int)s.nextSetBit(0); i >= 0; 
+                i = (int)s.nextSetBit(i + 1)) {
                 // simply increment the position
                 // that is probably faster than checking whether it might be
                 // frequent
@@ -165,11 +168,9 @@ public class ArrayApriori implements AprioriAlgorithm {
      * those itemsets, which might become frequent in the next level, that is,
      * itemsets with one item more.
      * 
-     * @see AprioriAlgorithm
-     *      #findFrequentItemSets(java.util.List, int, int,
-     *      FrequentItemSet.Type, org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
-    public void findFrequentItemSets(final List<BitSet> transactions,
+    public void findFrequentItemSets(final List<BitVectorValue> transactions,
             final double minSupport, final int maxDepth,
             final FrequentItemSet.Type type, final ExecutionMonitor exec)
             throws CanceledExecutionException {
@@ -182,7 +183,7 @@ public class ArrayApriori implements AprioriAlgorithm {
         m_builtLevel = 0;
         do {
             m_transactionNr = 0;
-            for (BitSet s : transactions) {
+            for (BitVectorValue s : transactions) {
                 exec.checkCanceled();
                 if (s.cardinality() == 0) {
                     continue;
@@ -191,17 +192,19 @@ public class ArrayApriori implements AprioriAlgorithm {
                 m_transactionNr++;
             }
             m_childCreated = false;
-            createChildren(m_root, 0, 0);
+            createChildren(m_root, 0, 0, exec);
             m_builtLevel++;
             exec.setProgress((1.0 - (1.0 / m_builtLevel)), "building level: "
                     + m_builtLevel);
         } while (m_childCreated && m_builtLevel < maxDepth);
     }
 
-    private void count(final BitSet transaction,
+    private void count(final BitVectorValue transaction,
             final ArrayPrefixTreeNode node, final int item, final int level) {
-        for (int i = transaction.nextSetBit(item); i >= 0; i = transaction
-                .nextSetBit(i + 1)) {
+        // this type cast is save since the maximum length was checked in 
+        // SubgroupMinerModel#preprocess
+        for (int i = (int)transaction.nextSetBit(item); i >= 0; 
+                i = (int)transaction.nextSetBit(i + 1)) {
             if (m_mapping[i] < 0) {
                 // this means that this item is not frequent at all!
                 continue;
@@ -218,11 +221,14 @@ public class ArrayApriori implements AprioriAlgorithm {
     }
 
     private void createChildren(final ArrayPrefixTreeNode node, final int item,
-            final int level) {
+            final int level, final ExecutionMonitor exec) 
+        throws CanceledExecutionException {
         if (node == null) {
             return;
         }
         for (int i = item; i < node.getLength() - 1; i++) {
+            // bugfix 1160
+            exec.checkCanceled();
             if (level == m_builtLevel) {
                 // create children
                 if (((double)node.getCounterFor(i) / (double)m_dbsize) 
@@ -270,7 +276,7 @@ public class ArrayApriori implements AprioriAlgorithm {
                     }
                 }
             } else {
-                createChildren(node.getChild(i), i + 1, level + 1);
+                createChildren(node.getChild(i), i + 1, level + 1, exec);
             }
         }
     }

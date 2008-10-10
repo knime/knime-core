@@ -75,7 +75,7 @@ public class CancelAllAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/cancelAll.GIF");
+        return ImageRepository.getImageDescriptor("icons/cancelAll.PNG");
     }
 
 
@@ -103,21 +103,16 @@ public class CancelAllAction extends AbstractNodeAction {
      */
     @Override
     protected boolean calculateEnabled() {
-        if (getManager() == null) {
-            return false;
-        }
         NodeContainerEditPart[] parts = getAllNodeParts();
-        boolean atLeastOneCancelable = false;
-        for (NodeContainerEditPart p : parts) {
-            NodeContainer nc = p.getNodeContainer();
-            if (nc.getState().equals(NodeContainer.State.EXECUTING)
-                    || nc.getState().equals(NodeContainer.State.QUEUED)
-                    || nc.getState().equals(
-                            NodeContainer.State.MARKEDFOREXEC)) {
-                atLeastOneCancelable = true;
+        // enable if we have at least one cancel-able node in our selection
+        for (int i = 0; i < parts.length; i++) {
+            NodeContainer nc = parts[i].getNodeContainer();
+            if (nc.getState().executionInProgress()) {
+                return true;
             }
+
         }
-        return atLeastOneCancelable;
+        return false;
     }
 
     /**
@@ -136,10 +131,10 @@ public class CancelAllAction extends AbstractNodeAction {
         }
 
         LOGGER.debug("(Cancel all)  cancel all running jobs.");
-        for (NodeContainerEditPart part : nodeParts) {
+        // bugfix 1386 -> get all parts (not only selected ones)
+        for (NodeContainerEditPart part : getAllNodeParts()) {
             getManager().cancelExecution(part.getNodeContainer());
         }
-
         try {
             // Give focus to the editor again. Otherwise the actions (selection)
             // is not updated correctly.

@@ -14,12 +14,6 @@
 		values. The SOTA Predictor can only be used with an input SOTA model,
 		that used the class column during the training phase.
 	</intro>
-	<option name="Column filter">
-		Choose only these columns for the clustering process which are 
-		important and interesting. Columns which are not chosen will be
-		ignored. Be aware that columns containing fuzzy cells and columns 
-		containing number cells can not be mixed.
-	</option>
 	</fullDescription>
 		
 	<ports>

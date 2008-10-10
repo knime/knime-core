@@ -24,9 +24,10 @@
  */
 package org.knime.base.node.mine.regression.linear.learn;
 
+import org.knime.base.node.mine.regression.linear.view.LinRegLineNodeView;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.NodeDialogPane;
 
 /**
  * Factory class for linear regression learner node.
@@ -48,7 +49,7 @@ public class LinRegLearnerNodeFactory
      */
     @Override
     public int getNrNodeViews() {
-        return 1;
+        return 2;
     }
 
     /**
@@ -60,8 +61,8 @@ public class LinRegLearnerNodeFactory
         switch (index) {
         case 0:
             return new LinRegLearnerNodeView(model);
-//        case 1:
-//            return new LinRegLineNodeView(model);
+        case 1:
+            return new LinRegLineNodeView(model);
         default:
             throw new IndexOutOfBoundsException();
         }

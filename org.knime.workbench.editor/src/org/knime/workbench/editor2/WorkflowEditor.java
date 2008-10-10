@@ -95,6 +95,8 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
+import org.knime.core.node.workflow.NodeUIInformationEvent;
+import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowException;
@@ -118,6 +120,7 @@ import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.actions.job.ProgressMonitorJob;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.repository.RepositoryManager;
+import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
 
 /**
  * This is the implementation of the Eclipse Editor used for editing a
@@ -193,6 +196,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     private boolean m_closed;
 
+    private String m_manuallySetToolTip;
  
     /**
      * No arg constructor, creates the edit domain for this editor.
@@ -341,7 +345,10 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     @Override
     public void dispose() {
-
+        if (m_fileResource != null) {
+            ProjectWorkflowMap.remove(m_fileResource.getProject().getName());
+        }
+        
         // remember that this editor has been closed
         m_closed = true;
 
@@ -632,8 +639,9 @@ public class WorkflowEditor extends GraphicalEditor implements
             LoadWorkflowRunnable loadWorflowRunnable =
                     new LoadWorkflowRunnable(this, file);
             ps.busyCursorWhile(loadWorflowRunnable);
-
-            m_manager.setName(m_fileResource.getProject().getName());
+            ProjectWorkflowMap.putWorkflow(
+                    m_fileResource.getProject().getName(), 
+                    m_manager);
 
             // check if the editor should be disposed
             if (m_manager == null) {
@@ -666,9 +674,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             LOGGER.fatal("Workflow could not be loaded.", e);
         }
 
-        // Editor name (title)
-        setPartName(m_manager.getID().getIDWithoutRoot() 
-                + ": " + file.getParentFile().getName());
+        updatePartName();
 
         if (getGraphicalViewer() != null) {
             loadProperties();
@@ -676,6 +682,49 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // update Actions, as now there's everything available
         updateActions();
+        }
+    }
+    
+    private void updatePartName() {
+        // Editor name (title)
+        setPartName(getTitleToolTip());
+        setTitleToolTip(getTitleToolTip());
+    }
+    
+
+    @Override
+    protected void setTitleToolTip(String toolTip) {
+        m_manuallySetToolTip = toolTip;
+        super.setTitleToolTip(toolTip);
+    }
+    
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public String getTitleToolTip() {
+        // only for projects -> they have file resources in title
+        // when renamed, they cannot reflect the changes, thus, the manually
+        // set title is returned...
+        // meta nodes can do not have file resources in title
+        if (m_manuallySetToolTip != null && m_parentEditor == null) {
+            return m_manuallySetToolTip;
+        }
+        // if this is a project
+        if (m_parentEditor == null) {
+            return m_manager.getID().getIDWithoutRoot()
+                + ": " + m_fileResource.getParent().getName();
+        } else {
+            // we are a meta node editor
+            // return id and node name (custom name)
+            String name = m_manager.getID().getIDWithoutRoot()
+                + ": " + m_manager.getName();
+            if (m_manager.getCustomName() != null) {
+                name += " (" + m_manager.getCustomName() + ")";
+            }
+            return name; 
         }
     }
 
@@ -692,6 +741,18 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // update Actions, as now there's everything available
         updateActions();
+        updatePartName();
+        // for meta nodes register to changed custom name events
+        // since it is displayed in the editor tab
+        m_manager.addUIInformationListener(new NodeUIInformationListener() {
+
+            @Override
+            public void nodeUIInformationChanged(
+                    final NodeUIInformationEvent evt) {
+                updatePartName();
+            }
+            
+        });
         return;
     }
 
@@ -1215,64 +1276,6 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @author Florian Georg, University of Konstanz
      */
     private class MyResourceDeltaVisitor implements IResourceDeltaVisitor {
-        /*
-        private String getTypeString(final IResourceDelta delta) {
-            StringBuffer buffer = new StringBuffer();
-
-            if ((delta.getKind() & IResourceDelta.ADDED) != 0) {
-                buffer.append("ADDED|");
-            }
-            if ((delta.getKind() & IResourceDelta.ADDED_PHANTOM) != 0) {
-                buffer.append("ADDED_PHANTOM|");
-            }
-            if ((delta.getKind() & IResourceDelta.ALL_WITH_PHANTOMS) != 0) {
-                buffer.append("ALL_WITH_PHANTOMS|");
-            }
-            if ((delta.getKind() & IResourceDelta.CHANGED) != 0) {
-                buffer.append("CHANGED|");
-            }
-            if ((delta.getKind() & IResourceDelta.CONTENT) != 0) {
-                buffer.append("CONTENT|");
-            }
-            if ((delta.getFlags() & IResourceDelta.DESCRIPTION) != 0) {
-                buffer.append("DESCRIPTION|");
-            }
-            if ((delta.getKind() & IResourceDelta.ENCODING) != 0) {
-                buffer.append("ENCODING|");
-            }
-            if ((delta.getKind() & IResourceDelta.MARKERS) != 0) {
-                buffer.append("MARKERS|");
-            }
-            if ((delta.getFlags() & IResourceDelta.MOVED_FROM) != 0) {
-                buffer.append("MOVED_FROM|");
-            }
-            if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
-                buffer.append("MOVED_TO|");
-            }
-            if ((delta.getKind() & IResourceDelta.NO_CHANGE) != 0) {
-                buffer.append("NO_CHANGE|");
-            }
-            if ((delta.getKind() & IResourceDelta.OPEN) != 0) {
-                buffer.append("OPEN|");
-            }
-            if ((delta.getKind() & IResourceDelta.REMOVED) != 0) {
-                buffer.append("REMOVED|");
-            }
-            if ((delta.getKind() & IResourceDelta.REMOVED_PHANTOM) != 0) {
-                buffer.append("REMOVED_PHANTOM|");
-            }
-            if ((delta.getKind() & IResourceDelta.REPLACED) != 0) {
-                buffer.append("REPLACED|");
-            }
-            if ((delta.getKind() & IResourceDelta.SYNC) != 0) {
-                buffer.append("SYNC|");
-            }
-            if ((delta.getKind() & IResourceDelta.TYPE) != 0) {
-                buffer.append("TYPE|");
-            }
-            return buffer.toString();
-        }
-        */
 
         /**
          * {@inheritDoc}
@@ -1286,12 +1289,18 @@ public class WorkflowEditor extends GraphicalEditor implements
             if (m_fileResource.getProject().equals(delta.getResource())) {
 
                 if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
-
+                    final String newName = delta.getMovedToPath().segment(0);
+                    String oldName = m_fileResource.getName();
+                    WorkflowEditor.this.m_manager.renameWorkflowDirectory(
+                            newName);
+                    ProjectWorkflowMap.replace(newName, 
+                            WorkflowEditor.this.m_manager, oldName);
                     Display.getDefault().syncExec(new Runnable() {
                         public void run() {
-
-                            setPartName(delta.getMovedToPath().segment(0));
-
+                            String newTitle = m_manager.getID()
+                                .getIDWithoutRoot() + ": " + newName;
+                            setTitleToolTip(newTitle);
+                            setPartName(newTitle);
                         }
                     });
 

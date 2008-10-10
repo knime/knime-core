@@ -132,14 +132,14 @@ public class DialogComponentColumnFilter extends DialogComponent {
             // update if the current spec and the spec we last updated with
             // are different
             final PortObjectSpec currPOSpec = getLastTableSpec(m_inPortIndex);
-            if (!(currPOSpec instanceof DataTableSpec)) {
-                throw new RuntimeException("Wrong type of PortObject for"
-                        + " ColumnFilterPanel, expecting DataTableSpec!");
-            }
-            DataTableSpec currSpec = (DataTableSpec)currPOSpec;
-            if (currSpec == null) {
+            if (currPOSpec == null) {
                 update = (m_specInFilter != null);
             } else {
+                if (!(currPOSpec instanceof DataTableSpec)) {
+                    throw new RuntimeException("Wrong type of PortObject for"
+                            + " ColumnFilterPanel, expecting DataTableSpec!");
+                }
+                DataTableSpec currSpec = (DataTableSpec)currPOSpec;
                 update = (!currSpec.equalStructure(m_specInFilter));
             }
         }

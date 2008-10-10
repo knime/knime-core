@@ -76,9 +76,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     public static final String CFG_ANTIALIAS = "antialias";
     
     private static final String FILE_NAME = "internals";
-    
-    private boolean m_antialiasing;
-    
+        
     private int[] m_excludedColumns;
     
     
@@ -111,13 +109,6 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     }
 
 
-    /**
-     * True, if antialiasing should be used, false otherwise.
-     * @return true, if antialiasing should be used, false otherwise
-     */
-    public boolean antiAliasingOn() {
-        return m_antialiasing;
-    }
 
     /**
      * All nominal columns without possible values or with more than 60
@@ -148,6 +139,8 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
             }
             if (colSpec.getType().isCompatible(NominalValue.class)) {
                 if (colSpec.getDomain().hasValues() 
+                        // TODO: in order to fix bug 1299 make the "60" 
+                        // adjustable via the dialog
                         && colSpec.getDomain().getValues().size() > 60) {
                     excludedCols.add(currColIdx);
                 } else if (!colSpec.getDomain().hasValues()) {
@@ -229,7 +222,6 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_last = settings.getInt(CFG_END);
-        m_antialiasing = settings.getBoolean(CFG_ANTIALIAS);
     }
 
     /**
@@ -264,7 +256,6 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addInt(CFG_END, m_last);
-        settings.addBoolean(CFG_ANTIALIAS, m_antialiasing);
     }
 
     /**
@@ -274,7 +265,12 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         settings.getInt(CFG_END);
-        settings.getBoolean(CFG_ANTIALIAS);
+        try {
+            settings.getBoolean(CFG_ANTIALIAS);
+        } catch (InvalidSettingsException ise) {
+            // removed this from dialog
+            // if not present set it to false in loadValidatedSettings
+        }
     }
 
     /**

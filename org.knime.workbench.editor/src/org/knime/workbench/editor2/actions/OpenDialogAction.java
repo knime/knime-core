@@ -111,6 +111,13 @@ public class OpenDialogAction extends AbstractNodeAction {
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         LOGGER.debug("Opening node dialog...");
         NodeContainer container = (NodeContainer) nodeParts[0].getModel();
+        if (!container.hasDialog()) {
+            // if short cut key is launched on a selected node without dialog
+            LOGGER.debug(
+                    "Node " + container.getNameWithID() + " has no dialog!");
+            // ignore
+            return;
+        }
         //
         // This is embedded in a special JFace wrapper dialog
         //

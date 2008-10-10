@@ -26,9 +26,7 @@ package org.knime.base.node.viz.plotter.node;
 
 import org.knime.base.node.viz.plotter.DataProvider;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 
@@ -62,10 +60,14 @@ public class DefaultVisualizationNodeDialog extends DefaultNodeSettingsPane {
                 new SettingsModelIntegerBounded(
                 DefaultVisualizationNodeModel.CFG_END, defaultNrOfRows, 
                 1, Integer.MAX_VALUE), "No. of rows to display:", 10));
+        /*
+         * moved to AbstractPlotterProperties
+         *
         addDialogComponent(new DialogComponentBoolean(
                 new SettingsModelBoolean(
                         DefaultVisualizationNodeModel.CFG_ANTIALIAS,false), 
-                        "Enable Antialiasing"));        
+                        "Enable Antialiasing"));
+                        */        
     }
 
 }

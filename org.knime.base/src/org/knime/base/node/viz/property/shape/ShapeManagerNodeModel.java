@@ -49,10 +49,10 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.viewproperty.ShapeHandlerPortObject;
 
 /**
- * Model used to set shapes by nominal values retrieved from the 
- * {@link org.knime.core.data.DataColumnSpec} domain.
- * The created {@link org.knime.core.data.property.ShapeHandler} is then
- * set in the column spec.
+ * Model used to set shapes by nominal values retrieved from the
+ * {@link org.knime.core.data.DataColumnSpec} domain. The created
+ * {@link org.knime.core.data.property.ShapeHandler} is then set in the column
+ * spec.
  * 
  * @see ShapeManagerNodeDialogPane
  * @see ShapeHandler
@@ -60,7 +60,7 @@ import org.knime.core.node.port.viewproperty.ShapeHandlerPortObject;
  * @author Thomas Gabriel, University of Konstanz
  */
 class ShapeManagerNodeModel extends NodeModel {
-    
+
     /** Logger for this package. */
     static final NodeLogger LOGGER = NodeLogger.getLogger("Shape Manager");
 
@@ -104,32 +104,32 @@ class ShapeManagerNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] data,
             final ExecutionContext exec) throws CanceledExecutionException {
-        BufferedDataTable inData = (BufferedDataTable) data[INPORT];
-        ShapeHandler shapeHandler = 
-            new ShapeHandler(new ShapeModelNominal(m_map));
-        final DataTableSpec newSpec = appendShapeHandler(
-                inData.getSpec(), m_column, shapeHandler);
-        BufferedDataTable changedSpecTable = exec.createSpecReplacerTable(
-                inData, newSpec);
-        DataTableSpec modelSpec = new DataTableSpec(
-                newSpec.getColumnSpec(m_column));
-        ShapeHandlerPortObject viewPort = new ShapeHandlerPortObject(
-                modelSpec, shapeHandler.toString() + " based on column \""
-                + m_column + "\"");
+        BufferedDataTable inData = (BufferedDataTable)data[INPORT];
+        ShapeHandler shapeHandler =
+                new ShapeHandler(new ShapeModelNominal(m_map));
+        final DataTableSpec newSpec =
+                appendShapeHandler(inData.getSpec(), m_column, shapeHandler);
+        BufferedDataTable changedSpecTable =
+                exec.createSpecReplacerTable(inData, newSpec);
+        DataTableSpec modelSpec =
+                new DataTableSpec(newSpec.getColumnSpec(m_column));
+        ShapeHandlerPortObject viewPort =
+                new ShapeHandlerPortObject(modelSpec, shapeHandler.toString()
+                        + " based on column \"" + m_column + "\"");
         return new PortObject[]{changedSpecTable, viewPort};
     }
-    
+
     /**
-     * Appends the given <code>ShapeHandler</code> to the given 
-     * <code>DataTableSpec</code> for the given column. If the spec
-     * already contains a ShapeHandler, it will be removed and replaced by
-     * the new one.
+     * Appends the given <code>ShapeHandler</code> to the given
+     * <code>DataTableSpec</code> for the given column. If the spec already
+     * contains a ShapeHandler, it will be removed and replaced by the new one.
+     * 
      * @param spec to which the ShapeHandler is appended
      * @param column for this column
      * @param shapeHandler ShapeHandler
      * @return a new spec with ShapeHandler
      */
-    static final DataTableSpec appendShapeHandler(final DataTableSpec spec, 
+    static final DataTableSpec appendShapeHandler(final DataTableSpec spec,
             final String column, final ShapeHandler shapeHandler) {
         DataColumnSpec[] cspecs = new DataColumnSpec[spec.getNumColumns()];
         for (int i = 0; i < cspecs.length; i++) {
@@ -151,7 +151,7 @@ class ShapeManagerNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        
+
     }
 
     /**
@@ -185,7 +185,7 @@ class ShapeManagerNodeModel extends NodeModel {
             throw new InvalidSettingsException("No column selected.");
         }
         // check column in spec
-        DataTableSpec inSpec = (DataTableSpec) inPorts[INPORT];
+        DataTableSpec inSpec = (DataTableSpec)inPorts[INPORT];
         if (!inSpec.containsName(m_column)) {
             throw new InvalidSettingsException("Column " + m_column
                     + " not found.");
@@ -193,12 +193,12 @@ class ShapeManagerNodeModel extends NodeModel {
         if (m_map.isEmpty()) {
             throw new InvalidSettingsException("No shapes defined to apply.");
         }
-        ShapeHandler shapeHandler = 
-            new ShapeHandler(new ShapeModelNominal(m_map));
-        DataTableSpec outSpec = appendShapeHandler(inSpec, m_column, 
-                shapeHandler);
-        DataTableSpec modelSpec = new DataTableSpec(
-                outSpec.getColumnSpec(m_column));
+        ShapeHandler shapeHandler =
+                new ShapeHandler(new ShapeModelNominal(m_map));
+        DataTableSpec outSpec =
+                appendShapeHandler(inSpec, m_column, shapeHandler);
+        DataTableSpec modelSpec =
+                new DataTableSpec(outSpec.getColumnSpec(m_column));
         return new DataTableSpec[]{outSpec, modelSpec};
     }
 
@@ -212,13 +212,13 @@ class ShapeManagerNodeModel extends NodeModel {
         // remove all mappings
         m_map.clear();
         // read settings and write into the map
-        m_column = settings.getString(SELECTED_COLUMN, null);
+        m_column = settings.getString(SELECTED_COLUMN);
         if (m_column != null) {
             DataCell[] values = settings.getDataCellArray(VALUES);
             for (DataCell val : values) {
                 String shape = settings.getString(val.toString());
                 m_map.put(val, ShapeFactory.getShape(shape));
-            }            
+            }
         }
     }
 
@@ -247,13 +247,13 @@ class ShapeManagerNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        String column = settings.getString(SELECTED_COLUMN, null);
+        String column = settings.getString(SELECTED_COLUMN);
         if (column != null) {
             DataCell[] values = settings.getDataCellArray(VALUES);
             for (DataCell val : values) {
                 if (val == null) {
                     throw new InvalidSettingsException("Domain value"
-                           + " must not be null.");
+                            + " must not be null.");
                 } else {
                     settings.getString(val.toString());
                 }

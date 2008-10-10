@@ -89,11 +89,13 @@ public class AppendedRowsNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         DataTable[] corrected;
         int totalRowCount = 0;
+        for (BufferedDataTable t : inData) {
+            totalRowCount += t.getRowCount();
+        }
         if (m_isIntersection) {
             DataTableSpec[] inSpecs = new DataTableSpec[inData.length];
             for (int i = 0; i < inData.length; i++) {
                 inSpecs[i] = inData[i].getDataTableSpec();
-                totalRowCount += inData[i].getRowCount();
             }
             corrected = new DataTable[inData.length];
             String[] intersection = getIntersection(inSpecs);

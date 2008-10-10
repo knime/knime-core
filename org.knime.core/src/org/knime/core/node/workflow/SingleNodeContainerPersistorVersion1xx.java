@@ -39,11 +39,11 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodePersistorVersion1xx;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -68,6 +68,7 @@ public class SingleNodeContainerPersistorVersion1xx
     private NodeSettingsRO m_nodeSettings;
     private ReferencedFile m_nodeDir;
     private boolean m_needsResetAfterLoad;
+    private boolean m_isDirtyAfterLoad;
     private List<ScopeObject> m_scopeObjects;
     private LoadNodeModelSettingsFailPolicy m_settingsFailPolicy;
     
@@ -81,6 +82,7 @@ public class SingleNodeContainerPersistorVersion1xx
     }
     
     /** {@inheritDoc} */
+    @Override
     public boolean needsResetAfterLoad() {
         return m_needsResetAfterLoad;
     }
@@ -90,6 +92,17 @@ public class SingleNodeContainerPersistorVersion1xx
         m_needsResetAfterLoad = true;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public boolean isDirtyAfterLoad() {
+        return m_isDirtyAfterLoad;
+    }
+    
+    /** Mark as dirty. */
+    protected void setDirtyAfterLoad() {
+        m_isDirtyAfterLoad = true;
+    }
+    
     public NodeContainerMetaPersistor getMetaPersistor() {
         return m_metaPersistor;
     }
@@ -115,18 +128,26 @@ public class SingleNodeContainerPersistorVersion1xx
     }
 
     /** {@inheritDoc} */
+    @Override
     public LoadResult preLoadNodeContainer(final ReferencedFile settingsFileRef,
             final NodeSettingsRO parentSettings) 
-    throws InvalidSettingsException, CanceledExecutionException, IOException {
+    throws InvalidSettingsException, IOException {
         LoadResult result = new LoadResult();
         File settingsFile = settingsFileRef.getFile();
         String error;
         if (!settingsFile.isFile()) {
+            setDirtyAfterLoad();
             throw new IOException("Can't read node file \"" 
                     + settingsFile.getAbsolutePath() + "\"");
         }
-        NodeSettingsRO settings = NodeSettings.loadFromXML(
-                new BufferedInputStream(new FileInputStream(settingsFile)));
+        NodeSettingsRO settings;
+        try {
+            settings = NodeSettings.loadFromXML(
+                    new BufferedInputStream(new FileInputStream(settingsFile)));
+        } catch (IOException ioe) {
+            setDirtyAfterLoad();
+            throw ioe;
+        }
         String nodeFactoryClassName;
         try {
             nodeFactoryClassName = loadNodeFactoryClassName(
@@ -138,6 +159,7 @@ public class SingleNodeContainerPersistorVersion1xx
             } else {
                 error = "Can't load node factory class name";
             }
+            setDirtyAfterLoad();
             throw new InvalidSettingsException(error, e);
         }
         NodeFactory<NodeModel> nodeFactory;
@@ -147,6 +169,7 @@ public class SingleNodeContainerPersistorVersion1xx
         } catch (Throwable e) {
             error =  "Unable to load factory class \"" 
                 + nodeFactoryClassName + "\"";
+            setDirtyAfterLoad();
             throw new InvalidSettingsException(error, e);
         }
         m_node = new Node(nodeFactory);
@@ -156,10 +179,14 @@ public class SingleNodeContainerPersistorVersion1xx
         result.addError(metaResult);
         m_nodeSettings = settings;
         m_nodeDir = settingsFileRef.getParent();
+        if (result.hasErrors() || m_metaPersistor.isDirtyAfterLoad()) {
+            setDirtyAfterLoad();
+        }
         return result;
     }
     
     /** {@inheritDoc} */
+    @Override
     public LoadResult loadNodeContainer(
             final Map<Integer, BufferedDataTable> tblRep, 
             final ExecutionMonitor exec) throws InvalidSettingsException, 
@@ -175,6 +202,7 @@ public class SingleNodeContainerPersistorVersion1xx
                     + m_node.getName() + "\"): " + e.getMessage();
             result.addError(error);
             getLogger().debug(error, e);
+            setDirtyAfterLoad();
             return result;
         }
         ReferencedFile nodeFile = new ReferencedFile(m_nodeDir, nodeFileName);
@@ -208,6 +236,9 @@ public class SingleNodeContainerPersistorVersion1xx
         }
         loadNodeStateIntoMetaPersistor(nodePersistor);
         exec.setProgress(1.0);
+        if (result.hasErrors()) {
+            setDirtyAfterLoad();
+        }
         return result;
     }
     

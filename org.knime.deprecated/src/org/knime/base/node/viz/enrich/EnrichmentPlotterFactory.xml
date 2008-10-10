@@ -38,6 +38,6 @@
         </dataOut>
     </ports>
     <views>
-        <view index="0" name="Enrichment plot">Enrichment plot</view>
+        <view index="0" name="Enrichment Plot">Enrichment plot</view>
     </views>
 </knimeNode>

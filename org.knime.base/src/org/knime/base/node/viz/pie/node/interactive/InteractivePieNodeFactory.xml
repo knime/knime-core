@@ -67,7 +67,7 @@
 		</dataIn>
 	</ports>	
 	<views>
-		<view index="0" name="Pie chart">
+		<view index="0" name="Pie Chart">
 			Displays the data in an pie chart.
 		</view>
 	</views>

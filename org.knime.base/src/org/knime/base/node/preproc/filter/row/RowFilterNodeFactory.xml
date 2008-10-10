@@ -38,7 +38,7 @@
 			If a range is specified, and you specify only one boundary, the other 
 			is then set to (plus or minus) infinity. <br />
 			Here are some examples of regular expressions:<br />
-			"<tt>$foo.*</tt>" matches anything that starts with "foo". The dollar
+			"<tt>^foo.*</tt>" matches anything that starts with "foo". The '^'-character
 			stands for the beginning of the word, the dot matches any (one) character,
 			and the asterisk allows any number (including zero) of the previous character.<br />
 			"<tt>[0-9]*</tt>" matches any string of digits (including the empty string).

@@ -377,14 +377,15 @@ public abstract class NodeView<T extends NodeModel> {
     }
 
     /**
-    *
-    * @return a {@link JFrame} with an initialized {@link NodeView}
-    */
-   public final JFrame createFrame(final String viewTitle) {
-       m_frameTitle = viewTitle;
-       openView();
-       return m_frame;
-   }
+     * Creates and opens a new view. 
+     * @param viewTitle the tile for this view
+     * @return a {@link JFrame} with an initialized {@link NodeView}
+     */
+    public final JFrame createFrame(final String viewTitle) {
+        m_frameTitle = viewTitle;
+        openView();
+        return m_frame;
+    }
 
     /**
      * Opens the view.

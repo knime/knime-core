@@ -83,7 +83,7 @@
 				The pre-classified data that should be used to induce the decision tree.
 				At least one attribute must be nominal.
 		</dataIn>
-		<modelOut index="0" name="Decision tree model">
+		<modelOut index="0" name="Decision Tree Model">
 			The induced decision tree. The model can be used to classify
 			data with unknown target (class) attribute. To do so, connect the 
 			model out port to the "Decision Tree Predictor" node.

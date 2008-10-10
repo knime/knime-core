@@ -44,6 +44,15 @@ public class KeyEvent extends EventObject {
     
     /** Internal unmodifiable set of row IDs. */
     private final Set<RowKey> m_keys;
+    
+    /**
+     * Creates an empty key event with the given source.
+     * @param src the source of this key event
+     */
+    @SuppressWarnings("unchecked")
+    public KeyEvent(final Object src) {
+        this(src, (Set<RowKey>) Collections.EMPTY_SET);
+    }
 
     /** 
      * Creates a new event with the underlying source and one data cell.

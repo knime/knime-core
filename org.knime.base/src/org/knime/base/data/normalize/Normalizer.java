@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,13 +18,14 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   21.04.2005 (cebron): created
  */
 package org.knime.base.data.normalize;
 
 import java.util.Arrays;
+import java.util.Vector;
 
 import org.knime.base.data.statistics.StatisticsTable;
 import org.knime.base.node.util.DoubleFormat;
@@ -54,7 +55,7 @@ import org.knime.core.node.NodeLogger;
  * {@link #generateNewSpec(DataTableSpec, String[])}, because
  * {@link org.knime.core.data.def.IntCell} columns are converted to
  * {@link org.knime.core.data.def.DoubleCell} columns.
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
  */
 public final class Normalizer {
@@ -71,11 +72,13 @@ public final class Normalizer {
      */
     private int[] m_colindices;
 
+    private String m_errormessage;
+
     /**
-     * Prepares a Normalizer to process the buffered data table 
+     * Prepares a Normalizer to process the buffered data table
      * <code>table</code>. Only columns as contained in the array argument
      * are considered.
-     * 
+     *
      * @param table table to be wrapped
      * @param columns to work on
      * @see DataTable#getDataTableSpec()
@@ -85,7 +88,7 @@ public final class Normalizer {
     }
 
     /**
-     * Prepares a Normalizer to process the StatisticsTable 
+     * Prepares a Normalizer to process the StatisticsTable
      * <code>table</code> (actually no traversing is done here).
 
      * @param table table to be wrapped
@@ -95,7 +98,7 @@ public final class Normalizer {
     public Normalizer(final StatisticsTable table, final String[] columns) {
         this((DataTable)table, columns);
     }
-    
+
     /**
      * Internal delegator.
      */
@@ -108,7 +111,7 @@ public final class Normalizer {
     /**
      * Creates a new DataTableSpec. IntCell-columns are converted to
      * DoubleCell-columns.
-     * 
+     *
      * @param inspec the DataTableSpec of the input table
      * @param columns the columns that are normalized
      * @return DataTableSpec for the output table
@@ -144,7 +147,7 @@ public final class Normalizer {
     /**
      * Method that looks into spec and filters all columns given by the second
      * argument AND which are also double compatible.
-     * 
+     *
      * @param spec the spec to look into
      * @param columns the columns to include
      * @return the valid indices
@@ -175,7 +178,7 @@ public final class Normalizer {
 
     /**
      * Does the Min-Max Normalization.
-     * 
+     *
      * @param newmax the new maximum
      * @param newmin the new minimum
      * @param exec an object to check for user cancelations. Can be
@@ -193,6 +196,8 @@ public final class Normalizer {
         } else {
             st = new StatisticsTable(m_table, statisticsExec);
         }
+        checkForMissVals(st);
+
         DataTableSpec spec = st.getDataTableSpec();
         DataCell[] max = st.getMax();
         DataCell[] min = st.getMin();
@@ -200,7 +205,7 @@ public final class Normalizer {
         final double[] transforms = new double[m_colindices.length];
         final double[] mins = new double[m_colindices.length];
         final double[] maxs = new double[m_colindices.length];
-        
+
         for (int i = 0; i < transforms.length; i++) {
             DataColumnSpec cSpec = spec.getColumnSpec(m_colindices[i]);
             boolean isDouble = cSpec.getType().isCompatible(DoubleValue.class);
@@ -238,7 +243,7 @@ public final class Normalizer {
 
     /**
      * Does the Z-Score Normalization.
-     * 
+     *
      * @param exec an object to check for user cancelations. Can be
      *            <code>null</code>.
      * @throws CanceledExecutionException if user canceled
@@ -253,6 +258,7 @@ public final class Normalizer {
         } else {
             st = new StatisticsTable(m_table, statisticsExec);
         }
+        checkForMissVals(st);
         double[] mean = st.getMean();
         double[] stddev = st.getStandardDeviation();
 
@@ -274,9 +280,9 @@ public final class Normalizer {
             mins[i] = Double.NaN;
             maxs[i] = Double.NaN;
         }
-        
+
         String[] includes = getNames();
-        String summary = "Z-Score (Gaussian) normalization on " 
+        String summary = "Z-Score (Gaussian) normalization on "
             + includes.length + " column(s)";
         AffineTransConfiguration configuration = new AffineTransConfiguration(
                 includes, scales, transforms, mins, maxs, summary);
@@ -285,7 +291,7 @@ public final class Normalizer {
 
     /**
      * Does the decimal scaling.
-     * 
+     *
      * @param exec an object to check for user cancelations. Can be
      *            <code>null</code>.
      * @throws CanceledExecutionException if user canceled
@@ -299,6 +305,7 @@ public final class Normalizer {
         } else {
             st = new StatisticsTable(m_table, exec);
         }
+        checkForMissVals(st);
         String[] includes = getNames();
         double[] max = st.getdoubleMax();
         double[] min = st.getdoubleMin();
@@ -321,7 +328,7 @@ public final class Normalizer {
             mins[i] = -1.0;
             maxs[i] = 1.0;
         }
-        String summary = "Decimal Scaling normalization on " 
+        String summary = "Decimal Scaling normalization on "
             + includes.length + " column(s)";
         AffineTransConfiguration configuration = new AffineTransConfiguration(
                 includes, scales, transforms, mins, maxs, summary);
@@ -337,5 +344,66 @@ public final class Normalizer {
             result[i] = spec.getColumnSpec(m_colindices[i]).getName();
         }
         return result;
+    }
+
+    private void checkForMissVals(final StatisticsTable table) {
+        Vector<Integer> missValsColVec = new Vector<Integer>();
+        DataCell[] min = table.getMin();
+        for (int index = 0; index < min.length; index++) {
+            if (min[index].isMissing()) {
+                boolean isIncluded = false;
+                for (int incl : m_colindices) {
+                    if (incl == index) {
+                        isIncluded = true;
+                    }
+                }
+                if (isIncluded) {
+                    missValsColVec.add(index);
+                }
+
+            }
+        }
+        if (missValsColVec.size() > 0) {
+            StringBuffer missColsBuffer = new StringBuffer();
+            for (Integer i : missValsColVec) {
+                missColsBuffer.append(table.getDataTableSpec().getColumnSpec(i)
+                        .getName()
+                        + " ");
+            }
+            String message =
+                    "Ignore column(s) " + missColsBuffer.toString()
+                            + "as it/they contain only missing values";
+            setErrorMessage(message);
+            Vector<Integer> newColIndices = new Vector<Integer>();
+            for (int val : m_colindices) {
+                newColIndices.add(val);
+            }
+            newColIndices.removeAll(missValsColVec);
+            int[] colIndices = new int[newColIndices.size()];
+            int counter = 0;
+            for (Integer i : newColIndices) {
+                colIndices[counter] = i;
+                counter++;
+            }
+            m_colindices = colIndices;
+        }
+    }
+
+    /**
+     * Sets an error message, if something went wrong during initialization.
+     * @param message the message to set.
+     */
+    void setErrorMessage(final String message) {
+        if (m_errormessage == null) {
+            m_errormessage = message;
+        }
+    }
+
+    /**
+     * @return error message if something went wrong, <code>null</code>
+     * otherwise.
+     */
+    public String getErrorMessage() {
+        return m_errormessage;
     }
 }

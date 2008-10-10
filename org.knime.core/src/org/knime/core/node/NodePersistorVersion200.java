@@ -306,7 +306,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     protected void saveNodeMessage(final Node node,
             final NodeSettingsWO settings) {
         NodeMessage message = node.getNodeMessage();
-        if (message != null) {
+        if (message != null && !message.getMessageType().equals(Type.RESET)) {
             NodeSettingsWO sub = settings.addNodeSettings("node_message");
             sub.addString("type", message.getMessageType().name());
             sub.addString("message", message.getMessage());

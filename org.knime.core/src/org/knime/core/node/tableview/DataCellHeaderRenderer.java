@@ -31,6 +31,7 @@ import javax.swing.Icon;
 import javax.swing.JTable;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableModel;
 
 /** 
  * Class to render a <code>DataCell</code> in a row header of a
@@ -70,7 +71,20 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
     public Component getTableCellRendererComponent(final JTable table,
             final Object value, final boolean isSelected,
             final boolean hasFocus, final int row, final int column) {
-        setToolTipText("Row " + (row + 1) + " \"" + value + "\"");
+        StringBuilder b = new StringBuilder("\"");
+        b.append(value);
+        b.append("\" (");
+        b.append(row + 1);
+        b.append("/");
+        b.append(table.getRowCount());
+        TableModel mdl = table.getModel();
+        if (mdl instanceof TableRowHeaderModel) {
+            if (!((TableRowHeaderModel)mdl).isRowCountFinal()) {
+                b.append("+");
+            }
+        }
+        b.append(")");
+        setToolTipText(b.toString());
         return super.getTableCellRendererComponent(table, value, isSelected,
                 hasFocus, row, column);
     }

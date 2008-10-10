@@ -24,7 +24,6 @@
 package org.knime.core.node.property.hilite;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -48,7 +47,7 @@ import org.knime.core.node.NodeLogger;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DefaultHiLiteHandler implements HiLiteHandler {
+public class DefaultHiLiteHandler extends HiLiteHandler {
     
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(DefaultHiLiteHandler.class);
@@ -76,6 +75,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * 
      * @param listener the hilite listener to append to the list
      */
+    @Override
     public void addHiLiteListener(final HiLiteListener listener) {
         if (!m_listenerList.contains(listener)) { 
             m_listenerList.add(listener);
@@ -87,6 +87,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * 
      * @param listener the hilite listener to remove from the list
      */
+    @Override
     public void removeHiLiteListener(final HiLiteListener listener) {
         m_listenerList.remove(listener);
     }
@@ -94,6 +95,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
     /**
      * Removes all hilite listeners from the list. 
      */
+    @Override
     public void removeAllHiLiteListeners() {
         m_listenerList.clear();
     }
@@ -106,6 +108,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * @throws IllegalArgumentException if this array or one of its elements is 
      *         <code>null</code>.
      */
+    @Override
     public boolean isHiLit(final RowKey... ids) {
         if (ids == null) {
             throw new IllegalArgumentException("Key array must not be null.");
@@ -129,6 +132,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * 
      * @param ids the row IDs to set hilited.
      */
+    @Override
     public synchronized void fireHiLiteEvent(final RowKey... ids) {
         this.fireHiLiteEvent(new LinkedHashSet<RowKey>(Arrays.asList(ids)));
     }
@@ -139,7 +143,8 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * before.
      * 
      * @param ids the row IDs to set unhilited
-     */    
+     */
+    @Override
     public synchronized void fireUnHiLiteEvent(final RowKey... ids) {
         this.fireUnHiLiteEvent(new LinkedHashSet<RowKey>(Arrays.asList(ids)));
     }
@@ -153,10 +158,64 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * @throws IllegalArgumentException if the set or one of its elements is
      *      <code>null</code>
      */
+    @Override
     public synchronized void fireHiLiteEvent(final Set<RowKey> ids) {
         if (ids == null) {
             throw new IllegalArgumentException("Key array must not be null.");
         }
+        // if at least on key changed
+        if (ids.size() > 0) {
+            // throw hilite event
+            fireHiLiteEventInternal(new KeyEvent(this, ids));
+        }
+    }
+
+    /**
+     * Sets the status of all specified row IDs in the set to 'unhilit'. 
+     * It will send a unhilite event to all registered listeners - only for 
+     * the IDs that were hilit before.
+     * 
+     * @param ids a set of row IDs to set unhilited
+     * @throws IllegalArgumentException if the set or one of its elements is
+     *      <code>null</code>
+     */
+    @Override
+    public synchronized void fireUnHiLiteEvent(final Set<RowKey> ids) {
+        if (ids == null) {
+            throw new IllegalArgumentException("Key array must not be null.");
+        }
+        /*
+         * Do not change this implementation, see #fireHiLiteEvent for
+         * more details.
+         */
+        // if at least on key changed
+        if (ids.size() > 0) {
+            // throw unhilite event
+            fireUnHiLiteEventInternal(new KeyEvent(this, ids));
+        }
+    }
+
+    /**
+     * Resets the hilit status of all row IDs. Every row ID will be unhilit
+     * after the call to this method. Sends an event to all registered listeners
+     * with all previously hilit row IDs, if at least one key was effected 
+     * by this call.
+     */
+    @Override
+    public synchronized void fireClearHiLiteEvent() {
+        if (!m_hiLitKeys.isEmpty()) {
+            fireClearHiLiteEventInternal(new KeyEvent(this));
+        }
+    } 
+    
+    /** 
+     * Informs all registered hilite listener to hilite the row keys contained 
+     * in the key event.
+     * 
+     * @param event Contains all rows keys to hilite.
+     */
+    @Override
+    public final void fireHiLiteEventInternal(final KeyEvent event) {
         /*
          * Do not change this implementation, unless you are aware of the 
          * following problem:
@@ -169,6 +228,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
          * the event must be queued in both cases to avoid nested events to be 
          * waiting on each other. 
          */
+        final Set<RowKey> ids = event.keys();
         // create list of row keys from input key array
         final Set<RowKey> changedIDs = new LinkedHashSet<RowKey>();
         // iterates over all keys and adds them to the changed set
@@ -184,28 +244,46 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
         }
         // if at least on key changed
         if (changedIDs.size() > 0) {
-            // throw hilite event
-            fireHiLiteEventInternal(new KeyEvent(this, changedIDs));
+            final KeyEvent fireEvent = 
+                new KeyEvent(event.getSource(), changedIDs);
+            final Runnable r = new Runnable() {
+                public void run() {
+                    for (HiLiteListener l : m_listenerList) {
+                        try {
+                            l.hiLite(fireEvent);
+                        } catch (Throwable t) {
+                            LOGGER.coding(
+                                    "Exception while notifying listeners, "
+                                        + "reason: " + t.getMessage(), t);
+                        }
+                    }
+                }
+            };
+            if (SwingUtilities.isEventDispatchThread()) {
+                r.run();
+            } else {
+                if (SwingUtilities.isEventDispatchThread()) {
+                    r.run();
+                } else {
+                    SwingUtilities.invokeLater(r);
+                }
+            }
         }
     }
 
     /**
-     * Sets the status of all specified row IDs in the set to 'unhilit'. 
-     * It will send a unhilite event to all registered listeners - only for 
-     * the IDs that were hilit before.
+     * Informs all registered hilite listener to unhilite the row keys contained
+     * in the key event.
      * 
-     * @param ids a set of row IDs to set unhilited
-     * @throws IllegalArgumentException if the set or one of its elements is
-     *      <code>null</code>
+     * @param event Contains all rows keys to unhilite.
      */
-    public synchronized void fireUnHiLiteEvent(final Set<RowKey> ids) {
-        if (ids == null) {
-            throw new IllegalArgumentException("Key array must not be null.");
-        }
+    @Override
+    public final void fireUnHiLiteEventInternal(final KeyEvent event) {
         /*
          * Do not change this implementation, see #fireHiLiteEvent for
          * more details.
          */
+        final Set<RowKey> ids = event.keys();
         // create list of row keys from input key array
         final Set<RowKey> changedIDs = new LinkedHashSet<RowKey>();
         // iterate over all keys and removes all not hilit ones
@@ -221,48 +299,21 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
         // if at least on key changed
         if (changedIDs.size() > 0) {
             // throw unhilite event
-            fireUnHiLiteEventInternal(new KeyEvent(this, changedIDs));
-        }
-    }
-
-    /**
-     * Resets the hilit status of all row IDs. Every row ID will be unhilit
-     * after the call to this method. Sends an event to all registered listeners
-     * with all previously hilit row IDs, if at least one key was effected 
-     * by this call.
-     */
-    public synchronized void fireClearHiLiteEvent() {
-        if (!m_hiLitKeys.isEmpty()) {
-            /*
-             * Do not change this implementation, see #fireHiLiteEvent for
-             * more details.
-             */
-            m_hiLitKeys.clear();
-            fireClearHiLiteEventInternal();
-        }
-    } 
-    
-    /** 
-     * Informs all registered hilite listener to hilite the row keys contained 
-     * in the key event.
-     * 
-     * @param event Contains all rows keys to hilite.
-     */
-    protected void fireHiLiteEventInternal(final KeyEvent event) {
-        final Runnable r = new Runnable() {
-            public void run() {
-                for (HiLiteListener l : m_listenerList) {
-                    try {
-                        l.hiLite(event);
-                    } catch (Throwable t) {
-                        LOGGER.coding("Exception while notifying listeners", t);
+            final KeyEvent fireEvent = new KeyEvent(
+                    event.getSource(), changedIDs); 
+            final Runnable r = new Runnable() {
+                public void run() {
+                    for (HiLiteListener l : m_listenerList) {
+                        try {
+                            l.unHiLite(fireEvent);
+                        } catch (Throwable t) {
+                            LOGGER.coding(
+                                 "Exception while notifying listeners, reason: "
+                                        + t.getMessage(), t);
+                        }
                     }
                 }
-            }
-        };
-        if (SwingUtilities.isEventDispatchThread()) {
-            r.run();
-        } else {
+            };
             if (SwingUtilities.isEventDispatchThread()) {
                 r.run();
             } else {
@@ -270,58 +321,40 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
             }
         }
     }
-
-    /**
-     * Informs all registered hilite listener to unhilite the row keys contained
-     * in the key event.
-     * 
-     * @param event Contains all rows keys to unhilite.
-     */
-    protected void fireUnHiLiteEventInternal(final KeyEvent event) {
-        final Runnable r = new Runnable() {
-            public void run() {
-                for (HiLiteListener l : m_listenerList) {
-                    try {
-                        l.unHiLite(event);
-                    } catch (Throwable t) {
-                        LOGGER.coding("Exception while notifying listeners", t);
-                    }
-                }
-            }
-        };
-        if (SwingUtilities.isEventDispatchThread()) {
-            r.run();
-        } else {
-            SwingUtilities.invokeLater(r);
-        }
-    }
-    
-    /** used to fire empty key event during clear hilite. */
-    private final KeyEvent EMPTY_KEY_EVENT = new KeyEvent(this,
-            (Set<RowKey>) Collections.EMPTY_SET);
     
     /**
      * Informs all registered hilite listener to reset all hilit rows.
+     * @param event the event fired for clear hilite
      */
-    protected void fireClearHiLiteEventInternal() {
-        final Runnable r = new Runnable() {
-            public void run() {
-                for (HiLiteListener l : m_listenerList) {
-                    try {
-                        l.unHiLiteAll(EMPTY_KEY_EVENT);
-                    } catch (Throwable t) {
-                        LOGGER.coding("Exception while notifying listeners", t);
+    @Override
+    public final void fireClearHiLiteEventInternal(final KeyEvent event) {
+        /*
+         * Do not change this implementation, see #fireHiLiteEvent for
+         * more details.
+         */
+        if (m_hiLitKeys.size() > 0) {
+            m_hiLitKeys.clear();
+            final Runnable r = new Runnable() {
+                public void run() {
+                    for (HiLiteListener l : m_listenerList) {
+                        try {
+                            l.unHiLiteAll(event);
+                        } catch (Throwable t) {
+                            LOGGER.coding(
+                                "Exception while notifying listeners, reason: "
+                                    + t.getMessage(), t);
+                        }
                     }
                 }
-            }
-        };
-        if (SwingUtilities.isEventDispatchThread()) {
-            r.run();
-        } else {
+            };
             if (SwingUtilities.isEventDispatchThread()) {
                 r.run();
             } else {
-                SwingUtilities.invokeLater(r);
+                if (SwingUtilities.isEventDispatchThread()) {
+                    r.run();
+                } else {
+                    SwingUtilities.invokeLater(r);
+                }
             }
         }
     }
@@ -331,6 +364,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * @return a set of hilit row keys
      * @see HiLiteHandler#getHiLitKeys()
      */
+    @Override
     public Set<RowKey> getHiLitKeys() {
         return new LinkedHashSet<RowKey>(m_hiLitKeys);
     }   

@@ -88,7 +88,7 @@
 		median, Q3, largest value (non-outlier), and maximum.</dataOut>
 	</ports>	
 	<views>
-		<view index="0" name="BoxPlot">
+		<view index="0" name="Box Plot">
 			The box plot displaying the data distribution.
 		</view>
 	</views>

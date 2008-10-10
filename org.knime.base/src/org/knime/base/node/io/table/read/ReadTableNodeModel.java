@@ -24,18 +24,25 @@
  */
 package org.knime.base.node.io.table.read;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
@@ -47,6 +54,10 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * @author wiswedel, University of Konstanz
  */
 public class ReadTableNodeModel extends NodeModel {
+    
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(ReadTableNodeModel.class);
+    
     /** Identifier for the node settings object. */
     static final String CFG_FILENAME = "filename";
     
@@ -122,10 +133,18 @@ public class ReadTableNodeModel extends NodeModel {
         }
         try {
             File f = new File(m_fileName.getStringValue());
-            // doesn't hurt to read the table here. It will only parse
-            // the spec, not the data content.
-            DataTable outTable = DataContainer.readFromZip(f);
-            return new DataTableSpec[]{outTable.getDataTableSpec()};
+            if (!f.isFile()) {
+                throw new InvalidSettingsException(
+                        "No such file: " + m_fileName.getStringValue());
+            }
+            DataTableSpec spec = peekDataTableSpec(f);
+            if (spec == null) { // if written with 1.3.x and before
+                LOGGER.debug("Table spec is not first entry in input file, " 
+                        + "need to deflate entire file");
+                DataTable outTable = DataContainer.readFromZip(f);
+                spec = outTable.getDataTableSpec();
+            }
+            return new DataTableSpec[]{spec};
         } catch (IOException ioe) {
             String message = ioe.getMessage();
             if (message == null) {
@@ -134,6 +153,47 @@ public class ReadTableNodeModel extends NodeModel {
             }
             throw new InvalidSettingsException(message);
             
+        }
+    }
+    
+    /** Opens the zip file and checks whether the first entry is the spec. If
+     * so, the spec is parsed and returned. Otherwise null is returned.
+     * 
+     * <p> This method is used to fix bug #1141: Dialog closes very slowly.
+     * @param file To read from.
+     * @return The spec or null (null will be returned when the file was
+     * written with a version prior 2.0)
+     * @throws IOException If that fails for any reason.
+     */
+    private DataTableSpec peekDataTableSpec(final File file) 
+        throws IOException {
+        // must not use ZipFile here as it is known to have memory problems
+        // on large files, see e.g. 
+        // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5077277
+        ZipInputStream zipIn = new ZipInputStream(
+                new BufferedInputStream(new FileInputStream(file)));
+        ZipEntry entry = zipIn.getNextEntry();
+        try {
+            // hardcoded constants here as we do not want additional 
+            // functionality to DataContainer ... at least not yet.
+            if ("spec.xml".equals(entry != null ? entry.getName() : "")) {
+                NodeSettingsRO settings = NodeSettings.loadFromXML(
+                        new NonClosableInputStream.Zip(zipIn));
+                try {
+                    NodeSettingsRO specSettings = 
+                        settings.getNodeSettings("table.spec");
+                    return DataTableSpec.load(specSettings);
+                } catch (InvalidSettingsException ise) {
+                    IOException ioe = new IOException(
+                    "Unable to read spec from file");
+                    ioe.initCause(ise);
+                    throw ioe;
+                }
+            } else {
+                return null;
+            }
+        } finally {
+            zipIn.close();
         }
     }
 

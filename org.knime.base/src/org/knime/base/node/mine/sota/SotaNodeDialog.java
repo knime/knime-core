@@ -51,7 +51,6 @@ public class SotaNodeDialog extends NodeDialogPane {
         NodeLogger.getLogger(SotaNodeDialog.class);
     
     private SotaSettingsPanel m_settings;
-    private SotaFilterColumnPanel m_filterSettings;
     private SotaHierarchicalFuzzySettings m_hierarchicalFuzzyDataSettings;
     
     /**
@@ -66,11 +65,6 @@ public class SotaNodeDialog extends NodeDialogPane {
         outerSettingsPanel.add(m_settings);
         outerSettingsPanel.setBorder(new EtchedBorder());
         
-        m_filterSettings = new SotaFilterColumnPanel();
-        JPanel outerFilterPanel = new JPanel();
-        outerFilterPanel.add(m_filterSettings);
-        outerFilterPanel.setBorder(new EtchedBorder());        
-        
         m_hierarchicalFuzzyDataSettings = 
             new SotaHierarchicalFuzzySettings(LOGGER);
         JPanel outerFuzzyPanel = new JPanel();
@@ -80,15 +74,6 @@ public class SotaNodeDialog extends NodeDialogPane {
         JPanel jp = new JPanel(new GridBagLayout());
         
         GridBagConstraints c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 0;
-        c.gridwidth = 2;
-        c.weightx = 10;
-        c.weighty = 10;        
-        c.fill = GridBagConstraints.BOTH;
-        c.insets = new Insets(10, 10, 0, 10);
-        jp.add(outerFilterPanel, c);
-
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 1;
@@ -146,7 +131,6 @@ public class SotaNodeDialog extends NodeDialogPane {
         }
         
         m_settings.loadSettingsFrom(settings, specs);
-        m_filterSettings.loadSettingsFrom(settings, specs);
         m_hierarchicalFuzzyDataSettings.loadSettingsFrom(settings, specs);
     }
 
@@ -158,7 +142,6 @@ public class SotaNodeDialog extends NodeDialogPane {
             throws InvalidSettingsException {
         assert (settings != null);
         m_settings.saveSettingsTo(settings);
-        m_filterSettings.saveSettingsTo(settings);
         m_hierarchicalFuzzyDataSettings.saveSettingsTo(settings);
     }
 }

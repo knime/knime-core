@@ -311,7 +311,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * fractions of patterns, for example when we have built a fuzzy decision
      * tree or there were missing values.
      *
-     * @return number (and fractions) of patterns of alss classes
+     * @return number (and fractions) of patterns of all classes
      */
     public double getEntireClassCount() {
         return m_allClassFreq;
@@ -325,7 +325,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * @param row input pattern
      * @param spec the corresponding table spec
      * @param weight the weight of the row (between 0.0 and 1.0)
-     * @throws Exception if something went wrong (unknown attriubte for example)
+     * @throws Exception if something went wrong (unknown attribute for example)
      */
     public abstract void addCoveredPattern(DataRow row, DataTableSpec spec,
             double weight) throws Exception;
@@ -338,7 +338,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * @param row input pattern
      * @param spec the corresponding table spec
      * @param weight the weight of the row (between 0.0 and 1.0)
-     * @throws Exception if something went wrong (unknown attriubte for example)
+     * @throws Exception if something went wrong (unknown attribute for example)
      */
     public abstract void addCoveredColor(DataRow row, DataTableSpec spec,
             double weight) throws Exception;

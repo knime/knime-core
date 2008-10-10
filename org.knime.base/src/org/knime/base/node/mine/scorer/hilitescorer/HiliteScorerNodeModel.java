@@ -141,6 +141,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
      * 
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws CanceledExecutionException {
@@ -159,17 +160,18 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
         // cells in common (e.g. both have Iris-Setosa), they get the same
         // index in the array. thus, the high numbers should appear
         // in the diagonal
-        m_values = determineColValues(in, index1, index2, 
+        DataCell[] values = determineColValues(in, index1, index2, 
                 exec.createSubProgress(0.5));
-        List<String> valuesList = Arrays.asList(m_values);
+        List<DataCell> valuesList = Arrays.asList(values);
+        Set<DataCell> valuesInCol2 = new HashSet<DataCell>();
 
         m_correctCount = 0;
         m_falseCount = 0;
 
         // the key store remembers the row key for later hiliting
-        m_keyStore = new List[m_values.length][m_values.length];
+        m_keyStore = new List[values.length][values.length];
         // the scorerCount counts the confusions
-        m_scorerCount = new int[m_values.length][m_values.length];
+        m_scorerCount = new int[values.length][values.length];
 
         // init the matrix
         for (int i = 0; i < m_keyStore.length; i++) {
@@ -194,18 +196,18 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
             }
             DataCell cell1 = row.getCell(index1);
             DataCell cell2 = row.getCell(index2);
+            valuesInCol2.add(cell2);
             if (cell1.isMissing() || cell2.isMissing()) {
                 continue;
             }
             boolean areEqual = cell1.equals(cell2);
 
-            // need to cast to string (column keys are strings!)
-            int i1 = valuesList.indexOf(cell1.toString());
-            int i2 = areEqual ? i1 : valuesList.indexOf(cell2.toString());
+            int i1 = valuesList.indexOf(cell1);
+            int i2 = areEqual ? i1 : valuesList.indexOf(cell2);
             assert i1 >= 0 : "column spec lacks possible value " + cell1;
             assert i2 >= 0 : "column spec lacks possible value " + cell2;
             // i2 must be equal to i1 if cells are equal (implication)
-            assert (!areEqual || i1 == valuesList.indexOf(cell2.toString()));
+            assert (!areEqual || i1 == valuesList.indexOf(cell2));
             m_keyStore[i1][i2].add(row.getKey());
             m_scorerCount[i1][i2]++;
 
@@ -217,10 +219,56 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
         }
 
         m_nrRows = rowNr;
+        HashSet<String> valuesAsStringSet = new HashSet<String>();
+        HashSet<String> duplicateValuesAsString = new HashSet<String>();
+        for (DataCell c : values) { 
+            valuesAsStringSet.add(c.toString());
+        }
+        for (DataCell c : values) {
+            String cAsString = c.toString(); 
+            if (!valuesAsStringSet.remove(cAsString)) {
+                duplicateValuesAsString.add(cAsString);
+            }
+        }
+        
+        
+        boolean hasPrintedWarningOnAmbiguousValues = false;
+        m_values = new String[values.length];
+        for (int i = 0; i < m_values.length; i++) {
+            DataCell c = values[i]; 
+            String s = c.toString();
+            if (duplicateValuesAsString.contains(s)) {
+                boolean isInSecondColumn = valuesInCol2.contains(c);
+                int uniquifier = 1;
+                if (isInSecondColumn) {
+                    s = s.concat(" (" + m_secondCompareColumn + ")");
+                } else {
+                    s = s.concat(" (" + m_firstCompareColumn + ")");
+                }
+                String newName = s;
+                while (!valuesAsStringSet.add(newName)) {
+                    newName = s + "#" + (uniquifier++);
+                }
+                m_values[i] = newName;
+                if (!hasPrintedWarningOnAmbiguousValues) {
+                    hasPrintedWarningOnAmbiguousValues = true;
+                    setWarningMessage("Ambiguous value \"" + c.toString() 
+                            + "\" encountered. Preserving individual instances;"
+                            + " consider to convert input columns to string");
+                }
+            } else {
+                int uniquifier = 1;
+                String newName = s;
+                while (!valuesAsStringSet.add(newName)) {
+                    newName = s + "#" + (uniquifier++);
+                }
+                m_values[i] = newName;
+            }
+        }
         DataType[] colTypes = new DataType[m_values.length];
         Arrays.fill(colTypes, IntCell.TYPE);
-        BufferedDataContainer container = exec
-                .createDataContainer(new DataTableSpec(m_values, colTypes));
+        BufferedDataContainer container = 
+            exec.createDataContainer(new DataTableSpec(m_values, colTypes));
         for (int i = 0; i < m_values.length; i++) {
             // need to make a datacell for the row key
             container.addRowToTable(new DefaultRow(m_values[i],
@@ -412,23 +460,17 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
         return keySet;
     }
 
-    /**
-     * Called to determine all possible values in the respective columns. This
-     * method will "stringify" all values as they show up as row and column key.
+    /** Called to determine all possible values in the respective columns. 
      * 
-     * @param in
-     *            the input table
-     * @param index1
-     *            the first column to compare
-     * @param index2
-     *            the second column to compare
-     * @param exec
-     *            object to check with if user canceled
+     * @param in the input table
+     * @param index1 the first column to compare
+     * @param index2 the second column to compare
+     * @param exec object to check with if user canceled
      * @return the order of rows and columns in the confusion matrix
      * @throws CanceledExecutionException
      *             if user canceled operation
      */
-    protected String[] determineColValues(final BufferedDataTable in, 
+    protected DataCell[] determineColValues(final BufferedDataTable in, 
             final int index1, final int index2, final ExecutionMonitor exec)
             throws CanceledExecutionException {
         int rowCnt = in.getRowCount();
@@ -488,13 +530,8 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
         temp = values2.toArray(new DataCell[0]);
         System.arraycopy(temp, 0, order, order.length - temp.length,
                 temp.length);
-        // make them a string
-        String[] result = new String[order.length];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = order[i].toString();
-        }
-        return result;
-    } // determineColValues(DataTable, int, int)
+        return order;
+    } 
 
     /**
      * Finds the position where key is located in source. It must be ensured
@@ -513,7 +550,8 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
                 return i;
             }
         }
-        throw new RuntimeException("You should never come here.");
+        throw new RuntimeException("Array does not contain desired value \"" 
+                + key + "\".");
     }
 
     /**

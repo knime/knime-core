@@ -6,8 +6,8 @@
     <fullDescription>
         <intro>
 	        This node normalizes the values of all (numeric) columns. In the
-			second tab of the dialog, you can choose the columns you want to work on.
-			The following normalizations are available in the dialog:
+			dialog, you can choose the columns you want to work on.
+			The following normalization methods are available in the dialog:
 		</intro>
 		<option name="Min-max normalization">
 			Linear transformation of all values such that the minimum and maximum 

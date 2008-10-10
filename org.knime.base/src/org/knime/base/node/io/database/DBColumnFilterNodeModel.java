@@ -69,7 +69,12 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         super.validateSettings(settings);
-        m_filter.validateSettings(settings);
+        SettingsModelFilterString filter = 
+            m_filter.createCloneWithValidatedValue(settings);
+        if (filter.getIncludeList().isEmpty()) {
+            throw new InvalidSettingsException(
+                    "No columns included for output table.");
+        }
     }
 
     /**
@@ -132,11 +137,16 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
     
     private String createQuery(final String query, final String tableID) {
         StringBuilder buf = new StringBuilder();
-        for (String s : m_filter.getIncludeList()) {
-            if (buf.length() > 0) {
-                buf.append(",");
+        if (m_filter.getExcludeList().isEmpty()) {
+            super.setWarningMessage("All columns retained.");
+            buf.append("*"); // selects all columns
+        } else {
+            for (String s : m_filter.getIncludeList()) {
+                if (buf.length() > 0) {
+                    buf.append(",");
+                }
+                buf.append(s);
             }
-            buf.append(s);
         }
         return "SELECT " + buf.toString() + " FROM (" + query + ") " + tableID;
     }

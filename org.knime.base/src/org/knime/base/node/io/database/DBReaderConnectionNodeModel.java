@@ -113,10 +113,16 @@ final class DBReaderConnectionNodeModel extends DBNodeModel {
         try {
             // try to create database connection
             DatabaseQueryConnectionSettings conn = m_load.getQueryConnection();
+            if (conn == null) {
+                throw new InvalidSettingsException(
+                        "No database connection available.");
+            }
             DataTableSpec spec = m_load.getDataTableSpec();
             DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(spec,
                     conn.createConnectionModel());
             return new PortObjectSpec[]{dbSpec};
+        } catch (InvalidSettingsException ise) {
+            throw ise;
         } catch (Throwable t) {
             throw new InvalidSettingsException(t);
         }

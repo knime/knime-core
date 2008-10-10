@@ -145,7 +145,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
      * creates candidate boundaries only at positions where class values change.
      * At other positions boundary checks are not necessary.
      */
-    private boolean m_classOptimizedVersion;
+    private final boolean m_classOptimizedVersion = true;
 
     /**
      * If true, the candidate boundaries are only created if the column value
@@ -661,7 +661,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
             final BufferedDataTable table, final int columnIndex,
             final ExecutionContext exec) throws Exception {
 
-        // sort the data accordint to the column index
+        // sort the data according to the column index
         List<String> sortColumn = new ArrayList<String>();
         sortColumn.add(table.getDataTableSpec().getColumnSpec(columnIndex)
                 .getName());
@@ -901,16 +901,10 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-
         m_includedColumnNames.loadSettingsFrom(settings);
-
         m_classColumnName.loadSettingsFrom(settings);
-
         m_sortInMemory.loadSettingsFrom(settings);
-
-        m_classOptimizedVersion = true;
         // m_classOptimizedVersion.loadSettingsFrom(settings);
-
     }
 
     /**
@@ -923,8 +917,6 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
         assert (settings != null);
         m_classColumnName.saveSettingsTo(settings);
         m_includedColumnNames.saveSettingsTo(settings);
-
-        settings.addBoolean(USE_CLASS_OPTIMIZATION, m_classOptimizedVersion);
         m_sortInMemory.saveSettingsTo(settings);
     }
 

@@ -227,7 +227,7 @@ public class SizeManager2NodeModel extends NodeModel {
             m_factor.validateSettings(settings);
             m_mapping.validateSettings(settings);
         } catch (InvalidSettingsException ise) {
-            // ignore it
+            // ignore it: added somewhere in between
         }
     }
 

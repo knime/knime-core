@@ -250,6 +250,16 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
                     }
 
                 });
+        m_properties.getAntialiasButton().addChangeListener(
+                new ChangeListener() {
+                    @Override
+                    public void stateChanged(final ChangeEvent e) {
+                        setAntialiasing(m_properties.getAntialiasButton()
+                                .isSelected());
+                        getDrawingPane().repaint();
+                    }
+            
+        });
         m_width = 400;
         m_height = 400;
         m_drawingPane.setPreferredSize(new Dimension(m_width, m_height));
@@ -263,12 +273,16 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
                                         .getPreferredSize().height));
         m_drawingPane.setBackground(Color.white);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+//        JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, 
+//                m_scroller, m_properties);
+//        add(split);
         add(m_scroller);
         add(m_properties);
         addComponentListener(this);
 
         m_hiliteHandler = new DefaultHiLiteHandler();
-        // fitToScreen();
+        
+        
     }
 
     /*----------- viewing methods ---------*/

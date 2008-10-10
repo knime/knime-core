@@ -60,7 +60,7 @@ final class DBRowFilterNodeDialogPane extends NodeDialogPane {
     private final DialogComponentStringSelection m_operator
         = new DialogComponentStringSelection(createOperatorModel(), 
                 "", Arrays.asList("=", "<>", "!=", ">", "<", ">=", "<=", 
-                        "BETWEEN", "LIKE", "IN"));
+                        "BETWEEN", "LIKE", "IN", "IS NULL", "IS NOT NULL"));
     
     private final DialogComponentString m_value = new DialogComponentString(
             createValueModel(), "");
@@ -111,7 +111,12 @@ final class DBRowFilterNodeDialogPane extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] ports) throws NotConfigurableException {
         DatabasePortObjectSpec dbSpec = (DatabasePortObjectSpec) ports[0];
-        DataTableSpec[] specs = new DataTableSpec[]{dbSpec.getDataTableSpec()};
+        final DataTableSpec[] specs; 
+        if (dbSpec == null) {
+            specs = new DataTableSpec[]{null};
+        } else {
+            specs = new DataTableSpec[]{dbSpec.getDataTableSpec()};
+        }
         m_column.loadSettingsFrom(settings, specs);
         m_operator.loadSettingsFrom(settings, specs);
         m_value.loadSettingsFrom(settings, specs);
@@ -133,6 +138,25 @@ final class DBRowFilterNodeDialogPane extends NodeDialogPane {
             throws InvalidSettingsException {
         m_column.saveSettingsTo(settings);
         m_operator.saveSettingsTo(settings);
+//        if (m_column.getSelectedAsSpec().getType().isCompatible(
+//                StringValue.class)) {
+//            SettingsModelString value = 
+//                (SettingsModelString) m_value.getModel();
+//            String str = value.getStringValue();
+//            if (str.length() > 0) {
+//                if (str.charAt(0) != (char) '\'') {
+//                    str = '\'' + str;
+//                }
+//                if (str.charAt(str.length() - 1) != (char) '\'') {
+//                    str += '\'';
+//                }
+//                if (value.getStringValue().length() < str.length()) {
+//                    value.setStringValue(str);
+//                }
+//            } else {
+//                value.setStringValue("''");
+//            }
+//        }
         m_value.saveSettingsTo(settings);
         m_tableOptions.saveSettingsTo(settings);
     }

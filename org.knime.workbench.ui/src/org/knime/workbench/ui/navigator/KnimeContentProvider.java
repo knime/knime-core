@@ -29,6 +29,8 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.ui.model.WorkbenchContentProvider;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 
 /**
@@ -42,26 +44,58 @@ public class KnimeContentProvider extends WorkbenchContentProvider {
      */
     @Override
     public boolean hasChildren(final Object element) {
-        // the knime navigator does not has any children except the first root
-        // level
+        // check whether it is a IProject (closed project)
         if (element instanceof IProject) {
+            // try to find the registered workflow manager
+            NodeContainer workflow = ProjectWorkflowMap.getWorkflow(
+                    ((IProject)element).getName());
+            if (workflow != null) {
+                // if the workflow is open then it is regsitered and 
+                // the number of contained nodes is returned
+                return ((WorkflowManager)workflow).getNodeContainers()
+                    .size() > 0;
+            }
+            // if the project is closed check for existence of workflow.knime 
+            // file
             boolean isKnime = ((IProject)element).exists(new Path("/" 
                     + WorkflowPersistor.WORKFLOW_FILE));
             try {
+                // if workflow.knime file is contained and there are other 
+                // elements -> except the workflow.knime file 
+                // hence > 2  (workflow.knime and .lock)
                 return isKnime && (((IProject)element).members().length > 2);
             } catch (CoreException ce) {
                 return false;
             }
         } else if (element instanceof IFolder) {
+            // also closed meta nodes are detected and can be expanded
             return ((IFolder)element).exists(new Path("/" 
                      + WorkflowPersistor.WORKFLOW_FILE));
+            // process meta nodes (no project but workflow manager = MetaNode)
+        } else if (element instanceof WorkflowManager) {
+            return ((WorkflowManager)element).getNodeContainers().size() > 0;
         }
         return false;
     }
     
+    /**
+     * 
+     * {@inheritDoc}
+     */
     @Override
-    public Object[] getChildren(Object element) {
+    public Object[] getChildren(final Object element) {
         // TODO: return the nodes and meta nodes etc.
+        if (element instanceof IProject) {
+            NodeContainer workflow = ProjectWorkflowMap.getWorkflow(
+                    ((IProject)element).getName());
+            if (workflow != null) {
+                return ((WorkflowManager)workflow).getNodeContainers()
+                    .toArray();
+            }
+            // process meta nodes
+        } else if (element instanceof WorkflowManager) {
+            return ((WorkflowManager)element).getNodeContainers().toArray();
+        }
         return super.getChildren(element);
     }
 }

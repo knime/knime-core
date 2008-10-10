@@ -156,6 +156,7 @@ public class ROCNodeView extends NodeView {
     @Override
     protected void modelChanged() {
         m_plotter.updatePaintModel();
+        m_plotter.fitToScreen();
     }
 
     /**
@@ -171,6 +172,13 @@ public class ROCNodeView extends NodeView {
      */
     @Override
     protected void onOpen() {
-        // nothing to do
+        /*
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                m_plotter.fitToScreen();
+            }
+        });
+        */
     }
 }

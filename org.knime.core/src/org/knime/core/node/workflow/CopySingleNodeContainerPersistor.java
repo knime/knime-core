@@ -112,13 +112,17 @@ final class CopySingleNodeContainerPersistor implements
     public boolean needsResetAfterLoad() {
         return false;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public boolean isDirtyAfterLoad() {
+        return false;
+    }
 
     /** {@inheritDoc} */
     @Override
     public LoadResult preLoadNodeContainer(final ReferencedFile nodeFileRef,
-            final NodeSettingsRO parentSettings)
-            throws InvalidSettingsException, CanceledExecutionException,
-            IOException {
+            final NodeSettingsRO parentSettings) {
         return new LoadResult();
     }
 

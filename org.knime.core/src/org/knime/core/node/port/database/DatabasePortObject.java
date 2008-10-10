@@ -151,7 +151,12 @@ public class DatabasePortObject implements PortObject {
     public JComponent[] getViews() {
         JComponent[] specPanels = m_spec.getViews();
         final JComponent[] panels = new JComponent[specPanels.length + 1];
-        final BufferedDataTableView dataView = new BufferedDataTableView(null);
+        final BufferedDataTableView dataView = new BufferedDataTableView(null) {
+            @Override
+            public String getName() {
+                return "Table Preview";
+            }            
+        };
         JButton b = new JButton("Cache no. of rows: ");
         final JPanel p = new JPanel(new FlowLayout());
         final JTextField cacheRows = new JTextField("100");
@@ -177,7 +182,13 @@ public class DatabasePortObject implements PortObject {
                     cacheRows.setText("100");
                 }
                 BufferedDataTableView dataView2 = new BufferedDataTableView(
-                        getDataTable(value));
+                        getDataTable(value)) {
+                    @Override
+                    public String getName() {
+                        return "Table Preview";
+                    }            
+                };
+                dataView2.setName("Table Preview");
                 panels[0].add(p, BorderLayout.NORTH);
                 panels[0].add(dataView2, BorderLayout.CENTER);
                 panels[0].setName(dataView2.getName());

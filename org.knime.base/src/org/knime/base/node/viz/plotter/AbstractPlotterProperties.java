@@ -25,6 +25,7 @@
 package org.knime.base.node.viz.plotter;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JTabbedPane;
@@ -84,6 +85,14 @@ public class AbstractPlotterProperties extends JTabbedPane {
      */
     public JButton getFitToScreenButton() {
         return m_defaultTab.getFitToScreenButton();
+    }
+    
+    /**
+     * 
+     * @return the check box for antialiasing
+     */
+    public JCheckBox getAntialiasButton() {
+        return m_defaultTab.getAntiAliasButton();
     }
     
 

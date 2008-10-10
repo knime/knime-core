@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./kmeans.png" type="Learner">
-    <name>K-Means (PMML)</name>
+    <name>k-Means</name>
     <shortDescription>Creates a crisp center based clustering.</shortDescription>
     <fullDescription>
         <intro>
@@ -26,7 +26,7 @@
         numerical values and only these are considered for clustering.</dataIn>
         <dataOut index="0" name="Labeled input">The input data labeled with the 
         cluster they are contained in.</dataOut>
-        <modelOut index="0" name="PMML cluster model">PMML cluster model</modelOut>
+        <modelOut index="0" name="PMML Cluster Model">PMML cluster model</modelOut>
 	</ports>
 	
 	<views>

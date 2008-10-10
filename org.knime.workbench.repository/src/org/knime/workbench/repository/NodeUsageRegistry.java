@@ -352,7 +352,7 @@ public final class NodeUsageRegistry {
             NodeTemplate node = (NodeTemplate)RepositoryManager.INSTANCE
                 .getRoot().clone().getChildByID(id, true);
             if (node != null) {
-                LAST_USED.add(node);
+                addToLastUsedNodes(node);
             }
         }
     }

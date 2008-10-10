@@ -93,12 +93,15 @@ public class OpenViewAction extends Action {
         LOGGER.debug("Open Node View " + m_nodeContainer.getName() + " (#"
                 + m_index + ")");
         try {
-            String title = m_nodeContainer.getID().toString();
-            if (m_nodeContainer.getCustomName() != null) { 
-                    title = m_nodeContainer.getCustomName();
-            }
-            title += " : " + m_nodeContainer.getViewName(m_index);
-            m_nodeContainer.getView(m_index).createFrame(title);
+            final String title = m_nodeContainer.getViewName(0) + " - " 
+                + m_nodeContainer.getName() + " #" 
+                + m_nodeContainer.getID().getIndex();
+            Display.getDefault().asyncExec(new Runnable() {
+                @Override
+                public void run() {                    
+                    m_nodeContainer.getView(m_index).createFrame(title);
+                }
+            });
         } catch (Throwable t) {
             MessageBox mb = new MessageBox(
                     Display.getDefault().getActiveShell(),

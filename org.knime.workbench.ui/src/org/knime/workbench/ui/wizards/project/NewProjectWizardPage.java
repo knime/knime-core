@@ -47,7 +47,7 @@ import com.swtdesigner.ResourceManager;
  * @author Christoph Sieb, University of Konstanz
  */
 public class NewProjectWizardPage extends WizardPage {
-    private static final String INITIAL_PROJECT_NAME = "Knime_project";
+    private static final String INITIAL_PROJECT_NAME = "KNIME_project";
 
     private Text m_projectName;
     
@@ -58,7 +58,7 @@ public class NewProjectWizardPage extends WizardPage {
     public NewProjectWizardPage() {
         super("wizardPage");
         setTitle("New KNIME Project Wizard");
-        setDescription("Create a new Knime workflow project.");
+        setDescription("Create a new KNIME workflow project.");
         setImageDescriptor(ResourceManager.getPluginImageDescriptor(
                 KNIMEUIPlugin.getDefault(), "icons/logo32x32.png"));
     }

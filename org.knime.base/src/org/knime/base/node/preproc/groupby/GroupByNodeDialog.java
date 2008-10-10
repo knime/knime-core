@@ -26,8 +26,8 @@
 package org.knime.base.node.preproc.groupby;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
@@ -65,10 +65,10 @@ import javax.swing.event.ChangeListener;
 public class GroupByNodeDialog extends NodeDialogPane {
 
     /**The width of the default component.*/
-    public static final int COMPONENT_WIDTH = 680;
+    public static final int DEFAULT_WIDTH = 680;
 
     /**The height of the default component.*/
-    public static final int COMPONENT_HEIGHT = 550;
+    public static final int DEFAULT_HEIGHT = 550;
 
     private final JPanel m_panel;
 
@@ -100,11 +100,6 @@ public class GroupByNodeDialog extends NodeDialogPane {
     public GroupByNodeDialog() {
         //create the root tab
         m_panel = new JPanel();
-        final Dimension dimension =
-            new Dimension(COMPONENT_WIDTH, COMPONENT_HEIGHT);
-        m_panel.setMinimumSize(dimension);
-        m_panel.setMaximumSize(dimension);
-        m_panel.setPreferredSize(dimension);
         m_panel.setLayout(new BoxLayout(m_panel, BoxLayout.Y_AXIS));
         addTab("Options", m_panel);
 
@@ -128,7 +123,20 @@ public class GroupByNodeDialog extends NodeDialogPane {
         m_panel.add(m_aggrColPanel.getComponentPanel());
 
 //The advanced settings box
-        m_panel.add(createAdvancedOptionsBox());
+        final JComponent advancedBox = createAdvancedOptionsBox();
+        m_panel.add(advancedBox);
+
+//calculate the component size
+        int width = (int)Math.max(m_groupColPanel.getComponentPanel().
+                getMinimumSize().getWidth(), m_aggrColPanel.
+                    getComponentPanel().getMinimumSize().getWidth());
+        width = (int)Math.max(width, advancedBox.getMinimumSize().getWidth());
+        width = Math.max(width, DEFAULT_WIDTH);
+        final Dimension dimension =
+            new Dimension(width, DEFAULT_HEIGHT);
+        m_panel.setMinimumSize(dimension);
+        m_panel.setMaximumSize(dimension);
+        m_panel.setPreferredSize(dimension);
     }
 
     private JComponent createAdvancedOptionsBox() {

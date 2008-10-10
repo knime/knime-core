@@ -42,8 +42,8 @@ import javax.swing.JTextField;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -77,7 +77,6 @@ public class NormalizerNodeDialog extends NodeDialogPane {
     /*
      * GUI elements
      */
-    private JRadioButton m_noNormButton;
 
     private JRadioButton m_minmaxButton;
 
@@ -99,6 +98,8 @@ public class NormalizerNodeDialog extends NodeDialogPane {
         super();
         JPanel panel = generateContent();
         m_filterpanel = new ColumnFilterPanel(DoubleValue.class);
+        m_filterpanel.setIncludeTitle("Normalize");
+        m_filterpanel.setExcludeTitle("Do not normalize");
         JPanel all = new JPanel();
         BoxLayout yaxis = new BoxLayout(all, BoxLayout.Y_AXIS);
         all.setLayout(yaxis);
@@ -112,12 +113,6 @@ public class NormalizerNodeDialog extends NodeDialogPane {
      */
     private JPanel generateContent() {
         JPanel panel = new JPanel();
-
-        // no normalization
-        JPanel panel0 = new JPanel();
-        panel0.setLayout(new BorderLayout());
-        m_noNormButton = new JRadioButton("No Normalization");
-        panel0.add(m_noNormButton, BorderLayout.WEST);
 
         // min-max
         JPanel panel1 = new JPanel();
@@ -171,20 +166,10 @@ public class NormalizerNodeDialog extends NodeDialogPane {
 
         // Group the radio buttons.
         ButtonGroup group = new ButtonGroup();
-        group.add(m_noNormButton);
         group.add(m_minmaxButton);
         group.add(m_zscoreButton);
         group.add(m_decButton);
 
-        m_noNormButton.addItemListener(new ItemListener() {
-            public void itemStateChanged(final ItemEvent e) {
-                if (m_noNormButton.isSelected()) {
-                    m_filterpanel.setEnabled(false);
-                    m_newminTextField.setEnabled(false);
-                    m_newmaxTextField.setEnabled(false);
-                }
-            }
-        });
         m_minmaxButton.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
                 if (m_minmaxButton.isSelected()) {
@@ -215,7 +200,6 @@ public class NormalizerNodeDialog extends NodeDialogPane {
 
         BoxLayout bly = new BoxLayout(panel, BoxLayout.Y_AXIS);
         panel.setLayout(bly);
-        panel.add(panel0);
         panel.add(panel1);
         panel.add(panel2);
         panel.add(panel3);
@@ -229,17 +213,25 @@ public class NormalizerNodeDialog extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
         m_spec = (DataTableSpec)specs[0];
-        // TODO remove this check.
-        if (m_spec == null) {
-            throw new NotConfigurableException("No input available");
+
+        String[] cols = null;
+        if (settings.containsKey(NormalizerNodeModel.COLUMNS_KEY)) {
+            try {
+                cols = settings.getStringArray(NormalizerNodeModel.COLUMNS_KEY);
+            } catch (InvalidSettingsException e) {
+                LOGGER.debug("Invalid Settings", e);
+            }
         }
+
         if (settings.containsKey(NormalizerNodeModel.MODE_KEY)) {
             try {
                 int mode = settings.getInt(NormalizerNodeModel.MODE_KEY);
                 switch (mode) {
                 case NormalizerNodeModel.NONORM_MODE:
-                    m_noNormButton.setSelected(true);
-                    m_filterpanel.setEnabled(false);
+                    // that's an old NormalizerNode setting.
+                    // We set the default method z-score and exclude all cols.
+                    m_zscoreButton.setSelected(true);
+                    cols = new String[0];
                     break;
                 case NormalizerNodeModel.MINMAX_MODE:
                     m_minmaxButton.setSelected(true);
@@ -278,14 +270,7 @@ public class NormalizerNodeDialog extends NodeDialogPane {
             }
         }
 
-        String[] cols = null;
-        if (settings.containsKey(NormalizerNodeModel.COLUMNS_KEY)) {
-            try {
-                cols = settings.getStringArray(NormalizerNodeModel.COLUMNS_KEY);
-            } catch (InvalidSettingsException e) {
-                LOGGER.debug("Invalid Settings", e);
-            }
-        }
+
         if (cols == null) {
             m_filterpanel.update(m_spec, true, new String[0]);
         } else {
@@ -300,9 +285,6 @@ public class NormalizerNodeDialog extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         int mode = -1;
-        if (m_noNormButton.isSelected()) {
-            mode = NormalizerNodeModel.NONORM_MODE;
-        }
         if (m_minmaxButton.isSelected()) {
             mode = NormalizerNodeModel.MINMAX_MODE;
         }
@@ -324,8 +306,8 @@ public class NormalizerNodeDialog extends NodeDialogPane {
         Set<String> inclset = m_filterpanel.getIncludedColumnSet();
         String[] columns = inclset.toArray(new String[inclset.size()]);
         settings.addStringArray(NormalizerNodeModel.COLUMNS_KEY, columns);
-        
-        boolean usedAll = Arrays.deepEquals(columns, 
+
+        boolean usedAll = Arrays.deepEquals(columns,
                 NormalizerNodeModel.findAllNumericColumns(m_spec));
         settings.addBoolean(NormalizerNodeModel.CFG_USE_ALL_NUMERIC, usedAll);
     }

@@ -31,6 +31,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JList;
 
 import org.knime.core.data.DataValue;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ScopeVariable;
 
@@ -51,11 +52,11 @@ public class ScopeVariableListCellRenderer extends DefaultListCellRenderer {
     
     static {
         SCOPE_VAR_DOUBLE_ICON = loadIcon(
-                ScopeVariable.class, "../icon/scopevar_double.png");
+                Node.class, "/icon/scopevar_double.png");
         SCOPE_VAR_INT_ICON = loadIcon(
-                ScopeVariable.class, "../icon/scopevar_integer.png");
+                Node.class, "/icon/scopevar_integer.png");
         SCOPE_VAR_STRING_ICON = loadIcon(
-                ScopeVariable.class, "../icon/scopevar_string.png");
+                Node.class, "/icon/scopevar_string.png");
     }
     
     private static Icon loadIcon(
@@ -72,7 +73,7 @@ public class ScopeVariableListCellRenderer extends DefaultListCellRenderer {
             icon = new ImageIcon(
                     loader.getResource(packagePath + correctedPath));
         } catch (Exception e) {
-            NodeLogger.getLogger(DataValue.class).debug(
+            NodeLogger.getLogger(ScopeVariableListCellRenderer.class).debug(
                     "Unable to load icon at path " + path, e);
             icon = null;
         }

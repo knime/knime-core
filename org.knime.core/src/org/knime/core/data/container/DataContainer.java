@@ -777,12 +777,14 @@ public class DataContainer implements RowAppender {
         }
         ZipOutputStream zipOut = 
             new ZipOutputStream(new BufferedOutputStream(out));
-        buf.addToZipFile(zipOut, e);
+        // (part of) bug fix #1141: spec must be put as first entry in order
+        // for the table reader to peek it
         zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_SPEC));
         NodeSettings settings = new NodeSettings("Table Spec");
         NodeSettingsWO specSettings = settings.addNodeSettings(CFG_TABLESPEC);
         buf.getTableSpec().save(specSettings);
         settings.saveToXML(new NonClosableOutputStream.Zip(zipOut));
+        buf.addToZipFile(zipOut, e);
         zipOut.close();
     }
     

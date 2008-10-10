@@ -32,12 +32,6 @@
 	expression patterns.
 	</p>
 	</intro>
-	<option name="Column filter">
-		Choose only these columns for the clustering process which are 
-		important and interesting. Columns which are not chosen will be
-		ignored. Be aware that columns containing fuzzy cells and columns 
-		containing number cells can not be mixed.
-	</option>
 	<option name="Winner learningrate">
 		Set the winners learning rate which is used to adjust the winning cluster
 		representative to the given data.
@@ -108,7 +102,7 @@
 		<dataIn name="Any input table" index="0">
 			Datatable with integer columns to do clustering on
 		</dataIn>
-		<modelOut index="0" name="The model of the trained SOTA">
+		<modelOut index="0" name="SOTA Model">
 			The model of the trained SOTA.
 		</modelOut>
 	</ports>	

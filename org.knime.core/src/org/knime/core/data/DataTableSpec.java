@@ -948,6 +948,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         return buffer.toString();
     }
     
+    /** {@inheritDoc} */
     @Override
     public JComponent[] getViews() {
         return new JComponent[] {new DataTableSpecView(this), 
