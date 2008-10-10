@@ -24,16 +24,33 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Arrays;
+
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.port.PortObject;
 
 public abstract class NodeExecutionJob implements Runnable {
 
     private JobID m_id;
 
+    private final SingleNodeContainer m_snc;
+    private final PortObject[] m_data;
     private final ExecutionContext m_execContext;
 
-    public NodeExecutionJob(final ExecutionContext ec) {
+    public NodeExecutionJob(final SingleNodeContainer snc, 
+            final PortObject[] data, final ExecutionContext ec) {
+        if (snc == null || data == null || ec == null) {
+            throw new NullPointerException("Args must not be null.");
+        }
+        if (Arrays.asList(data).contains(null)) {
+            throw new NullPointerException("Array arg must not contain null.");
+        }
+        m_snc = snc;
+        m_data = data;
         m_execContext = ec;
+        // TODO: remove, need read access to fields
+        assert m_data == data;
+        assert m_snc == snc;
     }
 
     public abstract void run(final ExecutionContext ec);

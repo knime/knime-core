@@ -432,7 +432,8 @@ public final class SingleNodeContainer extends NodeContainer
                 setState(State.QUEUED);
                 ExecutionContext execCon = createExecutionContext();
                 m_executionFuture
-                       = findJobExecutor().submitJob(new NodeExecutionJob(execCon) {
+                       = findJobExecutor().submitJob(
+                               new NodeExecutionJob(this, inData, execCon) {
                     @Override
                     public void run(final ExecutionContext ec) {
                         executeNode(inData, ec);
