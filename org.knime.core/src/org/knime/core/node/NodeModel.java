@@ -37,9 +37,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteHandler;
-import org.knime.core.node.property.hilite.HiLiteHandlerAdapter;
 import org.knime.core.node.workflow.LoopStartNode;
 import org.knime.core.node.workflow.ScopeLoopContext;
 import org.knime.core.node.workflow.ScopeObjectStack;
@@ -76,8 +74,7 @@ public abstract class NodeModel {
      * hilite handler is <code>null</code>, e.g. the node is not fully 
      * connected.
      */
-    private static final HiLiteHandlerAdapter HILITE_ADAPTER 
-        = new HiLiteHandlerAdapter();
+    private static final HiLiteHandler HILITE_ADAPTER = new HiLiteHandler();
 
     /** Keeps a list of registered views. */
     private final CopyOnWriteArrayList<NodeView<?>> m_views;
@@ -722,7 +719,7 @@ public abstract class NodeModel {
         // if we have no inputs we create a new instance (but only one...)
         if (getNrInPorts() == 0) {
             if (m_inHiLiteHdls[0] == null) {
-                m_inHiLiteHdls[0] = new DefaultHiLiteHandler();
+                m_inHiLiteHdls[0] = new HiLiteHandler();
             }
             return m_inHiLiteHdls[0];
         }

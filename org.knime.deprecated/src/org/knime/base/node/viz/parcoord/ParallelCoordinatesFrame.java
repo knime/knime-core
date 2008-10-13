@@ -32,7 +32,6 @@ import javax.swing.JMenuItem;
 import org.knime.core.data.DataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
   
@@ -51,7 +50,7 @@ public class ParallelCoordinatesFrame extends JFrame {
      */
     public ParallelCoordinatesFrame(final DataTable data, 
             final ExecutionMonitor exec) throws CanceledExecutionException {
-        this(data, new DefaultHiLiteHandler(), exec);
+        this(data, new HiLiteHandler(), exec);
     }
     
     /**

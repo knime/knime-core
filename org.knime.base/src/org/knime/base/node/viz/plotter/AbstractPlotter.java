@@ -63,7 +63,6 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteListener;
 import org.knime.core.node.property.hilite.KeyEvent;
@@ -280,7 +279,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         add(m_properties);
         addComponentListener(this);
 
-        m_hiliteHandler = new DefaultHiLiteHandler();
+        m_hiliteHandler = new HiLiteHandler();
         
         
     }

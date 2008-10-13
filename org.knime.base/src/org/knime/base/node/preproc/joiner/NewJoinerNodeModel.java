@@ -53,8 +53,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.property.hilite.DefaultHiLiteManager;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.property.hilite.HiLiteManager;
 import org.knime.core.util.DuplicateKeyException;
 
 /**
@@ -87,8 +87,7 @@ public class NewJoinerNodeModel extends NodeModel {
         return map;
     }
 
-    private final DefaultHiLiteManager m_hiliteHandler =
-            new DefaultHiLiteManager();
+    private final HiLiteManager m_hiliteHandler = new HiLiteManager();
 
     private int m_secondTableColIndex;
 
@@ -379,8 +378,7 @@ public class NewJoinerNodeModel extends NodeModel {
      */
     @Override
     protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
-        assert outIndex == 0;
-        return m_hiliteHandler;
+        return m_hiliteHandler.getFromHiLiteHandler();
     }
 
     private String getRightJoinKey(final DataRow row) {
@@ -416,10 +414,10 @@ public class NewJoinerNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_hiliteHandler.removeAllHiLiteHandlers();
+        m_hiliteHandler.removeAllToHiliteHandlers();
         for (int i = 0; i < getNrInPorts(); i++) {
             HiLiteHandler hdl = getInHiLiteHandler(i);
-            m_hiliteHandler.addHiLiteHandler(hdl);
+            m_hiliteHandler.addToHiLiteHandler(hdl);
         }
     }
 
@@ -448,7 +446,7 @@ public class NewJoinerNodeModel extends NodeModel {
     protected void setInHiLiteHandler(final int inIndex,
             final HiLiteHandler hiLiteHdl) {
         super.setInHiLiteHandler(inIndex, hiLiteHdl);
-        m_hiliteHandler.addHiLiteHandler(hiLiteHdl);
+        m_hiliteHandler.addToHiLiteHandler(hiLiteHdl);
     }
 
     /**

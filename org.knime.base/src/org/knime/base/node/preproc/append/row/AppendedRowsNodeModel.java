@@ -42,8 +42,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.property.hilite.DefaultHiLiteManager;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.property.hilite.HiLiteManager;
 
 /**
  * {@link org.knime.core.node.NodeModel} that concatenates its two input
@@ -71,8 +71,7 @@ public class AppendedRowsNodeModel extends NodeModel {
 
     private boolean m_isIntersection;
 
-    private final DefaultHiLiteManager m_manager =
-        new DefaultHiLiteManager();
+    private final HiLiteManager m_hiliteManager = new HiLiteManager();
     
     /**
      * Creates new node model with two inputs and one output.
@@ -222,10 +221,10 @@ public class AppendedRowsNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_manager.removeAllHiLiteHandlers();
+        m_hiliteManager.removeAllToHiliteHandlers();
         for (int i = 0; i < getNrInPorts(); i++) {
             HiLiteHandler hdl = getInHiLiteHandler(i);
-            m_manager.addHiLiteHandler(hdl);
+            m_hiliteManager.addToHiLiteHandler(hdl);
         }
     }
 
@@ -256,7 +255,7 @@ public class AppendedRowsNodeModel extends NodeModel {
     protected void setInHiLiteHandler(final int inIndex, 
             final HiLiteHandler hiLiteHdl) {
         super.setInHiLiteHandler(inIndex, hiLiteHdl);
-        m_manager.addHiLiteHandler(hiLiteHdl);
+        m_hiliteManager.addToHiLiteHandler(hiLiteHdl);
     }
     
     /**
@@ -264,6 +263,6 @@ public class AppendedRowsNodeModel extends NodeModel {
      */
     @Override
     protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
-        return m_manager;
+        return m_hiliteManager.getFromHiLiteHandler();
     }
 }

@@ -29,7 +29,7 @@ import java.util.EventListener;
 /** 
  * The event listener interface has to be implemented by classes that are 
  * interested in receiving hilite events.
- * <br />
+ * <p>
  * The listener object created from that class can then register with the
  * {@link HiLiteHandler} (calling
  * {@link HiLiteHandler#addHiLiteListener(HiLiteListener)}) or unregister

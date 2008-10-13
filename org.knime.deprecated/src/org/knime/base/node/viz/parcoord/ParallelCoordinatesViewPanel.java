@@ -1243,22 +1243,22 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
 
     // create JMenu
 
-    /** Popup menue entry constant. */
+    /** Popup menu entry constant. */
     public static final String POPUP_HILITE_SELECTED = HiLiteHandler.HILITE_SELECTED;
 
-    /** Popup menue entry constant. */
+    /** Popup menu entry constant. */
     public static final String POPUP_UNHILITE_SELECTED = HiLiteHandler.UNHILITE_SELECTED;
 
-    /** Popup menue entry constant. */
+    /** Popup menu entry constant. */
     public static final String POPUP_UNHILITE = HiLiteHandler.CLEAR_HILITE;
 
-    /** Popup menue entry constant. */
+    /** Popup menu entry constant. */
     public static final String POPUP_HIDE_UNHILITED = "Hide UnHiLited";
 
-    /** Popup menue entry constant. */
+    /** Popup menu entry constant. */
     public static final String POPUP_ALL_VISIBLE = "All Visible";
 
-    /** Popup menue entry constant. */
+    /** Popup menu entry constant. */
     public static final String POPUP_FADE_UNHILITED = "Fade UnHiLited";
 
     /** View Type constant. */
