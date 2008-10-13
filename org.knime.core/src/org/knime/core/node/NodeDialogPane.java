@@ -97,7 +97,7 @@ public abstract class NodeDialogPane {
 
     private static final String TAB_NAME_MISCELLANEOUS =
         "General Node Settings";
-    
+
     private static final String TAB_NAME_VARIABLES = "Flow Variables";
 
     /**
@@ -116,25 +116,25 @@ public abstract class NodeDialogPane {
      * This field is null when m_node has no data outports.
      */
     private MiscSettingsTab m_miscTab;
-    
+
     /** The tab containing the flow variables. */
     private ScopeVariablesTab m_scopeVariableTab;
-    
+
     /** The variables tab settings as loaded from the model. We'll use them as
      * soon as the tab gets activated to update the tree. */
     private NodeSettings m_scopeVariablesSettings;
-    
-    /** The scope object stack, it's also used when the variables tab get's 
+
+    /** The scope object stack, it's also used when the variables tab get's
      * activated. */
     private ScopeObjectStack m_scopeObjectStack;
-    
+
     /** The specs that were provided to the most recent internalLoadSettingsFrom
      * invocation. Ideally this member should not be kept as field but we need
      * it when the wrapped node dialog pane calls loadSettings on user request
      * (from the menu). */
     private PortObjectSpec[] m_specs;
-    
-    /** The port types that were provided to the most recent 
+
+    /** The port types that were provided to the most recent
      * internalLoadSettingsFrom invocation. See m_specs field for details. */
     private PortType[] m_portTypes;
 
@@ -172,8 +172,8 @@ public abstract class NodeDialogPane {
     public final JPanel getPanel() {
         return m_panel;
     }
-    
-    /** @return available scope variables in a non-modifiable map 
+
+    /** @return available scope variables in a non-modifiable map
      *           (ensured to be not null) . */
     public final Map<String, ScopeVariable> getAvailableScopeVariables() {
         Map<String, ScopeVariable> result = null;
@@ -186,7 +186,7 @@ public abstract class NodeDialogPane {
         return result;
     }
 
-    // TODO make method final, remove portTypes argument (added to enable 
+    // TODO make method final, remove portTypes argument (added to enable
     // type checking in class NodeDialogPane
     /** Method being called from the node when the dialog shall load the
      * settings from a NodeSettingsRO object. This method will call the
@@ -202,7 +202,7 @@ public abstract class NodeDialogPane {
      * @see #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])
      */
     void internalLoadSettingsFrom(final NodeSettingsRO settings,
-            final PortType[] portTypes, final PortObjectSpec[] specs, 
+            final PortType[] portTypes, final PortObjectSpec[] specs,
             final ScopeObjectStack scopeStack)
         throws NotConfigurableException {
         NodeSettings modelSettings = null;
@@ -237,14 +237,14 @@ public abstract class NodeDialogPane {
         }
         if (m_scopeVariableTab == null) {
             m_scopeVariableTab = new ScopeVariablesTab();
-            boolean isExpertMode = 
+            boolean isExpertMode =
                 Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE);
             if (isExpertMode) {
                 addTab(TAB_NAME_VARIABLES, m_scopeVariableTab);
                 m_pane.addChangeListener(new ChangeListener() {
                     /** {@inheritDoc} */
                     public void stateChanged(final ChangeEvent e) {
-                        if (m_pane.getSelectedComponent() 
+                        if (m_pane.getSelectedComponent()
                                 == m_scopeVariableTab) {
                             onVariablesTabSelected();
                         }
@@ -316,7 +316,7 @@ public abstract class NodeDialogPane {
             final PortObjectSpec[] specs) throws NotConfigurableException {
         // default implementation: the standard version needs to hold: all
         // ports are data ports!
-        
+
         // (1) case PortObjectSpecs to DataTableSpecs
         DataTableSpec[] inDataSpecs = new DataTableSpec[specs.length];
         for (int i = 0; i < specs.length; i++) {
@@ -333,12 +333,40 @@ public abstract class NodeDialogPane {
         loadSettingsFrom(settings, inDataSpecs);
     }
 
+    /**
+     * Invoked before the dialog window is opened. The settings object passed,
+     * contains the current settings of the corresponding node model. The model
+     * and the dialog must agree on a mutual contract on how settings are stored
+     * in the spec. I.e. they must able to read each other's settings.
+     * <p>
+     * The implementation must be able to handle invalid or incomplete settings
+     * as the model may not have any reasonable values yet (for example when the
+     * dialog is opened for the first time). When an empty/invalid settings
+     * object is passed the dialog should set default values in its components.
+     *
+     * @param settings The settings to load into the dialog. Could be an empty
+     *            object or contain invalid settings. But will never be null.
+     * @param specs The input data table specs. Items of the array could be null
+     *            if no spec is available from the corresponding input port.
+     * @throws NotConfigurableException if the dialog cannot be opened because
+     * of real invalid settings or if any preconditions are not fulfilled, e.g.
+     * no predecessor node, no nominal column in input table, etc.
+     * @see NodeModel#loadSettingsFrom(NodeSettingsRO)
+     */
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         throw new NotConfigurableException(
             "NodeDialogPane.loadSettingsFrom() implementation missing!");
     }
-    
+
+    /**
+     * Override this method in order to react on events induced by the Cancel
+     * button from the surrounding dialog.
+     */
+    public void onCancel() {
+
+    }
+
     /**
      * Invoked when the settings need to be applied. The implementation should
      * write the current user settings from its components into the passed
@@ -362,9 +390,9 @@ public abstract class NodeDialogPane {
      * commitJSpinners method (which traverses all components and commits
      * them if they are instance of JSpinner) and finally call
      * <code>saveSettingsTo(settings)</code>.
-     * 
+     *
      * <p>Derived classes should not be required to call this method. It may
-     * change in future versions without prior notice. 
+     * change in future versions without prior notice.
      * @param settings The settings object to write into.
      * @throws InvalidSettingsException If the settings are not applicable to
      *             the model.
@@ -375,29 +403,29 @@ public abstract class NodeDialogPane {
         commitComponentsRecursively(getPanel());
         internalSaveSettingsTo(settings);
     }
-    
-    
-    /** Saves current settings to an output stream (in xml format). 
-     * 
+
+
+    /** Saves current settings to an output stream (in xml format).
+     *
      * <p>Derived classes should not be required to call this method. It may
-     * change in future versions without prior notice. 
+     * change in future versions without prior notice.
      * @param out To save to.
      * @throws InvalidSettingsException If the settings can't be save since
      *         they are invalid
      * @throws IOException If problems writing to the stream occur.
      * @see #loadSettingsFrom(InputStream)
      */
-    public final void saveSettingsTo(final OutputStream out) 
+    public final void saveSettingsTo(final OutputStream out)
         throws InvalidSettingsException, IOException {
         NodeSettings settings = new NodeSettings("dialog");
         finishEditingAndSaveSettingsTo(settings);
         settings.saveToXML(out);
     }
-    
-    /** Loads settings from an input stream (in xml format). 
-     * 
+
+    /** Loads settings from an input stream (in xml format).
+     *
      * <p>Derived classes should not be required to call this method. It may
-     * change in future versions without prior notice. 
+     * change in future versions without prior notice.
      * @param in to load from.
      * @throws NotConfigurableException If settings can't be loaded since the
      * most recent input spec does not match the settings (or is not available)
@@ -408,13 +436,13 @@ public abstract class NodeDialogPane {
         throws NotConfigurableException, IOException {
         NodeSettingsRO settings = NodeSettings.loadFromXML(in);
         if (m_portTypes == null) {
-            throw new NotConfigurableException("No information on incoming " 
+            throw new NotConfigurableException("No information on incoming "
                     + "ports availabe");
         }
         internalLoadSettingsFrom(
                 settings, m_portTypes, m_specs, m_scopeObjectStack);
     }
-    
+
     /**
      * JSpinner seem to have the "feature" that their value is not committed
      * when* they are being edited (by hand, not with the arrows) and someone
@@ -645,7 +673,7 @@ public abstract class NodeDialogPane {
                     if (insertIdx.intValue() > varTabIdx) {
                         insertIdx.setValue(varTabIdx);
                     }
-                    
+
                 }
                 if (insertIdx.intValue() > m_pane.getTabCount()) {
                     insertIdx.setValue(m_pane.getTabCount());
@@ -794,7 +822,7 @@ public abstract class NodeDialogPane {
     protected final int getTabIndex(final String title) {
         return m_pane.indexOfTab(title);
     }
-    
+
     private void onVariablesTabSelected() {
         m_scopeVariableTab.setErrorLabel("");
         NodeSettings settings = new NodeSettings("save");
@@ -819,7 +847,7 @@ public abstract class NodeDialogPane {
         m_scopeVariableTab.setVariableSettings(
                 settings, variableSettings, m_scopeObjectStack);
     }
-    
+
     /** The tab currently called "Flow Variables". It allows the user to mask
      * certain settings of the dialog (for instance to use variables instead
      * of hard-coded values. */
@@ -827,7 +855,7 @@ public abstract class NodeDialogPane {
         private final ConfigEditJTree m_tree;
         private final JLabel m_errorLabel;
         private boolean m_wasAtLeastOnceVisible;
-        
+
         /** Creates new tab. */
         public ScopeVariablesTab() {
             super(new BorderLayout());
@@ -841,13 +869,13 @@ public abstract class NodeDialogPane {
             add(new JScrollPane(panel), BorderLayout.CENTER);
             add(m_errorLabel, BorderLayout.NORTH);
         }
-        
-        /** Update the panel to reflect new properties. 
-         * @param nodeSettings Settings of the node (or currently entered in 
+
+        /** Update the panel to reflect new properties.
+         * @param nodeSettings Settings of the node (or currently entered in
          *  the remaining tabs of the dialog.
          * @param variableSettings  The variable mask.
          * @param stack the stack to get the variables from. */
-        public void setVariableSettings(final NodeSettings nodeSettings, 
+        public void setVariableSettings(final NodeSettings nodeSettings,
                 final NodeSettings variableSettings,
                 final ScopeObjectStack stack) {
             NodeSettings nodeSetsCopy = nodeSettings == null
@@ -862,21 +890,21 @@ public abstract class NodeDialogPane {
                 }
             } catch (InvalidSettingsException e) {
                 JOptionPane.showMessageDialog(this, "Errors reading variable "
-                        + "configuration: " + e.getMessage(), "Error", 
+                        + "configuration: " + e.getMessage(), "Error",
                         JOptionPane.ERROR_MESSAGE);
                 model = ConfigEditTreeModel.create(nodeSetsCopy);
             }
             m_tree.setScopeStack(stack);
             m_tree.setModel(model);
         }
-        
+
         /**
          * @param error the errorLabel to set
          */
         public void setErrorLabel(final String error) {
             m_errorLabel.setText("<html><body>" + error + "</body></html>");
         }
-        
+
         /** @return the variables mask as node settings object. */
         public NodeSettings getVariableSettings() {
             m_tree.getCellEditor().cancelCellEditing();
@@ -888,13 +916,13 @@ public abstract class NodeDialogPane {
             }
             return null;
         }
-        
+
         /** @param wasVisible the wasVisible property.
          * @see #wasAtLeastOnceVisible() */
         public void setWasAtLeastOnceVisible(final boolean wasVisible) {
             m_wasAtLeastOnceVisible = wasVisible;
         }
-        
+
         /** If true, the tab was at least once loaded after a load settings.
          * It helps us to distinguish whether we need to read the original node
          * settings mask or the mask from this tab.
@@ -903,7 +931,7 @@ public abstract class NodeDialogPane {
         public boolean wasAtLeastOnceVisible() {
             return m_wasAtLeastOnceVisible;
         }
-        
+
     }
 
     private static class MiscSettingsTab extends JPanel {

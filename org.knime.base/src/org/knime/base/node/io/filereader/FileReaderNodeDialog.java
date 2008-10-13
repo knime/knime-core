@@ -616,11 +616,9 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     public void changedUpdate(final DocumentEvent e) {
                         commentSettingsChanged();
                     }
-
                     public void insertUpdate(final DocumentEvent e) {
                         commentSettingsChanged();
                     }
-
                     public void removeUpdate(final DocumentEvent e) {
                         commentSettingsChanged();
                     }
@@ -1266,6 +1264,20 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onCancel() {
+        // bug 1482: if an analysis is currently running stop it
+        synchronized (m_analysisRunning) {
+            if (m_analysisRunning.booleanValue()) {
+                m_analysisExecMonitor.setExecuteInterrupted();
+            }
+        }
+
+    }
+
     /*
      * Reads the entered file location from the edit field and stores the new
      * value in the settings object. Throws an exception if the entered URL is
@@ -1508,7 +1520,6 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      */
     private void analyzeInThread(final FileReaderNodeSettings userSettings) {
 
-        String threadName = "FileReaderAnalyze";
         // go!
         new Thread(new Runnable() {
             public void run() {
@@ -1588,7 +1599,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
             };
 
-        }, threadName).start();
+        }, "FileReaderAnalyze").start();
 
     }
 

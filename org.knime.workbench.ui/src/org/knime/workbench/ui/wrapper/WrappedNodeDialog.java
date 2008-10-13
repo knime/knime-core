@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   09.02.2005 (georg): created
  */
@@ -65,13 +65,13 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
 /**
  * JFace implementation of a dialog containing the wrapped Panel from the
  * original node dialog.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class WrappedNodeDialog extends Dialog {
     private Composite m_container;
 
-    private final NodeContainer m_nodeContainer; 
+    private final NodeContainer m_nodeContainer;
 
     private Panel2CompositeWrapper m_wrapper;
 
@@ -80,14 +80,14 @@ public class WrappedNodeDialog extends Dialog {
     private Menu m_menuBar;
 
     private final NodeLogger LOGGER;
-    
+
     /**
      * Creates the (application modal) dialog for a given node.
-     * 
+     *
      * We'll set SHELL_TRIM - style to keep this dialog resizable. This is
      * needed because of the odd "preferredSize" behavior (@see
      * WrappedNodeDialog#getInitialSize())
-     * 
+     *
      * @param parentShell The parent shell
      * @param nodeContainer The node.
      * @throws NotConfigurableException if the dialog cannot be opened because
@@ -105,7 +105,7 @@ public class WrappedNodeDialog extends Dialog {
 
     /**
      * Configure shell, create top level menu.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -156,7 +156,7 @@ public class WrappedNodeDialog extends Dialog {
                     } catch (IOException ioe) {
                         showErrorMessage(ioe.getMessage());
                     } catch (InvalidSettingsException ise) {
-                        showErrorMessage("Invalid Settings\n" 
+                        showErrorMessage("Invalid Settings\n"
                                 + ise.getMessage());
                     }
                 }
@@ -191,12 +191,12 @@ public class WrappedNodeDialog extends Dialog {
         JPanel p = m_dialogPane.getPanel();
         m_wrapper = new Panel2CompositeWrapper(m_container, p, SWT.EMBEDDED);
         m_wrapper.setLayoutData(new GridData(GridData.FILL_BOTH));
-        
-        
+
+
         m_wrapper.addFocusListener(new FocusAdapter() {
-           
+
             /**
-             * 
+             *
              * @param e focus event passed to the underlying AWT component
              */
             @Override
@@ -206,18 +206,18 @@ public class WrappedNodeDialog extends Dialog {
                     public void run() {
                         m_wrapper.getAwtPanel().requestFocus();
                     }
-                    
+
                 });
-            } 
+            }
         });
-        
-        
+
+
         return area;
     }
 
     /**
      * Linux (GTK) hack: must explicitly invoke <code>getInitialSize()</code>.
-     * 
+     *
      * @see org.eclipse.jface.window.Window#create()
      */
     @Override
@@ -237,12 +237,12 @@ public class WrappedNodeDialog extends Dialog {
         // WORKAROUND !! We can't use IDialogConstants.OK_ID here, as this
         // always closes the dialog, regardless if the settings couldn't be
         // applied.
-        final Button btnOK = createButton(parent, 
+        final Button btnOK = createButton(parent,
                 IDialogConstants.NEXT_ID, IDialogConstants.OK_LABEL, false);
-        final Button btnApply = createButton(parent, 
+        final Button btnApply = createButton(parent,
                 IDialogConstants.FINISH_ID, "Apply", false);
-        final Button btnCancel = createButton(parent, 
-                IDialogConstants.CANCEL_ID, 
+        final Button btnCancel = createButton(parent,
+                IDialogConstants.CANCEL_ID,
                 IDialogConstants.CANCEL_LABEL, false);
 
         // Register listeners that notify the content object, which
@@ -252,8 +252,8 @@ public class WrappedNodeDialog extends Dialog {
             public void widgetSelected(final SelectionEvent e) {
                 doOK(e);
             }
-        });    
-            
+        });
+
         btnApply.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
@@ -264,11 +264,16 @@ public class WrappedNodeDialog extends Dialog {
         btnCancel.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
-
+                doCancel(e);
             }
         });
     }
-        
+
+    private void doCancel(final SelectionEvent e) {
+        m_dialogPane.onCancel();
+        buttonPressed(IDialogConstants.CANCEL_ID);
+    }
+
     private void doOK(final SelectionEvent e) {
         // simulate doApply
         if (doApply(e)) {
@@ -340,7 +345,7 @@ public class WrappedNodeDialog extends Dialog {
 
     /**
      * Shows the latest error message of the dialog in a MessageBox.
-     * 
+     *
      * @param message The error string.
      */
     private void showErrorMessage(final String message) {
@@ -352,7 +357,7 @@ public class WrappedNodeDialog extends Dialog {
 
     /**
      * Shows the latest error message of the dialog in a MessageBox.
-     * 
+     *
      * @param message The error string.
      */
     private void showWarningMessage(final String message) {
@@ -361,10 +366,10 @@ public class WrappedNodeDialog extends Dialog {
         box.setMessage(message != null ? message : "(no message)");
         box.open();
     }
-    
+
     /**
      * Show confirm dialog before applying settings.
-     * 
+     *
      * @return <code>true</code> if the settings should be applied
      */
     protected boolean confirmApply() {
@@ -376,17 +381,17 @@ public class WrappedNodeDialog extends Dialog {
 
         // the following code has mainly been copied from
         // IDEWorkbenchWindowAdvisor#preWindowShellClose
-        IPreferenceStore store = 
+        IPreferenceStore store =
             KNIMEUIPlugin.getDefault().getPreferenceStore();
         if (!store.contains(PreferenceConstants.P_CONFIRM_RESET)
                 || store.getBoolean(PreferenceConstants.P_CONFIRM_RESET)) {
-            MessageDialogWithToggle dialog = 
+            MessageDialogWithToggle dialog =
                 MessageDialogWithToggle.openOkCancelConfirm(
-                    Display.getDefault().getActiveShell(), 
-                    "Confirm reset...", 
+                    Display.getDefault().getActiveShell(),
+                    "Confirm reset...",
                     "Warning, reset node(s)!\n"
                     + "New settings will be applied after resetting this "
-                    + "and all connected nodes. Continue?", 
+                    + "and all connected nodes. Continue?",
                     "Do not ask again", false, null, null);
             boolean isOK = dialog.getReturnCode() == IDialogConstants.OK_ID;
             if (isOK && dialog.getToggleState()) {
@@ -400,7 +405,7 @@ public class WrappedNodeDialog extends Dialog {
 
     /**
      * Show an information dialog that the settings were not changed and
-     * therefore the settings are not reset (node stays executed). 
+     * therefore the settings are not reset (node stays executed).
      */
     protected void informNothingChanged() {
         MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
@@ -428,35 +433,35 @@ public class WrappedNodeDialog extends Dialog {
      * This calculates the initial size of the dialog. As the wrapped AWT-Panel
      * ("NodeDialogPane") sometimes just won't return any useful preferred sizes
      * this is kinda tricky workaround :-(
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     protected Point getInitialSize() {
-        
+
         // get underlying panel and do layout it
         JPanel panel = m_dialogPane.getPanel();
         panel.doLayout();
-        
+
         // underlying pane sizes
         int width = panel.getWidth();
         int height = panel.getHeight();
-        
+
         // button bar sizes
         int widthButtonBar = buttonBar.computeSize(SWT.DEFAULT, SWT.DEFAULT).x;
         int heightButtonBar = buttonBar.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
-        
+
         // init dialog sizes
         int widthDialog = super.getInitialSize().x;
         int heightDialog = super.getInitialSize().y;
-        
+
         // we need to make sure that we have at least enough space for
         // the button bar (+ some extra space)
-        width = Math.max(Math.max(widthButtonBar, widthDialog), 
-                width + widthDialog - widthButtonBar + EXTRA_WIDTH); 
-        height = Math.max(Math.max(heightButtonBar, heightDialog), 
+        width = Math.max(Math.max(widthButtonBar, widthDialog),
+                width + widthDialog - widthButtonBar + EXTRA_WIDTH);
+        height = Math.max(Math.max(heightButtonBar, heightDialog),
                 height + heightDialog - heightButtonBar + EXTRA_HEIGHT);
-        
+
         // set the size of the container composite
         Point size = new Point(width, height);
         m_container.setSize(size);
