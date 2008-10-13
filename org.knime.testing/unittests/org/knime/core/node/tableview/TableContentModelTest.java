@@ -42,7 +42,6 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DefaultRowIterator;
 import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.KeyEvent;
 
@@ -101,7 +100,7 @@ public class TableContentModelTest extends TestCase {
      * Class under test for void TableContentModel(DataTable, HiLiteHandler).
      */
     public final void testTableContentModelDataTableHiLiteHandler() {
-        HiLiteHandler handler = new DefaultHiLiteHandler();
+        HiLiteHandler handler = new HiLiteHandler();
         final TableContentModel m2 = new TableContentModel(DATA, handler);
         assertEquals("Col Count", m2.getColumnCount(), OBJECT_DATA[0].length);
         assertTrue("Has Data", m2.hasData());
@@ -132,7 +131,7 @@ public class TableContentModelTest extends TestCase {
     public final void testSetHiLiteHandler() {
         final TableContentModel m = new TableContentModel();
         assertFalse("Has Hilitehandler", m.hasHiLiteHandler());
-        final HiLiteHandler hiliter = new DefaultHiLiteHandler();
+        final HiLiteHandler hiliter = new HiLiteHandler();
         m.setHiLiteHandler(hiliter);
         assertTrue("Has HiLiteHandler", m.hasHiLiteHandler());
         // setting data on and off shouldn't change HiLite handler
@@ -360,7 +359,7 @@ public class TableContentModelTest extends TestCase {
      * Method being tested: boolean isHiLit(int).
      */
     public final void testIsHiLit() {
-        final HiLiteHandler hiliteHdl = new DefaultHiLiteHandler();
+        final HiLiteHandler hiliteHdl = new HiLiteHandler();
         final TableContentModel m = new TableContentModel(DATA, hiliteHdl);
         
         // hilite every other in DATA and check if it is correctly reflected
@@ -399,7 +398,7 @@ public class TableContentModelTest extends TestCase {
      *         (implicitly) hiLite(KeyEvent).
      */
     public final void testHilite() {
-        final HiLiteHandler hiliter = new DefaultHiLiteHandler();
+        final HiLiteHandler hiliter = new HiLiteHandler();
         final TableContentModel m = new TableContentModel(DATA, hiliter);
         final JTable table = new JTable(m);
         final ListSelectionModel listModel = table.getSelectionModel();
@@ -461,7 +460,7 @@ public class TableContentModelTest extends TestCase {
      *         (implicitly) unHiLite(KeyEvent).
      */
     public final void testUnHilite() {
-        final HiLiteHandler hiliter = new DefaultHiLiteHandler();
+        final HiLiteHandler hiliter = new HiLiteHandler();
         final TableContentModel m = new TableContentModel(DATA, hiliter);
         final JTable table = new JTable(m);
         final ListSelectionModel listModel = table.getSelectionModel();
@@ -529,7 +528,7 @@ public class TableContentModelTest extends TestCase {
      * Method being tested: resetHiLite().
      */
     public final void testResetHilite() {
-        final HiLiteHandler hiliter = new DefaultHiLiteHandler();
+        final HiLiteHandler hiliter = new HiLiteHandler();
         final TableContentModel m = new TableContentModel(DATA, hiliter);
         final JTable table = new JTable(m);
         final ListSelectionModel listModel = table.getSelectionModel();
@@ -703,7 +702,7 @@ public class TableContentModelTest extends TestCase {
         model.showHiLitedOnly(true);
         assertEquals(model.getRowCount(), 0);
         assertTrue(model.isRowCountFinal());
-        final HiLiteHandler hiliter = new DefaultHiLiteHandler();
+        final HiLiteHandler hiliter = new HiLiteHandler();
         model.setHiLiteHandler(hiliter);
         final Random rand = new Random();
         int nrHiLitKeys = 0;

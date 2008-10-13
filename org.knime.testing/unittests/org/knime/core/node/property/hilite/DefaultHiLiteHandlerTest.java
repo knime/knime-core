@@ -31,9 +31,9 @@ import junit.framework.TestCase;
 import org.knime.core.data.RowKey;
   
 /**
- * JUnit test for the <code>DefaultHiLiteHandler</code>.
+ * JUnit test for the <code>HiLiteHandler</code>.
  * 
- * @see DefaultHiLiteHandler
+ * @see HiLiteHandler
  *  
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -57,7 +57,7 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         }
     }
     
-    private HiLiteHandler m_hdl = new DefaultHiLiteHandler();
+    private HiLiteHandler m_hdl = new HiLiteHandler();
     private HiLiteListener m_l1 = new MyHiLiteListener();
     private HiLiteListener m_l2 = new MyHiLiteListener();
     
@@ -329,4 +329,4 @@ public final class DefaultHiLiteHandlerTest extends TestCase {
         junit.textui.TestRunner.run(DefaultHiLiteHandlerTest.class);
     }
 
-}   // DefaultHiLiteHandlerTest
+}   // HiLiteHandlerTest
