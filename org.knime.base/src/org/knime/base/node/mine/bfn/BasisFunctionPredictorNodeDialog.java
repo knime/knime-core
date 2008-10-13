@@ -85,7 +85,6 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
         super();
         // panel with advance settings
         JPanel p = new JPanel(new GridLayout(3, 1));
-        p.setPreferredSize(new Dimension(200, 150));
 
         // add apply column
         m_apply.setPreferredSize(new Dimension(175, 25));
