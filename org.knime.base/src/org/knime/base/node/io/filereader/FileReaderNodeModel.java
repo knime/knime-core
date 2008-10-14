@@ -343,7 +343,7 @@ public class FileReaderNodeModel extends NodeModel {
         URL location = m_frSettings.getDataFileLocation();
         try {
             if ((location == null)
-                    || !location.toString().startsWith("file://")) {
+                    || !location.toString().startsWith("file:")) {
                 // We can only check files. Other protocols are ignored.
                 return;
             }
