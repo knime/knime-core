@@ -85,6 +85,10 @@ public class KnimeTestCase extends TestCase {
     // test
     private TestingConfig m_testConfig;
 
+    // flag, set to true when a workflow is currently loaded (for file reader
+    // messages being ignored during loading)
+    private boolean m_workflowLoading = false;
+
     /**
      *
      * @param workflowFile
@@ -109,7 +113,7 @@ public class KnimeTestCase extends TestCase {
             CanceledExecutionException, IOException, WorkflowException {
 
         // registers itself as appender to the logger:
-        m_testConfig = new TestingConfig(100);
+        m_testConfig = new TestingConfig(this, 100);
 
         // read in the owners of the test case
         File ownerFile = new File(m_knimeWorkFlow.getParentFile(), OWNER_FILE);
@@ -146,16 +150,23 @@ public class KnimeTestCase extends TestCase {
 
             logger.debug("Loading workflow ----------------------------"
                     + "--------------");
+            m_workflowLoading = true;
 
             WorkflowLoadResult loadRes = WorkflowManager.loadProject(
                     m_knimeWorkFlow.getParentFile(),
                     new ExecutionMonitor());
+            m_workflowLoading = false;
+
             if (loadRes.getGUIMustReportError()) {
                 logger.error(loadRes.getErrors());
             }
             m_manager = loadRes.getWorkflowManager();
             logger.debug("Workflow loaded ----------------------------"
                     + "--------------");
+
+            // remember the executed file readers (before executing) to not
+            // complain about their warning status later.
+            m_testConfig.registerExecutedFileReader(m_manager);
 
             // construct a list of options (i.e. settings to change in the flow)
             File optionsFile =
@@ -182,6 +193,13 @@ public class KnimeTestCase extends TestCase {
             wrapUp();
             fail();
         }
+    }
+
+    /**
+     * @return true, if the workflow is currently loaded.
+     */
+    boolean isCurrentlyLoading() {
+        return m_workflowLoading;
     }
 
     /**
@@ -214,7 +232,7 @@ public class KnimeTestCase extends TestCase {
                 for (NodeContainer nc : m_manager.getNodeContainers()) {
                     m_manager.cancelExecution(nc);
                 }
-                logger.error("Workflow canceled after " + TIMEOUT 
+                logger.error("Workflow canceled after " + TIMEOUT
                         + " seconds, status follows:: ");
                 logger.error(error);
             }
