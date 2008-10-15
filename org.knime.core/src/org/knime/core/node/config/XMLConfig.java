@@ -120,8 +120,14 @@ final class XMLConfig {
             }
         }
         // ====================================================================
-
-        reader.parse(new InputSource(buf));
+        
+        try {
+            reader.parse(new InputSource(buf));
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IOException("Unable to parse xml: " + e.getMessage(), e);
+        }
     }
 
     /**
