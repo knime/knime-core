@@ -31,6 +31,8 @@ import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.impl.fixed.FixedHistogramPlotter;
 import org.knime.base.node.viz.histogram.impl.fixed.FixedHistogramProperties;
 
+import javax.swing.SwingUtilities;
+
 /**
  * The node view which contains the histogram plotter panel.
  *
@@ -89,6 +91,14 @@ public class FixedColumnHistogramNodeView
         if (getComponent() == null) {
             setComponent(m_plotter);
         }
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                if (m_plotter != null) {
+                    m_plotter.fitToScreen();
+                }
+            }
+        });
     }
 
     /**
