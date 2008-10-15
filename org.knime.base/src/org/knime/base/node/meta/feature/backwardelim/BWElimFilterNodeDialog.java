@@ -52,8 +52,8 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
@@ -92,7 +92,7 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
                                 return diff;
                             }
                             return -o1.getSecond().size()
-                                + o2.getSecond().size();
+                                    + o2.getSecond().size();
                         }
                     });
             TableModelEvent ev = new TableModelEvent(this);
@@ -257,8 +257,6 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
         });
         p.add(m_includeTargetColumn, c);
 
-
-
         m_featureLevels.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         m_featureLevels.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
@@ -285,7 +283,11 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
         int selRow = m_featureLevels.getSelectionModel().getMinSelectionIndex();
         m_warningMessage.setText(" ");
         if (selRow >= 0) {
-            Collection<String> features = m_tableModel.getFeatures(selRow);
+            Collection<String> features =
+                    new ArrayList<String>(m_tableModel.getFeatures(selRow));
+            if (m_includeTargetColumn.isSelected()) {
+                features.add(m_targetColumn);
+            }
             m_includedColumns.setSelectedColumns(features);
             if (m_includedColumns.getSelectedIndices().length < features.size()) {
                 m_warningMessage.setText("Warning: Some features are missing "
