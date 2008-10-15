@@ -347,6 +347,17 @@ public class GroupByNodeModel extends NodeModel {
 
         //be compatible to the previous version
         checkColumnAggregators(groupByCols, origSpec);
+        //remove all invalid column aggregators
+        final List<ColumnAggregator> invalidColAggrs =
+            new LinkedList<ColumnAggregator>();
+        for (final ColumnAggregator colAggr : m_columnAggregators) {
+            if (!origSpec.containsName(colAggr.getColName())) {
+                invalidColAggrs.add(colAggr);
+            }
+        }
+        if (!invalidColAggrs.isEmpty()) {
+            m_columnAggregators.removeAll(invalidColAggrs);
+        }
 
         if (m_columnAggregators.isEmpty()) {
             setWarningMessage("No aggregation column defined");
