@@ -125,19 +125,22 @@ final class ShapeManagerNodeDialogPane extends NodeDialogPane implements
 
         // add columns and domain value mapping
         int cols = specs[0].getNumColumns();
+        Shape[] shapes = ShapeFactory.getShapes().toArray(new Shape[]{});
         for (int i = 0; i < cols; i++) {
             DataColumnSpec cspec = specs[0].getColumnSpec(i);
             DataColumnDomain domain = cspec.getDomain();
             if (domain.hasValues()) {
                 LinkedHashMap<DataCell, Shape> domMap = 
                     new LinkedHashMap<DataCell, Shape>();
+                int j = 0;
                 for (DataCell value : domain.getValues()) {
                     if (value != null) {
-                        String shape = settings.getString(value.toString(), 
-                                ShapeFactory.DEFAULT);
+                        String shape = settings.getString(value.toString(),
+                                // no settings -> assign different shapes
+                                null);
                         if (shape == null) {
-                            domMap.put(value, ShapeFactory.getShape(
-                                    ShapeFactory.DEFAULT));
+                            // bugfix 1283
+                            domMap.put(value, shapes[j++ % shapes.length]);
                         } else {
                             domMap.put(value, ShapeFactory.getShape(shape));
                         }
