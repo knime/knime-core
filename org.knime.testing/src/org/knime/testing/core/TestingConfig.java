@@ -597,6 +597,10 @@ public class TestingConfig extends AppenderSkeleton {
         String line;
         while ((line = statusReader.readLine()) != null) {
 
+            if (line.isEmpty()) {
+                // ignore empty lines
+                continue;
+            }
             if ((line.toUpperCase().startsWith("ERROR"))
                     || (line.toUpperCase().startsWith("WARN"))
                     || (line.toUpperCase().startsWith("INFO"))
