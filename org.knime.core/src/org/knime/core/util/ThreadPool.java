@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeExecutionJob;
+import org.knime.core.node.workflow.NodeExecutionJobManagerPanel;
 
 /**
  * Implements a sophisticated thread pool.
@@ -247,6 +248,29 @@ public class ThreadPool implements NodeExecutionJobManager {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public String getID() {
+        return "org.knime.core.util.ThreadPool";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public NodeExecutionJobManagerPanel getSettingsPanelComponent() {
+        // no settings to adjust for this job manager
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "Threaded Job Manager";
+    }
+
+    /**
      * Creates a sub pool that shares the threads with this (parent) pool. The
      * maximum number of threads in this and all its sub pools does not exceed
      * the maximum thread number for this pool, even if a sub pool is created
@@ -368,7 +392,7 @@ public class ThreadPool implements NodeExecutionJobManager {
      * nothing more than submitting jobs.
      *
      * @param <T> Type of the argument (result type)
-     * @param r A callable, which will be executed by the 
+     * @param r A callable, which will be executed by the
      *          thread invoking this method.
      * @return T The result of the callable.
      * @throws IllegalThreadStateException if the current thread is not taken

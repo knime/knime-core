@@ -35,7 +35,7 @@ public abstract class NodeExecutionJob implements Runnable {
     private final PortObject[] m_data;
     private final ExecutionContext m_execContext;
 
-    public NodeExecutionJob(final SingleNodeContainer snc, 
+    public NodeExecutionJob(final SingleNodeContainer snc,
             final PortObject[] data, final ExecutionContext ec) {
         if (snc == null || data == null || ec == null) {
             throw new NullPointerException("Args must not be null.");
@@ -62,4 +62,17 @@ public abstract class NodeExecutionJob implements Runnable {
         m_execContext.getProgressMonitor().setExecuteCanceled();
     }
 
+    // PO:added
+    public PortObject[] getPortObjects() {
+        return m_data;
+    }
+
+    // PO:added
+    public SingleNodeContainer getSingleNodeContainer() {
+        return m_snc;
+    }
+
+    public ExecutionContext getExecutionContext() {
+        return m_execContext;
+    }
 }

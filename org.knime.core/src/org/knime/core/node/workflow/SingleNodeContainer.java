@@ -38,11 +38,13 @@ import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeProgressMonitor;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
@@ -59,22 +61,28 @@ import org.w3c.dom.Element;
  *
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
-public final class SingleNodeContainer extends NodeContainer
-    implements NodeMessageListener, NodeProgressListener {
+public final class SingleNodeContainer extends NodeContainer implements
+        NodeMessageListener, NodeProgressListener {
 
     /** my logger. */
     private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(SingleNodeContainer.class);
+            NodeLogger.getLogger(SingleNodeContainer.class);
 
     /** underlying node. */
     private final Node m_node;
 
-    /** remember ID of the job when this node is submitted to a NodeExecutionJobManager. */
+    /**
+     * remember ID of the job when this node is submitted to a
+     * NodeExecutionJobManager.
+     */
     private Future<?> m_executionFuture;
 
     /** progress monitor. */
     private final NodeProgressMonitor m_progressMonitor =
             new DefaultNodeProgressMonitor(this);
+
+    private SingleNodeContainerSettings m_settings =
+        new SingleNodeContainerSettings();
 
     /**
      * Create new SingleNodeContainer based on existing Node.
@@ -103,20 +111,18 @@ public final class SingleNodeContainer extends NodeContainer
         super(parent, id, persistor.getMetaPersistor());
         m_node = persistor.getNode();
         assert m_node != null : persistor.getClass().getSimpleName()
-            + " did not provide Node instance for " + getClass().getSimpleName()
-            + " with id \"" + id + "\"";
+                + " did not provide Node instance for "
+                + getClass().getSimpleName() + " with id \"" + id + "\"";
         setPortNames();
         m_node.addMessageListener(this);
     }
-    
+
     private void setPortNames() {
         for (int i = 0; i < getNrOutPorts(); i++) {
-            getOutPort(i).setPortName(
-                    m_node.getFactory().getOutportName(i));
+            getOutPort(i).setPortName(m_node.getFactory().getOutportName(i));
         }
         for (int i = 0; i < getNrInPorts(); i++) {
-            getInPort(i).setPortName(
-                    m_node.getFactory().getInportName(i));
+            getInPort(i).setPortName(m_node.getFactory().getInportName(i));
         }
     }
 
@@ -142,10 +148,11 @@ public final class SingleNodeContainer extends NodeContainer
     }
 
     private NodeContainerOutPort[] m_outputPorts = null;
+
     /**
      * Returns the output port for the given <code>portID</code>. This port
-     * is essentially a container for the underlying Node and the index and
-     * will retrieve all interesting data from the Node.
+     * is essentially a container for the underlying Node and the index and will
+     * retrieve all interesting data from the Node.
      *
      * @param index The output port's ID.
      * @return Output port with the specified ID.
@@ -163,9 +170,10 @@ public final class SingleNodeContainer extends NodeContainer
     }
 
     private NodeInPort[] m_inputPorts = null;
+
     /**
-     * Return a port, which for the inputs really only holds the type
-     * and some other static information.
+     * Return a port, which for the inputs really only holds the type and some
+     * other static information.
      *
      * @param index the index of the input port
      * @return port
@@ -176,8 +184,8 @@ public final class SingleNodeContainer extends NodeContainer
             m_inputPorts = new NodeInPort[getNrInPorts()];
         }
         if (m_inputPorts[index] == null) {
-            m_inputPorts[index]
-                            = new NodeInPort(index, m_node.getInputType(index));
+            m_inputPorts[index] =
+                    new NodeInPort(index, m_node.getInputType(index));
         }
         return m_inputPorts[index];
     }
@@ -229,7 +237,8 @@ public final class SingleNodeContainer extends NodeContainer
     }
 
     /**
-     * Set a new NodeExecutionJobManager for this node but before check for valid state.
+     * Set a new NodeExecutionJobManager for this node but before check for
+     * valid state.
      *
      * @param je the new NodeExecutionJobManager.
      */
@@ -245,8 +254,8 @@ public final class SingleNodeContainer extends NodeContainer
     }
 
     private ExecutionContext createExecutionContext() {
-        return new ExecutionContext(m_progressMonitor, getNode(),
-                getParent().getGlobalTableRepository());
+        return new ExecutionContext(m_progressMonitor, getNode(), getParent()
+                .getGlobalTableRepository());
     }
 
     // ////////////////////////////////
@@ -264,8 +273,7 @@ public final class SingleNodeContainer extends NodeContainer
     boolean configureAsNodeContainer(final PortObjectSpec[] inObjectSpecs) {
         synchronized (m_nodeMutex) {
             // remember old specs
-            PortObjectSpec[] prevSpecs =
-                    new PortObjectSpec[getNrOutPorts()];
+            PortObjectSpec[] prevSpecs = new PortObjectSpec[getNrOutPorts()];
             for (int i = 0; i < prevSpecs.length; i++) {
                 prevSpecs[i] = getOutPort(i).getPortObjectSpec();
             }
@@ -313,8 +321,7 @@ public final class SingleNodeContainer extends NodeContainer
             }
             // compare old and new specs
             for (int i = 0; i < prevSpecs.length; i++) {
-                PortObjectSpec newSpec =
-                        getOutPort(i).getPortObjectSpec();
+                PortObjectSpec newSpec = getOutPort(i).getPortObjectSpec();
                 if (newSpec != null) {
                     if (!newSpec.equals(prevSpecs[i])) {
                         return true;
@@ -327,15 +334,17 @@ public final class SingleNodeContainer extends NodeContainer
         }
     }
 
-    /** check if node can be safely reset.
+    /**
+     * check if node can be safely reset.
+     *
      * @return if node can be reset.
      */
     @Override
     boolean isResetableAsNodeContainer() {
         return (getState().equals(State.EXECUTED)
                 || getState().equals(State.MARKEDFOREXEC)
-                || getState().equals(State.CONFIGURED)
-                || getState().equals(State.UNCONFIGURED_MARKEDFOREXEC));
+                || getState().equals(State.CONFIGURED) || getState().equals(
+                State.UNCONFIGURED_MARKEDFOREXEC));
     }
 
     /** {@inheritDoc} */
@@ -369,7 +378,7 @@ public final class SingleNodeContainer extends NodeContainer
     @Override
     void markForExecutionAsNodeContainer(final boolean flag) {
         synchronized (m_nodeMutex) {
-            if (flag) {  // we want to mark the node for execution!
+            if (flag) { // we want to mark the node for execution!
                 switch (getState()) {
                 case CONFIGURED:
                     setState(State.MARKEDFOREXEC);
@@ -382,7 +391,7 @@ public final class SingleNodeContainer extends NodeContainer
                             + getState()
                             + " encountered in markForExecution(true).");
                 }
-            } else {  // we want to remove the mark for execution
+            } else { // we want to remove the mark for execution
                 switch (getState()) {
                 case MARKEDFOREXEC:
                     setState(State.CONFIGURED);
@@ -431,14 +440,14 @@ public final class SingleNodeContainer extends NodeContainer
             case MARKEDFOREXEC:
                 setState(State.QUEUED);
                 ExecutionContext execCon = createExecutionContext();
-                m_executionFuture
-                       = findJobExecutor().submitJob(
-                               new NodeExecutionJob(this, inData, execCon) {
-                    @Override
-                    public void run(final ExecutionContext ec) {
-                        executeNode(inData, ec);
-                    }
-                });
+                m_executionFuture =
+                        findJobExecutor().submitJob(
+                                new NodeExecutionJob(this, inData, execCon) {
+                                    @Override
+                                    public void run(final ExecutionContext ec) {
+                                        executeNode(inData, ec);
+                                    }
+                                });
                 return;
             default:
                 throw new IllegalStateException("Illegal state " + getState()
@@ -447,7 +456,6 @@ public final class SingleNodeContainer extends NodeContainer
             }
         }
     }
-
 
     /** {@inheritDoc} */
     @Override
@@ -483,16 +491,15 @@ public final class SingleNodeContainer extends NodeContainer
         }
     }
 
+    // ////////////////////////////////////
+    // internal state change actions
+    // ////////////////////////////////////
 
-    //////////////////////////////////////
-    //  internal state change actions
-    //////////////////////////////////////
-
-    /** This should be used to change the nodes states correctly (and likely
-     * needs to be synchronized with other changes visible to successors of
-     * this node as well!) BEFORE the actual execution.
-     * The main reason is that the actual execution should be performed
-     * unsychronized!
+    /**
+     * This should be used to change the nodes states correctly (and likely
+     * needs to be synchronized with other changes visible to successors of this
+     * node as well!) BEFORE the actual execution. The main reason is that the
+     * actual execution should be performed unsychronized!
      */
     void preExecuteNode() {
         synchronized (m_nodeMutex) {
@@ -510,11 +517,11 @@ public final class SingleNodeContainer extends NodeContainer
         }
     }
 
-    /** This should be used to change the nodes states correctly (and likely
-     * needs to be synchronized with other changes visible to successors of
-     * this node as well!) AFTER the actual execution.
-     * The main reason is that the actual execution should be performed
-     * unsychronized!
+    /**
+     * This should be used to change the nodes states correctly (and likely
+     * needs to be synchronized with other changes visible to successors of this
+     * node as well!) AFTER the actual execution. The main reason is that the
+     * actual execution should be performed unsychronized!
      *
      * @param success indicates if execution was successful
      */
@@ -529,11 +536,12 @@ public final class SingleNodeContainer extends NodeContainer
                     setState(State.CONFIGURED);
                 }
             } else {
-                m_node.reset(false);  // we need to clean up remaining nonsense...
-                m_node.clearLoopStatus();  // ...and the loop status
+                m_node.reset(false); // we need to clean up remaining
+                                        // nonsense...
+                m_node.clearLoopStatus(); // ...and the loop status
                 // but node will not be reconfigured!
                 // (configure does not prepare execute but only tells us what
-                //  output execute() may create hence we do not need it here)
+                // output execute() may create hence we do not need it here)
                 setState(State.CONFIGURED);
             }
             m_executionFuture = null;
@@ -542,8 +550,8 @@ public final class SingleNodeContainer extends NodeContainer
 
     /**
      * Execute underlying Node asynchronously. Make sure to give Workflow-
-     * Manager a chance to call pre- and postExecuteNode() appropriately
-     * and synchronize those parts (since they changes states!).
+     * Manager a chance to call pre- and postExecuteNode() appropriately and
+     * synchronize those parts (since they changes states!).
      *
      * @param inTables input parameters
      * @throws IllegalStateException in case of illegal entry state.
@@ -569,8 +577,8 @@ public final class SingleNodeContainer extends NodeContainer
         } catch (CanceledExecutionException e) {
             errorString = "Execution canceled";
             LOGGER.warn(errorString);
-            m_node.notifyMessageListeners(
-                    new NodeMessage(NodeMessage.Type.WARNING, errorString));
+            m_node.notifyMessageListeners(new NodeMessage(
+                    NodeMessage.Type.WARNING, errorString));
             success = false;
         }
         // execute node outside any synchronization!
@@ -581,13 +589,12 @@ public final class SingleNodeContainer extends NodeContainer
         }
         if (caughtContextStackException) {
             LOGGER.warn(errorString);
-            m_node.notifyMessageListeners(
-                    new NodeMessage(NodeMessage.Type.ERROR, errorString));
+            m_node.notifyMessageListeners(new NodeMessage(
+                    NodeMessage.Type.ERROR, errorString));
         }
         // clean up stuff and especially change states synchronized again
         getParent().doAfterExecution(SingleNodeContainer.this, success);
     }
-
 
     /**
      * Enumerates the output tables and puts them into the workflow global
@@ -599,7 +606,7 @@ public final class SingleNodeContainer extends NodeContainer
      */
     private void putOutputTablesIntoGlobalRepository(final ExecutionContext c) {
         HashMap<Integer, ContainerTable> globalRep =
-            getParent().getGlobalTableRepository();
+                getParent().getGlobalTableRepository();
         m_node.putOutputTablesIntoGlobalRepository(globalRep);
         HashMap<Integer, ContainerTable> localRep =
                 Node.getLocalTableRepositoryFromContext(c);
@@ -626,6 +633,7 @@ public final class SingleNodeContainer extends NodeContainer
             throws InvalidSettingsException {
         synchronized (m_nodeMutex) {
             m_node.loadSettingsFrom(settings);
+            m_settings = new SingleNodeContainerSettings(settings);
             setDirty();
         }
     }
@@ -634,8 +642,8 @@ public final class SingleNodeContainer extends NodeContainer
     @Override
     LoadResult loadContent(final NodeContainerPersistor nodePersistor,
             final Map<Integer, BufferedDataTable> tblRep,
-            final ScopeObjectStack inStack,
-            final ExecutionMonitor exec) throws CanceledExecutionException {
+            final ScopeObjectStack inStack, final ExecutionMonitor exec)
+            throws CanceledExecutionException {
         synchronized (m_nodeMutex) {
             if (!(nodePersistor instanceof SingleNodeContainerPersistor)) {
                 throw new IllegalStateException("Expected "
@@ -644,12 +652,12 @@ public final class SingleNodeContainer extends NodeContainer
                         + nodePersistor.getClass().getSimpleName());
             }
             SingleNodeContainerPersistor persistor =
-                (SingleNodeContainerPersistor)nodePersistor;
+                    (SingleNodeContainerPersistor)nodePersistor;
             State state = persistor.getMetaPersistor().getState();
             setState(state, false);
             if (state.equals(State.EXECUTED)) {
-                m_node.putOutputTablesIntoGlobalRepository(
-                        getParent().getGlobalTableRepository());
+                m_node.putOutputTablesIntoGlobalRepository(getParent()
+                        .getGlobalTableRepository());
             }
             for (ScopeObject s : persistor.getScopeObjects()) {
                 inStack.push(s);
@@ -662,22 +670,39 @@ public final class SingleNodeContainer extends NodeContainer
     /** {@inheritDoc} */
     @Override
     void saveSettings(final NodeSettingsWO settings)
-    throws InvalidSettingsException {
+            throws InvalidSettingsException {
         m_node.saveSettingsTo(settings);
+        m_settings.save(settings);
     }
 
     /** {@inheritDoc} */
     @Override
     boolean areSettingsValid(final NodeSettingsRO settings) {
+        try {
+            new SingleNodeContainerSettings(settings);
+        } catch (InvalidSettingsException ise) {
+            return false;
+        }
         return m_node.areSettingsValid(settings);
     }
 
-    ////////////////////////////////////
+    /**
+     * Returns the settings for the job manager. This could be an empty settings
+     * object (generated by this class) - it won't be null.
+     *
+     * @return the settings for the currently set job manager
+     */
+    public NodeSettingsRO getJobManagerSettings() {
+        return m_settings.getjobManagerSettings();
+    }
+
+    // //////////////////////////////////
     // ScopeObjectStack handling
-    ////////////////////////////////////
+    // //////////////////////////////////
 
     /**
      * Set ScopeObjectStack.
+     *
      * @param st new stack
      */
     void setScopeObjectStack(final ScopeObjectStack st) {
@@ -699,9 +724,9 @@ public final class SingleNodeContainer extends NodeContainer
         return getNode().getLoopRole();
     }
 
-    ////////////////////////
+    // //////////////////////
     // Progress forwarding
-    ////////////////////////
+    // //////////////////////
 
     /**
      * {@inheritDoc}
@@ -714,9 +739,9 @@ public final class SingleNodeContainer extends NodeContainer
         notifyProgressListeners(event);
     }
 
-    ///////////////////////////////////
+    // /////////////////////////////////
     // NodeContainer->Node forwarding
-    ///////////////////////////////////
+    // /////////////////////////////////
 
     /** {@inheritDoc} */
     @Override
@@ -741,8 +766,8 @@ public final class SingleNodeContainer extends NodeContainer
 
     /** {@inheritDoc} */
     @Override
-    NodeDialogPane getDialogPaneWithSettings(
-            final PortObjectSpec[] inSpecs) throws NotConfigurableException {
+    NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs)
+            throws NotConfigurableException {
         ScopeObjectStack stack = getScopeObjectStack();
         return m_node.getDialogPaneWithSettings(inSpecs, stack);
     }
@@ -797,28 +822,146 @@ public final class SingleNodeContainer extends NodeContainer
         return m_node.getXMLDescription();
     }
 
-    /** Overridden to also ensure that outport tables are "open" (node directory
+    /**
+     * Overridden to also ensure that outport tables are "open" (node directory
      * is deleted upon save() - so the tables are better copied into temp).
      * {@inheritDoc}
      */
     @Override
     public void setDirty() {
-        /* Ensures that any port object in the associated node is read from its
+        /*
+         * Ensures that any port object in the associated node is read from its
          * saved location. Especially BufferedDataTable objects are read as late
          * as possible (in order to reduce start-up time), this method makes
          * sure that they are read (and either copied into TMP or into memory),
-         * so the underlying node directory can be savely deleted. */
+         * so the underlying node directory can be savely deleted.
+         */
         m_node.ensureOutputDataIsRead();
         super.setDirty();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected NodeContainerPersistor getCopyPersistor(
             final HashMap<Integer, ContainerTable> tableRep,
             final boolean preserveDeletableFlags) {
-        return new CopySingleNodeContainerPersistor(
-                this, preserveDeletableFlags);
+        return new CopySingleNodeContainerPersistor(this,
+                preserveDeletableFlags);
+    }
+
+    // /////////////////////////////////////////////////////////////////////
+    // Settings loading and saving (single node container settings only)
+    // /////////////////////////////////////////////////////////////////////
+
+    /**
+     * Handles the settings specific to a SingleNodeContainer. Reads and writes
+     * them from and into a NodeSettings object.
+     */
+    public static class SingleNodeContainerSettings {
+
+        private static final String CFG_SNC_SETTINGS =
+                "internal_single_node_container_settings";
+
+        private static final String CFG_JOB_MANAGER_ID = "JobManagerID";
+
+        private static final String CFG_JOB_MANAGER_SETTINGS =
+                "JobManagerSettings";
+
+        // the threaded job manager is the default
+        private String m_jobManagerID =
+            KNIMEConstants.GLOBAL_THREAD_POOL.getID();
+
+        // the default manager has no settings
+        private NodeSettingsRO m_jobManagerSettings =
+                new NodeSettings("empty");
+
+        /**
+         * Creates a settings object with default values.
+         */
+        public SingleNodeContainerSettings() {
+            // stay with the default values
+        }
+
+        /**
+         * Creates a new instance holding the settings contained in the
+         * specified object. The settings object must be one this class has
+         * saved itself into (and not a job manager settings object).
+         *
+         * @param settings the object with the settings to read
+         * @throws InvalidSettingsException if the settings in the argument are
+         *             invalid
+         */
+        public SingleNodeContainerSettings(final NodeSettingsRO settings)
+                throws InvalidSettingsException {
+
+            // since this settings object exists only since 2.0, we stay with
+            // the default if there are no node container settings.
+            if (settings.containsKey(CFG_SNC_SETTINGS)) {
+                NodeSettingsRO sncSettings =
+                        settings.getNodeSettings(CFG_SNC_SETTINGS);
+                m_jobManagerID = sncSettings.getString(CFG_JOB_MANAGER_ID);
+                m_jobManagerSettings =
+                        sncSettings.getNodeSettings(CFG_JOB_MANAGER_SETTINGS);
+            }
+
+        }
+
+        /**
+         * Writes the current settings values into the passed argument.
+         *
+         * @param settings the object to write the settings into.
+         */
+        public void save(final NodeSettingsWO settings) {
+            NodeSettingsWO sncSettings =
+                    settings.addNodeSettings(CFG_SNC_SETTINGS);
+            sncSettings.addString(CFG_JOB_MANAGER_ID, m_jobManagerID);
+
+            NodeSettingsWO foo =
+                sncSettings.addNodeSettings(CFG_JOB_MANAGER_SETTINGS);
+            m_jobManagerSettings.copyTo(foo);
+        }
+
+        /**
+         * Returns the ID of the job manager.
+         *
+         * @return the ID of the job manager
+         */
+        public String getJobManagerID() {
+            return m_jobManagerID;
+        }
+
+        /**
+         * Returns the settings for the job manager. This could be an empty
+         * settings object (generated by this class) - it won't be null.
+         *
+         * @return the settings for the job manager
+         */
+        public NodeSettingsRO getjobManagerSettings() {
+            return m_jobManagerSettings;
+        }
+
+        /**
+         * Stores a new selected job manager with its settings.
+         *
+         * @param id the id of the new job manager
+         * @param jobManagerSettings the settings for the specified job manager.
+         *            Could be null, if the manager doesn't need any settings.
+         *
+         */
+        public void setJobManager(final String id,
+                final NodeSettingsRO jobManagerSettings) {
+            if (id == null || id.isEmpty()) {
+                throw new IllegalArgumentException("Job manager ID can't "
+                        + "be null or empty");
+            }
+            NodeSettingsRO settings = jobManagerSettings;
+            if (settings == null) {
+                settings = new NodeSettings(id);
+            }
+            m_jobManagerID = id;
+            m_jobManagerSettings = settings;
+        }
+
     }
 
 }

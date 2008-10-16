@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.0"?>
 <plugin>
-   <extension-point id="org.knime.core.NodeExecutionJobManager" name="NodeExecutionJobManager" schema="schema/org.knime.core.NodeExecutionJobManager.exsd"/>
+   <extension-point id="NodeExecutionJobManager" name="NodeExecutionJobManager" schema="schema/org.knime.core.NodeExecutionJobManager.exsd"/>
    <extension
-         point="org.knime.core.org.knime.core.NodeExecutionJobManager">
+         point="org.knime.core.NodeExecutionJobManager">
       <NodeExecutionJobManager
             JobManager="org.knime.core.util.ThreadPool"
             id="org.knime.core.Threaded"

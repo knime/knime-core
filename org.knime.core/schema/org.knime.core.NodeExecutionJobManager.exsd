@@ -22,24 +22,10 @@
 
    <element name="NodeExecutionJobManager">
       <complexType>
-         <attribute name="id" type="string" use="required">
-            <annotation>
-               <documentation>
-                  provide a unique ID. Preferably a fully qualifying package/project name.
-               </documentation>
-            </annotation>
-         </attribute>
-         <attribute name="label" type="string" use="required">
-            <annotation>
-               <documentation>
-                  User readable label. Displayed in selection dialogs and messages.
-               </documentation>
-            </annotation>
-         </attribute>
          <attribute name="JobManager" type="string" use="required">
             <annotation>
                <documentation>
-                  
+                  Specify an implementation of the org.knime.core.node.workflow.NodeExecutionJobManager interface.
                </documentation>
                <appInfo>
                   <meta.attribute kind="java" basedOn=":org.knime.core.node.workflow.NodeExecutionJobManager"/>

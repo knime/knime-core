@@ -41,4 +41,26 @@ public class SimpleJobExecutor implements NodeExecutionJobManager {
         ft.run();
         return ft;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getID() {
+        return "org.knime.core.node.workflow.SimpleJobExecutor";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public NodeExecutionJobManagerPanel getSettingsPanelComponent() {
+        // this job manager needs no settings
+        return null;
+    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "Sequential Job Manager";
+    }
 }
