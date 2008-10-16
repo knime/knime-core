@@ -176,8 +176,7 @@ public class WorkflowExportPage extends WizardPage {
                 } else {
                     container = ((IResource)obj).getParent();
                 }
-
-                m_containerText.setText(container.getFullPath().toString());
+                m_containerText.setText(container.getName());
             }
         }
 
@@ -221,6 +220,10 @@ public class WorkflowExportPage extends WizardPage {
             }
         }
         dialog.setElements(validProjects.toArray());
+        IProject selected = getProjectForName(m_containerText.getText()); 
+        if (selected != null) {
+            dialog.setInitialSelections(new Object[] {selected});
+        }
         if (dialog.open() == Window.OK) {
             Object[] result = dialog.getResult();
             if (result.length == 1) {
@@ -235,6 +238,16 @@ public class WorkflowExportPage extends WizardPage {
         }
     }
 
+    
+    private IProject getProjectForName(final String projectName) {
+        IResource resource = ResourcesPlugin.getWorkspace().getRoot()
+            .findMember(projectName);
+        if (resource instanceof IProject) {
+            return (IProject)resource;
+        }
+        return null;
+    }
+    
     /**
      * @return true if the check box for excluding data is checked
      */
