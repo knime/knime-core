@@ -27,7 +27,6 @@ package org.knime.base.node.viz.plotter.node;
 import org.knime.base.node.viz.plotter.DataProvider;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 
 /**
@@ -57,9 +56,12 @@ public class DefaultVisualizationNodeDialog extends DefaultNodeSettingsPane {
     public DefaultVisualizationNodeDialog(final int defaultNrOfRows) {
         super();
         addDialogComponent(new DialogComponentNumber(
-                new SettingsModelIntegerBounded(
-                DefaultVisualizationNodeModel.CFG_END, defaultNrOfRows, 
-                1, Integer.MAX_VALUE), "No. of rows to display:", 10));
+                DefaultVisualizationNodeModel.createLastDisplayedRowModel(
+                        defaultNrOfRows), "No. of rows to display:", 10));
+        // bugfix 1299
+        addDialogComponent(new DialogComponentNumber(
+                DefaultVisualizationNodeModel.createMaxNominalValuesModel(), 
+                "Ignore columns with more nominal values than:", 10));
         /*
          * moved to AbstractPlotterProperties
          *
