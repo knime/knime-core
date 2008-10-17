@@ -38,6 +38,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -305,12 +306,8 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         int selRow = m_featureLevels.getSelectedRow();
-        m_settings.clearColumns();
         if (selRow >= 0) {
             m_settings.nrOfFeatures(m_tableModel.getNrOfFeatures(selRow));
-            for (String s : m_includedColumns.getSelectedColumns()) {
-                m_settings.addColumn(s);
-            }
         } else {
             m_settings.nrOfFeatures(-1);
         }
@@ -326,11 +323,20 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
             final PortObjectSpec[] specs) throws NotConfigurableException {
         m_settings.loadSettingsForDialog(settings);
 
-        m_targetColumn = ((BWElimModel)specs[0]).targetColumn();
+        final BWElimModel model = (BWElimModel)specs[0];
+        if (model == null) {
+            throw new NotConfigurableException(
+                    "No feature elimination model available.");
+        }
+        m_targetColumn = model.targetColumn();
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 m_tableModel.featuresChanged((BWElimModel)specs[0]);
-                m_includedColumns.update((DataTableSpec)specs[1]);
+                if (specs[1] != null) {
+                    m_includedColumns.update((DataTableSpec)specs[1]);
+                } else {
+                    ((DefaultListModel) m_includedColumns.getModel()).clear();
+                }
                 for (int i = 0; i < m_tableModel.getRowCount(); i++) {
                     if (m_tableModel.getNrOfFeatures(i) == m_settings
                             .nrOfFeatures()) {
@@ -342,7 +348,7 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
                 m_includeTargetColumn.setSelected(m_settings
                         .includeTargetColumn());
                 m_includedColumns.setSelectedColumns(m_settings
-                        .includedColumns());
+                        .includedColumns(model));
             }
         });
     }
