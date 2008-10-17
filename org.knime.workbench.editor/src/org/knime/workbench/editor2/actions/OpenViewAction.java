@@ -93,7 +93,7 @@ public class OpenViewAction extends Action {
         LOGGER.debug("Open Node View " + m_nodeContainer.getName() + " (#"
                 + m_index + ")");
         try {
-            final String title = m_nodeContainer.getViewName(0) + " - " 
+            final String title = m_nodeContainer.getViewName(m_index) + " - " 
                 + m_nodeContainer.getName() + " #" 
                 + m_nodeContainer.getID().getIndex();
             Display.getDefault().asyncExec(new Runnable() {
