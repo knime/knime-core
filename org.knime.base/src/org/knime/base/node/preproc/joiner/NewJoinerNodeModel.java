@@ -29,9 +29,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.knime.base.data.sort.SortedTable;
 import org.knime.base.node.preproc.joiner.NewJoinerSettings.DuplicateHandling;
@@ -136,38 +138,38 @@ public class NewJoinerNodeModel extends NodeModel {
     private DataTableSpec createSpec(final DataTableSpec[] specs)
             throws InvalidSettingsException {
         final List<DataColumnSpec> takeSpecs = new ArrayList<DataColumnSpec>();
+        Set<String> colNames = new HashSet<String>();
         for (DataColumnSpec colSpec : specs[0]) {
             takeSpecs.add(colSpec);
+            colNames.add(colSpec.getName());
         }
+
 
         List<Integer> stci = new ArrayList<Integer>();
         for (int i = 0; i < specs[1].getNumColumns(); i++) {
             DataColumnSpec colSpec = specs[1].getColumnSpec(i);
-            if (specs[0].findColumnIndex(colSpec.getName()) != -1) {
+            if (colNames.contains(colSpec.getName())) {
                 if (m_settings.duplicateHandling().equals(
                         DuplicateHandling.DontExecute)) {
                     throw new InvalidSettingsException("Duplicate column '"
                             + colSpec.getName() + "', won't execute");
                 } else if (m_settings.duplicateHandling().equals(
                         DuplicateHandling.AppendSuffix)) {
-                    String newName = colSpec.getName() + m_settings.suffix();
-
-                    // TODO: check if name is present in specs[1], also check if
-                    // it was previously assigned (not in specs[0]/specs[1] but
-                    // in output spec)
-                    if (specs[0].findColumnIndex(newName) != -1) {
-                        throw new InvalidSettingsException("Duplicate column '"
-                                + colSpec.getName() + "', won't execute");
-                    }
+                    String newName = colSpec.getName();
+                    do {
+                        newName += m_settings.suffix();
+                    } while (colNames.contains(newName));
 
                     DataColumnSpecCreator dcsc =
                             new DataColumnSpecCreator(colSpec);
                     dcsc.setName(newName);
                     takeSpecs.add(dcsc.createSpec());
                     stci.add(i);
+                    colNames.add(newName);
                 }
                 // else filter the column
             } else {
+                colNames.add(colSpec.getName());
                 takeSpecs.add(colSpec);
                 stci.add(i);
             }
