@@ -112,8 +112,6 @@ final class DBQueryNodeModel extends DBNodeModel {
             DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(
                     outSpec, conn.createConnectionModel());
             return new PortObjectSpec[]{dbSpec};
-        } catch (InvalidSettingsException ise) {
-            throw ise;
         } catch (Throwable t) {
             throw new InvalidSettingsException(t);
         }
