@@ -58,10 +58,10 @@
          <attribute name="factory-class" type="string" use="required">
             <annotation>
                <documentation>
-                  The factory, must implement &lt;code&gt;org.knime.knime.node.GenericNodeFactory&lt;/code&gt;
+                  The factory, must implement &lt;code&gt;org.knime.knime.node.NodeFactory&lt;/code&gt;
                </documentation>
                <appInfo>
-                  <meta.attribute kind="java" basedOn="org.knime.core.node.GenericNodeFactory:"/>
+                  <meta.attribute kind="java" basedOn="org.knime.core.node.NodeFactory:"/>
                </appInfo>
             </annotation>
          </attribute>
