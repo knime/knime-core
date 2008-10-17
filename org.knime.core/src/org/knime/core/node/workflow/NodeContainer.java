@@ -36,19 +36,19 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeDialog;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
@@ -149,8 +149,7 @@ public abstract class NodeContainer {
         m_parent = parent;
         if (m_parent == null) {
             // make sure at least the top node knows how to execute stuff
-            // TODO: better default choice??
-            m_jobExecutor = KNIMEConstants.GLOBAL_THREAD_POOL;
+            m_jobExecutor = ThreadNodeExecutionJobManager.INSTANCE;
         }
         m_id = id;
         m_state = State.IDLE;

@@ -31,8 +31,8 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.util.ThreadPool;
 
@@ -85,7 +85,7 @@ public final class NodeExecutionJobManagerPool {
      * @return the default job manager
      */
     public static NodeExecutionJobManager getDefaultJobManager() {
-        return KNIMEConstants.GLOBAL_THREAD_POOL;
+        return ThreadNodeExecutionJobManager.INSTANCE;
     }
 
     /**
@@ -134,8 +134,8 @@ public final class NodeExecutionJobManagerPool {
         IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
         if (point == null) {
             // let's throw in the default manager - otherwise things fail badly
-            managers.put(KNIMEConstants.GLOBAL_THREAD_POOL.getID(),
-                    KNIMEConstants.GLOBAL_THREAD_POOL);
+            managers.put(getDefaultJobManager().getID(),
+                    getDefaultJobManager());
             LOGGER.error("Invalid extension point: " + EXT_POINT_ID);
             throw new IllegalStateException("ACTIVATION ERROR: "
                     + " --> Invalid extension point: " + EXT_POINT_ID);
@@ -157,8 +157,8 @@ public final class NodeExecutionJobManagerPool {
             NodeExecutionJobManager instance = null;
             try {
                 // TODO: THE THREADED MANAGER NEEDS TO BE RE-WRITTEN!
-                if (jobMgr.equals(ThreadPool.class.getName())) {
-                    instance = KNIMEConstants.GLOBAL_THREAD_POOL;
+                if (jobMgr.equals(getDefaultJobManager().getID())) {
+                    instance = getDefaultJobManager();
                 } else {
                     instance =
                             (NodeExecutionJobManager)elem

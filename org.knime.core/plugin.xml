@@ -5,7 +5,7 @@
    <extension
          point="org.knime.core.NodeExecutionJobManager">
       <NodeExecutionJobManager
-            JobManager="org.knime.core.util.ThreadPool"
+            JobManager="org.knime.core.node.exec.ThreadNodeExecutionJobManager"
             id="org.knime.core.Threaded"
             label="Threaded NodeExecutionManager">
       </NodeExecutionJobManager>

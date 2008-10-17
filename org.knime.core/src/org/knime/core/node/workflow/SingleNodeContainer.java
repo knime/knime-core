@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Future;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.BufferedDataTable;
@@ -38,7 +37,6 @@ import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
@@ -50,6 +48,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -66,7 +65,7 @@ public final class SingleNodeContainer extends NodeContainer implements
 
     /** my logger. */
     private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(SingleNodeContainer.class);
+        NodeLogger.getLogger(SingleNodeContainer.class);
 
     /** underlying node. */
     private final Node m_node;
@@ -75,7 +74,7 @@ public final class SingleNodeContainer extends NodeContainer implements
      * remember ID of the job when this node is submitted to a
      * NodeExecutionJobManager.
      */
-    private Future<?> m_executionFuture;
+    private NodeExecutionJob m_executionJob;
 
     /** progress monitor. */
     private final NodeProgressMonitor m_progressMonitor =
@@ -116,7 +115,7 @@ public final class SingleNodeContainer extends NodeContainer implements
         setPortNames();
         m_node.addMessageListener(this);
     }
-
+    
     private void setPortNames() {
         for (int i = 0; i < getNrOutPorts(); i++) {
             getOutPort(i).setPortName(m_node.getFactory().getOutportName(i));
@@ -148,7 +147,6 @@ public final class SingleNodeContainer extends NodeContainer implements
     }
 
     private NodeContainerOutPort[] m_outputPorts = null;
-
     /**
      * Returns the output port for the given <code>portID</code>. This port
      * is essentially a container for the underlying Node and the index and will
@@ -170,7 +168,6 @@ public final class SingleNodeContainer extends NodeContainer implements
     }
 
     private NodeInPort[] m_inputPorts = null;
-
     /**
      * Return a port, which for the inputs really only holds the type and some
      * other static information.
@@ -254,6 +251,7 @@ public final class SingleNodeContainer extends NodeContainer implements
     }
 
     private ExecutionContext createExecutionContext() {
+        m_progressMonitor.reset();
         return new ExecutionContext(m_progressMonitor, getNode(), getParent()
                 .getGlobalTableRepository());
     }
@@ -378,7 +376,7 @@ public final class SingleNodeContainer extends NodeContainer implements
     @Override
     void markForExecutionAsNodeContainer(final boolean flag) {
         synchronized (m_nodeMutex) {
-            if (flag) { // we want to mark the node for execution!
+            if (flag) {  // we want to mark the node for execution!
                 switch (getState()) {
                 case CONFIGURED:
                     setState(State.MARKEDFOREXEC);
@@ -391,7 +389,7 @@ public final class SingleNodeContainer extends NodeContainer implements
                             + getState()
                             + " encountered in markForExecution(true).");
                 }
-            } else { // we want to remove the mark for execution
+            } else {  // we want to remove the mark for execution
                 switch (getState()) {
                 case MARKEDFOREXEC:
                     setState(State.CONFIGURED);
@@ -440,14 +438,8 @@ public final class SingleNodeContainer extends NodeContainer implements
             case MARKEDFOREXEC:
                 setState(State.QUEUED);
                 ExecutionContext execCon = createExecutionContext();
-                m_executionFuture =
-                        findJobExecutor().submitJob(
-                                new NodeExecutionJob(this, inData, execCon) {
-                                    @Override
-                                    public void run(final ExecutionContext ec) {
-                                        executeNode(inData, ec);
-                                    }
-                                });
+                m_executionJob = findJobExecutor().submitJob(
+                        this, inData, execCon);
                 return;
             default:
                 throw new IllegalStateException("Illegal state " + getState()
@@ -456,6 +448,7 @@ public final class SingleNodeContainer extends NodeContainer implements
             }
         }
     }
+
 
     /** {@inheritDoc} */
     @Override
@@ -473,13 +466,13 @@ public final class SingleNodeContainer extends NodeContainer implements
                 // it will not hand off to node implementation (otherwise it
                 // would be executing)
                 m_progressMonitor.setExecuteCanceled();
-                m_executionFuture.cancel(true);
+                m_executionJob.cancel();
                 setState(State.CONFIGURED);
                 break;
             case EXECUTING:
                 // future is running in thread pool, use ordinary cancel policy
                 m_progressMonitor.setExecuteCanceled();
-                m_executionFuture.cancel(true);
+                m_executionJob.cancel();
                 break;
             case EXECUTED:
                 // Too late - do nothing.
@@ -491,9 +484,10 @@ public final class SingleNodeContainer extends NodeContainer implements
         }
     }
 
-    // ////////////////////////////////////
-    // internal state change actions
-    // ////////////////////////////////////
+
+    //////////////////////////////////////
+    //  internal state change actions
+    //////////////////////////////////////
 
     /**
      * This should be used to change the nodes states correctly (and likely
@@ -536,46 +530,54 @@ public final class SingleNodeContainer extends NodeContainer implements
                     setState(State.CONFIGURED);
                 }
             } else {
-                m_node.reset(false); // we need to clean up remaining
-                                        // nonsense...
-                m_node.clearLoopStatus(); // ...and the loop status
+                m_node.reset(false);  // we need to clean up remaining nonsense
+                m_node.clearLoopStatus();  // ...and the loop status
                 // but node will not be reconfigured!
                 // (configure does not prepare execute but only tells us what
-                // output execute() may create hence we do not need it here)
+                //  output execute() may create hence we do not need it here)
                 setState(State.CONFIGURED);
             }
-            m_executionFuture = null;
+            m_executionJob = null;
         }
     }
-
+    
+    /**
+     * Invoked by the job executor immediately before the execution is
+     * triggered. It invokes doBeforeExecution on the parent.
+     * @throws IllegalContextStackObjectException in case of wrongly
+     *         connected loops, for instance.
+     */
+    void performBeforeExecuteNode() {
+        // this will allow the parent to call state changes etc properly
+        // synchronized. The main execution is done asynchronously.
+        try {
+            getParent().doBeforeExecution(SingleNodeContainer.this);
+        } catch (IllegalContextStackObjectException e) {
+            LOGGER.warn(e.getMessage());
+            m_node.notifyMessageListeners(
+                    new NodeMessage(NodeMessage.Type.ERROR, e.getMessage()));
+            throw e;
+        }
+    }
+    
     /**
      * Execute underlying Node asynchronously. Make sure to give Workflow-
      * Manager a chance to call pre- and postExecuteNode() appropriately and
      * synchronize those parts (since they changes states!).
      *
-     * @param inTables input parameters
+     * @param inObjects input data
+     * @param ec The execution context for progress, e.g.
+     * @return whether execution was successful. 
      * @throws IllegalStateException in case of illegal entry state.
      */
-    private void executeNode(final PortObject[] inObjects,
+    public boolean performExecuteNode(final PortObject[] inObjects,
             final ExecutionContext ec) {
-        boolean caughtContextStackException = false;
-        String errorString = null;
-        try {
-            // this will allow the parent to call state changes etc properly
-            // synchronized. The main execution is done asynchronously.
-            getParent().doBeforeExecution(SingleNodeContainer.this);
-        } catch (IllegalContextStackObjectException ice) {
-            errorString = ice.getMessage();
-            caughtContextStackException = true;
-        }
-        // TODO: the progress monitor should not be accessible from the
-        // public world.
-        ec.getProgressMonitor().reset();
-        boolean success = !caughtContextStackException;
+        boolean success;
         try {
             ec.checkCanceled();
+            success = true;
         } catch (CanceledExecutionException e) {
-            errorString = "Execution canceled";
+            String errorString = "Execution canceled";
             LOGGER.warn(errorString);
             m_node.notifyMessageListeners(new NodeMessage(
                     NodeMessage.Type.WARNING, errorString));
@@ -587,11 +589,14 @@ public final class SingleNodeContainer extends NodeContainer implements
             // output tables are made publicly available (for blobs)
             putOutputTablesIntoGlobalRepository(ec);
         }
-        if (caughtContextStackException) {
-            LOGGER.warn(errorString);
-            m_node.notifyMessageListeners(new NodeMessage(
-                    NodeMessage.Type.ERROR, errorString));
-        }
+        return success;
+    }
+
+    /** Called immediately after the execution took place in the job executor.
+     * It will trigger an doAfterExecution on the parent wfm.
+     * @param success Whether the execution was successful.
+     */
+    void performAfterExecuteNode(final boolean success) {
         // clean up stuff and especially change states synchronized again
         getParent().doAfterExecution(SingleNodeContainer.this, success);
     }
@@ -606,7 +611,7 @@ public final class SingleNodeContainer extends NodeContainer implements
      */
     private void putOutputTablesIntoGlobalRepository(final ExecutionContext c) {
         HashMap<Integer, ContainerTable> globalRep =
-                getParent().getGlobalTableRepository();
+            getParent().getGlobalTableRepository();
         m_node.putOutputTablesIntoGlobalRepository(globalRep);
         HashMap<Integer, ContainerTable> localRep =
                 Node.getLocalTableRepositoryFromContext(c);
@@ -652,7 +657,7 @@ public final class SingleNodeContainer extends NodeContainer implements
                         + nodePersistor.getClass().getSimpleName());
             }
             SingleNodeContainerPersistor persistor =
-                    (SingleNodeContainerPersistor)nodePersistor;
+                (SingleNodeContainerPersistor)nodePersistor;
             State state = persistor.getMetaPersistor().getState();
             setState(state, false);
             if (state.equals(State.EXECUTED)) {
@@ -670,7 +675,7 @@ public final class SingleNodeContainer extends NodeContainer implements
     /** {@inheritDoc} */
     @Override
     void saveSettings(final NodeSettingsWO settings)
-            throws InvalidSettingsException {
+    throws InvalidSettingsException {
         m_node.saveSettingsTo(settings);
         m_settings.save(settings);
     }
@@ -696,9 +701,9 @@ public final class SingleNodeContainer extends NodeContainer implements
         return m_settings.getjobManagerSettings();
     }
 
-    // //////////////////////////////////
+    ////////////////////////////////////
     // ScopeObjectStack handling
-    // //////////////////////////////////
+    ////////////////////////////////////
 
     /**
      * Set ScopeObjectStack.
@@ -724,9 +729,9 @@ public final class SingleNodeContainer extends NodeContainer implements
         return getNode().getLoopRole();
     }
 
-    // //////////////////////
+    ////////////////////////
     // Progress forwarding
-    // //////////////////////
+    ////////////////////////
 
     /**
      * {@inheritDoc}
@@ -739,9 +744,9 @@ public final class SingleNodeContainer extends NodeContainer implements
         notifyProgressListeners(event);
     }
 
-    // /////////////////////////////////
+    ///////////////////////////////////
     // NodeContainer->Node forwarding
-    // /////////////////////////////////
+    ///////////////////////////////////
 
     /** {@inheritDoc} */
     @Override
@@ -839,7 +844,7 @@ public final class SingleNodeContainer extends NodeContainer implements
         m_node.ensureOutputDataIsRead();
         super.setDirty();
     }
-
+    
     /** {@inheritDoc} */
     @Override
     protected NodeContainerPersistor getCopyPersistor(
@@ -869,7 +874,7 @@ public final class SingleNodeContainer extends NodeContainer implements
 
         // the threaded job manager is the default
         private String m_jobManagerID =
-            KNIMEConstants.GLOBAL_THREAD_POOL.getID();
+            ThreadNodeExecutionJobManager.INSTANCE.getID();
 
         // the default manager has no settings
         private NodeSettingsRO m_jobManagerSettings =

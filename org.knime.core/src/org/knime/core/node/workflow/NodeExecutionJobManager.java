@@ -24,7 +24,8 @@
  */
 package org.knime.core.node.workflow;
 
-import java.util.concurrent.Future;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.port.PortObject;
 
 /**
  * Main entry point for compute intensive jobs. Controls resource (thread)
@@ -33,8 +34,10 @@ import java.util.concurrent.Future;
  * @author M. Berthold & B. Wiswedel, University of Konstanz
  */
 public interface NodeExecutionJobManager {
-
-    Future<?> submitJob(NodeExecutionJob r);
+    
+    public NodeExecutionJob submitJob(final SingleNodeContainer snc, 
+            final PortObject[] data, final ExecutionContext exec);
+    
 
     /**
      * Creates a new instance of a panel that holds components to display the

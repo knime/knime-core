@@ -35,7 +35,7 @@ public abstract class NodeExecutionJob implements Runnable {
     private final PortObject[] m_data;
     private final ExecutionContext m_execContext;
 
-    public NodeExecutionJob(final SingleNodeContainer snc,
+    public NodeExecutionJob(final SingleNodeContainer snc, 
             final PortObject[] data, final ExecutionContext ec) {
         if (snc == null || data == null || ec == null) {
             throw new NullPointerException("Args must not be null.");
@@ -46,28 +46,27 @@ public abstract class NodeExecutionJob implements Runnable {
         m_snc = snc;
         m_data = data;
         m_execContext = ec;
-        // TODO: remove, need read access to fields
-        assert m_data == data;
-        assert m_snc == snc;
     }
-
-    public abstract void run(final ExecutionContext ec);
 
     @Override
-    public final void run() {
-        run(m_execContext);
+    public void run() {
+        boolean success = true;
+        try {
+            m_snc.performBeforeExecuteNode();
+        } catch (IllegalContextStackObjectException e) {
+            success = false;
+        }
+        success = success && mainExecute();
+        m_snc.performAfterExecuteNode(success);
     }
+    
+    public abstract boolean mainExecute();
+    public abstract boolean cancel();
 
-    public final void triggerCancel() {
-        m_execContext.getProgressMonitor().setExecuteCanceled();
-    }
-
-    // PO:added
     public PortObject[] getPortObjects() {
         return m_data;
     }
 
-    // PO:added
     public SingleNodeContainer getSingleNodeContainer() {
         return m_snc;
     }
