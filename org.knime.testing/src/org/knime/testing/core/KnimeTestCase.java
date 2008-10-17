@@ -220,7 +220,7 @@ public class KnimeTestCase extends TestCase {
                 // store the view in order to close is after the test finishes
                 allViews.add(view);
                 // open it now.
-                view.createFrame("");
+                view.createFrame("View #" + i);
             }
         }
 
