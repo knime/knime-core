@@ -61,7 +61,6 @@ public abstract class ExtToolOutputNodeView<T extends ExtToolOutputNodeModel>
      */
     public ExtToolOutputNodeView(final T nodeModel) {
         super(nodeModel);
-        setViewTitle("Output to StdErr");
         m_output = new JTextArea();
         m_numOfLines = 0;
         m_colorGray = Color.GRAY;
