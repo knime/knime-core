@@ -172,7 +172,7 @@ public abstract class NodeContainer {
     /**
      * @return parent workflowmanager holding this node (or null if root).
      */
-    final WorkflowManager getParent() {
+    public final WorkflowManager getParent() {
         return m_parent;
     }
 
