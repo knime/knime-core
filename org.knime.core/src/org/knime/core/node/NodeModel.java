@@ -364,7 +364,7 @@ public abstract class NodeModel {
      *             execution. Even if the derived model doesn't check, the
      *             result will be discarded and the exception thrown. 
      * @throws IllegalStateException If the number of <code>PortObject</code>
-     *             objects returned by the derived <code>GenericNodeModel</code>
+     *             objects returned by the derived <code>NodeModel</code>
      *             does not match the number of outputs. Or if any of them is 
      *             null.
      * @see #execute(PortObject[],ExecutionContext)
@@ -595,10 +595,10 @@ public abstract class NodeModel {
             try {
                 view.callModelChanged();
             } catch (Exception e) {
-                setWarningMessage("View [" + view.getViewName()
+                setWarningMessage("View [" + view.getViewTitle()
                         + "] could not be open, reason: " + e.getMessage());
-                m_logger.debug("View [" + view.getViewName()
-                        + "] could not be open", e);
+                m_logger.debug("View [" + view.getViewTitle()
+                        + "] could not be open, reason: " + e.getMessage(), e);
             }
         }
     }
@@ -608,7 +608,7 @@ public abstract class NodeModel {
      * views about changes of the settings or during execution, if you want the
      * views to show the progress, and if they can display models half way
      * through the execution. In the view
-     * <code>GenericNodeView#updateModel(Object)</code> is called and needs to
+     * <code>NodeView#updateModel(Object)</code> is called and needs to
      * be overridden.
      *
      * @param arg The argument you want to pass.

@@ -65,7 +65,7 @@ public abstract class NodeView<T extends NodeModel> {
     private final NodeLogger m_logger;
 
     /**
-     * Holds the underlying <code>GenericNodeModel</code>.
+     * Holds the underlying <code>NodeModel</code> of type T.
      */
     private final T m_nodeModel;
 
@@ -125,9 +125,6 @@ public abstract class NodeView<T extends NodeModel> {
      * stay on top all the time
      */
     private boolean m_alwaysOnTop = false;
-
-
-    private String m_frameTitle;
 
     private final WindowListener m_windowListener = new WindowAdapter() {
         /**
@@ -275,11 +272,11 @@ public abstract class NodeView<T extends NodeModel> {
                 // CALL abstract model changed
                 modelChanged();
             } catch (NullPointerException npe) {
-                m_logger.coding("GenericNodeView.modelChanged() causes "
+                m_logger.coding("NodeView.modelChanged() causes "
                        + "NullPointerException during notification of a "
                        + "changed model, reason: " + npe.getMessage(), npe);
             } catch (Throwable t) {
-                m_logger.error("GenericNodeView.modelChanged() causes an error "
+                m_logger.error("NodeView.modelChanged() causes an error "
                        + "during notification of a changed model, reason: "
                        + t.getMessage(), t);
             } finally {
@@ -292,9 +289,9 @@ public abstract class NodeView<T extends NodeModel> {
     }
 
     /**
-     * Method is invoked when the underlying <code>GenericNodeModel</code> has
+     * Method is invoked when the underlying <code>NodeModel</code> has
      * changed. Also the HiLightHandler have changed. Note, the
-     * <code>GenericNodeModel</code> content may be not available. Be sure to
+     * <code>NodeModel</code> content may be not available. Be sure to
      * modify GUI components in the EventDispatchThread only.
      */
     protected abstract void modelChanged();
@@ -302,7 +299,7 @@ public abstract class NodeView<T extends NodeModel> {
     /**
      * This method is supposed to be overridden by views that want to receive
      * events from their assigned models via the
-     * <code>GenericNodeModel#notifyViews(Object)</code> method. Can be used to
+     * <code>NodeModel#notifyViews(Object)</code> method. Can be used to
      * iteratively update the view during execute.
      *
      * @param arg The argument can be everything.
@@ -344,7 +341,7 @@ public abstract class NodeView<T extends NodeModel> {
         try {
             onOpen();
         } catch (Throwable t) {
-            m_logger.error("GenericNodeView.onOpen() causes an error "
+            m_logger.error("NodeView.onOpen() causes an error "
                     + "on opening node view, reason: " + t.getMessage(), t);
         }
         m_nodeModel.registerView(this);
@@ -355,7 +352,6 @@ public abstract class NodeView<T extends NodeModel> {
                 m_comp.invalidate();
                 m_comp.repaint();
             }
-            m_frame.setTitle(m_frameTitle);
             m_frame.pack();
             setLocation();
         }
@@ -382,7 +378,14 @@ public abstract class NodeView<T extends NodeModel> {
      * @return a {@link JFrame} with an initialized {@link NodeView}
      */
     public final JFrame createFrame(final String viewTitle) {
-        m_frameTitle = viewTitle;
+        final String name;
+        if (viewTitle == null) {
+            name = "View \"no title\"";
+        } else {
+            name = viewTitle;
+        }
+        m_frame.setName(name);
+        setTitle(name);
         openView();
         return m_frame;
     }
@@ -392,7 +395,7 @@ public abstract class NodeView<T extends NodeModel> {
      *
      * @see #onOpen
      */
-    final void openView() {
+    private void openView() {
         // init
         callOpenView();
         // show frame, make sure to do this in EDT (GUI related task)
@@ -419,7 +422,7 @@ public abstract class NodeView<T extends NodeModel> {
         try {
             onClose();
         } catch (Throwable t) {
-            m_logger.error("GenericNodeView.onClose() causes an error "
+            m_logger.error("NodeView.onClose() causes an error "
                     + "during closing node view, reason: " + t.getMessage(), t);
         }
         m_frame.getContentPane().firePropertyChange(PROP_CHANGE_CLOSE, 0, 1);
@@ -467,52 +470,33 @@ public abstract class NodeView<T extends NodeModel> {
     }
 
     /**
-     * Set a new name for this view. The title is updated to the given title.
-     * If <code>newName</code> is <code>null</code> the new title is
-     * <i>base name - &lt; no title &gt; </i>.
+     * Append this suffix to the current view name.
+     * If <code>suffix</code> is <code>null</code> the title does not change.
      *
-     * @param newName The new title to be set.
+     * @param suffix append this suffix to the current view name
      */
-    // TODO: somewhere we have to be informed about changes of the custom name
-    protected final void setViewTitle(final String newName) {
-        Runnable runner = new Runnable() {
+    protected final void setViewTitleSuffix(final String suffix) {
+        if (suffix != null) {
+            setTitle(m_frame.getName() + " " + suffix);
+        }
+    }
+    
+    private void setTitle(final String title) {
+        final Runnable runner = new Runnable() {
             public void run() {
-                if (newName == null) {
-                    m_frame.setTitle(getViewName() + " - <no title>");
-                } else {
-                    m_frame.setTitle(newName);
-                }
+                m_frame.setTitle(title);
             }
         };
         ViewUtils.invokeAndWaitInEDT(runner);
     }
+        
+        
 
     /**
      * @return The current view's title.
      */
     public final String getViewTitle() {
         return m_frame.getTitle();
-    }
-
-    /**
-     * Sets the given name as frame name and title.
-     *
-     * @param name The frame's name and title.
-     */
-    final void setViewName(final String name) {
-        m_frame.setName(name);
-        m_frame.setTitle(name);
-    }
-
-    /**
-     * Returns the view name as set by <code>#setViewName(String)</code> or
-     * <code>null</code> if that hasn't happen yet.
-     *
-     * @return The view's name.
-     * @see JFrame#setName(String)
-     */
-    protected final String getViewName() {
-        return m_frame.getName();
     }
 
     /**
