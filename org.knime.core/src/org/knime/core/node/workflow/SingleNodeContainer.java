@@ -638,7 +638,6 @@ public final class SingleNodeContainer extends NodeContainer implements
             throws InvalidSettingsException {
         synchronized (m_nodeMutex) {
             m_node.loadSettingsFrom(settings);
-            m_settings = new SingleNodeContainerSettings(settings);
             setDirty();
         }
     }
@@ -649,6 +648,7 @@ public final class SingleNodeContainer extends NodeContainer implements
             final Map<Integer, BufferedDataTable> tblRep,
             final ScopeObjectStack inStack, final ExecutionMonitor exec)
             throws CanceledExecutionException {
+        LoadResult result = new LoadResult();
         synchronized (m_nodeMutex) {
             if (!(nodePersistor instanceof SingleNodeContainerPersistor)) {
                 throw new IllegalStateException("Expected "
@@ -668,8 +668,15 @@ public final class SingleNodeContainer extends NodeContainer implements
                 inStack.push(s);
             }
             setScopeObjectStack(inStack);
-            return new LoadResult();
+            try {
+                loadSNCSettings(persistor.getSNCSettings());
+            } catch (InvalidSettingsException e) {
+                String error = "Error loading SNC settings: " + e.getMessage();
+                LOGGER.warn(error, e);
+                result.addError(error);
+            }
         }
+        return result;
     }
 
     /** {@inheritDoc} */
@@ -677,9 +684,29 @@ public final class SingleNodeContainer extends NodeContainer implements
     void saveSettings(final NodeSettingsWO settings)
     throws InvalidSettingsException {
         m_node.saveSettingsTo(settings);
+    }
+    
+    /** Saves the SingleNodeContainer settings such as the job executor
+     * to the argument node settings object.
+     * @param settings To save to.
+     * @see #loadSNCSettings(NodeSettingsRO)
+     */
+    void saveSNCSettings(final NodeSettingsWO settings) {
         m_settings.save(settings);
     }
-
+    
+    /** Loads the SingleNodeContainer settings from the argument. This is
+     * the reverse operation to {@link #saveSNCSettings(NodeSettingsWO)}.
+     * @param settings To load from.
+     * @throws InvalidSettingsException If settings are invalid.
+     */
+    void loadSNCSettings(final NodeSettingsRO settings) 
+        throws InvalidSettingsException {
+        synchronized (m_nodeMutex) {
+            m_settings = new SingleNodeContainerSettings(settings);
+        }
+    }
+    
     /** {@inheritDoc} */
     @Override
     boolean areSettingsValid(final NodeSettingsRO settings) {
@@ -698,7 +725,7 @@ public final class SingleNodeContainer extends NodeContainer implements
      * @return the settings for the currently set job manager
      */
     public NodeSettingsRO getJobManagerSettings() {
-        return m_settings.getjobManagerSettings();
+        return m_settings.getJobManagerSettings();
     }
 
     ////////////////////////////////////
@@ -941,7 +968,7 @@ public final class SingleNodeContainer extends NodeContainer implements
          *
          * @return the settings for the job manager
          */
-        public NodeSettingsRO getjobManagerSettings() {
+        public NodeSettingsRO getJobManagerSettings() {
             return m_jobManagerSettings;
         }
 

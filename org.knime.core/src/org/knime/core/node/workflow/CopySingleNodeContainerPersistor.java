@@ -36,6 +36,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
@@ -47,6 +48,7 @@ final class CopySingleNodeContainerPersistor implements
         SingleNodeContainerPersistor {
     
     private final SingleNodeContainer m_original;
+    private final NodeSettingsRO m_sncSettings;
     private final Node m_node;
     private final boolean m_preserveDeletableFlag;
     
@@ -58,6 +60,9 @@ final class CopySingleNodeContainerPersistor implements
             final boolean preserveDeletableFlag) {
         m_original = original;
         m_node = new Node(m_original.getNode());
+        NodeSettings sncSettings = new NodeSettings("snc_settings");
+        m_original.saveSNCSettings(sncSettings);
+        m_sncSettings = sncSettings;
         m_preserveDeletableFlag = preserveDeletableFlag;
     }
 
@@ -117,6 +122,12 @@ final class CopySingleNodeContainerPersistor implements
     @Override
     public boolean isDirtyAfterLoad() {
         return false;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public NodeSettingsRO getSNCSettings() {
+        return m_sncSettings;
     }
 
     /** {@inheritDoc} */

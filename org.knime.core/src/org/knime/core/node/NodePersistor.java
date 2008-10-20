@@ -30,13 +30,10 @@ import java.util.Map;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 
-public interface NodePersistor {
+public interface NodePersistor extends NodeContentPersistor {
     
     /** Node settings XML file name. */
     static final String SETTINGS_FILE_NAME = "settings.xml";
@@ -88,24 +85,10 @@ public interface NodePersistor {
             Map<Integer, BufferedDataTable> loadTblRep, HashMap<Integer, ContainerTable> tblRep)
             throws IOException, CanceledExecutionException;
     
-    boolean needsResetAfterLoad();
-    /** Indicate an error and that this node should better be reset after load.
-     */
-    public void setNeedsResetAfterLoad();
-    
     boolean isConfigured();
     boolean isExecuted();
     boolean hasContent();
-    boolean mustWarnOnDataLoadError();
-    ReferencedFile getNodeInternDirectory();
     // may return null in which case the node decides what to do.
     LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy();
     NodeSettingsRO getSettings();
-    PortObjectSpec getPortObjectSpec(final int outportIndex);
-    PortObject getPortObject(final int outportIndex);
-    String getPortObjectSummary(final int outportIndex);
-    BufferedDataTable[] getInternalHeldTables();
-    // TODO should use template instead of final object creation, goes
-    // along with changes in Node class
-    NodeMessage getNodeMessage();
 }

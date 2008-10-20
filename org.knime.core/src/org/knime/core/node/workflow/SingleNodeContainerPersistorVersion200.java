@@ -187,6 +187,11 @@ public class SingleNodeContainerPersistorVersion200 extends
         return new ReferencedFile(nodeDirectoryRef, fileName);
     }
     
+    protected void saveSNCSettings(final NodeSettingsWO settings, 
+            final SingleNodeContainer snc) {
+        snc.saveSNCSettings(settings);
+    }
+    
     protected void saveScopeObjectStack(final NodeSettingsWO settings,
             final SingleNodeContainer nc) {
         NodeSettingsWO stackSet = settings.addNodeSettings("scope_stack");

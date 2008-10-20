@@ -200,7 +200,7 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
         if (m_jobManagerSelect.getSelectedItem() == newMgr) {
 
             // if the job manager exists in the list apply the settings
-            m_currentPanel.loadSettings(settings.getjobManagerSettings());
+            m_currentPanel.loadSettings(settings.getJobManagerSettings());
 
         } else {
             // seems we got a manager we currently don't have

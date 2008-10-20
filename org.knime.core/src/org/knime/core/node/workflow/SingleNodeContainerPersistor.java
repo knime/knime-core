@@ -27,6 +27,7 @@ package org.knime.core.node.workflow;
 import java.util.List;
 
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeSettingsRO;
 
 
 /**
@@ -42,6 +43,8 @@ interface SingleNodeContainerPersistor extends NodeContainerPersistor {
     static final String KEY_FACTORY_NAME = "factory";
 
     Node getNode();
+    
+    NodeSettingsRO getSNCSettings();
     
     List<ScopeObject> getScopeObjects();
 }

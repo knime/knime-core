@@ -66,6 +66,7 @@ public class SingleNodeContainerPersistorVersion1xx
     private final WorkflowPersistorVersion1xx m_wfmPersistor;
     
     private NodeSettingsRO m_nodeSettings;
+    private NodeSettingsRO m_sncSettings; 
     private ReferencedFile m_nodeDir;
     private boolean m_needsResetAfterLoad;
     private boolean m_isDirtyAfterLoad;
@@ -110,6 +111,12 @@ public class SingleNodeContainerPersistorVersion1xx
     /** {@inheritDoc} */
     public Node getNode() {
         return m_node;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public NodeSettingsRO getSNCSettings() {
+        return m_sncSettings;
     }
     
     /** {@inheritDoc} */
@@ -192,6 +199,16 @@ public class SingleNodeContainerPersistorVersion1xx
             final ExecutionMonitor exec) throws InvalidSettingsException, 
             CanceledExecutionException, IOException {
         LoadResult result = new LoadResult();
+        
+        try {
+            m_sncSettings = loadSNCSettings(m_nodeSettings);
+        } catch (InvalidSettingsException e) {
+            String error = "Unable to load SNC settings: " + e.getMessage();
+            result.addError(error);
+            getLogger().debug(error, e);
+            setDirtyAfterLoad();
+            return result;
+        }
         String nodeFileName;
         try {
             nodeFileName = loadNodeFile(m_nodeSettings);
@@ -297,6 +314,11 @@ public class SingleNodeContainerPersistorVersion1xx
     protected String loadNodeFile(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         return SETTINGS_FILE_NAME;
+    }
+    
+    protected NodeSettingsRO loadSNCSettings(final NodeSettingsRO settings)
+        throws InvalidSettingsException {
+        return settings;
     }
     
     protected List<ScopeObject> loadScopeObjects(

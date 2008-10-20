@@ -274,10 +274,7 @@ public final class Node implements NodeModelWarningListener {
         LoadResult result = new LoadResult();
         boolean hasContent = loader.hasContent();
         m_model.setHasContent(hasContent);
-        NodeMessage nodeMessage = loader.getNodeMessage();
-        if (nodeMessage != null) {
-            notifyMessageListeners(nodeMessage);
-        }
+        result.addError(loadDataAndInternals(loader, exec));
         try {
             // this also validates the settings
             loadSettingsFrom(loader.getSettings());
@@ -316,6 +313,46 @@ public final class Node implements NodeModelWarningListener {
                 break;
             }
         }
+        exec.setProgress(1.0);
+        return result;
+    }
+    
+    public LoadResult loadDataAndInternals(
+            final NodeContentPersistor loader, final ExecutionMonitor exec) {
+        LoadResult result = new LoadResult();
+        NodeMessage nodeMessage = loader.getNodeMessage();
+        if (nodeMessage != null) {
+            notifyMessageListeners(nodeMessage);
+        }
+        for (int i = 0; i < getNrOutPorts(); i++) {
+            Class<? extends PortObjectSpec> specClass =
+                m_outputs[i].type.getPortObjectSpecClass();
+            PortObjectSpec spec = loader.getPortObjectSpec(i);
+            if (spec != null && !specClass.isInstance(spec)) {
+                result.addError("Loaded PortObjectSpec of class \""
+                        + spec.getClass().getSimpleName() + ", expected "
+                        + specClass.getSimpleName());
+                loader.setNeedsResetAfterLoad();
+            } else {
+                m_outputs[i].spec = spec;
+            }
+            
+            Class<? extends PortObject> objClass =
+                m_outputs[i].type.getPortObjectClass();
+            PortObject obj = loader.getPortObject(i);
+            if (obj != null && !objClass.isInstance(obj)) {
+                result.addError("Loaded PortObject of class \""
+                        + obj.getClass().getSimpleName() + ", expected "
+                        + objClass.getSimpleName());
+                loader.setNeedsResetAfterLoad();
+            } else {
+                m_outputs[i].object = obj;
+                m_outputs[i].summary = loader.getPortObjectSummary(i);
+            }
+            if (m_outputs[i].object != null) {
+                m_outputs[i].hiliteHdl = m_model.getOutHiLiteHandler(i);
+            }
+        }
         ReferencedFile internDirRef = loader.getNodeInternDirectory();
         if (internDirRef != null) {
             internDirRef.lock();
@@ -341,35 +378,6 @@ public final class Node implements NodeModelWarningListener {
                 internDirRef.unlock();
             }
         }
-        for (int i = 0; i < getNrOutPorts(); i++) {
-            Class<? extends PortObjectSpec> specClass =
-                m_outputs[i].type.getPortObjectSpecClass();
-            PortObjectSpec spec = loader.getPortObjectSpec(i);
-            if (spec != null && !specClass.isInstance(spec)) {
-                result.addError("Loaded PortObjectSpec of class \""
-                    + spec.getClass().getSimpleName() + ", expected "
-                        + specClass.getSimpleName());
-                loader.setNeedsResetAfterLoad();
-            } else {
-                m_outputs[i].spec = spec;
-            }
-
-            Class<? extends PortObject> objClass =
-                m_outputs[i].type.getPortObjectClass();
-            PortObject obj = loader.getPortObject(i);
-            if (obj != null && !objClass.isInstance(obj)) {
-                result.addError("Loaded PortObject of class \""
-                    + obj.getClass().getSimpleName() + ", expected "
-                        + objClass.getSimpleName());
-                loader.setNeedsResetAfterLoad();
-            } else {
-                m_outputs[i].object = obj;
-                m_outputs[i].summary = loader.getPortObjectSummary(i);
-            }
-            if (m_outputs[i].object != null) {
-                m_outputs[i].hiliteHdl = m_model.getOutHiLiteHandler(i);
-            }
-        }
         if (m_model instanceof BufferedDataTableHolder) {
             m_internalHeldTables = loader.getInternalHeldTables();
             if (m_internalHeldTables != null) {
@@ -378,7 +386,6 @@ public final class Node implements NodeModelWarningListener {
                 ((BufferedDataTableHolder)m_model).setInternalTables(copy);
             }
         }
-        exec.setProgress(1.0);
         return result;
     }
 
