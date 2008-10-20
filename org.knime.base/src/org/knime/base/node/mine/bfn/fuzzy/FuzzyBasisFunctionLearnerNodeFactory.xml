@@ -54,6 +54,7 @@
     	the algorithm has to process the entire data set, otherwise it repeats 
     	this process until this rule model is stable, i.e. no new rule has been 
     	committed and/or no shrink is executed.
+    	</option>
         <option name="Target Columns">
         Select the target(s) to be used for classification. If more
         than one column (only numeric) is selected, the columns must contain 
