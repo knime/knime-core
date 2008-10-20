@@ -84,6 +84,37 @@ public class DenseBitVectorTest extends TestCase {
         assertTrue(bv.getAllBits()[1] == 0x1FE034L);
     }
 
+    public void testInfocomHexNumber() {
+        String hex =
+                "35BF7308B4797C2D67D1F8E8FCD03B65E78B19"
+                        + "D2EE113EFAD239ACFCD952F3E000";
+        String bin =
+                "001101011011111101110011000010001011010001111001011111000010"
+                        + "11010110011111010001111110001110100011111100110100"
+                        + "00001110110110010111100111100010110001100111010010"
+                        + "11101110000100010011111011111010110100100011100110"
+                        + "10110011111100110110010101001011110011111000000000"
+                        + "0000";
+        assertTrue(hex.length() * 4 == bin.length());
+
+        DenseBitVector hexBV = new DenseBitVector(hex);
+        // make sure the vector has the expected length
+        assertTrue(hexBV.length() == hex.length() * 4);
+
+        // make sure each bit matches the corresponding bit in the bin vector
+        for (int i = 0; i < hexBV.length(); i++) {
+            char strBit = bin.charAt(bin.length() - 1 - i);
+            if (hexBV.get(i)) {
+                assertTrue(strBit == '1');
+            } else {
+                assertTrue(strBit == '0');
+            }
+        }
+
+        assertEquals(hexBV.toBinaryString(), bin);
+
+    }
+
     /**
      * Makes sure vectors of length zero work.
      */
@@ -899,7 +930,6 @@ public class DenseBitVectorTest extends TestCase {
         assertTrue(!bv50.intersects(bv50));
         assertTrue(!bv130.intersects(bv130));
         assertTrue(!bv256.intersects(bv256));
-
 
         bv50.set(30);
         bv130.set(29);
