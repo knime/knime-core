@@ -27,11 +27,12 @@ import java.util.Set;
 
 import org.knime.core.data.RowKey;
 
-
 /**
  * This mapper has to be implemented by all classes that are interested in 
  * mapping hilite events between {@link RowKey}s.
- *  
+ * 
+ * @see HiLiteTranslator
+ * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public interface HiLiteMapper {

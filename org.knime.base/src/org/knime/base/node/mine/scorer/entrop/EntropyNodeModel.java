@@ -40,7 +40,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
@@ -79,7 +78,7 @@ class EntropyNodeModel extends NodeModel {
      */
     EntropyNodeModel(final boolean enableOutput) {
         super(2, enableOutput ? 1 : 0);
-        m_translator = new HiLiteTranslator(new DefaultHiLiteHandler());
+        m_translator = new HiLiteTranslator();
     }
 
     /**

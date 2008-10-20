@@ -29,12 +29,11 @@ import org.knime.core.node.NodeView;
 /**
  * This view displays a scatter plot of a DataTable. The user has selected two
  * columns for the x- and y-axes. The view will now display the rows with a
- * certain zoom factor and dot sze, that can be set in the view.
+ * certain zoom factor and dot size, that can be set in the view.
  * 
  * This class brings together user settings and plotter.
  * 
- * @author Christoph Sieb, University of Konstanz
- * @author ohl University of Konstanz
+ * @author Peter Ohl, University of Konstanz
  */
 public class ScatterPlotNodeView extends NodeView {
     
@@ -98,9 +97,6 @@ public class ScatterPlotNodeView extends NodeView {
             } else {
                 m_properties.setSelectables(null);
             }
-
-            setViewTitle(getViewName() + " " 
-                    + constructTitle((ScatterPlotNodeModel)getNodeModel()));
         }
     }
 
@@ -126,25 +122,6 @@ public class ScatterPlotNodeView extends NodeView {
     @Override
     protected void onOpen() {
         m_plot.setHiLiteHandler(getNodeModel().getInHiLiteHandler(0));
-    }
-
-    private static String constructTitle(final ScatterPlotNodeModel model) {
-        StringBuffer result = new StringBuffer("<");
-        if (model != null) {
-            DataArray rows = model.getRowsContainer();
-            if (rows != null) {
-                result.append(rows.getDataTableSpec().getName());
-                result.append("> shows datapoints ");
-                result.append("" + rows.getFirstRowNumber());
-                result.append(" to "
-                        + (rows.getFirstRowNumber() + rows.size() - 1));
-            } else {
-                result.append("<no data to display>");
-            }
-        } else {
-            result.append("<no model set>");
-        }
-        return result.toString();
     }
 
 }

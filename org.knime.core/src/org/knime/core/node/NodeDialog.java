@@ -34,9 +34,17 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -47,8 +55,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * The standard node dialog used to display the node dialog pane.
@@ -60,11 +66,8 @@ public final class NodeDialog {
     /** The underlying dialog's pane. */
     private final NodeDialogPane m_dialogPane;
 
-    /**
-     * The underlying workflow manager and node ID
-     */
-    private final WorkflowManager m_wfm;
-    private final NodeID m_node;
+    /** The underlying node container. */
+    private final NodeContainer m_node;
 
     /** The hidden dialog. */
     private final JDialog m_dialog;
@@ -85,15 +88,12 @@ public final class NodeDialog {
      * @param pane this dialog's underlying pane
      * @param node the underlying node
      */
-    public NodeDialog(final NodeDialogPane pane, final WorkflowManager wfm,
-            final NodeID node) {
-        m_wfm = wfm;
+    public NodeDialog(final NodeDialogPane pane, final NodeContainer node) {
         m_node = node;
         // keep node dialog pane and init this dialog
         m_dialogPane = pane;
-        // TODO the following used to call ...node.getNameWithID() - why?
-        m_dialog = initDialog("Dialog - "
-                + wfm.getNodeContainer(m_node).getName());
+        m_dialog = initDialog("Dialog - " + node.getName() + " #"
+                + node.getID().getIndex());
 
         // init OK and Cancel button
         JPanel control = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -121,7 +121,7 @@ public final class NodeDialog {
         });
         control.add(apply);
 
-        // create: Canel button adn actions
+        // create: Cancel button and actions
         final JButton cancel = new JButton("Cancel");
         cancel.setMnemonic(KeyEvent.VK_C);
         cancel.setPreferredSize(new Dimension(INIT_BTN_WIDTH, INIT_BTN_HEIGHT));
@@ -137,65 +137,68 @@ public final class NodeDialog {
         JMenu menu = new JMenu("File");
         menu.setMnemonic(KeyEvent.VK_F);
         menu.getPopupMenu().setLightWeightPopupEnabled(false);
-// TODO (tg,po)
-//        final JFileChooser jfc = new JFileChooser();
+        final JFileChooser jfc = new JFileChooser();
         JMenuItem btnLoad = new JMenuItem("Load Settings");
         btnLoad.setMnemonic(KeyEvent.VK_L);
         // add action listener
-// TODO (tg,po)
-//        btnLoad.addActionListener(new ActionListener() {
-//            public void actionPerformed(final ActionEvent e) {
-//                try {
-//                    if (jfc.showOpenDialog(m_dialog) == APPROVE_OPTION) {
-//                        File file = jfc.getSelectedFile();
-//                        InputStream is = new FileInputStream(file);
-//                        m_dialogPane.loadSettings(is);
-//                    }
-//                } catch (FileNotFoundException fnfe) {
-//                    JOptionPane.showMessageDialog(m_dialog, fnfe.getMessage(),
-//                                    "Couldn't Load Settings",
-//                                    JOptionPane.ERROR_MESSAGE);
-//                } catch (IOException ioe) {
-//                    JOptionPane.showMessageDialog(m_dialog, ioe.getMessage(),
-//                                    "Couldn't Load Settings",
-//                                    JOptionPane.ERROR_MESSAGE);
-//                } catch (NotConfigurableException ex) {
-//                    JOptionPane.showMessageDialog(m_dialog, ex.getMessage(),
-//                            "Couldn't Load Settings",
-//                            JOptionPane.ERROR_MESSAGE);
-//                }
-//            }
-//        });
+        btnLoad.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                try {
+                    if (jfc.showOpenDialog(m_dialog)
+                            == JFileChooser.APPROVE_OPTION) {
+                        File file = jfc.getSelectedFile();
+                        InputStream is = new FileInputStream(file);
+                        m_dialogPane.loadSettingsFrom(is);
+                    }
+                } catch (FileNotFoundException fnfe) {
+                    JOptionPane.showMessageDialog(m_dialog, fnfe.getMessage(),
+                                    "Couldn't Load Settings",
+                                    JOptionPane.ERROR_MESSAGE);
+                } catch (IOException ioe) {
+                    JOptionPane.showMessageDialog(m_dialog, ioe.getMessage(),
+                                    "Couldn't Load Settings",
+                                    JOptionPane.ERROR_MESSAGE);
+                } catch (NotConfigurableException ex) {
+                    /* should not happen, since the dialog is already open
+                     * (and loadSettings successfully completed before)
+                     */
+                    JOptionPane.showMessageDialog(m_dialog, ex.getMessage(),
+                            "Couldn't Load Settings",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
         menu.add(btnLoad);
 
         JMenuItem btnSave = new JMenuItem("Save Settings");
         btnSave.setMnemonic(KeyEvent.VK_S);
         // add action listener
-//      TODO (tg,po)
-//        btnSave.addActionListener(new ActionListener() {
-//            public void actionPerformed(final ActionEvent e) {
-//                try {
-//                    if (jfc.showSaveDialog(m_dialog) == APPROVE_OPTION) {
-//                        File file = jfc.getSelectedFile();
-//                        OutputStream os = new FileOutputStream(file);
-//                        m_dialogPane.saveSettings(os, file.getName());
-//                    }
-//                } catch (InvalidSettingsException ise) {
-//                    JOptionPane.showMessageDialog(m_dialog, "Warning",
-//                            "Invalid Settings", JOptionPane.WARNING_MESSAGE);
-//                } catch (FileNotFoundException fnfe) {
-//                    JOptionPane
-//                            .showMessageDialog(m_dialog, fnfe.getMessage(),
-//                                    "Couldn't Save Settings",
-//                                    JOptionPane.ERROR_MESSAGE);
-//                } catch (IOException ioe) {
-//                    JOptionPane
-//                            .showMessageDialog(m_dialog, ioe.getMessage(),
-//                                    "Couldn't Save Settings",
-//                                    JOptionPane.ERROR_MESSAGE);
-//                }
-//            }
-//        });
+        btnSave.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                try {
+                    if (jfc.showSaveDialog(m_dialog)
+                            == JFileChooser.APPROVE_OPTION) {
+                        File file = jfc.getSelectedFile();
+                        OutputStream os = new FileOutputStream(file);
+                        m_dialogPane.saveSettingsTo(os);
+                    }
+                } catch (InvalidSettingsException ise) {
+                    JOptionPane.showMessageDialog(m_dialog, "Warning",
+                            "Invalid Settings", JOptionPane.WARNING_MESSAGE);
+                } catch (FileNotFoundException fnfe) {
+                    JOptionPane
+                            .showMessageDialog(m_dialog, fnfe.getMessage(),
+                                    "Couldn't Save Settings",
+                                    JOptionPane.ERROR_MESSAGE);
+                } catch (IOException ioe) {
+                    JOptionPane
+                            .showMessageDialog(m_dialog, ioe.getMessage(),
+                                    "Couldn't Save Settings",
+                                    JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
         menu.add(btnSave);
 
         JMenuBar menuBar = new JMenuBar();
@@ -244,7 +247,6 @@ public final class NodeDialog {
                 });
             }
         });
-
         return dialog;
     }
 
@@ -287,28 +289,27 @@ public final class NodeDialog {
         assert (event != null);
         try {
             // validate settings first
-            if (!m_wfm.getNodeContainer(m_node).areDialogAndNodeSettingsEqual()) {
+            if (!m_node.areDialogAndNodeSettingsEqual()) {
                 // if the node is executed
-                if (m_wfm.getNodeContainer(m_node).getState().equals(
-                        NodeContainer.State.EXECUTED)) {
+                if (m_node.getState().equals(NodeContainer.State.EXECUTED)) {
                     // show option pane with reset warning
                     int r = JOptionPane.showConfirmDialog(m_dialog,
                             "Node is executed. Do you want to reset it\n"
-                                    + "and apply the current settings.", m_dialog
-                                    .getTitle()
-                                    + ": Warning", JOptionPane.OK_CANCEL_OPTION,
+                          + "and apply the current settings.",
+                              m_dialog.getTitle()
+                          + ": Warning", JOptionPane.OK_CANCEL_OPTION,
                             JOptionPane.WARNING_MESSAGE);
                     // if reset can be performed
                     if (r == JOptionPane.OK_OPTION) {
                         // try to load dialog settings to the model
-                        m_wfm.getNodeContainer(m_node).applySettingsFromDialog();
+                        m_node.applySettingsFromDialog();
                         return true;
                     } else {
                         return false;
                     }
                 }
                 // try to load dialog settings to the model
-                m_wfm.getNodeContainer(m_node).applySettingsFromDialog();
+                m_node.applySettingsFromDialog();
                 return true;
             } else {
                 return true; // nothing done - everything ok!
@@ -335,6 +336,7 @@ public final class NodeDialog {
      */
     protected void onCancel(final AWTEvent event) {
         assert (event != null);
+        m_dialogPane.onCancel();
         closeDialog();
     }
 

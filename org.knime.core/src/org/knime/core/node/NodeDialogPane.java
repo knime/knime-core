@@ -370,10 +370,38 @@ public abstract class NodeDialogPane {
         loadSettingsFrom(settings, inDataSpecs);
     }
 
+    /**
+     * Invoked before the dialog window is opened. The settings object passed,
+     * contains the current settings of the corresponding node model. The model
+     * and the dialog must agree on a mutual contract on how settings are stored
+     * in the spec. I.e. they must able to read each other's settings.
+     * <p>
+     * The implementation must be able to handle invalid or incomplete settings
+     * as the model may not have any reasonable values yet (for example when the
+     * dialog is opened for the first time). When an empty/invalid settings
+     * object is passed the dialog should set default values in its components.
+     *
+     * @param settings The settings to load into the dialog. Could be an empty
+     *            object or contain invalid settings. But will never be null.
+     * @param specs The input data table specs. Items of the array could be null
+     *            if no spec is available from the corresponding input port.
+     * @throws NotConfigurableException if the dialog cannot be opened because
+     * of real invalid settings or if any preconditions are not fulfilled, e.g.
+     * no predecessor node, no nominal column in input table, etc.
+     * @see NodeModel#loadSettingsFrom(NodeSettingsRO)
+     */
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         throw new NotConfigurableException(
             "NodeDialogPane.loadSettingsFrom() implementation missing!");
+    }
+
+    /**
+     * Override this method in order to react on events induced by the Cancel
+     * button from the surrounding dialog.
+     */
+    public void onCancel() {
+
     }
 
     /**

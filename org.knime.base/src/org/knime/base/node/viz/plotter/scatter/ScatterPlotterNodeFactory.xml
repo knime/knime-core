@@ -39,6 +39,8 @@
 			to navigate in the zoomed display.</li>
 			<li>"Fit to screen" fits the display again to the available space.</li>
 			<li>"Background color lets you choose the background color of the display. </li>
+			<li>"Anti-aliasing": Check if the view should enable anti-aliasing
+        (make a smoother drawing). This will slow down performance as well.</li>
 			</ul>
 		</p>
 		<p>Column Selection:
@@ -58,8 +60,18 @@
 		<option name="Nr. of rows to display">Enter the maximum number of rows
 		the plotter should display. Setting a higher value than the default value 
 		might dramatically decrease performance.</option>
-		<option name="Enable Anti-aliasing">Check if the view should enable anti-aliasing
-		(make a smoother drawing). This will slow down performance as well.</option>
+		<option name="Ignore columns with more nominal values than:">
+			Enter the maximum number of distinct nominal values that the
+			view should consider. Columns with more values than the
+			specified number will be ignored and can't be selected in
+			the view. Please also note that nominal values must be
+			present in the table specification of the input table (check
+			it by inspecting the table spec tab of the predecessor's
+			outport view). If no nominal values are present in the
+			table, execute the predecessor or consider to use the 
+			"Domain Calculator" node and to enforce the determination of 
+			the nominal values.
+		</option>
 	</fullDescription>
 	
 	<ports>

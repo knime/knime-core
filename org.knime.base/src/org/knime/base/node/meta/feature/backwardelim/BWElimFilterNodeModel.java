@@ -28,7 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTable;
@@ -38,8 +37,8 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
@@ -76,46 +75,47 @@ public class BWElimFilterNodeModel extends NodeModel {
         DataTableSpec tSpec = (DataTableSpec)inSpecs[1];
 
         int missing = 0;
-        String missingColumns = ", ";
         HashSet<String> allColumns = new HashSet<String>();
         for (Pair<Double, Collection<String>> p : model.featureLevels()) {
             allColumns.addAll(p.getSecond());
-
         }
         for (String s : allColumns) {
             if (!tSpec.containsName(s)) {
-                missingColumns += s + ", ";
                 missing++;
             }
         }
         if (missing >= allColumns.size()) {
             throw new InvalidSettingsException("Input table does not contain "
                     + "any of the columns used in the feature elimination ");
-        } else if (missing > 0) {
-            setWarningMessage("The following columns used in the feature "
-                    + " are missing in the input table: "
-                    + missingColumns.substring(0, missingColumns.length() - 2));
         }
 
-        if (m_settings.includedColumns().size() == 0) {
+        if (m_settings.nrOfFeatures() < 1) {
             throw new InvalidSettingsException("No features selected yet");
         }
 
-        for (String s : m_settings.includedColumns()) {
+        missing = 0;
+        String missingColumns = ", ";
+        Collection<String> incFeatures = m_settings.includedColumns(model);
+        for (String s : incFeatures) {
             if (!tSpec.containsName(s)) {
-                throw new InvalidSettingsException("Column '" + s + "' does "
-                        + "not exist in input table");
+                missing++;
+                missingColumns += s + ", ";
             }
         }
 
-        ColumnRearranger crea =
-                createRearranger(tSpec, m_settings.includedColumns());
+        if (missing > 0) {
+            setWarningMessage("The following columns used in the selected "
+                    + " level are missing in the input table: "
+                    + missingColumns.substring(0, missingColumns.length() - 2));
+        }
+        ColumnRearranger crea = createRearranger(tSpec, incFeatures);
 
         return new DataTableSpec[]{crea.createSpec()};
     }
 
+
     private ColumnRearranger createRearranger(final DataTableSpec inSpec,
-            final List<String> includedColumns) {
+            final Collection<String> includedColumns) {
         ColumnRearranger crea = new ColumnRearranger(inSpec);
 
         for (DataColumnSpec cs : inSpec) {
@@ -133,11 +133,12 @@ public class BWElimFilterNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
+        BWElimModel model = (BWElimModel)inData[0];
         BufferedDataTable table = (BufferedDataTable)inData[1];
 
         ColumnRearranger crea =
                 createRearranger(((DataTable)inData[1]).getDataTableSpec(),
-                        m_settings.includedColumns());
+                        m_settings.includedColumns(model));
 
         return new PortObject[]{exec.createColumnRearrangeTable(table, crea,
                 exec)};

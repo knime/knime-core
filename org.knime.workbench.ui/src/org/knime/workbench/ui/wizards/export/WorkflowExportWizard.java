@@ -49,8 +49,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IExportWizard;
 import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.dialogs.ExportWizard;
-import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin;
 import org.eclipse.ui.internal.wizards.datatransfer.ArchiveFileExportOperation;
 import org.knime.core.node.NodePersistorVersion200;
 import org.knime.core.node.workflow.WorkflowPersistor;
@@ -95,7 +95,7 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
 
         // first save dirty editors
         boolean canceled =
-                !IDEWorkbenchPlugin.getDefault().getWorkbench().saveAllEditors(
+                !PlatformUI.getWorkbench().saveAllEditors(
                         true);
         if (canceled) {
             return false;

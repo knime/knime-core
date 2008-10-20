@@ -48,6 +48,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 /**
  * Implementation of a {@link org.knime.core.node.NodeModel} which provides all
@@ -67,8 +68,6 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     
     private DataArray m_input;
     
-    private int m_last = END;
-    
     /** Config key for the last displayed row. */
     public static final String CFG_END = "end";
     
@@ -76,9 +75,43 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     public static final String CFG_ANTIALIAS = "antialias";
     
     private static final String FILE_NAME = "internals";
-        
+    
+    /** Config key for the maximal number of nominal values. */
+    // bugfix 1299
+    public static final String CFG_MAX_NOMINAL = "max_nominal_values";
+    
+    /** Per default columns with nominal values more than this value are 
+     * ignored. 
+     */
+    // bugfix 1299
+    static final int DEFAULT_NR_NOMINAL_VALUES = 60;
+    
     private int[] m_excludedColumns;
     
+    private final SettingsModelIntegerBounded m_maxNominalValues 
+        = createMaxNominalValuesModel();
+    
+    private final SettingsModelIntegerBounded m_maxRows 
+        = createLastDisplayedRowModel(END);
+    /**
+     * 
+     * @return the settings model for max nominal values
+     */
+    // bugfix 1299
+    static SettingsModelIntegerBounded createMaxNominalValuesModel() {
+        return new SettingsModelIntegerBounded(
+                CFG_MAX_NOMINAL, DEFAULT_NR_NOMINAL_VALUES, 
+                1, Integer.MAX_VALUE);
+    }
+    
+    /** @param end The last row index to display.
+     * @return settings model for the max row count property. 
+     * */
+    static SettingsModelIntegerBounded createLastDisplayedRowModel(
+            final int end) {
+        return new SettingsModelIntegerBounded(
+                CFG_END, end, 1, Integer.MAX_VALUE);
+    }
     
     /**
      * Creates a {@link org.knime.core.node.NodeModel} with one data inport and 
@@ -139,9 +172,10 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
             }
             if (colSpec.getType().isCompatible(NominalValue.class)) {
                 if (colSpec.getDomain().hasValues() 
-                        // TODO: in order to fix bug 1299 make the "60" 
-                        // adjustable via the dialog
-                        && colSpec.getDomain().getValues().size() > 60) {
+                        // bugfix 1299 
+                        // made the "60" adjustable via the dialog
+                        && colSpec.getDomain().getValues().size() 
+                            > m_maxNominalValues.getIntValue()) {
                     excludedCols.add(currColIdx);
                 } else if (!colSpec.getDomain().hasValues()) {
                     excludedCols.add(currColIdx);
@@ -187,14 +221,15 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
             final ExecutionContext exec) throws Exception {
         // first filter out those nominal columns with
         // possible values == null
-        // or possibleValues.size() > 60
+        // or possibleValues.size() > m_maxNominalValues
         findCompatibleColumns(inData[0].getDataTableSpec(), false);
         DataTable filter = new FilterColumnTable(inData[0], false, 
                 m_excludedColumns);
-        m_input = new DefaultDataArray(filter, 1, m_last, exec);
-        if ((m_last) < inData[0].getRowCount()) {
-            setWarningMessage("Only the rows from 0 to " + m_last 
-                    + " are displayed.");
+        m_input = new DefaultDataArray(
+                filter, 1, m_maxRows.getIntValue(), exec);
+        if (m_maxRows.getIntValue() < inData[0].getRowCount()) {
+            setWarningMessage("Only the rows from 0 to " 
+                    + m_maxRows.getIntValue() + " are displayed.");
         }
         return new BufferedDataTable[0];
     }
@@ -210,7 +245,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
             throws IOException, CanceledExecutionException {
         File f = new File(nodeInternDir, FILE_NAME);
         ContainerTable table = DataContainer.readFromZip(f);
-        m_input = new DefaultDataArray(table, 1, m_last, exec);
+        m_input = new DefaultDataArray(table, 1, m_maxRows.getIntValue(), exec);
     }
 
     /**
@@ -221,7 +256,13 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_last = settings.getInt(CFG_END);
+        m_maxRows.loadSettingsFrom(settings);
+        try {
+            m_maxNominalValues.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            // take default value
+            m_maxNominalValues.setIntValue(DEFAULT_NR_NOMINAL_VALUES);
+        }
     }
 
     /**
@@ -255,7 +296,8 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        settings.addInt(CFG_END, m_last);
+        m_maxRows.saveSettingsTo(settings);
+        m_maxNominalValues.saveSettingsTo(settings);
     }
 
     /**
@@ -264,9 +306,10 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        settings.getInt(CFG_END);
+        m_maxRows.validateSettings(settings);
         try {
             settings.getBoolean(CFG_ANTIALIAS);
+            // do not validate m_maxNominalValues (backward compatibility)
         } catch (InvalidSettingsException ise) {
             // removed this from dialog
             // if not present set it to false in loadValidatedSettings
@@ -284,7 +327,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
      * @return the last
      */
     public int getEndIndex() {
-        return m_last;
+        return m_maxRows.getIntValue();
     }
 
 }

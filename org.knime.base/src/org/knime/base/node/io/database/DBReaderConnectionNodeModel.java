@@ -43,7 +43,7 @@ import org.knime.core.node.port.database.DatabasePortObjectSpec;
 final class DBReaderConnectionNodeModel extends DBNodeModel {
     
     private final DatabaseReaderConnection m_load = 
-        new DatabaseReaderConnection(); 
+        new DatabaseReaderConnection(null); 
     
     /**
      * Creates a new database reader.
@@ -118,6 +118,10 @@ final class DBReaderConnectionNodeModel extends DBNodeModel {
                         "No database connection available.");
             }
             DataTableSpec spec = m_load.getDataTableSpec();
+            if (spec == null) {
+                throw new InvalidSettingsException(
+                        "No database connection available.");
+            }
             DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(spec,
                     conn.createConnectionModel());
             return new PortObjectSpec[]{dbSpec};

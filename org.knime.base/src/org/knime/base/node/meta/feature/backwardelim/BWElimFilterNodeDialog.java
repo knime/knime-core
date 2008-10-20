@@ -38,6 +38,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -52,8 +53,8 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
@@ -92,7 +93,7 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
                                 return diff;
                             }
                             return -o1.getSecond().size()
-                                + o2.getSecond().size();
+                                    + o2.getSecond().size();
                         }
                     });
             TableModelEvent ev = new TableModelEvent(this);
@@ -257,8 +258,6 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
         });
         p.add(m_includeTargetColumn, c);
 
-
-
         m_featureLevels.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         m_featureLevels.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
@@ -285,7 +284,11 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
         int selRow = m_featureLevels.getSelectionModel().getMinSelectionIndex();
         m_warningMessage.setText(" ");
         if (selRow >= 0) {
-            Collection<String> features = m_tableModel.getFeatures(selRow);
+            Collection<String> features =
+                    new ArrayList<String>(m_tableModel.getFeatures(selRow));
+            if (m_includeTargetColumn.isSelected()) {
+                features.add(m_targetColumn);
+            }
             m_includedColumns.setSelectedColumns(features);
             if (m_includedColumns.getSelectedIndices().length < features.size()) {
                 m_warningMessage.setText("Warning: Some features are missing "
@@ -303,12 +306,8 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         int selRow = m_featureLevels.getSelectedRow();
-        m_settings.clearColumns();
         if (selRow >= 0) {
             m_settings.nrOfFeatures(m_tableModel.getNrOfFeatures(selRow));
-            for (String s : m_includedColumns.getSelectedColumns()) {
-                m_settings.addColumn(s);
-            }
         } else {
             m_settings.nrOfFeatures(-1);
         }
@@ -324,11 +323,20 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
             final PortObjectSpec[] specs) throws NotConfigurableException {
         m_settings.loadSettingsForDialog(settings);
 
-        m_targetColumn = ((BWElimModel)specs[0]).targetColumn();
+        final BWElimModel model = (BWElimModel)specs[0];
+        if (model == null) {
+            throw new NotConfigurableException(
+                    "No feature elimination model available.");
+        }
+        m_targetColumn = model.targetColumn();
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 m_tableModel.featuresChanged((BWElimModel)specs[0]);
-                m_includedColumns.update((DataTableSpec)specs[1]);
+                if (specs[1] != null) {
+                    m_includedColumns.update((DataTableSpec)specs[1]);
+                } else {
+                    ((DefaultListModel) m_includedColumns.getModel()).clear();
+                }
                 for (int i = 0; i < m_tableModel.getRowCount(); i++) {
                     if (m_tableModel.getNrOfFeatures(i) == m_settings
                             .nrOfFeatures()) {
@@ -340,7 +348,7 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
                 m_includeTargetColumn.setSelected(m_settings
                         .includeTargetColumn());
                 m_includedColumns.setSelectedColumns(m_settings
-                        .includedColumns());
+                        .includedColumns(model));
             }
         });
     }

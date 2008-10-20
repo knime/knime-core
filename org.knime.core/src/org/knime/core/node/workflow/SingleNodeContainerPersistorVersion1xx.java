@@ -217,7 +217,7 @@ public class SingleNodeContainerPersistorVersion1xx
             result.addError(nodeLoadResult);
         } catch (final Exception e) {
             String error = "Error loading node content: " + e.getMessage();
-            getLogger().debug(error, e);
+            getLogger().warn(error, e);
             needsResetAfterLoad();
             result.addError(error);
         }
@@ -227,7 +227,7 @@ public class SingleNodeContainerPersistorVersion1xx
             m_scopeObjects = Collections.emptyList();
             String error = "Error loading scope objects (flow variables): "
                 + e.getMessage();
-            getLogger().debug(error, e);
+            getLogger().warn(error, e);
             result.addError(error);
             needsResetAfterLoad();
         }

@@ -33,6 +33,7 @@ import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.knime.workbench.repository.ImageRepository;
 import org.knime.workbench.ui.wizards.export.WorkflowExportWizard;
 
@@ -56,7 +57,6 @@ public class ExportKnimeWorkflowAction extends Action {
      * The workbench window; or <code>null</code> if this action has been
      * <code>dispose</code>d.
      */
-    private IWorkbenchWindow m_workbenchWindow;
 
     /**
      * Create a new instance of this class.
@@ -68,7 +68,6 @@ public class ExportKnimeWorkflowAction extends Action {
         if (window == null) {
             throw new IllegalArgumentException();
         }
-        this.m_workbenchWindow = window;
         setToolTipText("Exports a KNIME workflow to an archive");
         setId(ID); //$NON-NLS-1$
         // window.getWorkbench().getHelpSystem().setHelp(this,
@@ -100,28 +99,29 @@ public class ExportKnimeWorkflowAction extends Action {
      * Invoke the Import wizards selection Wizard.
      */
     public void run() {
-        if (m_workbenchWindow == null) {
+        IWorkbenchWindow workbenchWindow = 
+            PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        if (workbenchWindow == null) {
             // action has been disposed
             return;
         }
 
         WorkflowExportWizard wizard = new WorkflowExportWizard();
-
         IStructuredSelection selectionToPass;
         // get the current workbench selection
         ISelection workbenchSelection =
-                m_workbenchWindow.getSelectionService().getSelection();
+                workbenchWindow.getSelectionService().getSelection();
         if (workbenchSelection instanceof IStructuredSelection) {
             selectionToPass = (IStructuredSelection)workbenchSelection;
         } else {
             selectionToPass = StructuredSelection.EMPTY;
         }
 
-        wizard.init(m_workbenchWindow.getWorkbench(), selectionToPass);
+        wizard.init(workbenchWindow.getWorkbench(), selectionToPass);
 
         // wizard.setForcePreviousAndNextButtons(true);
 
-        Shell parent = m_workbenchWindow.getShell();
+        Shell parent = workbenchWindow.getShell();
         WizardDialog dialog = new WizardDialog(parent, wizard);
         dialog.create();
         dialog.getShell().setSize(
@@ -132,17 +132,4 @@ public class ExportKnimeWorkflowAction extends Action {
         dialog.open();
     }
 
-    /*
-     * (non-Javadoc) Method declared on ActionFactory.IWorkbenchAction.
-     * 
-     * @since 3.0
-     */
-    public void dispose() {
-        if (m_workbenchWindow == null) {
-            // action has already been disposed
-            return;
-        }
-
-        m_workbenchWindow = null;
-    }
 }

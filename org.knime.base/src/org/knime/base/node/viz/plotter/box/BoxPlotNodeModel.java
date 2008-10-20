@@ -61,7 +61,6 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.Config;
-import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
@@ -114,7 +113,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     
     private DataArray m_array;
     
-    private final HiLiteHandler m_hiliteHandler = new DefaultHiLiteHandler();
+    private final HiLiteHandler m_hiliteHandler = new HiLiteHandler();
     
     
     /**

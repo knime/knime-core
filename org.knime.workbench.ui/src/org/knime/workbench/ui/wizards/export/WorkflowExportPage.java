@@ -24,12 +24,18 @@
  */
 package org.knime.workbench.ui.wizards.export;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
@@ -37,6 +43,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -45,7 +52,9 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.dialogs.ElementListSelectionDialog;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.workbench.ui.KNIMEUIPlugin;
 
 
 /**
@@ -54,6 +63,7 @@ import org.knime.core.node.workflow.WorkflowPersistor;
  * @author Christoph Sieb, University of Konstanz
  */
 public class WorkflowExportPage extends WizardPage {
+    
     private static final String[] FILTER_EXTENSION = {"*.zip"};
 
     private static String exportPath;
@@ -166,8 +176,7 @@ public class WorkflowExportPage extends WizardPage {
                 } else {
                     container = ((IResource)obj).getParent();
                 }
-
-                m_containerText.setText(container.getFullPath().toString());
+                m_containerText.setText(container.getName());
             }
         }
 
@@ -182,18 +191,63 @@ public class WorkflowExportPage extends WizardPage {
      */
 
     private void handleBrowse() {
-
-        ContainerSelectionDialog dialog = new ContainerSelectionDialog(
-                getShell(), ResourcesPlugin.getWorkspace().getRoot(), false,
-                "Select KNIME project");
+        ElementListSelectionDialog dialog = new ElementListSelectionDialog(
+                getShell(), new LabelProvider() {
+                    private final Image m_icon = KNIMEUIPlugin.getDefault()
+                        .getImage("icons/knime_default.png");
+                    @Override
+                    public String getText(final Object element) {
+                        if (element instanceof IProject) {
+                            return ((IProject)element).getName();
+                        }
+                        return element.toString();
+                    }
+                    @Override
+                    public Image getImage(final Object element) {
+                        return m_icon;
+                    }
+                });
+        // TODO: remove phantoms
+        List<IProject>validProjects = new ArrayList<IProject>();
+        for (Object o : ResourcesPlugin.getWorkspace().getRoot()
+                .getProjects()) {
+            if (o instanceof IProject && ((IProject)o).exists()) {
+                IFile wfFile = ((IProject)o).getFile(
+                        WorkflowPersistor.WORKFLOW_FILE);
+                if (wfFile != null && wfFile.exists()) {
+                    validProjects.add((IProject)o);
+                }
+            }
+        }
+        dialog.setElements(validProjects.toArray());
+        IProject selected = getProjectForName(m_containerText.getText()); 
+        if (selected != null) {
+            dialog.setInitialSelections(new Object[] {selected});
+        }
         if (dialog.open() == Window.OK) {
             Object[] result = dialog.getResult();
             if (result.length == 1) {
-                m_containerText.setText(((Path)result[0]).toString());
+                if (result[0] instanceof IProject) {
+                    m_containerText.setText(((IProject)result[0]).getName());
+                } else {
+                    setErrorMessage("Selected element " 
+                            + result[0] + " is not a workflow");
+                    setPageComplete(false);
+                }
             }
         }
     }
 
+    
+    private IProject getProjectForName(final String projectName) {
+        IResource resource = ResourcesPlugin.getWorkspace().getRoot()
+            .findMember(projectName);
+        if (resource instanceof IProject) {
+            return (IProject)resource;
+        }
+        return null;
+    }
+    
     /**
      * @return true if the check box for excluding data is checked
      */

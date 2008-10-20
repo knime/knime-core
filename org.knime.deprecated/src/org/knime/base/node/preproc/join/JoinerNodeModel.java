@@ -51,8 +51,8 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.property.hilite.DefaultHiLiteManager;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.property.hilite.HiLiteManager;
 
 /**
  * Joins two tables such that the first table appears on the left side of the
@@ -82,14 +82,14 @@ public class JoinerNodeModel extends NodeModel {
 
     private boolean m_ignoreMissingRows;
 
-    private final DefaultHiLiteManager m_hiliteHandler;
+    private final HiLiteManager m_hiliteManager;
 
     /** Creates new model, with 2 inports and 1 outport. */
     public JoinerNodeModel() {
         super(2, 1);
         m_method = JoinedTable.METHOD_FAIL;
         m_suffix = "_duplicate";
-        m_hiliteHandler = new DefaultHiLiteManager();
+        m_hiliteManager = new HiLiteManager();
     }
 
     /**
@@ -102,7 +102,7 @@ public class JoinerNodeModel extends NodeModel {
     protected void setInHiLiteHandler(final int inIndex,
             final HiLiteHandler hiLiteHdl) {
         super.setInHiLiteHandler(inIndex, hiLiteHdl);
-        m_hiliteHandler.addHiLiteHandler(hiLiteHdl);
+        m_hiliteManager.addToHiLiteHandler(hiLiteHdl);
     }
 
     private CounterRowIterator m_leftIt, m_rightIt;
@@ -322,8 +322,7 @@ public class JoinerNodeModel extends NodeModel {
      */
     @Override
     protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
-        assert outIndex == 0;
-        return m_hiliteHandler;
+        return m_hiliteManager.getFromHiLiteHandler();
     }
 
     /**
@@ -415,10 +414,10 @@ public class JoinerNodeModel extends NodeModel {
         m_exec = null;
         m_firstMapHelper = null;
 
-        m_hiliteHandler.removeAllHiLiteHandlers();
+        m_hiliteManager.removeAllToHiliteHandlers();
         for (int i = 0; i < getNrInPorts(); i++) {
             HiLiteHandler hdl = getInHiLiteHandler(i);
-            m_hiliteHandler.addHiLiteHandler(hdl);
+            m_hiliteManager.addToHiLiteHandler(hdl);
         }
     }
 

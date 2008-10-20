@@ -43,6 +43,8 @@ import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.knime.workbench.help.intro.InvokeInstallSiteAction;
+import org.knime.workbench.ui.navigator.ExportKnimeWorkflowAction;
+import org.knime.workbench.ui.navigator.ImportKnimeWorkflowAction;
 
 /**
  * This advisor is resposible for creating the workbench actions and fills them
@@ -103,6 +105,10 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     // private IAction m_openConsoleViewAction;
     //
     // private IAction m_openProgressViewAction;
+    
+    private IAction m_exportWorkflowAction;
+    
+    private IAction m_importWorkflowAction;
 
     private IContributionItem m_showViewShortlistContributionItem;
 
@@ -208,7 +214,11 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         m_newWizardDropdownAction = ActionFactory.NEW_WIZARD_DROP_DOWN
                 .create(window);
         register(m_newWizardDropdownAction);
-
+        
+        m_exportWorkflowAction = new ExportKnimeWorkflowAction(window);
+        register(m_exportWorkflowAction);
+        m_importWorkflowAction = new ImportKnimeWorkflowAction(window);
+        register(m_importWorkflowAction);
     }
 
     /**
@@ -244,6 +254,10 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         fileMenu.add(m_saveAction);
         fileMenu.add(m_saveAllAction);
         fileMenu.add(m_closeAllAction);
+        
+        fileMenu.add(m_importWorkflowAction);
+        fileMenu.add(m_exportWorkflowAction);
+        
         fileMenu.add(new Separator());
         fileMenu.add(m_preferencesAction);
         fileMenu.add(m_updateKnimeAction);

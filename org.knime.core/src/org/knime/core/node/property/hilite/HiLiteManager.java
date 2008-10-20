@@ -27,25 +27,21 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.knime.core.data.RowKey;
-
 /**
- * A translator for hilite events between one source (from) 
- * {@link HiLiteHandler} and a number of target handlers (to). The source hilite 
- * handler is passed through the
- * constructor of this class. The target hilite handlers can be set
- * independently, as well as the mapping which is defined between {@link RowKey}
- * row keys and {@link RowKey} sets.
+ * A manager for hilite events between one source (from) {@link HiLiteHandler} 
+ * and a number of target handlers (to). This class provides one source hilite 
+ * handler instantiated within the constructor. The target hilite handlers can 
+ * be added individually.
  * <p>
  * This class hosts two listeners one which is registered with the source
  * handler and one which is registered with all target handlers. These listeners
- * are called when something changes either on the source or target side, and
- * then invoke the corresponding handlers on the other side to hilite,
- * unhilite, and clear mapped keys.
+ * are called when something changes either on the source (from) or target side 
+ * (to), and then invoke the corresponding handlers on the other side to hilite,
+ * unhilite, and clear hilite.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class HiLiteTranslator {
+public final class HiLiteManager {
     
     /** Target handler used for hiliting on the aggregation side. */
     private final Set<HiLiteHandler> m_targetHandlers;
@@ -53,10 +49,6 @@ public final class HiLiteTranslator {
     /** Source handlers used for hiliting for single items. */
     private final HiLiteHandler m_sourceHandler;
     
-    /** Contains the mapping between aggregation and single items. */
-    private HiLiteMapper m_mapper;
-    
-    /** Event source used to indicate hilite events fired by this translator. */
     private final Object m_eventSource = this;
     
     /** 
@@ -71,20 +63,9 @@ public final class HiLiteTranslator {
             if (event.getSource() == m_eventSource) {
                 return;
             }
-            if (m_mapper != null && m_targetHandlers.size() > 0) {
-                Set<RowKey> fireSet = new LinkedHashSet<RowKey>();
-                for (RowKey key : event.keys()) {
-                    Set<RowKey> s = m_mapper.getKeys(key);
-                    if (s != null && !s.isEmpty()) {
-                        fireSet.addAll(s);
-                    }  
-                }
-                if (!fireSet.isEmpty()) {
-                    for (HiLiteHandler h : m_targetHandlers) {
-                        h.fireHiLiteEventInternal(
-                                new KeyEvent(m_eventSource, fireSet));
-                    }
-                }
+            for (HiLiteHandler h : m_targetHandlers) {
+                h.fireHiLiteEventInternal(new KeyEvent(
+                        m_eventSource, event.keys()));
             }
         }
 
@@ -95,20 +76,9 @@ public final class HiLiteTranslator {
             if (event.getSource() == m_eventSource) {
                 return;
             }
-            if (m_mapper != null && m_targetHandlers.size() > 0) {
-                Set<RowKey> fireSet = new LinkedHashSet<RowKey>();
-                for (RowKey key : event.keys()) {
-                    Set<RowKey> s = m_mapper.getKeys(key);
-                    if (s != null && !s.isEmpty()) {
-                        fireSet.addAll(s);
-                    }
-                }
-                if (!fireSet.isEmpty()) {
-                    for (HiLiteHandler h : m_targetHandlers) {
-                        h.fireUnHiLiteEventInternal(
-                                new KeyEvent(m_eventSource, fireSet));
-                    }
-                }
+            for (HiLiteHandler h : m_targetHandlers) {
+                h.fireUnHiLiteEventInternal(
+                        new KeyEvent(m_eventSource, event.keys()));
             }
         }
 
@@ -121,7 +91,7 @@ public final class HiLiteTranslator {
             }
             for (HiLiteHandler h : m_targetHandlers) {
                 h.fireClearHiLiteEventInternal(
-                        new KeyEvent(m_eventSource));
+                        new KeyEvent(m_eventSource, event.keys()));
             }
         }
     };
@@ -138,24 +108,8 @@ public final class HiLiteTranslator {
             if (event.getSource() == m_eventSource) {
                 return;
             }
-            if (m_mapper != null) {
-                // add all hilite keys from the event and all hilit keys
-                // from the target hilite handlers
-                final Set<RowKey> all = new LinkedHashSet<RowKey>(
-                        event.keys());
-                for (HiLiteHandler hdl : m_targetHandlers) {
-                    all.addAll(hdl.getHiLitKeys());
-                }
-                // check overlap with all mappings  
-                for (RowKey key : m_mapper.keySet()) {
-                    final Set<RowKey> keys = m_mapper.getKeys(key);
-                    // if all mapped keys are hilit then fire event
-                    if (all.containsAll(keys)) {
-                        m_sourceHandler.fireHiLiteEventInternal(
-                                new KeyEvent(m_eventSource, key));
-                    }
-                }
-            }
+            m_sourceHandler.fireHiLiteEventInternal(
+                    new KeyEvent(m_eventSource, event.keys()));
         }
         /**
          * {@inheritDoc}
@@ -164,20 +118,9 @@ public final class HiLiteTranslator {
             if (event.getSource() == m_eventSource) {
                 return;
             }
-            if (m_mapper != null) {
-                // check all mappings
-                for (RowKey key : m_mapper.keySet()) {
-                    final Set<RowKey> keys = m_mapper.getKeys(key);
-                    // if at least one item is unhilit then fire event
-                    for (RowKey hilite : event.keys()) {
-                        if (keys.contains(hilite)) {
-                            m_sourceHandler.fireUnHiLiteEventInternal(
-                                    new KeyEvent(m_eventSource, key));
-                            break;
-                        }
-                    }
-                }
-            }
+            m_sourceHandler.fireUnHiLiteEventInternal(
+                                new KeyEvent(m_eventSource, event.keys()));
+ 
         }
         /**
          * {@inheritDoc}
@@ -187,68 +130,18 @@ public final class HiLiteTranslator {
                 return;
             }
             m_sourceHandler.fireClearHiLiteEventInternal(
-                    new KeyEvent(m_eventSource));
+                    new KeyEvent(m_eventSource, event.keys()));
         }
     };
     
     /**
-     * Creates a translator with an empty mapping and a default hilite
-     * handler.
+     * Creates a new manager.
      */
-    public HiLiteTranslator() {
-        this((HiLiteMapper) null);
-    }
-    
-    /**
-     * Creates a new translator.
-     * @param handler a given source <code>HiLiteHandler</code>
-     */
-    public HiLiteTranslator(final HiLiteHandler handler) {
-        this(handler, null);
-    }
-    
-    /**
-     * Creates a new translator.
-     * @param mapper mapping from aggregation to single patterns
-     */
-    public HiLiteTranslator(final HiLiteMapper mapper) {
-        this(new HiLiteHandler(), mapper);
-    }
-    
-    /**
-     * Creates a new translator.
-     * @param handler a given source <code>HiLiteHandler</code>
-     * @param mapper mapping from aggregation to single patterns
-     */
-    public HiLiteTranslator(final HiLiteHandler handler, 
-            final HiLiteMapper mapper) {
-        if (handler == null) {
-            throw new IllegalArgumentException(
-                    "Source HiLiteHandler must not be null.");
-        }
-        m_sourceHandler = handler;
+    public HiLiteManager() {
+        m_sourceHandler = new HiLiteHandler();
         m_targetHandlers = new LinkedHashSet<HiLiteHandler>();
-        m_mapper = mapper;
     }
     
-    /**
-     * Sets a new hilite mapper which can be <code>null</code> in case no
-     * hilite translation is available.
-     * 
-     * @param mapper the new hilite mapper
-     */
-    public void setMapper(final HiLiteMapper mapper) {
-        m_sourceHandler.fireClearHiLiteEvent();
-        m_mapper = mapper;
-    }
-    
-    /**
-     * @return mapper which contains the mapping, can be null
-     */
-    public HiLiteMapper getMapper() {
-        return m_mapper;
-    }
-        
     /**
      * Removes the given target <code>HiLiteHandler</code> from the list of 
      * registered hilite handlers and removes the private target listener from 

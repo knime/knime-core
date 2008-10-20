@@ -210,7 +210,7 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
-     * Creates a new <code>GenericNodeFactory</code> and tries to read to properties
+     * Creates a new <code>NodeFactory</code> and tries to read to properties
      * file named <code>Node.xml</code> in the same package as the factory.
      */
     protected NodeFactory() {
@@ -319,7 +319,7 @@ public abstract class NodeFactory<T extends NodeModel> {
             m_fullAsHTML = readFullDescription();
             // DO NOT call "checkConsistency(createNodeModel());" here as that
             // would call an abstract method from within the constructor -
-            // local fields in the derived GenericNodeFactory have not been initialized
+            // local fields in the derived NodeFactory have not been initialized
         }
         addLoadedFactory(this.getClass());
     }
@@ -415,7 +415,7 @@ public abstract class NodeFactory<T extends NodeModel> {
 
     /**
      * The XML description can be used with the
-     * <code>GenericNodeFactoryHTMLCreator</code> in order to get
+     * <code>NodeFactoryHTMLCreator</code> in order to get
      * a converted HTML description of it, which fits the overall KNIME HTML
      * style.
      * @return XML description of this node
@@ -681,7 +681,7 @@ public abstract class NodeFactory<T extends NodeModel> {
     /**
      * Creates and returns a new instance of the node's corresponding model.
      *
-     * @return A new GenericNodeModel for this node. Never <code>null</code>!
+     * @return A new NodeModel for this node. Never <code>null</code>!
      */
     public abstract T createNodeModel();
 
@@ -689,8 +689,8 @@ public abstract class NodeFactory<T extends NodeModel> {
      * Access method for <code>createNodeModel()</code>. This method will
      * also do sanity checks for the correct labeling of the port description:
      * The port count (in, out, modelIn, modelOut) is only available in the
-     * GenericNodeModel. The first time, this method is called, the port count is
-     * retrieved from the GenericNodeModel and the xml description is validated against
+     * NodeModel. The first time, this method is called, the port count is
+     * retrieved from the NodeModel and the xml description is validated against
      * the info from the model. If inconsistencies are identified, log messages
      * will be written and the full description of the node is adapted such that
      * the user (preferably the implementor) immediately sees the problem.
@@ -758,7 +758,7 @@ public abstract class NodeFactory<T extends NodeModel> {
 
     /**
      * @deprecated Use the
-     *  <code>GenericNodeFactoryHTMLCreator</code>
+     *  <code>NodeFactoryHTMLCreator</code>
      *  in connection with the {@link #getXMLDescription()} method.
      *
      * @return A short description (like 50 characters) of the functionality the
@@ -785,7 +785,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * all available information.
      *
      * @deprecated Use the
-     *  <code>GenericNodeFactoryHTMLCreator</code>
+     *  <code>NodeFactoryHTMLCreator</code>
      *  in connection with the {@link #getXMLDescription()}.
      * @return An html string containing a full description of the node's
      *         functionality, all parameters, inport data, output of the node,
@@ -798,11 +798,11 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
-     * Called when the GenericNodeModel is instantiated the first time. We do some
+     * Called when the NodeModel is instantiated the first time. We do some
      * sanity checks here, for instance: Do the number of ports in the xml match
      * with the port count in the node model...
      *
-     * @param m The GenericNodeModel to check against.
+     * @param m The NodeModel to check against.
      */
     private void checkConsistency(final NodeModel m) {
 //        if ((m.getNrDataIns() > 0)

@@ -52,7 +52,7 @@ final class DBReaderNodeModel extends NodeModel {
     private String m_query = null;
     
     private final DatabaseReaderConnection m_load = 
-        new DatabaseReaderConnection();
+        new DatabaseReaderConnection(null);
     
     /**
      * Creates a new database reader with one data out-port.

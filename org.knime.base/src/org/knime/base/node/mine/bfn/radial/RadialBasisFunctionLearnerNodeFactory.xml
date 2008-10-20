@@ -48,19 +48,15 @@
 	    maximum coverage degree of the target columns is used during training,
 	    otherwise all class columns are considered for coverage. 
 		</option>
-	    <option name="Maximum #Epochs">
+	    <option name="Maximum no. Epochs">
     	If selected, the option defines the maximum number of epochs 
     	the algorithm has to process the entire data set, otherwise it repeats 
     	this process until this rule model is stable, i.e. no new rule has been 
     	committed and/or no shrink is executed.
 		</option>
-		<option name="Data Columns">
-		Select at least one column used as numeric input for the training 
-		algorithm.
-		</option>
 		<option name="Target Columns">
 		Select the target(s) to be used for classification. If more
-		than one column (numeric) is selected, the columns must contain the 
+		than one column (only numeric) is selected, the columns must contain 
 		class membership values between 0 and 1 for each class given by the 
 		column name.
 		</option>

@@ -67,7 +67,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
@@ -90,7 +89,7 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
 
     private DataArray m_dataArray;
 
-    private HiLiteHandler m_hiLiteHandler = new DefaultHiLiteHandler();
+    private HiLiteHandler m_hiLiteHandler = new HiLiteHandler();
 
     /**
      * Creates a conditional box plot node model.

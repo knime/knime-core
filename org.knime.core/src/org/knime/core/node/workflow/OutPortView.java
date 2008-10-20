@@ -185,8 +185,10 @@ public class OutPortView extends JFrame {
                 }
                 JComponent[] posViews = portObjectSpec == null 
                     ? new JComponent[0] : portObjectSpec.getViews();
-                for (JComponent comp : posViews) {
-                    views.put(comp.getName(), comp);
+                if (posViews != null) {
+                    for (JComponent comp : posViews) {
+                        views.put(comp.getName(), comp);
+                    }
                 }
                 ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
                     @Override

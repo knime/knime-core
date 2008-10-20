@@ -246,7 +246,7 @@ public class KnimeResourceLableProvider extends LabelProvider implements
     public final String getText(final Object element) {
         if (element instanceof NodeContainer) {
             return ((NodeContainer)element).getName() 
-                + "(#" + ((NodeContainer)element).getID().getIndex() + ")";
+                + " (#" + ((NodeContainer)element).getID().getIndex() + ")";
         }
         // query the element for its label
         IWorkbenchAdapter adapter = getAdapter(element);

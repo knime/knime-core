@@ -52,7 +52,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
@@ -140,12 +139,7 @@ public class GroupByNodeModel extends NodeModel {
     /**
      * Node returns a new hilite handler instance.
      */
-
-    /**
-     * Node returns a new hilite handler instance.
-     */
-    private final HiLiteTranslator m_hilite = new HiLiteTranslator(
-            new DefaultHiLiteHandler());
+    private final HiLiteTranslator m_hilite = new HiLiteTranslator();
 
     /**
      * Creates a new group by model with one in- and outport.
@@ -353,6 +347,17 @@ public class GroupByNodeModel extends NodeModel {
 
         //be compatible to the previous version
         checkColumnAggregators(groupByCols, origSpec);
+        //remove all invalid column aggregators
+        final List<ColumnAggregator> invalidColAggrs =
+            new LinkedList<ColumnAggregator>();
+        for (final ColumnAggregator colAggr : m_columnAggregators) {
+            if (!origSpec.containsName(colAggr.getColName())) {
+                invalidColAggrs.add(colAggr);
+            }
+        }
+        if (!invalidColAggrs.isEmpty()) {
+            m_columnAggregators.removeAll(invalidColAggrs);
+        }
 
         if (m_columnAggregators.isEmpty()) {
             setWarningMessage("No aggregation column defined");

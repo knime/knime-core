@@ -1134,7 +1134,7 @@ public class DenseBitVector {
      * character in the result represents one bit - a '1' stands for a set bit,
      * a '0' represents a cleared bit. The character at string position
      * <code>(length - 1)</code> holds the bit with index 0, the character at
-     * position 0 represents the bits with the largest index in the vector. If
+     * position 0 represents the bit with the largest index in the vector. If
      * the length of the vector is larger than ({@link Integer#MAX_VALUE} - 3)
      * (i.e. 2147483644), the result is truncated (and ends with ...).
      *
@@ -1150,13 +1150,13 @@ public class DenseBitVector {
         }
 
         // start with the highest bits
-        int storageAddr = (max - 1 >> STORAGE_ADDRBITS);
-        int storageIdx = (max - 1 % STORAGE_BITS);
+        int storageAddr = ((max - 1) >> STORAGE_ADDRBITS);
+        int storageIdx = ((max - 1) % STORAGE_BITS);
 
         while (storageAddr >= 0) {
 
             while (storageIdx >= 0) {
-                if ((m_storage[storageAddr] & (1 << storageIdx)) == 0) {
+                if ((m_storage[storageAddr] & (1L << storageIdx)) == 0) {
                     result.append('0');
                 } else {
                     result.append('1');

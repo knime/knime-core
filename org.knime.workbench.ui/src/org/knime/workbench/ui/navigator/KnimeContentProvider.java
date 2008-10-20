@@ -24,6 +24,11 @@
  */
 package org.knime.workbench.ui.navigator;
 
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Set;
+import java.util.TreeSet;
+
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -38,6 +43,9 @@ import org.knime.core.node.workflow.WorkflowPersistor;
  * @author Christoph Sieb, University of Konstanz
  */
 public class KnimeContentProvider extends WorkbenchContentProvider {
+    
+//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+//            KnimeContentProvider.class);
 
     /**
      * {@inheritDoc}
@@ -84,18 +92,38 @@ public class KnimeContentProvider extends WorkbenchContentProvider {
      */
     @Override
     public Object[] getChildren(final Object element) {
-        // TODO: return the nodes and meta nodes etc.
+        // return the nodes and meta nodes etc.
         if (element instanceof IProject) {
             NodeContainer workflow = ProjectWorkflowMap.getWorkflow(
                     ((IProject)element).getName());
             if (workflow != null) {
-                return ((WorkflowManager)workflow).getNodeContainers()
-                    .toArray();
+                return getSortedNodeContainers(((WorkflowManager)workflow)
+                        .getNodeContainers());
             }
             // process meta nodes
         } else if (element instanceof WorkflowManager) {
-            return ((WorkflowManager)element).getNodeContainers().toArray();
+            return getSortedNodeContainers(((WorkflowManager)element)
+                    .getNodeContainers());
         }
         return super.getChildren(element);
+    }
+
+    // bugfix: 1474 (now nodes are always sorted lexicographically)
+    private Object[] getSortedNodeContainers(
+            final Collection<NodeContainer> nodes) {
+        Set<NodeContainer>copy = new TreeSet<NodeContainer>(
+                new Comparator<NodeContainer>() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public int compare(final NodeContainer o1, 
+                    final NodeContainer o2) {
+                return o1.getNameWithID().compareTo(o2.getNameWithID());
+            }
+            
+        });
+        copy.addAll(nodes);
+        return copy.toArray();
     }
 }

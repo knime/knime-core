@@ -282,7 +282,7 @@ public final class Node implements NodeModelWarningListener {
             // this also validates the settings
             loadSettingsFrom(loader.getSettings());
         } catch (Throwable e) {
-            String error;
+            final String error;
             if (e instanceof InvalidSettingsException) {
                 error = "Loading model settings failed: " + e.getMessage();
             } else {
@@ -308,19 +308,11 @@ public final class Node implements NodeModelWarningListener {
                 break;
             case FAIL:
                 result.addError(error);
-                if (e instanceof InvalidSettingsException) {
-                    createErrorMessageAndNotify(error);
-                } else {
-                    createErrorMessageAndNotify(error, e);
-                }
+                createErrorMessageAndNotify(error, e);
                 loader.setNeedsResetAfterLoad();
                 break;
             case WARN:
-                if (e instanceof InvalidSettingsException) {
-                    createWarningMessageAndNotify(error);
-                } else {
-                    createWarningMessageAndNotify(error, e);
-                }
+                createWarningMessageAndNotify(error, e);
                 break;
             }
         }

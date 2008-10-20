@@ -58,8 +58,7 @@ public class NaiveBayesLearnerNodeFactory
         if (viewIndex != 0) {
             throw new IllegalArgumentException();
         }
-        return new NaiveBayesLearnerNodeView(nodeModel,
-                "Naive Bayesian Learner View");
+        return new NaiveBayesLearnerNodeView(nodeModel);
     }
 
     /**

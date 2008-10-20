@@ -357,14 +357,16 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         EditPart part = super.createChild(model);
         LOGGER.debug("part: " + part);
         if (part instanceof NodeContainerEditPart) {
+            getViewer().deselect(this);
             NodeID id = ((NodeContainerEditPart)part).getNodeContainer()
                 .getID();
             if (m_futureSelection.isEmpty()) {
                 // select only this element
+                getViewer().deselectAll();
                 getViewer().select(part);
             } else if (m_futureSelection.contains(id)) {
                 // append this element to the current selection
-                getViewer().getSelectionManager().appendSelection(part);
+                getViewer().appendSelection(part);
                 m_futureSelection.remove(id);
             }
         }

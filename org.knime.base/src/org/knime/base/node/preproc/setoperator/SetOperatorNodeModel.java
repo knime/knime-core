@@ -25,6 +25,11 @@
 
 package org.knime.base.node.preproc.setoperator;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -38,16 +43,10 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnName;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
-import org.knime.core.node.property.hilite.DefaultHiLiteManager;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.property.hilite.HiLiteManager;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 
 
 /**
@@ -83,12 +82,9 @@ public class SetOperatorNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_skipMissing;
 
-    private final HiLiteTranslator m_hilite0 = new HiLiteTranslator(
-            new DefaultHiLiteHandler());
-    private final HiLiteTranslator m_hilite1 = new HiLiteTranslator(
-            new DefaultHiLiteHandler());
-    private final DefaultHiLiteManager m_outHiLiteHandler =
-        new DefaultHiLiteManager();
+    private final HiLiteTranslator m_hilite0 = new HiLiteTranslator();
+    private final HiLiteTranslator m_hilite1 = new HiLiteTranslator();
+    private final HiLiteManager m_outHiLiteHandler = new HiLiteManager();
 
     /**Constructor for class SetOperatorNodeModel.
      */
@@ -98,8 +94,8 @@ public class SetOperatorNodeModel extends NodeModel {
                 SetOperation.getDefault().getName());
         m_sortInMemory = new SettingsModelBoolean(CFG_SORT_IN_MEMORY, false);
         m_skipMissing = new SettingsModelBoolean(CFG_SKIP_MISSING, true);
-        m_outHiLiteHandler.addHiLiteHandler(m_hilite0.getFromHiLiteHandler());
-        m_outHiLiteHandler.addHiLiteHandler(m_hilite1.getFromHiLiteHandler());
+        m_outHiLiteHandler.addToHiLiteHandler(m_hilite0.getFromHiLiteHandler());
+        m_outHiLiteHandler.addToHiLiteHandler(m_hilite1.getFromHiLiteHandler());
     }
 
     /**
@@ -107,8 +103,7 @@ public class SetOperatorNodeModel extends NodeModel {
      */
     @Override
     protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
-        assert outIndex == 0;
-        return m_outHiLiteHandler;
+        return m_outHiLiteHandler.getFromHiLiteHandler();
     }
 
     /**

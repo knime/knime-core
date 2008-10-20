@@ -37,6 +37,8 @@ import org.knime.core.data.RowKey;
  * properties. An event keeps an unmodifiable set of row keys as 
  * {@link RowKey}.
  * 
+ * @see HiLiteHandler
+ * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public class KeyEvent extends EventObject {

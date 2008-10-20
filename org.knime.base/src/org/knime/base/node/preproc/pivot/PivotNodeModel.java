@@ -56,7 +56,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
@@ -95,9 +94,7 @@ public class PivotNodeModel extends NodeModel {
     /**
      * Node returns a new hilite handler instance.
      */
-    private final HiLiteTranslator m_hilite = new HiLiteTranslator(
-            new DefaultHiLiteHandler());
-
+    private final HiLiteTranslator m_hilite = new HiLiteTranslator();
 
     /**
      * Creates a new pivot model with one in- and out-port.

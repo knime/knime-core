@@ -1,24 +1,19 @@
-/*
- * ----------------------------------------------------------------------------
- * This source code, its documentation and all appendant files
- * are protected by copyright law. All rights reserved.
+/*******************************************************************************
+ * Copyright (c) 2003, 2007 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
- * Copyright, 2003 - 2008
- * University of Konstanz, Germany
- * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
- * and KNIME GmbH, Konstanz, Germany
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
  *
- * You may not modify, publish, transmit, transfer or sell, reproduce,
- * create derivative works from, distribute, perform, display, or in
- * any way exploit any of the content, in whole or in part, except as
- * otherwise expressly permitted in writing by the copyright owner or
- * as specified in the license file distributed with this product.
+ * Note:
+ * This code was copied and slightly adapted by KNIME from Eclipse's
+ * IDEApplication because it is not possible to subclass it and use the
+ * workspace selection dialog at startup.
  *
- * If you have any questions please contact the copyright holder:
- * website: www.knime.org
- * email: contact@knime.org
- * ----------------------------------------------------------------------------
- */
+ *******************************************************************************/
 package org.knime.product.rcp;
 
 import java.io.File;
@@ -435,12 +430,12 @@ public class KNIMEApplication implements IApplication {
             return null;
         }
     }
-    
+
     /** Checks whether we are running linux and if so, we set the
      * "org.eclipse.swt.browser.XULRunnerPath" property. The property
      * points to the "xulrunner" directory in the installation dir (if that
-     * dir does not exist, this method does nothing). 
-     * This is one suggested workaround for bug 
+     * dir does not exist, this method does nothing).
+     * This is one suggested workaround for bug
      * https://bugs.eclipse.org/bugs/show_bug.cgi?id=236724#c22
      * (eclipse 3.3.2 crashes on linux with firefox 3.0 installed).
      */
@@ -463,7 +458,7 @@ public class KNIMEApplication implements IApplication {
         }
         File xulrunnerDir = new File(new File(path), "xulrunner");
         if (xulrunnerDir.isDirectory()) {
-            System.setProperty("org.eclipse.swt.browser.XULRunnerPath", 
+            System.setProperty("org.eclipse.swt.browser.XULRunnerPath",
                     xulrunnerDir.getAbsolutePath());
         }
     }

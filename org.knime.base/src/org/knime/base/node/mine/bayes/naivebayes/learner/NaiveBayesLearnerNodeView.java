@@ -47,14 +47,11 @@ extends NodeView<NaiveBayesLearnerNodeModel> {
      * Creates a new view.
      *
      * @param nodeModel The model (
-     * class: <code>NaiveBayesPredictorNodeModel</code>)
-     * @param title The title
+     * class: <code>NaiveBayesLearnerNodeModel</code>)
      */
     protected NaiveBayesLearnerNodeView(
-            final NaiveBayesLearnerNodeModel nodeModel,
-            final String title) {
+            final NaiveBayesLearnerNodeModel nodeModel) {
         super(nodeModel);
-        setViewTitle(title);
         m_model = (nodeModel).getNaiveBayesModel();
         //The output as HTML
         m_htmlPane = new JEditorPane("text/html", "");

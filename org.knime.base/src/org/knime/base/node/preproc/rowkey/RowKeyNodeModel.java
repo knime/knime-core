@@ -23,6 +23,12 @@
  */
 package org.knime.base.node.preproc.rowkey;
 
+import java.io.File;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -39,15 +45,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteHandler;
-
-import org.knime.base.data.append.column.AppendedColumnTable;
-
-import java.io.File;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 /**
  * The node model of the row key manipulation node. The node allows the user
@@ -135,7 +133,7 @@ public class RowKeyNodeModel extends NodeModel {
     /**
      * The output HiLite handler.
      */
-    private final DefaultHiLiteHandler m_hiLiteHandler;
+    private final HiLiteHandler m_hiLiteHandler;
 
     /**
      * Constructor for class RowKeyNodeModel.
@@ -144,7 +142,7 @@ public class RowKeyNodeModel extends NodeModel {
         // we have one data in and one data out port
         super(1, 1);
         //initialise the settings models
-        m_hiLiteHandler = new DefaultHiLiteHandler();
+        m_hiLiteHandler = new HiLiteHandler();
         m_replaceKey = new SettingsModelBoolean(
                 RowKeyNodeModel.REPLACE_ROWKEY, true);
         m_newRowKeyColumn = new SettingsModelString(

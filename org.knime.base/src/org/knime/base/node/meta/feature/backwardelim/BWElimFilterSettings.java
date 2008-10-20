@@ -25,12 +25,13 @@
 package org.knime.base.node.meta.feature.backwardelim;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.util.Pair;
 
 /**
  * This class contains the settings for the feature elimination filter node.
@@ -39,11 +40,6 @@ import org.knime.core.node.NodeSettingsWO;
  */
 public class BWElimFilterSettings {
     private int m_nrOfFeatures;
-
-    private final List<String> m_includedColumns = new ArrayList<String>();
-
-    private final List<String> m_unmodList =
-            Collections.unmodifiableList(m_includedColumns);
 
     private boolean m_includeTargetColumn;
 
@@ -72,36 +68,34 @@ public class BWElimFilterSettings {
      * table. This list also includes the target column if it should be
      * included.
      *
-     * @return an unmodifiable list with column names
+     * @param model the feature elimination model used
+     * @return a list with column names
      *
      * @see #includeTargetColumn()
      */
-    public List<String> includedColumns() {
-        return m_unmodList;
-    }
+    public List<String> includedColumns(final BWElimModel model) {
+        List<String> l = new ArrayList<String>();
+        for (Pair<Double, Collection<String>> p : model.featureLevels()) {
+            Collection<String> incFeatures = p.getSecond();
+            if (incFeatures.size() == m_nrOfFeatures) {
+                l.addAll(incFeatures);
+                break;
+            }
+        }
 
-    /**
-     * Clears the list with included columns.
-     */
-    public void clearColumns() {
-        m_includedColumns.clear();
-    }
+        if (m_includeTargetColumn) {
+            l.add(model.targetColumn());
+        }
 
-    /**
-     * Adds a column to the list of included columns.
-     *
-     * @param name the column's name
-     */
-    public void addColumn(final String name) {
-        m_includedColumns.add(name);
+        return l;
     }
 
     /**
      * Returns the number of included feature for the selected level. This is
-     * not necessarily the same as the size of {@link #includedColumns()} as the
-     * latter only contains columns that are present in the input table while
-     * the number of features is the "level" that comes out from the elimination
-     * loop.
+     * not necessarily the same as the size of
+     * {@link #includedColumns(BWElimModel)} as the latter only contains
+     * columns that are present in the input table while the number of features
+     * is the "level" that comes out from the elimination loop.
      *
      * @return the number of included features
      */
@@ -111,10 +105,10 @@ public class BWElimFilterSettings {
 
     /**
      * Sets the number of included feature for the selected level. This is not
-     * necessarily the same as the size of {@link #includedColumns()} as the
-     * latter only contains columns that are present in the input table while
-     * the number of features is the "level" that comes out from the elimination
-     * loop.
+     * necessarily the same as the size of {@link #includedColumns(BWElimModel)}
+     * as the latter only contains columns that are present in the input table
+     * while the number of features is the "level" that comes out from the
+     * elimination loop.
      *
      * @param number the number of included features
      */
@@ -128,8 +122,6 @@ public class BWElimFilterSettings {
      * @param settings a node settings object
      */
     public void saveSettings(final NodeSettingsWO settings) {
-        settings.addStringArray("includedColumns", m_includedColumns
-                .toArray(new String[m_includedColumns.size()]));
         settings.addInt("nrOfFeatures", m_nrOfFeatures);
         settings.addBoolean("includeTargetColumn", m_includeTargetColumn);
     }
@@ -142,10 +134,6 @@ public class BWElimFilterSettings {
      */
     public void loadSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_includedColumns.clear();
-        for (String t : settings.getStringArray("includedColumns")) {
-            m_includedColumns.add(t);
-        }
         m_nrOfFeatures = settings.getInt("nrOfFeatures");
         m_includeTargetColumn = settings.getBoolean("includeTargetColumn");
     }
@@ -157,11 +145,6 @@ public class BWElimFilterSettings {
      * @param settings a node settings object
      */
     public void loadSettingsForDialog(final NodeSettingsRO settings) {
-        m_includedColumns.clear();
-        for (String t : settings.getStringArray("includedColumns",
-                new String[0])) {
-            m_includedColumns.add(t);
-        }
         m_nrOfFeatures = settings.getInt("nrOfFeatures", -1);
         m_includeTargetColumn =
                 settings.getBoolean("includeTargetColumn", false);

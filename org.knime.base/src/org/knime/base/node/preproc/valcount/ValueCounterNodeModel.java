@@ -60,7 +60,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
@@ -79,8 +78,7 @@ public class ValueCounterNodeModel extends NodeModel {
 
     private static final DataTableSpec TABLE_SPEC = new DataTableSpec(COL_SPEC);
 
-    private final HiLiteTranslator m_translator =
-            new HiLiteTranslator(new DefaultHiLiteHandler());
+    private final HiLiteTranslator m_translator = new HiLiteTranslator();
 
     /**
      * Creates a new value counter model.

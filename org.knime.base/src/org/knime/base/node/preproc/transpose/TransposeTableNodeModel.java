@@ -45,7 +45,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
-import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
@@ -69,7 +68,7 @@ final class TransposeTableNodeModel extends NodeModel {
      */
     TransposeTableNodeModel() {
         super(1, 1);
-        m_outHiLite = new DefaultHiLiteHandler();
+        m_outHiLite = new HiLiteHandler();
     }
 
     /**

@@ -544,11 +544,6 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
         g2d.setTransform(saveAT);
     }
 
-    /**
-     * Comment for <code>writeCoordNames</code> write the labels of the axes.
-     * 
-     * @author pintilie, University of Konstanz
-     */
     private void writeCoordNames(final double angle, final Graphics2D g2d) {
         String[] names = m_content.getNamesVector();
         for (int i = 0; i < m_columnCount; i++) {
@@ -559,10 +554,6 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
         }
     }
 
-    /**
-     * 
-     * @author pintilie, University of Konstanz
-     */
     private void drawAxes(final Graphics2D g2d) {
         for (int i = 1; i <= m_columnCount; i++) {
             g2d.drawLine(i * m_distanceBetweenCoordinates, m_headerHeight, i
@@ -571,9 +562,6 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
         }
     }
 
-    /**
-     * 
-     */
     private double setCanvasStructure(final int meineHoehe,
             final int meineGuete, final Graphics2D g2d) {
         m_canvasWidth = meineGuete;
@@ -615,12 +603,6 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
 
     }
 
-    /**
-     * Comment for <code>drawCoordBounds</code> writing min & max for each
-     * coordinate coresponding to a number attribute.
-     * 
-     * @author pintilie, University of Konstanz
-     */
     private void drawCoordBounds(final Graphics2D g2d) {
         String[] types = m_content.getTypesVector();
         double[] minVector = m_content.getMinVector();
@@ -705,11 +687,6 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
         g2d.setColor(oldColor);
     }
 
-    /**
-     * @param value a double value
-     * @return pixel height, a value in interval [min_bound, max_bound]
-     * @author pintilie, University of Konstanz
-     */
     private int getPH(final double value) {
         return m_canvasHeight - ((int)(value * m_axisLength) + m_footerHeight);
     }
@@ -760,12 +737,6 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
         }
     }
 
-    /**
-     * Comment for <code>paintCoordinatesStage</code> drawing the axes and the
-     * points vs fuzzy rules.
-     * 
-     * @author pintilie, University of Konstanz
-     */
     private void paintCoordinatesStage(final Graphics2D g2d) {
         for (int row = 0; row < m_rowCount; row++) {
             if (!m_selected[row] && !m_hilited[row]) {
@@ -1243,22 +1214,22 @@ public final class ParallelCoordinatesViewPanel extends JPanel implements
 
     // create JMenu
 
-    /** Popup menue entry constant. */
+    /** Popup menu entry constant. */
     public static final String POPUP_HILITE_SELECTED = HiLiteHandler.HILITE_SELECTED;
 
-    /** Popup menue entry constant. */
+    /** Popup menu entry constant. */
     public static final String POPUP_UNHILITE_SELECTED = HiLiteHandler.UNHILITE_SELECTED;
 
-    /** Popup menue entry constant. */
+    /** Popup menu entry constant. */
     public static final String POPUP_UNHILITE = HiLiteHandler.CLEAR_HILITE;
 
-    /** Popup menue entry constant. */
+    /** Popup menu entry constant. */
     public static final String POPUP_HIDE_UNHILITED = "Hide UnHiLited";
 
-    /** Popup menue entry constant. */
+    /** Popup menu entry constant. */
     public static final String POPUP_ALL_VISIBLE = "All Visible";
 
-    /** Popup menue entry constant. */
+    /** Popup menu entry constant. */
     public static final String POPUP_FADE_UNHILITED = "Fade UnHiLited";
 
     /** View Type constant. */
