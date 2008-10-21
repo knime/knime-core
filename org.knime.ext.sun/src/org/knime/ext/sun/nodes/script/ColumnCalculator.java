@@ -195,7 +195,7 @@ class ColumnCalculator implements CellFactory {
         try {
             m_expression.set(nameValueMap);
             o = m_expression.evaluate();
-            if (!(returnType.isAssignableFrom(o.getClass()))) {
+            if (o != null && !returnType.isAssignableFrom(o.getClass())) {
                 LOGGER.warn("Unable to cast return type of expression \""
                         + o.getClass().getName() + "\" to desired output \"" 
                         + returnType.getName() 
