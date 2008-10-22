@@ -54,7 +54,7 @@ public class DoubleCoordinateMapping extends CoordinateMapping {
      * @param domainValue the domain value
      * @param mappingValue the corresponding mapped value
      */
-    DoubleCoordinateMapping(final String stringDomainValue,
+    public DoubleCoordinateMapping(final String stringDomainValue,
             final double domainValue, final double mappingValue) {
         super(stringDomainValue, mappingValue);
         setValues(new DoubleCell(domainValue));

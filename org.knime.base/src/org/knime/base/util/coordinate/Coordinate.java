@@ -25,6 +25,7 @@
  */
 package org.knime.base.util.coordinate;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -63,36 +64,53 @@ public abstract class Coordinate {
      */
     private DataColumnSpec m_columnSpec;
 
-    private static final Map<Class<? extends DataValue>, CoordinateFactory> 
-        MAP = new HashMap<Class<? extends DataValue>, CoordinateFactory>();
+    private static final Map<Class<? extends DataValue>, CoordinateFactory> MAP =
+            new HashMap<Class<? extends DataValue>, CoordinateFactory>();
 
-    private static final Map<Class<? extends DataValue>, Set<PolicyStrategy>> 
-        POLICY_MAP = new HashMap
-            <Class<? extends DataValue>, Set<PolicyStrategy>>();
+    private static final Map<Class<? extends DataValue>, Set<PolicyStrategy>> POLICY_MAP =
+            new HashMap<Class<? extends DataValue>, Set<PolicyStrategy>>();
 
-    private static final Map<Class<? extends DataValue>, Set<MappingMethod>> 
-        MAPPING_METHODS = new HashMap
-            <Class<? extends DataValue>, Set<MappingMethod>>();
+    private static final Map<String, PolicyStrategy> POLICY_ID_MAP =
+            new HashMap<String, PolicyStrategy>();
+
+    private static final Map<Class<? extends DataValue>, Set<MappingMethod>> MAPPING_METHODS =
+            new HashMap<Class<? extends DataValue>, Set<MappingMethod>>();
+
+    private static final Map<String, MappingMethod> MAPPING_ID =
+            new HashMap<String, MappingMethod>();
 
     static {
         addCoordinateFactory(DoubleValue.class, new DoubleCoordinateFactory());
-        addPolicy(DoubleValue.class, new AscendingNumericTickPolicyStrategy(
-                "Ascending"));
-        addPolicy(DoubleValue.class, new DescendingNumericTickPolicyStrategy(
-                "Descending"));
-        addMappingMethod(DoubleValue.class, new LogarithmicMappingMethod());
-        addMappingMethod(IntValue.class, new LogarithmicMappingMethod());
-        addMappingMethod(DoubleValue.class, new LogarithmicMappingMethod(10));
-        addMappingMethod(IntValue.class, new LogarithmicMappingMethod(10));
-        addMappingMethod(DoubleValue.class, new LogarithmicMappingMethod(2));
-        addMappingMethod(IntValue.class, new LogarithmicMappingMethod(2));
-
-        addPolicy(IntValue.class, new AscendingNumericTickPolicyStrategy(
-                "Ascending"));
-        addPolicy(IntValue.class, new DescendingNumericTickPolicyStrategy(
-                "Descending"));
         addCoordinateFactory(IntValue.class, new IntegerCoordinateFactory());
         addCoordinateFactory(StringValue.class, new NominalCoordinateFactory());
+
+        AscendingNumericTickPolicyStrategy ascending =
+                new AscendingNumericTickPolicyStrategy();
+
+        DescendingNumericTickPolicyStrategy descending =
+                new DescendingNumericTickPolicyStrategy();
+
+        PercentagePolicyStrategy percentage = new PercentagePolicyStrategy();
+
+        addPolicy(DoubleValue.class, AscendingNumericTickPolicyStrategy.ID,
+                ascending);
+        addPolicy(DoubleValue.class, DescendingNumericTickPolicyStrategy.ID,
+                descending);
+        addPolicy(DoubleValue.class, PercentagePolicyStrategy.ID, percentage);
+
+//        LogarithmicMappingMethod lnMappingMethod =
+//                new LogarithmicMappingMethod();
+//        LogarithmicMappingMethod log10MappingMethod =
+//                new LogarithmicMappingMethod(10);
+//        LogarithmicMappingMethod ldMappingMethod =
+//                new LogarithmicMappingMethod(2);
+//
+//        addMappingMethod(DoubleValue.class, LogarithmicMappingMethod.ID_BASE_E,
+//                lnMappingMethod);
+//        addMappingMethod(DoubleValue.class,
+//                LogarithmicMappingMethod.ID_BASE_10, log10MappingMethod);
+//        addMappingMethod(DoubleValue.class, LogarithmicMappingMethod.ID_BASE_2,
+//                ldMappingMethod);
     }
 
     private final Set<DataValue> m_desiredValues = new HashSet<DataValue>();
@@ -132,9 +150,15 @@ public abstract class Coordinate {
      * @return the according strategy
      */
     protected PolicyStrategy getPolicyStategy(final String policy) {
-        Set<PolicyStrategy> strategies =
-                POLICY_MAP.get(m_columnSpec.getType().getPreferredValueClass());
-        if (strategies == null) {
+        Set<PolicyStrategy> strategies = new HashSet<PolicyStrategy>();
+        for (Class<? extends DataValue> cl : m_columnSpec.getType()
+                .getValueClasses()) {
+            Set<PolicyStrategy> temp = POLICY_MAP.get(cl);
+            if (temp != null && temp.size() > 0) {
+                strategies.addAll(temp);
+            }
+        }
+        if (strategies.size() == 0) {
             throw new IllegalArgumentException("No strategy available for "
                     + m_columnSpec.getType());
         }
@@ -155,23 +179,34 @@ public abstract class Coordinate {
      * @return the compatible policies or <code>null</code> if none.
      */
     public Set<PolicyStrategy> getCompatiblePolicies() {
-        return POLICY_MAP.get(m_columnSpec.getType().getPreferredValueClass());
+        Set<PolicyStrategy> strategies = new HashSet<PolicyStrategy>();
+        for (Class<? extends DataValue> cl : m_columnSpec.getType()
+                .getValueClasses()) {
+            Set<PolicyStrategy> temp = POLICY_MAP.get(cl);
+            if (temp != null && temp.size() > 0) {
+                strategies.addAll(temp);
+            }
+        }
+
+        return strategies;
     }
 
     /**
      * Registers a strategy.
      *
      * @param dataValue the according {@link DataValue}.
+     * @param id a unique identifier
      * @param strategy the {@link PolicyStrategy}
      */
     public static void addPolicy(final Class<? extends DataValue> dataValue,
-            final PolicyStrategy strategy) {
+            final String id, final PolicyStrategy strategy) {
         Set<PolicyStrategy> strategies = POLICY_MAP.get(dataValue);
         if (strategies == null) {
             strategies = new HashSet<PolicyStrategy>();
         }
         strategies.add(strategy);
         POLICY_MAP.put(dataValue, strategies);
+        POLICY_ID_MAP.put(id, strategy);
     }
 
     /**
@@ -195,6 +230,22 @@ public abstract class Coordinate {
             m_policy = policy;
         } else {
             throw new IllegalArgumentException("Policy is null.");
+        }
+    }
+
+    /**
+     * Sets the current {@link PolicyStrategy}.
+     *
+     * @param id the unique identifier of the desired policy
+     * @throws IllegalArgumentException if desired policy does not exist.
+     */
+    public void setPolicy(final String id) {
+        PolicyStrategy policy = POLICY_ID_MAP.get(id);
+        if (policy != null) {
+            m_policy = policy;
+        } else {
+            throw new IllegalArgumentException("Policy " + id
+                    + "does not exist.");
         }
     }
 
@@ -326,7 +377,7 @@ public abstract class Coordinate {
      *
      * @return the mapping of tick positions and corresponding domain values
      */
-    public abstract CoordinateMapping[] getTickPositionsInternal(
+    protected abstract CoordinateMapping[] getTickPositionsInternal(
             final double absoluteLength);
 
     /**
@@ -386,7 +437,7 @@ public abstract class Coordinate {
      *
      * @return the mapped value
      */
-    public abstract double calculateMappedValueInternal(
+    protected abstract double calculateMappedValueInternal(
             final DataCell domainValueCell, final double absoluteLength);
 
     /**
@@ -416,16 +467,18 @@ public abstract class Coordinate {
      * Adds a {@link MappingMethod} to the internal registry.
      *
      * @param clazz the according class, must extend {@link DataValue}
+     * @param id a unique identifier
      * @param mappingMethod a {@link MappingMethod}
      */
     public static void addMappingMethod(final Class<? extends DataValue> clazz,
-            final MappingMethod mappingMethod) {
+            final String id, final MappingMethod mappingMethod) {
         Set<MappingMethod> mapMethods = MAPPING_METHODS.get(clazz);
         if (mapMethods == null) {
             mapMethods = new HashSet<MappingMethod>();
         }
         mapMethods.add(mappingMethod);
         MAPPING_METHODS.put(clazz, mapMethods);
+        MAPPING_ID.put(id, mappingMethod);
     }
 
     /**
@@ -434,8 +487,27 @@ public abstract class Coordinate {
      * @return a {@link Set} of {@link MappingMethod}s
      */
     public Set<MappingMethod> getCompatibleMappingMethods() {
-        return MAPPING_METHODS.get(getDataColumnSpec().getType()
-                .getPreferredValueClass());
+        Set<MappingMethod> methods = new HashSet<MappingMethod>();
+        for (Class<? extends DataValue> cl : m_columnSpec.getType()
+                .getValueClasses()) {
+            Set<MappingMethod> temp = MAPPING_METHODS.get(cl);
+            if (temp != null && temp.size() > 0) {
+                methods.addAll(temp);
+            }
+        }
+
+        return methods;
+    }
+
+    /**
+     * Returns the {@link MappingMethod} with the given id if available.
+     *
+     * @param id the unique identifier
+     * @return a {@link MappingMethod} or <code>null</code> if id is not
+     *         registered.
+     */
+    public MappingMethod getMappingMethod(final String id) {
+        return MAPPING_ID.get(id);
     }
 
     /**
@@ -445,9 +517,41 @@ public abstract class Coordinate {
      */
     public void setActiveMappingMethods(final List<MappingMethod> methods) {
         m_activeMethods.clear();
-        if (methods != null) {
+        if (methods != null && methods.size() > 0) {
             m_activeMethods.addAll(methods);
         }
+    }
+
+    /**
+     * Adds mapping method which should be applied.
+     *
+     * @param method a {@link MappingMethod}
+     */
+    public void addActiveMappingMethod(final MappingMethod method) {
+        if (method != null) {
+            m_activeMethods.add(method);
+        }
+    }
+
+    /**
+     * Removes mapping method from applied mapping methods.
+     *
+     * @param method a {@link MappingMethod}
+     */
+    public void removeActiveMappingMethod(final MappingMethod method) {
+        if (method != null) {
+            m_activeMethods.remove(method);
+        }
+    }
+
+    /**
+     * Gets the mapping methods which should be applied.
+     *
+     * @return a {@link List} of {@link MappingMethod}s. This list is not
+     *         modifiable!
+     */
+    public List<MappingMethod> getActiveMappingMethods() {
+        return Collections.unmodifiableList(m_activeMethods);
     }
 
     /**
@@ -457,12 +561,16 @@ public abstract class Coordinate {
      * @return the mapped value
      */
     protected DataCell applyMappingMethods(final DataCell datacell) {
+
+//        System.out.print("Mapping " + datacell);
+
         DataCell cell = datacell;
         if (m_activeMethods.size() > 0) {
-                for (MappingMethod method : m_activeMethods) {
-                    cell = method.doMapping(cell);
-                }
+            for (MappingMethod method : m_activeMethods) {
+                cell = method.doMapping(cell);
+            }
         }
+//        System.out.println(" to: " + cell);
         return cell;
     }
 
@@ -477,8 +585,8 @@ public abstract class Coordinate {
     }
 
     /**
-     * Returns the value for positive infinity after mapping.
-     * Necessary to recognize infinity after scaling e.g..
+     * Returns the value for positive infinity after mapping. Necessary to
+     * recognize infinity after scaling e.g..
      *
      * @return the value for positive infinity.
      */
@@ -487,8 +595,8 @@ public abstract class Coordinate {
     }
 
     /**
-     * Returns the value for negative infinity after mapping.
-     * Necessary to recognize infinity after scaling e.g..
+     * Returns the value for negative infinity after mapping. Necessary to
+     * recognize infinity after scaling e.g..
      *
      * @return the value for negative infinity.
      */

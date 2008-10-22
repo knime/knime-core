@@ -32,6 +32,25 @@ public class DescendingNumericTickPolicyStrategy extends
         AscendingNumericTickPolicyStrategy {
 
     /**
+     * ID of a descending policy. Used to ensure single instances in
+     * {@link Coordinate}.
+     */
+    //hiding is necessary
+    @SuppressWarnings("hiding")
+    public static final String ID = "Descending";
+
+    /**
+     * Creates a policy strategy for descending order. Default name is
+     * "Descending".
+     *
+     */
+    public DescendingNumericTickPolicyStrategy() {
+        super(ID);
+    }
+
+    /**
+     * Creates a policy strategy for descending order.
+     *
      * @param name the name of this strategy. Must not be null or empty.
      */
     public DescendingNumericTickPolicyStrategy(final String name) {

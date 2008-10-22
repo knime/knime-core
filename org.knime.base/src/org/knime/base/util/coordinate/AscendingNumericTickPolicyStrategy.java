@@ -25,11 +25,14 @@
 package org.knime.base.util.coordinate;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
 
 /**
  * A strategy which creates tick for numeric values in ascending order.
@@ -41,6 +44,22 @@ public class AscendingNumericTickPolicyStrategy extends PolicyStrategy {
     private static final double EPSILON = 0.5;
 
     /**
+     * ID for a ascending tick policy. Used as unique identifier in
+     * {@link Coordinate}.
+     */
+    public static final String ID = "Ascending";
+
+    /**
+     * Creates a policy strategy for ascending order. The name is set to
+     * "Ascending".
+     *
+     */
+    public AscendingNumericTickPolicyStrategy() {
+        super(ID);
+    }
+
+    /**
+     * Creates a policy strategy for ascending order.
      *
      * @param name the name of this strategy
      */
@@ -213,8 +232,7 @@ public class AscendingNumericTickPolicyStrategy extends PolicyStrategy {
                 for (DataValue v : getValues()) {
                     if (v instanceof DoubleValue) {
                         double desVal = ((DoubleValue)v).getDoubleValue();
-                        if (value + EPSILON * step > desVal
-                                && value < desVal) {
+                        if (value + EPSILON * step > desVal && value < desVal) {
                             add = false;
                         } else if (value - EPSILON * step < desVal
                                 && value > desVal) {
@@ -247,5 +265,36 @@ public class AscendingNumericTickPolicyStrategy extends PolicyStrategy {
         }
 
         return result.toArray(new Double[0]);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CoordinateMapping[] getTickPositions(final int absoluteLength,
+            final int minDomainValue, final int maxDomainValue,
+            final int tickDistance) {
+        int nrTicks =
+                Math.min(absoluteLength / tickDistance, (maxDomainValue
+                        - minDomainValue + 1));
+        if (nrTicks < 1) {
+            nrTicks = 1;
+        }
+        int diff = Math.max((maxDomainValue - minDomainValue) / nrTicks, 1);
+        List<CoordinateMapping> mapping = new LinkedList<CoordinateMapping>();
+        for (int i = 0; minDomainValue + i * diff <= maxDomainValue; i++) {
+            int domValue = Math.round(minDomainValue + i * diff);
+            if (domValue + diff > maxDomainValue) {
+                domValue = maxDomainValue;
+            }
+            int mappedValue =
+                    (int)calculateMappedValue(new IntCell(domValue),
+                            absoluteLength, minDomainValue, maxDomainValue);
+
+            mapping.add(new IntegerCoordinateMapping("" + domValue, domValue,
+                    mappedValue));
+        }
+
+        return mapping.toArray(new CoordinateMapping[0]);
     }
 }

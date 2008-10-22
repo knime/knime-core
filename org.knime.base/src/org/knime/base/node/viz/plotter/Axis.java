@@ -26,6 +26,7 @@ package org.knime.base.node.viz.plotter;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -35,16 +36,18 @@ import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.swing.ButtonGroup;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
@@ -52,7 +55,6 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.base.node.util.DoubleFormat;
 import org.knime.base.util.coordinate.Coordinate;
 import org.knime.base.util.coordinate.CoordinateMapping;
 import org.knime.base.util.coordinate.MappingMethod;
@@ -136,11 +138,19 @@ public class Axis extends JComponent {
 
     private CoordinateMapping[] m_coordMap;
 
-    private List<MappingMethod> m_selectedMappingMethods =
-            new LinkedList<MappingMethod>();
+    private static final DecimalFormat SCIENTIFIC = new DecimalFormat("0.##E0");
+
+    private static final DecimalFormat NORMAL =
+            new DecimalFormat("#######0.###");
+
+    private DecimalFormat m_currFormat = NORMAL;
 
     private List<ChangeListener> m_changeListener =
             new LinkedList<ChangeListener>();
+
+    private JRadioButtonMenuItem m_notationNormalRB;
+
+    private JRadioButtonMenuItem m_notationScientificRB;
 
     /**
      * Adds a {@link ChangeListener}, which is notified if repaint is
@@ -219,10 +229,11 @@ public class Axis extends JComponent {
                 continue;
             }
             if (v instanceof DoubleValue) {
-                tooltip +=
-                        new BigDecimal(((DoubleValue)v).getDoubleValue(),
-                                new MathContext(25))
-                                + " ";
+                double value = ((DoubleValue)v).getDoubleValue();
+                if (Double.isNaN(value) || Double.isInfinite(value)) {
+                    continue;
+                }
+                tooltip += new BigDecimal(value, new MathContext(25)) + " ";
             } else {
                 tooltip += v.toString() + " ";
             }
@@ -286,24 +297,45 @@ public class Axis extends JComponent {
         if (m_coordinate == null) {
             return;
         }
+
         m_coordMap =
                 m_coordinate.getTickPositions(length - 2 * m_startTickOffset);
+
         if (m_coordMap == null || m_coordMap.length == 0) {
             return;
         }
 
+        // implicit assumption: equidistant ticks
         m_tickDist = length / m_coordMap.length;
+
+        // better: at least real distance between 2 ticks
+        if (m_coordMap.length >= 2) {
+            int v2 = (int)m_coordMap[m_coordMap.length - 1].getMappingValue();
+            int v1 = (int)m_coordMap[m_coordMap.length - 2].getMappingValue();
+            m_tickDist = v2 - v1;
+        }
+
+        int minDecimals = m_currFormat.getMinimumFractionDigits();
+        int maxDecimals = m_currFormat.getMaximumFractionDigits();
+
+        // search for too long labels
+        List<String> labels = new LinkedList<String>();
+        int decimals = getDecimals(labels, g.getFontMetrics());
 
         if (m_horizontal) {
             // check the distance between the ticks
             m_rotateXLabels =
-                    LabelPaintUtil.rotateLabels(m_coordMap, m_tickDist, g
-                            .getFontMetrics());
+                    LabelPaintUtil.rotateLabels(labels,
+                            (int)(m_tickDist * 1.2), g.getFontMetrics());
         } else {
             m_rotateYLabels =
-                    LabelPaintUtil.rotateLabels(m_coordMap,
-                            SIZE - m_tickLength, g.getFontMetrics());
+                    LabelPaintUtil.rotateLabels(labels, SIZE - m_tickLength, g
+                            .getFontMetrics());
         }
+
+        m_currFormat.setMinimumFractionDigits(decimals);
+        m_currFormat.setMaximumFractionDigits(decimals);
+
         if (m_coordinate.isNominal()) {
             m_coordMap =
                     ((NominalCoordinate)m_coordinate)
@@ -312,13 +344,15 @@ public class Axis extends JComponent {
 
         }
 
-        // this offset is for the labeldrawing in the horizontal header
+        // this offset is for the label drawing in the horizontal header
         // it puts the labels alternatively up and down to have more
         // space for the labeling
         boolean useOffset = false;
 
-        // draw all ticks except the last
+        Set<String> drawnLabels = new HashSet<String>();
+
         for (int i = 0; i < m_coordMap.length; i++) {
+
             CoordinateMapping mapping = m_coordMap[i];
             String label = mapping.getDomainValueAsString();
             try {
@@ -326,22 +360,74 @@ public class Axis extends JComponent {
                 if (Math.abs(value) <= 1e-15) {
                     label = "0";
                 } else {
-                    label = DoubleFormat.formatDouble(value);
+                    label = formatDouble(value);
                 }
             } catch (Exception e) {
                 // no number.. no formatting necessary
             }
 
-            if (mapping.getValues().length > 1) {
-                // continue;
+            if (drawnLabels.contains(label) && !label.equals("...")) {
+                continue;
             }
 
+            drawnLabels.add(label);
             drawTick(g, (long)mapping.getMappingValue() + m_startTickOffset,
                     label, useOffset);
             useOffset = !useOffset;
         }
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                 RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+
+        m_currFormat.setMinimumFractionDigits(minDecimals);
+        m_currFormat.setMaximumFractionDigits(maxDecimals);
+    }
+
+    private int getDecimals(final List<String> labels, final FontMetrics fm) {
+        int decimals = 0;
+        boolean tooLong = false;
+
+        for (CoordinateMapping cm : m_coordMap) {
+            String l = cm.getDomainValueAsString();
+            try {
+                double value = Double.parseDouble(l);
+                if (Math.abs(value) <= 1e-15) {
+                    l = "0";
+                } else {
+                    l = formatDouble(value);
+                }
+            } catch (Exception e) {
+                // no number.. no formatting necessary
+            }
+            labels.add(l);
+            if (!m_horizontal) {
+                if (fm.stringWidth(l) > SIZE - m_tickLength) {
+                    tooLong = true;
+                }
+            } else {
+                if (fm.stringWidth(l) > m_tickDist * 1.4) {
+                    tooLong = true;
+                }
+            }
+            if (l.contains(".") && l.contains("E")) {
+                int temp = l.indexOf('E') - l.indexOf('.') - 1;
+                if (temp > decimals) {
+                    decimals = temp;
+                }
+            } else if (l.contains(".")) {
+                int temp = l.length() - l.indexOf('.') - 1;
+                if (temp > decimals) {
+                    decimals = temp;
+                }
+            }
+        }
+        if (tooLong) {
+            if (m_notationScientificRB != null) {
+                m_notationScientificRB.setSelected(true);
+                m_notationNormalRB.setEnabled(false);
+            }
+        }
+
+        return decimals;
     }
 
     /*
@@ -350,7 +436,7 @@ public class Axis extends JComponent {
      */
     private void drawTick(final Graphics g, final long at, final String label,
             final boolean useOffset) {
-        if (label.equals("...")) { //no tick at all
+        if (label.equals("...")) { // no tick at all
             m_tickLength = 0;
         }
         if (m_horizontal) {
@@ -374,18 +460,28 @@ public class Axis extends JComponent {
             }
             g.drawLine(x, 2, x, m_tickLength + 2);
 
-            if (!m_coordinate.isNominal()) {
-                // for the label we adjust the coordinates
-                int lablePixelLength = g.getFontMetrics().stringWidth(label);
+            // if (!m_coordinate.isNominal()) {
+            // for the label we adjust the coordinates
+            int lablePixelLength = g.getFontMetrics().stringWidth(label);
 
-                // place the label in the middle of a tick
-                if (x > lablePixelLength) {
-                    x -= lablePixelLength / 2;
+            // place the label in the middle of a tick
+            if (!m_rotateXLabels) {
+                x -= lablePixelLength / 2;
+            }
+
+            if (x + lablePixelLength > m_fullLength) {
+                // if the label would be printed beyond the right border
+
+                if (m_rotateXLabels) {
+                    x = (int)(x - (0.25 * lablePixelLength));
+                } else {
+                    x = m_fullLength - lablePixelLength;
                 }
-                if (x + lablePixelLength > m_fullLength) {
-                    // if the label would be printed beyond the right border
-                    x = m_fullLength - lablePixelLength - 1;
-                }
+            }
+            // }
+
+            if (x < 0) {
+                x = 0;
             }
 
             // store the tick position for later tool tip retrieval
@@ -397,7 +493,7 @@ public class Axis extends JComponent {
             if (labelY < FONTSIZE) {
                 labelY = FONTSIZE;
             }
-            if (m_coordinate.isNominal()) {
+            if (m_coordinate.isNominal() && m_rotateXLabels) {
                 Rectangle rect =
                         new Rectangle(x, m_tickLength
                                 + g.getFontMetrics().getHeight(), m_tickDist,
@@ -426,26 +522,33 @@ public class Axis extends JComponent {
 
             m_tickPositions.add(y);
 
-            if (!m_coordinate.isNominal()) {
-                // for the label we adjust the coordinates
-                int lablePixelHeight = g.getFontMetrics().getHeight();
+            // System.out.println(m_rotateYLabels);
 
-                // if this would mean that the label is not displayed
-                // at the left border set x to 0
-                if (y < lablePixelHeight) {
-                    y += g.getFontMetrics().getAscent();
-                } else if (y + lablePixelHeight > m_fullLength) {
+            if (!m_coordinate.isNominal()) { // for the label we adjust the
+                // coordinates
+                int lablePixelHeight = g.getFontMetrics().getHeight();
+                y += lablePixelHeight / 2 - 1;
+                // if (y < lablePixelHeight) {
+                // y += g.getFontMetrics().getAscent();
+                // } else
+                if (y + lablePixelHeight > m_fullLength) {
                     // if the label would be printed beyond the border
-                    y -= g.getFontMetrics().getDescent();
+                    y = m_fullLength;
                 }
-                g.drawString(label, SIZE - (2 * m_tickLength)
-                        - g.getFontMetrics().stringWidth(label), y); // +
-                // g.getFontMetrics().getHeight()
-                // / 3);
+                if (y < lablePixelHeight) {
+                    // move the upper tick a bit
+                    y = lablePixelHeight;
+                }
+                g.drawString(label, SIZE - (int)(1.4 * m_tickLength)
+                        - g.getFontMetrics().stringWidth(label), y);
+                // + g.getFontMetrics().getHeight() / 3);
             } else {
+
                 Rectangle rect =
                         new Rectangle(m_tickLength, y - m_tickDist, SIZE
                                 - (2 * m_tickLength), m_tickDist);
+                // new Rectangle(0, y - m_tickDist, SIZE - m_tickLength,
+                // m_tickDist);
                 LabelPaintUtil.drawLabel(label, (Graphics2D)g, rect,
                         LabelPaintUtil.Position.LEFT, m_rotateYLabels);
             }
@@ -476,16 +579,22 @@ public class Axis extends JComponent {
      */
     public void setCoordinate(final Coordinate coordinate) {
         m_coordinate = coordinate;
-        m_selectedMappingMethods.clear();
-        this.setComponentPopupMenu(createAndSetPopupMenu());
+        SCIENTIFIC.setMinimumFractionDigits(0);
+        SCIENTIFIC.setMaximumFractionDigits(2);
+        NORMAL.setMinimumFractionDigits(0);
+        NORMAL.setMaximumFractionDigits(3);
+        this.setComponentPopupMenu(createPopupMenu());
         repaint();
     }
 
-    private JPopupMenu createAndSetPopupMenu() {
+    private JPopupMenu createPopupMenu() {
         if (getCoordinate() == null) {
             return null;
         }
         JPopupMenu popupMenu = new JPopupMenu();
+        createNotationMenu(popupMenu);
+
+        // policies
         if (m_coordinate != null) {
             List<PolicyStrategy> strategies = new LinkedList<PolicyStrategy>();
             if (m_coordinate.getCompatiblePolicies() != null) {
@@ -503,84 +612,162 @@ public class Axis extends JComponent {
             }
             JMenu tickPolicyMenu = new JMenu("Tick policies");
             ButtonGroup tickPolicyButtons = new ButtonGroup();
-            if (strategies != null && strategies.size() > 0) {
+            if (strategies.size() > 0) {
                 popupMenu.add(tickPolicyMenu);
-            } else {
-                // no way to exit normally .. too bad
-                return null;
-            }
-            for (PolicyStrategy strategy : strategies) {
-                final PolicyStrategy tempStrategy = strategy;
-                JRadioButtonMenuItem tickPolicy =
-                        new JRadioButtonMenuItem(strategy.getDisplayName());
-                tickPolicyButtons.add(tickPolicy);
-                tickPolicyMenu.add(tickPolicy);
-                if (strategy.equals(m_coordinate.getCurrentPolicy())) {
-                    tickPolicy.setSelected(true);
-                }
-                tickPolicy.addItemListener(new ItemListener() {
-                    /**
-                     * {@inheritDoc}
-                     */
-                    public void itemStateChanged(final ItemEvent e) {
-                        if (e.getStateChange() == ItemEvent.SELECTED) {
-                            m_coordinate.setPolicy(tempStrategy);
-                            notifyChangeListeners();
-                        }
+
+                for (PolicyStrategy strategy : strategies) {
+                    final PolicyStrategy tempStrategy = strategy;
+                    JRadioButtonMenuItem tickPolicy =
+                            new JRadioButtonMenuItem(strategy.getDisplayName());
+                    tickPolicyButtons.add(tickPolicy);
+                    tickPolicyMenu.add(tickPolicy);
+                    if (strategy.equals(m_coordinate.getCurrentPolicy())) {
+                        tickPolicy.setSelected(true);
                     }
-                });
+                    tickPolicy.addItemListener(new ItemListener() {
+                        /**
+                         * {@inheritDoc}
+                         */
+                        public void itemStateChanged(final ItemEvent e) {
+                            if (e.getStateChange() == ItemEvent.SELECTED) {
+                                m_coordinate.setPolicy(tempStrategy);
+                                notifyChangeListeners();
+                            }
+                        }
+                    });
+                }
             } // add strategies
 
             Set<MappingMethod> mappingMethods =
                     m_coordinate.getCompatibleMappingMethods();
             JMenu mappingMethodMenu = new JMenu("Mapping Methods");
-            if (mappingMethods.size() > 0) {
+            if (mappingMethods != null && mappingMethods.size() > 0) {
                 popupMenu.add(mappingMethodMenu);
-            }
-
-            final Map<MappingMethod, JCheckBoxMenuItem> checkboxes =
-                    new HashMap<MappingMethod, JCheckBoxMenuItem>();
-            for (MappingMethod method : mappingMethods) {
-                final MappingMethod tempMethod = method; // final needed
-                JCheckBoxMenuItem checkbox =
-                        new JCheckBoxMenuItem(method.getDisplayName(), false);
-                checkbox.setEnabled(method
-                        .isCompatibleWithDomain(getCoordinate().getDomain()));
-                checkboxes.put(method, checkbox);
-                checkbox.addItemListener(new ItemListener() {
-                    /**
-                     * {@inheritDoc}
-                     */
+                ButtonGroup buttons = new ButtonGroup();
+                final Map<MappingMethod, JRadioButtonMenuItem> checkboxes =
+                        new HashMap<MappingMethod, JRadioButtonMenuItem>();
+                JRadioButtonMenuItem none =
+                        new JRadioButtonMenuItem("none", true);
+                buttons.add(none);
+                none.addItemListener(new ItemListener() {
+                    @Override
                     public void itemStateChanged(final ItemEvent e) {
                         if (e.getStateChange() == ItemEvent.SELECTED) {
-                            if (!m_selectedMappingMethods.contains(tempMethod)) {
-                                m_selectedMappingMethods.add(tempMethod);
-                            }
-                        } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                            m_selectedMappingMethods.remove(tempMethod);
+                            List<MappingMethod> list =
+                                    new LinkedList<MappingMethod>();
+                            m_coordinate.setActiveMappingMethods(list);
                         }
-                        m_coordinate
-                                .setActiveMappingMethods(m_selectedMappingMethods);
-                        for (Map.Entry<MappingMethod, JCheckBoxMenuItem> entry : checkboxes
-                                .entrySet()) {
-                            if (entry.getKey().isCompatibleWithDomain(
-                                    getCoordinate().getDomain())) {
-                                entry.getValue().setEnabled(true);
-                            } else {
-                                if (!entry.getValue().isSelected()) {
-                                    // the user should be able to disable a
-                                    // mapping method
-                                    entry.getValue().setEnabled(false);
-                                }
-                            }
-                        }
-                        notifyChangeListeners();
                     }
                 });
-                mappingMethodMenu.add(checkbox);
+                mappingMethodMenu.add(none);
+                for (MappingMethod method : mappingMethods) {
+                    final MappingMethod tempMethod = method; // final needed
+                    JRadioButtonMenuItem checkbox =
+                            new JRadioButtonMenuItem(method.getDisplayName(),
+                                    false);
+                    checkbox
+                            .setEnabled(method
+                                    .isCompatibleWithDomain(getCoordinate()
+                                            .getDomain()));
+                    checkboxes.put(method, checkbox);
+                    buttons.add(checkbox);
+                    if (m_coordinate.getActiveMappingMethods().contains(method)) {
+                        checkbox.setSelected(true);
+                    }
+                    checkbox.addItemListener(new ItemListener() {
+                        /**
+                         * {@inheritDoc}
+                         */
+                        public void itemStateChanged(final ItemEvent e) {
+                            int stateChange = e.getStateChange();
+                            if (e.getStateChange() == ItemEvent.SELECTED) {
+                                if (!m_coordinate.getActiveMappingMethods()
+                                        .contains(tempMethod)) {
+                                    List<MappingMethod> list =
+                                            new LinkedList<MappingMethod>();
+                                    m_coordinate.setActiveMappingMethods(list);
+                                    m_coordinate
+                                            .addActiveMappingMethod(tempMethod);
+                                }
+                            } else if (stateChange == ItemEvent.DESELECTED) {
+                                m_coordinate
+                                        .removeActiveMappingMethod(tempMethod);
+                            }
+                            for (Map.Entry<MappingMethod, JRadioButtonMenuItem> entry : checkboxes
+                                    .entrySet()) {
+                                if (entry.getKey().isCompatibleWithDomain(
+                                        getCoordinate().getDomain())) {
+                                    entry.getValue().setEnabled(true);
+                                } else {
+                                    if (!entry.getValue().isSelected()) {
+                                        // the user should be able to disable a
+                                        // mapping method
+                                        entry.getValue().setEnabled(false);
+                                    }
+                                }
+                            }
+                            notifyChangeListeners();
+                        }
+                    });
+                    mappingMethodMenu.add(checkbox);
+                }
+
+                for (Map.Entry<MappingMethod, JRadioButtonMenuItem> entry : checkboxes
+                        .entrySet()) {
+                    if (entry.getKey().isCompatibleWithDomain(
+                            getCoordinate().getDomain())) {
+                        entry.getValue().setEnabled(true);
+                    } else {
+                        if (!entry.getValue().isSelected()) {
+                            entry.getValue().setEnabled(false);
+                        }
+                    }
+                }
             }
         }
+        if (popupMenu.getComponentCount() < 1) {
+            return null;
+        }
         return popupMenu;
+    }
+
+    private void createNotationMenu(final JPopupMenu popupMenu) {
+        // notation
+        if (m_coordinate != null && !m_coordinate.isNominal()) {
+
+            JMenu notationsMenu = new JMenu("Notations");
+            ButtonGroup notationBG = new ButtonGroup();
+
+            m_notationScientificRB = new JRadioButtonMenuItem("scientific");
+            m_notationScientificRB.setSelected(m_currFormat == SCIENTIFIC);
+            m_notationScientificRB.addItemListener(new ItemListener() {
+                @Override
+                public void itemStateChanged(final ItemEvent e) {
+                    if (e.getStateChange() == ItemEvent.SELECTED) {
+                        m_currFormat = SCIENTIFIC;
+                    }
+                    repaint();
+                }
+            });
+            notationBG.add(m_notationScientificRB);
+
+            m_notationNormalRB = new JRadioButtonMenuItem("normal");
+            m_notationNormalRB.setSelected(m_currFormat == NORMAL);
+            m_notationNormalRB.addItemListener(new ItemListener() {
+                @Override
+                public void itemStateChanged(final ItemEvent e) {
+                    if (e.getStateChange() == ItemEvent.SELECTED) {
+                        m_currFormat = NORMAL;
+                    }
+                    repaint();
+                }
+            });
+            notationBG.add(m_notationNormalRB);
+
+            notationsMenu.add(m_notationScientificRB);
+            notationsMenu.add(m_notationNormalRB);
+            popupMenu.add(notationsMenu);
+        }
     }
 
     /**
@@ -607,5 +794,10 @@ public class Axis extends JComponent {
      */
     public Coordinate getCoordinate() {
         return m_coordinate;
+    }
+
+    private String formatDouble(final double d) {
+        m_currFormat.setRoundingMode(RoundingMode.FLOOR);
+        return m_currFormat.format(d);
     }
 }
