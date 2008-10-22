@@ -1,4 +1,4 @@
-/*  
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   12.01.2005 (Florian Georg): created
  */
@@ -50,7 +50,7 @@ import org.osgi.framework.BundleContext;
 
 /**
  * Plugin class for the eclipse UI contributions.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class KNIMEUIPlugin extends AbstractUIPlugin {
@@ -67,18 +67,18 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
 
     // Resource bundle.
     private ResourceBundle m_resourceBundle;
-    
+
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(KNIMEUIPlugin.class);
 
-    
+
     /**
      * Keeps list of <code>ConsoleViewAppender</code>. TODO FIXME remove
      * static if you want to have a console for each Workbench
      */
     private static final ArrayList<ConsoleViewAppender> APPENDERS =
             new ArrayList<ConsoleViewAppender>();
-    
+
     /**
      * The constructor.
      */
@@ -86,19 +86,18 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
         super();
         plugin = this;
     }
-    
-    
+
+
     /**
      * This method is called upon plug-in activation.
-     * 
+     *
      * @param context The bundle context
      * @throws Exception If failed
      */
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
-        readAndSetPreferences();
-        
+
         // create a knime encryption supplier that reads in an encryption key
         // from the user via a dialog or directly from the preference page
         KnimeEncryption.setEncryptionKeySupplier(
@@ -111,7 +110,7 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
                 PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE);
         int usedHistorySize = prefStore.getInt(
                 PreferenceConstants.P_FAV_LAST_USED_SIZE);
-        
+
         prefStore.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent event) {
@@ -123,7 +122,7 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
                         count = (Integer)event.getNewValue();
                         NodeUsageRegistry.setMaxFrequentSize(count);
                     } catch (Exception e) {
-                        LOGGER.warn("Unable to set maximum number of " 
+                        LOGGER.warn("Unable to set maximum number of "
                                 + "frequently used nodes", e);
                     }
                 } else if (PreferenceConstants.P_FAV_LAST_USED_SIZE.equals(
@@ -133,10 +132,15 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
                         count = (Integer)event.getNewValue();
                         NodeUsageRegistry.setMaxLastUsedSize(count);
                     } catch (Exception e) {
-                        LOGGER.warn("Unable to set maximum number of " 
+                        LOGGER.warn("Unable to set maximum number of "
                                 + "last used nodes", e);
                     }
+                } else if (PreferenceConstants.P_LOGLEVEL_CONSOLE.equals(
+                        prop)) {
+                    String newName = event.getNewValue().toString();
+                    setLogLevel(newName);
                 }
+
             }
         });
 
@@ -144,39 +148,24 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
             NodeUsageRegistry.setMaxFrequentSize(freqHistorySize);
             NodeUsageRegistry.setMaxLastUsedSize(usedHistorySize);
         } catch (Exception e) {
-            NodeLogger.getLogger(KNIMEUIPlugin.class).error(
-                    "Error during loading of node usage history: ", e);
+            LOGGER.error("Error during loading of node usage history: ", e);
         }
-    }
-    
-    
-    public void readAndSetPreferences() {
-        IPreferenceStore pStore =
-                KNIMEUIPlugin.getDefault().getPreferenceStore();
+
         String logLevelConsole =
-                pStore.getString(PreferenceConstants.P_LOGLEVEL_CONSOLE);
-        setLogLevel(logLevelConsole);
+            prefStore.getString(PreferenceConstants.P_LOGLEVEL_CONSOLE);
         try {
             ConsoleViewAppender.WARN_APPENDER
-                    .write(KNIMEConstants.WELCOME_MESSAGE);
+                .write(KNIMEConstants.WELCOME_MESSAGE);
             ConsoleViewAppender.WARN_APPENDER.write("Log file is located at: "
                     + KNIMEConstants.getKNIMEHomeDir() + File.separator
                     + NodeLogger.LOG_FILE + "\n");
         } catch (IOException ioe) {
             LOGGER.error("Could not print welcome message: ", ioe);
         }
-        pStore.addPropertyChangeListener(new IPropertyChangeListener() {
-            public void propertyChange(final PropertyChangeEvent event) {
-                if (event.getProperty().equals(
-                        PreferenceConstants.P_LOGLEVEL_CONSOLE)) {
-                    String newName = event.getNewValue().toString();
-                    setLogLevel(newName);
-                }
-            }
-        });
+        setLogLevel(logLevelConsole);
     }
-    
-    
+
+
     /**
      * Register the appenders according to logLevel, i.e.
      * PreferenceConstants.P_LOGLEVEL_DEBUG,
@@ -219,8 +208,8 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
             LOGGER.info("Setting console view log level to " + logLevel);
         }
     }
-    
-    
+
+
     /**
      * Add the given Appender to the NodeLogger.
      *
@@ -254,10 +243,10 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
 
     /**
      * This method is called when the plug-in is stopped.
-     * 
+     *
      * @param context The bundle context
      * @throws Exception If failed
-     * 
+     *
      */
     @Override
     public void stop(final BundleContext context) throws Exception {
@@ -276,7 +265,7 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
 
     /**
      * Returns the shared instance.
-     * 
+     *
      * @return The shared plugin instance
      */
     public static KNIMEUIPlugin getDefault() {
@@ -286,7 +275,7 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
     /**
      * Returns the string from the plugin's resource bundle, or 'key' if not
      * found.
-     * 
+     *
      * @param key The resource key
      * @return The resource string
      */
@@ -317,7 +306,7 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
 
     /**
      * Returns a (cached) image from the image registry.
-     * 
+     *
      * @param descriptor The image descriptor
      * @return The image, or a default image if missing.
      */
@@ -347,7 +336,7 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
 
     /**
      * This only works for images located in the KNIMERepositry Plugin !
-     * 
+     *
      * @param filename The filename, relative to the KNIMERepositryPlugin root
      * @return The image, default will be supplied if missing.
      */
@@ -357,7 +346,7 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
 
     /**
      * Load a image from the given location from within the plugin.
-     * 
+     *
      * @param pluginID The ID of the hosting plugin
      * @param filename The elative filename
      * @return The image, a default will be returned if file was missing.
@@ -369,7 +358,7 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
 
     /**
      * Returns a image descriptor.
-     * 
+     *
      * @param pluginID The plugin ID
      * @param filename Th relative filename
      * @return The descriptor, or null
