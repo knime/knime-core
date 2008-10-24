@@ -162,6 +162,7 @@ public class NewJoinerNodeModel extends NodeModel {
 
                     DataColumnSpecCreator dcsc =
                             new DataColumnSpecCreator(colSpec);
+                    dcsc.removeAllHandlers();
                     dcsc.setName(newName);
                     takeSpecs.add(dcsc.createSpec());
                     stci.add(i);

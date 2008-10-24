@@ -116,8 +116,6 @@ public abstract class NodeModel {
      * output types.
      * @param inPortTypes an array of non-null in-port types
      * @param outPortTypes an array of non-null out-port types
-     * @throws NegativeArraySizeException If the number of in- or outputs is
-     *             smaller than zero.
      */
     protected NodeModel(final PortType[] inPortTypes,
             final PortType[] outPortTypes) {
@@ -129,10 +127,11 @@ public abstract class NodeModel {
                        new CopyOnWriteArraySet<NodeModelWarningListener>();
 
         // check port types of validity and store them
-        if ((inPortTypes == null) || (outPortTypes == null)) {
-            throw new NullPointerException("Args must not be null!");
+        if (inPortTypes == null) {
+            m_inPortTypes = new PortType[0];
+        } else {
+            m_inPortTypes = new PortType[inPortTypes.length];
         }
-        m_inPortTypes = new PortType[inPortTypes.length];
         for (int i = 0; i < inPortTypes.length; i++) {
             if (inPortTypes[i] == null) {
                 throw new NullPointerException("InPortType[" + i
@@ -140,7 +139,11 @@ public abstract class NodeModel {
             }
             m_inPortTypes[i] = inPortTypes[i];
         }
-        m_outPortTypes = new PortType[outPortTypes.length];
+        if (outPortTypes == null) {
+            m_outPortTypes = new PortType[0];
+        } else {
+            m_outPortTypes = new PortType[outPortTypes.length];
+        }
         for (int i = 0; i < outPortTypes.length; i++) {
             if (outPortTypes[i] == null) {
                 throw new NullPointerException("OutPortType[" + i
@@ -364,7 +367,7 @@ public abstract class NodeModel {
      *             execution. Even if the derived model doesn't check, the
      *             result will be discarded and the exception thrown. 
      * @throws IllegalStateException If the number of <code>PortObject</code>
-     *             objects returned by the derived <code>GenericNodeModel</code>
+     *             objects returned by the derived <code>NodeModel</code>
      *             does not match the number of outputs. Or if any of them is 
      *             null.
      * @see #execute(PortObject[],ExecutionContext)
@@ -524,8 +527,7 @@ public abstract class NodeModel {
      *             the execution.
      */
     protected PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec)
-    throws Exception {
+            final ExecutionContext exec) throws Exception {
         // default implementation: the standard version needs to hold: all
         // ports are data ports!
         
@@ -550,7 +552,8 @@ public abstract class NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec)
         throws Exception {
-            throw new IOException("NodeModel.execute() implementation missing!");
+            throw new IOException(
+                    "NodeModel.execute() implementation missing!");
     }
 
     /**
@@ -595,10 +598,10 @@ public abstract class NodeModel {
             try {
                 view.callModelChanged();
             } catch (Exception e) {
-                setWarningMessage("View [" + view.getViewName()
+                setWarningMessage("View [" + view.getViewTitle()
                         + "] could not be open, reason: " + e.getMessage());
-                m_logger.debug("View [" + view.getViewName()
-                        + "] could not be open", e);
+                m_logger.debug("View [" + view.getViewTitle()
+                        + "] could not be open, reason: " + e.getMessage(), e);
             }
         }
     }
@@ -608,7 +611,7 @@ public abstract class NodeModel {
      * views about changes of the settings or during execution, if you want the
      * views to show the progress, and if they can display models half way
      * through the execution. In the view
-     * <code>GenericNodeView#updateModel(Object)</code> is called and needs to
+     * <code>NodeView#updateModel(Object)</code> is called and needs to
      * be overridden.
      *
      * @param arg The argument you want to pass.
@@ -620,7 +623,7 @@ public abstract class NodeModel {
     }
 
     /**
-     * <p>This implementation is empty. Subclasses may override this method
+     * This implementation is empty. Subclasses may override this method
      * in order to be informed when the hilite handler changes at the inport,
      * e.g. when the node (or an preceding node) is newly connected.
      *
@@ -631,7 +634,6 @@ public abstract class NodeModel {
      * @throws IndexOutOfBoundsException If the <code>inIndex</code> is not in
      *          the range of inputs.
      */
-    //TODO refactor - terrible name! This is a notification really!
     protected void setInHiLiteHandler(final int inIndex,
             final HiLiteHandler hiLiteHdl) {
         assert inIndex >= 0;
@@ -854,7 +856,8 @@ public abstract class NodeModel {
         return outDataSpecs;
     }
     
-    /** Simple implementation processing only BufferedDataTables.
+    /** 
+     * Simple implementation processing only BufferedDataTables.
      * 
      * @param inSpecs
      * @return
@@ -910,8 +913,7 @@ public abstract class NodeModel {
 
     /**
      * Notifies all listeners that the warning of this node has changed.
-     * 
-     * @param message The warning message.
+     * @param warning message
      */
     public void notifyWarningListeners(final String warning) {
         for (NodeModelWarningListener listener : m_warningListeners) {

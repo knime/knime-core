@@ -175,6 +175,8 @@ public final class KnimeEncryption {
      */
     public static void setEncryptionKeySupplier(
             final EncryptionKeySupplier supplier) {
+        LOGGER.debug("Replacing current encryption key supplier \""
+                + keySupplier + "\" with this new one \"" + supplier + "\".");
         keySupplier = supplier;
     }
 

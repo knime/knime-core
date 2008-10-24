@@ -136,6 +136,9 @@ public class ExecutionContext extends ExecutionMonitor {
     public BufferedDataTable createBufferedDataTable(final DataTable table,
             final ExecutionMonitor subProgressMon)
             throws CanceledExecutionException {
+        if (table instanceof BufferedDataTable) {
+            return (BufferedDataTable) table;
+        }
         BufferedDataContainer c = createDataContainer(
                 table.getDataTableSpec(), true);
         int row = 0;
@@ -168,7 +171,8 @@ public class ExecutionContext extends ExecutionMonitor {
             throws CanceledExecutionException {
         BufferedDataTable[] temp = new BufferedDataTable[tables.length];
         for (int i = 0; i < tables.length; i++) {
-            temp[i] = createBufferedDataTable(tables[i], exec);
+            temp[i] = createBufferedDataTable(tables[i], 
+                    exec.createSubProgress(1.0 / tables.length));
         }
         return temp;
 

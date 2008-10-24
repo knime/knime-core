@@ -17,6 +17,7 @@
 package org.knime.product.rcp;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -52,11 +53,16 @@ public class KNIMEApplication implements IApplication {
 
     private static final String VERSION_FILENAME = "version.ini"; //$NON-NLS-1$
 
-    private static final String WORKSPACE_VERSION_KEY = "org.eclipse.core.runtime"; //$NON-NLS-1$
+    private static final String WORKSPACE_VERSION_KEY =
+            "org.eclipse.core.runtime"; //$NON-NLS-1$
 
     private static final String WORKSPACE_VERSION_VALUE = "1"; //$NON-NLS-1$
 
     private static final String PROP_EXIT_CODE = "eclipse.exitcode"; //$NON-NLS-1$
+
+    private static final String XUL = "org.eclipse.swt.browser.XULRunnerPath";
+
+    private static final String[] XUL_BINS = {"xulrunner", "xulrunner-bin"};
 
     /**
      * A special return code that will be recognized by the launcher and used to
@@ -64,8 +70,11 @@ public class KNIMEApplication implements IApplication {
      */
     private static final Integer EXIT_RELAUNCH = new Integer(24);
 
-    /* (non-Javadoc)
-     * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext context)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext
+     *      context)
      */
     public Object start(final IApplicationContext appContext) throws Exception {
         Display display = createDisplay();
@@ -78,19 +87,29 @@ public class KNIMEApplication implements IApplication {
                     Platform.endSplash();
                     return EXIT_OK;
                 }
+                boolean xulOk = true;
+                try {
+                    xulOk = checkXULRunner();
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                }
+                if (!xulOk) {
+                    Platform.endSplash();
+                    return EXIT_OK;
+                }
             } finally {
                 if (shell != null) {
                     shell.dispose();
                 }
             }
-            checkXULRunner();
 
             // create the workbench with this advisor and run it until it exits
             // N.B. createWorkbench remembers the advisor, and also registers
             // the workbench globally so that all UI plug-ins can find it using
             // PlatformUI.getWorkbench() or AbstractUIPlugin.getWorkbench()
-            int returnCode = PlatformUI.createAndRunWorkbench(display,
-                    new KNIMEApplicationWorkbenchAdvisor());
+            int returnCode =
+                    PlatformUI.createAndRunWorkbench(display,
+                            new KNIMEApplicationWorkbenchAdvisor());
 
             // the workbench doesn't support relaunch yet (bug 61809) so
             // for now restart is used, and exit data properties are checked
@@ -112,7 +131,7 @@ public class KNIMEApplication implements IApplication {
 
     /**
      * Creates the display used by the application.
-     *
+     * 
      * @return the display used by the application
      */
     protected Display createDisplay() {
@@ -122,7 +141,7 @@ public class KNIMEApplication implements IApplication {
     /**
      * Return true if a valid workspace path has been set and false otherwise.
      * Prompt for and set the path if possible and required.
-     *
+     * 
      * @return true if a valid instance location has been set and false
      *         otherwise
      */
@@ -158,31 +177,31 @@ public class KNIMEApplication implements IApplication {
                 // Two possibilities:
                 // 1. directory is already in use
                 // 2. directory could not be created
-                File workspaceDirectory = new File(instanceLoc.getURL().getFile());
+                File workspaceDirectory =
+                        new File(instanceLoc.getURL().getFile());
                 if (workspaceDirectory.exists()) {
-                    MessageDialog.openError(
-                            shell,
-                            IDEWorkbenchMessages.IDEApplication_workspaceCannotLockTitle,
-                            IDEWorkbenchMessages.IDEApplication_workspaceCannotLockMessage);
+                    MessageDialog
+                            .openError(
+                                    shell,
+                                    IDEWorkbenchMessages.IDEApplication_workspaceCannotLockTitle,
+                                    IDEWorkbenchMessages.IDEApplication_workspaceCannotLockMessage);
                 } else {
-                    MessageDialog.openError(
-                            shell,
-                            IDEWorkbenchMessages.IDEApplication_workspaceCannotBeSetTitle,
-                            IDEWorkbenchMessages.IDEApplication_workspaceCannotBeSetMessage);
+                    MessageDialog
+                            .openError(
+                                    shell,
+                                    IDEWorkbenchMessages.IDEApplication_workspaceCannotBeSetTitle,
+                                    IDEWorkbenchMessages.IDEApplication_workspaceCannotBeSetMessage);
                 }
             } catch (IOException e) {
-                MessageDialog
-                .openError(
-                        shell,
-                        IDEWorkbenchMessages.InternalError,
-                        e.getMessage());
+                MessageDialog.openError(shell,
+                        IDEWorkbenchMessages.InternalError, e.getMessage());
             }
             return false;
         }
 
         // -data @noDefault or -data not specified, prompt and set
-        ChooseWorkspaceData launchData = new ChooseWorkspaceData(instanceLoc
-                .getDefault());
+        ChooseWorkspaceData launchData =
+                new ChooseWorkspaceData(instanceLoc.getDefault());
 
         boolean force = false;
         while (true) {
@@ -214,7 +233,8 @@ public class KNIMEApplication implements IApplication {
 
             // by this point it has been determined that the workspace is
             // already in use -- force the user to choose again
-            MessageDialog.openError(shell, IDEWorkbenchMessages.IDEApplication_workspaceInUseTitle,
+            MessageDialog.openError(shell,
+                    IDEWorkbenchMessages.IDEApplication_workspaceInUseTitle,
                     IDEWorkbenchMessages.IDEApplication_workspaceInUseMessage);
         }
     }
@@ -224,22 +244,22 @@ public class KNIMEApplication implements IApplication {
      * argument data with the user's selection. Perform first level validation
      * on the selection by comparing the version information. This method does
      * not examine the runtime state (e.g., is the workspace already locked?).
-     *
+     * 
      * @param shell
      * @param launchData
-     * @param force
-     *            setting to true makes the dialog open regardless of the
+     * @param force setting to true makes the dialog open regardless of the
      *            showDialog value
      * @return An URL storing the selected workspace or null if the user has
      *         canceled the launch operation.
      */
-    private URL promptForWorkspace(final Shell shell, final ChooseWorkspaceData launchData,
-            boolean force) {
+    private URL promptForWorkspace(final Shell shell,
+            final ChooseWorkspaceData launchData, boolean force) {
         URL url = null;
         do {
             // don't use the parent shell to make the dialog a top-level
             // shell. See bug 84881.
-            new ChooseWorkspaceDialog(null, launchData, false, true).prompt(force);
+            new ChooseWorkspaceDialog(null, launchData, false, true)
+                    .prompt(force);
             String instancePath = launchData.getSelection();
             if (instancePath == null) {
                 return null;
@@ -253,10 +273,10 @@ public class KNIMEApplication implements IApplication {
             // 70576: don't accept empty input
             if (instancePath.length() <= 0) {
                 MessageDialog
-                .openError(
-                        shell,
-                        IDEWorkbenchMessages.IDEApplication_workspaceEmptyTitle,
-                        IDEWorkbenchMessages.IDEApplication_workspaceEmptyMessage);
+                        .openError(
+                                shell,
+                                IDEWorkbenchMessages.IDEApplication_workspaceEmptyTitle,
+                                IDEWorkbenchMessages.IDEApplication_workspaceEmptyMessage);
                 continue;
             }
 
@@ -267,10 +287,12 @@ public class KNIMEApplication implements IApplication {
             }
 
             try {
-                // Don't use File.toURL() since it adds a leading slash that Platform does not
-                // handle properly.  See bug 54081 for more details.
-                String path = workspace.getAbsolutePath().replace(
-                        File.separatorChar, '/');
+                // Don't use File.toURL() since it adds a leading slash that
+                // Platform does not
+                // handle properly. See bug 54081 for more details.
+                String path =
+                        workspace.getAbsolutePath().replace(File.separatorChar,
+                                '/');
                 url = new URL("file", null, path); //$NON-NLS-1$
             } catch (MalformedURLException e) {
                 MessageDialog
@@ -290,7 +312,7 @@ public class KNIMEApplication implements IApplication {
      * false otherwise. A version check will be performed, and a confirmation
      * box may be displayed on the argument shell if an older version is
      * detected.
-     *
+     * 
      * @return true if the argument URL is ok to use as a workspace and false
      *         otherwise.
      */
@@ -322,10 +344,13 @@ public class KNIMEApplication implements IApplication {
         // other than the current ide version -- find out if the user wants
         // to use it anyhow.
         String title = IDEWorkbenchMessages.IDEApplication_versionTitle;
-        String message = NLS.bind(IDEWorkbenchMessages.IDEApplication_versionMessage, url.getFile());
+        String message =
+                NLS.bind(IDEWorkbenchMessages.IDEApplication_versionMessage,
+                        url.getFile());
 
-        MessageBox mbox = new MessageBox(shell, SWT.OK | SWT.CANCEL
-                | SWT.ICON_WARNING | SWT.APPLICATION_MODAL);
+        MessageBox mbox =
+                new MessageBox(shell, SWT.OK | SWT.CANCEL | SWT.ICON_WARNING
+                        | SWT.APPLICATION_MODAL);
         mbox.setText(title);
         mbox.setMessage(message);
         return mbox.open() == SWT.OK;
@@ -361,8 +386,8 @@ public class KNIMEApplication implements IApplication {
 
     /**
      * Write the version of the metadata into a known file overwriting any
-     * existing file contents. Writing the version file isn't really crucial,
-     * so the function is silent about failure
+     * existing file contents. Writing the version file isn't really crucial, so
+     * the function is silent about failure
      */
     private static void writeWorkspaceVersion() {
         Location instanceLoc = Platform.getInstanceLocation();
@@ -377,8 +402,8 @@ public class KNIMEApplication implements IApplication {
 
         OutputStream output = null;
         try {
-            String versionLine = WORKSPACE_VERSION_KEY + '='
-                    + WORKSPACE_VERSION_VALUE;
+            String versionLine =
+                    WORKSPACE_VERSION_KEY + '=' + WORKSPACE_VERSION_VALUE;
 
             output = new FileOutputStream(versionFile);
             output.write(versionLine.getBytes("UTF-8")); //$NON-NLS-1$
@@ -398,9 +423,8 @@ public class KNIMEApplication implements IApplication {
      * The version file is stored in the metadata area of the workspace. This
      * method returns an URL to the file or null if the directory or file does
      * not exist (and the create parameter is false).
-     *
-     * @param create
-     *            If the directory and file does not exist this parameter
+     * 
+     * @param create If the directory and file does not exist this parameter
      *            controls whether it will be created.
      * @return An url to the file or null if the version file does not exist or
      *         could not be created.
@@ -431,39 +455,107 @@ public class KNIMEApplication implements IApplication {
         }
     }
 
-    /** Checks whether we are running linux and if so, we set the
-     * "org.eclipse.swt.browser.XULRunnerPath" property. The property
-     * points to the "xulrunner" directory in the installation dir (if that
-     * dir does not exist, this method does nothing).
-     * This is one suggested workaround for bug
-     * https://bugs.eclipse.org/bugs/show_bug.cgi?id=236724#c22
-     * (eclipse 3.3.2 crashes on linux with firefox 3.0 installed).
+    /**
+     * Checks whether a compatible xulrunner version is installed on a linux
+     * system and sets java property appropriately. It will also popup a dialog
+     * to warn the user before a crash. This all is done to address bug
+     * https://bugs.eclipse.org/bugs/show_bug.cgi?id=236724#c22 (eclipse 3.3.2
+     * crashes on linux with firefox 3.0 installed).
      */
-    private void checkXULRunner() {
+    private boolean checkXULRunner() throws Exception {
         if (!"linux".equalsIgnoreCase(System.getProperty("os.name"))) {
-            return;
+            return true;
         }
-        if (System.getProperty(
-                "org.eclipse.swt.browser.XULRunnerPath") != null) {
-            return;
+        if (System.getProperty(XUL) != null) {
+            return true;
         }
-        Location instanceLoc = Platform.getInstallLocation();
-        if (instanceLoc == null || !instanceLoc.isSet()) {
-            return;
+
+        File libDir = new File("/usr/lib");
+        File[] xulLocations = libDir.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(final File pathname) {
+                return pathname.isDirectory()
+                        && (pathname.getName().startsWith("xulrunner")
+                                || pathname.getName().startsWith("firefox")
+                                || pathname.getName().startsWith("seamonkey") || pathname
+                                .getName().startsWith("mozilla"));
+            }
+        });
+
+        File xul19Location = null;
+        File xul18Location = null;
+
+        for (File dir : xulLocations) {
+            File libXPCom = new File(dir, "libxpcom.so");
+            if (!libXPCom.exists()) {
+                continue;
+            }
+
+            for (String s : XUL_BINS) {
+                File xulrunner = new File(dir, s);
+                if (xulrunner.canExecute()) {
+                    Process p =
+                            Runtime.getRuntime().exec(
+                                    new String[]{xulrunner.getAbsolutePath(),
+                                            "-v"});
+                    byte[] buf = new byte[4096];
+                    int r = p.getErrorStream().read(buf);
+                    if (r >= 0) {
+                        String version = new String(buf, 0, r);
+                        if (version.indexOf(" 1.9") >= 0) {
+                            xul19Location = dir;
+                        } else {
+                            xul18Location = dir;
+                        }
+
+                        while (p.getErrorStream().read(buf) >= 0) {
+                        }
+                    }
+                    p.waitFor();
+                }
+            }
         }
-        URL url = instanceLoc.getURL();
-        String path = url != null ? url.getPath() : null;
-        if (path == null) {
-            return;
-        }
-        File xulrunnerDir = new File(new File(path), "xulrunner");
-        if (xulrunnerDir.isDirectory()) {
-            System.setProperty("org.eclipse.swt.browser.XULRunnerPath",
-                    xulrunnerDir.getAbsolutePath());
+
+        if (xul18Location != null) {
+            System.out.println("Using xulrunner at '"
+                    + xul18Location.getAbsolutePath()
+                    + "' as internal web browser. If you want to change this,"
+                    + " add '-D" + XUL + "=...' to " + " knime.ini");
+            System.setProperty(XUL, xul18Location.getAbsolutePath());
+            return true;
+        } else if (xul19Location != null) {
+            String knimeLOC = "<unknown>";
+            Location instanceLoc = Platform.getInstallLocation();
+            if (instanceLoc != null && instanceLoc.isSet()) {
+                URL url = instanceLoc.getURL();
+                String path = url != null ? url.getPath() : null;
+                if (path != null) {
+                    knimeLOC = new File(path).getAbsolutePath();
+                }
+            }
+            return MessageDialog.openQuestion(null, "Internal Web Browser",
+                "KNIME found an incompatible version of xulrunner "
+                    + "at '" + xul19Location.getAbsolutePath() + "'. "
+                    + "This might result in a crash if you continue "
+                    + "now due to a known Eclipse bug.\n"
+                    + "Please install a version of xulrunner < 1.9 and add '-D"
+                    + XUL + "=...' to knime.ini.\nDetails on this problem " 
+                    + "can be found in the KNIME FAQs on knime.org and the " 
+                    + "readme file in the KNIME directory (\"" 
+                    + knimeLOC + "\").\n" 
+                    + "Do you want to continue loading KNIME?");
+        } else {
+            System.out.println("No xulrunner found, Node descriptions and "
+                    + "online help will possibly not work. If you have " 
+                    + "xulrunner installed at an unusual location, add '-D" 
+                    + XUL + "=...' to knime.ini.");
+            return true;
         }
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.eclipse.equinox.app.IApplication#stop()
      */
     public void stop() {

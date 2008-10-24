@@ -34,19 +34,22 @@ import org.knime.core.data.RowKey;
 import org.knime.core.node.NodeLogger;
 
 /**
- * Default implementation for a <code>HiLiteHandler</code> which receives
- * hilite change requests, answers, queries, and notifies registered listeners. 
+ * <code>HiLiteHandler</code> implementation which receives hilite change
+ * requests, answers, queries, and notifies registered listeners.
  * <p>
- * This implementation keeps a list of row keys only for the hilit items. 
+ * This implementation keeps a list of row keys only for the hilit items.
  * Furthermore, an event is only sent for items whose status actually changed.
- * The list of hilite keys is modified (delete or add keys) before
- * the actual event is send.
+ * The list of hilite keys is modified (delete or add keys) before the actual
+ * event is send.
+ * <p>
+ * Do NOT derive this class which intended to be final but can't due to the
+ * historical <code>DefaultHiLiteHandler</code> class.
  * 
  * @see HiLiteListener
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class HiLiteHandler {
+public class HiLiteHandler {
     
     /**
      * Constant for the Menu entry 'HiLite'.

@@ -150,6 +150,40 @@ public abstract class PolicyStrategy {
     }
 
     /**
+     * Calculates the mappings of the ticks according to the policy.
+     * Additionally, values for infinity can be changed.
+     *
+     * @param absoluteLength the absolute length
+     * @param minDomainValue the minimal domain value
+     * @param maxDomainValue the maximal domain value
+     * @param tickDistance the absolute distance between to ticks
+     * @param negativeInfinity the value for negative infinity
+     * @param positiveInfinity the value for positive infinity
+     * @return the mappings of the ticks.
+     */
+    public CoordinateMapping[] getTickPositions(final int absoluteLength,
+            final int minDomainValue, final int maxDomainValue,
+            final int tickDistance, final double negativeInfinity,
+            final double positiveInfinity) {
+        m_negativeInfinity = negativeInfinity;
+        m_positiveInfinity = positiveInfinity;
+        return getTickPositions(absoluteLength, minDomainValue, maxDomainValue,
+                tickDistance);
+    }
+
+    /**
+     * Calculates the mappings of the ticks according to the policy.
+     *
+     * @param absoluteLength the absolute length
+     * @param minDomainValue the minimal domain value
+     * @param maxDomainValue the maximal domain value
+     * @param tickDistance the absolute distance between to ticks
+     * @return the mappings of the ticks.
+     */
+    public abstract CoordinateMapping[] getTickPositions(int absoluteLength,
+            int minDomainValue, int maxDomainValue, int tickDistance);
+
+    /**
      * Returns the name of this strategy.
      *
      * @return the name

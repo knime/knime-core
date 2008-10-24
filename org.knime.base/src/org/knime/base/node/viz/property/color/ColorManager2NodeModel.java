@@ -231,16 +231,19 @@ class ColorManager2NodeModel extends NodeModel {
             if (column == null) {
                 throw new InvalidSettingsException("No column selected.");
             }
-            super.setWarningMessage(
-                    "Selected column \"" + column
-                    + "\" with default nominal color mapping.");
+            m_column = column;
+            m_isNominal = true;
             Set<DataCell> set = spec.getColumnSpec(column).
                     getDomain().getValues();
-            ColorHandler colorHandler = createNominalColorHandler(
-                    ColorManager2DialogNominal.createColorMapping(set));
+            m_map.clear();
+            m_map.putAll(ColorManager2DialogNominal.createColorMapping(set));
+            ColorHandler colorHandler = createNominalColorHandler(m_map);
             DataTableSpec dataSpec = getOutSpec(spec, column, colorHandler);
             DataTableSpec modelSpec = 
                 new DataTableSpec(dataSpec.getColumnSpec(column));
+            super.setWarningMessage(
+                    "Selected column \"" + column
+                    + "\" with default nominal color mapping.");
             return new DataTableSpec[]{dataSpec, modelSpec};
         }
         // check column in spec

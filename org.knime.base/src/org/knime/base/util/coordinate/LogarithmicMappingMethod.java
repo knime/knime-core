@@ -37,6 +37,21 @@ import org.knime.core.data.def.DoubleCell;
  */
 public class LogarithmicMappingMethod implements MappingMethod {
 
+    /**
+     * Identifier for a logarithmic mapping method with base e ( ln ).
+     */
+    public static final String ID_BASE_E = "lnMappingMethod";
+
+    /**
+     * Identifier for a logarithmic mapping method with base 2 ( ld ).
+     */
+    public static final String ID_BASE_2 = "ldMappingMethod";
+
+    /**
+     * Identifier for a logarithmic mapping method with base 10 ( log ).
+     */
+    public static final String ID_BASE_10 = "logMappingMethod";
+
     private double m_base;
 
     private double m_logBase;
@@ -72,17 +87,16 @@ public class LogarithmicMappingMethod implements MappingMethod {
             return in;
         }
         double value = ((DoubleValue)in).getDoubleValue();
-        if (value < 0.0) {
+        if (value <= 0.0) {
             // should not get this input at all
             // no guarantee for output..
             return in;
         }
-        if (value == Double.POSITIVE_INFINITY) {
+        if (Double.isInfinite(value)) {
             value = Double.MAX_VALUE;
-        } else if (value == Double.NEGATIVE_INFINITY) {
-            value = -Double.MAX_VALUE;
         }
         value = Math.log(value) / m_logBase;
+
         return new DoubleCell(value);
     }
 
@@ -101,6 +115,9 @@ public class LogarithmicMappingMethod implements MappingMethod {
 
     /**
      * {@inheritDoc}
+     *
+     * The logarithmic mapping method is usable if lower bound is greater or
+     * equal 0 and the upper bound is greater than 1 for scaling reasons.
      */
     public boolean isCompatibleWithDomain(final DataColumnDomain domain) {
         if (domain.getLowerBound().getType().isCompatible(DoubleValue.class)
@@ -108,8 +125,9 @@ public class LogarithmicMappingMethod implements MappingMethod {
                         DoubleValue.class)) {
             double upperBound =
                     ((DoubleValue)domain.getUpperBound()).getDoubleValue();
-            if (((DoubleValue)domain.getLowerBound()).getDoubleValue() > 0
-                    && upperBound > 0) {
+            double lowerBound =
+                    ((DoubleValue)domain.getLowerBound()).getDoubleValue();
+            if (lowerBound >= 0 && upperBound > 1) {
                 return true;
             }
         }

@@ -152,7 +152,6 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
         portObjectSpec.m_spec.save(specModel);
         os.putNextEntry(new ZipEntry(KEY_SPEC));
         specModel.saveToXML(new NonClosableOutputStream.Zip(os));
-        ze.clone();
         os.close();
     }
     

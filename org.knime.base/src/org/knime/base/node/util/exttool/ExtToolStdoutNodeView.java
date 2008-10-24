@@ -44,7 +44,6 @@ public class ExtToolStdoutNodeView<T extends ExtToolOutputNodeModel> extends
      */
     public ExtToolStdoutNodeView(final T nodeModel) {
         super(nodeModel);
-        setViewTitle("Output to standard output");
     }
 
     /**
@@ -85,4 +84,14 @@ public class ExtToolStdoutNodeView<T extends ExtToolOutputNodeModel> extends
     protected Collection<String> getNoOutputText() {
         return Arrays.asList(new String[]{"No output to standard output"});
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void onOpen() {
+        super.onOpen();
+        setViewTitleSuffix("(stdout)");
+    }
+    
 }

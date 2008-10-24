@@ -7,6 +7,9 @@
         <intro>
             This node joins two tables in a database-like way. The join is based either on the row IDs of both tables or
             on the row ID of the first table and an arbitrary column from the second table.
+            <br />
+            If you want to join based on two columns, you first have to set the row IDs from either table by using the
+            Row ID node.
         </intro>
         <option name="Join column from second table">
             Select the column from the second input table that should be used for joining. You may selected a real

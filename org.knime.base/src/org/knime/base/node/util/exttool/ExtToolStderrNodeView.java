@@ -44,7 +44,6 @@ public class ExtToolStderrNodeView<T extends ExtToolOutputNodeModel> extends
      */
     public ExtToolStderrNodeView(final T nodeModel) {
         super(nodeModel);
-        setViewTitle("Output to standard ERROR");
     }
 
     /**
@@ -84,5 +83,14 @@ public class ExtToolStderrNodeView<T extends ExtToolOutputNodeModel> extends
     @Override
     protected Collection<String> getNoOutputText() {
         return Arrays.asList(new String[]{"No output to standard error"});
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void onOpen() {
+        super.onOpen();
+        setViewTitleSuffix("(stderr)");
     }
 }

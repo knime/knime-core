@@ -59,9 +59,10 @@ class IntegerCoordinate extends NumericCoordinate {
         if (strategy != null) {
             strategy.setValues(getDesiredValues());
             CoordinateMapping[] mapping =
-                    strategy.getTickPositions(absoluteLength,
-                            getMinDomainValue(), getMaxDomainValue(),
-                            DoubleCoordinate.DEFAULT_ABSOLUTE_TICK_DIST);
+                    strategy.getTickPositions((int)absoluteLength,
+                            (int)getMinDomainValue(), (int)getMaxDomainValue(),
+                            Coordinate.DEFAULT_ABSOLUTE_TICK_DIST,
+                            getNegativeInfinity(), getPositiveInfinity());
             List<CoordinateMapping> mappings =
                     new ArrayList<CoordinateMapping>();
             boolean hasNegInfinity = false;

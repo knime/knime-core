@@ -211,7 +211,7 @@ public class TableNodeView extends NodeView {
     protected void updateTitle() {
         final TableContentView view = m_tableView.getContentTable();
         TableContentModel model = view.getContentModel();
-        StringBuffer title = new StringBuffer(getViewName());
+        StringBuffer title = new StringBuffer();
         if (model.hasData()) {
             String tableName = model.getTableName();
             if (!tableName.equals("default")) {
@@ -229,7 +229,7 @@ public class TableNodeView extends NodeView {
         } else {
             title.append(" <no data>");
         }
-        super.setViewTitle(title.toString());
+        super.setViewTitleSuffix(title.toString());
     }
 
     /**

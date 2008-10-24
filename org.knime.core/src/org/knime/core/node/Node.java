@@ -1327,30 +1327,6 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
-     * Opens the node's view.
-     *
-     * @param viewIndex The view index to show.
-     */
-    public void showView(final int viewIndex) {
-        showView(viewIndex, getName());
-    }
-
-    /**
-     * Opens the node's view.
-     *
-     * @param viewIndex The view's index to show.
-     * @param nodeName The underlying node's name.
-     */
-    public void showView(final int viewIndex, final String nodeName) {
-        try {
-            getView(viewIndex, nodeName).openView();
-        } catch (Throwable e) {
-            createErrorMessageAndNotify("View could not be opened, reason: "
-                    + e.getMessage(), e);
-        }
-    }
-
-    /**
      * Return a new instance of the node's view (without opening it).
      *
      * @param viewIndex The view's index to show up.
@@ -1362,7 +1338,6 @@ public final class Node implements NodeModelWarningListener {
         NodeView<?> view;
         try {
             view = m_factory.createNodeView(viewIndex, m_model);
-            view.setViewTitle(title);
         } catch (Throwable e) {
             m_logger.error("View instantiation failed", e);
             throw new RuntimeException(e.getMessage(), e);
