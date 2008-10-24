@@ -2524,7 +2524,7 @@ public final class WorkflowManager extends NodeContainer {
     //////////////////////////////////////
     
     public NodeID[] copy(final WorkflowManager sourceManager, 
-            final NodeID[] nodeIDs) {
+            final NodeID... nodeIDs) {
         HashSet<NodeID> idsHashed = new HashSet<NodeID>(Arrays.asList(nodeIDs));
         if (idsHashed.size() != nodeIDs.length) {
             throw new IllegalArgumentException(

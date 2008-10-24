@@ -79,6 +79,17 @@ public class SingleNodeContainerPersistorVersion200 extends
     
     /** {@inheritDoc} */
     @Override
+    protected NodeSettingsRO loadSNCSettings(NodeSettingsRO settings,
+            NodePersistorVersion1xx nodePersistor)
+            throws InvalidSettingsException {
+        // TODO eventually the settings for the snc will be stored as part
+        // of the settings.xml (represented by the settings object), currently
+        // there are part of the node.xml (which the nodePersistor reads)
+        return super.loadSNCSettings(settings, nodePersistor);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
     protected List<ScopeObject> loadScopeObjects(
             final NodeSettingsRO settings)
         throws InvalidSettingsException {

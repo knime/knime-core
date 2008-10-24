@@ -199,16 +199,6 @@ public class SingleNodeContainerPersistorVersion1xx
             final ExecutionMonitor exec) throws InvalidSettingsException, 
             CanceledExecutionException, IOException {
         LoadResult result = new LoadResult();
-        
-        try {
-            m_sncSettings = loadSNCSettings(m_nodeSettings);
-        } catch (InvalidSettingsException e) {
-            String error = "Unable to load SNC settings: " + e.getMessage();
-            result.addError(error);
-            getLogger().debug(error, e);
-            setDirtyAfterLoad();
-            return result;
-        }
         String nodeFileName;
         try {
             nodeFileName = loadNodeFile(m_nodeSettings);
@@ -247,6 +237,15 @@ public class SingleNodeContainerPersistorVersion1xx
             getLogger().warn(error, e);
             result.addError(error);
             needsResetAfterLoad();
+        }
+        try {
+            m_sncSettings = loadSNCSettings(m_nodeSettings, nodePersistor);
+        } catch (InvalidSettingsException e) {
+            String error = "Unable to load SNC settings: " + e.getMessage();
+            result.addError(error);
+            getLogger().debug(error, e);
+            setDirtyAfterLoad();
+            return result;
         }
         if (nodePersistor.needsResetAfterLoad()) {
             setNeedsResetAfterLoad();
@@ -316,9 +315,10 @@ public class SingleNodeContainerPersistorVersion1xx
         return SETTINGS_FILE_NAME;
     }
     
-    protected NodeSettingsRO loadSNCSettings(final NodeSettingsRO settings)
+    protected NodeSettingsRO loadSNCSettings(final NodeSettingsRO settings, 
+            final NodePersistorVersion1xx nodePersistor)
         throws InvalidSettingsException {
-        return settings;
+        return nodePersistor.getSettings();
     }
     
     protected List<ScopeObject> loadScopeObjects(
