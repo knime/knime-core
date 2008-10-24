@@ -65,7 +65,7 @@ public final class SingleNodeContainer extends NodeContainer implements
 
     /** my logger. */
     private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(SingleNodeContainer.class);
+            NodeLogger.getLogger(SingleNodeContainer.class);
 
     /** underlying node. */
     private final Node m_node;
@@ -81,7 +81,35 @@ public final class SingleNodeContainer extends NodeContainer implements
             new DefaultNodeProgressMonitor(this);
 
     private SingleNodeContainerSettings m_settings =
-        new SingleNodeContainerSettings();
+            new SingleNodeContainerSettings();
+
+    /**
+     * Available policy how to handle output data. It might be held in memory or
+     * completely on disc. We use an enum here as a boolean may not be
+     * sufficient in the future (possibly adding a third option "try to keep in
+     * memory").
+     */
+    public static enum MemoryPolicy {
+        /** Hold output in memory. */
+        CacheInMemory,
+        /**
+         * Cache only small tables in memory, i.e. with cell count <=
+         * DataContainer.MAX_CELLS_IN_MEMORY.
+         */
+        CacheSmallInMemory,
+        /** Buffer on disc. */
+        CacheOnDisc
+    }
+
+    /** Config key: What memory policy to use for a node outport. */
+    static final String CFG_MEMORY_POLICY = "memory_policy";
+
+    /**
+     * The memory policy for the data outports, i.e. keep in memory or hold on
+     * disc. Default is to keep small tables in memory
+     */
+    private MemoryPolicy m_outDataPortsMemoryPolicy =
+            MemoryPolicy.CacheSmallInMemory;
 
     /**
      * Create new SingleNodeContainer based on existing Node.
@@ -115,7 +143,7 @@ public final class SingleNodeContainer extends NodeContainer implements
         setPortNames();
         m_node.addMessageListener(this);
     }
-    
+
     private void setPortNames() {
         for (int i = 0; i < getNrOutPorts(); i++) {
             getOutPort(i).setPortName(m_node.getFactory().getOutportName(i));
@@ -147,6 +175,7 @@ public final class SingleNodeContainer extends NodeContainer implements
     }
 
     private NodeContainerOutPort[] m_outputPorts = null;
+
     /**
      * Returns the output port for the given <code>portID</code>. This port
      * is essentially a container for the underlying Node and the index and will
@@ -168,6 +197,7 @@ public final class SingleNodeContainer extends NodeContainer implements
     }
 
     private NodeInPort[] m_inputPorts = null;
+
     /**
      * Return a port, which for the inputs really only holds the type and some
      * other static information.
@@ -185,6 +215,17 @@ public final class SingleNodeContainer extends NodeContainer implements
                     new NodeInPort(index, m_node.getInputType(index));
         }
         return m_inputPorts[index];
+    }
+
+    /**
+     * Get the policy for the data outports, that is, keep the output in main
+     * memory or write it to disc. This method is used from within the
+     * ExecutionContext when the derived NodeModel is executing.
+     *
+     * @return The memory policy to use.
+     */
+    final MemoryPolicy getOutDataMemoryPolicy() {
+        return m_outDataPortsMemoryPolicy;
     }
 
     /* ------------------ Views ---------------- */
@@ -252,8 +293,9 @@ public final class SingleNodeContainer extends NodeContainer implements
 
     private ExecutionContext createExecutionContext() {
         m_progressMonitor.reset();
-        return new ExecutionContext(m_progressMonitor, getNode(), getParent()
-                .getGlobalTableRepository());
+        return new ExecutionContext(m_progressMonitor, getNode(),
+                getOutDataMemoryPolicy(),
+                getParent().getGlobalTableRepository());
     }
 
     // ////////////////////////////////
@@ -376,7 +418,7 @@ public final class SingleNodeContainer extends NodeContainer implements
     @Override
     void markForExecutionAsNodeContainer(final boolean flag) {
         synchronized (m_nodeMutex) {
-            if (flag) {  // we want to mark the node for execution!
+            if (flag) { // we want to mark the node for execution!
                 switch (getState()) {
                 case CONFIGURED:
                     setState(State.MARKEDFOREXEC);
@@ -389,7 +431,7 @@ public final class SingleNodeContainer extends NodeContainer implements
                             + getState()
                             + " encountered in markForExecution(true).");
                 }
-            } else {  // we want to remove the mark for execution
+            } else { // we want to remove the mark for execution
                 switch (getState()) {
                 case MARKEDFOREXEC:
                     setState(State.CONFIGURED);
@@ -449,7 +491,6 @@ public final class SingleNodeContainer extends NodeContainer implements
         }
     }
 
-
     /** {@inheritDoc} */
     @Override
     void cancelExecutionAsNodeContainer() {
@@ -484,10 +525,9 @@ public final class SingleNodeContainer extends NodeContainer implements
         }
     }
 
-
-    //////////////////////////////////////
-    //  internal state change actions
-    //////////////////////////////////////
+    // ////////////////////////////////////
+    // internal state change actions
+    // ////////////////////////////////////
 
     /**
      * This should be used to change the nodes states correctly (and likely
@@ -531,21 +571,22 @@ public final class SingleNodeContainer extends NodeContainer implements
                 }
             } else {
                 m_node.reset(false);  // we need to clean up remaining nonsense
-                m_node.clearLoopStatus();  // ...and the loop status
+                m_node.clearLoopStatus(); // ...and the loop status
                 // but node will not be reconfigured!
                 // (configure does not prepare execute but only tells us what
-                //  output execute() may create hence we do not need it here)
+                // output execute() may create hence we do not need it here)
                 setState(State.CONFIGURED);
             }
             m_executionJob = null;
         }
     }
-    
+
     /**
      * Invoked by the job executor immediately before the execution is
      * triggered. It invokes doBeforeExecution on the parent.
-     * @throws IllegalContextStackObjectException in case of wrongly
-     *         connected loops, for instance.
+     *
+     * @throws IllegalContextStackObjectException in case of wrongly connected
+     *             loops, for instance.
      */
     void performBeforeExecuteNode() {
         // this will allow the parent to call state changes etc properly
@@ -554,12 +595,12 @@ public final class SingleNodeContainer extends NodeContainer implements
             getParent().doBeforeExecution(SingleNodeContainer.this);
         } catch (IllegalContextStackObjectException e) {
             LOGGER.warn(e.getMessage());
-            m_node.notifyMessageListeners(
-                    new NodeMessage(NodeMessage.Type.ERROR, e.getMessage()));
+            m_node.notifyMessageListeners(new NodeMessage(
+                    NodeMessage.Type.ERROR, e.getMessage()));
             throw e;
         }
     }
-    
+
     /**
      * Execute underlying Node asynchronously. Make sure to give Workflow-
      * Manager a chance to call pre- and postExecuteNode() appropriately and
@@ -567,7 +608,7 @@ public final class SingleNodeContainer extends NodeContainer implements
      *
      * @param inObjects input data
      * @param ec The execution context for progress, e.g.
-     * @return whether execution was successful. 
+     * @return whether execution was successful.
      * @throws IllegalStateException in case of illegal entry state.
      */
     public boolean performExecuteNode(final PortObject[] inObjects,
@@ -592,8 +633,10 @@ public final class SingleNodeContainer extends NodeContainer implements
         return success;
     }
 
-    /** Called immediately after the execution took place in the job executor.
-     * It will trigger an doAfterExecution on the parent wfm.
+    /**
+     * Called immediately after the execution took place in the job executor. It
+     * will trigger an doAfterExecution on the parent wfm.
+     *
      * @param success Whether the execution was successful.
      */
     void performAfterExecuteNode(final boolean success) {
@@ -611,7 +654,7 @@ public final class SingleNodeContainer extends NodeContainer implements
      */
     private void putOutputTablesIntoGlobalRepository(final ExecutionContext c) {
         HashMap<Integer, ContainerTable> globalRep =
-            getParent().getGlobalTableRepository();
+                getParent().getGlobalTableRepository();
         m_node.putOutputTablesIntoGlobalRepository(globalRep);
         HashMap<Integer, ContainerTable> localRep =
                 Node.getLocalTableRepositoryFromContext(c);
@@ -657,7 +700,7 @@ public final class SingleNodeContainer extends NodeContainer implements
                         + nodePersistor.getClass().getSimpleName());
             }
             SingleNodeContainerPersistor persistor =
-                (SingleNodeContainerPersistor)nodePersistor;
+                    (SingleNodeContainerPersistor)nodePersistor;
             State state = persistor.getMetaPersistor().getState();
             setState(state, false);
             if (state.equals(State.EXECUTED)) {
@@ -682,31 +725,35 @@ public final class SingleNodeContainer extends NodeContainer implements
     /** {@inheritDoc} */
     @Override
     void saveSettings(final NodeSettingsWO settings)
-    throws InvalidSettingsException {
+            throws InvalidSettingsException {
         m_node.saveSettingsTo(settings);
     }
-    
-    /** Saves the SingleNodeContainer settings such as the job executor
-     * to the argument node settings object.
+
+    /**
+     * Saves the SingleNodeContainer settings such as the job executor to the
+     * argument node settings object.
+     *
      * @param settings To save to.
      * @see #loadSNCSettings(NodeSettingsRO)
      */
     void saveSNCSettings(final NodeSettingsWO settings) {
         m_settings.save(settings);
     }
-    
-    /** Loads the SingleNodeContainer settings from the argument. This is
-     * the reverse operation to {@link #saveSNCSettings(NodeSettingsWO)}.
+
+    /**
+     * Loads the SingleNodeContainer settings from the argument. This is the
+     * reverse operation to {@link #saveSNCSettings(NodeSettingsWO)}.
+     *
      * @param settings To load from.
      * @throws InvalidSettingsException If settings are invalid.
      */
-    void loadSNCSettings(final NodeSettingsRO settings) 
-        throws InvalidSettingsException {
+    void loadSNCSettings(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
         synchronized (m_nodeMutex) {
             m_settings = new SingleNodeContainerSettings(settings);
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     boolean areSettingsValid(final NodeSettingsRO settings) {
@@ -728,9 +775,9 @@ public final class SingleNodeContainer extends NodeContainer implements
         return m_settings.getJobManagerSettings();
     }
 
-    ////////////////////////////////////
+    // //////////////////////////////////
     // ScopeObjectStack handling
-    ////////////////////////////////////
+    // //////////////////////////////////
 
     /**
      * Set ScopeObjectStack.
@@ -756,9 +803,9 @@ public final class SingleNodeContainer extends NodeContainer implements
         return getNode().getLoopRole();
     }
 
-    ////////////////////////
+    // //////////////////////
     // Progress forwarding
-    ////////////////////////
+    // //////////////////////
 
     /**
      * {@inheritDoc}
@@ -771,9 +818,9 @@ public final class SingleNodeContainer extends NodeContainer implements
         notifyProgressListeners(event);
     }
 
-    ///////////////////////////////////
+    // /////////////////////////////////
     // NodeContainer->Node forwarding
-    ///////////////////////////////////
+    // /////////////////////////////////
 
     /** {@inheritDoc} */
     @Override
@@ -871,7 +918,7 @@ public final class SingleNodeContainer extends NodeContainer implements
         m_node.ensureOutputDataIsRead();
         super.setDirty();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected NodeContainerPersistor getCopyPersistor(
@@ -891,9 +938,6 @@ public final class SingleNodeContainer extends NodeContainer implements
      */
     public static class SingleNodeContainerSettings {
 
-        private static final String CFG_SNC_SETTINGS =
-                "internal_single_node_container_settings";
-
         private static final String CFG_JOB_MANAGER_ID = "JobManagerID";
 
         private static final String CFG_JOB_MANAGER_SETTINGS =
@@ -901,12 +945,12 @@ public final class SingleNodeContainer extends NodeContainer implements
 
         // the threaded job manager is the default
         private String m_jobManagerID =
-            ThreadNodeExecutionJobManager.INSTANCE.getID();
+                ThreadNodeExecutionJobManager.INSTANCE.getID();
 
         // the default manager has no settings
-        private NodeSettingsRO m_jobManagerSettings =
-                new NodeSettings("empty");
+        private NodeSettingsRO m_jobManagerSettings = new NodeSettings("empty");
 
+        private MemoryPolicy m_memoryPolicy = MemoryPolicy.CacheSmallInMemory;
         /**
          * Creates a settings object with default values.
          */
@@ -926,14 +970,26 @@ public final class SingleNodeContainer extends NodeContainer implements
         public SingleNodeContainerSettings(final NodeSettingsRO settings)
                 throws InvalidSettingsException {
 
-            // since this settings object exists only since 2.0, we stay with
+            NodeSettingsRO sncSettings =
+                    settings.getNodeSettings(Node.CFG_MISC_SETTINGS);
+
+            // since job manager settings exists only since 2.0, we stay with
             // the default if there are no node container settings.
-            if (settings.containsKey(CFG_SNC_SETTINGS)) {
-                NodeSettingsRO sncSettings =
-                        settings.getNodeSettings(CFG_SNC_SETTINGS);
+            if (sncSettings.containsKey(CFG_JOB_MANAGER_ID)) {
                 m_jobManagerID = sncSettings.getString(CFG_JOB_MANAGER_ID);
+            }
+            if (sncSettings.containsKey(CFG_JOB_MANAGER_SETTINGS)) {
                 m_jobManagerSettings =
                         sncSettings.getNodeSettings(CFG_JOB_MANAGER_SETTINGS);
+            }
+            if (sncSettings.containsKey(CFG_MEMORY_POLICY)) {
+                String memPolStr = sncSettings.getString(CFG_MEMORY_POLICY);
+                try {
+                m_memoryPolicy = MemoryPolicy.valueOf(memPolStr);
+                } catch (IllegalArgumentException iae) {
+                    throw new InvalidSettingsException(
+                            "Invalid memory policy: " + memPolStr);
+                }
             }
 
         }
@@ -945,12 +1001,14 @@ public final class SingleNodeContainer extends NodeContainer implements
          */
         public void save(final NodeSettingsWO settings) {
             NodeSettingsWO sncSettings =
-                    settings.addNodeSettings(CFG_SNC_SETTINGS);
+                    settings.addNodeSettings(Node.CFG_MISC_SETTINGS);
             sncSettings.addString(CFG_JOB_MANAGER_ID, m_jobManagerID);
 
             NodeSettingsWO foo =
-                sncSettings.addNodeSettings(CFG_JOB_MANAGER_SETTINGS);
+                    sncSettings.addNodeSettings(CFG_JOB_MANAGER_SETTINGS);
             m_jobManagerSettings.copyTo(foo);
+
+            sncSettings.addString(CFG_MEMORY_POLICY, m_memoryPolicy.name());
         }
 
         /**
@@ -992,6 +1050,24 @@ public final class SingleNodeContainer extends NodeContainer implements
             }
             m_jobManagerID = id;
             m_jobManagerSettings = settings;
+        }
+
+        /**
+         * Store a new memory policy in this settings object.
+         *
+         * @param memPolicy the new policy to set
+         */
+        public void setMemoryPolicy(final MemoryPolicy memPolicy) {
+            m_memoryPolicy = memPolicy;
+        }
+
+        /**
+         * Returns the memory policy currently stored in this settings object.
+         *
+         * @return the memory policy currently stored in this settings object.
+         */
+        public MemoryPolicy getMemoryPolicy() {
+            return m_memoryPolicy;
         }
 
     }

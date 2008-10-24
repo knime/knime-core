@@ -38,6 +38,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 
@@ -62,7 +63,8 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
              * {@inheritDoc}
              */
             @Override
-            public void loadSettings(final NodeSettingsRO settings) {
+            public void loadSettings(final NodeSettingsRO settings,
+                    final PortObjectSpec[] inSpecs) {
                 // nothing to do here
             }
 
@@ -188,8 +190,10 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
      * Takes over the settings from the argument and displays them in the panel.
      *
      * @param settings the settings to load into the components
+     * @param inSpecs the specs of the input port objects
      */
-    public void loadSettings(final SingleNodeContainerSettings settings) {
+    public void loadSettings(final SingleNodeContainerSettings settings,
+            final PortObjectSpec[] inSpecs) {
 
         // select the job manager in the combo box
         NodeExecutionJobManager newMgr =
@@ -200,7 +204,8 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
         if (m_jobManagerSelect.getSelectedItem() == newMgr) {
 
             // if the job manager exists in the list apply the settings
-            m_currentPanel.loadSettings(settings.getJobManagerSettings());
+            m_currentPanel.loadSettings(settings.getJobManagerSettings(),
+                    inSpecs);
 
         } else {
             // seems we got a manager we currently don't have
@@ -211,6 +216,9 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
             m_jobManagerSelect.setSelectedItem(NodeExecutionJobManagerPool
                     .getDefaultJobManager());
         }
+
+        // show the proper panel
+        jobManagerSelectionChanged();
     }
 
     /**

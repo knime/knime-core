@@ -27,6 +27,7 @@ import javax.swing.JComponent;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * Settings panel for {@link NodeExecutionJobManager}s. Contains components
@@ -54,7 +55,9 @@ public abstract class NodeExecutionJobManagerPanel extends JComponent {
      *
      * @param settings the object holding new settings (as written by
      *            {@link #saveSettings(NodeSettingsWO)}
+     * @param inSpecs the specs of the input port objects.
      */
-    public abstract void loadSettings(final NodeSettingsRO settings);
+    public abstract void loadSettings(final NodeSettingsRO settings,
+            final PortObjectSpec[] inSpecs);
 
 }
