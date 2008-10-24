@@ -473,12 +473,15 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      * @return
      */
     private PortObject getPMMLOutPortObject(final DataTableSpec spec) {
-        Set<String> learnCols = new LinkedHashSet<String>();
-        for (int i = 0; i < spec.getNumColumns(); i++) {
-            learnCols.add(spec.getColumnSpec(i).getName());
-        }
         Set<String> targetSet = new LinkedHashSet<String>();
         targetSet.add(m_classifyColumn.getStringValue());
+        Set<String> learnCols = new LinkedHashSet<String>();
+        for (int i = 0; i < spec.getNumColumns(); i++) {
+            String col = spec.getColumnSpec(i).getName();
+            if (!targetSet.contains(col)) {
+                learnCols.add(spec.getColumnSpec(i).getName());
+            }
+        }
         PMMLPortObjectSpec outSpec = new PMMLPortObjectSpec(
                 spec, learnCols, Collections.EMPTY_SET, targetSet);
         return new PMMLDecisionTreePortObject(m_decisionTree, outSpec);
