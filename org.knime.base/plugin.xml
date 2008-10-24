@@ -873,7 +873,7 @@
        </PersistedMetaNode>
        <PersistedMetaNode expert-flag="true" icon="icons/meta_nodes/variables_looper_flow.png" id="variables_loop" name="Variables Loop (Data)" workflowDir="metanode_templates/Variables Loop/">
        </PersistedMetaNode>
-       <PersistedMetaNode expert-flag="true" icon="icons/meta_nodes/variables_looper_db_flow.png" id="variables_loop_db" name="Variables Loop (Database)" workflowDir="metanode_templates/Variables Loop/">
+       <PersistedMetaNode expert-flag="true" icon="icons/meta_nodes/variables_looper_db_flow.png" id="variables_loop_db" name="Variables Loop (Database)" workflowDir="metanode_templates/Variables Loop (Database)/">
        </PersistedMetaNode>
        <PersistedMetaNode category-path="/meta" description="Backward Feature Elimination" icon="icons/meta_nodes/feature_elimination_flow.png" id="feature_elimination" name="Feature Elimination" workflowDir="metanode_templates/Feature Elimination/">
        </PersistedMetaNode>
