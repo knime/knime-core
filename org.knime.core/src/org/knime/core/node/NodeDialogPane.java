@@ -28,8 +28,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.io.IOException;
@@ -37,12 +35,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.ParseException;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import javax.swing.AbstractButton;
-import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
@@ -50,7 +45,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
@@ -60,8 +54,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicComboPopup;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.container.DataContainer;
-import org.knime.core.node.Node.MemoryPolicy;
+import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.Node.SettingsLoaderAndWriter;
 import org.knime.core.node.config.ConfigEditJTree;
 import org.knime.core.node.config.ConfigEditTreeModel;
@@ -98,9 +91,6 @@ public abstract class NodeDialogPane {
     /** Logger "personalized" for this dialog instance. */
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
-    private static final String TAB_NAME_MISCELLANEOUS =
-        "General Node Settings";
-
     private static final String TAB_NAME_VARIABLES = "Flow Variables";
 
     /**
@@ -118,7 +108,7 @@ public abstract class NodeDialogPane {
     /** The additional tab in which the user can set the memory options.
      * This field is null when m_node has no data outports.
      */
-    private MiscSettingsTab m_miscTab;
+    private MiscSettingsTab m_memPolicyTab;
 
     /**
      * the additional tab in which the user can select the job manager and set
@@ -172,8 +162,8 @@ public abstract class NodeDialogPane {
      * of nodes with output ports.
      */
     void addMiscTab() {
-        m_miscTab = new MiscSettingsTab();
-        addTab(TAB_NAME_MISCELLANEOUS, m_miscTab);
+        m_memPolicyTab = new MiscSettingsTab();
+        addTab(m_memPolicyTab.getTabName(), m_memPolicyTab);
     }
 
     /**
@@ -224,14 +214,12 @@ public abstract class NodeDialogPane {
             final ScopeObjectStack scopeStack)
         throws NotConfigurableException {
         NodeSettings modelSettings = null;
-        MemoryPolicy memoryPolicy = null;
         m_scopeObjectStack = scopeStack;
         m_portTypes = portTypes;
         m_specs = specs;
         try {
             SettingsLoaderAndWriter l = SettingsLoaderAndWriter.load(settings);
             modelSettings = l.getModelSettings();
-            memoryPolicy = l.getMemoryPolicy();
             m_scopeVariablesSettings = l.getVariablesSettings();
         } catch (InvalidSettingsException e) {
             // silently ignored here, variables get assigned default values
@@ -240,9 +228,6 @@ public abstract class NodeDialogPane {
         if (modelSettings == null) {
             modelSettings = new NodeSettings("empty");
         }
-        if (memoryPolicy == null) {
-            memoryPolicy = MemoryPolicy.CacheSmallInMemory;
-        }
         try {
             loadSettingsFrom(modelSettings, specs);
         } catch (NotConfigurableException nce) {
@@ -250,10 +235,7 @@ public abstract class NodeDialogPane {
         } catch (Throwable e) {
             m_logger.error("Error loading model settings", e);
         }
-        if (m_miscTab != null) {
-            m_miscTab.setStatus(memoryPolicy);
-        }
-        if (m_scopeVariableTab == null) {
+         if (m_scopeVariableTab == null) {
             m_scopeVariableTab = new ScopeVariablesTab();
             boolean isExpertMode =
                 Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE);
@@ -275,17 +257,27 @@ public abstract class NodeDialogPane {
             onVariablesTabSelected();
         }
 
-        if (m_jobMgrTab != null) {
+        // output memory policy and job manager (stored in NodeContainer)
+        if (m_memPolicyTab != null || m_jobMgrTab != null) {
             SingleNodeContainerSettings sncSettings;
             try {
                 sncSettings =
-                        new SingleNodeContainer.SingleNodeContainerSettings(
-                                settings);
+                    new SingleNodeContainer.SingleNodeContainerSettings(
+                            settings);
             } catch (InvalidSettingsException ise) {
                 sncSettings =
-                        new SingleNodeContainer.SingleNodeContainerSettings();
+                    new SingleNodeContainer.SingleNodeContainerSettings();
             }
-            m_jobMgrTab.loadSettings(sncSettings);
+            if (m_memPolicyTab != null) {
+                MemoryPolicy memoryPolicy = sncSettings.getMemoryPolicy();
+                if (memoryPolicy == null) {
+                    memoryPolicy = MemoryPolicy.CacheSmallInMemory;
+                }
+                m_memPolicyTab.setStatus(memoryPolicy);
+            }
+            if (m_jobMgrTab != null) {
+                m_jobMgrTab.loadSettings(sncSettings, specs);
+            }
         }
     }
 
@@ -313,18 +305,21 @@ public abstract class NodeDialogPane {
         } else {
             variables = m_scopeVariablesSettings;
         }
-        MemoryPolicy memPolicy = MemoryPolicy.CacheSmallInMemory;
-        if (m_miscTab != null) {
-            memPolicy = m_miscTab.getStatus();
-        }
         l.setModelSettings(model);
-        l.setMemoryPolicy(memPolicy);
         l.setVariablesSettings(variables);
         l.save(settings);
-
-        if (m_jobMgrTab != null) {
+        if (m_jobMgrTab != null || m_memPolicyTab != null) {
             SingleNodeContainerSettings s = new SingleNodeContainerSettings();
-            m_jobMgrTab.saveSettings(s);
+
+            if (m_memPolicyTab != null) {
+                s.setMemoryPolicy(m_memPolicyTab.getStatus());
+            } else {
+                // store the default
+                s.setMemoryPolicy(MemoryPolicy.CacheSmallInMemory);
+            }
+            if (m_jobMgrTab != null) {
+                m_jobMgrTab.saveSettings(s);
+            }
             s.save(settings);
         }
     }
@@ -401,7 +396,7 @@ public abstract class NodeDialogPane {
      * button from the surrounding dialog.
      */
     public void onCancel() {
-
+        // default implementation does nothing.
     }
 
     /**
@@ -697,13 +692,13 @@ public abstract class NodeDialogPane {
         ViewUtils.invokeAndWaitInEDT(new Runnable() {
             public void run() {
                 int varTabIdx = m_pane.indexOfComponent(m_scopeVariableTab);
-                int miscIndex = m_pane.indexOfComponent(m_miscTab);
+                int memIndex = m_pane.indexOfComponent(m_memPolicyTab);
                 int jobMgrIdx = m_pane.indexOfComponent(m_jobMgrTab);
 
-                if (miscIndex >= 0) {
+                if (memIndex >= 0) {
                     // make sure the miscellaneous tab is the last tab
-                    if (insertIdx.intValue() > miscIndex) {
-                        insertIdx.setValue(miscIndex);
+                    if (insertIdx.intValue() > memIndex) {
+                        insertIdx.setValue(memIndex);
                     }
                 }
                 if (varTabIdx >= 0) {
@@ -979,71 +974,6 @@ public abstract class NodeDialogPane {
 
     }
 
-    private static class MiscSettingsTab extends JPanel {
-        private final ButtonGroup m_group;
-
-        /** Inits GUI. */
-        public MiscSettingsTab() {
-            super(new BorderLayout());
-            m_group = new ButtonGroup();
-            JRadioButton cacheAll = new JRadioButton("Keep all in memory.");
-            cacheAll.setActionCommand(MemoryPolicy.CacheInMemory.toString());
-            m_group.add(cacheAll);
-            cacheAll.setToolTipText(
-                    "All generated output data is kept in main memory, "
-                    + "resulting in faster execution of successor nodes but "
-                    + "also in more memory usage.");
-            JRadioButton cacheSmall = new JRadioButton(
-                    "Keep only small tables in memory.", true);
-            cacheSmall.setActionCommand(
-                    MemoryPolicy.CacheSmallInMemory.toString());
-            m_group.add(cacheSmall);
-            cacheSmall.setToolTipText("Tables with less than "
-                    + DataContainer.MAX_CELLS_IN_MEMORY + " cells are kept in "
-                    + "main memory, otherwise swapped to disc.");
-            JRadioButton cacheOnDisc = new JRadioButton(
-                    "Write tables to disc.");
-            cacheOnDisc.setActionCommand(MemoryPolicy.CacheOnDisc.toString());
-            m_group.add(cacheOnDisc);
-            cacheOnDisc.setToolTipText("All output is immediately "
-                    + "written to disc to save main memory usage.");
-            final int s = 15;
-            JPanel north = new JPanel(new FlowLayout(FlowLayout.LEFT, s, s));
-            north.add(new JLabel("Select memory policy for data outport(s)"));
-            add(north, BorderLayout.NORTH);
-            JPanel bigCenter =
-                new JPanel(new FlowLayout(FlowLayout.LEFT, s, s));
-            JPanel center = new JPanel(new GridLayout(0, 1));
-            center.add(cacheAll);
-            center.add(cacheSmall);
-            center.add(cacheOnDisc);
-            bigCenter.add(center);
-            add(bigCenter, BorderLayout.CENTER);
-        }
-
-        /** Get the memory policy for the currently selected radio button.
-         * @return The corresponding policy.
-         */
-        MemoryPolicy getStatus() {
-            String memoryPolicy = m_group.getSelection().getActionCommand();
-            return MemoryPolicy.valueOf(memoryPolicy);
-        }
-
-        /** Select the radio button for the given policy.
-         * @param policy The one to use.
-         */
-        void setStatus(final MemoryPolicy policy) {
-            for (Enumeration<AbstractButton> e = m_group.getElements();
-                e.hasMoreElements();) {
-                AbstractButton m = e.nextElement();
-                if (m.getActionCommand().equals(policy.toString())) {
-                    m.setSelected(true);
-                    return;
-                }
-            }
-            assert false;
-        }
-    } // class MiscSettingsTab
 
     /**
      * <code>NodeDialogPane</code> that only keeps a

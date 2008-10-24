@@ -99,6 +99,11 @@ public final class Node implements NodeModelWarningListener {
 
     /** The node logger for this class. */
     private final NodeLogger m_logger;
+    /**
+     * Config for node (and node container) settings which are shown in the
+     * dialog.
+     */
+    public static final String CFG_MISC_SETTINGS = "internal_node_subsettings";
 
     /** The sub settings entry where the model can save its setup. */
     public static final String CFG_MODEL = "model";
@@ -145,35 +150,8 @@ public final class Node implements NodeModelWarningListener {
      * {@link BufferedDataTableHolder}. In most cases this is null. */
     private BufferedDataTable[] m_internalHeldTables;
 
-    /**
-     * The memory policy for the data outports, i.e. keep in memory or hold on
-     * disc.
-     */
-    private MemoryPolicy m_outDataPortsMemoryPolicy;
-
     /** The listeners that are interested in node state changes. */
     private final CopyOnWriteArraySet<NodeMessageListener> m_messageListeners;
-
-    /** Config key: What memory policy to use for a node outport. */
-    static final String CFG_MEMORY_POLICY = "memory_policy";
-
-    /**
-     * Available policy how to handle output data. It might be held in memory or
-     * completely on disc. We use an enum here as a boolean may not be
-     * sufficient in the future (possibly adding a third option "try to keep in
-     * memory").
-     */
-    static enum MemoryPolicy {
-        /** Hold output in memory. */
-        CacheInMemory,
-        /**
-         * Cache only small tables in memory, i.e. with cell count <=
-         * DataContainer.MAX_CELLS_IN_MEMORY.
-         */
-        CacheSmallInMemory,
-        /** Buffer on disc. */
-        CacheOnDisc
-    }
 
     /**
      * Contains the set of tables that have been created during the execute
@@ -236,8 +214,6 @@ public final class Node implements NodeModelWarningListener {
         }
 
         m_outputs = new Output[m_model.getNrOutPorts()];
-        // default option: keep small tables in mem (can be changed in dialog)
-        m_outDataPortsMemoryPolicy = MemoryPolicy.CacheSmallInMemory;
         for (int i = 0; i < m_outputs.length; i++) {
             m_outputs[i] = new Output();
             m_outputs[i].type = m_model.getOutPortType(i);
@@ -316,7 +292,7 @@ public final class Node implements NodeModelWarningListener {
         exec.setProgress(1.0);
         return result;
     }
-    
+
     public LoadResult loadDataAndInternals(
             final NodeContentPersistor loader, final ExecutionMonitor exec) {
         LoadResult result = new LoadResult();
@@ -336,7 +312,7 @@ public final class Node implements NodeModelWarningListener {
             } else {
                 m_outputs[i].spec = spec;
             }
-            
+
             Class<? extends PortObject> objClass =
                 m_outputs[i].type.getPortObjectClass();
             PortObject obj = loader.getPortObject(i);
@@ -408,10 +384,6 @@ public final class Node implements NodeModelWarningListener {
             m_logger.error("Loading model settings failed", t);
         }
         m_variablesSettings = l.getVariablesSettings();
-        if (getNrOutPorts() > 0) {
-            // ensured to return non-null value
-            m_outDataPortsMemoryPolicy = l.getMemoryPolicy();
-        }
     }
 
     /**
@@ -585,17 +557,6 @@ public final class Node implements NodeModelWarningListener {
 
     public void setInHiLiteHandler(final int index, final HiLiteHandler hdl) {
         m_model.setNewInHiLiteHandler(index, hdl);
-    }
-
-    /**
-     * Get the policy for the data outports, that is, keep the output in main
-     * memory or write it to disc. This method is used from within the
-     * ExecutionContext when the derived NodeModel is executing.
-     *
-     * @return The memory policy to use.
-     */
-    final MemoryPolicy getOutDataMemoryPolicy() {
-        return m_outDataPortsMemoryPolicy;
     }
 
     /**
@@ -1535,7 +1496,6 @@ public final class Node implements NodeModelWarningListener {
      */
     public void saveSettingsTo(final NodeSettingsWO settings) {
         SettingsLoaderAndWriter l = new SettingsLoaderAndWriter();
-        l.setMemoryPolicy(m_outDataPortsMemoryPolicy);
         final NodeSettings model = new NodeSettings("field_ignored");
         try {
             m_model.saveSettingsTo(model);
@@ -1841,34 +1801,10 @@ public final class Node implements NodeModelWarningListener {
     }
 
     static class SettingsLoaderAndWriter {
-        /**
-         * Config for misc settings which are shown in the dialog. So far it
-         * only contains a subsetting for the memory policy of the data
-         * outports.
-         */
-        static final String CFG_MISC_SETTINGS = "internal_node_subsettings";
 
-        private MemoryPolicy m_memoryPolicy = MemoryPolicy.CacheSmallInMemory;
         private NodeSettings m_variablesSettings =
             new NodeSettings("variables");
         private NodeSettings m_modelSettings;
-
-        /**
-         * @return the memoryPolicy
-         */
-        MemoryPolicy getMemoryPolicy() {
-            return m_memoryPolicy;
-        }
-
-        /**
-         * @param memoryPolicy the memoryPolicy to set
-         */
-        final void setMemoryPolicy(final MemoryPolicy memoryPolicy) {
-            if (memoryPolicy == null) {
-                throw new NullPointerException("Memory Policy can't be null");
-            }
-            m_memoryPolicy = memoryPolicy;
-        }
 
         /**
          * @return the modelSettings
@@ -1903,30 +1839,7 @@ public final class Node implements NodeModelWarningListener {
             SettingsLoaderAndWriter result = new SettingsLoaderAndWriter();
             // in versions before KNIME 1.2.0, there were no misc settings
             // in the dialog, we must use caution here: if they are not present
-            // we use the default, i.e. small data are kept in memory
-            if (settings.containsKey(CFG_MISC_SETTINGS)
-                    && settings.getNodeSettings(CFG_MISC_SETTINGS).containsKey(
-                            Node.CFG_MEMORY_POLICY)) {
-                NodeSettingsRO sub =
-                        settings.getNodeSettings(CFG_MISC_SETTINGS);
-                String memoryPolicy =
-                        sub.getString(Node.CFG_MEMORY_POLICY,
-                                MemoryPolicy.CacheSmallInMemory.toString());
-                if (memoryPolicy == null) {
-                    throw new InvalidSettingsException(
-                            "Can't use null memory policy.");
-                }
-                MemoryPolicy p;
-                try {
-                    p = MemoryPolicy.valueOf(memoryPolicy);
-                } catch (IllegalArgumentException iae) {
-                    throw new InvalidSettingsException(
-                            "Invalid memory policy: " + memoryPolicy);
-                }
-                result.m_memoryPolicy = p;
-            } else {
-                result.m_memoryPolicy = MemoryPolicy.CacheSmallInMemory;
-            }
+            // we use the default.
             if (settings.containsKey(CFG_VARIABLES)) {
                 result.m_variablesSettings =
                     (NodeSettings)settings.getNodeSettings(CFG_VARIABLES);
@@ -1939,11 +1852,6 @@ public final class Node implements NodeModelWarningListener {
         }
 
         void save(final NodeSettingsWO settings) {
-            if (m_memoryPolicy != null) {
-                NodeSettingsWO sub =
-                        settings.addNodeSettings(CFG_MISC_SETTINGS);
-                sub.addString(CFG_MEMORY_POLICY, m_memoryPolicy.toString());
-            }
             NodeSettingsWO model = settings.addNodeSettings(CFG_MODEL);
             m_modelSettings.copyTo(model);
             if (m_variablesSettings != null) {
