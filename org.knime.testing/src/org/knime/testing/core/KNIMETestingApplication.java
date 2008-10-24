@@ -44,6 +44,8 @@ import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.EncryptionKeySupplier;
+import org.knime.core.util.KnimeEncryption;
 import org.knime.core.util.LogfileAppender;
 import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.repository.RepositoryManager;
@@ -218,6 +220,16 @@ public class KNIMETestingApplication implements IApplication {
      * the tests to run.
      */
     private void runRegressionTests(final String testPattern) {
+        // override current encryption key supplier
+        KnimeEncryption.setEncryptionKeySupplier(new EncryptionKeySupplier() {
+            /**
+             * @return <code>KNIME</code> always
+             * {@inheritDoc}
+             */
+           public String getEncryptionKey() {
+               return "KNIME";
+           }
+        });
 
         KnimeTestRegistry registry = new KnimeTestRegistry(testPattern);
         Test tests = registry.collectTestCases(new File(m_rootDir));
