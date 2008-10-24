@@ -59,6 +59,8 @@ public class SingleNodeContainerPersistorVersion1xx
     implements SingleNodeContainerPersistor {
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
+    
+    private final String m_versionString;
 
     private Node m_node;
     
@@ -74,8 +76,17 @@ public class SingleNodeContainerPersistorVersion1xx
     private LoadNodeModelSettingsFailPolicy m_settingsFailPolicy;
     
     SingleNodeContainerPersistorVersion1xx(
-            WorkflowPersistorVersion1xx workflowPersistor) {
+            WorkflowPersistorVersion1xx workflowPersistor, 
+            final String versionString) {
+        if (workflowPersistor == null || versionString == null) {
+            throw new NullPointerException();
+        }
         m_wfmPersistor = workflowPersistor;
+        m_versionString = versionString;
+    }
+    
+    protected final String getVersionString() {
+        return m_versionString;
     }
     
     protected NodeLogger getLogger() {

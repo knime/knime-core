@@ -54,8 +54,9 @@ public class SingleNodeContainerPersistorVersion200 extends
     private static final String NODE_FILE = "node.xml";
 
     public SingleNodeContainerPersistorVersion200(
-            final WorkflowPersistorVersion200 workflowPersistor) {
-        super(workflowPersistor);
+            final WorkflowPersistorVersion200 workflowPersistor,
+            final String versionString) {
+        super(workflowPersistor, versionString);
     }
     
     /** {@inheritDoc} */
@@ -82,10 +83,14 @@ public class SingleNodeContainerPersistorVersion200 extends
     protected NodeSettingsRO loadSNCSettings(NodeSettingsRO settings,
             NodePersistorVersion1xx nodePersistor)
             throws InvalidSettingsException {
-        // TODO eventually the settings for the snc will be stored as part
-        // of the settings.xml (represented by the settings object), currently
-        // there are part of the node.xml (which the nodePersistor reads)
-        return super.loadSNCSettings(settings, nodePersistor);
+        if ("2.0.0".equals(getVersionString())) {
+            return nodePersistor.getSettings();
+        } else {
+            // any version after 2.0 saves the snc settings in the settings.xml
+            // (previously these settings were saves as part of the node.xml)
+            return settings;
+        }
+            
     }
     
     /** {@inheritDoc} */
@@ -167,6 +172,7 @@ public class SingleNodeContainerPersistorVersion200 extends
         saveNodeFactoryClassName(settings, snc);
         ReferencedFile nodeXMLFileRef = saveNodeFileName(settings, nodeDirRef);
         saveScopeObjectStack(settings, snc);
+        saveSNCSettings(settings, snc);
         NodeContainerMetaPersistorVersion200 metaPersistor = 
             createNodeContainerMetaPersistor(null);
         metaPersistor.save(snc, settings);

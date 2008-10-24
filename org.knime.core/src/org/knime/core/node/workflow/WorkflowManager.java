@@ -2630,7 +2630,7 @@ public final class WorkflowManager extends NodeContainer {
         WorkflowPersistorVersion1xx persistor;
         if (WorkflowPersistorVersion200.canReadVersion(version)) {
             persistor = new WorkflowPersistorVersion200(
-                    new HashMap<Integer, ContainerTable>());
+                    new HashMap<Integer, ContainerTable>(), version);
         } else if (WorkflowPersistorVersion1xx.canReadVersion(version)) {
             LOGGER.warn(
                     "The current KNIME version (" + KNIMEConstants.VERSION
@@ -2642,7 +2642,7 @@ public final class WorkflowManager extends NodeContainer {
                     + " Please re-configure and/or re-execute these"
                     + " nodes.");
             persistor = new WorkflowPersistorVersion1xx(
-                    new HashMap<Integer, ContainerTable>());
+                    new HashMap<Integer, ContainerTable>(), version);
         } else {
             throw new InvalidSettingsException("Unable to load workflow, "
                     + "version string \"" + version + "\" is unknown");
@@ -2961,13 +2961,13 @@ public final class WorkflowManager extends NodeContainer {
             try {
                 final boolean isWorkingDirectory = 
                     workflowDirRef.equals(getNodeContainerDirectory());
-                WorkflowPersistorVersion200 persistor =
-                    new WorkflowPersistorVersion200(null);
+                final String saveVersion = 
+                    WorkflowPersistorVersion200.VERSION_LATEST;
                 if (m_loadVersion != null
-                        && !m_loadVersion.equals(persistor.getSaveVersion())) {
+                        && !m_loadVersion.equals(saveVersion)) {
                     LOGGER.info("Workflow was created with a previous version "
                             + "of KNIME (" + m_loadVersion + "), converting to "
-                            + "current version " + persistor.getSaveVersion()
+                            + "current version " + saveVersion
                             + ". This may take some time.");
                     setDirtyAll();
                     if (isWorkingDirectory) {
@@ -2989,9 +2989,9 @@ public final class WorkflowManager extends NodeContainer {
                                     + f.getAbsolutePath() + "\" failed");
                         }
                     }
-                    m_loadVersion = persistor.getSaveVersion();
+                    m_loadVersion = saveVersion;
                 }
-                new WorkflowPersistorVersion200(null).save(
+                new WorkflowPersistorVersion200().save(
                         this, workflowDirRef, exec, isSaveData);
             } finally {
                 workflowDirRef.unlock();
