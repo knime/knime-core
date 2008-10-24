@@ -52,6 +52,7 @@ import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.w3c.dom.Element;
 
@@ -464,7 +465,7 @@ public final class SingleNodeContainer extends NodeContainer implements
             }
         }
     }
-
+    
     /**
      * Change state of marked (for execution) node to queued once it has been
      * assigned to a NodeExecutionJobManager.
@@ -477,9 +478,24 @@ public final class SingleNodeContainer extends NodeContainer implements
             switch (getState()) {
             case MARKEDFOREXEC:
                 setState(State.QUEUED);
-                ExecutionContext execCon = createExecutionContext();
-                m_executionJob = findJobExecutor().submitJob(
-                        this, inData, execCon);
+                NodeExecutionJobManager jobManager = findJobExecutor();
+                try {
+                    ExecutionContext execCon = createExecutionContext();
+                    m_executionJob = findJobExecutor().submitJob(
+                            this, inData, execCon);
+                } catch (Throwable t) {
+                    String error = "Failed to submit job to job executor \"" 
+                        + jobManager + "\": " + t.getMessage();
+                    m_node.notifyMessageListeners(new NodeMessage(
+                            NodeMessage.Type.ERROR, error));
+                    LOGGER.error(error, t);
+                    try {
+                        performBeforeExecuteNode();
+                    } catch (IllegalContextStackObjectException e) {
+                        // have something more serious to deal with
+                    }
+                    performAfterExecuteNode(false);
+                }
                 return;
             default:
                 throw new IllegalStateException("Illegal state " + getState()
@@ -692,6 +708,7 @@ public final class SingleNodeContainer extends NodeContainer implements
             throws InvalidSettingsException {
         synchronized (m_nodeMutex) {
             m_node.loadSettingsFrom(settings);
+            loadSNCSettings(settings);
             setDirty();
         }
     }
@@ -735,9 +752,9 @@ public final class SingleNodeContainer extends NodeContainer implements
 
     /** {@inheritDoc} */
     @Override
-    void saveSettings(final NodeSettingsWO settings)
-    throws InvalidSettingsException {
+    void saveSettings(final NodeSettingsWO settings) {
         m_node.saveSettingsTo(settings);
+        saveSNCSettings(settings);
     }
     
     /**
@@ -762,6 +779,8 @@ public final class SingleNodeContainer extends NodeContainer implements
         throws InvalidSettingsException {
         synchronized (m_nodeMutex) {
             m_settings = new SingleNodeContainerSettings(settings);
+            String id = m_settings.getJobManagerID();
+            setJobExecutor(NodeExecutionJobManagerPool.getJobManager(id));
         }
     }
     
@@ -859,7 +878,9 @@ public final class SingleNodeContainer extends NodeContainer implements
     NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs)
             throws NotConfigurableException {
         ScopeObjectStack stack = getScopeObjectStack();
-        return m_node.getDialogPaneWithSettings(inSpecs, stack);
+        NodeSettings settings = new NodeSettings(getName());
+        saveSettings(settings);
+        return m_node.getDialogPaneWithSettings(inSpecs, stack, settings);
     }
 
     /** {@inheritDoc} */

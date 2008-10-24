@@ -568,8 +568,7 @@ public abstract class NodeContainer {
     abstract void loadSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException;
 
-    abstract void saveSettings(final NodeSettingsWO settings)
-    throws InvalidSettingsException;
+    abstract void saveSettings(final NodeSettingsWO settings);
 
 
     abstract boolean areSettingsValid(final NodeSettingsRO settings);

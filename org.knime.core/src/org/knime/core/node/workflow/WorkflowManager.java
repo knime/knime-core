@@ -3180,8 +3180,7 @@ public final class WorkflowManager extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    void saveSettings(final NodeSettingsWO settings)
-    throws InvalidSettingsException {
+    void saveSettings(final NodeSettingsWO settings) {
     }
 
     /** {@inheritDoc} */

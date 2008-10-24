@@ -1409,6 +1409,8 @@ public final class Node implements NodeModelWarningListener {
      * @return The dialog pane which holds all the settings' components. In
      *         addition this method loads the settings from the model into the
      *         dialog pane.
+     * @param settings The current settings of this node. The settings object
+     *        will also contain the settings of the outer SNC.
      * @throws NotConfigurableException if the dialog cannot be opened because
      *             of real invalid settings or if any preconditions are not
      *             fulfilled, e.g. no predecessor node, no nominal column in
@@ -1417,10 +1419,9 @@ public final class Node implements NodeModelWarningListener {
      * @see #hasDialog()
      */
     public NodeDialogPane getDialogPaneWithSettings(
-            final PortObjectSpec[] inSpecs, final ScopeObjectStack scopeStack)
-        throws NotConfigurableException {
+            final PortObjectSpec[] inSpecs, final ScopeObjectStack scopeStack,
+            final NodeSettings settings) throws NotConfigurableException {
         NodeDialogPane dialogPane = getDialogPane();
-        NodeSettingsRO settings = getSettingsFromNode();
         PortType[] inTypes = new PortType[getNrInPorts()];
         for (int i = 0; i < inTypes.length; i++) {
             PortType t = getInputType(i);
@@ -1442,7 +1443,8 @@ public final class Node implements NodeModelWarningListener {
     /**
      * Get reference to the node dialog instance. Used to get the user settings
      * from the dialog without overwriting them as in in
-     * {@link #getDialogPaneWithSettings(PortObjectSpec[], ScopeObjectStack)}
+     * {@link #getDialogPaneWithSettings(
+     * PortObjectSpec[], ScopeObjectStack, NodeSettings)}
      *
      * @return Reference to dialog pane.
      * @throws IllegalStateException If node has no dialog.
