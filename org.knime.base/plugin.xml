@@ -871,7 +871,7 @@
    <extension point="org.knime.workbench.repository.metanode">
        <PersistedMetaNode description="Provides a skeleton of nodes necessary for cross validation" icon="icons/meta_nodes/cross_validation_flow.png" id="cross_validation" name="X-Validation" workflowDir="metanode_templates/Cross Validation/">
        </PersistedMetaNode>
-       <PersistedMetaNode expert-flag="true" icon="icons/meta_nodes/variables_looper_flow.png" id="variables_loop" name="Variables Loop (Data)" workflowDir="metanode_templates/Variables Loop/">
+       <PersistedMetaNode expert-flag="true" icon="icons/meta_nodes/variables_looper_flow.png" id="variables_loop" name="Variables Loop (Data)" workflowDir="metanode_templates/Variables Loop (Data)/">
        </PersistedMetaNode>
        <PersistedMetaNode expert-flag="true" icon="icons/meta_nodes/variables_looper_db_flow.png" id="variables_loop_db" name="Variables Loop (Database)" workflowDir="metanode_templates/Variables Loop (Database)/">
        </PersistedMetaNode>
