@@ -45,6 +45,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettings;
+import org.knime.core.node.workflow.SingleNodeContainer;
 
 /**
  * Test class for the SorterNodeModel.
@@ -53,8 +54,9 @@ import org.knime.core.node.NodeSettings;
  */
 public class SorterNodeModelTest extends TestCase {
     private static final ExecutionContext EXEC_CONTEXT = new ExecutionContext(
-            new DefaultNodeProgressMonitor(), new Node(new SorterNodeFactory()), 
-                    new HashMap<Integer, ContainerTable>());
+            new DefaultNodeProgressMonitor(), new Node(new SorterNodeFactory()),
+                SingleNodeContainer.MemoryPolicy.CacheSmallInMemory,
+                new HashMap<Integer, ContainerTable>());
 
     private SorterNodeModel m_snm;
 
