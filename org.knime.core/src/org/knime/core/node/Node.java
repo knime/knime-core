@@ -793,11 +793,22 @@ public final class Node implements NodeModelWarningListener {
     } // executeNode(ExecutionMonitor)
 
     /** Copies the PortObject so that the copy can be given to the node model
-     * implementation (and potentially modified). */
-    private PortObject copyPortObject(final PortObject portObject,
+     * implementation (and potentially modified). The copy is carried out by
+     * means of the respective serializer (via streams).
+     * 
+     * <p> Note that this method is meant to be used by the framework only. 
+     * @param portObject The object to be copied.
+     * @param exec For progress/cancel
+     * @return The (deep) copy. 
+     * @throws IOException In case of exceptions while accessing the stream or
+     * if the argument is an instance of {@link BufferedDataTable}.
+     * @throws CanceledExecutionException If canceled.*/
+    public static PortObject copyPortObject(final PortObject portObject,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        assert !(portObject instanceof BufferedDataTable) : "Must not copy BDT";
+        if (portObject instanceof BufferedDataTable) {
+            throw new IOException("Can't copy BufferedDataTable objects");
+        }
 
         // first copy the spec, then copy the object
         final PortObjectSpec s = portObject.getSpec();
