@@ -509,6 +509,9 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
          * {@inheritDoc}
          */
         public void setProgress(final double progress) {
+            if (m_maxProg <= 0.0) { // don't report 0-progress ("unknown")
+                return;
+            }
             // synchronization is imported here: multiple sub progresses may
             // report to the parent. "getOldProgress" and "setNewProgress" must
             // be an atomic operation
