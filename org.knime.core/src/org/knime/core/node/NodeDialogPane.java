@@ -308,20 +308,15 @@ public abstract class NodeDialogPane {
         l.setModelSettings(model);
         l.setVariablesSettings(variables);
         l.save(settings);
-        if (m_jobMgrTab != null || m_memPolicyTab != null) {
-            SingleNodeContainerSettings s = new SingleNodeContainerSettings();
+        SingleNodeContainerSettings s = new SingleNodeContainerSettings();
 
-            if (m_memPolicyTab != null) {
-                s.setMemoryPolicy(m_memPolicyTab.getStatus());
-            } else {
-                // store the default
-                s.setMemoryPolicy(MemoryPolicy.CacheSmallInMemory);
-            }
-            if (m_jobMgrTab != null) {
-                m_jobMgrTab.saveSettings(s);
-            }
-            s.save(settings);
+        if (m_memPolicyTab != null) {
+            s.setMemoryPolicy(m_memPolicyTab.getStatus());
         }
+        if (m_jobMgrTab != null) {
+            m_jobMgrTab.saveSettings(s);
+        }
+        s.save(settings);
     }
 
     /**
