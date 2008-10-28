@@ -667,8 +667,19 @@ public final class SingleNodeContainer extends NodeContainer implements
      * @return If that's successful (false if for instance, elements are null
      * or incompatible)
      */
-    public boolean loadPortObjects(final PortObject[] outData) {
-        return m_node.loadOutPortObjects(outData, false);
+    public boolean loadExecutionResult(final PortObject[] outData) {
+        return m_node.loadExecutionResult(outData, false);
+    }
+    
+    /** Set a node message on this node. This method should be used when
+     * the node is executed remotely, i.e. the local Node instance is not
+     * used for the calculation but should represent a calculation result.
+     * @param message A message that should be shown at the node. Must not be
+     * null (use a reset message instead).
+     * @throws NullPointerException If the argument is null 
+     */ 
+    public void loadNodeMessage(final NodeMessage message) {
+        m_node.loadNodeMessage(message);
     }
 
     /**

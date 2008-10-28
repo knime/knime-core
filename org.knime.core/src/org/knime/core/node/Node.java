@@ -302,7 +302,7 @@ public final class Node implements NodeModelWarningListener {
      * @return Whether that is successful (false in case of incompatible port
      *         objects)
      */
-    public boolean loadOutPortObjects(final PortObject[] newOutData, 
+    public boolean loadExecutionResult(final PortObject[] newOutData, 
             final boolean continuesLoop) {
         // the following exception will not be thrown in a local execution
         // (i.e. from execute(...)); need to check anyway as this is a public
@@ -373,6 +373,19 @@ public final class Node implements NodeModelWarningListener {
             }
         }
         return true;
+    }
+    
+    /** Load a node message. This method is used in case of a remote execution,
+     * e.g. See {@link org.knime.core.node.workflow.SingleNodeContainer#
+     * loadNodeMessage(NodeMessage)} for details.
+     * @param message the message to be loaded
+     * @throws NullPointerException If the argument is null
+     */
+    public void loadNodeMessage(final NodeMessage message) {
+        if (message == null) {
+            throw new NullPointerException("Message must not be null");
+        }
+        notifyMessageListeners(message);
     }
     
     public LoadResult loadDataAndInternals(
@@ -754,7 +767,7 @@ public final class Node implements NodeModelWarningListener {
         // check if we see a loop status in the NodeModel
         ScopeLoopContext slc = m_model.getLoopStatus();
         boolean continuesLoop = (slc != null);
-        if (!loadOutPortObjects(newOutData, continuesLoop)) {
+        if (!loadExecutionResult(newOutData, continuesLoop)) {
             return false;
         }
         for (int p = 0; p < getNrOutPorts(); p++) {
