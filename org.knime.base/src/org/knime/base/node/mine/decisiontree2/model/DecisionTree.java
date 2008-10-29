@@ -134,6 +134,13 @@ public class DecisionTree implements Serializable {
             final DataTableSpec spec) throws Exception {
         return m_rootNode.getClassCounts(row, spec);
     }
+    
+    /**
+     * Clean all color information in the entire tree.
+     */
+    public void resetColorInformation() {
+        m_rootNode.resetColorInformation();
+    }
 
     // ///////////////////
     // Save & Load

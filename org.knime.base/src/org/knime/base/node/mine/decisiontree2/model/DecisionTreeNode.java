@@ -72,6 +72,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
 
     private HashMap<Color, Double> m_coveredColors
                 = new HashMap<Color, Double>();
+    private boolean m_newColors = false;
 
     private HashMap<DataCell, Double> m_classCounts;
 
@@ -356,6 +357,35 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
         return m_coveredColors;
     }
 
+    /**
+     * Clean all color information in this node and all children.
+     */
+    public void resetColorInformation() {
+        // first reset color information
+        m_coveredColors = new HashMap<Color, Double>();
+        // remember this choice (i.e. hide class distribution info as it
+        // does not match current color scheme anymore - but is needed
+        // for classification).
+        m_newColors = true;
+        // then do all the cleanup for all children
+        for (int i = 0; i < getChildCount(); i++) {
+            TreeNode n = getChildAt(i);
+            // not beautiful but safe - we know what we inserted!
+            if (n instanceof DecisionTreeNode) {
+                ((DecisionTreeNode)n).resetColorInformation();
+            } else {
+                LOGGER.coding("Odd: Decision Tree Predictor found a"
+                    + " TreeNode which is not a DecisionTreeNode");
+            }
+        }
+    }
+    
+    /**
+     * @return true of the colors of this node were overwritten.
+     */
+    boolean newColors() {
+        return m_newColors;
+    }
 
     /**
      * @return index of this node itself
@@ -374,14 +404,31 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     }
 
     /**
+     * @return overall accumulate count of all color-weights in this node
+     */
+    double getOverallColorCount() {
+        double overallColorCount = 0.0;
+        for (Double d : m_coveredColors.values()) {
+            overallColorCount += d;
+        }
+        return overallColorCount;
+    }
+    
+    /**
      * {@inheritDoc}
      */
     @Override
     public final String toString() {
+        String nodeName = "[" + m_prefix + "]: " + " class '" + m_class;
         NumberFormat nf = NumberFormat.getInstance();
-        return "[" + m_prefix + "]: " + " class '" + m_class + "' ("
-                + nf.format(m_ownClassFreq) + " of "
+        if (!m_newColors) {
+            nodeName = nodeName + "' (" + nf.format(m_ownClassFreq) + " of "
                 + nf.format(m_allClassFreq) + ")";
+        } else {
+            nodeName = nodeName + " (w=" + nf.format(getOverallColorCount())
+                + ")";
+        }
+        return nodeName;
     }
 
     /**

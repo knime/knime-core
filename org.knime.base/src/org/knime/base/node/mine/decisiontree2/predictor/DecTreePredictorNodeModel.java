@@ -137,11 +137,15 @@ public class DecTreePredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inDataPorts,
+    protected PortObject[] execute(final PortObject[] inPorts,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
-        loadModelContent((PMMLDecisionTreePortObject) inDataPorts[INMODELPORT]);
-        BufferedDataTable inData = (BufferedDataTable)inDataPorts[INDATAPORT];
+        LOGGER.info("Decision Tree Predictor: Loading predictor...");
+        m_decTree = ((PMMLDecisionTreePortObject)
+                inPorts[INMODELPORT]).getTree();
+        m_decTree.resetColorInformation();
+        LOGGER.info("Decision Tree Predictor: Loading predictor successful.");
+        BufferedDataTable inData = (BufferedDataTable)inPorts[INDATAPORT];
         assert m_decTree != null;
         LOGGER.info("Decision Tree Predictor: start execution.");
         DataTableSpec outSpec =
@@ -202,12 +206,6 @@ public class DecTreePredictorNodeModel extends NodeModel {
         outData.close();
         LOGGER.info("Decision Tree Predictor: end execution.");
         return new BufferedDataTable[]{outData.getTable()};
-    }
-
-    private void loadModelContent(final PMMLDecisionTreePortObject port) {
-        LOGGER.info("Decision Tree Predictor: Loading predictor...");
-        m_decTree = port.getTree();
-        LOGGER.info("Decision Tree Predictor: Loading predictor successful.");
     }
 
     /**
