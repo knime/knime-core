@@ -47,7 +47,6 @@ import org.knime.workbench.editor2.actions.OpenDialogAction;
 import org.knime.workbench.editor2.actions.OpenPortViewAction;
 import org.knime.workbench.editor2.actions.OpenSubworkflowEditorAction;
 import org.knime.workbench.editor2.actions.OpenViewAction;
-import org.knime.workbench.editor2.actions.OpenViewEmbeddedAction;
 import org.knime.workbench.editor2.actions.OpenWorkflowPortViewAction;
 import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 import org.knime.workbench.editor2.actions.ResetAction;
@@ -201,22 +200,8 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 LOGGER.debug("adding open node-view action(s) "
                         + "to context menu...");
                 int numNodeViews = container.getNrViews();
-                /*
-                 * BW: disabled this feature, no embedded eclipse views
-                 * available (to enable them uncomment the following lines and
-                 * also change the settings in MainPreferencePage.
-                 */
-                boolean openEmbedded = false;
-                // boolean openEmbedded = KNIMEUIPlugin.getDefault().
-                // getPreferenceStore().getString(
-                // PreferenceConstants.P_CHOICE_VIEWMODE).equals(
-                // PreferenceConstants.P_CHOICE_VIEWMODE_VIEW);
                 for (int i = 0; i < numNodeViews; i++) {
-                    if (openEmbedded) {
-                        action = new OpenViewEmbeddedAction(container, i);
-                    } else {
-                        action = new OpenViewAction(container, i);
-                    }
+                    action = new OpenViewAction(container, i);
                     manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP,
                             action);
                 }

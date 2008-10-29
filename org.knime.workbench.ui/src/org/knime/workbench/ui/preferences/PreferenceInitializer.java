@@ -45,9 +45,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
                 .getPreferenceStore();
 
         // set default values
-        store.setDefault(PreferenceConstants.P_CHOICE_VIEWMODE,
-                PreferenceConstants.P_CHOICE_VIEWMODE_JFRAME);
-
         store.setDefault(PreferenceConstants.P_LOGLEVEL_CONSOLE,
                 LEVEL.WARN.name());
         

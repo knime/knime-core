@@ -200,13 +200,6 @@
       <category
             id="org.knime.workbench.ui.category"
             name="KNIME Views"/>
-      <view
-            allowMultiple="true"
-            category="org.knime.workbench.ui.category"
-            class="org.knime.workbench.ui.views.EmbeddedNodeView"
-            icon="icons/knime.png"
-            id="org.knime.workbench.ui.views.EmbeddedNodeView"
-            name="Node View"/>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">

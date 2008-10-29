@@ -34,8 +34,6 @@ import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.ui.KNIMEUIPlugin;
-import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  * Action to execute a node and open its first view.
@@ -194,21 +192,9 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
                     if (cont.getState().equals(NodeContainer.State.EXECUTED)) {
                         Display.getDefault().asyncExec(new Runnable() {
                             public void run() {
-                                // set the appropriate action to open the
-                                // view (jframe or embedded)
-                                boolean openEmbedded =
-                                        KNIMEUIPlugin.getDefault()
-                                        .getPreferenceStore().getString(
-                                    PreferenceConstants.P_CHOICE_VIEWMODE)
-                                                .equals(
-                                    PreferenceConstants.P_CHOICE_VIEWMODE_VIEW);
-                                IAction viewAction = null;
-                                if (openEmbedded) {
-                                    viewAction =
-                                            new OpenViewEmbeddedAction(cont, 0);
-                                } else {
-                                    viewAction = new OpenViewAction(cont, 0);
-                                }
+                                // set the appropriate action to open the view
+                                IAction viewAction = new OpenViewAction(
+                                        cont, 0);
                                 viewAction.run();
                             };
                         });
