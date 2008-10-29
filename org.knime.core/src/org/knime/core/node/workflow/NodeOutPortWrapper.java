@@ -69,11 +69,27 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
         }
         m_underlyingPort = p;
         if (m_underlyingPort != null) {
+            // this fixes bug #1499
+            // we use some prefix here and do not simply copy the name since
+            // the default (null) name is "Outport 0", for instance. If we then
+            // connect a WFM to an outer WFM, whereby the inner WFM is not 
+            // connected (i.e. its output would show "Output X"), we would end
+            // up copying whatever the WFM decides (the port could show 
+            // "Outport 3" although the port is "0"
+            // besides all that it's reasonable to show that the port only
+            // forwards data, it does not hold it.
+            String prefix = "Connected to: ";
+            String name = m_underlyingPort.getPortName();
+            if (name != null && !name.startsWith(prefix)) {
+                name = prefix + name;
+            }
+            setPortName(name);
             m_underlyingPort.addNodeStateChangeListener(this);
             // if not null -> query state and throw event
             notifyNodeStateChangeListener(new NodeStateEvent(
                     new NodeID(0), m_underlyingPort.getNodeState()));
         } else {
+            setPortName(null);
             // if null: disconnected set state -> idle
             notifyNodeStateChangeListener(new NodeStateEvent(
                     new NodeID(0), NodeContainer.State.IDLE));
