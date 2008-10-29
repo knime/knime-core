@@ -135,7 +135,7 @@ public class StringReplacerNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        exec.setMessage("Replacing");
+        exec.setMessage("Searching & Replacing");
         String regex = WildcardMatcher.wildcardToRegex(m_settings.pattern());
         // support for \n and international characters
         int flags = Pattern.DOTALL | Pattern.MULTILINE;
