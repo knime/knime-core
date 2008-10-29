@@ -58,14 +58,15 @@ public final class FavoriteNodesManager {
     private Category m_freqNodes;
     private Category m_lastNodes;
     
-    private static final Image FAV_ICON = KNIMEUIPlugin.getDefault().getImage(
-            KNIMEUIPlugin.PLUGIN_ID, "icons/fav/folder_fav.png");
+    private static Image favIcon = null;
+
     // icons swapped on purpose
-    private static final Image FREQ_ICON = KNIMEUIPlugin.getDefault().getImage(
-            KNIMEUIPlugin.PLUGIN_ID, "icons/fav/folder_last.png");
+    private static Image freqIcon = null; 
+
     // icons swapped on purpose
-    private static final Image LAST_ICON = KNIMEUIPlugin.getDefault().getImage(
-            KNIMEUIPlugin.PLUGIN_ID, "icons/fav/folder_freq.png");
+    private static Image lastIcon = null;
+
+    
     
     // loading and saving
     private static final String TAG_FAVORITES = "favoritenodes";
@@ -101,6 +102,14 @@ public final class FavoriteNodesManager {
     
     /**
      * 
+     * @return true if it was initialized, false otherwise
+     */
+    public static boolean wasInitialized() {
+        return instance != null;
+    }
+    
+    /**
+     * 
      * @return the tree model with three categories: favorites, most frequent 
      * and last used
      */
@@ -108,29 +117,49 @@ public final class FavoriteNodesManager {
         return m_root;
     }
     
+    
     /**
      * 
      */
     private void createTreeModel() {
+        if (lastIcon == null) {
+            // only initialize when needed
+            // to avoid loading of images for static access
+            // especially #wasInitialized()
+            lastIcon = KNIMEUIPlugin.imageDescriptorFromPlugin(
+                    KNIMEUIPlugin.PLUGIN_ID, "icons/fav/folder_freq.png")
+                    .createImage();
+        }
+        if (freqIcon == null) {
+            // icons swapped on purpose (last vs. frequent)
+            freqIcon = KNIMEUIPlugin.imageDescriptorFromPlugin(
+                    KNIMEUIPlugin.PLUGIN_ID, "icons/fav/folder_last.png")
+                    .createImage();
+        }
+        if (favIcon == null) {
+            favIcon = KNIMEUIPlugin.imageDescriptorFromPlugin(
+                    KNIMEUIPlugin.PLUGIN_ID, "icons/fav/folder_fav.png")
+                    .createImage();
+        }
         m_root = new Root();
         m_root.setSortChildren(false);
         m_favNodes = new Category(FAV_CAT_ID);
         m_favNodes.setName(FAV_TITLE);
-        m_favNodes.setIcon(FAV_ICON);
+        m_favNodes.setIcon(favIcon);
         m_favNodes.setAfterID("");
         m_favNodes.setSortChildren(true);
         m_root.addChild(m_favNodes);
         
         m_freqNodes = new Category("freq");
         m_freqNodes.setName("Most frequently used nodes");
-        m_freqNodes.setIcon(FREQ_ICON);
+        m_freqNodes.setIcon(freqIcon);
         m_freqNodes.setAfterID("fav");
         m_freqNodes.setSortChildren(false);
         m_root.addChild(m_freqNodes);
         
         m_lastNodes = new Category("last");
         m_lastNodes.setName("Last used nodes");
-        m_lastNodes.setIcon(LAST_ICON);
+        m_lastNodes.setIcon(lastIcon);
         m_lastNodes.setAfterID("freq");
         m_lastNodes.setSortChildren(false);
         m_root.addChild(m_lastNodes);
