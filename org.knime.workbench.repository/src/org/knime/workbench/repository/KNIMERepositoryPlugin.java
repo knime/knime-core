@@ -42,7 +42,7 @@ import org.osgi.framework.BundleContext;
 
 /**
  * Repository Plugin.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class KNIMERepositoryPlugin extends AbstractUIPlugin {
@@ -53,7 +53,7 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             KNIMERepositoryPlugin.class);
-    
+
     // The shared instance.
     private static KNIMERepositoryPlugin plugin;
 
@@ -75,7 +75,7 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
      * This method is called upon plug-in activation. We're showing a little
      * opening splashScreen wit a progress bar, while building up the
      * repository.
-     * 
+     *
      * @param context The context
      * @throws Exception some startup exception
      */
@@ -84,18 +84,26 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
         super.start(context);
         // Do the actual work: load the repository
         try {
-            // get the preference store 
-            // with the preferences for nr threads and tempDir 
+            // get the preference store
+            // with the preferences for nr threads and tempDir
             IPreferenceStore pStore =
                 KNIMERepositoryPlugin.getDefault().getPreferenceStore();
             int maxThreads = pStore.getInt(
                     HeadlessPreferencesConstants.P_MAXIMUM_THREADS);
-            if (maxThreads <= 0) {
-                LOGGER.warn("Can set " + maxThreads
-                        + " as number of threads to use");
+            String maxTString = System.getProperty("org.knime.core.maxThreads");
+            if (maxTString == null) {
+                if (maxThreads <= 0) {
+                    LOGGER.warn("Can set " + maxThreads
+                            + " as number of threads to use");
+                } else {
+                    KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(maxThreads);
+                    LOGGER.debug("Setting KNIME max thread count to "
+                            + maxThreads);
+                }
             } else {
-                KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(maxThreads);
-                LOGGER.debug("Setting KNIME max thread count to " + maxThreads);
+                LOGGER.debug("Ignoring thread count from preference page (" 
+                        + maxThreads + "), since it has set by java property " 
+                        + "\"org.knime.core.maxThreads\" (" + maxTString + ")");
             }
             String tmpDir = pStore.getString(
                     HeadlessPreferencesConstants.P_TEMP_DIR);
@@ -109,13 +117,13 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
                 LOGGER.debug("Setting temp dir environment variable "
                         + "(java.io.tmpdir) to \"" + tmpDir + "\"");
             }
-            
+
             // set log file level to stored
             String logLevelFile =
                 pStore.getString(HeadlessPreferencesConstants
                         .P_LOGLEVEL_LOG_FILE);
             NodeLogger.setLevel(LEVEL.valueOf(logLevelFile));
-            
+
             pStore.addPropertyChangeListener(new IPropertyChangeListener() {
 
                 @Override
@@ -149,19 +157,19 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
                                     + ", using WARN");
                         }
                         NodeLogger.setLevelIntern(level);
-                    } 
+                    }
                 }
             });
             RepositoryManager.INSTANCE.create();
         } catch (Throwable e) {
             WorkbenchErrorLogger.error("FATAL: error initializing KNIME"
                     + " repository - check plugin.xml" + " and classpath", e);
-        } 
+        }
     }
 
     /**
      * This method is called when the plug-in is stopped.
-     * 
+     *
      * @param context The context
      * @throws Exception some stopping exception
      */
@@ -174,7 +182,7 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
 
     /**
      * Returns the shared instance.
-     * 
+     *
      * @return The plugin instance (singleton)
      */
     public static KNIMERepositoryPlugin getDefault() {
@@ -184,7 +192,7 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
     /**
      * Returns the string from the plugin's resource bundle, or 'key' if not
      * found.
-     * 
+     *
      * @param key The key
      * @return The string
      */
@@ -200,7 +208,7 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
 
     /**
      * Returns the plugin's resource bundle.
-     * 
+     *
      * @return The bundle
      */
     public ResourceBundle getResourceBundle() {
@@ -218,7 +226,7 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
 
     /**
      * Returns a (cached) image from the image registry.
-     * 
+     *
      * @param descriptor The image descriptor
      * @return The image, or a default image if missing.
      */
@@ -227,12 +235,12 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
         if (descriptor == null) {
             return null;
         }
-        
+
         // create the registry if needed
         if (m_imageRegistry == null) {
-            // if the imageRegistry is not created within the UI thread 
+            // if the imageRegistry is not created within the UI thread
             // then the UI thread has to be invoked with Display.getDefault();
-            // this has to be done when KNIME is started without the eclipse GUI 
+            // this has to be done when KNIME is started without the eclipse GUI
             if (Display.getCurrent() == null) {
                 Display.getDefault();
                 assert Display.getCurrent() != null;
@@ -255,7 +263,7 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
 
     /**
      * This only works for images located in the KNIMERepositry Plugin !
-     * 
+     *
      * @param filename The filename, relative to the KNIMERepositryPlugin root
      * @return The image, default will be supplied if missing.
      */
@@ -265,7 +273,7 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
 
     /**
      * Load a image from the given location from within the plugin.
-     * 
+     *
      * @param pluginID The ID of the hosting plugin
      * @param filename The elative filename
      * @return The image, a default will be returned if file was missing.
@@ -277,7 +285,7 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
 
     /**
      * Returns a image descriptor.
-     * 
+     *
      * @param pluginID The plugin ID
      * @param filename Th relative filename
      * @return The descriptor, or null
