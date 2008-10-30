@@ -613,8 +613,14 @@
             factory-class="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
             id="org.knime.base.node.io.database.DBReaderConnectionNodeFactory">
    	  </node>
-      <node
+   	  <node
             after="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
+            category-path="/database"
+            factory-class="org.knime.base.node.io.database.DatabaseLoopingNodeFactory"
+            id="org.knime.base.node.io.database.DatabaseLoopingNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.io.database.DatabaseLoopingnNodeFactory"
             category-path="/database"
             factory-class="org.knime.base.node.io.database.DBConnectionNodeFactory"
             id="org.knime.base.node.io.database.DBConnectionNodeFactory">

@@ -45,7 +45,7 @@ import org.knime.core.node.port.database.DatabaseReaderConnection;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-final class DBReaderNodeModel extends NodeModel {
+class DBReaderNodeModel extends NodeModel {
     
     private DataTableSpec m_lastSpec = null;
     
@@ -56,9 +56,11 @@ final class DBReaderNodeModel extends NodeModel {
     
     /**
      * Creates a new database reader with one data out-port.
+     * @param ins number data input ports
+     * @param outs number data output ports
      */
-    DBReaderNodeModel() {
-        super(0, 1);
+    DBReaderNodeModel(final int ins, final int outs) {
+        super(ins, outs);
     }
 
     /**
@@ -209,5 +211,19 @@ final class DBReaderNodeModel extends NodeModel {
             conn.saveConnection(settings);
         }
         settings.addString(DatabaseConnectionSettings.CFG_STATEMENT, m_query);
+    }
+    
+    /**
+     * @param newQuery the new query to set
+     */
+    final void setQuery(final String newQuery) {
+        m_query = newQuery;
+    }
+    
+    /**
+     * @return current query
+     */
+    final String getQuery() {
+        return m_query;
     }
 }

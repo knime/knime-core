@@ -1,9 +1,9 @@
-/*
+/* 
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2007
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -17,44 +17,46 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * -------------------------------------------------------------------
+ * --------------------------------------------------------------------- *
  * 
+ * History
+ *   19.06.2007 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class DBReaderNodeFactory 
-        extends NodeFactory<DBReaderNodeModel> {
-    
+public class DatabaseLoopingNodeFactory extends NodeFactory {
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public DBReaderNodeModel createNodeModel() {
-        return new DBReaderNodeModel(0, 1);
+    protected NodeDialogPane createNodeDialogPane() {
+        return new DatabaseLoopingNodeDialogPane();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int getNrNodeViews() {
-        return 0;
+    public NodeModel createNodeModel() {
+        return new DatabaseLoopingNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView<DBReaderNodeModel> createNodeView(
-            final int viewIndex, final DBReaderNodeModel nodeModel) {
+    public NodeView createNodeView(final int viewIndex, 
+            final NodeModel nodeModel) {
         return null;
     }
 
@@ -62,15 +64,16 @@ public final class DBReaderNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public boolean hasDialog() {
-        return true;
+    protected int getNrNodeViews() {
+        return 0;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new DBReaderDialogPane();
+    protected boolean hasDialog() {
+        return true;
     }
+
 }
