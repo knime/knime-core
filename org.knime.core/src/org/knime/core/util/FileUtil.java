@@ -31,6 +31,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -152,6 +154,26 @@ public final class FileUtil {
         byte[] cache = new byte[bufSize];
         int read;
         while ((read = input.read(cache, 0, bufSize)) > 0) {
+            destination.write(cache, 0, read);
+        }
+    }
+
+    /**
+     * Copies the chars as read from <code>source</code> to the writer
+     * <code>destination</code>. Neither <code>input</code> nor
+     * <code>destination</code> get closed at the end!
+     *
+     * @param source To read from
+     * @param destination To write to
+     * @throws IOException If that fails for any reason.
+     * @throws NullPointerException If any argument is <code>null</code>.
+     */
+    public static void copy(final Reader source,
+            final Writer destination) throws IOException {
+        final int bufSize = 8192;
+        char[] cache = new char[bufSize];
+        int read;
+        while ((read = source.read(cache, 0, bufSize)) > 0) {
             destination.write(cache, 0, read);
         }
     }
