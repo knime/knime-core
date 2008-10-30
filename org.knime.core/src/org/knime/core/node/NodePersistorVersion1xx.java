@@ -28,7 +28,9 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
@@ -72,7 +74,13 @@ public class NodePersistorVersion1xx implements NodePersistor {
     private BufferedDataTable[] m_internalHeldTables;
 
     private boolean m_needsResetAfterLoad;
-    
+
+    /** List of factories (only the simple class name), which were 
+     * auto-executable in 1.3.x and need to be restored as configured only. */
+    public static final List<String> OLD_AUTOEXECUTABLE_NODEFACTORIES =
+        Arrays.asList("InteractivePieNodeFactory", "HistogramNodeFactory", 
+                "JmolViewerNodeFactory", "TableNodeFactory");
+                
     static String createDataFileDirName(final int index) {
         return DATA_FILE_PREFIX + index;
     }
@@ -96,18 +104,6 @@ public class NodePersistorVersion1xx implements NodePersistor {
     protected boolean loadIsExecuted(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return settings.getBoolean(CFG_ISEXECUTED);
-    }
-    
-    protected boolean shouldLoadAsNotExecuted(final Node node) {
-        String facName = node.getFactory().getClass().getSimpleName();
-        // all auto-executable nodes, don't exist anymore with 2.0
-        if (facName.equals("InteractivePieNodeFactory")
-                || facName.equals("HistogramNodeFactory")
-                || facName.equals("JmolViewerNodeFactory")
-                || facName.equals("TableNodeFactory")) {
-            return true;
-        }
-        return false;
     }
     
     protected boolean loadHasContent(final NodeSettingsRO settings)
@@ -158,8 +154,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
                     object = loadBufferedDataTable(
                             node, settings, execPort, loadTblRep, i, tblRep);
                 } else {
-                    throw new IOException("Can't restore model ports of old 1.x " +
-                    		"workflows. Execute node again.");
+                    throw new IOException("Can't restore model ports of " 
+                            + "old 1.x workflows. Execute node again.");
                 }
                 String summary = object != null ? object.getSummary() : null;
                 setPortObject(i, object);
@@ -398,7 +394,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
         
         try {
             m_isExecuted = loadIsExecuted(settings);
-            if (m_isExecuted && shouldLoadAsNotExecuted(node)) {
+            if (m_isExecuted && OLD_AUTOEXECUTABLE_NODEFACTORIES.contains(
+                    node.getFactory().getClass().getSimpleName())) {
                 getLogger().debug("Setting executed flag of node \"" 
                         + node.getFactory().getClass().getSimpleName()
                         + "\" to false due to version bump (loaded as true)");
@@ -438,7 +435,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         } catch (Exception e) {
             if (!(e instanceof InvalidSettingsException)
                     && !(e instanceof IOException)) {
-                getLogger().error("Unexpected \"" + e.getClass().getSimpleName() 
+                getLogger().error("Unexpected \"" + e.getClass().getSimpleName()
                         + "\" encountered");
             }
             String err = "Unable to load port content for node \"" 
@@ -458,7 +455,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         } catch (Exception e) {
             if (!(e instanceof InvalidSettingsException)
                     && !(e instanceof IOException)) {
-                getLogger().error("Unexpected \"" + e.getClass().getSimpleName() 
+                getLogger().error("Unexpected \"" + e.getClass().getSimpleName()
                         + "\" encountered");
             }
             String err = "Unable to load internally held tables for node \"" 

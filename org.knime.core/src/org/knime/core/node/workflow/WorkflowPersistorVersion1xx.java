@@ -112,6 +112,13 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     public String getLoadVersion() {
         return m_loadVersion;
     }
+    
+    /**
+     * @return the workflowDir
+     */
+    protected ReferencedFile getWorkflowDir() {
+        return m_workflowDir;
+    }
 
     /** {@inheritDoc} */
     public Set<ConnectionContainerTemplate> getConnectionSet() {
@@ -245,7 +252,17 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             loadResult.addError(error);
             m_name = "Workflow";
         }
-        LoadResult metaLoadResult = m_metaPersistor.load(subWFSettings);
+        NodeSettingsRO metaFlowParentSettings = 
+            new NodeSettings("fake_parent_settings");
+        try {
+            metaFlowParentSettings = readParentSettings();
+        } catch (IOException e1) {
+            String error = "Errors reading settings file: " + e1.getMessage();
+            getLogger().warn(error, e1);
+            loadResult.addError(error);
+        }
+        LoadResult metaLoadResult = m_metaPersistor.load(
+                subWFSettings, metaFlowParentSettings);
         if (metaLoadResult.hasErrors()) {
             loadResult.addError(metaLoadResult);
             setNeedsResetAfterLoad();
@@ -665,6 +682,13 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             setDirtyAfterLoad();
         }
         return loadResult;
+    }
+    
+    protected NodeSettingsRO readParentSettings() throws IOException {
+        NodeSettings result = new NodeSettings("generated_wf_settings");
+        result.addBoolean("isExecuted", false);
+        result.addBoolean("isConfigured", false);
+        return result;
     }
     
     /** This is overridden by the meta node loader (1.x.x) and returns

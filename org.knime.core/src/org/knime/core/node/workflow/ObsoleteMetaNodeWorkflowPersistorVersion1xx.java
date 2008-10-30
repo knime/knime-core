@@ -57,13 +57,20 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
     
     public static final List<String> OLD_META_NODES = 
         Collections.unmodifiableList(Arrays.asList(new String[]{
-                "org.knime.base.node.meta.MetaNodeFactory01",
-                "org.knime.base.node.meta.MetaNodeFactory11",
-                "org.knime.base.node.meta.MetaNodeFactory21",
-                "org.knime.base.node.meta.MetaNodeFactory12",
-                "org.knime.base.node.meta.MetaNodeFactory22",
-                "org.knime.base.node.meta.xvalidation.XValidateNodeFactory",
-                "org.knime.base.node.meta.looper.LooperFactory"
+            "org.knime.base.node.meta.MetaNodeFactory01",
+            "org.knime.base.node.meta.MetaNodeFactory11",
+            "org.knime.base.node.meta.MetaNodeFactory21",
+            "org.knime.base.node.meta.MetaNodeFactory12",
+            "org.knime.base.node.meta.MetaNodeFactory22",
+            "org.knime.base.node.meta.xvalidation.XValidateNodeFactory",
+            "org.knime.base.node.meta.looper.LooperFactory",
+            "de.unikn.knime.core.node.meta.MetaNodeFactory01",
+            "de.unikn.knime.core.node.meta.MetaNodeFactory11",
+            "de.unikn.knime.core.node.meta.MetaNodeFactory21",
+            "de.unikn.knime.core.node.meta.MetaNodeFactory12",
+            "de.unikn.knime.core.node.meta.MetaNodeFactory22",
+            "de.unikn.knime.dev.node.xvalidation.XValidateNodeFactory",
+            "de.unikn.knime.dev.node.looper.LooperFactory"
         }));
     
     private int[] m_dataInNodeIDs = new int[0];
@@ -110,11 +117,6 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
             m_metaNodeType = MetaNodeType.LOOPER;
         } else {
             m_metaNodeType = MetaNodeType.ORDINARY;
-        }
-        switch (m_metaNodeType) {
-        case CROSSVALIDATION:
-        case LOOPER:
-        default:
         }
         NodeSettingsRO settings = NodeSettings.loadFromXML(
                 new BufferedInputStream(new FileInputStream(setFile)));
@@ -178,6 +180,19 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
             b.append(m_dataOutNodeIDs.length);
             return b.toString();
         }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected NodeSettingsRO readParentSettings() throws IOException {
+        File f = getWorkflowDir().getFile();
+        File oldSettingsFile = new File(f, "settings.xml");
+        if (!oldSettingsFile.isFile()) {
+            throw new IOException("No such settings file: " 
+                    + oldSettingsFile.getAbsolutePath());
+        }
+        return NodeSettings.loadFromXML(new BufferedInputStream(
+                new FileInputStream(oldSettingsFile)));
     }
 
     /** {@inheritDoc} */

@@ -57,6 +57,14 @@ interface NodeContainerMetaPersistor {
     
     void setUIInfo(final UIInformation uiInfo);
     
-    LoadResult load(final NodeSettingsRO settings);
+    /** Load content, gets both the current settings (first argument) and
+     * the "parent settings", which are only used in 1.3.x flows and will be
+     * ignored in any version after that.
+     * @param settings The settings object that is usually read from
+     * @param parentSettings The parent settings, mostly ignored. 
+     * @return The load result representing the load task.
+     */
+    LoadResult load(final NodeSettingsRO settings, 
+            final NodeSettingsRO parentSettings);
     
 }

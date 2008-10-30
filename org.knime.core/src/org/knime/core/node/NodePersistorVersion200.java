@@ -332,12 +332,6 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
     /** {@inheritDoc} */
     @Override
-    protected boolean shouldLoadAsNotExecuted(Node node) {
-        return false;
-    }
-    
-    /** {@inheritDoc} */
-    @Override
     public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy() {
         LoadNodeModelSettingsFailPolicy result = 
             getSingleNodeContainerPersistor().getModelSettingsFailPolicy();

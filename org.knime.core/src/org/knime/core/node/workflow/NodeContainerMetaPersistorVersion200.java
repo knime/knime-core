@@ -50,7 +50,7 @@ class NodeContainerMetaPersistorVersion200 extends
 
     /** {@inheritDoc} */
     @Override
-    protected State loadState(final NodeSettingsRO settings)
+    protected State loadState(final NodeSettingsRO settings, final NodeSettingsRO parentSettings)
             throws InvalidSettingsException {
         String stateString = settings.getString(CFG_STATE);
         if (stateString == null) {
@@ -68,6 +68,28 @@ class NodeContainerMetaPersistorVersion200 extends
     @Override
     protected boolean loadIsDeletable(final NodeSettingsRO settings) {
         return settings.getBoolean(CFG_IS_DELETABLE, true);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected String loadCustomName(final NodeSettingsRO settings,
+            final NodeSettingsRO parentSettings) 
+    throws InvalidSettingsException {
+        if (!settings.containsKey(KEY_CUSTOM_NAME)) {
+            return null;
+        }
+        return settings.getString(KEY_CUSTOM_NAME);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected String loadCustomDescription(final NodeSettingsRO settings,
+            final NodeSettingsRO parentSettings) 
+    throws InvalidSettingsException {
+        if (!settings.containsKey(KEY_CUSTOM_DESCRIPTION)) {
+            return null;
+        }
+        return settings.getString(KEY_CUSTOM_DESCRIPTION);
     }
 
     public void save(final NodeContainer nc, final NodeSettingsWO settings)

@@ -70,6 +70,12 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         return set.getString("name");
     }
     
+    /** {@inheritDoc} */
+    @Override
+    protected NodeSettingsRO readParentSettings() throws IOException {
+        return null; // only used in 1.3.x
+    }
+    
     @Override
     protected boolean loadIsMetaNode(NodeSettingsRO settings) 
             throws InvalidSettingsException {
