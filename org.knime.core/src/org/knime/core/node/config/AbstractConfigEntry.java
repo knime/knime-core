@@ -137,11 +137,14 @@ abstract class AbstractConfigEntry implements Serializable, TreeNode {
      * @see #isIdentical(AbstractConfigEntry)
      */
     @Override
-    public final boolean equals(final Object o) {
+    public boolean equals(final Object o) {
+        if (o == this) {
+            return true;
+        }
         if (o == null) {
             return false;
         }
-        if (o.getClass() != this.getClass()) {
+        if (!o.getClass().equals(this.getClass())) {
             return false;
         }
         return isIdentical((AbstractConfigEntry) o);
@@ -175,8 +178,8 @@ abstract class AbstractConfigEntry implements Serializable, TreeNode {
      * {@inheritDoc}
      */
     @Override
-    public final int hashCode() {
-        return m_key.hashCode() ^ m_type.name().hashCode();
+    public int hashCode() {
+        return m_key.hashCode() ^ m_type.hashCode();
     }
     
     // tree node methods

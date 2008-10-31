@@ -110,7 +110,7 @@ final class SearchReplaceDictNodeModel extends NodeModel {
         exec.setMessage("Reading dictionary");
         ExecutionMonitor subExec = exec.createSubProgress(0.2);
         m_replacementMap = readDictionary(subExec);
-        exec.setMessage("Search & Replacing");
+        exec.setMessage("Searching & Replacing");
         DataTableSpec spec = inData[0].getDataTableSpec();
         ColumnRearranger rearranger = createColumnRearranger(spec);
         BufferedDataTable result = exec.createColumnRearrangeTable(

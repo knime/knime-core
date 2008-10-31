@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.Vector;
 
 import org.knime.base.node.mine.cluster.PMMLClusterPortObject;
 import org.knime.base.node.mine.cluster.PMMLClusterPortObject.ComparisonMeasure;
@@ -46,8 +45,8 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
@@ -61,20 +60,11 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
  */
 public class ClusterAssignerNodeModel extends NodeModel {
    
-   private DataTableSpec m_clusterSpec;
-   
-   private List<Prototype> m_prototypes;
-   
-   private ComparisonMeasure m_measure = ComparisonMeasure.euclidean;
-   
    private static final int PMML_PORT = 0;
    private static final int DATA_PORT = 1;
    
-   private int[] m_colIndices;
-   
    private static final DataColumnSpec NEWCOLSPEC =
-       new DataColumnSpecCreator("Cluster", StringCell.TYPE)
-               .createSpec();
+       new DataColumnSpecCreator("Cluster", StringCell.TYPE).createSpec();
 
     /**
      * 
@@ -82,8 +72,7 @@ public class ClusterAssignerNodeModel extends NodeModel {
     public ClusterAssignerNodeModel() {
         super(new PortType[] {
                 PMMLClusterPortObject.TYPE,
-                BufferedDataTable.TYPE 
-                },
+                BufferedDataTable.TYPE},
                 new PortType[] {BufferedDataTable.TYPE});
     }
     /**
@@ -92,28 +81,12 @@ public class ClusterAssignerNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        m_clusterSpec = ((PMMLPortObjectSpec)inSpecs[PMML_PORT])
-            .getDataTableSpec();
-        Vector<Integer> colIndices = new Vector<Integer>();
-        for (DataColumnSpec colspec : m_clusterSpec) {
-            int index =
-                    ((DataTableSpec)inSpecs[DATA_PORT]).findColumnIndex(colspec
-                            .getName());
-            if (index < 0) {
-                throw new InvalidSettingsException("Column "
-                        + colspec.getName()
-                        + " not found in input DataTableSpec.");
-            }
-            colIndices.add(index);
-        }
-        m_colIndices = new int[colIndices.size()];
-        for (int i = 0; i < m_colIndices.length; i++) {
-            m_colIndices[i] = colIndices.get(i);
-        }
-
-        ColumnRearranger colre =
-                new ColumnRearranger((DataTableSpec)inSpecs[DATA_PORT]);
-        colre.append(new ClusterAssignFactory(NEWCOLSPEC));
+        PMMLPortObjectSpec spec = ((PMMLPortObjectSpec)inSpecs[PMML_PORT]);
+        DataTableSpec dataSpec = (DataTableSpec) inSpecs[DATA_PORT];
+        ColumnRearranger colre = new ColumnRearranger(dataSpec);
+        colre.append(new ClusterAssignFactory(
+                null, null, NEWCOLSPEC, 
+                findLearnedColumnIndices(dataSpec, spec.getLearningCols())));
         DataTableSpec out = colre.createSpec();
         return new DataTableSpec[]{out};
     }
@@ -124,51 +97,43 @@ public class ClusterAssignerNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-//        extractModelInfo(m_predParams);
-        extractModelInfo((PMMLClusterPortObject)inData[PMML_PORT], 
-                inData[PMML_PORT].getSpec());
-        DataTableSpec inSpec = ((BufferedDataTable)inData[DATA_PORT])
-            .getDataTableSpec();
-        ColumnRearranger colre = new ColumnRearranger(inSpec);
-        colre.append(new ClusterAssignFactory(NEWCOLSPEC));
-        BufferedDataTable bdt =
-                exec.createColumnRearrangeTable(
-                        (BufferedDataTable)inData[DATA_PORT], colre, exec);
-        return new BufferedDataTable[]{bdt};
-    }
-    
-    
-
-    private void extractModelInfo(final PMMLClusterPortObject model, 
-            final PortObjectSpec spec)
-            throws InvalidSettingsException {
-        m_clusterSpec = ((PMMLPortObjectSpec)spec).getDataTableSpec();
-        m_measure = model.getComparisonMeasure();
-        m_prototypes = new ArrayList<Prototype>();
+        PMMLClusterPortObject model = (PMMLClusterPortObject) inData[PMML_PORT];
+        ComparisonMeasure measure = model.getComparisonMeasure();
+        List<Prototype> prototypes = new ArrayList<Prototype>();
         String[] labels = model.getLabels();
         double[][] protos = model.getPrototypes();
         for (int i = 0; i < protos.length; i++) {
             double[] prototype = protos[i];
-            m_prototypes.add(new Prototype(prototype, 
+            prototypes.add(new Prototype(prototype, 
                     new StringCell(labels[i])));
         }
-        Set<DataColumnSpec> inclCols = model.getUsedColumns();
-        m_colIndices = new int[inclCols.size()];
-        int i = 0;
-        for (DataColumnSpec colSpec : inclCols) {
-            int idx = ((PMMLPortObjectSpec)spec).getDataTableSpec()
-                .findColumnIndex(colSpec.getName());
-            if (idx < 0) {
-                throw new InvalidSettingsException(
-                        "Column " + colSpec.getName() 
-                        + " was not found in spec");
-            } else {
-                m_colIndices[i] = idx;
-            }
-            i++;
-        }
+        BufferedDataTable data = (BufferedDataTable)inData[DATA_PORT];
+        ColumnRearranger colre = new ColumnRearranger(data.getSpec());
+        colre.append(new ClusterAssignFactory(
+                measure, prototypes, NEWCOLSPEC, 
+                findLearnedColumnIndices(data.getSpec(), 
+                        model.getSpec().getLearningCols())));
+        BufferedDataTable bdt =
+                exec.createColumnRearrangeTable(data, colre, exec);
+        return new BufferedDataTable[]{bdt};
     }
     
+    private static int[] findLearnedColumnIndices(final DataTableSpec ospec,
+            final Set<DataColumnSpec> learnedCols) 
+            throws InvalidSettingsException {
+        int[] colIndices = new int[learnedCols.size()];
+        int idx = 0;
+        for (DataColumnSpec cspec : learnedCols) {
+            int i = ospec.findColumnIndex(cspec.getName());
+            if (i < 0) {
+                throw new InvalidSettingsException("Column \""
+                        + cspec.getName() + "\" not found in data input spec.");
+            }
+            colIndices[idx++] = i;
+        }
+        return colIndices;
+    }
+        
     
     /**
      * {@inheritDoc}
@@ -192,6 +157,7 @@ public class ClusterAssignerNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
+
     }
 
     /**
@@ -219,13 +185,25 @@ public class ClusterAssignerNodeModel extends NodeModel {
     }
 
     private class ClusterAssignFactory extends SingleCellFactory {
+        private final ComparisonMeasure m_measure;
+        private final List<Prototype> m_prototypes;
+        private final int[] m_colIndices;
        
         /**
-         * Constructor. 
-         * @param newColspec the DataColumnSpec of the appended column.
+         * Constructor.
+         * @param measure comparison measure
+         * @param prototypes list of prototypes
+         * @param newColspec the DataColumnSpec of the appended column
+         * @param learnedCols columns used for training
          */
-        ClusterAssignFactory(final DataColumnSpec newColspec) {
+        ClusterAssignFactory(final ComparisonMeasure measure, 
+                final List<Prototype> prototypes, 
+                final DataColumnSpec newColspec, 
+                final int[] learnedCols) {
             super(newColspec);
+            m_measure = measure;
+            m_prototypes = prototypes;
+            m_colIndices = learnedCols;
         }
 
         /**

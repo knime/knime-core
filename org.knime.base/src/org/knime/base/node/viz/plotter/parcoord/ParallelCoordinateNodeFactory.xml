@@ -28,6 +28,10 @@
 		the set of axes.
 		</p>
 		
+       <p><b>Only columns with a valid domain are available in this view.
+        Make sure that the predecessor node is executed or set the domain 
+        with the DomainCalculator node!</b></p>		
+		
 		<h3>HiLiting:</h3>
 		<p> The data points may be selected by either dragging
 		a rectangle with the mouse over the points on the parallel axes or 
@@ -83,6 +87,7 @@
 			Coordinate Visualizations").</li>
 			</ul>
 		</p>
+
 		</intro>
 		<option name="Nr. of rows to display">Enter the maximum number of rows
 		the plotter should display. Setting a higher value than the default value 

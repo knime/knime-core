@@ -250,7 +250,16 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
      */
     @Override
     public void stop(final BundleContext context) throws Exception {
-        FavoriteNodesManager.getInstance().saveFavoriteNodes();
+        // if the FavoriteNodesManager was not initialized
+        // then we do not need to save it, since no changes happened
+        // to the last used and most frequent used has not changed
+        // which is the case, when the workflow is only loaded and not
+        // structurally changed.
+        // @see FavoritesView#usedHistoryChanged
+        // @see FavoritesView#frequentHistoryChanged
+        if (FavoriteNodesManager.wasInitialized()) {
+            FavoriteNodesManager.getInstance().saveFavoriteNodes();
+        }
         // remove appender listener from "our" NodeLogger
         for (int i = 0; i < APPENDERS.size(); i++) {
             removeAppender(APPENDERS.get(i));

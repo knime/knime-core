@@ -44,6 +44,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.Map.Entry;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -119,7 +120,7 @@ class Buffer implements KNIMEStreamConstants {
      * this is a subconfig in meta.xml.
      */
     private static final String CFG_INTERNAL_META = "table.meta.internal";
-
+    
     /** Config entries when writing the meta info to the file (uses NodeSettings
      * object, which uses key-value pairs. Here: the version of the writing
      * method.
@@ -140,15 +141,22 @@ class Buffer implements KNIMEStreamConstants {
      */
     private static final String CFG_SIZE = "table.size";
 
-    /** Config entry: Array of the used DataCell classes; storing the class
-     * names as strings, see m_shortCutsLookup. */
+    /** Config entry: Sub element in config that keeps the list of cell
+     * class information (used to be a plain array). */
     private static final String CFG_CELL_CLASSES = "table.datacell.classes";
 
+    /** Config entry: Class name of data cell. */
+    private static final String CFG_CELL_SINGLE_CLASS = "class";
+    
+    /** Config entry: element type if a cell represents a collection. */
+    private static final String CFG_CELL_SINGLE_ELEMENT_TYPE = 
+        "collection.element.type";
+    
     /** Current version string. */
-    private static final String VERSION = "container_6";
+    private static final String VERSION = "container_7";
 
     /** The version number corresponding to VERSION. */
-    private static final int IVERSION = 6;
+    private static final int IVERSION = 7;
 
     private static final HashMap<String, Integer> COMPATIBILITY_MAP;
 
@@ -159,6 +167,7 @@ class Buffer implements KNIMEStreamConstants {
         COMPATIBILITY_MAP.put("container_1.2.0", 3); // never released
         COMPATIBILITY_MAP.put("container_4", 4);     // version 1.2.x - 1.3.x
         COMPATIBILITY_MAP.put("container_5", 5);     // 2.0 TechPreview Version
+        COMPATIBILITY_MAP.put("container_6", 6);     // 2.0 Alpha
         COMPATIBILITY_MAP.put(VERSION, IVERSION);    // version 2.0
     }
 
@@ -182,7 +191,6 @@ class Buffer implements KNIMEStreamConstants {
 
     /** Dummy object for the file iterator map. */
     private static final Object DUMMY = new Object();
-
 
     /** Adds a shutdown hook to the runtime that closes all open input streams
      * @see #OPENBUFFERS
@@ -208,8 +216,19 @@ class Buffer implements KNIMEStreamConstants {
         }
     }
 
+    /**
+     * Hash used to reduce the overhead of reading a blob cell over and over
+     * again. Useful in cases where a blob is added multiple times to a table...
+     * the iterator will read the blob address, treat it as unseen and then ask
+     * the owning Buffer to restore the blob.
+     */
+    private static final BlobLRUCache BLOB_LRU_CACHE = new BlobLRUCache();
+
     private static boolean isUseCompressionForBlobs(
-            final Class<? extends BlobDataCell> cl) {
+            final CellClassInfo cellClassInfo) {
+        @SuppressWarnings("unchecked")
+        Class<? extends BlobDataCell> cl = 
+            (Class<? extends BlobDataCell>)cellClassInfo.getCellClass();
         Boolean result = BLOB_COMPRESS_MAP.get(cl);
         if (result != null) {
             return result;
@@ -300,13 +319,13 @@ class Buffer implements KNIMEStreamConstants {
     /** Map for all DataCells' type, which have been added to this buffer,
      * they will be separately written to to the meta.xml in a zip file.
      */
-    private HashMap<Class<? extends DataCell>, Byte> m_typeShortCuts;
+    private HashMap<CellClassInfo, Byte> m_typeShortCuts;
 
     /** Inverse map of m_typeShortCuts - it stores to each shortcut
-     * (like 'A', 'B', ...) the corresponding DataType.
+     * (like 'A', 'B', ...) the corresponding type.
      * This object is null unless close() has been called.
      */
-    private Class<? extends DataCell>[] m_shortCutsLookup;
+    private CellClassInfo[] m_shortCutsLookup;
 
     /**
      * List of file iterators that look at this buffer. Need to close them
@@ -326,12 +345,6 @@ class Buffer implements KNIMEStreamConstants {
      */
     private int m_version = IVERSION;
     
-    /*** Hash used to reduce the overhead of reading a blob cell over and 
-     * over again. Useful in cases where a blob is added multiple times to 
-     * a table... the iterator will read the blob address, treat it as unseen
-     * an then ask the owning Buffer to restore the blob. */
-    private static final BlobLRUCache BLOB_LRU_CACHE = new BlobLRUCache();
-
     /**
      * Creates new buffer for <strong>writing</strong>. It has assigned a
      * given spec, and a max row count that may resize in memory.
@@ -388,12 +401,6 @@ class Buffer implements KNIMEStreamConstants {
         m_maxRowsInMem = 0;
         try {
             readMetaFromFile(metaIn);
-        } catch (ClassNotFoundException cnfe) {
-            IOException ioe = new IOException(
-                    "Unable to read meta information from file \""
-                    + metaIn + "\"");
-            ioe.initCause(cnfe);
-            throw ioe;
         } catch (InvalidSettingsException ise) {
             IOException ioe = new IOException(
                     "Unable to read meta information from file \""
@@ -535,14 +542,14 @@ class Buffer implements KNIMEStreamConstants {
         
         boolean isWrapperCell = cell instanceof BlobWrapperDataCell;
         BlobAddress ad;
-        final Class<? extends BlobDataCell> cl;
+        final CellClassInfo cl;
         BlobWrapperDataCell wc = null;
         if (isWrapperCell) {
             wc = (BlobWrapperDataCell)cell;
             ad = wc.getAddress();
-            cl = wc.getBlobClass();
+            cl = wc.getBlobClassInfo();
         } else if (cell instanceof BlobDataCell) {
-            cl = ((BlobDataCell)cell).getClass();
+            cl = CellClassInfo.get(cell);
             ad = ((BlobDataCell)cell).getBlobAddress();
         } else {
             if (cell instanceof CollectionDataValue) {
@@ -633,7 +640,7 @@ class Buffer implements KNIMEStreamConstants {
                 }
                 // the null case can only happen if there were problems reading
                 // the persisted blob (caught exception and returned missing 
-                // cell) - reading the the blob that is "not saved" here will 
+                // cell) - reading the blob that is "not saved" here will 
                 // also cause trouble ("no such file"), which is ok as we need
                 // to take an error along
                 if (bc != null) {
@@ -708,9 +715,9 @@ class Buffer implements KNIMEStreamConstants {
      * called from {@link #close(DataTableSpec)}.
      * @throws IOException If that fails.
      */
-    private Class<? extends DataCell>[] closeFile(
+    private CellClassInfo[] closeFile(
             final DCObjectOutputVersion2 outStream) throws IOException {
-        Class<? extends DataCell>[] shortCutsLookup = createShortCutArray();
+        CellClassInfo[] shortCutsLookup = createShortCutArray();
         outStream.close();
         return shortCutsLookup;
     }
@@ -724,7 +731,7 @@ class Buffer implements KNIMEStreamConstants {
      * @throws IOException If that fails.
      */
     private void writeMetaToFile(final OutputStream out,
-            final Class<? extends DataCell>[] shortCutsLookup)
+            final CellClassInfo[] shortCutsLookup)
             throws IOException {
         NodeSettings settings = new NodeSettings("Table Meta Information");
         NodeSettingsWO subSettings =
@@ -734,13 +741,21 @@ class Buffer implements KNIMEStreamConstants {
         subSettings.addBoolean(CFG_CONTAINS_BLOBS, m_containsBlobs);
         subSettings.addBoolean(CFG_IS_IN_MEMORY, !usesOutFile());
         subSettings.addInt(CFG_BUFFER_ID, m_bufferID);
-        // m_shortCutsLookup to string array, saved in config
-        String[] cellClasses = new String[shortCutsLookup.length];
+        NodeSettingsWO typeSubSettings = 
+            subSettings.addNodeSettings(CFG_CELL_CLASSES);
         for (int i = 0; i < shortCutsLookup.length; i++) {
-            cellClasses[i] = shortCutsLookup[i].getName();
+            CellClassInfo info = shortCutsLookup[i];
+            NodeSettingsWO single = 
+                typeSubSettings.addNodeSettings("element_" + i);
+            single.addString(CFG_CELL_SINGLE_CLASS, 
+                    info.getCellClass().getName());
+            DataType elementType = info.getCollectionElementType();
+            if (elementType != null) {
+                NodeSettingsWO subTypeConfig = 
+                    single.addNodeSettings(CFG_CELL_SINGLE_ELEMENT_TYPE);
+                elementType.save(subTypeConfig);
+            }
         }
-        subSettings.addStringArray(CFG_CELL_CLASSES, cellClasses);
-        // calls close (and hence closeEntry)
         settings.saveToXML(out);
     }
 
@@ -753,7 +768,7 @@ class Buffer implements KNIMEStreamConstants {
      */
     @SuppressWarnings("unchecked") // cast with generics
     private void readMetaFromFile(final InputStream metaIn)
-    throws IOException, ClassNotFoundException, InvalidSettingsException {
+    throws IOException, InvalidSettingsException {
         InputStream inStream = new BufferedInputStream(metaIn);
         try {
             NodeSettingsRO settings = NodeSettings.loadFromXML(inStream);
@@ -784,34 +799,99 @@ class Buffer implements KNIMEStreamConstants {
                     restoreIntoMemory();
                 }
             }
-            String[] cellClasses = subSettings.getStringArray(CFG_CELL_CLASSES);
-            m_shortCutsLookup = new Class[cellClasses.length];
-            for (int i = 0; i < cellClasses.length; i++) {
-                Class cl = GlobalClassCreator.createClass(cellClasses[i]);
-                if (!DataCell.class.isAssignableFrom(cl)) {
-                    throw new InvalidSettingsException("No data cell class: \""
-                            + cellClasses[i] + "\"");
-                }
-                m_shortCutsLookup[i] = cl;
+            if (m_version <= 6) {
+                m_shortCutsLookup = 
+                    readCellClassInfoArrayFromMetaVersion1x(subSettings);
+            } else {
+                m_shortCutsLookup =
+                    readCellClassInfoArrayFromMetaVersion2(subSettings);
             }
         } finally {
             inStream.close();
         }
     }
+    
+    @SuppressWarnings("unchecked")
+    private static CellClassInfo[] readCellClassInfoArrayFromMetaVersion1x(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        String[] cellClasses = settings.getStringArray(CFG_CELL_CLASSES);
+        CellClassInfo[] shortCutsLookup = new CellClassInfo[cellClasses.length];
+        for (int i = 0; i < cellClasses.length; i++) {
+            Class<?> cl;
+            try {
+                cl = GlobalClassCreator.createClass(cellClasses[i]);
+            } catch (ClassNotFoundException e) {
+                throw new InvalidSettingsException("Can't load data cell " 
+                        + "class \"" + cellClasses[i] + "\"", e);
+            }
+            if (!DataCell.class.isAssignableFrom(cl)) {
+                throw new InvalidSettingsException("No data cell class: \""
+                        + cellClasses[i] + "\"");
+            }
+            try {
+                shortCutsLookup[i] = CellClassInfo.get(
+                        (Class<? extends DataCell>)cl, null);
+            } catch (IllegalArgumentException e) {
+                throw new InvalidSettingsException(
+                        "Unable to instantiate CellClassInfo for class \""
+                        + cellClasses[i] + "\"", e);
+            }
+        }
+        return shortCutsLookup;
+    }
+    
+    @SuppressWarnings("unchecked")
+    private static CellClassInfo[] readCellClassInfoArrayFromMetaVersion2(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        NodeSettingsRO typeSubSettings = 
+            settings.getNodeSettings(CFG_CELL_CLASSES);
+        Set<String> keys = typeSubSettings.keySet();
+        CellClassInfo[] shortCutsLookup = new CellClassInfo[keys.size()];
+        int i = 0;
+        for (String s : keys) {
+            NodeSettingsRO single = typeSubSettings.getNodeSettings(s);
+            String className = single.getString(CFG_CELL_SINGLE_CLASS); 
+            Class<?> cl;
+            try {
+                cl = GlobalClassCreator.createClass(className);
+            } catch (ClassNotFoundException e) {
+                throw new InvalidSettingsException("Can't load data cell " 
+                        + "class \"" + className + "\"", e);
+            }
+            if (!DataCell.class.isAssignableFrom(cl)) {
+                throw new InvalidSettingsException("No data cell class: \""
+                        + className + "\"");
+            }
+            DataType elementType = null;
+            if (single.containsKey(CFG_CELL_SINGLE_ELEMENT_TYPE)) {
+                NodeSettingsRO subTypeConfig = 
+                    single.getNodeSettings(CFG_CELL_SINGLE_ELEMENT_TYPE);
+                elementType = DataType.load(subTypeConfig);
+            }
+            try {
+                shortCutsLookup[i] = CellClassInfo.get(
+                        (Class<? extends DataCell>)cl, elementType);
+            } catch (IllegalArgumentException iae) {
+                throw new InvalidSettingsException(
+                        "Unable to instantiate CellClassInfo for class \""
+                        + className + "\", element type: " + elementType);
+            }
+            i++;
+        }
+        return shortCutsLookup;
+    }
 
     /** Create the shortcut table, it translates m_typeShortCuts to
      * m_shortCutsLookup. */
-    @SuppressWarnings("unchecked") // no generics in array definition
-    private Class<? extends DataCell>[] createShortCutArray() {
+    private CellClassInfo[] createShortCutArray() {
         // unreported bug fix: NPE when the table only contains missing values.
         if (m_typeShortCuts == null) {
-            m_typeShortCuts = new HashMap<Class<? extends DataCell>, Byte>();
+            m_typeShortCuts = new HashMap<CellClassInfo, Byte>();
         }
-        m_shortCutsLookup = new Class[m_typeShortCuts.size()];
-        for (Map.Entry<Class<? extends DataCell>, Byte> e
-                : m_typeShortCuts.entrySet()) {
+        m_shortCutsLookup = new CellClassInfo[m_typeShortCuts.size()];
+        for (Map.Entry<CellClassInfo, Byte> e : m_typeShortCuts.entrySet()) {
             byte shortCut = e.getValue();
-            Class<? extends DataCell> type = e.getKey();
+            CellClassInfo type = e.getKey();
             m_shortCutsLookup[shortCut - BYTE_TYPE_START] = type;
         }
         return m_shortCutsLookup;
@@ -925,9 +1005,9 @@ class Buffer implements KNIMEStreamConstants {
             return;
         }
         boolean isBlob = cell instanceof BlobWrapperDataCell;
-        Class<? extends DataCell> cellClass = isBlob
-        ? ((BlobWrapperDataCell)cell).getBlobClass()
-                : cell.getClass();
+        CellClassInfo cellClass = isBlob
+        ? ((BlobWrapperDataCell)cell).getBlobClassInfo()
+                : CellClassInfo.get(cell);
         DataCellSerializer<DataCell> ser = getSerializerForDataCell(cellClass);
         Byte identifier = m_typeShortCuts.get(cellClass);
         // DataCell is datacell-serializable
@@ -955,14 +1035,14 @@ class Buffer implements KNIMEStreamConstants {
      * implementations (currently 253 are theoretically supported)
      */
     private DataCellSerializer<DataCell> getSerializerForDataCell(
-            final Class<? extends DataCell> cellClass) throws IOException {
+            final CellClassInfo cellClass) throws IOException {
         if (m_typeShortCuts == null) {
-            m_typeShortCuts = new HashMap<Class<? extends DataCell>, Byte>();
+            m_typeShortCuts = new HashMap<CellClassInfo, Byte>();
         }
         @SuppressWarnings("unchecked")
         DataCellSerializer<DataCell> serializer =
             (DataCellSerializer<DataCell>)DataType.getCellSerializer(
-                    cellClass);
+                    cellClass.getCellClass());
         if (!m_typeShortCuts.containsKey(cellClass)) {
             int size = m_typeShortCuts.size();
             if (size + BYTE_TYPE_START > Byte.MAX_VALUE) {
@@ -989,7 +1069,8 @@ class Buffer implements KNIMEStreamConstants {
         int column = a.getColumn();
         int indexInColumn = m_indicesOfBlobInColumns[column]++;
         a.setIndexOfBlobInColumn(indexInColumn);
-        boolean isToCompress = isUseCompressionForBlobs(cell.getClass());
+        boolean isToCompress = 
+            isUseCompressionForBlobs(CellClassInfo.get(cell));
         File outFile = getBlobFile(indexInColumn, column, true, isToCompress);
         BlobAddress originalBA = cell.getBlobAddress();
         if (originalBA != a) {
@@ -1045,7 +1126,7 @@ class Buffer implements KNIMEStreamConstants {
      * @throws IOException If that fails.
      */
     BlobDataCell readBlobDataCell(final BlobAddress blobAddress,
-            final Class<? extends DataCell> cl) throws IOException {
+            final CellClassInfo cl) throws IOException {
         int blobBufferID = blobAddress.getBufferID();
         if (blobBufferID != m_bufferID) {
             ContainerTable cnTbl = m_globalRepository.get(blobBufferID);
@@ -1073,12 +1154,12 @@ class Buffer implements KNIMEStreamConstants {
         return result;
     }
     
-    /** Perform lookup for the DataCell class mapped to the argument byte.
+    /** Perform lookup for the DataCell class info given the argument byte.
      * @param identifier The byte as read from the stream.
-     * @return the associated DataCell class
+     * @return the associated cell class info
      * @throws IOException If the byte is invalid.
      */
-    Class<? extends DataCell> getTypeForChar(final byte identifier)
+    CellClassInfo getTypeForChar(final byte identifier)
         throws IOException {
         int shortCutIndex = (byte)(identifier - BYTE_TYPE_START);
         if (shortCutIndex < 0 || shortCutIndex >= m_shortCutsLookup.length) {
@@ -1277,7 +1358,7 @@ class Buffer implements KNIMEStreamConstants {
         // binary data is already deflated
         zipOut.setLevel(Deflater.NO_COMPRESSION);
         zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_DATA));
-        Class<? extends DataCell>[] shortCutsLookup;
+        CellClassInfo[] shortCutsLookup;
         if (!usesOutFile() || m_version < IVERSION) {
             // need to use new buffer since we otherwise write properties
             // of this buffer, which prevents it from further reading (version 
@@ -1423,7 +1504,7 @@ class Buffer implements KNIMEStreamConstants {
             }
         }
     }
-    
+
     /** Last recently used cache for blobs. */
     private static final class BlobLRUCache 
         extends LinkedHashMap<BlobAddress, SoftReference<BlobDataCell>> {
@@ -1693,7 +1774,5 @@ class Buffer implements KNIMEStreamConstants {
             }
             return f.delete();
         }
-
     }
-
 }

@@ -14,6 +14,10 @@
 	    difference of the values in the columns is large.  
 		</p>
 		
+        <p><b>Only columns with a valid domain are available in this view.
+        Make sure that the predecessor node is executed or set the domain 
+        with the DomainCalculator node!</b></p>		
+		
 		<h3>HiLiting:</h3>
 		<p> The data points may be selected by either dragging
 		a rectangle with the mouse over the points or 

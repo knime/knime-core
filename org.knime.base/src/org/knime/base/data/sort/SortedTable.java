@@ -258,7 +258,7 @@ public class SortedTable implements DataTable {
                     "Reading in data-chunk " + chunkCounter + "...");
             exec.checkCanceled();
             if (newContainer.isClosed()) {
-                newContainer = exec.createDataContainer(m_spec, true);
+                newContainer = exec.createDataContainer(m_spec, true, 0);
                 nrRowsinContainer = 0;
             }
             final DataRow row = rowIt.next();

@@ -101,7 +101,8 @@ final class CopyNodeContainerMetaPersistor implements
 
     /** {@inheritDoc} */
     @Override
-    public LoadResult load(final NodeSettingsRO settings) {
+    public LoadResult load(final NodeSettingsRO settings, 
+            final NodeSettingsRO parentSettings) {
         return new LoadResult();
     }
     

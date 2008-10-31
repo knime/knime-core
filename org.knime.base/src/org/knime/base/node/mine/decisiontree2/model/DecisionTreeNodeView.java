@@ -57,7 +57,7 @@ public class DecisionTreeNodeView extends JPanel {
         // create pie chart showing node's "pureness"
         ClassPieChart pc = new ClassPieChart();
         internalBox.add(pc);
-        // add barplot if it's not a parent
+        // add barplot
         HistoChart hi = new HistoChart();
         internalBox.add(hi);
         // create label summarizing node
@@ -107,6 +107,11 @@ public class DecisionTreeNodeView extends JPanel {
                     g.fillRect(0, 0, sqLen - 1, sqLen - 1);
                     double totalCount = m_node.getEntireClassCount();
                     double ownCount = m_node.getOwnClassCount();
+                    if (m_node.newColors()) {
+                        // just one (default) color and new colors? Then
+                        // we just saw patterns of one default color!
+                        ownCount = totalCount;
+                    }
                     int angle = (int)(ownCount * 360 / totalCount);
                     double radAngle = 2 * Math.PI * ownCount / totalCount;
                     g.setColor(Color.BLACK);
@@ -123,6 +128,11 @@ public class DecisionTreeNodeView extends JPanel {
                     // for the only color were "used".
                     double totalCount = m_node.getEntireClassCount();
                     double ownCount = colorCounts.get(c);
+                    if (m_node.newColors()) {
+                        // just one color and new colors? Then
+                        // we just saw patterns of one default color!
+                        ownCount = totalCount;
+                    }
                     int angle = (int)(ownCount * 360 / totalCount);
                     g.setColor(c);
                     g.fillArc(0, 2, sqLen - 4, sqLen - 4, 0, angle);
@@ -179,10 +189,19 @@ public class DecisionTreeNodeView extends JPanel {
                 // counts of parent node for empty nodes!
                 g.setColor(this.getForeground());
                 double ownCount = m_node.getEntireClassCount();
+                if (m_node.newColors()) {
+                    // new colors? Then we need to based this on color info!
+                    ownCount = m_node.getOverallColorCount();
+                }
                 double parentCount = ownCount;
                 if (m_node.getParent() != null) {
                     parentCount = ((DecisionTreeNode)m_node.getParent())
                             .getEntireClassCount();
+                    if (m_node.newColors()) {
+                        // new colors? Then we need to based this on color info!
+                        parentCount = ((DecisionTreeNode)m_node.getParent())
+                                .getOverallColorCount();
+                    }
                 }
                 int barHeight = height - 4;
                 int fillHeight = (int)(ownCount * barHeight / parentCount);

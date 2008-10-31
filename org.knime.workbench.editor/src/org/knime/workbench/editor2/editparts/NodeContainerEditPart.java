@@ -339,7 +339,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 for (Object part : getChildren()) {
 
                     if (part instanceof NodeOutPortEditPart
-                            || part instanceof WorkflowInPortEditPart) {
+                            || part instanceof WorkflowInPortEditPart
+                            || part instanceof SubWorkFlowOutPortEditPart) {
                         AbstractPortEditPart outPortPart =
                                 (AbstractPortEditPart)part;
                         outPortPart.rebuildTooltip();

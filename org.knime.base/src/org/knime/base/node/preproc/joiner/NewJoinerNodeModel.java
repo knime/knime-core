@@ -322,6 +322,7 @@ public class NewJoinerNodeModel extends NodeModel {
             }
             missingRow = new DefaultRow(new RowKey(""), missingCells);
 
+            boolean warningSet = false;
             while (true) {
                 String key = rrow.getKey().toString();
                 int c = 0;
@@ -336,6 +337,12 @@ public class NewJoinerNodeModel extends NodeModel {
                            throw ex;
                         }
                         key = key + "_r";
+                        if (!warningSet) {
+                            setWarningMessage("Encountered and fixed some "
+                                    + "duplicate row keys at the end of the "
+                                    + "table");
+                            warningSet = true;
+                        }
                     }
                 }
                 if (!rit.hasNext()) {

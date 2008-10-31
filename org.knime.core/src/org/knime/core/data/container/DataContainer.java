@@ -481,14 +481,19 @@ public class DataContainer implements RowAppender {
             }
             if (value instanceof BlobWrapperDataCell) {
                 BlobWrapperDataCell bw = (BlobWrapperDataCell)value;
-                runtimeType = DataType.getType(bw.getBlobClass());
+                runtimeType = bw.getBlobDataType();
             } else {
                 runtimeType = value.getType();
             }
                 
             if (!columnClass.isASuperTypeOf(runtimeType)) {
+                String valString = value.toString();
+                // avoid too long string representations
+                if (valString.length() > 30) {
+                    valString = valString.substring(0, 30) + "...";
+                }
                 throw new IllegalArgumentException("Runtime class of object \""
-                        + value.toString() + "\" (index " + c
+                        + valString + "\" (index " + c
                         + ") in " + "row \"" + key + "\" is "
                         + runtimeType.toString()
                         + " and does not comply with its supposed superclass "

@@ -79,13 +79,28 @@ public class FlowVariablePortObject implements PortObject {
         return "Variables connection";
     }
     
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public JComponent[] getViews() {
-        // TODO Auto-generated method stub
         return null;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        return getClass().equals(obj.getClass());
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 
 }

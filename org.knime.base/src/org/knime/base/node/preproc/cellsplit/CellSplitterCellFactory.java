@@ -66,7 +66,7 @@ class CellSplitterCellFactory implements CellFactory {
     private final int m_colIdx;
 
     private final FileTokenizerSettings m_tokenizerSettings;
-    
+
     private static final StringCell EMPTY_STRINGCELL = new StringCell("");
 
     /**
@@ -149,10 +149,16 @@ class CellSplitterCellFactory implements CellFactory {
 
         DataCell inputCell = row.getCell(m_colIdx);
         if (inputCell.isMissing()) {
+
+            Arrays.fill(result, DataType.getMissingCell());
+
             if (m_settings.isUseEmptyString()) {
-                Arrays.fill(result, EMPTY_STRINGCELL);
-            } else {
-                Arrays.fill(result, DataType.getMissingCell());
+                // replace cells for string columns with empty string cells
+                for (int c = 0; c < result.length; c++) {
+                    if (m_settings.getTypeOfColumn(c).equals(StringCell.TYPE)) {
+                        result[c] = EMPTY_STRINGCELL;
+                    }
+                }
             }
             return result;
         }
@@ -205,7 +211,9 @@ class CellSplitterCellFactory implements CellFactory {
             }
 
             if (token == null) {
-                if (m_settings.isUseEmptyString()) {
+                if (m_settings.isUseEmptyString()
+                        && m_settings.getTypeOfColumn(col).equals(
+                                StringCell.TYPE)) {
                     // create empty string cells - not missing cells.
                     result[col] = EMPTY_STRINGCELL;
                 } else {

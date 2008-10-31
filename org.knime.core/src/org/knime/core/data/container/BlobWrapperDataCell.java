@@ -51,7 +51,7 @@ public final class BlobWrapperDataCell extends DataCell {
     
     private Buffer m_buffer;
     private BlobAddress m_blobAddress;
-    private final Class<? extends BlobDataCell> m_blobClass;
+    private final CellClassInfo m_blobClass;
     private SoftReference<BlobDataCell> m_cellRef;
     private BlobDataCell m_hardCellRef;
     
@@ -59,10 +59,10 @@ public final class BlobWrapperDataCell extends DataCell {
      * Keeps references.
      * @param b The buffer that owns the cell.
      * @param ba Its address.
-     * @param cl The class of the blob.
+     * @param cl The class information of the blob.
      */
     BlobWrapperDataCell(final Buffer b, final BlobAddress ba,
-            final Class<? extends BlobDataCell> cl) {
+            final CellClassInfo cl) {
         assert b.getBufferID() == ba.getBufferID();
         m_buffer = b;
         m_blobAddress = ba;
@@ -76,7 +76,7 @@ public final class BlobWrapperDataCell extends DataCell {
      * @param cell The cell to wrap.
      */
     public BlobWrapperDataCell(final BlobDataCell cell) {
-        m_blobClass = cell.getClass(); 
+        m_blobClass = CellClassInfo.get(cell);
         m_blobAddress = cell.getBlobAddress();
         m_cellRef = new SoftReference<BlobDataCell>(cell);
         m_hardCellRef = cell;
@@ -141,9 +141,20 @@ public final class BlobWrapperDataCell extends DataCell {
         return m_blobAddress;
     }
     
-    /** @return Blob class. */
+    /** @return Class of the blob. */
+    @SuppressWarnings("unchecked")
     public Class<? extends BlobDataCell> getBlobClass() {
+        return (Class<? extends BlobDataCell>)m_blobClass.getCellClass();
+    }
+    
+    /** @return Class info to the blob. */
+    CellClassInfo getBlobClassInfo() {
         return m_blobClass;
+    }
+    
+    /** @return DataType associated with the underlying blob cell. */
+    DataType getBlobDataType() {
+        return getBlobClassInfo().getDataType();
     }
     
     /** @return owning buffer or null if not set yet. */

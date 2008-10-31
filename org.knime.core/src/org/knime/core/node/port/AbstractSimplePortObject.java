@@ -199,4 +199,53 @@ public abstract class AbstractSimplePortObject implements PortObject {
         }
         return null;
     }
+    
+    /**
+     * Method compares both <code>ModelContent</code> objects that first need 
+     * to be saved by calling {@link #save(ModelContentWO, ExecutionMonitor)}. 
+     * Override this method in order to compare both objects more efficiently.
+     * 
+     * {@inheritDoc} 
+     */
+    @Override
+    public boolean equals(final Object oport) {
+        if (oport == this) {
+            return true;
+        }
+        if (oport == null) {
+            return false;
+        }
+        if (!this.getClass().equals(oport.getClass())) {
+            return false;
+        }
+        ModelContent tcont = new ModelContent("ignored");
+        ModelContent ocont = new ModelContent("ignored");
+        try {
+            this.save(tcont, new ExecutionMonitor());
+            ((AbstractSimplePortObject) oport).save(
+                   ocont, new ExecutionMonitor());
+        } catch (CanceledExecutionException cee) {
+            // ignored, should not happen
+        }
+        return tcont.equals(ocont);
+    }
+    
+    /**
+     * Method computes the hash code as defined by the underlying 
+     * <code>ModelContent</code> object that first need to be saved by calling
+     * {@link #save(ModelContentWO, ExecutionMonitor)}. Override this method in 
+     * order to compute the hash code more efficiently.
+     * 
+     * {@inheritDoc} 
+     */
+    @Override
+    public int hashCode() {
+        ModelContent tcont = new ModelContent("ignored");
+        try {
+            this.save(tcont, new ExecutionMonitor());
+        } catch (CanceledExecutionException cee) {
+            // ignored, should not happen
+        }
+        return tcont.hashCode();
+    }
 }

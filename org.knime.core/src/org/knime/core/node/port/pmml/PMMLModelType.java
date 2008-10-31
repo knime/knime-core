@@ -47,6 +47,6 @@ public enum PMMLModelType {
          * models don't fit. 
          */
         Extension,
-        /** Neither a vaild PMML model nor an extension was found. */
+        /** Neither a valid PMML model nor an extension was found. */
         None
 }

@@ -193,7 +193,7 @@ public class SingleNodeContainerPersistorVersion1xx
         m_node = new Node(nodeFactory);
         m_metaPersistor = createNodeContainerMetaPersistor(
                 settingsFileRef.getParent());
-        LoadResult metaResult = m_metaPersistor.load(settings);
+        LoadResult metaResult = m_metaPersistor.load(settings, parentSettings);
         result.addError(metaResult);
         m_nodeSettings = settings;
         m_nodeDir = settingsFileRef.getParent();
@@ -261,7 +261,6 @@ public class SingleNodeContainerPersistorVersion1xx
         if (nodePersistor.needsResetAfterLoad()) {
             setNeedsResetAfterLoad();
         }
-        loadNodeStateIntoMetaPersistor(nodePersistor);
         exec.setProgress(1.0);
         if (result.hasErrors()) {
             setDirtyAfterLoad();
@@ -272,19 +271,6 @@ public class SingleNodeContainerPersistorVersion1xx
     protected NodeContainerMetaPersistorVersion1xx 
         createNodeContainerMetaPersistor(final ReferencedFile baseDir) {
         return new NodeContainerMetaPersistorVersion1xx(baseDir);
-    }
-    
-    protected void loadNodeStateIntoMetaPersistor(
-            final NodePersistorVersion1xx nodePersistor) {
-        State nodeState;
-        if (nodePersistor.isExecuted()) {
-            nodeState = State.EXECUTED;
-        } else if (nodePersistor.isConfigured()) {
-            nodeState = State.CONFIGURED;
-        } else {
-            nodeState = State.IDLE;
-        }
-        m_metaPersistor.setState(nodeState);
     }
     
     protected String loadNodeFactoryClassName(

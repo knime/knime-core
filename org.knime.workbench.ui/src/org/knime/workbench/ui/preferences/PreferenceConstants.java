@@ -33,15 +33,6 @@ package org.knime.workbench.ui.preferences;
  * @author Florian Georg, University of Konstanz
  */
 public interface PreferenceConstants {
-    
-    /** Peference constant: select default view mode. */
-    public static final String P_CHOICE_VIEWMODE = "choice.view.mode";
-
-    /** Choice: open views in JFrame. */
-    public static final String P_CHOICE_VIEWMODE_JFRAME = "jframe";
-
-    /** Choice: open views in eclipse views. */
-    public static final String P_CHOICE_VIEWMODE_VIEW = "eclipse.jframe";
 
     /** Preference constant: log level for console appender. */
     public static final String P_LOGLEVEL_CONSOLE = "logging.loglevel.console";

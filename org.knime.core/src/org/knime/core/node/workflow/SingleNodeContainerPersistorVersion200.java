@@ -35,7 +35,6 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodePersistorVersion1xx;
 import org.knime.core.node.NodePersistorVersion200;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -139,12 +138,6 @@ public class SingleNodeContainerPersistorVersion200 extends
             }
         }
         return result;
-    }
-    
-    /** {@inheritDoc} */
-    @Override
-    protected void loadNodeStateIntoMetaPersistor(
-            final NodePersistorVersion1xx nodePersistor) {
     }
     
     /** {@inheritDoc} */

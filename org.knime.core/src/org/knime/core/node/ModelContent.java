@@ -34,8 +34,7 @@ import org.knime.core.node.port.PortObject;
 
 
 /**
- * This ModelContent is used to stored models. This class needs to be
- * modified to provide more functions to store model parts PMML like.
+ * This ModelContent is used to store XML-like model settings.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */

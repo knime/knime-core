@@ -21,10 +21,10 @@
  */
 package org.knime.core.node.port.database;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringWriter;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.PreparedStatement;
@@ -52,6 +52,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.FileUtil;
 
 /**
  * Creates a connection to read from database.
@@ -324,41 +325,26 @@ public final class DatabaseReaderConnection {
                             if (wasNull() || clob == null) {
                                 s = null;
                             } else {
-                                BufferedReader buf =
-                                        new BufferedReader(clob
-                                                .getCharacterStream());
-                                StringBuilder sb = null;
-                                String line;
-                                while ((line = buf.readLine()) != null) {
-                                    if (sb == null) {
-                                        sb = new StringBuilder();
-                                    } else {
-                                        sb.append("\n");
-                                    }
-                                    sb.append(line);
-                                }
-                                s = (sb == null ? null : sb.toString()); 
+                                Reader reader = clob.getCharacterStream();
+                                StringWriter writer = new StringWriter();
+                                FileUtil.copy(reader, writer);
+                                reader.close();
+                                writer.close();
+                                s = writer.toString();
                             }
                         } else if (dbType == Types.BLOB) {
                             Blob blob = m_result.getBlob(i + 1);
                             if (wasNull() || blob == null) {
                                 s = null;
                             } else {
-                                InputStream is = blob.getBinaryStream();
-                                BufferedReader buf =
-                                        new BufferedReader(
-                                                new InputStreamReader(is));
-                                StringBuilder sb = null;
-                                String line;
-                                while ((line = buf.readLine()) != null) {
-                                    if (sb == null) {
-                                        sb = new StringBuilder();
-                                    } else {
-                                        sb.append("\n");
-                                    }
-                                    sb.append(line);
-                                }
-                                s = (sb == null ? null : sb.toString()); 
+                                InputStreamReader reader = 
+                                    // TODO: using default encoding 
+                                  new InputStreamReader(blob.getBinaryStream());
+                                StringWriter writer = new StringWriter();
+                                FileUtil.copy(reader, writer);
+                                reader.close();
+                                writer.close();
+                                s = writer.toString();
                             }
                         } else {
                             s = m_result.getString(i + 1);

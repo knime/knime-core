@@ -53,6 +53,7 @@ public class BoxPlotDrawingPane extends ScatterPlotterDrawingPane {
     private List<Box> m_boxes;
     
     private int m_boxWidth;
+    
     private static final int DASH_SIZE = 5;
     
     private static final int DOT_SIZE = 6;
@@ -120,9 +121,14 @@ public class BoxPlotDrawingPane extends ScatterPlotterDrawingPane {
             // paint the rectangle
             ((Graphics2D)g).setStroke(backupStroke);
             g.drawRect(
-                    x - m_boxWidth / 2, box.getUpperQuartile(),
+                    // x 
+                    x - m_boxWidth / 2,
+                    // y -> use maximum in order to support descending rendering
+                    // bugfix 1380
+                    Math.min(box.getUpperQuartile(), box.getLowerQuartile()),
                     m_boxWidth, 
-                    box.getLowerQuartile() - box.getUpperQuartile());
+                    // bugfix 1380
+                    Math.abs(box.getLowerQuartile() - box.getUpperQuartile()));
             // draw the dotted vertical line to the quartiles
             ((Graphics2D)g).setStroke(DASHED);
             // lower 
@@ -150,45 +156,90 @@ public class BoxPlotDrawingPane extends ScatterPlotterDrawingPane {
         int offset = g.getFontMetrics().getHeight() / 3;
         int fontHeight = g.getFontMetrics().getHeight();
         int x = box.getX() + (m_boxWidth / 2) + 10;
-        int y = box.getUpperWhisker() + offset;
-        // if the next value is too close draw the maximum value above...
-        if (box.getUpperQuartile() < y + fontHeight) {
-            g.drawString(LabelPaintUtil.getDoubleAsString(
-                    statistics[BoxPlotNodeModel.UPPER_WHISKER], 
-                    Box.ROUNDING_FACTOR), x, box.getUpperWhisker());
+        if (box.getUpperQuartile() < box.getLowerQuartile()) {
+            // ascending
+            int y = box.getUpperWhisker() + offset;
+            // if the next value is too close draw the maximum value above...
+            if (box.getUpperQuartile() < y + fontHeight) {
+                g.drawString(LabelPaintUtil.getDoubleAsString(
+                        statistics[BoxPlotNodeModel.UPPER_WHISKER], 
+                        Box.ROUNDING_FACTOR), x, box.getUpperWhisker());
+            } else {
+                g.drawString("" + LabelPaintUtil.getDoubleAsString(
+                        statistics[BoxPlotNodeModel.UPPER_WHISKER],
+                        Box.ROUNDING_FACTOR), x, y);
+            }
+            int oldY = y;
+            y = box.getUpperQuartile() + offset;
+            if (oldY != y && y > oldY + fontHeight) {
+                g.drawString(LabelPaintUtil.getDoubleAsString(
+                        statistics[BoxPlotNodeModel.UPPER_QUARTILE],
+                        Box.ROUNDING_FACTOR), x, y);
+                oldY = y;
+            }
+            y = box.getMedian() + offset;
+            if (oldY != y && y > oldY + fontHeight) {
+                g.drawString("" + LabelPaintUtil.getDoubleAsString(
+                        statistics[BoxPlotNodeModel.MEDIAN], 
+                        Box.ROUNDING_FACTOR), x, y);
+                oldY = y;
+            }
+            y = box.getLowerQuartile() + offset;
+            if (oldY != y && y > oldY + fontHeight) {
+                g.drawString(LabelPaintUtil.getDoubleAsString(
+                        statistics[BoxPlotNodeModel.LOWER_QUARTILE],
+                        Box.ROUNDING_FACTOR), x, y);
+                oldY = y;
+            }
+            y = box.getLowerWhisker() + offset;
+            if (oldY != y && y > oldY + fontHeight) {
+                g.drawString(LabelPaintUtil.getDoubleAsString(
+                        statistics[BoxPlotNodeModel.LOWER_WHISKER],
+                        Box.ROUNDING_FACTOR), x, y);
+            }
         } else {
-            g.drawString("" + LabelPaintUtil.getDoubleAsString(
-                    statistics[BoxPlotNodeModel.UPPER_WHISKER],
-                    Box.ROUNDING_FACTOR), x, y);
+            // descending
+            int y = box.getLowerWhisker() + offset;
+            // if the next value is too close draw the maximum value above...
+            if (box.getLowerQuartile() < y + fontHeight) {
+                g.drawString(LabelPaintUtil.getDoubleAsString(
+                        statistics[BoxPlotNodeModel.LOWER_WHISKER], 
+                        Box.ROUNDING_FACTOR), x, box.getLowerWhisker());
+            } else {
+                g.drawString("" + LabelPaintUtil.getDoubleAsString(
+                        statistics[BoxPlotNodeModel.LOWER_WHISKER],
+                        Box.ROUNDING_FACTOR), x, y);
+            }
+            int oldY = y;
+            y = box.getLowerQuartile() + offset;
+            if (oldY != y && y > oldY + fontHeight) {
+                g.drawString(LabelPaintUtil.getDoubleAsString(
+                        statistics[BoxPlotNodeModel.LOWER_QUARTILE],
+                        Box.ROUNDING_FACTOR), x, y);
+                oldY = y;
+            }
+            y = box.getMedian() + offset;
+            if (oldY != y && y > oldY + fontHeight) {
+                g.drawString("" + LabelPaintUtil.getDoubleAsString(
+                        statistics[BoxPlotNodeModel.MEDIAN], 
+                        Box.ROUNDING_FACTOR), x, y);
+                oldY = y;
+            }
+            y = box.getUpperQuartile() + offset;
+            if (oldY != y && y > oldY + fontHeight) {
+                g.drawString(LabelPaintUtil.getDoubleAsString(
+                        statistics[BoxPlotNodeModel.UPPER_QUARTILE],
+                        Box.ROUNDING_FACTOR), x, y);
+                oldY = y;
+            }
+            y = box.getUpperWhisker() + offset;
+            if (oldY != y && y > oldY + fontHeight) {
+                g.drawString(LabelPaintUtil.getDoubleAsString(
+                        statistics[BoxPlotNodeModel.UPPER_WHISKER],
+                        Box.ROUNDING_FACTOR), x, y);
+            }
         }
-        int oldY = y;
-        y = box.getUpperQuartile() + offset;
-        if (oldY != y && y > oldY + fontHeight) {
-            g.drawString(LabelPaintUtil.getDoubleAsString(
-                    statistics[BoxPlotNodeModel.UPPER_QUARTILE],
-                    Box.ROUNDING_FACTOR), x, y);
-            oldY = y;
-        }
-        y = box.getMedian() + offset;
-        if (oldY != y && y > oldY + fontHeight) {
-            g.drawString("" + LabelPaintUtil.getDoubleAsString(
-                    statistics[BoxPlotNodeModel.MEDIAN], 
-                    Box.ROUNDING_FACTOR), x, y);
-            oldY = y;
-        }
-        y = box.getLowerQuartile() + offset;
-        if (oldY != y && y > oldY + fontHeight) {
-            g.drawString(LabelPaintUtil.getDoubleAsString(
-                    statistics[BoxPlotNodeModel.LOWER_QUARTILE],
-                    Box.ROUNDING_FACTOR), x, y);
-            oldY = y;
-        }
-        y = box.getLowerWhisker() + offset;
-        if (oldY != y && y > oldY + fontHeight) {
-            g.drawString(LabelPaintUtil.getDoubleAsString(
-                    statistics[BoxPlotNodeModel.LOWER_WHISKER],
-                    Box.ROUNDING_FACTOR), x, y);
-        }
+
     }
     
     /**
@@ -205,7 +256,7 @@ public class BoxPlotDrawingPane extends ScatterPlotterDrawingPane {
                 // check the y coordinates for enough space
                 if (Math.abs(lastDot.getYCoord() - dot.getYCoord()) 
                         < fontHeight) {
-                    lastDot = dot;
+//                    lastDot = dot;
                     continue;
                 }
             }
