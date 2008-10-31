@@ -202,7 +202,8 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
         // check for empty table
         if (warn && inSpec.getNumColumns() - excludedCols.size() <= 0) {
             throw new InvalidSettingsException(
-                "No columns to visualize are available!");
+                "No columns to visualize are available!"
+                    + " Please refer to the NodeDescription to find out why!");
         }
     }
     
