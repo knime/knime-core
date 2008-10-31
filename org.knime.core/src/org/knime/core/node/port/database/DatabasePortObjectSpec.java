@@ -166,4 +166,23 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
         return new JComponent[]{specPanel, connPanel};
     }
     
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof DatabasePortObjectSpec)) {
+            return false;
+        }
+        DatabasePortObjectSpec dbSpec = (DatabasePortObjectSpec) obj;
+        return m_conn.equals(dbSpec.m_conn) && m_spec.equals(dbSpec.m_spec); 
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        return m_conn.hashCode() ^ m_spec.hashCode();
+    }
+    
 }

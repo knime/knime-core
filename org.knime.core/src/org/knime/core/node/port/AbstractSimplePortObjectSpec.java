@@ -172,4 +172,31 @@ public abstract class AbstractSimplePortObjectSpec implements PortObjectSpec {
             return new JComponent[] {
                     new ModelContentOutPortView((ModelContentRO)model)};
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(final Object ospec) {
+        if (ospec == this) {
+            return true;
+        }
+        if (ospec == null) {
+            return false;
+        }
+        if (!this.getClass().equals(ospec.getClass())) {
+            return false;
+        }
+        ModelContent tcont = new ModelContent("ignored");
+        ModelContent ocont = new ModelContent("ignored");
+        this.save(tcont);
+        ((AbstractSimplePortObjectSpec) ospec).save(ocont);
+        return tcont.equals(ocont);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        ModelContent tcont = new ModelContent("ignored");
+        this.save(tcont);
+        return tcont.hashCode();
+    }
 }

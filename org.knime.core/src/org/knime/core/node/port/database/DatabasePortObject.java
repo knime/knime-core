@@ -202,4 +202,23 @@ public class DatabasePortObject implements PortObject {
         return panels;
     }
     
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof DatabasePortObjectSpec)) {
+            return false;
+        }
+        DatabasePortObject dbPort = (DatabasePortObject) obj;
+        return m_spec.equals(dbPort.m_spec); 
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        return m_spec.hashCode();
+    }
+    
 }

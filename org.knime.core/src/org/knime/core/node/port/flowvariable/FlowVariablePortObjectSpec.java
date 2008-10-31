@@ -33,7 +33,7 @@ import org.knime.core.node.port.PortObjectSpecZipOutputStream;
  * 
  * @author wiswedel, University of Konstanz
  */
-public class FlowVariablePortObjectSpec implements PortObjectSpec {
+public final class FlowVariablePortObjectSpec implements PortObjectSpec {
 
     public static PortObjectSpecSerializer<FlowVariablePortObjectSpec> 
     getPortObjectSpecSerializer() { 
@@ -65,7 +65,6 @@ public class FlowVariablePortObjectSpec implements PortObjectSpec {
      */
     @Override
     public JComponent[] getViews() {
-        // TODO Auto-generated method stub
         return null;
     }
 }
