@@ -307,11 +307,11 @@ public final class Node implements NodeModelWarningListener {
                 break;
             case FAIL:
                 result.addError(error);
-                createErrorMessageAndNotify(error, e);
+                    createErrorMessageAndNotify(error, e);
                 loader.setNeedsResetAfterLoad();
                 break;
             case WARN:
-                createWarningMessageAndNotify(error, e);
+                    createWarningMessageAndNotify(error, e);
                 break;
             }
         }
@@ -683,12 +683,14 @@ public final class Node implements NodeModelWarningListener {
             // INVOKE MODEL'S EXECUTE
             // (warnings will now be processed "automatically" - we listen)
             newOutData = m_model.executeModel(inData, exec);
-        } catch (CanceledExecutionException cee) {
-            // execution was canceled
-            reset(true);
-            createWarningMessageAndNotify("Execution canceled");
-            return false;
         } catch (Throwable th) {
+            if (th instanceof CanceledExecutionException
+                     || th instanceof InterruptedException) {
+                // execution was canceled
+                reset(true);
+                createWarningMessageAndNotify("Execution canceled");
+                return false;
+            }
             String message = "Execute failed: ";
             if (th.getMessage() != null && th.getMessage().length() >= 5) {
                 message = message.concat(th.getMessage());
