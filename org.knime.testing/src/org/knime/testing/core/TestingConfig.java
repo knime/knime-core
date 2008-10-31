@@ -108,13 +108,7 @@ public class TestingConfig extends AppenderSkeleton {
     // file readers loaded in as executed nodes are expected to have a warning
     // (file <blah> not accessible anymore). This store their ID (like "0:1:3")
     // without prefix
-    private Set<String> m_executedFileReaders;
-
-    // used to identify the file reader node by name
-    private static final String FILEREADER_NAME = "File Reader";
-
-    // the test case we get the messages from
-    private final KnimeTestCase m_testCase;
+    private Set<String> m_preExecutedNodes;
 
     // maps node IDs (strings like "0:1:4" w/o prefix) to messages
     private Map<String, MsgPattern> m_warningStatus;
@@ -137,9 +131,7 @@ public class TestingConfig extends AppenderSkeleton {
      * @param test the test case we get messages from.
      * @param maxLines the last maxLines messages will be stored.
      */
-    public TestingConfig(final KnimeTestCase test, final int maxLines) {
-
-        m_testCase = test;
+    public TestingConfig(final int maxLines) {
 
         m_requiredErrors = new LinkedList<MsgPattern>();
         m_requiredWarnings = new LinkedList<MsgPattern>();
@@ -148,7 +140,7 @@ public class TestingConfig extends AppenderSkeleton {
         m_requiredUnexecutedNodes = new HashSet<String>();
         m_errorStatus = new HashMap<String, MsgPattern>();
         m_warningStatus = new HashMap<String, MsgPattern>();
-        m_executedFileReaders = new HashSet<String>();
+        m_preExecutedNodes = new HashSet<String>();
 
         m_owners = null;
 
@@ -256,23 +248,15 @@ public class TestingConfig extends AppenderSkeleton {
         boolean isRequired = registerRequiredMessage(msg, msgLevel);
 
         if (!isRequired) {
-            // lets ignore message from the file reader during workflow loading
-            // when the node is executed and warning that the file isn't
-            // accessible anymore.
-            if (!isFileReaderMessageWhileLoading(aEvent)) {
-                // an unintended error: add it to the list of unexpected errors
-                if ((msgLevel == Level.ERROR) || (msgLevel == Level.FATAL)) {
+            // an unintended error: add it to the list of unexpected errors
+            if ((msgLevel == Level.ERROR) || (msgLevel == Level.FATAL)) {
 
-                    m_unexpectedErrors.add(msg);
+                m_unexpectedErrors.add(msg);
 
-                    // make sure the list won't get too long
-                    if (m_unexpectedErrors.size() > m_maxlines) {
-                        m_unexpectedErrors.removeFirst();
-                    }
+                // make sure the list won't get too long
+                if (m_unexpectedErrors.size() > m_maxlines) {
+                    m_unexpectedErrors.removeFirst();
                 }
-            } else {
-                LOGGER.debug("Ignoring warning message of executed "
-                        + "file reader during workflow loading");
             }
         } else {
             String dbgmsg = "Required msg. ('" + msg + "')";
@@ -280,73 +264,34 @@ public class TestingConfig extends AppenderSkeleton {
         }
     }
 
-    private boolean isFileReaderMessageWhileLoading(final LoggingEvent logMsg) {
-
-        if (logMsg.getLevel() != Level.WARN) {
-            // only warning message are ignored
-            return false;
-        }
-        if (!m_testCase.isCurrentlyLoading()) {
-            // only while the workflow is loading msg are ignored
-            return false;
-        }
-
-        if (!logMsg.getLoggerName().equals(FileReader.class.getName())
-                && !logMsg.getLoggerName().equals(FILEREADER_NAME)) {
-            // only file reader messages are ignored
-            return false;
-        }
-
-        return equalsFileNotAccessibleAnymoreMessage(logMsg
-                .getRenderedMessage());
-    }
-
     /**
-     * @param String the message to check
-     * @return true, if the message looks like file readers &quot;The file
-     *         '&lt;blah&gt;' can't be accessed anymore!&quot;
-     *
-     */
-    private boolean equalsFileNotAccessibleAnymoreMessage(final String msg) {
-        if (msg != null && msg.startsWith("The file '")
-                && msg.endsWith("' can't be accessed anymore!")) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Searches the nodes of the WFM for executed file readers. Their warning
-     * status will later on not cause the test case to fail then. That is
-     * because ALL executed file readers warn in a regression test framework
-     * about missing files. To avoid having all test creators add this warning
-     * status to the test's node_status file, we crick our neck to ignore the
-     * status later.
+     * Searches the nodes of the WFM for executed nodes. Their warning status
+     * will later on not cause the test case to fail then. That is to make test
+     * creation (or my life) easier. The status of these nodes doesn't appear in
+     * the log file - but if specified in the node_status file it will become a
+     * required message. (Except for the reader nodes that re-create the status
+     * each time they are loaded...). Also, reader always create warnings in a
+     * test (because the test file read doesn't exists after the test gets
+     * checked in) - and the test creators will always forget to specify their
+     * warning status.
      *
      * @param wfm the workflow to examine
      */
-    void registerExecutedFileReader(final WorkflowManager wfm) {
+    void registerExecutedNodes(final WorkflowManager wfm) {
         String prefix = wfm.getID().toString() + ":";
         for (NodeContainer nc : wfm.getNodeContainers()) {
 
             if (!nc.getState().equals(State.EXECUTED)) {
                 continue;
             }
-            if (!nc.getName().equals(FILEREADER_NAME)) {
-                continue;
-            }
-            NodeMessage msg = nc.getNodeMessage();
-            if (msg == null
-                    || !msg.getMessageType().equals(NodeMessage.Type.WARNING)) {
-                continue;
-            }
-            if (!equalsFileNotAccessibleAnymoreMessage(msg.getMessage())) {
-                continue;
-            }
 
-            m_executedFileReaders.add(shortID(nc, prefix));
-            LOGGER.debug("Registering File Reader Node " + nc.getID()
-                    + " as executed node with file-not-accessible-warning");
+            if (nc.getNodeMessage() == null) {
+                continue;
+            }
+            String status = nc.getNodeMessage().getMessageType().name();
+            m_preExecutedNodes.add(shortID(nc, prefix));
+            LOGGER.debug("Registering node " + nc.getNameWithID()
+                    + " as pre-executed with a " + status + " status");
         }
     }
 
@@ -785,7 +730,7 @@ public class TestingConfig extends AppenderSkeleton {
                 }
                 msg += " should have a warning status '" + statMsg + "'";
 
-               /*
+                /*
                  * a warning status also creates a warn message in the log file
                  * lets make this required.
                  */
@@ -877,21 +822,31 @@ public class TestingConfig extends AppenderSkeleton {
                 MsgPattern expMsg = m_errorStatus.get(shortID(node, idPrefix));
                 if (expMsg == null) {
                     // node was not expected to finish with an error status
-                    String msg =
-                            "Node '" + node.getNameWithID() + "' has an "
-                                    + "unexpected error status (message: "
-                                    + status.getMessage() + ")";
-                    // make sure to log an error
-                    // during wrapUp the test fails then
-                    LOGGER.error(msg);
+                    if (!m_preExecutedNodes.contains(shortID(node, idPrefix))) {
+                        // complain only if the node was not loaded in executed
+                        String msg =
+                                "Node '" + node.getNameWithID() + "' has an "
+                                        + "unexpected error status (message: "
+                                        + status.getMessage() + ")";
+                        // make sure to log an error
+                        // during wrapUp the test fails then
+                        LOGGER.error(msg);
+                    } else {
+                        String msg =
+                                "Node '" + node.getNameWithID() + "' has an "
+                                        + "unexpected error status (message: "
+                                        + status.getMessage()
+                                        + ") - ignored as it was not "
+                                        + "executed during the test";
+                        LOGGER.debug(msg);
+                    }
                 } else {
                     // make sure the error message is as expected.
                     if (!expMsg.matches(status.getMessage())) {
                         String msg =
-                                "Node '"
-                                        + node.getNameWithID()
-                                        + "' has the"
-                                        + " expected status - but the message is not the "
+                                "Node '" + node.getNameWithID()
+                                        + "' has the expected status - but "
+                                        + "the message is not the "
                                         + "expected one (node status msg: "
                                         + status.getMessage() + ")";
                         // make sure to log an error
@@ -910,26 +865,23 @@ public class TestingConfig extends AppenderSkeleton {
                 MsgPattern expMsg =
                         m_warningStatus.get(shortID(node, idPrefix));
                 if (expMsg == null) {
-                    // node was not expected to finish with a warning status -
-                    // unless it was an executed file reader. That's okay.
-                    if (!m_executedFileReaders
-                            .contains(shortID(node, idPrefix))) {
+                    // Node was not supposed to finish with a warning status
+                    if (!m_preExecutedNodes.contains(shortID(node, idPrefix))) {
+                        // Complain only if node was not loaded in executed
                         String msg =
                                 "Node '"
                                         + node.getNameWithID()
                                         + "' has an "
                                         + "unexpected warning status (message: "
                                         + status.getMessage() + ")";
-                        // make sure to log an error
-                        // during wrapUp the test fails then
+                        // log an error. During wrapUp the test fails then
                         LOGGER.error(msg);
                     } else {
                         String msg =
-                            "Node '"
-                                    + node.getNameWithID()
-                                    + "' has an "
-                                    + "unexpected warning status. Ignored as"
-                                    + " it is an executed file reader.";
+                                "Node '" + node.getNameWithID()
+                                        + "' has an unexpected warning status."
+                                        + " Ignored as it was not executed "
+                                        + "during the test";
                         LOGGER.debug(msg);
                     }
                 } else {
@@ -949,6 +901,28 @@ public class TestingConfig extends AppenderSkeleton {
                         LOGGER.debug("Node '" + node.getNameWithID()
                                 + "' finished"
                                 + " with a warning status - which is good.");
+                    }
+                    // Pre-Executed nodes with warning status don't create
+                    // log entries - except for reader nodes. Remove the
+                    // message from the list of required messages!
+                    if (m_preExecutedNodes.contains(shortID(node, idPrefix))
+                            && !isReaderNode(node)) {
+                        String nodeWarnMsg = status.getMessage();
+                        Iterator<MsgPattern> warns =
+                                m_requiredWarnings.iterator();
+                        while (warns.hasNext()) {
+                            MsgPattern warn = warns.next();
+                            if (warn.matches(nodeWarnMsg)) {
+                                LOGGER.debug(
+                                        "Removing warn message from required "
+                                        + "warn messages (it is a pre-executed "
+                                        + "node (" + node.getNameWithID()
+                                        + ") with declared status) Msg:"
+                                        + nodeWarnMsg);
+                                warns.remove();
+                                break;
+                            }
+                        }
                     }
                 }
 
@@ -985,6 +959,16 @@ public class TestingConfig extends AppenderSkeleton {
 
         }
 
+    }
+
+    private boolean isReaderNode(final NodeContainer node) {
+        // all readers here that test the existence of the file during
+        // loadInternals. These are the ones that create a warning status that
+        // is reflected in the log file. All other nodes loaded in with a
+        // warning status to not create a warning line in the log.
+        String[] readerNames = {"File Reader", "Table Reader", "SDF Reader"};
+        String nodeName = node.getName();
+        return Arrays.asList(readerNames).contains(nodeName);
     }
 
     /**

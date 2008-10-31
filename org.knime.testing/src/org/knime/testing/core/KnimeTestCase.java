@@ -113,7 +113,7 @@ public class KnimeTestCase extends TestCase {
             CanceledExecutionException, IOException, WorkflowException {
 
         // registers itself as appender to the logger:
-        m_testConfig = new TestingConfig(this, 100);
+        m_testConfig = new TestingConfig(100);
 
         // read in the owners of the test case
         File ownerFile = new File(m_knimeWorkFlow.getParentFile(), OWNER_FILE);
@@ -164,9 +164,9 @@ public class KnimeTestCase extends TestCase {
             logger.debug("Workflow loaded ----------------------------"
                     + "--------------");
 
-            // remember the executed file readers (before executing) to not
+            // remember the executed nodes (before executing) to not
             // complain about their warning status later.
-            m_testConfig.registerExecutedFileReader(m_manager);
+            m_testConfig.registerExecutedNodes(m_manager);
 
             // construct a list of options (i.e. settings to change in the flow)
             File optionsFile =
