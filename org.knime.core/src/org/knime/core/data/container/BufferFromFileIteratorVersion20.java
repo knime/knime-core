@@ -176,7 +176,7 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
      * @return The row key as read right from the stream.
      * @throws IOException If reading fails for IO problems.
      */
-    RowKey readRowKeyAndEndBlock(
+    private RowKey readRowKeyAndEndBlock(
             final DCObjectInputVersion2 inStream) throws IOException {
         if (m_buffer.shouldSkipRowKey()) {
             return DUMMY_ROW_KEY;
@@ -272,9 +272,9 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
             if (isSerialized) {
                 identifier = inStream.readControlByte();
             }
-            Class<? extends DataCell> type = 
-                m_buffer.getTypeForChar(identifier);
-            boolean isBlob = BlobDataCell.class.isAssignableFrom(type);
+            CellClassInfo type = m_buffer.getTypeForChar(identifier);
+            Class<? extends DataCell> cellClass = type.getCellClass(); 
+            boolean isBlob = BlobDataCell.class.isAssignableFrom(cellClass);
             if (isBlob) {
                 BlobAddress address = inStream.readBlobAddress();
                 Buffer blobBuffer = m_buffer;
@@ -287,16 +287,15 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
                     }
                     blobBuffer = cnTbl.getBuffer();
                 }
-                return new BlobWrapperDataCell(blobBuffer, address, 
-                        (Class<? extends BlobDataCell>)type);
+                return new BlobWrapperDataCell(blobBuffer, address, type);
             }
             if (isSerialized) {
-                ClassLoader cellLoader = type.getClassLoader();
+                ClassLoader cellLoader = cellClass.getClassLoader();
                 inStream.setCurrentClassLoader(cellLoader);
                 return inStream.readDataCellPerJavaSerialization();
             } else {
                 DataCellSerializer<? extends DataCell> serializer =
-                    DataType.getCellSerializer(type);
+                    DataType.getCellSerializer(cellClass);
                 assert serializer != null;
                 return inStream.readDataCellPerKNIMESerializer(serializer);
             }
@@ -310,7 +309,7 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
          * @throws IOException If that fails.
          */
         BlobDataCell readBlobDataCell(final BlobAddress blobAddress,
-                final Class<? extends DataCell> cl) throws IOException {
+                final CellClassInfo cl) throws IOException {
             Buffer buffer = m_buffer;
             assert buffer.getBufferID() == blobAddress.getBufferID() 
                 : "Buffer IDs don't match: " + buffer.getBufferID() + " vs. " 
@@ -327,8 +326,9 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
                 // that buffering is important
                 in = new BufferedInputStream(in);
             }
+            Class<? extends DataCell> cellClass = cl.getCellClass();
             DataCellSerializer<? extends DataCell> ser =
-                DataType.getCellSerializer(cl);
+                DataType.getCellSerializer(cellClass);
             DCObjectInputVersion2 inStream = 
                 new DCObjectInputVersion2(in, this);
             BlobDataCell result;
@@ -339,7 +339,7 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
                     result = (BlobDataCell)
                         inStream.readDataCellPerKNIMESerializer(ser); 
                 } else {
-                    inStream.setCurrentClassLoader(cl.getClassLoader());
+                    inStream.setCurrentClassLoader(cellClass.getClassLoader());
                     result = (BlobDataCell)
                         inStream.readDataCellPerJavaSerialization();
                 }
