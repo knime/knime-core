@@ -72,7 +72,7 @@ public class KNIMEApplication implements IApplication {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext
      *      context)
      */
@@ -131,7 +131,7 @@ public class KNIMEApplication implements IApplication {
 
     /**
      * Creates the display used by the application.
-     * 
+     *
      * @return the display used by the application
      */
     protected Display createDisplay() {
@@ -141,7 +141,7 @@ public class KNIMEApplication implements IApplication {
     /**
      * Return true if a valid workspace path has been set and false otherwise.
      * Prompt for and set the path if possible and required.
-     * 
+     *
      * @return true if a valid instance location has been set and false
      *         otherwise
      */
@@ -244,7 +244,7 @@ public class KNIMEApplication implements IApplication {
      * argument data with the user's selection. Perform first level validation
      * on the selection by comparing the version information. This method does
      * not examine the runtime state (e.g., is the workspace already locked?).
-     * 
+     *
      * @param shell
      * @param launchData
      * @param force setting to true makes the dialog open regardless of the
@@ -312,7 +312,7 @@ public class KNIMEApplication implements IApplication {
      * false otherwise. A version check will be performed, and a confirmation
      * box may be displayed on the argument shell if an older version is
      * detected.
-     * 
+     *
      * @return true if the argument URL is ok to use as a workspace and false
      *         otherwise.
      */
@@ -423,7 +423,7 @@ public class KNIMEApplication implements IApplication {
      * The version file is stored in the metadata area of the workspace. This
      * method returns an URL to the file or null if the directory or file does
      * not exist (and the create parameter is false).
-     * 
+     *
      * @param create If the directory and file does not exist this parameter
      *            controls whether it will be created.
      * @return An url to the file or null if the version file does not exist or
@@ -470,7 +470,15 @@ public class KNIMEApplication implements IApplication {
             return true;
         }
 
-        File libDir = new File("/usr/lib");
+        File libDir;
+        if ("amd64".equals(System.getProperty("os.arch"))) {
+            libDir = new File("/usr/lib64");
+        } else {
+            libDir = new File("/usr/lib32");
+            if (!libDir.isDirectory()) {
+                libDir = new File("/usr/lib");
+            }
+        }
         File[] xulLocations = libDir.listFiles(new FileFilter() {
             @Override
             public boolean accept(final File pathname) {
@@ -539,15 +547,15 @@ public class KNIMEApplication implements IApplication {
                     + "This might result in a crash if you continue "
                     + "now due to a known Eclipse bug.\n"
                     + "Please install a version of xulrunner < 1.9 and add '-D"
-                    + XUL + "=...' to knime.ini.\nDetails on this problem " 
-                    + "can be found in the KNIME FAQs on knime.org and the " 
-                    + "readme file in the KNIME directory (\"" 
-                    + knimeLOC + "\").\n" 
+                    + XUL + "=...' to knime.ini.\nDetails on this problem "
+                    + "can be found in the KNIME FAQs on knime.org and the "
+                    + "readme file in the KNIME directory (\""
+                    + knimeLOC + "\").\n"
                     + "Do you want to continue loading KNIME?");
         } else {
             System.out.println("No xulrunner found, Node descriptions and "
-                    + "online help will possibly not work. If you have " 
-                    + "xulrunner installed at an unusual location, add '-D" 
+                    + "online help will possibly not work. If you have "
+                    + "xulrunner installed at an unusual location, add '-D"
                     + XUL + "=...' to knime.ini.");
             return true;
         }
@@ -555,7 +563,7 @@ public class KNIMEApplication implements IApplication {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.eclipse.equinox.app.IApplication#stop()
      */
     public void stop() {
