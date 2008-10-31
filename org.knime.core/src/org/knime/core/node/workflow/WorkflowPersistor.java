@@ -46,9 +46,6 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
 
     public static final String KEY_UI_INFORMATION = "extraInfoClassName";
 
-    /** Links the node settings file name. */
-    static final String KEY_NODE_SETTINGS_FILE = "node_settings_file";
-
     /** Key for this node's internal ID. */
     static final String KEY_ID = "id";
     
