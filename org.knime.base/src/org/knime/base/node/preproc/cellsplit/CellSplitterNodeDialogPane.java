@@ -76,7 +76,8 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
                             + "data table scan)");
 
     private final JCheckBox m_useEmptyString =
-            new JCheckBox("Create empty cells instead of missing cells");
+            new JCheckBox("Create empty string cells "
+                    + "instead of missing string cells");
 
     /**
      * Creates a new panel for the dialog and inits all components.
