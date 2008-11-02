@@ -23,8 +23,6 @@
  */
 package org.knime.core.workflow;
 
-import junit.framework.TestCase;
-
 import org.knime.base.node.preproc.filter.column.FilterColumnNodeFactory;
 import org.knime.base.node.util.sampledata.SampleDataNodeFactory;
 import org.knime.base.node.viz.table.TableNodeFactory;
@@ -38,7 +36,7 @@ import org.knime.core.node.workflow.NodeContainer.State;
  * 
  * @author wiswedel, University of Konstanz
  */
-public class ChainOfNodesTest extends TestCase {
+public class ChainOfNodesTest extends WorkflowTestCase {
     
     public void testExecuteOneByOne() throws Exception {
         final Object semaphore = new Object();
@@ -55,13 +53,13 @@ public class ChainOfNodesTest extends TestCase {
         NodeID dataGen = m.createAndAddNode(new SampleDataNodeFactory());
         NodeID colFilter = m.createAndAddNode(new FilterColumnNodeFactory());
         NodeID tblView = m.createAndAddNode(new TableNodeFactory());
-        assertTrue(Util.checkState(m, dataGen, State.CONFIGURED));
-        assertTrue(Util.checkState(m, colFilter, State.IDLE));
-        assertTrue(Util.checkState(m, tblView, State.IDLE));
+        checkState(m, dataGen, State.CONFIGURED);
+        checkState(m, colFilter, State.IDLE);
+        checkState(m, tblView, State.IDLE);
         m.addConnection(dataGen, 0, colFilter, 0);
         m.addConnection(colFilter, 0, tblView, 0);
-        assertTrue(Util.checkState(m, colFilter, State.CONFIGURED));
-        assertTrue(Util.checkState(m, tblView, State.CONFIGURED));
+        checkState(m, colFilter, State.CONFIGURED);
+        checkState(m, tblView, State.CONFIGURED);
         
         synchronized (semaphore) {
             m.executeUpToHere(dataGen);
@@ -69,9 +67,9 @@ public class ChainOfNodesTest extends TestCase {
                 semaphore.wait();
             } while (m.getState().executionInProgress());
         }
-        assertTrue(Util.checkState(m, dataGen, State.EXECUTED));
-        assertTrue(Util.checkState(m, colFilter, State.CONFIGURED));
-        assertTrue(Util.checkState(m, tblView, State.CONFIGURED));
+        checkState(m, dataGen, State.EXECUTED);
+        checkState(m, colFilter, State.CONFIGURED);
+        checkState(m, tblView, State.CONFIGURED);
         
         synchronized (semaphore) {
             m.executeUpToHere(colFilter);
@@ -79,9 +77,9 @@ public class ChainOfNodesTest extends TestCase {
                 semaphore.wait();
             } while (m.getState().executionInProgress());
         }
-        assertTrue(Util.checkState(m, dataGen, State.EXECUTED));
-        assertTrue(Util.checkState(m, colFilter, State.EXECUTED));
-        assertTrue(Util.checkState(m, tblView, State.CONFIGURED));
+        checkState(m, dataGen, State.EXECUTED);
+        checkState(m, colFilter, State.EXECUTED);
+        checkState(m, tblView, State.CONFIGURED);
         
         synchronized (semaphore) {
             m.executeUpToHere(tblView);
@@ -89,9 +87,9 @@ public class ChainOfNodesTest extends TestCase {
                 semaphore.wait();
             } while (m.getState().executionInProgress());
         }
-        assertTrue(Util.checkState(m, dataGen, State.EXECUTED));
-        assertTrue(Util.checkState(m, colFilter, State.EXECUTED));
-        assertTrue(Util.checkState(m, tblView, State.EXECUTED));
+        checkState(m, dataGen, State.EXECUTED);
+        checkState(m, colFilter, State.EXECUTED);
+        checkState(m, tblView, State.EXECUTED);
     }
 
 }

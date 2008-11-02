@@ -23,6 +23,8 @@
  */
 package org.knime.core.workflow;
 
+import junit.framework.TestCase;
+
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.NodeContainer.State;
@@ -31,14 +33,13 @@ import org.knime.core.node.workflow.NodeContainer.State;
  * 
  * @author wiswedel, University of Konstanz
  */
-public final class Util {
+public class WorkflowTestCase extends TestCase {
     
-    private Util() {
-    }
-    
-    public static boolean checkState(
+    public void checkState(
             final WorkflowManager m, final NodeID id, final State s) {
-        return m.getNodeContainer(id).getState().equals(s);
+        if (!m.getNodeContainer(id).getState().equals(s)) {
+            assertTrue(false);
+        }
     }
 
     
