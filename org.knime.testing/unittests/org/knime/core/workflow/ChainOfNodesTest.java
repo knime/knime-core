@@ -27,8 +27,6 @@ import org.knime.base.node.preproc.filter.column.FilterColumnNodeFactory;
 import org.knime.base.node.util.sampledata.SampleDataNodeFactory;
 import org.knime.base.node.viz.table.TableNodeFactory;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeStateChangeListener;
-import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.NodeContainer.State;
 
@@ -38,58 +36,44 @@ import org.knime.core.node.workflow.NodeContainer.State;
  */
 public class ChainOfNodesTest extends WorkflowTestCase {
     
-    public void testExecuteOneByOne() throws Exception {
-        final Object semaphore = new Object();
+    private NodeID m_dataGen;
+    private NodeID m_colFilter;
+    private NodeID m_tblView;
+    
+    /** {@inheritDoc} */
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
         WorkflowManager m = WorkflowManager.ROOT.createAndAddProject();
-        m.addNodeStateChangeListener(new NodeStateChangeListener() {
-            /** {@inheritDoc} */
-            @Override
-            public void stateChanged(final NodeStateEvent state) {
-                synchronized (semaphore) {
-                    semaphore.notifyAll();
-                }
-            }
-        });
-        NodeID dataGen = m.createAndAddNode(new SampleDataNodeFactory());
-        NodeID colFilter = m.createAndAddNode(new FilterColumnNodeFactory());
-        NodeID tblView = m.createAndAddNode(new TableNodeFactory());
-        checkState(m, dataGen, State.CONFIGURED);
-        checkState(m, colFilter, State.IDLE);
-        checkState(m, tblView, State.IDLE);
-        m.addConnection(dataGen, 0, colFilter, 0);
-        m.addConnection(colFilter, 0, tblView, 0);
-        checkState(m, colFilter, State.CONFIGURED);
-        checkState(m, tblView, State.CONFIGURED);
+        m_dataGen = m.createAndAddNode(new SampleDataNodeFactory());
+        m_colFilter = m.createAndAddNode(new FilterColumnNodeFactory());
+        m_tblView = m.createAndAddNode(new TableNodeFactory());
+        setManager(m);
+    }
+    
+    public void testExecuteOneByOne() throws Exception {
+        checkState(m_dataGen, State.CONFIGURED);
+        checkState(m_colFilter, State.IDLE);
+        checkState(m_tblView, State.IDLE);
+        getManager().addConnection(m_dataGen, 0, m_colFilter, 0);
+        getManager().addConnection(m_colFilter, 0, m_tblView, 0);
+        checkState(m_colFilter, State.CONFIGURED);
+        checkState(m_tblView, State.CONFIGURED);
         
-        synchronized (semaphore) {
-            m.executeUpToHere(dataGen);
-            do {
-                semaphore.wait();
-            } while (m.getState().executionInProgress());
-        }
-        checkState(m, dataGen, State.EXECUTED);
-        checkState(m, colFilter, State.CONFIGURED);
-        checkState(m, tblView, State.CONFIGURED);
+        executeAndWait(m_dataGen);
+        checkState(m_dataGen, State.EXECUTED);
+        checkState(m_colFilter, State.CONFIGURED);
+        checkState(m_tblView, State.CONFIGURED);
         
-        synchronized (semaphore) {
-            m.executeUpToHere(colFilter);
-            do {
-                semaphore.wait();
-            } while (m.getState().executionInProgress());
-        }
-        checkState(m, dataGen, State.EXECUTED);
-        checkState(m, colFilter, State.EXECUTED);
-        checkState(m, tblView, State.CONFIGURED);
-        
-        synchronized (semaphore) {
-            m.executeUpToHere(tblView);
-            do {
-                semaphore.wait();
-            } while (m.getState().executionInProgress());
-        }
-        checkState(m, dataGen, State.EXECUTED);
-        checkState(m, colFilter, State.EXECUTED);
-        checkState(m, tblView, State.EXECUTED);
+        executeAndWait(m_colFilter);
+        checkState(m_dataGen, State.EXECUTED);
+        checkState(m_colFilter, State.EXECUTED);
+        checkState(m_tblView, State.CONFIGURED);
+
+        executeAndWait(m_tblView);
+        checkState(m_dataGen, State.EXECUTED);
+        checkState(m_colFilter, State.EXECUTED);
+        checkState(m_tblView, State.EXECUTED);
     }
 
 }
