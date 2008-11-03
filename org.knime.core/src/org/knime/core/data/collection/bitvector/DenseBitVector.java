@@ -725,7 +725,8 @@ public class DenseBitVector {
         if (((endIdx - 1) & storageMask) < (startIdx & storageMask)) {
             result.m_storage[addrCount - 1] =
                     (m_storage[startAddr] >>> startIdx)
-                            | (m_storage[startAddr + 1] & lastWordMask) << -startIdx;
+                            | (m_storage[startAddr + 1] & lastWordMask)
+                            << -startIdx;
         } else {
             result.m_storage[addrCount - 1] =
                     ((m_storage[startAddr] & lastWordMask) >>> startIdx);
@@ -1100,7 +1101,7 @@ public class DenseBitVector {
         if (leftOver == 0) {
             nibbleIdx = 15;
         } else {
-            nibbleIdx = (leftOver >> 2) - 1;
+            nibbleIdx = (leftOver - 1) >> 2;
         }
         while (storageAddr >= 0) {
 
