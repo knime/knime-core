@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Other">
+	<name>Fail in execution</name>
+	
+	<shortDescription>
+	   Node that always fails upon execution.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+			<p>
+			 This node is part of the workflow manager test framework. It's
+			 used to simulate failing nodes 
+			</p>
+		</intro>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Any input table">Any input data.</dataIn>
+		<dataIn index="1" name="Copy of input">Copy of input data.</dataIn>
+	</ports>	
+</knimeNode>

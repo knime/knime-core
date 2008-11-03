@@ -19,49 +19,23 @@
  * ---------------------------------------------------------------------
  * 
  * History
- *   01.11.2008 (wiswedel): created
+ *   Nov 3, 2008 (wiswedel): created
  */
 package org.knime.testing.node.blocking;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
-public final class BlockingNodeFactory extends NodeFactory<BlockingNodeModel> {
-    
-    /** {@inheritDoc} */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new BlockingNodeDialogPane();
-    }
+final class BlockingNodeDialogPane extends DefaultNodeSettingsPane {
 
-    /** {@inheritDoc} */
-    @Override
-    public BlockingNodeModel createNodeModel() {
-        return new BlockingNodeModel();
+    /** Init gui. */
+    BlockingNodeDialogPane() {
+        SettingsModelString lockModel = BlockingNodeModel.createLockIDModel();
+        addDialogComponent(new DialogComponentString(lockModel, "Lock ID"));
     }
-
-    /** {@inheritDoc} */
-    @Override
-    public NodeView<BlockingNodeModel> createNodeView(
-            int viewIndex, BlockingNodeModel nodeModel) {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
-
 }

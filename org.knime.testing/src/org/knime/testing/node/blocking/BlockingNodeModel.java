@@ -25,7 +25,7 @@ package org.knime.testing.node.blocking;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.Lock;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -36,6 +36,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * 
@@ -43,25 +44,25 @@ import org.knime.core.node.NodeSettingsWO;
  */
 class BlockingNodeModel extends NodeModel {
     
-    private final ReentrantLock m_lock;
+    private final SettingsModelString m_lockIDModel;
     
     /** One data input, one data output.
-     * @param lock The non-null lock that we use to synchronize.
      */
-    BlockingNodeModel(final ReentrantLock lock) {
+    BlockingNodeModel() {
         super(1, 1);
-        m_lock = lock;
+        m_lockIDModel = createLockIDModel();
     }
     
     /** {@inheritDoc} */
     @Override
     protected BufferedDataTable[] execute(BufferedDataTable[] inData,
             ExecutionContext exec) throws Exception {
-        m_lock.lock();
+        Lock lock = getLock();
+        lock.lock();
         try {
             return inData;
         } finally {
-            m_lock.unlock();
+            lock.unlock();
         }
     }
     
@@ -69,6 +70,7 @@ class BlockingNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        getLock();
         return inSpecs;
     }
 
@@ -104,6 +106,25 @@ class BlockingNodeModel extends NodeModel {
     @Override
     protected void saveInternals(File nodeInternDir, ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
+    }
+    
+    private Lock getLock() throws InvalidSettingsException {
+        String id = m_lockIDModel.getStringValue();
+        if (id == null) {
+            throw new InvalidSettingsException("No lock id set");
+        }
+        Lock lock = BlockingRepository.get(id);
+        if (lock == null) {
+            throw new InvalidSettingsException(
+                    "No lock associated with id: " + id);
+        }
+        return lock;
+    }
+    
+    /** Factory method to create the lock id model. 
+     * @return a new model used in dialog and model. */
+    static final SettingsModelString createLockIDModel() {
+        return new SettingsModelString("lock_id", null);
     }
 
 }
