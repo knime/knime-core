@@ -23,7 +23,9 @@
  */
 package org.knime.core.workflow.simplechainofnodes;
 
+import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.workflow.WorkflowTestCase;
 
@@ -79,5 +81,120 @@ public class ChainOfNodesTest extends WorkflowTestCase {
         checkState(m_rowFilter, State.EXECUTED);
         checkState(m_tblView, State.EXECUTED);
     }
-
+    
+    public void testExecuteLast() throws Exception {
+        executeAndWait(m_tblView);
+        checkState(m_dataGen, State.EXECUTED);
+        checkState(m_colFilter, State.EXECUTED);
+        checkState(m_rowFilter, State.EXECUTED);
+        checkState(m_tblView, State.EXECUTED);
+    }
+    
+    public void testExecuteAll() throws Exception {
+        getManager().executeAllAndWaitUntilDone();
+        checkState(m_dataGen, State.EXECUTED);
+        checkState(m_colFilter, State.EXECUTED);
+        checkState(m_rowFilter, State.EXECUTED);
+        checkState(m_tblView, State.EXECUTED);
+    }
+    
+    public void testRandomExecuteAndReset() throws Exception {
+        executeAndWait(m_rowFilter);
+        checkState(m_dataGen, State.EXECUTED);
+        checkState(m_colFilter, State.EXECUTED);
+        checkState(m_rowFilter, State.EXECUTED);
+        checkState(m_tblView, State.CONFIGURED);
+        
+        assertTrue(getManager().canResetNode(m_colFilter));
+        getManager().resetAndConfigureNode(m_colFilter);
+        checkState(m_dataGen, State.EXECUTED);
+        checkState(m_colFilter, State.CONFIGURED);
+        checkState(m_rowFilter, State.CONFIGURED);
+        checkState(m_tblView, State.CONFIGURED);
+        
+        executeAndWait(m_tblView);
+        checkState(m_tblView, State.EXECUTED);
+        
+        for (int i = 0; i < 10; i++) {
+            getManager().resetAndConfigureNode(m_dataGen);
+            checkState(m_dataGen, State.CONFIGURED);
+            checkState(m_colFilter, State.CONFIGURED);
+            checkState(m_rowFilter, State.CONFIGURED);
+            checkState(m_tblView, State.CONFIGURED);
+            executeAndWait(m_tblView);
+            checkState(m_dataGen, State.EXECUTED);
+            checkState(m_colFilter, State.EXECUTED);
+            checkState(m_rowFilter, State.EXECUTED);
+            checkState(m_tblView, State.EXECUTED);
+        }
+    }
+    
+    public void testDeleteConnectionTryExecuteInsertAgain() throws Exception {
+        WorkflowManager m = getManager();
+        ConnectionContainer connection = null;
+        for (ConnectionContainer cc : m.getConnectionContainers()) {
+            if (cc.getDest().equals(m_rowFilter)) {
+                connection = cc;
+            }
+        }
+        assertNotNull(connection);
+        assertFalse(m.canAddConnection(m_colFilter, 0, m_rowFilter, 0));
+        assertTrue(m.canRemoveConnection(connection));
+        m.removeConnection(connection);
+        
+        checkState(m_rowFilter, State.IDLE);
+        assertFalse(m.canExecuteNode(m_rowFilter));
+        assertFalse(m.canExecuteNode(m_tblView));
+        assertTrue(m.canExecuteNode(m_colFilter));
+        
+        executeAndWait(m_colFilter);
+        checkState(m_colFilter, State.EXECUTED);
+        
+        executeAndWait(m_rowFilter);
+        checkState(m_rowFilter, State.IDLE);
+        
+        m.addConnection(m_colFilter, 0, m_rowFilter, 0);
+        checkState(m_rowFilter, State.CONFIGURED);
+        checkState(m_tblView, State.CONFIGURED);
+        
+        executeAndWait(m_tblView);
+        checkState(m_tblView, State.EXECUTED);
+    }
+    
+    public void testExecuteDeleteConnection() throws Exception {
+        WorkflowManager m = getManager();
+        executeAndWait(m_tblView);
+        ConnectionContainer connection = null;
+        for (ConnectionContainer cc : m.getConnectionContainers()) {
+            if (cc.getDest().equals(m_rowFilter)) {
+                connection = cc;
+            }
+        }
+        assertTrue(m.canRemoveConnection(connection));
+        m.removeConnection(connection);
+        
+        checkState(m_rowFilter, State.IDLE);
+        assertFalse(m.canExecuteNode(m_rowFilter));
+        assertFalse(m.canExecuteNode(m_tblView));
+    }
+    
+    public void testDeleteNodeExecute() throws Exception {
+        WorkflowManager m = getManager();
+        assertTrue(m.canRemoveNode(m_rowFilter));
+        m.removeNode(m_rowFilter);
+        
+        checkState(m_tblView, State.IDLE);
+        assertFalse(m.canExecuteNode(m_tblView));
+    }
+    
+    public void testExecuteDeleteNode() throws Exception {
+        WorkflowManager m = getManager();
+        executeAndWait(m_tblView);
+        assertTrue(m.canRemoveNode(m_rowFilter));
+        m.removeNode(m_rowFilter);
+        
+        checkState(m_tblView, State.IDLE);
+        assertFalse(m.canExecuteNode(m_tblView));
+    }
+    
 }
