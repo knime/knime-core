@@ -23,14 +23,8 @@
  */
 package org.knime.core.workflow.simplechainofnodes;
 
-import java.io.File;
-import java.net.URL;
-
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.NodeContainer.State;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.workflow.WorkflowTestCase;
 
 /**
@@ -48,24 +42,11 @@ public class ChainOfNodesTest extends WorkflowTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        ClassLoader l = getClass().getClassLoader();
-        String workflowDirString = getClass().getPackage().getName();
-        workflowDirString = workflowDirString.replace('.', '/');
-        URL workflowURL = l.getResource(workflowDirString);
-        File workflowDir = new File(workflowURL.getFile());
-        if (!workflowDir.isDirectory()) {
-            throw new Exception("Can't load workflow directory: " 
-                    + workflowDirString);
-        }
-        WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(
-                workflowDir, new ExecutionMonitor());
-        WorkflowManager m = loadResult.getWorkflowManager();
-        NodeID id = m.getID();
-        m_dataGen = new NodeID(id, 1);
-        m_colFilter = new NodeID(id, 2);
-        m_rowFilter = new NodeID(id, 3);
-        m_tblView = new NodeID(id, 4);
-        setManager(m);
+        NodeID baseID = loadAndSetWorkflow();
+        m_dataGen = new NodeID(baseID, 1);
+        m_colFilter = new NodeID(baseID, 2);
+        m_rowFilter = new NodeID(baseID, 3);
+        m_tblView = new NodeID(baseID, 4);
     }
     
     public void testExecuteOneByOne() throws Exception {

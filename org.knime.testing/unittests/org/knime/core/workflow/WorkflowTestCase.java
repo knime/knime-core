@@ -24,14 +24,17 @@
 package org.knime.core.workflow;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URL;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import junit.framework.TestCase;
 
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
@@ -39,6 +42,7 @@ import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 
 /**
  * 
@@ -71,6 +75,33 @@ public class WorkflowTestCase extends TestCase {
                 }
             }
         };
+    }
+    
+    protected NodeID loadAndSetWorkflow() throws Exception {
+        ClassLoader l = getClass().getClassLoader();
+        String workflowDirString = getClass().getPackage().getName();
+        URL workflowURL = l.getResource(workflowDirString.replace('.', '/'));
+        if (workflowURL == null) {
+            throw new Exception("Can't load workflow that's expected to be " 
+                    + "in package " + workflowDirString);
+        }
+        File workflowDir = new File(workflowURL.getFile());
+        if (!workflowDir.isDirectory()) {
+            throw new Exception("Can't load workflow directory: " 
+                    + workflowDirString);
+        }
+        WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(
+                workflowDir, new ExecutionMonitor());
+        WorkflowManager m = loadResult.getWorkflowManager();
+        if (m == null) {
+            throw new Exception("Errors reading workflow: " 
+                    + loadResult.getErrors());
+        } else if (loadResult.hasErrors()) {
+            m_logger.info("Errors reading workflow (proceeding anyway): ");
+            dumpLineBreakStringToLog(loadResult.getErrors());
+        }
+        setManager(m);
+        return m.getID();
     }
     
     /**
@@ -181,7 +212,11 @@ public class WorkflowTestCase extends TestCase {
     
     protected void dumpWorkflowToLog() throws IOException {
         String toString = m_manager.printNodeSummary(m_manager.getID(), 0);
-        BufferedReader r = new BufferedReader(new StringReader(toString));
+        dumpLineBreakStringToLog(toString);
+    }
+    
+    protected void dumpLineBreakStringToLog(final String s) throws IOException {
+        BufferedReader r = new BufferedReader(new StringReader(s));
         String line;
         while ((line = r.readLine()) != null) {
             m_logger.info(line);
