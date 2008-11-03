@@ -43,7 +43,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Test Table">Datatable with the output of the node to test</dataIn>
-		<dataIn index="1" name="Golden Table">The "golden" (i.e. correct) datatable.</dataIn>
+		<inPort index="0" name="Test Table">Datatable with the output of the node to test</inPort>
+		<inPort index="1" name="Golden Table">The "golden" (i.e. correct) datatable.</inPort>
 	</ports>	
 </knimeNode>
