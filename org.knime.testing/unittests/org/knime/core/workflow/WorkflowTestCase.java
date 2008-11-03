@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -133,7 +134,7 @@ public class WorkflowTestCase extends TestCase {
     }
     
     protected void checkState(final NodeID id, 
-            final State expected) throws Exception {
+            final State... expected) throws Exception {
         if (m_manager == null) {
             throw new NullPointerException("WorkflowManager not set.");
         }
@@ -142,11 +143,18 @@ public class WorkflowTestCase extends TestCase {
     }
     
     protected void checkState(final NodeContainer nc, 
-            final State expected) throws Exception {
+            final State... expected) throws Exception {
         State actual = nc.getState();
-        if (!actual.equals(expected)) {
+        boolean matches = false;
+        for (State s : expected) {
+            if (actual.equals(s)) {
+                matches = true;
+            }
+        }
+        if (!matches) {
             String error = "node " + nc.getNameWithID() + " has wrong state; "
-            + "expected " + expected + ", actual " + actual + " (dump follows)";
+            + "expected (any of) " + Arrays.toString(expected) + ", actual " 
+            + actual + " (dump follows)";
             m_logger.info("Test failed: " + error);
             dumpWorkflowToLog();
             fail(error);
