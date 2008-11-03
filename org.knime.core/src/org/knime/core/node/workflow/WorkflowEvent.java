@@ -126,7 +126,7 @@ public class WorkflowEvent {
      */
     @Override
     public String toString() {
-        return "WorkflowEvent [type=" + getClass().getSimpleName()
+        return "WorkflowEvent [type=" + m_type
                 + ";old=" + m_oldValue
                 + ";new=" + m_newValue + ";timestamp="
                 + DateFormat.getDateTimeInstance().format(new Date(m_timestamp))
