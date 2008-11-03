@@ -24,7 +24,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Any input table">Any input table</dataIn>
-		<dataIn index="1" name="Copy of input table">Copy</dataIn>
+		<inPort index="0" name="Any input table">Any input table</inPort>
+		<outPort index="1" name="Copy of input table">Copy</outPort>
 	</ports>	
 </knimeNode>
