@@ -133,6 +133,10 @@ public class WorkflowTestCase extends TestCase {
         m_lock.unlock();
     }
     
+    protected Condition getCondition() {
+        return m_workflowStableCondition;
+    }
+    
     protected void checkState(final NodeID id, 
             final State... expected) throws Exception {
         if (m_manager == null) {
@@ -185,14 +189,17 @@ public class WorkflowTestCase extends TestCase {
     
     protected void waitWhileNodeInExecution(final NodeContainer node) 
     throws InterruptedException {
-        if (!m_lock.isHeldByCurrentThread()) {
-            throw new IllegalStateException(
-                    "Ill-posed test case; thread must own lock");
-        }
-        m_logger.debug("node " + node.getNameWithID() + " is " + node.getState());
-        while (node.getState().executionInProgress()) {
-            m_logger.debug("node " + node.getNameWithID() + " is " + node.getState());
-            m_workflowStableCondition.await();
+        m_lock.lock();
+        try {
+            m_logger.debug("node " + node.getNameWithID() 
+                    + " is " + node.getState());
+            while (node.getState().executionInProgress()) {
+                m_logger.debug("node " + node.getNameWithID() 
+                        + " is " + node.getState());
+                m_workflowStableCondition.await();
+            }
+        } finally {
+            m_lock.unlock();
         }
     }
     

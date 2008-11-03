@@ -25,6 +25,8 @@ package org.knime.core.workflow.chainofnodesoneblocking;
 
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.NodeContainer.State;
@@ -69,22 +71,158 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
     
     public void testBlockingStates() throws Exception {
         WorkflowManager m = getManager();
-        ReentrantLock lock = BlockingRepository.get(LOCK_ID);
-        lock.lock();
+        ReentrantLock execLock = BlockingRepository.get(LOCK_ID);
+        execLock.lock();
         try {
             m.executeUpToHere(m_tblView);
             // can't tell about the data generator, but the remaining three
             // should be in some executing state
-            checkState(m_blocker, State.MARKEDFOREXEC, State.EXECUTING);
+            checkState(m_blocker, State.MARKEDFOREXEC, 
+                    State.QUEUED, State.EXECUTING);
             checkState(m_colFilter, State.MARKEDFOREXEC);
             checkState(m_tblView, State.MARKEDFOREXEC);
-            // TODO enable later
-//            assertTrue(m.getState().executionInProgress());
+            assertTrue(m.getState().executionInProgress());
         } finally {
-            lock.unlock();
+            execLock.unlock();
         }
         // give the workflow manager time to wrap up
-        executeAndWait(m_tblView);
+        waitWhileInExecution();
+    }
+    
+    public void testPropertiesOfExecutingNode() throws Exception {
+        WorkflowManager m = getManager();
+        ReentrantLock execLock = BlockingRepository.get(LOCK_ID);
+        execLock.lock();
+        try {
+            m.executeUpToHere(m_tblView);
+            checkState(m_blocker, State.MARKEDFOREXEC, State.EXECUTING);
+            NodeContainer blockerNC = m.getNodeContainer(m_blocker);
+            lock();
+            try {
+                while(blockerNC.getState().equals(State.MARKEDFOREXEC)
+                        || blockerNC.getState().equals(State.QUEUED)) {
+                    getCondition().await();
+                }
+            } finally {
+                unlock();
+            }
+            checkState(m_blocker, State.EXECUTING);
+            
+            // test reset node
+            assertFalse(m.canResetNode(m_blocker));
+            try {
+                m.resetAndConfigureNode(m_blocker);
+                fail();
+            } catch (IllegalStateException ise) {
+                // expected
+            }
+            
+            // test delete node
+            assertFalse(m.canRemoveNode(m_blocker));
+            try {
+                m.removeNode(m_blocker);
+                fail();
+            } catch (IllegalStateException ise) {
+            }
+            
+            // test outgoing connection delete
+            ConnectionContainer cc = null;
+            for (ConnectionContainer c : m.getConnectionContainers()) {
+                if (c.getSource().equals(m_blocker)) {
+                    cc = c;
+                    break;
+                }
+            }
+            assertNotNull(cc);
+            assertFalse(m.canRemoveConnection(cc));
+            try {
+                m.removeConnection(cc);
+                fail();
+            } catch (IllegalStateException ise) {
+            }
+            
+            // test cancel node
+            m.cancelExecution(blockerNC);
+            lock();
+            try {
+                while(!blockerNC.getState().equals(State.CONFIGURED)) {
+                    getCondition().await();
+                }
+            } finally {
+                unlock();
+            }
+            checkState(m_blocker, State.CONFIGURED);
+            checkState(m_colFilter, State.CONFIGURED);
+            checkState(m_tblView, State.CONFIGURED);
+        } finally {
+            execLock.unlock();
+        }
+        // give the workflow manager time to wrap up
+    }
+
+    public void testPropertiesOfMarkedNode() throws Exception {
+        WorkflowManager m = getManager();
+        ReentrantLock execLock = BlockingRepository.get(LOCK_ID);
+        execLock.lock();
+        try {
+            m.executeUpToHere(m_tblView);
+            
+            checkState(m_colFilter, State.MARKEDFOREXEC);
+            checkState(m_tblView, State.MARKEDFOREXEC);
+            
+            // test reset node
+            assertFalse(m.canResetNode(m_colFilter));
+            try {
+                m.resetAndConfigureNode(m_colFilter);
+                fail();
+            } catch (IllegalStateException ise) {
+                // expected
+            }
+            
+            // test delete node
+            assertFalse(m.canRemoveNode(m_colFilter));
+            try {
+                m.removeNode(m_colFilter);
+                fail();
+            } catch (IllegalStateException ise) {
+            }
+            
+            // test outgoing connection delete
+            ConnectionContainer inConnection = null;
+            ConnectionContainer outConnection = null;
+            for (ConnectionContainer c : m.getConnectionContainers()) {
+                if (c.getSource().equals(m_colFilter)) {
+                    outConnection = c;
+                } else if (c.getDest().equals(m_colFilter)) {
+                    inConnection = c;
+                }
+            }
+            assertNotNull(inConnection);
+            assertNotNull(outConnection);
+            assertFalse(m.canRemoveConnection(inConnection));
+            assertFalse(m.canRemoveConnection(outConnection));
+            try {
+                m.removeConnection(inConnection);
+                fail();
+            } catch (IllegalStateException ise) {
+            }
+            try {
+                m.removeConnection(outConnection);
+                fail();
+            } catch (IllegalStateException ise) {
+            }
+            
+            m.cancelExecution(m.getNodeContainer(m_colFilter));
+            checkState(m_colFilter, State.CONFIGURED);
+            checkState(m_tblView, State.CONFIGURED);
+            
+            checkState(m_blocker, State.MARKEDFOREXEC, 
+                    State.QUEUED, State.EXECUTING);
+        } finally {
+            execLock.unlock();
+        }
+        // give the workflow manager time to wrap up
+        waitWhileNodeInExecution(m_blocker);
     }
     
     /** {@inheritDoc} */
