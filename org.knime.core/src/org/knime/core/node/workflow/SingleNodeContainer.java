@@ -344,6 +344,7 @@ public final class SingleNodeContainer extends NodeContainer
         synchronized (m_nodeMutex) {
             switch (getState()) {
             case EXECUTED:
+                removeOutputTablesFromGlobalRepository();
                 m_node.reset(true);
                 // After reset we need explicit configure!
                 setState(State.IDLE);
@@ -613,6 +614,14 @@ public final class SingleNodeContainer extends NodeContainer
             }
         }
         m_node.addToTemporaryTables(localTables);
+    }
+    
+    /** Removes all tables that were created by this node from the global
+     * table repository. */
+    private void removeOutputTablesFromGlobalRepository() {
+        HashMap<Integer, ContainerTable> globalRep =
+            getParent().getGlobalTableRepository();
+        m_node.removeOutputTablesFromGlobalRepository(globalRep);
     }
 
     // //////////////////////////////////////

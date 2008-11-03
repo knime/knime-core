@@ -1007,6 +1007,22 @@ public final class Node implements NodeModelWarningListener {
             }
         }
     }
+    
+    /** Reverse operation to 
+     * {@link #putOutputTablesIntoGlobalRepository(HashMap)}. It will remove
+     * all output tables and its delegates from the global table repository.
+     * @param rep The global table rep.
+     */
+    public void removeOutputTablesFromGlobalRepository(
+            final HashMap<Integer, ContainerTable> rep) {
+        for (int i = 0; i < m_outputs.length; i++) {
+            PortObject portObject = m_outputs[i].object;
+            if (portObject instanceof BufferedDataTable) {
+                BufferedDataTable t = (BufferedDataTable)portObject;
+                t.removeFromTableRepository(rep, this);
+            }
+        }
+    }
 
     /**
      * Delegate method to allow access to the (package scope) method
