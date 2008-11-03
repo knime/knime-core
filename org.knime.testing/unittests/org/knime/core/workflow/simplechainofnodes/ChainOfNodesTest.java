@@ -80,6 +80,8 @@ public class ChainOfNodesTest extends WorkflowTestCase {
         checkState(m_colFilter, State.EXECUTED);
         checkState(m_rowFilter, State.EXECUTED);
         checkState(m_tblView, State.EXECUTED);
+        
+        checkState(getManager(), State.EXECUTED);
     }
     
     public void testExecuteLast() throws Exception {

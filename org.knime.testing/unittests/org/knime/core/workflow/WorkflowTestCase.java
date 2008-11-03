@@ -138,6 +138,11 @@ public class WorkflowTestCase extends TestCase {
             throw new NullPointerException("WorkflowManager not set.");
         }
         NodeContainer nc = m_manager.getNodeContainer(id);
+        checkState(nc, expected);
+    }
+    
+    protected void checkState(final NodeContainer nc, 
+            final State expected) throws Exception {
         State actual = nc.getState();
         if (!actual.equals(expected)) {
             String error = "node " + nc.getNameWithID() + " has wrong state; "
