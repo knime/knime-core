@@ -21,7 +21,7 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.workflow.node.blocking;
+package org.knime.testing.node.blocking;
 
 import java.util.concurrent.locks.ReentrantLock;
 

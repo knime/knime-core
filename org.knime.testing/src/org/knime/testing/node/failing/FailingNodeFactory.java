@@ -21,7 +21,7 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.workflow.node.failing;
+package org.knime.testing.node.failing;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

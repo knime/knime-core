@@ -21,10 +21,11 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.workflow.node.failing;
+package org.knime.testing.node.blocking;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -40,20 +41,28 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author wiswedel, University of Konstanz
  */
-class FailingNodeModel extends NodeModel {
+class BlockingNodeModel extends NodeModel {
     
+    private final ReentrantLock m_lock;
     
     /** One data input, one data output.
+     * @param lock The non-null lock that we use to synchronize.
      */
-    FailingNodeModel() {
+    BlockingNodeModel(final ReentrantLock lock) {
         super(1, 1);
+        m_lock = lock;
     }
     
     /** {@inheritDoc} */
     @Override
     protected BufferedDataTable[] execute(BufferedDataTable[] inData,
             ExecutionContext exec) throws Exception {
-        throw new RuntimeException("This node fails on each execution");
+        m_lock.lock();
+        try {
+            return inData;
+        } finally {
+            m_lock.unlock();
+        }
     }
     
     /** {@inheritDoc} */
