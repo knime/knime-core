@@ -43,7 +43,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Data to process">Data</dataIn>
-		<dataOut index="0" name="Processed data">Data with aggregated column</dataOut>
+		<inPort index="0" name="Data to process">Data</inPort>
+		<outPort index="0" name="Processed data">Data with aggregated column</outPort>
 	</ports>	
 </knimeNode>

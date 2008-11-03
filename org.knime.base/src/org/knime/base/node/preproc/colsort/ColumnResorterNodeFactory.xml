@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./column_resorter.png" type="Manipulator">
     <name>Column Resorter</name>
     <shortDescription>Resorts the order of the columns based on user input</shortDescription>
@@ -32,11 +32,11 @@
 
 	</fullDescription>
     <ports>
-        <dataIn index="0" name="Input data">
+        <inPort index="0" name="Input data">
 			Table containing several columns to rearrange.
-		</dataIn>
-        <dataOut index="0" name="Output data">
+		</inPort>
+        <outPort index="0" name="Output data">
         	Table with rearranged column structure.
-        </dataOut>
+        </outPort>
 	</ports>
 </knimeNode>

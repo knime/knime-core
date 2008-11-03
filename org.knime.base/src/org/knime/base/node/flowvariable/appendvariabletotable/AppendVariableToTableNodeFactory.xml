@@ -18,10 +18,10 @@
 	</fullDescription>
 
 	<ports>
-		<dataIn index="0" name="Any data">Any data</dataIn>
-		<dataOut index="0" name="Input table with additional columns">
+		<inPort index="0" name="Any data">Any data</inPort>
+		<outPort index="0" name="Input table with additional columns">
 		  The input table with additional columns, one for each selected 
 		  variable. All values in the new column will be the same.
-		</dataOut>
+		</outPort>
 	</ports>
 </knimeNode>

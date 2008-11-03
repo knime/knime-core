@@ -17,7 +17,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Table">Table in which to compute statistics</dataIn>
+		<inPort index="0" name="Table">Table in which to compute statistics</inPort>
 	</ports>	
 	<views>
 		<view index="0" name="Statistics View">

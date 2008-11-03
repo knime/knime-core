@@ -104,9 +104,9 @@
 	</fullDescription>
 		
 	<ports>
-		<dataIn name="Any input table" index="0">
+		<inPort name="Any input table" index="0">
 			Datatable with integer columns to do clustering on
-		</dataIn>
+		</inPort>
 	</ports>	
 		
 	<views>

@@ -46,14 +46,14 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Input data">Numeric input data to filter. 
+		<inPort name="Correlation Model" index="0">
+			The model from the correlation node.</inPort>
+		<inPort index="1" name="Input data">Numeric input data to filter. 
 			It must contain the set of columns that were used to create 
 			the correlation model. (Typically you connect the input data from the 
-			correlation node here.)</dataIn>
-		<dataOut index="0" name="Filtered data from input">
-			Filtered data from input.</dataOut>
-		<modelIn name="Correlation Model" index="0">
-			The model from the correlation node.</modelIn>
+			correlation node here.)</inPort>
+		<outPort index="0" name="Filtered data from input">
+			Filtered data from input.</outPort>
 	</ports>
 	
 </knimeNode>

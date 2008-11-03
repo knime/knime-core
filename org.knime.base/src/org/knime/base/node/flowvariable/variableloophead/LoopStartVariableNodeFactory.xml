@@ -17,10 +17,10 @@
     </fullDescription>
     
     <ports>
-        <dataIn index="0" name="Parameters table">The table whose 
-          rows will constitute variables' values for each iteration.</dataIn>
-        <dataOut index="0" name="Variable connection">
+        <inPort index="0" name="Parameters table">The table whose 
+          rows will constitute variables' values for each iteration.</inPort>
+        <outPort index="0" name="Variable connection">
             The connection passing on the variable values to the next
-            nodes.</dataOut>
+            nodes.</outPort>
     </ports>
 </knimeNode>

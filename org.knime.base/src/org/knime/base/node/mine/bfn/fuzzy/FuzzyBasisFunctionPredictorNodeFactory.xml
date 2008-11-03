@@ -33,15 +33,15 @@
 	</fullDescription>
 
 	<ports>
-		<dataIn index="0" name="Test Data">
-			Test data matching the Fuzzy Rule Model structure.
-		</dataIn>
-    	<dataOut index="0" name="Predicted Data">
-    		Predicted data with one additional classification column.
-    	</dataOut>
-		<modelIn index="0" name="Fuzzy Rule Model">
+		<inPort index="1" name="Fuzzy Rule Model">
 			Fuzzy Rule Model to which test data is applied.
-		</modelIn>
+		</inPort>
+		<inPort index="0" name="Test Data">
+			Test data matching the Fuzzy Rule Model structure.
+		</inPort>
+    	<outPort index="0" name="Predicted Data">
+    		Predicted data with one additional classification column.
+    	</outPort>
 	</ports>
 	
 </knimeNode>

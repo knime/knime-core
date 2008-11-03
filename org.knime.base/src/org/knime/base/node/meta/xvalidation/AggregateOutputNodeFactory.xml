@@ -16,10 +16,10 @@
     </fullDescription>
 
     <ports>
-        <dataIn index="0" name="Outport from predictor">
+        <inPort index="0" name="Outport from predictor">
             Contains the class column and the prediction column to compare
-        </dataIn>
-        <dataOut index="0" name="Prediction table">Collected output tables from the predictor</dataOut>
-        <dataOut index="1" name="Error rates">Error rates for all iterations</dataOut>
+        </inPort>
+        <outPort index="0" name="Prediction table">Collected output tables from the predictor</outPort>
+        <outPort index="1" name="Error rates">Error rates for all iterations</outPort>
     </ports>
 </knimeNode>

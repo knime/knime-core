@@ -86,6 +86,6 @@
 	</fullDescription>
 	
 	<ports>
-		<dataOut index="0" name="File Table">Datatable just read from the file</dataOut>
+		<outPort index="0" name="File Table">Datatable just read from the file</outPort>
 	</ports>	
 </knimeNode>

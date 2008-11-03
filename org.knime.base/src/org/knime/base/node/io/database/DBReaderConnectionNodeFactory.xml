@@ -38,6 +38,6 @@
 	</fullDescription>
 	
 	<ports>
-		<modelOut index="0" name="Database Connection">Database connection object</modelOut>
+		<outPort index="0" name="Database Connection">Database connection object</outPort>
 	</ports>	
 </knimeNode>

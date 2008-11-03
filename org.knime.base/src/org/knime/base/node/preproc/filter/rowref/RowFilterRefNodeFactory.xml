@@ -34,14 +34,14 @@
 	</fullDescription>
 	
 	<ports>
-        <dataIn index="0" name="Table to be filtered">
+        <inPort index="0" name="Table to be filtered">
             Table from which rows are to be included or excluded
-        </dataIn>
-        <dataIn index="1" name="Reference table">
+        </inPort>
+        <inPort index="1" name="Reference table">
             Table rows used as reference filter
-        </dataIn>
-        <dataOut index="0" name="Filtered table">
+        </inPort>
+        <outPort index="0" name="Filtered table">
             Table with filtered rows
-        </dataOut>
+        </outPort>
 	</ports>	
 </knimeNode>

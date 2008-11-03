@@ -47,11 +47,11 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Data to process">
+		<inPort index="0" name="Data to process">
 			The data table to be processed.
-		</dataIn>
-		<dataOut index="0" name="Processed data">
+		</inPort>
+		<outPort index="0" name="Processed data">
 			Data with the replaced RowID and/or a new column with the current RowID values.
-		</dataOut>
+		</outPort>
 	</ports>	
 </knimeNode>

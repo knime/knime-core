@@ -99,12 +99,12 @@
 	</fullDescription>
 		
 	<ports>
-		<dataIn name="Any input table" index="0">
+		<inPort name="Any input table" index="0">
 			Datatable with integer columns to do clustering on
-		</dataIn>
-		<modelOut index="0" name="SOTA Model">
+		</inPort>
+		<outPort index="0" name="SOTA Model">
 			The model of the trained SOTA.
-		</modelOut>
+		</outPort>
 	</ports>	
 		
 	<views>

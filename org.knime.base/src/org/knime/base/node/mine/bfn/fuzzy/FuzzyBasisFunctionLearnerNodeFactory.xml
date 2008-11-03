@@ -78,16 +78,16 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Training Data">
+		<inPort index="0" name="Training Data">
 			Numeric data as well as class information used for training.
-		</dataIn>
-		<dataOut index="0" name="Fuzzy Rules">
+		</inPort>
+		<outPort index="0" name="Fuzzy Rules">
 			Rules with fuzzy intervals in each dimension, classification columns,
 			and additional rule measures.
-		</dataOut>
-		<modelOut index="0" name="Fuzzy Rule Model">
+		</outPort>
+		<outPort index="1" name="Fuzzy Rule Model">
 			Fuzzy Rule Model can be used for prediction.
-		</modelOut>
+		</outPort>
 	</ports>	
 	<views>
 		<view index="0" name="Learner Statistics">

@@ -33,7 +33,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Input">Arbitrary input data.</dataIn>
-		<dataOut index="0" name="Input with appended column">Input data + additional column containing string combination</dataOut>
+		<inPort index="0" name="Input">Arbitrary input data.</inPort>
+		<outPort index="0" name="Input with appended column">Input data + additional column containing string combination</outPort>
 	</ports>	
 </knimeNode>

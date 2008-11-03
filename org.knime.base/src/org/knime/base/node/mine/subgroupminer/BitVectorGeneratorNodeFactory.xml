@@ -100,8 +100,8 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Input data to create bit vectors from">Datatable with numerical data or a string column to be parsed.</dataIn>
-		<dataOut index="0" name="Bit vector data">Datatable with the generated bitvectors.</dataOut>
+		<inPort index="0" name="Input data to create bit vectors from">Datatable with numerical data or a string column to be parsed.</inPort>
+		<outPort index="0" name="Bit vector data">Datatable with the generated bitvectors.</outPort>
 	</ports>	
 	<views>
 		<view index="0" name="Statistics View">

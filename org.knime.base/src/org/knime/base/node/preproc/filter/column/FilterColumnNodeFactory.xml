@@ -41,11 +41,11 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Table to be filtered">
+		<inPort index="0" name="Table to be filtered">
 			Table from which columns are to be excluded
-		</dataIn>
-		<dataOut index="0" name="Filtered table">
+		</inPort>
+		<outPort index="0" name="Filtered table">
 			Table with excluded columns
-		</dataOut>
+		</outPort>
 	</ports>	
 </knimeNode>

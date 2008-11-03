@@ -16,7 +16,7 @@
 		</option>
 	</fullDescription>
     <ports>
-        <dataIn index="0" name="Table">Input data to transpose</dataIn>
-        <dataOut index="0" name="Transposed Table">Table transposed by swapping rows and columns</dataOut>
+        <inPort index="0" name="Table">Input data to transpose</inPort>
+        <outPort index="0" name="Transposed Table">Table transposed by swapping rows and columns</outPort>
 	</ports>
 </knimeNode>

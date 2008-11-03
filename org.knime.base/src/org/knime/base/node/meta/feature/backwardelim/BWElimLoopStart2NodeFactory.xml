@@ -31,8 +31,8 @@
     </fullDescription>
 
     <ports>
-        <dataIn index="0" name="Any datatable">Any datatable that contains at least three columns</dataIn>
-        <dataIn index="1" name="Any datatable">Any datatable that contains at least three columns</dataIn>
-        <dataOut index="0" name="Filtered table">The input table with some columns filtered out</dataOut>
+        <inPort index="0" name="Any datatable">Any datatable that contains at least three columns</inPort>
+        <inPort index="1" name="Any datatable">Any datatable that contains at least three columns</inPort>
+        <outPort index="0" name="Filtered table">The input table with some columns filtered out</outPort>
     </ports>
 </knimeNode>

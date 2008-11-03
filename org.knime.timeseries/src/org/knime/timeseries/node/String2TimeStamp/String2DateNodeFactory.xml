@@ -12,9 +12,9 @@
         Select the input column containing the timestamp string.</option>
     </fullDescription>
     <ports>
-        <dataIn index="0" name="Input column">
-        Table containing timestamp strings.</dataIn>
-        <dataOut index="0" name="Wrapped output">
-        Table with replaced column holding timestamp cells.</dataOut>
+        <inPort index="0" name="Input column">
+        Table containing timestamp strings.</inPort>
+        <outPort index="0" name="Wrapped output">
+        Table with replaced column holding timestamp cells.</outPort>
     </ports>
 </knimeNode>

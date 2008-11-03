@@ -18,6 +18,6 @@
 	</fullDescription>
 	
 	<ports>
-		<dataOut index="0" name="Data from ARFF">The data read from ARFF files</dataOut>
+		<outPort index="0" name="Data from ARFF">The data read from ARFF files</outPort>
 	</ports>
 </knimeNode>

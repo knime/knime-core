@@ -40,8 +40,8 @@
 		</option>
 		</fullDescription>
     <ports>
-        <dataIn index="0" name="Left table">Table contributing to the left part of the output table</dataIn>
-        <dataIn index="1" name="Right table">Table contributing to the right part of the output table</dataIn>
-        <dataOut index="0" name="Joined table">Joined Table</dataOut>
+        <inPort index="0" name="Left table">Table contributing to the left part of the output table</inPort>
+        <inPort index="1" name="Right table">Table contributing to the right part of the output table</inPort>
+        <outPort index="0" name="Joined table">Joined Table</outPort>
 	</ports>
 </knimeNode>

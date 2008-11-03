@@ -15,11 +15,11 @@
 		</option>
 	</fullDescription>
     <ports>
-        <dataIn index="0" name="To be shuffled">
+        <inPort index="0" name="To be shuffled">
             Input table with the rows that should be shuffled.
-        </dataIn>
-        <dataOut index="0" name="Shuffled">
+        </inPort>
+        <outPort index="0" name="Shuffled">
                 Input table with shuffled rows.
-        </dataOut>
+        </outPort>
 	</ports>
 </knimeNode>

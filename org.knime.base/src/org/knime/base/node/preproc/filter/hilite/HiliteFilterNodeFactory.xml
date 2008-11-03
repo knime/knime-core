@@ -15,10 +15,10 @@
 	</fullDescription>
 		
 	<ports>
-        <dataIn name="Input data" index="0">Input data.</dataIn>
-        <dataOut name="Output data containing hilited rows" index="0">
-        The filtered output table containing hilited rows only.</dataOut>
-        <dataOut name="Output data containing non-hilited rows" index="1">
-        The filtered output table containing non-hilited rows only.</dataOut>
+        <inPort name="Input data" index="0">Input data.</inPort>
+        <outPort name="Output data containing hilited rows" index="0">
+        The filtered output table containing hilited rows only.</outPort>
+        <outPort name="Output data containing non-hilited rows" index="1">
+        The filtered output table containing non-hilited rows only.</outPort>
 	</ports>
 </knimeNode>

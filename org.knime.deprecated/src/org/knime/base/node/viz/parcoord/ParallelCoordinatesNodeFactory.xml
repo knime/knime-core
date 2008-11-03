@@ -25,7 +25,7 @@
 	</fullDescription>
 	
 	<ports>
-    	<dataIn index="0" name="Data Table">Table with data to display</dataIn>
+    	<inPort index="0" name="Data Table">Table with data to display</inPort>
 	</ports>
 	
 	<views>

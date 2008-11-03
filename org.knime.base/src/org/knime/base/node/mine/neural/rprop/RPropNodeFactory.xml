@@ -38,8 +38,8 @@
     </option>
     </fullDescription>
     <ports>
-		<dataIn index="0" name = "Training Data">Datatable with training data</dataIn>
-		<modelOut index="0" name = "Neural Network">RProp trained Neural Network</modelOut>
+		<inPort index="0" name = "Training Data">Datatable with training data</inPort>
+		<outPort index="0" name = "Neural Network">RProp trained Neural Network</outPort>
 		</ports>
     <views>
     <view index="0" name="Error Plot">

@@ -33,10 +33,10 @@
 		</option>
 	</fullDescription>
     <ports>
-        <dataIn index="0" name="Table to normalize">Table requiring normalization of some or all columns.</dataIn>
-        <dataOut index="0" name="Normalized table">Table with normalized columns.</dataOut>
-        <modelOut index="0" name="Normalize Model">Model containing normalization parameters, 
+        <inPort index="0" name="Table to normalize">Table requiring normalization of some or all columns.</inPort>
+        <outPort index="0" name="Normalized table">Table with normalized columns.</outPort>
+        <outPort index="1" name="Normalize Model">Model containing normalization parameters, 
 	        which can be used in a "normalize apply" node to normalize test data the same way 
-	        as the training data has been normalized.</modelOut>
+	        as the training data has been normalized.</outPort>
 	</ports>
 </knimeNode>

@@ -17,7 +17,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Any port object">The input data, which can be a data table or any other arbitrary port object.</dataIn>
-		<dataOut index="0" name="Unaltered input">The unaltered input object</dataOut>
+		<inPort index="0" name="Any port object">The input data, which can be a data table or any other arbitrary port object.</inPort>
+		<outPort index="0" name="Unaltered input">The unaltered input object</outPort>
 	</ports>
 </knimeNode>

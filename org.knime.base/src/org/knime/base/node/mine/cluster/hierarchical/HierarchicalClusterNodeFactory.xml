@@ -63,13 +63,13 @@
         much memory, so you can switch it off for large datasets.</option>
 	</fullDescription>
 	<ports>
-	<dataIn index="0" name="Data to cluster">
+	<inPort index="0" name="Data to cluster">
 			The data that should be clustered using hierarchical clustering. 
 			Only numeric columns are considered, nominal columns are ignored.
-	</dataIn>
-	<dataOut index="0" name="Clustered data">
+	</inPort>
+	<outPort index="0" name="Clustered data">
 		The input data with an extra column with the cluster name where the data point is assigned to.
-	</dataOut>
+	</outPort>
 	</ports>	
 	<views>
 		<view index="0" name="Dendrogram/Distance View">

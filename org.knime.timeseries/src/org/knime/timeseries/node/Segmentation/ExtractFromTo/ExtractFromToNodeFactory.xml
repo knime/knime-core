@@ -17,10 +17,10 @@
         Second Timestamp boundary of the extraction interval.</option>
     </fullDescription>
     <ports>
-        <dataIn index="0" name="Input column">
-        Table containing timestamp cells.</dataIn>
-        <dataOut index="0" name="Wrapped output">
+        <inPort index="0" name="Input column">
+        Table containing timestamp cells.</inPort>
+        <outPort index="0" name="Wrapped output">
         Sub-Table containing only data between "From: Timestamp" and 
-        "To: Timestamp".</dataOut>
+        "To: Timestamp".</outPort>
     </ports>
 </knimeNode>

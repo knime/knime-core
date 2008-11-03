@@ -20,9 +20,9 @@
         Name of the column from which patterns will be extracted.</option>
     </fullDescription>
     <ports>
-        <dataIn index="0" name="Input column">
-        Table containing string event column.</dataIn>
-        <dataOut index="0" name="Wrapped output">
-        Table containing new patterns.</dataOut>
+        <inPort index="0" name="Input column">
+        Table containing string event column.</inPort>
+        <outPort index="0" name="Wrapped output">
+        Table containing new patterns.</outPort>
     </ports>
 </knimeNode>

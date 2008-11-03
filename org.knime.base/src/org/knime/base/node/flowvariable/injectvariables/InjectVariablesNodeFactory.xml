@@ -16,11 +16,11 @@
     </fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Passed through data table">
-		  Port object being passed on to output port.</dataIn>
-		<dataIn index="1" name="Variable port">The variable values.</dataIn>
-		<dataOut index="0" name="Passed through table">The unaltered input 
+		<inPort index="0" name="Passed through data table">
+		  Port object being passed on to output port.</inPort>
+		<inPort index="1" name="Variable port">The variable values.</inPort>
+		<outPort index="0" name="Passed through table">The unaltered input 
 		  table (first input port), whereby the connection carries the variables
-		  as defined in second input port.</dataOut>
+		  as defined in second input port.</outPort>
 	</ports>
 </knimeNode>

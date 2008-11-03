@@ -14,7 +14,7 @@
 		the bottom and click 'new columns' to add them to the dialog.</option>
 		</fullDescription>
 		<ports>
-    <dataIn index="0" name = "Input Table">Table to be sorted.</dataIn>
-    <dataOut index="0" name = "Sorted Table">A sorted table.</dataOut>
+    <inPort index="0" name = "Input Table">Table to be sorted.</inPort>
+    <outPort index="0" name = "Sorted Table">A sorted table.</outPort>
     </ports>
     </knimeNode>

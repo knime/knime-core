@@ -19,6 +19,6 @@
 	</fullDescription>
 	
 	<ports>
-		<dataOut name="Read table" index="0">The table contained in the selected file.</dataOut>
+		<outPort name="Read table" index="0">The table contained in the selected file.</outPort>
 	</ports>	
 </knimeNode>

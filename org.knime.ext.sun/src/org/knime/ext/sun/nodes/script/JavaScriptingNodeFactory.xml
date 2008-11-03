@@ -87,9 +87,9 @@
 		</option>
 	</fullDescription>
     <ports>
-        <dataIn name="Any input table" index="0">Input table.</dataIn>
-        <dataOut name="Appended table" index="0">Input table with an additional calculated column
+        <inPort name="Any input table" index="0">Input table.</inPort>
+        <outPort name="Appended table" index="0">Input table with an additional calculated column
 	        or one column replaced.
-        </dataOut>
+        </outPort>
 	</ports>
 </knimeNode>

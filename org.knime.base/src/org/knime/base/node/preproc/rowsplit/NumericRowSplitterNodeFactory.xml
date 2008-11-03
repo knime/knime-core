@@ -26,8 +26,8 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Input">Arbitrary input data.</dataIn>
-		<dataOut index="0" name="Data accepted">Data that matches numeric filter criteria.</dataOut>
-		<dataOut index="1" name="Data discarded">Data that does not match filter criteria.</dataOut>
+		<inPort index="0" name="Input">Arbitrary input data.</inPort>
+		<outPort index="0" name="Data accepted">Data that matches numeric filter criteria.</outPort>
+		<outPort index="1" name="Data discarded">Data that does not match filter criteria.</outPort>
 	</ports>	
 </knimeNode>

@@ -32,8 +32,8 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Input data">Numeric input data. (Non-numeric columns will be left untouched.)</dataIn>
-		<dataOut index="0" name="Filtered data">Filtered data.</dataOut>
+		<inPort index="0" name="Input data">Numeric input data. (Non-numeric columns will be left untouched.)</inPort>
+		<outPort index="0" name="Filtered data">Filtered data.</outPort>
 	</ports>
 	
 </knimeNode>

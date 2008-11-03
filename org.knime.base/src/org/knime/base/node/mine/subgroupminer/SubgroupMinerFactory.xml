@@ -76,8 +76,8 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Bitvectors">Datatable containing bitvectors.</dataIn>
-		<dataOut index="0" name="Frequent itemsets/Association rules">Datatable with discovered frequent itemsets or association rules.</dataOut>
-        <modelOut index="0" name="Model">Frequent itemset or association rule model.</modelOut>
+		<inPort index="0" name="Bitvectors">Datatable containing bitvectors.</inPort>
+		<outPort index="0" name="Frequent itemsets/Association rules">Datatable with discovered frequent itemsets or association rules.</outPort>
+        <outPort index="1" name="Model">Frequent itemset or association rule model.</outPort>
 	</ports>	
 </knimeNode>

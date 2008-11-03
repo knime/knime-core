@@ -18,6 +18,6 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Input table">The datatable to be written to the file</dataIn>
+		<inPort index="0" name="Input table">The datatable to be written to the file</inPort>
 	</ports>	
 </knimeNode>

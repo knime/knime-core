@@ -57,7 +57,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Display data">Datatable with data to display</dataIn>
+		<inPort index="0" name="Display data">Datatable with data to display</inPort>
 	</ports>	
 	<views>
 		<view index="0" name="Financial Bar Chart">

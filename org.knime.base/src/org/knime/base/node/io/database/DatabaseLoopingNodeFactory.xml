@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Source" icon="db_looper.png">
 	<name>Database Looping (BETA)</name>
 	
@@ -67,8 +67,8 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Data with possible values">Data column with possible values used to constrain the database SQL query</dataIn>
-		<dataOut index="0" name="Data from Database">Table with data read from the database</dataOut>
+		<inPort index="0" name="Data with possible values">Data column with possible values used to constrain the database SQL query</inPort>
+		<outPort index="0" name="Data from Database">Table with data read from the database</outPort>
 	</ports>
     
 </knimeNode>

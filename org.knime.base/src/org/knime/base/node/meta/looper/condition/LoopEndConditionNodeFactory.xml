@@ -28,8 +28,8 @@
     </fullDescription>
 
     <ports>
-        <dataIn index="0" name="Any datatable">Any datatable</dataIn>
-        <dataOut index="0" name="Collected results">Collected results from the loop body</dataOut>
-        <dataOut index="1" name="Variable values">The selected flow variable's values in each iteration</dataOut>
+        <inPort index="0" name="Any datatable">Any datatable</inPort>
+        <outPort index="0" name="Collected results">Collected results from the loop body</outPort>
+        <outPort index="1" name="Variable values">The selected flow variable's values in each iteration</outPort>
     </ports>
 </knimeNode>

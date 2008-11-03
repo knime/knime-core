@@ -18,10 +18,10 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Input Data">DataTable containing the input data that
-		will be assigned to the prototypes</dataIn>
-		<dataOut index="0" name="Assigned Data">Input data assigned to cluster
-		prototypes</dataOut>
-		<modelIn index="0" name="Prototypes">Prototype odel</modelIn>
+		<inPort index="0" name="Prototypes">Prototype model</inPort>
+		<inPort index="1" name="Input Data">DataTable containing the input data that
+		will be assigned to the prototypes</inPort>
+		<outPort index="0" name="Assigned Data">Input data assigned to cluster
+		prototypes</outPort>
 	</ports>
 </knimeNode>

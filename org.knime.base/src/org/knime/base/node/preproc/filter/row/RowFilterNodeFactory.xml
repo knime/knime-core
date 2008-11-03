@@ -61,7 +61,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="To be filtered">Datatable from which to filter rows.</dataIn>
-		<dataOut index="0" name="Filtered">Datatable with rows meeting the specified criteria</dataOut>
+		<inPort index="0" name="To be filtered">Datatable from which to filter rows.</inPort>
+		<outPort index="0" name="Filtered">Datatable with rows meeting the specified criteria</outPort>
 	</ports>	
 </knimeNode>

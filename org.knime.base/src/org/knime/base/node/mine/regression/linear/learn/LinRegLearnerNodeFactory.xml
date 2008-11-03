@@ -19,8 +19,8 @@
 		</intro>
 	</fullDescription>
     <ports>
-        <dataIn index="0" name="Input data">Table on which to perform regression.</dataIn>
-        <modelOut index="0" name="Model for Predictor">Model to connect to a predictor node.</modelOut>
+        <inPort index="0" name="Input data">Table on which to perform regression.</inPort>
+        <outPort index="0" name="Model for Predictor">Model to connect to a predictor node.</outPort>
 	</ports>
 	<views>
 		<view index="0" name="Linear Regression Result View">

@@ -34,11 +34,11 @@
     </fullDescription>
     
     <ports>
-        <modelIn index="0" name="Database Connection">
+        <inPort index="0" name="Database Connection">
             Table in database to apply row filter
-        </modelIn>
-        <modelOut index="0" name="Database Connection">
+        </inPort>
+        <outPort index="0" name="Database Connection">
             Table in the database with filtered rows
-        </modelOut>
+        </outPort>
     </ports>    
 </knimeNode>

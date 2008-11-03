@@ -42,8 +42,8 @@
         </option>
     </fullDescription>
     <ports>
-        <dataIn index="0" name="Set one">Set one</dataIn>
-        <dataIn index="1" name="Set two">Set two</dataIn>
-        <dataOut index="0" name="Result set">Result set</dataOut>
+        <inPort index="0" name="Set one">Set one</inPort>
+        <inPort index="1" name="Set two">Set two</inPort>
+        <outPort index="0" name="Result set">Result set</outPort>
     </ports>
 </knimeNode>

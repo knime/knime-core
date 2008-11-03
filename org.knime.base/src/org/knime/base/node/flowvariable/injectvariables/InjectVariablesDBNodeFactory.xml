@@ -17,11 +17,11 @@
     </fullDescription>
     
     <ports>
-        <dataIn index="0" name="Passed through Database connection">
-          Port object being passed on to output port.</dataIn>
-        <dataIn index="1" name="Variable port">The variable values.</dataIn>
-        <dataOut index="0" name="Passed through DB connection">
+        <inPort index="0" name="Passed through Database connection">
+          Port object being passed on to output port.</inPort>
+        <inPort index="1" name="Variable port">The variable values.</inPort>
+        <outPort index="0" name="Passed through DB connection">
             The unaltered database input, whereby the connection carries 
-            the variables defined in second input port.</dataOut>
+            the variables defined in second input port.</outPort>
     </ports>
 </knimeNode>

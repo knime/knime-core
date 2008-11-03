@@ -26,8 +26,8 @@
     </fullDescription>
 
     <ports>
-        <dataIn index="0" name="Any datatable">The datatable that is to be split</dataIn>
-        <dataOut index="0" name="Training data">The data table with the training data</dataOut>
-        <dataOut index="1" name="Test data">The data table with the test data</dataOut>
+        <inPort index="0" name="Any datatable">The datatable that is to be split</inPort>
+        <outPort index="0" name="Training data">The data table with the training data</outPort>
+        <outPort index="1" name="Test data">The data table with the test data</outPort>
     </ports>
 </knimeNode>

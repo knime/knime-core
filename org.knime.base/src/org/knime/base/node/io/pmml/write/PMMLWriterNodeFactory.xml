@@ -23,6 +23,6 @@
     </fullDescription>
     
     <ports>
-        <modelIn index="0" name="Model">The model to write to PMML.</modelIn>
+        <inPort index="0" name="Model">The model to write to PMML</inPort>
     </ports>    
 </knimeNode>

@@ -21,8 +21,8 @@
 		</intro>
 	</fullDescription>
     <ports>
-        <dataIn index="0" name="Table to score">Table containing at least two columns to compare.</dataIn>
-        <dataOut index="0" name="Confusion matrix">The confusion matrix.</dataOut>
+        <inPort index="0" name="Table to score">Table containing at least two columns to compare.</inPort>
+        <outPort index="0" name="Confusion matrix">The confusion matrix.</outPort>
 	</ports>
 	<views>
 		<view index="0" name="Confusion Matrix View">

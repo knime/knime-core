@@ -139,8 +139,8 @@ public final class Node implements NodeModelWarningListener {
         PortType type;
     }
     private final Input[] m_inputs;
-    
-    /** The array of BDTs, that has been given by the interface 
+
+    /** The array of BDTs, that has been given by the interface
      * {@link BufferedDataTableHolder}. In most cases this is null. */
     private BufferedDataTable[] m_internalHeldTables;
 
@@ -252,9 +252,9 @@ public final class Node implements NodeModelWarningListener {
         // let the model create its 'default' table specs
         // configure(null);
     }
-    
+
     /** Constructor used to copy the node.
-     * @param original To copy from. 
+     * @param original To copy from.
      */
     public Node(final Node original) {
         this(original.getFactory());
@@ -405,7 +405,7 @@ public final class Node implements NodeModelWarningListener {
             m_outDataPortsMemoryPolicy = l.getMemoryPolicy();
         }
     }
-    
+
     /**
      * Validates the argument settings.
      *
@@ -445,32 +445,6 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
-     * A detailed description of this node as html.
-     *
-     * @deprecated Use the <code>NodeFactoryHTMLCreator</code> in connection
-     *             with the {@link #getXMLDescription()}.
-     * @return A html page containing the node's detailed description.
-     * @see org.knime.core.node.NodeFactory#getXMLDescription
-     */
-    @Deprecated
-    public String getFullHTMLDescription() {
-        return m_factory.getNodeFullHTMLDescription();
-    }
-
-    /**
-     * A short description of this node.
-     *
-     * @deprecated Use the <code>NodeFactoryHTMLCreator</code> in connection
-     *             with the {@link #getXMLDescription()}.
-     * @return A single line containing a brief node description.
-     * @see org.knime.core.node.NodeFactory#getXMLDescription
-     */
-    @Deprecated
-    public String getOneLineDescription() {
-        return m_factory.getNodeOneLineDescription();
-    }
-
-    /**
      * The XML description can be used with the
      * <code>NodeFactoryHTMLCreator</code> in order to get a converted HTML
      * description of it, which fits the overall KNIME HTML style.
@@ -505,7 +479,7 @@ public final class Node implements NodeModelWarningListener {
     public int getNrOutPorts() {
         return m_model.getNrOutPorts();
     }
-    
+
     /**
      * Return name of input connector.
      *
@@ -557,7 +531,7 @@ public final class Node implements NodeModelWarningListener {
     public PortObject getOutputObject(final int index) {
         return m_outputs[index].object;
     }
-    
+
     public String getOutputObjectSummary(final int index) {
         return m_outputs[index].summary;
     }
@@ -565,7 +539,7 @@ public final class Node implements NodeModelWarningListener {
     public HiLiteHandler getOutputHiLiteHandler(final int index) {
         return m_outputs[index].hiliteHdl;
     }
-    
+
     /** Get the current set of tables internally held by a NodeModel that
      * implements {@link BufferedDataTableHolder}. It may be null or contain
      * null elements. This array is modified upon load, execute and reset.
@@ -641,7 +615,7 @@ public final class Node implements NodeModelWarningListener {
                 // TODO NEWWFM state event
                 // TODO: also notify message/progress listeners
                 createErrorMessageAndNotify(
-                        "Couldn't get data from predecessor (Port No." 
+                        "Couldn't get data from predecessor (Port No."
                         + i + ").");
                 // notifyStateListeners(new NodeStateChangedEvent.EndExecute());
                 return false;
@@ -657,7 +631,7 @@ public final class Node implements NodeModelWarningListener {
                     createWarningMessageAndNotify("Execution canceled");
                     return false;
                 } catch (Throwable e) {
-                    createErrorMessageAndNotify("Unable to clone input data " 
+                    createErrorMessageAndNotify("Unable to clone input data "
                             + "at port " + i + ": " + e.getMessage(), e);
                     return false;
                 }
@@ -722,7 +696,7 @@ public final class Node implements NodeModelWarningListener {
                     return false;
                 }
                 if (newOutData[i].getSpec() == null) {
-                    createErrorMessageAndNotify("Implementation Error: " 
+                    createErrorMessageAndNotify("Implementation Error: "
                             + "PortObject \""
                             + newOutData[i].getClass().getName() + "\" must not"
                             + " have null spec (output port " + i + ").");
@@ -768,13 +742,13 @@ public final class Node implements NodeModelWarningListener {
             }
             m_outputs[p].hiliteHdl = m_model.getOutHiLiteHandler(p);
         }
-        
+
         if (m_model instanceof BufferedDataTableHolder) {
             // copy the table array to prevent later modification by the user
-            BufferedDataTable[] internalTbls = 
+            BufferedDataTable[] internalTbls =
                 ((BufferedDataTableHolder)m_model).getInternalTables();
             if (internalTbls != null) {
-                m_internalHeldTables = 
+                m_internalHeldTables =
                     new BufferedDataTable[internalTbls.length];
                 for (int i = 0; i < internalTbls.length; i++) {
                     BufferedDataTable t = internalTbls[i];
@@ -799,42 +773,42 @@ public final class Node implements NodeModelWarningListener {
         m_logger.info("End execute (" + elapsed + ")");
         return true;
     } // executeNode(ExecutionMonitor)
-    
+
     /** Copies the PortObject so that the copy can be given to the node model
      * implementation (and potentially modified). */
-    private PortObject copyPortObject(final PortObject portObject, 
+    private PortObject copyPortObject(final PortObject portObject,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         assert !(portObject instanceof BufferedDataTable) : "Must not copy BDT";
-        
+
         // first copy the spec, then copy the object
         final PortObjectSpec s = portObject.getSpec();
-        PortObjectSpec.PortObjectSpecSerializer ser = 
+        PortObjectSpec.PortObjectSpecSerializer ser =
             PortUtil.getPortObjectSpecSerializer(s.getClass());
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream(10 * 1024);
-        PortObjectSpecZipOutputStream specOut = 
+        PortObjectSpecZipOutputStream specOut =
             PortUtil.getPortObjectSpecZipOutputStream(byteOut);
         specOut.setLevel(0);
         ser.savePortObjectSpec(s, specOut);
         specOut.close();
-        ByteArrayInputStream byteIn = 
+        ByteArrayInputStream byteIn =
             new ByteArrayInputStream(byteOut.toByteArray());
-        PortObjectSpecZipInputStream specIn = 
+        PortObjectSpecZipInputStream specIn =
             PortUtil.getPortObjectSpecZipInputStream(byteIn);
         PortObjectSpec specCopy = ser.loadPortObjectSpec(specIn);
         specIn.close();
-        
+
         PortObject.PortObjectSerializer obSer =
             PortUtil.getPortObjectSerializer(portObject.getClass());
         byteOut.reset();
-        PortObjectZipOutputStream objOut = 
+        PortObjectZipOutputStream objOut =
             PortUtil.getPortObjectZipOutputStream(byteOut);
         specOut.setLevel(0);
         obSer.savePortObject(portObject, objOut, exec);
         objOut.close();
-        
+
         byteIn = new ByteArrayInputStream(byteOut.toByteArray());
-        PortObjectZipInputStream objIn = 
+        PortObjectZipInputStream objIn =
             PortUtil.getPortObjectZipInputStream(byteIn);
         PortObject result = obSer.loadPortObject(
                 objIn, specCopy, exec);
@@ -980,7 +954,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Enumerates the output tables and puts them into the global workflow
-     * repository of tables. This method delegates from the NodeContainer class 
+     * repository of tables. This method delegates from the NodeContainer class
      * to access a package-scope method in BufferedDataTable.
      *
      * @param rep The global repository.
@@ -995,10 +969,10 @@ public final class Node implements NodeModelWarningListener {
             }
         }
         if (m_internalHeldTables != null) {
-            // note: theoretically we don't need to put those into table rep 
-            // as they are either also part of m_outputs or not 
-            // available to downstream nodes. We do it anyway as we want to 
-            // treat both m_outputs and the internal tables as similar as 
+            // note: theoretically we don't need to put those into table rep
+            // as they are either also part of m_outputs or not
+            // available to downstream nodes. We do it anyway as we want to
+            // treat both m_outputs and the internal tables as similar as
             // possible (particular during load)
             for (BufferedDataTable t : m_internalHeldTables) {
                 if (t != null) {
@@ -1301,8 +1275,8 @@ public final class Node implements NodeModelWarningListener {
                     createWarningMessageAndNotify(ise.getMessage(), ise);
                 }
             } catch (Throwable t) {
-                String error = "Configure failed (" 
-                    + t.getClass().getSimpleName() + "): " 
+                String error = "Configure failed ("
+                    + t.getClass().getSimpleName() + "): "
                     + t.getMessage();
                 createErrorMessageAndNotify(error, t);
             } finally {

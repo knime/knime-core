@@ -21,8 +21,8 @@
 				This column is provided by the second input table.</option>
 	</fullDescription>
     <ports>
-        <dataIn index="0" name="Reference clustering">Table containing reference clustering.</dataIn>
-        <dataIn index="1" name="Clustering to score">Table containing clustering (to score).</dataIn>
+        <inPort index="0" name="Reference clustering">Table containing reference clustering.</inPort>
+        <inPort index="1" name="Clustering to score">Table containing clustering (to score).</inPort>
 	</ports>
 	<views>
 		<view index="0" name="Statistics View">

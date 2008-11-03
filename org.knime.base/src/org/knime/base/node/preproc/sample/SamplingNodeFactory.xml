@@ -36,7 +36,7 @@
         </option>
     </fullDescription>
     <ports>
-        <dataIn index="0" name="Table to sample from">Table to sample from.</dataIn>
-        <dataOut index="0" name="The sampled table">The sampled table.</dataOut>
+        <inPort index="0" name="Table to sample from">Table to sample from.</inPort>
+        <outPort index="0" name="The sampled table">The sampled table.</outPort>
     </ports>
 </knimeNode>

@@ -22,9 +22,9 @@
 	</fullDescription>
 		
 	<ports>
-		<dataIn index="0" name="Data point input">Input table with the data points explained by the rules</dataIn>
-		<dataIn index="1" name="Fuzzy Rule input">Input table with the rules explaining the data points. They must be provided
-        as a FuzzyIntervalValue per dimension.</dataIn>
+		<inPort index="0" name="Data point input">Input table with the data points explained by the rules</inPort>
+		<inPort index="1" name="Fuzzy Rule input">Input table with the rules explaining the data points. They must be provided
+        as a FuzzyIntervalValue per dimension.</inPort>
 	</ports>	
 	
 	<views>

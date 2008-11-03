@@ -69,16 +69,16 @@
 	</fullDescription>
 	
     <ports>
-		<dataIn index="0" name="Training Data">
+		<inPort index="0" name="Training Data">
 			Numeric data as well as class information used for training.
-		</dataIn>
-		<dataOut index="0" name="PNN Rules">
+		</inPort>
+		<outPort index="0" name="PNN Rules">
 			Rules as Gaussian functions, classification columns,
 			and additional rule measures.
-		</dataOut>
-		<modelOut index="0" name="PNN Model">
+		</outPort>
+		<outPort index="1" name="PNN Model">
 			PNN model can be used for prediction.
-		</modelOut>
+		</outPort>
 	</ports>
 	
 	<views>

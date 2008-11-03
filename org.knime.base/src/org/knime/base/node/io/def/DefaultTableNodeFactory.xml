@@ -15,7 +15,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataOut index="0" name="Created Table">Datatable with desired values</dataOut>
+		<outPort index="0" name="Created Table">Datatable with desired values</outPort>
 	</ports>	
 </knimeNode>
 

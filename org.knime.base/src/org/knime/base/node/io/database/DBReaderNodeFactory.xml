@@ -38,6 +38,6 @@
 	</fullDescription>
 	
 	<ports>
-		<dataOut index="0" name="Data from Database">Table with data read from the database</dataOut>
+		<outPort index="0" name="Data from Database">Table with data read from the database</outPort>
 	</ports>	
 </knimeNode>

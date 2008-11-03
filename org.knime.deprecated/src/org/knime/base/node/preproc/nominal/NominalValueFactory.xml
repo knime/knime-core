@@ -21,7 +21,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn name="Input table" index="0">Datatable to read all possible values from</dataIn>
-		<dataOut name="Output table" index="0">Datatable with possible values set</dataOut>
+		<inPort name="Input table" index="0">Datatable to read all possible values from</inPort>
+		<outPort name="Output table" index="0">Datatable with possible values set</outPort>
 	</ports>	
 </knimeNode>

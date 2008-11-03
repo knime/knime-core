@@ -40,8 +40,8 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Table">Table to which color should be applied</dataIn>
-		<dataOut index="0" name="Table with Colors">Same table with color information appended to one attribute</dataOut>
-		<modelOut index="0" name="Color Settings">Color settings applied to the input table</modelOut>
+		<inPort index="0" name="Table">Table to which color should be applied</inPort>
+		<outPort index="0" name="Table with Colors">Same table with color information appended to one attribute</outPort>
+		<outPort index="1" name="Color Settings">Color settings applied to the input table</outPort>
 	</ports>	
 </knimeNode>

@@ -58,9 +58,9 @@
     </fullDescription>
     
     <ports>
-        <dataIn index="0" name="Data in port">
+        <inPort index="0" name="Data in port">
             The data table to be displayed.
-        </dataIn>
+        </inPort>
     </ports>    
     <views>
         <view index="0" name="Pie Chart">

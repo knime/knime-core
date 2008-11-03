@@ -41,8 +41,8 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name = "Training Data">Datatable with training data</dataIn>
-		<modelOut index="0" name = "Trained SVM">Trained Support Vector Machine</modelOut>
+		<inPort index="0" name = "Training Data">Datatable with training data</inPort>
+		<outPort index="0" name = "Trained SVM">Trained Support Vector Machine</outPort>
 	</ports>	
 	
 	<views>

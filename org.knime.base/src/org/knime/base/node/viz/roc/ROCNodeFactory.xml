@@ -36,10 +36,10 @@
         </option>
     </fullDescription>
     <ports>
-        <dataIn index="0" name="Input table">Input data with actual values and class probabilities</dataIn>
-        <dataOut index="0" name="Areas under curve">
+        <inPort index="0" name="Input table">Input data with actual values and class probabilities</inPort>
+        <outPort index="0" name="Areas under curve">
             A one-column table with the area(s) under the ROC curve(s)
-        </dataOut>
+        </outPort>
     </ports>
     <views>
         <view index="0" name="ROC Curves">ROC curves</view>

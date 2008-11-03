@@ -36,9 +36,9 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Table">Table to which colors are applied to</dataIn>
-		<dataOut index="0" name="Table with Colors">Table with colors for the selected column</dataOut>
-		<modelIn index="0" name="Color Settings">Existing color model to be applied to the input table</modelIn>
+		<inPort index="0" name="Color Settings">Existing color model to be applied to the input table</inPort>
+		<inPort index="1" name="Table">Table to which colors are applied to</inPort>
+		<outPort index="0" name="Table with Colors">Table with colors for the selected column</outPort>
 	</ports>	
 	
 </knimeNode>
