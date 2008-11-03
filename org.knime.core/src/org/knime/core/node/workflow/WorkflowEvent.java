@@ -126,10 +126,15 @@ public class WorkflowEvent {
      */
     @Override
     public String toString() {
-        return "WorkflowEvent [type=" + m_type
-                + ";old=" + m_oldValue
-                + ";new=" + m_newValue + ";timestamp="
-                + DateFormat.getDateTimeInstance().format(new Date(m_timestamp))
-                + "]";
+        StringBuilder b = new StringBuilder(getClass().getSimpleName());
+        b.append(" [type=").append(m_type);
+        b.append(";node=").append(m_id);
+        b.append(";old=").append(m_oldValue);
+        b.append(";new=").append(m_newValue);
+        b.append(";timestamp=");
+        b.append(DateFormat.getDateTimeInstance().format(
+                new Date(m_timestamp)));
+        b.append("]");
+        return b.toString();
     }
 }
