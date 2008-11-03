@@ -58,7 +58,7 @@ class BlockingNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(BufferedDataTable[] inData,
             ExecutionContext exec) throws Exception {
         Lock lock = getLock();
-        lock.lock();
+        lock.lockInterruptibly();
         try {
             return inData;
         } finally {
