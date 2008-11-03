@@ -971,13 +971,30 @@ public class DenseBitVectorTest extends TestCase {
     public void testToHexString() {
         DenseBitVector bv = new DenseBitVector("1F03");
         assertEquals(bv.toHexString(), "1F03");
+
         bv = new DenseBitVector("1F0329384abedf7cA7FC29FF0");
         assertEquals(bv.toHexString(), "1F0329384ABEDF7CA7FC29FF0");
+
         bv = new DenseBitVector("");
         assertEquals(bv.toHexString(), "");
+
+        bv = new DenseBitVector(3);
+        bv.set(0);
+        bv.set(2);
+        assertEquals(bv.toHexString(), "5");
+
         bv = new DenseBitVector(13L);
         bv.set(8);
         bv.set(3);
-        assertEquals(bv.toHexString(), "108");
+        assertEquals(bv.toHexString(), "0108");
+
+        bv = new DenseBitVector("FFF");
+        assertEquals(bv.toHexString(), "FFF");
+
+        bv = new DenseBitVector("FFFF8888EEEEFFFF");
+        assertEquals(bv.toHexString(), "FFFF8888EEEEFFFF");
+
+        bv = new DenseBitVector("1FFFF8888EEEEFFFF");
+        assertEquals(bv.toHexString(), "1FFFF8888EEEEFFFF");
     }
 }
