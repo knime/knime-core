@@ -21,7 +21,7 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.workflow;
+package org.knime.core.workflow.simplechainofnodes;
 
 import java.io.File;
 import java.net.URL;
@@ -31,6 +31,7 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.workflow.WorkflowTestCase;
 
 /**
  * 
@@ -49,7 +50,6 @@ public class ChainOfNodesTest extends WorkflowTestCase {
         super.setUp();
         ClassLoader l = getClass().getClassLoader();
         String workflowDirString = getClass().getPackage().getName();
-        workflowDirString += ".simplechainofnodes";
         workflowDirString = workflowDirString.replace('.', '/');
         URL workflowURL = l.getResource(workflowDirString);
         File workflowDir = new File(workflowURL.getFile());
