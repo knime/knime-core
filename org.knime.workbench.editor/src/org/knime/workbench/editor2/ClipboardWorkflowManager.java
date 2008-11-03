@@ -51,10 +51,17 @@ public final class ClipboardWorkflowManager {
         // Utility class -> use static methods only 
     }
     
-    private static final WorkflowManager CLIP_BOARD 
-        = WorkflowManager.ROOT.createAndAddProject();
+    private static final WorkflowManager CLIP_BOARD; 
+        
+    private static final String NAME = "KNIME Clipboard";
     
     private static int counter = 0;
+    
+    
+    static {
+        CLIP_BOARD = WorkflowManager.ROOT.createAndAddProject();
+        CLIP_BOARD.setName(NAME);
+    }
     
     /**
      * 

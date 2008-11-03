@@ -113,7 +113,7 @@ public class MetaNodeTemplateDropTargetListener
                 .getWorkflowManager(); 
         } else if (selection instanceof MetaNodeTemplate) {
             id = ((MetaNodeTemplate)selection).getManager().getID();
-            sourceManager = RepositoryFactory.ROOT;
+            sourceManager = RepositoryFactory.META_NODE_ROOT;
         }
         if (id == null || sourceManager == null) {
             return;

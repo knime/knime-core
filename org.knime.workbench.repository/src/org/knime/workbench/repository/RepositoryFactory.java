@@ -70,8 +70,12 @@ public final class RepositoryFactory {
      * Workflow manager instance loading and administering 
      * the predefined meta nodes. 
      */
-    public static final WorkflowManager ROOT 
-        = WorkflowManager.ROOT.createAndAddProject(); 
+    public static final WorkflowManager META_NODE_ROOT;
+    
+    static {        
+        META_NODE_ROOT = WorkflowManager.ROOT.createAndAddProject();
+        META_NODE_ROOT.setName("KNIME MetaNode Repository");
+    }
     
 
     /**
@@ -206,10 +210,9 @@ public final class RepositoryFactory {
         
         if (url != null) {
             try {
-                LOGGER.debug("found pre-installed template " 
-                        + FileLocator.toFileURL(url));
                 File f = new File(FileLocator.toFileURL(url).getFile());
-                WorkflowManager metaNode = ROOT.load(f, 
+                LOGGER.debug("meta node template name: " + f.getName());
+                WorkflowManager metaNode = META_NODE_ROOT.load(f, 
                         new ExecutionMonitor()).getWorkflowManager();
                 return metaNode;
             } catch (CanceledExecutionException cee) {
