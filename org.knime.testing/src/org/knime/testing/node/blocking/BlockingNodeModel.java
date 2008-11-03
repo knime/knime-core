@@ -83,17 +83,20 @@ class BlockingNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(NodeSettingsRO settings)
             throws InvalidSettingsException {
+        m_lockIDModel.loadSettingsFrom(settings);
     }
 
     /** {@inheritDoc} */
     @Override
     protected void validateSettings(NodeSettingsRO settings)
             throws InvalidSettingsException {
+        m_lockIDModel.validateSettings(settings);
     }
 
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(NodeSettingsWO settings) {
+        m_lockIDModel.saveSettingsTo(settings);
     }
 
     /** {@inheritDoc} */
