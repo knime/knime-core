@@ -47,8 +47,6 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.collection.bitvector.DenseBitVectorCell;
 import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.def.DefaultRow;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -58,6 +56,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
@@ -121,6 +120,9 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
     private STRING_TYPES m_type = STRING_TYPES.BIT;
 
     private final SettingsModelString m_stringColumn = createStringColModel();
+    
+    private final SettingsModelFilterString m_includedColumns 
+        = createColumnFilterModel();
 
     private static final String FILE_NAME = "bitVectorParams";
 
@@ -189,6 +191,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         settings.addDouble(CFG_THRESHOLD, m_threshold);
         settings.addBoolean(CFG_FROM_STRING, m_fromString);
         m_stringColumn.saveSettingsTo(settings);
+        m_includedColumns.saveSettingsTo(settings);
         settings.addBoolean(CFG_USE_MEAN, m_useMean);
         settings.addInt(CFG_MEAN_THRESHOLD, m_meanPercentage);
         settings.addString(CFG_STRING_TYPE, m_type.name());
@@ -214,6 +217,20 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         }
         settings.getString(CFG_STRING_TYPE);
         settings.getBoolean(CFG_REPLACE, false);
+        // try to load them
+        SettingsModelFilterString clone = null;
+        try {
+            clone = m_includedColumns.createCloneWithValidatedValue(settings);
+        } catch (InvalidSettingsException ise) {
+            // added with 2.0 -> no validation for backward compatibility
+        }
+        if (clone != null) {
+            if (clone.isEnabled() && clone.getIncludeList().isEmpty()) {
+                throw new InvalidSettingsException(
+                        "No numeric input columns selected.");
+            }
+        }
+            
     }
 
     /**
@@ -225,6 +242,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         m_threshold = settings.getDouble(CFG_THRESHOLD);
         m_fromString = settings.getBoolean(CFG_FROM_STRING);
         m_stringColumn.loadSettingsFrom(settings);
+        
         m_useMean = settings.getBoolean(CFG_USE_MEAN);
         m_meanPercentage = settings.getInt(CFG_MEAN_THRESHOLD);
         String type = settings.getString(CFG_STRING_TYPE);
@@ -235,6 +253,13 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                     + type + "'");
         }
         m_replace = settings.getBoolean(CFG_REPLACE, false);
+        
+        try {
+            // for backward compatibility try to load it
+            m_includedColumns.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            // if not available: use all numeric columns
+        }
     }
 
     private double[] calculateMeanValues(final DataTable input) {
@@ -292,6 +317,17 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             throws CanceledExecutionException {
         DataColumnSpec colSpec =
                 createNumericOutputSpec(data.getDataTableSpec());
+        // get the indices for included columns
+        List<Integer>colIndices = new ArrayList<Integer>();
+        for (String colName : m_includedColumns.getIncludeList()) {
+            int index = data.getDataTableSpec().findColumnIndex(colName);
+            if (index < 0) {
+                throw new IllegalArgumentException(
+                        "Column " + colName + " is not available in " 
+                        + "current data. Please re-configure the node.");
+            }
+            colIndices.add(index);
+        }
         // calculate bits from numeric data
         if (m_useMean) {
             // either from a percentage of the mean
@@ -300,41 +336,24 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             meanValues = calculateMeanValues(data);
             m_factory =
                     new Numeric2BitVectorMeanCellFactory(colSpec,
-                            meanValues, meanFactor);
+                            meanValues, meanFactor, colIndices);
         } else {
             // or dependend on fixed threshold
             m_factory =
                     new Numeric2BitVectorThresholdCellFactory(colSpec,
-                            m_threshold);
-
+                            m_threshold, colIndices);
         }
         ColumnRearranger c = new ColumnRearranger(data.getDataTableSpec());
-        if (!m_replace) {
-            c.append(m_factory);
-            BufferedDataTable out = exec.createColumnRearrangeTable(data, c,
-                    exec);
-            return new BufferedDataTable[]{out};
-        } else {
-            // put out only the generated one
-            DataTableSpec spec = new DataTableSpec(createNumericOutputSpec(
-                    data.getDataTableSpec()));
-            BufferedDataContainer cont = exec.createDataContainer(spec);
-            int rowNr = 0;
-            double nrOfRows = data.getRowCount();
-            for (DataRow row : data) {
-                exec.checkCanceled();
-                exec.setProgress(rowNr / nrOfRows, "Processing row: " + rowNr);
-                rowNr++;
-                DataCell cell = m_factory.getCell(row);
-                DataRow newRow = new DefaultRow(row.getKey(), cell);
-                cont.addRowToTable(newRow);
-            }
-            cont.close();
-            return new BufferedDataTable[]{cont.getTable()};
+        c.append(m_factory);
+        if (m_replace) {
+            List<String>includeList = m_includedColumns.getIncludeList();
+            c.remove(includeList.toArray(new String[includeList.size()]));
         }
+        BufferedDataTable out = exec.createColumnRearrangeTable(data, c,
+                exec);
+        return new BufferedDataTable[]{out};
     }
-
-
+    
     private BufferedDataTable[] createBitVectorsFromStrings(
             final BufferedDataTable data,
             final int stringColIndex, final ExecutionContext exec)
@@ -450,24 +469,37 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             throws InvalidSettingsException {
         DataTableSpec spec = inSpecs[0];
         if (!m_fromString) {
-            boolean hasNumericCol = false;
-            for (int i = 0; i < spec.getNumColumns(); i++) {
-                if (spec.getColumnSpec(i).getType().isCompatible(
+            // numeric input
+            // check if there is at least one numeric column selected
+            if (m_includedColumns.getIncludeList().isEmpty()) {
+                // throw exception 
+                throw new InvalidSettingsException(
+                        "No numeric column selected!");
+            }
+            for (String inclColName : m_includedColumns.getIncludeList()) {
+                DataColumnSpec colSpec = spec.getColumnSpec(inclColName);
+                if (colSpec == null) {
+                    throw new InvalidSettingsException(
+                            "Column " + inclColName 
+                            + " not found in input table. " 
+                            + "Please re-configure the node.");
+                }
+                if (!colSpec.getType().isCompatible(
                         DoubleValue.class)) {
-                    hasNumericCol = true;
-                    break;
+                    throw new InvalidSettingsException(
+                            "Column " + inclColName + " is not a numeric column"
+                            );
                 }
             }
-            if (!hasNumericCol) {
-                throw new InvalidSettingsException("No numeric column found");
-            }
         } else {
+            // parse from string column 
+            // -> check if selected column is a string column 
             if (!spec.containsName(m_stringColumn.getStringValue())
                     || !(spec.getColumnSpec(m_stringColumn.getStringValue())
                             .getType().isCompatible(StringValue.class))) {
                 throw new InvalidSettingsException("Selected string column "
                         + m_stringColumn.getStringValue()
-                        + " not in the input spec");
+                        + " not in the input table");
             }
         }
         if (m_fromString) {
@@ -477,13 +509,18 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                     inSpecs[0], stringColIdx);
             return new DataTableSpec[]{c.createSpec()};
         } else {
+            // numeric input
             DataTableSpec newSpec;
+            DataColumnSpec newColSpec = createNumericOutputSpec(spec);
             if (m_replace) {
-                newSpec = new DataTableSpec(
-                        createNumericOutputSpec(spec));
+                ColumnRearranger colR = new ColumnRearranger(spec);
+                colR.remove(m_includedColumns.getIncludeList().toArray(
+                        new String[m_includedColumns.getIncludeList().size()]));
+                newSpec = new DataTableSpec(colR.createSpec(), 
+                        new DataTableSpec(newColSpec));
             } else {
-                newSpec = new DataTableSpec(spec, new DataTableSpec(
-                        createNumericOutputSpec(spec)));
+                newSpec = new DataTableSpec(spec, 
+                        new DataTableSpec(newColSpec));
             }
             return new DataTableSpec[]{newSpec};
         }
@@ -499,10 +536,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         } while (spec.containsName(name));
         // get the names of numeric columns
         List<String> nameMapping = new ArrayList<String>();
-        for (int i = 0; i < spec.getNumColumns(); i++) {
-            nameMapping.add(spec.getColumnSpec(i)
-                    .getName().toString());
-        }
+        nameMapping.addAll(m_includedColumns.getIncludeList());
         DataColumnSpecCreator creator = new DataColumnSpecCreator(
                 name, DenseBitVectorCell.TYPE);
         creator.setElementNames(nameMapping.toArray(
@@ -549,6 +583,14 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
      */
     static SettingsModelString createStringColModel() {
         return new SettingsModelString("STRING_COLUMN", null);
-
     }
+    
+    /**
+     * 
+     * @return the settings model for included numeric columns
+     */
+    static SettingsModelFilterString createColumnFilterModel() {
+        return new SettingsModelFilterString("included.numeric.columns");
+    }
+    
 }

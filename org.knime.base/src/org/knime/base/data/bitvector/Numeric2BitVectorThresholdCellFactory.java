@@ -24,6 +24,8 @@
  */
 package org.knime.base.data.bitvector;
 
+import java.util.List;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -43,6 +45,8 @@ public class Numeric2BitVectorThresholdCellFactory
     private int m_totalNrOf0s;
     private int m_totalNrOf1s;
     private double m_threshold;
+    
+    private final List<Integer>m_columns;
 
     /**
      *
@@ -52,9 +56,10 @@ public class Numeric2BitVectorThresholdCellFactory
      */
     public Numeric2BitVectorThresholdCellFactory(
             final DataColumnSpec bitColSpec,
-            final double threshold) {
+            final double threshold, final List<Integer>columns) {
         super(bitColSpec);
         m_threshold = threshold;
+        m_columns = columns;
     }
 
 
@@ -89,18 +94,14 @@ public class Numeric2BitVectorThresholdCellFactory
     @Override
     public DataCell getCell(final DataRow row) {
         incrementNrOfRows();
-        DenseBitVector bitSet = new DenseBitVector(row.getNumCells());
-        for (int i = 0; i < row.getNumCells(); i++) {
-            if (!row.getCell(i).getType().isCompatible(
-                    DoubleValue.class)) {
-                continue;
-            }
-            if (row.getCell(i).isMissing()) {
+        DenseBitVector bitSet = new DenseBitVector(m_columns.size());
+        for (int i = 0; i < m_columns.size(); i++) {
+            DataCell cell = row.getCell(m_columns.get(i));
+            if (cell.isMissing()) {
                 m_totalNrOf0s++;
                 continue;
             }
-            double currValue = ((DoubleValue)row.getCell(i))
-                    .getDoubleValue();
+            double currValue = ((DoubleValue)cell).getDoubleValue();
                 if (currValue >= m_threshold) {
                     bitSet.set(i);
                     m_totalNrOf1s++;

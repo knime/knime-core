@@ -89,12 +89,9 @@
         	ID (bit positions) or BIT (binary strings). See description above.
         </option>
                 
-        <option name="Replace column(s):">
-        If it is checked the generating column(s) (either all columns if numeric input was used
-        or the selected string column) should be replaced by the resulting 
-        bitvectors, i.e. in case of numeric input only the bitvectors will be in the output table.
-        In case of string input the column properties such as name, color information and the like
-        are retained.
+        <option name="Remove column(s) used for bit vector creation:">
+        If it is checked the generating column(s) (included columns if numeric input was used
+        or the selected string column) are removed.
         If it is unchecked the generated bitvectors are appended to the input table.
         </option>
 	</fullDescription>
