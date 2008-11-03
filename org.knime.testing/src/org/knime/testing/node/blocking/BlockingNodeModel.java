@@ -70,7 +70,10 @@ class BlockingNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        getLock();
+        String id = m_lockIDModel.getStringValue();
+        if (id == null || id.length() == 0) {
+            throw new InvalidSettingsException("No lock id provided.");
+        }
         return inSpecs;
     }
 

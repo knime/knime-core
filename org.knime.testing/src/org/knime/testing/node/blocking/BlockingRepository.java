@@ -26,6 +26,7 @@ package org.knime.testing.node.blocking;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * A static repository of {@link Lock} objects, identified by (String) id.
@@ -33,8 +34,8 @@ import java.util.concurrent.locks.Lock;
  */
 public final class BlockingRepository {
     
-    private final static Map<String, Lock> LOCK_REPOSITORY =
-        new HashMap<String, Lock>();
+    private final static Map<String, ReentrantLock> LOCK_REPOSITORY =
+        new HashMap<String, ReentrantLock>();
     
     private BlockingRepository() {
     }
@@ -46,7 +47,8 @@ public final class BlockingRepository {
      * @throws NullPointerException if either arg is null
      * @throws IllegalArgumentException If id is already in use
      */
-    public static synchronized void put(final String id, final Lock lock) {
+    public static synchronized void put(
+            final String id, final ReentrantLock lock) {
         if (id == null || lock == null) {
             throw new NullPointerException();
         }
@@ -61,7 +63,7 @@ public final class BlockingRepository {
      * @param id The id of interest
      * @return The lock or null
      */
-    public static synchronized Lock get(final String id) {
+    public static synchronized ReentrantLock get(final String id) {
         return LOCK_REPOSITORY.get(id);
     }
     
@@ -71,7 +73,7 @@ public final class BlockingRepository {
      * @param id The id of interest.
      * @return The lock previously assigned to the id or null if not present.
      */
-    public static synchronized Lock remove(final String id) {
+    public static synchronized ReentrantLock remove(final String id) {
         return LOCK_REPOSITORY.remove(id);
     }
 }
