@@ -25,6 +25,6 @@
 	
 	<ports>
 		<inPort index="0" name="Any input table">Any input table</inPort>
-		<outPort index="1" name="Copy of input table">Copy</outPort>
+		<outPort index="0" name="Copy of input table">Copy of input table</outPort>
 	</ports>	
 </knimeNode>
