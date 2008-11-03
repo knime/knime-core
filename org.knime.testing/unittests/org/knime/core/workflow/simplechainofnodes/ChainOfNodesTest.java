@@ -140,7 +140,9 @@ public class ChainOfNodesTest extends WorkflowTestCase {
             }
         }
         assertNotNull(connection);
-        assertFalse(m.canAddConnection(m_colFilter, 0, m_rowFilter, 0));
+        // although the connection exists, we can replace it. This is heavily
+        // used when old connections are overwritten. 
+        assertTrue(m.canAddConnection(m_colFilter, 0, m_rowFilter, 0));
         assertTrue(m.canRemoveConnection(connection));
         m.removeConnection(connection);
         
