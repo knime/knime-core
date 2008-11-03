@@ -138,15 +138,14 @@ final class DBWriterNodeModel extends NodeModel {
             }
             m_table = table;
             m_append = append;
-            // loaded driver are needed to load settings before 1.2
-            String[] loadedDriver = settings.getStringArray("loaded_driver",
-                    new String[0]);
-            for (String fileName : loadedDriver) {
+            // loaded driver
+            String loadedDriver = settings.getString("loaded_driver", null);
+            if (loadedDriver != null) {
                 try {
-                    DatabaseDriverLoader.loadDriver(new File(fileName));
+                    DatabaseDriverLoader.loadDriver(new File(loadedDriver));
                 } catch (Throwable t) {
                     LOGGER.info("Could not load driver from file \"" 
-                            + fileName + "\".", t);
+                            + loadedDriver + "\".", t);
                 }
             }
             // load SQL type for each column

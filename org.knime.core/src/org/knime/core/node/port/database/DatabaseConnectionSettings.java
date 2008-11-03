@@ -176,9 +176,6 @@ public class DatabaseConnectionSettings {
         String user = settings.getString("user");
         // password
         String password = settings.getString("password", "");
-        // loaded driver
-        String[] loadedDriver = settings.getStringArray("loaded_driver", 
-                new String[0]);
         // write settings or skip it
         if (write) {
             m_driver = driver;
@@ -195,12 +192,14 @@ public class DatabaseConnectionSettings {
             DRIVER_URLS.add(m_dbName);
             m_user = user;
             m_pass = password;
-            for (String fileName : loadedDriver) {
+            // loaded driver
+            String loadedDriver = settings.getString("loaded_driver", null);
+            if (loadedDriver != null) {
                 try {
-                    DatabaseDriverLoader.loadDriver(new File(fileName));
+                    DatabaseDriverLoader.loadDriver(new File(loadedDriver));
                 } catch (Throwable t) {
                     LOGGER.info("Could not load driver from file \"" 
-                            + fileName + "\".", t);
+                            + loadedDriver + "\".", t);
                 }
             }
             return changed;

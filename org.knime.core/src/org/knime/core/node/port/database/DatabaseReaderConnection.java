@@ -27,10 +27,10 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.sql.Blob;
 import java.sql.Clob;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
 
 import org.knime.core.data.DataCell;
@@ -68,7 +68,7 @@ public final class DatabaseReaderConnection {
     
     private DatabaseQueryConnectionSettings m_conn;
     
-    private PreparedStatement m_stmt;
+    private Statement m_stmt;
     
     /**
      * Creates a empty handle for a new connection.
@@ -110,9 +110,10 @@ public final class DatabaseReaderConnection {
                 String tableID = "table_" + hashCode();
                 String pQuery = "SELECT * FROM (" + m_conn.getQuery() + ") " 
                     + tableID + " WHERE 1 = 0";
-                m_stmt = m_conn.createConnection().prepareStatement(pQuery);
-                m_stmt.execute();
-                m_spec = createTableSpec(m_stmt.getMetaData());
+                m_stmt = m_conn.createConnection().createStatement();
+                final ResultSet result = m_stmt.executeQuery(pQuery);
+                m_spec = createTableSpec(result.getMetaData());
+                result.close();
             } catch (SQLException sql) {
                 if (m_stmt != null) {
                     try {
@@ -142,15 +143,12 @@ public final class DatabaseReaderConnection {
         final DataTableSpec spec = getDataTableSpec();
         if (m_stmt == null) {
             try {
-                m_stmt = m_conn.createConnection().prepareStatement(
-                        m_conn.getQuery());
+                m_stmt = m_conn.createConnection().createStatement();
             } catch (Throwable t) {
                 throw new SQLException(t);
             }   
-        } else {
-            m_stmt.execute(m_conn.getQuery());
         }
-        final ResultSet result = m_stmt.getResultSet();
+        final ResultSet result = m_stmt.executeQuery(m_conn.getQuery());
         BufferedDataTable table = exec.createBufferedDataTable(new DataTable() {
             /**
              * {@inheritDoc}
@@ -168,7 +166,6 @@ public final class DatabaseReaderConnection {
             }
 
         }, exec);
-        result.close();
         return table;
     }
     
@@ -196,7 +193,6 @@ public final class DatabaseReaderConnection {
         }
         buf.close();
         DataTable table = buf.getTable();
-        result.close();
         m_stmt.close();
         return table;
     }
