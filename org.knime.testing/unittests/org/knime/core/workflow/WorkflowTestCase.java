@@ -24,7 +24,9 @@
 package org.knime.core.workflow;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.StringReader;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -62,7 +64,7 @@ public class WorkflowTestCase extends TestCase {
             public void workflowChanged(WorkflowEvent event) {
                 m_lock.lock();
                 try {
-                    m_logger.info("Sending signal: " + event);
+                    m_logger.info("Received " + event);
                     m_workflowStableCondition.signalAll();
                 } finally {
                     m_lock.unlock();
@@ -110,24 +112,19 @@ public class WorkflowTestCase extends TestCase {
             String error = "node " + nc.getNameWithID() + " has wrong state; "
             + "expected " + expected + ", actual " + actual + " (dump follows)";
             m_logger.info("Test failed: " + error);
-            String toString = m_manager.printNodeSummary(m_manager.getID(), 0);
-            BufferedReader r = new BufferedReader(new StringReader(toString));
-            String line;
-            while ((line = r.readLine()) != null) {
-                m_logger.info(line);
-            }
-            r.close();
+            dumpWorkflowToLog();
             fail(error);
         }
     }
     
     protected void executeAndWait(final NodeID... ids) 
         throws Exception {
+        getManager().executeUpToHere(ids);
         m_lock.lock();
         try {
-            getManager().executeUpToHere(ids);
-            System.out.println(getManager());
-            waitWhileInExecution();
+            for (NodeID id : ids) {
+                waitWhileNodeInExecution(id);
+            } 
         } finally {
             m_lock.unlock();
         }
@@ -148,9 +145,9 @@ public class WorkflowTestCase extends TestCase {
             throw new IllegalStateException(
                     "Ill-posed test case; thread must own lock");
         }
-        System.out.println("node " + node.getNameWithID() + " is " + node.getState());
+        m_logger.debug("node " + node.getNameWithID() + " is " + node.getState());
         while (node.getState().executionInProgress()) {
-            System.out.println("node " + node.getNameWithID() + " is " + node.getState());
+            m_logger.debug("node " + node.getNameWithID() + " is " + node.getState());
             m_workflowStableCondition.await();
         }
     }
@@ -160,9 +157,35 @@ public class WorkflowTestCase extends TestCase {
     protected void tearDown() throws Exception {
         super.tearDown();
         if (m_manager != null) {
+            // in most cases we wait for individual nodes to finish. This
+            // does not mean that the workflow state is also updated, give
+            // it a second to finish its cleanup
+            if (m_manager.getState().executionInProgress()) {
+                m_lock.lock();
+                try {
+                    m_workflowStableCondition.await(2, TimeUnit.SECONDS);
+                } finally {
+                    m_lock.unlock();
+                }
+            }
+            if (!WorkflowManager.ROOT.canRemoveNode(m_manager.getID())) {
+                String error = "Cannot remove workflow, dump follows";
+                m_logger.error(error);
+                dumpWorkflowToLog();
+                fail(error);
+            }
             WorkflowManager.ROOT.removeProject(m_manager.getID());
             setManager(null);
         }
     }
     
+    protected void dumpWorkflowToLog() throws IOException {
+        String toString = m_manager.printNodeSummary(m_manager.getID(), 0);
+        BufferedReader r = new BufferedReader(new StringReader(toString));
+        String line;
+        while ((line = r.readLine()) != null) {
+            m_logger.info(line);
+        }
+        r.close();
+    }
 }
