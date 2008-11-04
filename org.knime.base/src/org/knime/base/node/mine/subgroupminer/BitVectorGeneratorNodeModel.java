@@ -111,7 +111,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
 
     private double m_threshold = DEFAULT_THRESHOLD;
 
-    private boolean m_fromString = false;
+    private boolean m_fromString = true;
 
     private boolean m_useMean = false;
 
@@ -471,10 +471,21 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         if (!m_fromString) {
             // numeric input
             // check if there is at least one numeric column selected
-            if (m_includedColumns.getIncludeList().isEmpty()) {
-                // throw exception 
-                throw new InvalidSettingsException(
-                        "No numeric column selected!");
+            if (m_includedColumns.isEnabled() 
+                    && m_includedColumns.getIncludeList().isEmpty()) {
+                // the includeColumns model can not be empty 
+                // through the dialog (see #validateSettings)
+                // only case where !m_fromString and includeColumns evaluates 
+                // to true is for old workflows.
+                // For backward compatiblity include all numeric columns
+                // which was the behavior before 2.0
+                List<String>allNumericColumns = new ArrayList<String>();
+                for (DataColumnSpec colSpec : spec) {
+                    if (colSpec.getType().isCompatible(DoubleValue.class)) {
+                        allNumericColumns.add(colSpec.getName());
+                    }
+                }
+                m_includedColumns.setIncludeList(allNumericColumns);
             }
             for (String inclColName : m_includedColumns.getIncludeList()) {
                 DataColumnSpec colSpec = spec.getColumnSpec(inclColName);
@@ -493,7 +504,12 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             }
         } else {
             // parse from string column 
-            // -> check if selected column is a string column 
+            if (m_stringColumn.getStringValue() == null) {
+                throw new InvalidSettingsException(
+                        "No string column selected. " 
+                        + "Please (re-)configure the node.");
+            }
+                // -> check if selected column is a string column 
             if (!spec.containsName(m_stringColumn.getStringValue())
                     || !(spec.getColumnSpec(m_stringColumn.getStringValue())
                             .getType().isCompatible(StringValue.class))) {
