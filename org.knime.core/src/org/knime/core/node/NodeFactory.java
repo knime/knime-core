@@ -600,7 +600,7 @@ public abstract class NodeFactory<T extends NodeModel> {
     /**
      * Access method for <code>createNodeModel()</code>. This method will
      * also do sanity checks for the correct labeling of the port description:
-     * The port count (in, out, modelIn, modelOut) is only available in the
+     * The port count (in, out) is only available in the
      * NodeModel. The first time, this method is called, the port count is
      * retrieved from the NodeModel and the xml description is validated against
      * the info from the model. If inconsistencies are identified, log messages
