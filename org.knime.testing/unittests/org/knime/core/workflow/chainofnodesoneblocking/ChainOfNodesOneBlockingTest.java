@@ -126,13 +126,7 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
             }
             
             // test outgoing connection delete
-            ConnectionContainer cc = null;
-            for (ConnectionContainer c : m.getConnectionContainers()) {
-                if (c.getSource().equals(m_blocker)) {
-                    cc = c;
-                    break;
-                }
-            }
+            ConnectionContainer cc = findInConnection(m_colFilter, 0);
             assertNotNull(cc);
             assertFalse(m.canRemoveConnection(cc));
             try {
@@ -188,15 +182,8 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
             }
             
             // test outgoing connection delete
-            ConnectionContainer inConnection = null;
-            ConnectionContainer outConnection = null;
-            for (ConnectionContainer c : m.getConnectionContainers()) {
-                if (c.getSource().equals(m_colFilter)) {
-                    outConnection = c;
-                } else if (c.getDest().equals(m_colFilter)) {
-                    inConnection = c;
-                }
-            }
+            ConnectionContainer inConnection = findInConnection(m_blocker, 0);
+            ConnectionContainer outConnection = findInConnection(m_tblView, 0);
             assertNotNull(inConnection);
             assertNotNull(outConnection);
             assertFalse(m.canRemoveConnection(inConnection));

@@ -7,7 +7,7 @@
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
  *
- * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * You may not+ modify, publish, transmit, transfer or sell, reproduce,
  * create derivative works from, distribute, perform, display, or in
  * any way exploit any of the content, in whole or in part, except as
  * otherwise expressly permitted in writing by the copyright owner or
@@ -133,12 +133,7 @@ public class ChainOfNodesTest extends WorkflowTestCase {
     
     public void testDeleteConnectionTryExecuteInsertAgain() throws Exception {
         WorkflowManager m = getManager();
-        ConnectionContainer connection = null;
-        for (ConnectionContainer cc : m.getConnectionContainers()) {
-            if (cc.getDest().equals(m_rowFilter)) {
-                connection = cc;
-            }
-        }
+        ConnectionContainer connection = findInConnection(m_tblView, 0);
         assertNotNull(connection);
         // although the connection exists, we can replace it. This is heavily
         // used when old connections are overwritten. 
@@ -168,12 +163,7 @@ public class ChainOfNodesTest extends WorkflowTestCase {
     public void testExecuteDeleteConnection() throws Exception {
         WorkflowManager m = getManager();
         executeAndWait(m_tblView);
-        ConnectionContainer connection = null;
-        for (ConnectionContainer cc : m.getConnectionContainers()) {
-            if (cc.getDest().equals(m_rowFilter)) {
-                connection = cc;
-            }
-        }
+        ConnectionContainer connection = findInConnection(m_tblView, 0);
         assertTrue(m.canRemoveConnection(connection));
         m.removeConnection(connection);
         

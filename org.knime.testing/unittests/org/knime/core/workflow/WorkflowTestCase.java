@@ -37,11 +37,13 @@ import junit.framework.TestCase;
 
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowOutPort;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 
@@ -139,10 +141,7 @@ public class WorkflowTestCase extends TestCase {
     
     protected void checkState(final NodeID id, 
             final State... expected) throws Exception {
-        if (m_manager == null) {
-            throw new NullPointerException("WorkflowManager not set.");
-        }
-        NodeContainer nc = m_manager.getNodeContainer(id);
+        NodeContainer nc = findNodeContainer(id);
         checkState(nc, expected);
     }
     
@@ -165,9 +164,102 @@ public class WorkflowTestCase extends TestCase {
         }
     }
     
+    protected void checkMetaOutState(final NodeID metaID, final int portIndex,
+            final State... expected) throws Exception {
+        NodeContainer nc = findNodeContainer(metaID);
+        if (!(nc instanceof WorkflowManager)) {
+            throw new IllegalArgumentException("Node with ID " + metaID  
+                    + " is not a meta node: " + nc.getNameWithID());
+        }
+        WorkflowOutPort p = ((WorkflowManager)nc).getOutPort(portIndex);
+        State actual = p.getNodeState();
+        boolean matches = false;
+        for (State s : expected) {
+            if (actual.equals(s)) {
+                matches = true;
+            }
+        }
+        if (!matches) {
+            String error = "Workflow outport " + portIndex + " of WFM "
+                + nc.getNameWithID() + " has wrong state; expected (any of) "
+                + Arrays.toString(expected) + ", actual " + actual 
+                + " (dump follows)";
+            m_logger.info("Test failed: " + error);
+            dumpWorkflowToLog();
+            fail(error);
+        }
+    }
+    
+    protected WorkflowManager findParent(final NodeID id) {
+        if (m_manager == null) {
+            throw new NullPointerException("WorkflowManager not set.");
+        }
+        if (!id.hasPrefix(m_manager.getID())) {
+            throw new IllegalArgumentException("NodeID " + id + " has not " 
+                    + "same prefix as WorkflowManager: " + m_manager.getID());
+        }
+        if (!id.hasSamePrefix(m_manager.getID())) {
+            WorkflowManager myParent = findParent(id.getPrefix());
+            NodeContainer current = myParent.getNodeContainer(id.getPrefix());
+            if (!(current instanceof WorkflowManager)) {
+                throw new IllegalArgumentException("Parent is not a WFM: "
+                        + current.getNameWithID());
+            }
+            return (WorkflowManager)current;
+        }
+        return m_manager;
+    }
+    
+    protected NodeContainer findNodeContainer(final NodeID id) 
+    throws Exception {
+        WorkflowManager parent = findParent(id);
+        return parent.getNodeContainer(id);
+    }
+    
+    protected ConnectionContainer findInConnection(final NodeID id,
+            final int port) 
+        throws Exception {
+        WorkflowManager parent = findParent(id);
+        for (ConnectionContainer cc : parent.getConnectionContainers()) {
+            if (cc.getDest().equals(id) && cc.getDestPort() == port) {
+                return cc;
+            }
+        }
+        return null;
+    }
+    
+    protected ConnectionContainer findLeavingWorkflowConnection(final NodeID id,
+            final int port) throws Exception {
+        NodeContainer nc = findNodeContainer(id);
+        if (!(nc instanceof WorkflowManager)) {
+            throw new IllegalArgumentException("Node " + id 
+                    + " is not a workflow manager");
+        }
+        for (ConnectionContainer cc 
+                : ((WorkflowManager)nc).getConnectionContainers()) {
+            if (cc.getDest().equals(id) && cc.getDestPort() == port) {
+                return cc;
+            }
+        }
+        return null;
+    }
+    
     protected void executeAndWait(final NodeID... ids) 
         throws Exception {
-        getManager().executeUpToHere(ids);
+        NodeID prefix = null;
+        WorkflowManager parent = null;
+        for (NodeID id : ids) {
+            if (prefix == null) {
+                prefix = id.getPrefix();
+                parent = findParent(id);
+            } else if (!prefix.equals(id.getPrefix())) {
+                throw new IllegalArgumentException("Mixing NodeIDs of " 
+                        + "different levels " + Arrays.toString(ids));
+            }
+        }
+        if (parent != null) {
+            parent.executeUpToHere(ids);
+        }
         m_lock.lock();
         try {
             for (NodeID id : ids) {
@@ -178,17 +270,16 @@ public class WorkflowTestCase extends TestCase {
         }
     }
     
-    protected void waitWhileInExecution() throws InterruptedException {
+    protected void waitWhileInExecution() throws Exception {
         waitWhileNodeInExecution(m_manager);
     }
 
-    protected void waitWhileNodeInExecution(final NodeID node) 
-        throws InterruptedException {
-        waitWhileNodeInExecution(m_manager.getNodeContainer(node));
+    protected void waitWhileNodeInExecution(final NodeID id) throws Exception {
+        waitWhileNodeInExecution(findNodeContainer(id));
     }
     
     protected void waitWhileNodeInExecution(final NodeContainer node) 
-    throws InterruptedException {
+    throws Exception {
         m_lock.lock();
         try {
             m_logger.debug("node " + node.getNameWithID() 
