@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   02.07.2006 (sieb): created
  */
@@ -52,16 +52,22 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.dialogs.ExportWizard;
 import org.eclipse.ui.internal.wizards.datatransfer.ArchiveFileExportOperation;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodePersistor;
 import org.knime.core.node.NodePersistorVersion200;
 import org.knime.core.node.workflow.WorkflowPersistor;
 
 /**
  * This wizard is intended to export a knime workflow project.
- * 
- * 
+ *
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class WorkflowExportWizard extends ExportWizard implements IExportWizard {
+
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(WorkflowExportWizard.class);
+
     private WorkflowExportPage m_page;
 
     private ISelection m_selection;
@@ -87,16 +93,14 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
     /**
      * This method is called when 'Finish' button is pressed in the wizard. We
      * will create an operation and run it using wizard as execution context.
-     * 
+     *
      * @return If finished successfully
      */
     @Override
     public boolean performFinish() {
 
         // first save dirty editors
-        boolean canceled =
-                !PlatformUI.getWorkbench().saveAllEditors(
-                        true);
+        boolean canceled = !PlatformUI.getWorkbench().saveAllEditors(true);
         if (canceled) {
             return false;
         }
@@ -108,8 +112,16 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
         // for confirmation
 
         final File exportFile = new File(fileName);
-        if (exportFile.exists()) {
 
+        if (exportFile.exists()) {
+            // if it exists we have to check if we can write to:
+            if (!exportFile.canWrite() || exportFile.isDirectory()) {
+                // display error
+                m_page.setErrorMessage("Cannot write to specified file");
+                LOGGER.error("No write access for "
+                        + exportFile.getAbsolutePath());
+                return false;
+            }
             MessageBox mb =
                     new MessageBox(Display.getDefault().getActiveShell(),
                             SWT.ICON_QUESTION | SWT.YES | SWT.NO | SWT.CANCEL);
@@ -118,6 +130,38 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
                     + "overwrite the specified file ?");
             if (mb.open() != SWT.YES) {
                 return false;
+            }
+        } else {
+            File parentFile = exportFile.getParentFile();
+            if ((parentFile != null) && parentFile.exists()) {
+                // check if we can write to
+                if (!parentFile.canWrite() || !parentFile.isDirectory()) {
+                    // display error
+                    m_page.setErrorMessage("Cannot write to specified file");
+                    LOGGER.error("No write access for "
+                            + exportFile.getAbsolutePath());
+                    return false;
+                }
+            } else if (parentFile != null && !parentFile.exists()) {
+                if (!exportFile.getParentFile().mkdirs()) {
+                    boolean wasRoot = false;
+                    for (File root : File.listRoots()) {
+                        if (exportFile.getParentFile().equals(root)) {
+                            wasRoot = true;
+                            break;
+                        }
+                    }
+                    if (!wasRoot) {
+                        LOGGER.error("Failed to create all necessary "
+                                + "directories for export path "
+                                + exportFile.getAbsolutePath());
+                        m_page.setErrorMessage("Failed to create: "
+                                + exportFile.getAbsolutePath()
+                                + ". \n Please check if it is a "
+                                + "valid file name.");
+                        return false;
+                    }
+                }
             }
         }
 
@@ -152,7 +196,7 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
     /**
      * Implements the exclude policy. At the moment the "intern" folder and
      * "*.zip" files are excluded.
-     * 
+     *
      * @param resource the resource to check
      */
     private boolean excludeResource(final IResource resource) {
@@ -171,27 +215,27 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
                 return true;
             }
         }
-        
+
         // exclusion list for workflows in format of 2.x
         switch (resource.getType()) {
-        case IResource.FOLDER: 
-            if (name.startsWith(NodePersistorVersion200.PORT_FOLDER_PREFIX)) {
-                return true;
-            }
-            if (name.startsWith(
-                    NodePersistorVersion200.INTERNAL_TABLE_FOLDER_PREFIX)) {
-                return true;
-            }
-            if (name.startsWith(NodePersistorVersion200.INTERN_FILE_DIR)) {
-                return true;
-            }
-            break;
-        case IResource.FILE:
-            if (name.startsWith(WorkflowPersistor.SAVED_WITH_DATA_FILE)) {
-                return true;
-            }
-            break;
-        default:
+            case IResource.FOLDER:
+                if (name.startsWith(NodePersistorVersion200.PORT_FOLDER_PREFIX)) {
+                    return true;
+                }
+                if (name
+                        .startsWith(NodePersistorVersion200.INTERNAL_TABLE_FOLDER_PREFIX)) {
+                    return true;
+                }
+                if (name.startsWith(NodePersistor.INTERN_FILE_DIR)) {
+                    return true;
+                }
+                break;
+            case IResource.FILE:
+                if (name.startsWith(WorkflowPersistor.SAVED_WITH_DATA_FILE)) {
+                    return true;
+                }
+                break;
+            default:
         }
 
         // get extension to check if this resource is a zip file
@@ -236,7 +280,7 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
 
         // start zipping
         monitor.beginTask("Collect resources... ", 3);
-        
+
         IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
         IResource resource = root.findMember(new Path(containerName));
         if (!resource.exists() || !(resource instanceof IContainer)) {
@@ -256,7 +300,7 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
         } else {
             resourceList.add(container);
         }
-        
+
         monitor.worked(1);
 
         ArchiveFileExportOperation exportOperation =
@@ -322,7 +366,7 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
     /**
      * We will accept the selection in the workbench to see if we can initialize
      * from it.
-     * 
+     *
      * @see org.eclipse.ui.IWorkbenchWizard# init(org.eclipse.ui.IWorkbench,
      *      org.eclipse.jface.viewers.IStructuredSelection)
      */
