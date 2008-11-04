@@ -40,8 +40,6 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -132,12 +130,12 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         // do here the layout and the composition
         // if the input is numeric
         m_numericRadio = new JRadioButton("Numeric input (many columns)");
-        m_numericRadio.addChangeListener(new ChangeListener() {
+        m_numericRadio.addItemListener(new ItemListener() {
 
             /**
              * {@inheritDoc}
              */
-            public void stateChanged(final ChangeEvent arg0) {
+            public void itemStateChanged(final ItemEvent arg0) {
                 if (m_numericRadio.isSelected()) {
                     // disable
                     m_stringColumn.getModel().setEnabled(false);
@@ -154,12 +152,12 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         // m_numericRadio.setSelected(true);
         m_stringRadio = new JRadioButton(
                 "Parse bitvectors from strings (one column)");
-        m_stringRadio.addChangeListener(new ChangeListener() {
+        m_stringRadio.addItemListener(new ItemListener() {
 
             /**
              * {@inheritDoc}
              */
-            public void stateChanged(final ChangeEvent arg0) {
+            public void itemStateChanged(final ItemEvent arg0) {
                 if (m_stringRadio.isSelected()) {
                     // disable
                     m_threshold.setEnabled(false);

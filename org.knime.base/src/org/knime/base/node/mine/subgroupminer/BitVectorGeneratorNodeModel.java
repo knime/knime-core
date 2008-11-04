@@ -111,7 +111,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
 
     private double m_threshold = DEFAULT_THRESHOLD;
 
-    private boolean m_fromString = true;
+    private boolean m_fromString;
 
     private boolean m_useMean = false;
 
@@ -121,8 +121,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
 
     private final SettingsModelString m_stringColumn = createStringColModel();
     
-    private final SettingsModelFilterString m_includedColumns 
-        = createColumnFilterModel();
+    private final SettingsModelFilterString m_includedColumns;
 
     private static final String FILE_NAME = "bitVectorParams";
 
@@ -149,6 +148,14 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
      */
     public BitVectorGeneratorNodeModel() {
         super(1, 1);
+        // set to true in order to ensure that all numeric columns are only 
+        // included for backward compatibility (not as auto-guessing)
+        // see also #configure
+        m_fromString = true;
+        // because from string is true -> disable the column selection for 
+        // numeric input
+        m_includedColumns = createColumnFilterModel();
+        m_includedColumns.setEnabled(false);
     }
 
     /**
