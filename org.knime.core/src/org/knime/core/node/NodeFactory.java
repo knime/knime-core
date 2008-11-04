@@ -200,7 +200,7 @@ public abstract class NodeFactory<T extends NodeModel> {
         InputStream propInStream;
         String path;
         Class<?> clazz = getClass();
-        
+
 
         do {
             path = clazz.getPackage().getName();
@@ -262,7 +262,7 @@ public abstract class NodeFactory<T extends NodeModel> {
                 }
                 String shortDescription = readShortDescriptionFromXML(
                         knimeNode);
-                if (shortDescription == null 
+                if (shortDescription == null
                         || shortDescription.length() == 0) {
                     m_logger.coding("Unable to read \"shortDescription\" "
                             + "tag from XML");
@@ -270,8 +270,8 @@ public abstract class NodeFactory<T extends NodeModel> {
                 readPortsFromXML(knimeNode);
                 readViewsFromXML(knimeNode);
                 // DO NOT call "checkConsistency(createNodeModel());" here as
-                // that would call an abstract method from within the 
-                // constructor - local fields in the derived NodeFactory have 
+                // that would call an abstract method from within the
+                // constructor - local fields in the derived NodeFactory have
                 // not been initialized
             } catch (Exception ex) {
                 m_logger.coding(ex.getMessage() + " (" + path + ")", ex);
@@ -466,7 +466,7 @@ public abstract class NodeFactory<T extends NodeModel> {
                 || "predParamsOut".equals(elemName)) {
             throw new IllegalArgumentException(elemName + " is not supported "
                     + " inside the node factory xml file any more. "
-                    + "It has been replaced by portIn/portOut. " 
+                    + "It has been replaced by portIn/portOut. "
                     + "(Also update the publicID of the factory xml.)");
         } else if ("dataIn".equals(elemName) || "dataOut".equals(elemName)) {
             m_logger.coding("Please do not use " + elemName
@@ -520,7 +520,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @return an input port description
      */
     public String getInportName(final int index) {
-        if (index >= m_inPorts.size()) {
+        if ((index >= m_inPorts.size()) || (m_inPorts.get(index) == null)) {
             // can happen if no XML file for the node exists
             return "No name available";
         } else {
@@ -536,7 +536,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @return an output port description
      */
     public String getOutportName(final int index) {
-        if (index >= m_outPorts.size()) {
+        if ((index >= m_outPorts.size()) || (m_outPorts.get(index) == null)) {
             // can happen if no XML file for the node exists
             return "No name available";
         } else {
@@ -551,7 +551,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @return an input port description
      */
     public final String getInportDescription(final int index) {
-        if (index >= m_inPorts.size()) {
+        if ((index >= m_inPorts.size()) || (m_inPorts.get(index) == null)) {
             // can happen if no XML file for the node exists
             return "No description available";
         } else {
@@ -566,7 +566,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @return an output port description
      */
     public final String getOutportDescription(final int index) {
-        if (index >= m_outPorts.size()) {
+        if ((index >= m_outPorts.size()) || (m_outPorts.get(index) == null)) {
             // can happen if no XML file for the node exists
             return "No description available";
         } else {
