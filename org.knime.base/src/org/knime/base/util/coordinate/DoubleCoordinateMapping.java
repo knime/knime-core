@@ -24,15 +24,16 @@
  */
 package org.knime.base.util.coordinate;
 
-import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 
 /**
  * Holds the original value according to the domain and its mapping.
  *
  * @author Christoph Sieb, University of Konstanz
+ * @author Stephan Sellien, University of Konstanz
  */
 public class DoubleCoordinateMapping extends CoordinateMapping {
+
 
     /**
      * Constructs a coordinate mapping.
@@ -42,19 +43,6 @@ public class DoubleCoordinateMapping extends CoordinateMapping {
      * @param mappingValue the corresponding mapped value
      */
     DoubleCoordinateMapping(final String stringDomainValue,
-            final DoubleValue domainValue, final double mappingValue) {
-        super(stringDomainValue, mappingValue);
-        setValues(domainValue);
-    }
-
-    /**
-     * Constructs a coordinate mapping.
-     *
-     * @param stringDomainValue the domain value as string
-     * @param domainValue the domain value
-     * @param mappingValue the corresponding mapped value
-     */
-    public DoubleCoordinateMapping(final String stringDomainValue,
             final double domainValue, final double mappingValue) {
         super(stringDomainValue, mappingValue);
         setValues(new DoubleCell(domainValue));
