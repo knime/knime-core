@@ -200,6 +200,7 @@ public abstract class NodeFactory<T extends NodeModel> {
         InputStream propInStream;
         String path;
         Class<?> clazz = getClass();
+        
 
         do {
             path = clazz.getPackage().getName();
@@ -222,15 +223,15 @@ public abstract class NodeFactory<T extends NodeModel> {
                     defaultNodeName.substring(0, defaultNodeName.length()
                             - "Factory".length());
         }
+        URL icon = null;
+        NodeType type = null;
+        Element knimeNode = null;
+        String nodeName = defaultNodeName;
         if (propInStream == null) {
             m_logger.error("Could not find XML description "
                     + "file for node '" + getClass().getName() + "'");
-            m_knimeNode = null;
-            m_icon = null;
-            m_nodeName = defaultNodeName;
         } else {
             Document doc = null;
-            Exception exception = null;
             try {
                 synchronized (parser) {
                     parser.setErrorHandler(new DefaultHandler() {
@@ -243,48 +244,47 @@ public abstract class NodeFactory<T extends NodeModel> {
                     });
                     doc = parser.parse(new InputSource(propInStream));
                 }
-            } catch (SAXException ex) {
-                exception = ex;
-            } catch (IOException ex) {
-                exception = ex;
-            }
-            if (exception != null) {
-                m_logger.coding(exception.getMessage() + " (" + path + ")",
-                        exception);
-                m_knimeNode = null;
-                m_icon = null;
-                m_nodeName = defaultNodeName;
-                return;
-            }
-            m_knimeNode = doc.getDocumentElement();
-            m_icon = readIconFromXML();
+                knimeNode = doc.getDocumentElement();
+                icon = readIconFromXML(knimeNode);
 
-            try {
-                m_type = NodeType.valueOf(m_knimeNode.getAttribute("type"));
-            } catch (IllegalArgumentException ex) {
-                m_logger.coding("Unknown node type '"
-                        + m_knimeNode.getAttribute("type") + "'");
-                m_type = NodeType.Unknown;
-            }
+                try {
+                    type = NodeType.valueOf(knimeNode.getAttribute("type"));
+                } catch (IllegalArgumentException ex) {
+                    m_logger.coding("Unknown node type '"
+                            + knimeNode.getAttribute("type") + "'");
+                    type = NodeType.Unknown;
+                }
 
-            String nodeName = readNameFromXML();
-            if (nodeName == null || nodeName.length() == 0) {
-                m_logger.coding("Unable to read \"name\" tag from XML");
-                m_nodeName = defaultNodeName;
-            } else {
-                m_nodeName = nodeName;
+                nodeName = readNameFromXML(knimeNode);
+                if (nodeName == null || nodeName.length() == 0) {
+                    m_logger.coding("Unable to read \"name\" tag from XML");
+                    nodeName = defaultNodeName;
+                }
+                String shortDescription = readShortDescriptionFromXML(
+                        knimeNode);
+                if (shortDescription == null 
+                        || shortDescription.length() == 0) {
+                    m_logger.coding("Unable to read \"shortDescription\" "
+                            + "tag from XML");
+                }
+                readPortsFromXML(knimeNode);
+                readViewsFromXML(knimeNode);
+                // DO NOT call "checkConsistency(createNodeModel());" here as
+                // that would call an abstract method from within the 
+                // constructor - local fields in the derived NodeFactory have 
+                // not been initialized
+            } catch (Exception ex) {
+                m_logger.coding(ex.getMessage() + " (" + path + ")", ex);
+                knimeNode = null;
+                icon = null;
+                nodeName = defaultNodeName;
+                type = NodeType.Unknown;
             }
-            String shortDescription = readShortDescriptionFromXML();
-            if (shortDescription == null || shortDescription.length() == 0) {
-                m_logger.coding("Unable to read \"shortDescription\" "
-                        + "tag from XML");
-            }
-            readPortsFromXML();
-            readViewsFromXML();
-            // DO NOT call "checkConsistency(createNodeModel());" here as that
-            // would call an abstract method from within the constructor -
-            // local fields in the derived NodeFactory have not been initialized
         }
+        m_knimeNode = knimeNode;
+        m_icon = icon;
+        m_nodeName = nodeName;
+        m_type = type;
         addLoadedFactory(this.getClass());
     }
 
@@ -301,8 +301,8 @@ public abstract class NodeFactory<T extends NodeModel> {
      *
      * @return The icon as given in the xml attribute <i>icon</i>.
      */
-    private URL readIconFromXML() {
-        String imagePath = m_knimeNode.getAttribute("icon");
+    private URL readIconFromXML(final Element knimeNode) {
+        String imagePath = knimeNode.getAttribute("icon");
         imagePath = imagePath.replaceAll("//", "/");
 
         if (imagePath.startsWith("./")) {
@@ -331,8 +331,8 @@ public abstract class NodeFactory<T extends NodeModel> {
      *
      * @return The name as defined in the xml or null if that fails.
      */
-    private String readNameFromXML() {
-        Node w3cNode = m_knimeNode.getElementsByTagName("name").item(0);
+    private String readNameFromXML(final Element knimeNode) {
+        Node w3cNode = knimeNode.getElementsByTagName("name").item(0);
         if (w3cNode == null) {
             return null;
         }
@@ -352,9 +352,9 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @return The short description as defined in the xml or null if that
      *         fails.
      */
-    private String readShortDescriptionFromXML() {
+    private String readShortDescriptionFromXML(final Element knimeNode) {
         Node w3cNode =
-                m_knimeNode.getElementsByTagName("shortDescription").item(0);
+                knimeNode.getElementsByTagName("shortDescription").item(0);
         if (w3cNode == null) {
             return null;
         }
@@ -381,8 +381,8 @@ public abstract class NodeFactory<T extends NodeModel> {
      * occurs (no such element in the xml, parsing exception ...), a coding
      * problem is reported to the node logger.
      */
-    private void readPortsFromXML() {
-        Node w3cNode = m_knimeNode.getElementsByTagName("ports").item(0);
+    private void readPortsFromXML(final Element knimeNode) {
+        Node w3cNode = knimeNode.getElementsByTagName("ports").item(0);
         if (w3cNode == null) {
             return;
         }
@@ -425,8 +425,8 @@ public abstract class NodeFactory<T extends NodeModel> {
      * occurs (no such element in the xml, parsing exception ...), a coding
      * problem is reported to the node logger.
      */
-    private void readViewsFromXML() {
-        Node w3cNode = m_knimeNode.getElementsByTagName("views").item(0);
+    private void readViewsFromXML(final Element knimeNode) {
+        Node w3cNode = knimeNode.getElementsByTagName("views").item(0);
         if (w3cNode == null) {
             return;
         }
@@ -466,7 +466,8 @@ public abstract class NodeFactory<T extends NodeModel> {
                 || "predParamsOut".equals(elemName)) {
             throw new IllegalArgumentException(elemName + " is not supported "
                     + " inside the node factory xml file any more. "
-                    + "It has been replaced by portIn/portOut.");
+                    + "It has been replaced by portIn/portOut. " 
+                    + "(Also update the publicID of the factory xml.)");
         } else if ("dataIn".equals(elemName) || "dataOut".equals(elemName)) {
             m_logger.coding("Please do not use " + elemName
                     + " any more. It has been replaced by portIn/portOut.");
