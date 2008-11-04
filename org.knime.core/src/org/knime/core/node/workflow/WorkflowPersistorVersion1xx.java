@@ -887,7 +887,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     }
     
     protected boolean loadIfMustWarnOnDataLoadError(final File workflowFile) {
-        return false;
+        return true;
     }
 
     protected NodeContainerMetaPersistorVersion1xx
