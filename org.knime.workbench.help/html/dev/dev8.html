@@ -34,26 +34,23 @@ will go through each of the fields and add the appropriate information.
 	should be binned&lt;/option&gt;</li>
 	<li>ports:
 	<ul>
-		<li>dataIn: the data inports with the index - a name displayed in
+		<li>inPort: the inports with the index - a name displayed in
 		the tooltip and a description, which is displayed in the
 		NodeDescription,</li>
-		<li>dataOut: the data outports with the index, a name displayed
+		<li>outPort: the outports with the index, a name displayed
 		in the tooltip and in the context menu and a description, which is
 		displayed in the NodeDescription,</li>
-		<li>modelIn: the model inports with the index, a name displayed
-		in the tooltip and a description for the NodeDescription,</li>
-		<li>modelOut: the model outports with the index, a name displayed
-		in the tooltip and the context menu and a description for the
-		NodeDescription.</li>
 	</ul>
+	<p><em>Note, that as of KNIME 2.0 no distinction between data and model ports
+	are necessary in the NodeDescription anymore.</em></p>
 	We add: <br />
 	&lt;ports&gt; <br />
-	&lt;dataIn index="0" name="Data to bin"&gt;Data to bin&lt;/dataIn&gt; <br />
-	&lt;dataOut index="0" name="Binned data"&gt;The input data with an
+	&lt;inPort index="0" name="Data to bin"&gt;Data to bin&lt;/inPort&gt; <br />
+	&lt;outPort index="0" name="Binned data"&gt;The input data with an
 	additional column containing the referring bin number for each
-	row.&lt;/dataOut&gt; <br />
-	&lt;modelOut index="0" name="Bin intervals"&gt;Bounds of the
-	intervals&lt;/modelOut&gt;<br />
+	row.&lt;/outPort&gt; <br />
+	&lt;outPort index="1" name="Bin intervals"&gt;Bounds of the
+	intervals&lt;/outPort&gt;<br />
 	&lt;/ports&gt;</li>
 	<li>views: explains what is displayed in the view with an index of
 	the view (since a node may have several views), a name displayed in the

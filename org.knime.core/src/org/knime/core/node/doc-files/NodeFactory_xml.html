@@ -186,58 +186,38 @@ corresponding dialog option.<br>
 
 
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;dataIn index="0" name="Left
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;inPort index="0" name="Left
 table"&gt;Descriptive text for the <br>
 
 
 
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-data coming through that port.&lt;/dataIn&gt;<br>
+data coming through that port.&lt;/inPort&gt;<br>
 
 
 
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;dataIn index="1" name="Right
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;inPort index="1" name="Right
 table"&gt;This text will be displayed <br>
 
 
 
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-in the view.&lt;/dataIn&gt;<br>
+in the view.&lt;/inPort&gt;<br>
 
 
 
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;dataOut index="0" name="Joined
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;outPort index="0" name="Joined
 table"&gt;While the 'name' is used <br>
 
 
 
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-in the menus.&lt;/dataOut&gt;<br>
-
-
-
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;predParamIn index="0"
-name="Model"&gt;More about this port.&lt;/predParamIn&gt;<br>
-
-
-
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;predParamOut index="0"
-name="Model"&gt;Description of the model <br>
-
-
-
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-coming through this port.&lt;/predParamOut&gt;<br>
-
-
+in the menus.&lt;/outPort&gt;<br>
 
 
 &nbsp;&nbsp;&nbsp; &lt;/ports&gt;<br>
@@ -408,37 +388,20 @@ above, remove the red numbers from the text.
 
 
 
-  <div style="margin-left: 40px;"><code>&lt;dataIn index=""
-  name=""&gt;description&lt;/dataIn&gt;</code>, for a data table input port,<br>
+  <div style="margin-left: 40px;"><code>&lt;inPort index=""
+  name=""&gt;description&lt;/inPort&gt;</code>, for any input port,<br>
 
 
 
 
-  <code>&lt;dataOut index="" name=""&gt;description&lt;/dataOut&gt;</code>, for
-  a data table output port,<br>
-
-
-
-
-  <code>&lt;predParamIn index="" name=""
-  type=""&gt;description&lt;/predParamIn&gt;</code>, and<br>
-
-
-
-
-  <code>&lt;predParamOut index="" name=""
-  type=""&gt;description&lt;/predParamOut&gt;</code>, for a content model input or
-  output port.</div>
-
-
+  <code>&lt;outPort index="" name=""&gt;description&lt;/outPort&gt;</code>, for
+  any output port,<br>
 
 
   The index&nbsp; must be the same index as used in the source code. The name
   provided is displayed in the menus. The description (between the tags) is
-  shown in the node description view. Model ports (for content/data models) have
-  an optional '<code>type</code>' attribute. The GUI will allow only to connect
-  ports with matching type attributes. If the type is not specified, the port
-  connects to any type (but still only to model ports).</li>
+  shown in the node description view. <em>Note, that as of KNIME 2.0 no distinction 
+  between data ports and model ports is necessary in the NodeDescription.</em></li>
 
 
 
