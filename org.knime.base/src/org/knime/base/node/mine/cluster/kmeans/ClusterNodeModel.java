@@ -119,11 +119,8 @@ public class ClusterNodeModel extends NodeModel {
 
     // mapping from cluster to covering data point
 
-    private final HiLiteTranslator m_translator;
+    private final HiLiteTranslator m_translator = new HiLiteTranslator();
     
-    private DefaultHiLiteMapper m_mapper;
-
-
     private DataTableSpec m_spec;
 
 //    private static final String CFG_PROTOTYPE = "prototype";
@@ -156,8 +153,6 @@ public class ClusterNodeModel extends NodeModel {
                 new PortType[] {
                     BufferedDataTable.TYPE, 
                     PMMLClusterPortObject.TYPE});
-        m_mapper = null;
-        m_translator = new HiLiteTranslator(m_mapper);
     }
 
     /**
@@ -466,8 +461,8 @@ public class ClusterNodeModel extends NodeModel {
             }
         }
         labeledInput.close();
-        m_mapper = new DefaultHiLiteMapper(mapping);
-        m_translator.setMapper(m_mapper);
+        m_translator.setMapper(new DefaultHiLiteMapper(mapping));
+        m_translator.addToHiLiteHandler(getInHiLiteHandler(0));
         BufferedDataTable outData = exec.createBufferedDataTable(
                 labeledInput.getTable(), exec);
         return new PortObject[]{outData, getPMMLOutPortObject()};
@@ -565,8 +560,9 @@ public class ClusterNodeModel extends NodeModel {
     protected void reset() {
         // remove the clusters
         m_clusters = null;
-        m_translator.setMapper(new DefaultHiLiteMapper(
-                new HashMap<RowKey, Set<RowKey>>()));
+        m_translator.getFromHiLiteHandler().fireClearHiLiteEvent();
+        m_translator.removeAllToHiliteHandlers();
+        m_translator.setMapper(null);
     }
 
     /**
@@ -701,14 +697,14 @@ public class ClusterNodeModel extends NodeModel {
                 m_featureNames = settings.getStringArray(CFG_FEATURE_NAMES);
                 NodeSettingsRO mapSet = settings.getNodeSettings(
                         CFG_HILITEMAPPING);
-                m_mapper = DefaultHiLiteMapper.load(mapSet);
-                m_translator.setMapper(m_mapper);
+                m_translator.setMapper(DefaultHiLiteMapper.load(mapSet));
             } catch (InvalidSettingsException e) {
-                m_mapper = null;
-                m_translator.setMapper(m_mapper);
+                m_translator.setMapper(null);
+            } finally {
+                m_translator.addToHiLiteHandler(getInHiLiteHandler(0));
             }
         } catch (InvalidSettingsException e) {
-            throw new IOException(e.getMessage());
+            throw new IOException(e);
         }
     }
 
@@ -729,7 +725,7 @@ public class ClusterNodeModel extends NodeModel {
         internalSettings.addStringArray(CFG_FEATURE_NAMES, m_featureNames);
         NodeSettingsWO mapSet = 
             internalSettings.addNodeSettings(CFG_HILITEMAPPING);
-        m_mapper.save(mapSet);
+        ((DefaultHiLiteMapper) m_translator.getMapper()).save(mapSet);
         File f = new File(internDir, SETTINGS_FILE_NAME);
         FileOutputStream out = new FileOutputStream(f);
         internalSettings.saveToXML(out);

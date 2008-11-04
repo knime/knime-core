@@ -113,7 +113,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
     private ModelContent m_modelInfo;
 
     /** Translates hilite events between model and training data. */
-    private final HiLiteTranslator m_translator;
+    private final HiLiteTranslator m_translator = new HiLiteTranslator();
 
     /**
      * Creates a new model with one data in and out port, and model out-port.
@@ -121,9 +121,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
      */
     protected BasisFunctionLearnerNodeModel(final PortType model) {
         super(new PortType[]{BufferedDataTable.TYPE},  
-              new PortType[]{BufferedDataTable.TYPE, 
-                model});
-        m_translator = new HiLiteTranslator();
+              new PortType[]{BufferedDataTable.TYPE, model});
     }
 
     /**
@@ -134,16 +132,9 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
     @Override
     protected void reset() {
         m_modelInfo = null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void setInHiLiteHandler(final int id, final HiLiteHandler hdl) {
-        assert (id == 0);
+        m_translator.getFromHiLiteHandler().fireClearHiLiteEvent();
         m_translator.removeAllToHiliteHandlers();
-        m_translator.addToHiLiteHandler(hdl);
+        m_translator.setMapper(null);
     }
 
     /**
@@ -307,6 +298,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
 
         // set translator mapping
         m_translator.setMapper(table.getHiLiteMapper());
+        m_translator.addToHiLiteHandler(getInHiLiteHandler(0));
 
         ModelContent modelInfo = new ModelContent(MODEL_INFO);
         table.saveInfos(modelInfo);
@@ -454,6 +446,8 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         } catch (InvalidSettingsException ise) {
             m_translator.setMapper(null);
             throw new IOException(ise.getMessage());
+        } finally {
+            m_translator.addToHiLiteHandler(getInHiLiteHandler(0));
         }
     }
 
