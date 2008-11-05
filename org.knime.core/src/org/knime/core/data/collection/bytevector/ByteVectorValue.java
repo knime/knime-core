@@ -121,7 +121,7 @@ public interface ByteVectorValue extends DataValue {
     public static class ByteVectorUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
         private static final Icon ICON =
-                loadIcon(DoubleValue.class, "/../../icon/bytevectoricon.png");
+                loadIcon(DoubleValue.class, "/bytevectoricon.png");
 
         private static final DataValueComparator COMPARATOR =
                 new DataValueComparator() {

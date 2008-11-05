@@ -139,7 +139,7 @@ public interface BitVectorValue extends DataValue {
     public static class BitVectorUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
         private static final Icon ICON =
-                loadIcon(BitVectorValue.class, "/../../icon/bitvectoricon.png");
+                loadIcon(BitVectorValue.class, "/bitvectoricon.png");
 
         private static final DataValueComparator COMPARATOR =
                 new DataValueComparator() {

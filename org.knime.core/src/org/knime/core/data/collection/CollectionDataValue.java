@@ -92,7 +92,7 @@ public interface CollectionDataValue extends DataValue, Iterable<DataCell> {
     public static class CollectionUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
         private static final Icon ICON =
-            loadIcon(CollectionDataValue.class, "/../icon/collectionicon.png");
+            loadIcon(CollectionDataValue.class, "/icon/collectionicon.png");
 
         /** Only subclasses are allowed to instantiate this class. */
         protected CollectionUtilityFactory() {
