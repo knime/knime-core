@@ -22,7 +22,7 @@
  * History
  *   Aug 4, 2006 (rs): created
  */
-package org.knime.timeseries.node.String2TimeStamp;
+package org.knime.base.node.timeseries.stringtotimestamp;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

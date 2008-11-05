@@ -22,7 +22,7 @@
  * History
  *   January 13, 2007 (rosaria): created from String2Smileys
  */
-package org.knime.timeseries.node.String2TimeStamp;
+package org.knime.base.node.timeseries.stringtotimestamp;
 
 //import java.util.LinkedList;
 //import java.util.List;
