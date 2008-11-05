@@ -309,7 +309,12 @@ public class PivotNodeModel extends NodeModel {
         m_aggMethod.loadSettingsFrom(settings);
         m_makeAgg.loadSettingsFrom(settings);
         m_hiliting.loadSettingsFrom(settings);
-        m_ignoreMissValues.loadSettingsFrom(settings);
+        try {
+            m_ignoreMissValues.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            // new with 1.3.5
+            m_ignoreMissValues.setBooleanValue(true);
+        }
     }
 
     /**
@@ -363,7 +368,7 @@ public class PivotNodeModel extends NodeModel {
         m_aggMethod.validateSettings(settings);
         m_makeAgg.validateSettings(settings);
         m_hiliting.validateSettings(settings);
-        m_ignoreMissValues.validateSettings(settings);
+        // m_ignoreMissValues.validateSettings(settings);
     }
 
     /**
