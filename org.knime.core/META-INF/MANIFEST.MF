@@ -41,3 +41,4 @@ Require-Bundle: org.eclipse.core.runtime;reprovide=true,
  org.apache.log4j
 Eclipse-LazyStart: true
 Eclipse-RegisterBuddy: org.apache.log4j
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
