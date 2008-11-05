@@ -30,6 +30,7 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.collection.bitvector.DenseBitVectorCellFactory;
 
 /**
  *
@@ -145,16 +146,22 @@ public class DenseByteVectorCell extends DataCell implements ByteVectorValue {
      * {@inheritDoc}
      */
     @Override
-    public long nextCountIndex(final int startIdx) {
-        return m_byteVector.nextCountIndex(startIdx);
+    public long nextCountIndex(final long startIdx) {
+        if (startIdx > Integer.MAX_VALUE) {
+            return -1;
+        }
+        return m_byteVector.nextCountIndex((int)startIdx);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public long nextZeroIndex(final int startIdx) {
-        return m_byteVector.nextZeroIndex(startIdx);
+    public long nextZeroIndex(final long startIdx) {
+        if (startIdx > Integer.MAX_VALUE) {
+            return -1;
+        }
+        return m_byteVector.nextZeroIndex((int)startIdx);
     }
 
     /**
@@ -163,6 +170,14 @@ public class DenseByteVectorCell extends DataCell implements ByteVectorValue {
     @Override
     public long sumOfAllCounts() {
         return m_byteVector.sumOfAllCounts();
+    }
+
+    /**
+     * Returns a clone of the internal dense byte vector.
+     * @return a copy of the internal dense byte vector.
+     */
+    public DenseByteVector getByteVectorCopy() {
+        return new DenseByteVector(m_byteVector);
     }
 
     /** Factory for (de-)serializing a DenseBitVectorCell. */

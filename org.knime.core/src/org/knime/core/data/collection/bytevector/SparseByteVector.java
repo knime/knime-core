@@ -92,7 +92,8 @@ public class SparseByteVector {
 
     /**
      * Creates a new instance by taking over the initialization from the passed
-     * arrays. The numbers in the first argument array (<code>countIndices</code>)
+     * arrays. The numbers in the first argument array
+     * (<code>countIndices</code>)
      * are considered indices of the positions a number is stored at. The second
      * array (<code>counts</code>) contains the corresponding number to
      * store. Both arrays must have the same length.<br />
@@ -391,7 +392,7 @@ public class SparseByteVector {
      * @throws ArrayIndexOutOfBoundsException if the specified startIdx is
      *             negative
      */
-    public long nextCountIndex(final int startIdx) {
+    public long nextCountIndex(final long startIdx) {
         if (startIdx < 0) {
             throw new ArrayIndexOutOfBoundsException("Starting index"
                     + " can't be negative");
@@ -432,7 +433,7 @@ public class SparseByteVector {
      *         there after.
      * @throws ArrayIndexOutOfBoundsException if the specified startIdx negative
      */
-    public long nextZeroIndex(final int startIdx) {
+    public long nextZeroIndex(final long startIdx) {
         if (startIdx < 0) {
             throw new ArrayIndexOutOfBoundsException("Starting index"
                     + " can't be negative");
@@ -653,6 +654,56 @@ public class SparseByteVector {
 
         assert result.checkConsistency() == null;
 
+        return result;
+
+    }
+
+    /**
+     * Creates and returns a new byte vector that contains a subsequence of this
+     * vector, beginning with the byte at index <code>startIdx</code> and with
+     * its last byte being this' byte at position <code>endIdx - 1</code>.
+     * The length of the result vector is <code>endIdx - startIdx</code>. If
+     * <code>startIdx</code> equals <code>endIdx</code> a vector of length
+     * zero is returned.
+     *
+     * @param startIdx the first index included in the subsequence
+     * @param endIdx the first byte in this vector after startIdx that is not
+     *            included in the result sequence.
+     * @return a new vector of length <code>endIdx - startIdx</code>
+     *         containing the subsequence of this vector from
+     *         <code>startIdx</code> (included) to <code>endIdx</code> (not
+     *         included anymore).
+     */
+    public SparseByteVector subSequence(final long startIdx,
+            final long endIdx) {
+        if (startIdx < 0 || endIdx > m_length || endIdx < startIdx) {
+            throw new IllegalArgumentException("Illegal range for subsequense."
+                    + "(startIdx=" + startIdx + ", endIdx=" + endIdx
+                    + ", length = " + m_length + ")");
+        }
+
+        SparseByteVector result = new SparseByteVector(endIdx - startIdx);
+
+        if (m_lastIdx < 0 || startIdx == endIdx || m_idxStorage[0] >= endIdx
+                || m_idxStorage[m_lastIdx] < startIdx) {
+            // no bits set, or not in the specified range - or range is null
+            return result;
+        }
+
+        // find the address to start copying
+        int storageIdx =
+                Arrays.binarySearch(m_idxStorage, 0, m_lastIdx + 1, startIdx);
+        if (storageIdx < 0) {
+            // it points to the next index in the array
+            storageIdx = -(storageIdx + 1);
+        }
+        // copy the indexes
+        while (storageIdx < m_lastIdx && m_idxStorage[storageIdx] < endIdx) {
+            result.set(m_idxStorage[storageIdx], m_count[storageIdx] & 0x0FF);
+            storageIdx++;
+        }
+
+        assert result.checkConsistency() == null;
         return result;
 
     }

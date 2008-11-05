@@ -127,6 +127,28 @@ public class SparseBitVectorCellFactory {
     }
 
     /**
+     * Sets the bit at the specified index to the new value.
+     *
+     * @param bitIdx the index of the bit to set or clear
+     * @param value if true, the specified bit will be set, otherwise it will be
+     *            cleared.
+     * @throws ArrayIndexOutOfBoundsException if the index is negative or larger
+     *             than the size of the vector
+     */
+    public void set(final long bitIdx, final boolean value) {
+        m_vector.set(bitIdx, value);
+    }
+
+    /**
+     * Clears the bit with the specified index in the vector.
+     *
+     * @param bitIndex the index of the bit to set to zero.
+     */
+    public void clear(final long bitIndex) {
+        m_vector.clear(bitIndex);
+    }
+
+    /**
      * Creates a {@link DataCell} from the currently stored bit vector.
      *
      * @return a {@link DataCell} containing the current value of the vector

@@ -25,6 +25,13 @@ package org.knime.core.data.collection.bitvector;
 import org.knime.core.data.DataCell;
 
 /**
+ * Used to created {@link DataCell}s holding a {@link DenseBitVector}. As data
+ * cells are read only this factory can be used to initialize the bit vector
+ * accordingly and then create a data cell from it. <br />
+ * This factory also provides methods for performing basic operations
+ * ({@link #and(BitVectorValue, BitVectorValue)},
+ * {@link #or(BitVectorValue, BitVectorValue)}, etc.) on two data cells holding
+ * bit vectors.
  *
  * @author ohl, University of Konstanz
  */
@@ -108,6 +115,40 @@ public class DenseBitVectorCellFactory {
      */
     public void set(final long bitIndex) {
         m_vector.set(bitIndex);
+    }
+
+    /**
+     * Sets all bits in the specified range. The bit at index startIdx is
+     * included, the endIdx is not included in the change. The endIdx can't be
+     * smaller than the startIdx. If the indices are equal, no change is made.
+     *
+     * @param startIdx the index of the first bit to set to one
+     * @param endIdx the index of the last bit to set to one
+     */
+    public void set(final long startIdx, final long endIdx) {
+        m_vector.set(startIdx, endIdx);
+    }
+
+    /**
+     * Sets the bit at the specified index to the new value.
+     *
+     * @param bitIdx the index of the bit to set or clear
+     * @param value if true, the specified bit will be set, otherwise it will be
+     *            cleared.
+     * @throws ArrayIndexOutOfBoundsException if the index is negative or larger
+     *             than the size of the vector
+     */
+    public void set(final long bitIdx, final boolean value) {
+        m_vector.set(bitIdx, value);
+    }
+
+    /**
+     * Clears the bit with the specified index in the vector.
+     *
+     * @param bitIndex the index of the bit to set to zero.
+     */
+    public void clear(final long bitIndex) {
+        m_vector.clear(bitIndex);
     }
 
     /**

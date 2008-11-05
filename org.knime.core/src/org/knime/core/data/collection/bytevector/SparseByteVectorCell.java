@@ -30,6 +30,7 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.collection.bitvector.SparseBitVectorCellFactory;
 
 /**
  *
@@ -142,7 +143,7 @@ public class SparseByteVectorCell extends DataCell implements ByteVectorValue {
      * {@inheritDoc}
      */
     @Override
-    public long nextCountIndex(final int startIdx) {
+    public long nextCountIndex(final long startIdx) {
         return m_byteVector.nextCountIndex(startIdx);
     }
 
@@ -150,7 +151,7 @@ public class SparseByteVectorCell extends DataCell implements ByteVectorValue {
      * {@inheritDoc}
      */
     @Override
-    public long nextZeroIndex(final int startIdx) {
+    public long nextZeroIndex(final long startIdx) {
         return m_byteVector.nextZeroIndex(startIdx);
     }
 
@@ -160,6 +161,14 @@ public class SparseByteVectorCell extends DataCell implements ByteVectorValue {
     @Override
     public long sumOfAllCounts() {
         return m_byteVector.sumOfAllCounts();
+    }
+
+    /**
+     * Returns a clone of the internal sparse byte vector.
+     * @return a copy of the internal sparse byte vector.
+     */
+    public SparseByteVector getByteVectorCopy() {
+        return new SparseByteVector(m_byteVector);
     }
 
     /** Factory for (de-)serializing a DenseBitVectorCell. */

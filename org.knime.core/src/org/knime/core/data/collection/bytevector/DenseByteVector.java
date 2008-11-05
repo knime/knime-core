@@ -267,6 +267,76 @@ public class DenseByteVector {
     }
 
     /**
+     * Returns a new vector with the maximum of the counts at each position. The
+     * result's length is the maximum of this' and the argument's length. The
+     * value at position i in the result is the maximum of the counts in this'
+     * and the arguments vector at position i.
+     *
+     * @param bv the vector to compute the maximum of (position-wise).
+     * @return a new instance holding at each position the maximum of the
+     *         counts.
+     */
+    public DenseByteVector max(final DenseByteVector bv) {
+
+        DenseByteVector result =
+                new DenseByteVector(Math.max(m_storage.length,
+                        bv.m_storage.length));
+
+        DenseByteVector longer;
+        DenseByteVector shorter;
+        if (m_storage.length < bv.m_storage.length) {
+            shorter = this;
+            longer = bv;
+        } else {
+            shorter = bv;
+            longer = this;
+        }
+
+        for (int i = 0; i < shorter.m_storage.length; i++) {
+            result.m_storage[i] =
+                    longer.m_storage[i] < shorter.m_storage[i] ? shorter.m_storage[i]
+                            : longer.m_storage[i];
+        }
+
+        // copy the rest of the longer one
+        if (shorter.m_storage.length < longer.m_storage.length) {
+            System.arraycopy(longer.m_storage, shorter.m_storage.length,
+                    result.m_storage, shorter.m_storage.length,
+                    longer.m_storage.length - shorter.m_storage.length);
+        }
+        return result;
+
+    }
+
+    /**
+     * Returns a new vector with the minimum of the counts at each position. The
+     * result's length is the maximum of this' and the argument's length. The
+     * value at position i in the result is the minimum of the counts in this'
+     * and the arguments vector at position i.
+     *
+     * @param bv the vector to compute the minimum of (position-wise).
+     * @return a new instance holding at each position the minimum of the
+     *         counts.
+     */
+    public DenseByteVector min(final DenseByteVector bv) {
+
+        DenseByteVector result =
+                new DenseByteVector(Math.max(m_storage.length,
+                        bv.m_storage.length));
+
+        int i = Math.min(bv.m_storage.length, m_storage.length) - 1;
+        while (i >= 0) {
+            result.m_storage[i] =
+                    bv.m_storage[i] < m_storage[i] ? bv.m_storage[i]
+                            : m_storage[i];
+
+        }
+        // the rest of the counts stays zero.
+        return result;
+
+    }
+
+    /**
      * Appends the argument at the end of this vector. It creates and returns a
      * new vector whose length is the sum of this' and the argument's length.
      * The lower indices in the result contain the counts of this vector, the
@@ -282,6 +352,38 @@ public class DenseByteVector {
         System.arraycopy(m_storage, 0, result.m_storage, 0, m_storage.length);
         System.arraycopy(bv.m_storage, 0, result.m_storage, m_storage.length,
                 bv.m_storage.length);
+        return result;
+    }
+
+    /**
+     * Creates and returns a new byte vector that contains a subsequence of this
+     * vector, beginning with the byte at index <code>startIdx</code> and with
+     * its last byte being this' byte at position <code>endIdx - 1</code>.
+     * The length of the result vector is <code>endIdx - startIdx</code>. If
+     * <code>startIdx</code> equals <code>endIdx</code> a vector of length
+     * zero is returned.
+     *
+     * @param startIdx the startIdx of the subsequence
+     * @param endIdx the first byte in this vector after startIdx that is not
+     *            included in the result sequence.
+     * @return a new vector of length <code>endIdx - startIdx</code>
+     *         containing the subsequence of this vector from
+     *         <code>startIdx</code> (included) to <code>endIdx</code> (not
+     *         included anymore).
+     */
+    public DenseByteVector subSequence(final int startIdx, final int endIdx) {
+        if (startIdx < 0 || endIdx > m_storage.length || endIdx < startIdx) {
+            throw new IllegalArgumentException("Illegal range for subsequense."
+                    + "(startIdx=" + startIdx + ", endIdx=" + endIdx
+                    + ", length = " + m_storage.length + ")");
+        }
+
+        DenseByteVector result = new DenseByteVector(endIdx - startIdx);
+        if (endIdx == startIdx) {
+            return result;
+        }
+        System.arraycopy(m_storage, startIdx, result.m_storage, 0,
+                result.m_storage.length);
         return result;
     }
 

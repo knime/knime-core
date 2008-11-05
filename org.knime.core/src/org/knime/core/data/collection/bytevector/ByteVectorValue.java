@@ -37,7 +37,6 @@ import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
  * Implementations are vectors of fixed length storing byte counts at specific
  * positions. Only positive values of counts are supported. Each index can store
  * a number between 0 and 255 (both inclusive).<br />
- * The maximum length is 2147483645.<br />
  *
  * @author ohl, University of Konstanz
  */
@@ -100,7 +99,7 @@ public interface ByteVectorValue extends DataValue {
      *         there after.
      * @throws ArrayIndexOutOfBoundsException if the specified startIdx negative
      */
-    public long nextZeroIndex(final int startIdx);
+    public long nextZeroIndex(final long startIdx);
 
     /**
      * Finds the next count not equal to zero on or after the specified index.
@@ -115,7 +114,7 @@ public interface ByteVectorValue extends DataValue {
      * @throws ArrayIndexOutOfBoundsException if the specified startIdx is
      *             negative
      */
-    public long nextCountIndex(final int startIdx);
+    public long nextCountIndex(final long startIdx);
 
     /** Implementations of the meta information of this value class. */
     public static class ByteVectorUtilityFactory extends UtilityFactory {
