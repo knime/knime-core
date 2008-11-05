@@ -779,15 +779,10 @@ public abstract class NodeModel {
         // make sure we conveniently have TableSpecs.
         // Rather empty ones than null
         for (int i = 0; i < copyInSpecs.length; i++) {
-            if (copyInSpecs[i] == null) {
-                if (m_inPortTypes[i].getPortObjectSpecClass().isAssignableFrom(
-                        DataTableSpec.class)) {
-                    // replace with an empty data table spec
-                    copyInSpecs[i] = new DataTableSpec();
-                } else {
-                    // TODO: is this really what we want?
-                    copyInSpecs[i] = null;
-                }
+            if (copyInSpecs[i] == null 
+                    && BufferedDataTable.TYPE.equals(m_inPortTypes[i])) {
+                // only mimic empty table for real table connections
+                copyInSpecs[i] = new DataTableSpec();
             }
         }
         // CALL CONFIGURE
