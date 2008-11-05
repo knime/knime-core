@@ -848,6 +848,10 @@
             factory-class="org.knime.base.node.preproc.filter.nominal.NominalValueRowFilterNodeFactory"
             id="org.knime.base.node.preproc.filter.nominal.NominalValueRowFilterNodeFactory">
       </node>
+      <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.timeseries.stringtotimestamp.String2DateNodeFactory"
+            id="org.knime.base.node.timeseries.stringtotimestamp.String2DateNodeFactory"/>
       
    </extension>
       <extension
