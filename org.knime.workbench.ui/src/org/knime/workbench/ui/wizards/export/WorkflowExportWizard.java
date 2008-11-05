@@ -52,7 +52,6 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.dialogs.ExportWizard;
 import org.eclipse.ui.internal.wizards.datatransfer.ArchiveFileExportOperation;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodePersistor;
 import org.knime.core.node.NodePersistorVersion200;
 import org.knime.core.node.workflow.WorkflowPersistor;
@@ -65,8 +64,8 @@ import org.knime.core.node.workflow.WorkflowPersistor;
  */
 public class WorkflowExportWizard extends ExportWizard implements IExportWizard {
 
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(WorkflowExportWizard.class);
+//    private static final NodeLogger LOGGER =
+//            NodeLogger.getLogger(WorkflowExportWizard.class);
 
     private WorkflowExportPage m_page;
 
@@ -118,8 +117,6 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
             if (!exportFile.canWrite() || exportFile.isDirectory()) {
                 // display error
                 m_page.setErrorMessage("Cannot write to specified file");
-                LOGGER.error("No write access for "
-                        + exportFile.getAbsolutePath());
                 return false;
             }
             MessageBox mb =
@@ -138,8 +135,6 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
                 if (!parentFile.canWrite() || !parentFile.isDirectory()) {
                     // display error
                     m_page.setErrorMessage("Cannot write to specified file");
-                    LOGGER.error("No write access for "
-                            + exportFile.getAbsolutePath());
                     return false;
                 }
             } else if (parentFile != null && !parentFile.exists()) {
@@ -152,9 +147,6 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
                         }
                     }
                     if (!wasRoot) {
-                        LOGGER.error("Failed to create all necessary "
-                                + "directories for export path "
-                                + exportFile.getAbsolutePath());
                         m_page.setErrorMessage("Failed to create: "
                                 + exportFile.getAbsolutePath()
                                 + ". \n Please check if it is a "
