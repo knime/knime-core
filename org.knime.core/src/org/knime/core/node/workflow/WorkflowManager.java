@@ -72,6 +72,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.ScopeLoopContext.RestoredScopeLoopContext;
+import org.knime.core.node.workflow.WorkflowEvent.Type;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -1328,6 +1329,8 @@ public final class WorkflowManager extends NodeContainer {
             }
             // allow SNC to update states etc
             snc.postExecuteNode(success);
+            notifyWorkflowListeners(new WorkflowEvent(
+                    Type.NODE_FINISHED, snc.getID(), null, null));
             boolean canConfigureSuccessors = true;
             // process loop context - only for "real" nodes:
             if (snc.getLoopRole().equals(LoopRole.BEGIN)) {
@@ -1618,7 +1621,7 @@ public final class WorkflowManager extends NodeContainer {
     //////////////////////////////////////////////////////////
     // NodeContainer implementations (WFM acts as meta node)
     //////////////////////////////////////////////////////////
-
+    
     /** Reset node and all executed successors of a specific node.
     *
     * @param id of first node in chain to be reset.
@@ -2678,7 +2681,7 @@ public final class WorkflowManager extends NodeContainer {
             if (result.hasErrors() && (!result.hasErrorDuringNonDataLoad()
                     && !persistor.mustWarnOnDataLoadError())) {
                 LOGGER.debug("Workflow was apparently ex/imported without "
-                        + "data, silently fixing states writing changes");
+                        + "data, silently fixing states and writing changes");
                 try {
                     manager.save(directory, new ExecutionMonitor(), true);
                     fixDataLoadProblems = true;

@@ -50,7 +50,7 @@ public interface TimestampValue extends DataValue {
     public static class TimestampUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
         private static final Icon ICON = 
-            loadIcon(TimestampValue.class, "/Timestamp.png");
+            loadIcon(TimestampValue.class, "/icon/timestampicon.png");
 
         private static final TimestampValueComparator COMPARATOR =
             new TimestampValueComparator();
