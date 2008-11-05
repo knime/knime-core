@@ -55,13 +55,13 @@ public class DefaultHiLiteMapper implements HiLiteMapper {
      * 
      * @param map keeps the <code>RowKey</code> to set of
      *      <code>RowKey</code>s mapping
-     * @throws IllegalArgumentException if <code>map</code> is <code>null</code>
      */
     public DefaultHiLiteMapper(final Map<RowKey, Set<RowKey>> map) {
         if (map == null) {
-            throw new IllegalArgumentException("Mapping must not be null.");
+            m_map = Collections.emptyMap();
+        } else {
+            m_map = map;
         }
-        m_map = map;
     }
     
     /**
