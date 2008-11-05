@@ -235,7 +235,8 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
 
         // for all included columns do the discretization
         int currentColumn = 0;
-        for (String includedColumnName : m_includedColumnNames.getIncludeList()) {
+        for (String includedColumnName 
+                : m_includedColumnNames.getIncludeList()) {
 
             LOGGER.debug("Process column: " + includedColumnName);
             exec
@@ -310,9 +311,9 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
                 subExecPerColumn.checkCanceled();
 
                 // create subExec for counting
-                ExecutionContext subExecCount =
-                        subExecBounds
-                                .createSubExecutionContext(1.0D / m_classValues.length);
+                ExecutionContext subExecCount = 
+                    subExecBounds.createSubExecutionContext(
+                            1.0D / m_classValues.length);
 
                 // LOGGER.debug("Inserted bounds: " + numInsertedBounds);
                 // LOGGER.debug("intervall boundaries: " +
@@ -751,8 +752,8 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
                     // if the class value has changed since this time
                     if (!Double.isNaN(lastChangeValueWithoutNewBoundary)) {
                         // a new boundary is the midpoint
-                        double newBoundary =
-                                (lastDifferentValue + lastChangeValueWithoutNewBoundary) / 2.0D;
+                        double newBoundary = (lastDifferentValue 
+                                + lastChangeValueWithoutNewBoundary) / 2.0D;
 
                         // add the new midpoint boundary to the linked list
                         lastAdded.m_next = new LinkedDouble(newBoundary);
@@ -877,7 +878,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
                     .getIncludeList().toArray(
                             new String[m_includedColumnNames.getIncludeList()
                                     .size()])) > -1) {
-                // creat a nominal string column spec
+                // create a nominal string column spec
                 newColumnSpecs[counter] =
                         new DataColumnSpecCreator(originalColumnSpec.getName(),
                                 StringCell.TYPE).createSpec();
@@ -901,7 +902,11 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_includedColumnNames.loadSettingsFrom(settings);
+        try {
+            m_includedColumnNames.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            // ignore: new with 2.0
+        }
         m_classColumnName.loadSettingsFrom(settings);
         m_sortInMemory.loadSettingsFrom(settings);
         // m_classOptimizedVersion.loadSettingsFrom(settings);
@@ -938,10 +943,14 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
         if (classifyColumn == null || classifyColumn.equals("")) {
             throw new InvalidSettingsException("Discretization column not set");
         }
-
-        SettingsModelFilterString tmpIncl =
+        SettingsModelFilterString tmpIncl = null;
+        try {
+            tmpIncl = 
                 m_includedColumnNames.createCloneWithValidatedValue(settings);
-        if (tmpIncl.getIncludeList() == null
+        } catch (InvalidSettingsException ise) {
+            // new with 2.0
+        }
+        if (tmpIncl == null || tmpIncl.getIncludeList() == null
                 || tmpIncl.getIncludeList().size() == 0) {
             setWarningMessage(WARNING_NO_COLS_SELECTED);
         }
@@ -986,7 +995,6 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
             DataTableSpec inclCols = DataTableSpec.load(sub);
             // now load/create the model
             m_discretizationModel = new DiscretizationModel(binModel, inclCols);
-
         } catch (InvalidSettingsException ise) {
             throw new IOException("Internal model could not be loaded.", ise);
         }
