@@ -453,6 +453,7 @@
          factory-class="org.knime.base.node.preproc.discretization.caim2.modelcreator.CAIMDiscretization2NodeFactory"
          id="org.knime.base.node.preproc.discretization.caim.modelcreator.CAIMDiscretizationNodeFactory"/>
     <node
+         after="org.knime.base.node.preproc.discretization.caim2.modelcreator.CAIMDiscretizationNodeFactory"
    		 category-path="/manipulation/column"
          factory-class="org.knime.base.node.preproc.discretization.caim2.modelapply.Discretization2ApplyNodeFactory"
          id="org.knime.base.node.preproc.discretization.caim.modelapply.DiscretizationApplyNodeFactory"/>
