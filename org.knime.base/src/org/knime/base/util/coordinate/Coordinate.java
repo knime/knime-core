@@ -98,19 +98,19 @@ public abstract class Coordinate {
                 descending);
         addPolicy(DoubleValue.class, PercentagePolicyStrategy.ID, percentage);
 
-//        LogarithmicMappingMethod lnMappingMethod =
-//                new LogarithmicMappingMethod();
-//        LogarithmicMappingMethod log10MappingMethod =
-//                new LogarithmicMappingMethod(10);
-//        LogarithmicMappingMethod ldMappingMethod =
-//                new LogarithmicMappingMethod(2);
-//
-//        addMappingMethod(DoubleValue.class, LogarithmicMappingMethod.ID_BASE_E,
-//                lnMappingMethod);
-//        addMappingMethod(DoubleValue.class,
-//                LogarithmicMappingMethod.ID_BASE_10, log10MappingMethod);
-//        addMappingMethod(DoubleValue.class, LogarithmicMappingMethod.ID_BASE_2,
-//                ldMappingMethod);
+        LogarithmicMappingMethod lnMappingMethod =
+                new LogarithmicMappingMethod();
+        LogarithmicMappingMethod log10MappingMethod =
+                new LogarithmicMappingMethod(10);
+        LogarithmicMappingMethod ldMappingMethod =
+                new LogarithmicMappingMethod(2);
+
+        addMappingMethod(DoubleValue.class, LogarithmicMappingMethod.ID_BASE_E,
+                lnMappingMethod);
+        addMappingMethod(DoubleValue.class,
+                LogarithmicMappingMethod.ID_BASE_10, log10MappingMethod);
+        addMappingMethod(DoubleValue.class, LogarithmicMappingMethod.ID_BASE_2,
+                ldMappingMethod);
     }
 
     private final Set<DataValue> m_desiredValues = new HashSet<DataValue>();

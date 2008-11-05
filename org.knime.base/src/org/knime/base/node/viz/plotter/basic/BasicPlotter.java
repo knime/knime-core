@@ -38,6 +38,10 @@ import org.knime.base.node.util.DataArray;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
+import org.knime.base.node.viz.plotter.Axis;
+import org.knime.base.util.coordinate.Coordinate;
+import org.knime.base.util.coordinate.LogarithmicMappingMethod;
+import org.knime.base.util.coordinate.MappingMethod;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -293,23 +297,78 @@ public abstract class BasicPlotter extends AbstractPlotter {
         double yMax = yCopy[yCopy.length - 1];
         createYCoordinate(yMin, yMax);
         for (int i = 0; i < y.length; i++) {
-            double value = y[i];
-            double mappedValue = getYAxis().getCoordinate()
-                .calculateMappedValue(new DoubleCell(value), 
-                        getDrawingPaneDimension().height);
-            int mappedX = (int)getXAxis().getCoordinate()
-                .calculateMappedValue(new IntCell(xCoords[i]), 
-                        getDrawingPaneDimension().width);
-            Point p = new Point(mappedX, (int)getScreenYCoordinate(
-                    mappedValue));
-            line.addPoint(p);
-            line.addDomainValue(new DataCellPoint(new DoubleCell(xCoords[i]), 
-                    new DoubleCell(value)));
-            }
+                double value = y[i];
+                double mappedValue = getYAxis().getCoordinate()
+                    .calculateMappedValue(
+                                new DoubleCell(value),
+                                getDrawingPaneDimension().height);
+                int mappedX = (int)getXAxis().getCoordinate()
+                    .calculateMappedValue(
+                                new IntCell(xCoords[i]),
+                                getDrawingPaneDimension().width);
+                Point p = new Point(mappedX, 
+                        (int)getScreenYCoordinate(mappedValue));
+                line.addPoint(p);
+                line.addDomainValue(new DataCellPoint(
+                        new DoubleCell(xCoords[i]),
+                        new DoubleCell(value)));
+        }
         ((BasicDrawingPane)getDrawingPane()).addDrawingElement(line);    
         fitToScreen();
     }
    
+    
+    private boolean isLogarithmic(final Axis axis) {
+        Coordinate coordinate = axis.getCoordinate();
+        for (MappingMethod mapMethod : coordinate.getActiveMappingMethods()) {
+            if (mapMethod instanceof LogarithmicMappingMethod) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+
+
+    private List<Point> interpolateLine(final BasicDrawingElement line, 
+            final boolean x, final boolean y) {
+        // add points between every two points
+        List<Point>newPoints = new ArrayList<Point>();
+        List<DataCellPoint>domainValues = line.getDomainValues();
+        for (int i = 0; i < domainValues.size() - 1; i++) {
+            double x1 = ((DoubleCell)domainValues.get(i).getX())
+                .getDoubleValue();
+            double y1 = ((DoubleCell)domainValues.get(i).getY())
+                .getDoubleValue();
+            double x2 = ((DoubleCell)domainValues.get(i + 1).getX())
+                .getDoubleValue();
+            double y2 = ((DoubleCell)domainValues.get(i + 1).getY())
+                .getDoubleValue(); 
+            
+//            newPoints.add(line.getPoints().get(i));
+            
+            double deltaX = x2 - x1;
+            double deltaY = y2 - y1;
+            double distance = Math.sqrt(
+                    (deltaX * deltaX) 
+                    + (deltaY * deltaY));
+            for (int j = 0; j <= distance; j += 1) {
+              double newX = x1 + (deltaX / distance) * j;
+              double newY = y1 + (deltaY / distance) * j;
+              // either x or Y
+              if (x && newX < 1.0) {
+                  continue;
+              }
+              if (y && newY < 1.0) {
+                  continue;
+              }
+              newX = getMappedXValue(new DoubleCell(newX));
+              newY = getMappedYValue(new DoubleCell(newY));
+              newPoints.add(new Point((int)newX, (int)newY));
+            }
+        }
+        return newPoints;
+    }
     
     
     /**
@@ -354,15 +413,18 @@ public abstract class BasicPlotter extends AbstractPlotter {
         double yMax = yCopy[yCopy.length - 1];
         createYCoordinate(yMin, yMax);
         for (int i = 0; i < y.length; i++) {
-        double value = y[i];
-        double mappedValue = getYAxis().getCoordinate().calculateMappedValue(
-                new DoubleCell(value), getDrawingPaneDimension().height);
-        int mappedX = (int)getXAxis().getCoordinate().calculateMappedValue(
-                new DoubleCell(x[i]), getDrawingPaneDimension().width);
-        Point p = new Point(mappedX, (int)getScreenYCoordinate(mappedValue));
-        line.addPoint(p);
-        line.addDomainValue(new DataCellPoint(new DoubleCell(x[i]), 
-                new DoubleCell(value)));
+            double value = y[i];
+            double mappedValue = getYAxis().getCoordinate()
+                .calculateMappedValue(
+                    new DoubleCell(value), 
+                    getDrawingPaneDimension().height);
+            int mappedX = (int)getXAxis().getCoordinate().calculateMappedValue(
+                    new DoubleCell(x[i]), getDrawingPaneDimension().width);
+            Point p = new Point(mappedX, 
+                    (int)getScreenYCoordinate(mappedValue));
+            line.addPoint(p);
+            line.addDomainValue(new DataCellPoint(new DoubleCell(x[i]), 
+                    new DoubleCell(value)));
         }
         ((BasicDrawingPane)getDrawingPane()).addDrawingElement(line);
     }
@@ -588,6 +650,15 @@ public abstract class BasicPlotter extends AbstractPlotter {
                     }
                     // set new points
                     element.setPoints(newPoints);
+                    // check whether we are in logarithmic mode
+                    boolean xLog = isLogarithmic(getXAxis());
+                    boolean yLog = isLogarithmic(getYAxis());
+                    if (xLog || yLog) {
+                        // add points
+                        List<Point>extrapolatedPoints = interpolateLine(element, 
+                                xLog, yLog);
+                        element.setPoints(extrapolatedPoints);
+                    } 
                 }
             }
         }
