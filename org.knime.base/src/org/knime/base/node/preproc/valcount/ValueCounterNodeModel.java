@@ -236,13 +236,15 @@ public class ValueCounterNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        NodeSettings s = new NodeSettings("Hiliting");
-        ((DefaultHiLiteMapper)m_translator.getMapper()).save(s);
-        File f = new File(nodeInternDir, "Hiliting.conf.gz");
-        OutputStream out = new GZIPOutputStream(new BufferedOutputStream(
-                new FileOutputStream(f)));
-        s.saveToXML(out);
-        out.close();
+        if (m_settings.hiliting()) {
+            NodeSettings s = new NodeSettings("Hiliting");
+            ((DefaultHiLiteMapper)m_translator.getMapper()).save(s);
+            File f = new File(nodeInternDir, "Hiliting.conf.gz");
+            OutputStream out = new GZIPOutputStream(new BufferedOutputStream(
+                    new FileOutputStream(f)));
+            s.saveToXML(out);
+            out.close();
+        }
     }
 
     /**
