@@ -27,8 +27,8 @@
 	</fullDescription>
 	
 	<ports>
-		<inPort index="0" name="Data to classify">Data to classify</inPort>
-		<inPort index="1" name="The model to use">Naive Bayes Model</inPort>
+	    <inPort index="0" name="The model to use">Naive Bayes Model</inPort>
+		<inPort index="1" name="Data to classify">Data to classify</inPort>
 		<outPort index="0" name="The classified data">Classified data</outPort>
 	</ports>
 </knimeNode>

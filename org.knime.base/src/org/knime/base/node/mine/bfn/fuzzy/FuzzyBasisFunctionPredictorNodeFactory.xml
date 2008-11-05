@@ -33,10 +33,10 @@
 	</fullDescription>
 
 	<ports>
-		<inPort index="1" name="Fuzzy Rule Model">
+		<inPort index="0" name="Fuzzy Rule Model">
 			Fuzzy Rule Model to which test data is applied.
 		</inPort>
-		<inPort index="0" name="Test Data">
+		<inPort index="1" name="Test Data">
 			Test data matching the Fuzzy Rule Model structure.
 		</inPort>
     	<outPort index="0" name="Predicted Data">
