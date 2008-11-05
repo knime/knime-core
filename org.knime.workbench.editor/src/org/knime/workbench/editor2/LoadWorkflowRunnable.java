@@ -51,6 +51,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
  * deleted later and the memeory can not be freed.
  *
  * @author Christoph Sieb, University of Konstanz
+ * @author Fabian Dill, University of Konstanz
  */
 class LoadWorkflowRunnable extends PersistWorflowRunnable {
 
@@ -60,11 +61,22 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
     private WorkflowEditor m_editor;
 
     private File m_workflowFile;
+    
+    private Throwable m_throwable = null;
 
     public LoadWorkflowRunnable(final WorkflowEditor editor, 
             final File workflowFile) {
         m_editor = editor;
         m_workflowFile = workflowFile;
+    }
+    
+    /**
+     * 
+     * @return the throwable which was thrown during the loading of the workflow
+     * or null, if no throwable was thrown
+     */
+    Throwable getThrowable() {
+        return m_throwable;
     }
     
     public void run(final IProgressMonitor pm) {
@@ -75,7 +87,8 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
 
         // set the loading canceled variable to false
         m_editor.setLoadingCanceled(false);
-
+        m_throwable = null;
+        
         try {
 
             // create progress monitor
@@ -114,8 +127,10 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
             }
 
         } catch (FileNotFoundException fnfe) {
+            m_throwable = fnfe;
             LOGGER.fatal("File not found", fnfe);
         } catch (IOException ioe) {
+            m_throwable = ioe;
             if (m_workflowFile.length() == 0) {
                 LOGGER.info("New workflow created.");
                 createEmptyWorkflow = true;
@@ -126,6 +141,7 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
         } catch (InvalidSettingsException ise) {
             LOGGER.error("Could not load workflow from: "
                     + m_workflowFile.getName(), ise);
+            m_throwable = ise;
         } catch (CanceledExecutionException cee) {
             LOGGER.info("Canceled loading worflow: " 
                     + m_workflowFile.getName());
@@ -140,6 +156,7 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
  *
  */
         } catch (Throwable e) {
+            m_throwable = e;
             LOGGER.error("Workflow could not be loaded. " + e.getMessage(), e);
             createEmptyWorkflow = true;
             m_editor.setWorkflowManager(null);

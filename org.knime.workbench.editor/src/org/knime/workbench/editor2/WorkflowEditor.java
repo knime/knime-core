@@ -621,6 +621,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         // LOGGER.debug("Created new WFM object as input");
 
         LOGGER.debug("Resource File's project: " + m_fileResource.getProject());
+        
         final File file = m_fileResource.getLocation().toFile();
         try {
             // FIXME:
@@ -639,10 +640,6 @@ public class WorkflowEditor extends GraphicalEditor implements
             LoadWorkflowRunnable loadWorflowRunnable =
                     new LoadWorkflowRunnable(this, file);
             ps.busyCursorWhile(loadWorflowRunnable);
-            ProjectWorkflowMap.putWorkflow(
-                    m_fileResource.getProject().getName(), 
-                    m_manager);
-
             // check if the editor should be disposed
             if (m_manager == null) {
                 if (m_loadingCanceled) {
@@ -661,11 +658,14 @@ public class WorkflowEditor extends GraphicalEditor implements
                     });
                     throw new OperationCanceledException(
                             m_loadingCanceledMessage);
-                } else {
-                    throw new RuntimeException("Workflow could not be loaded");
+                } else if (loadWorflowRunnable.getThrowable() != null) {
+                    throw new RuntimeException(
+                            loadWorflowRunnable.getThrowable());
                 }
             }
-
+            ProjectWorkflowMap.putWorkflow(
+                    m_fileResource.getProject().getName(), 
+                    m_manager);
             m_manager.addListener(this);
             m_manager.addNodeStateChangeListener(this);
         } catch (InterruptedException ie) {
@@ -1304,18 +1304,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         }
                     });
 
-                } else if ((delta.getKind() & IResourceDelta.REMOVED) != 0
-                        && (delta.getFlags() & IResourceDelta.MOVED_TO) == 0) {
-                    // We can't save the workflow here, so unsaved changes are
-                    // definitly lost. Well, people deleting projects really
-                    // should know what they're doing ;-)
-                    Display.getDefault().asyncExec(new Runnable() {
-                        public void run() {
-                            getEditorSite().getPage().closeEditor(
-                                    WorkflowEditor.this, false);
-                        }
-                    });
-                }
+                } 
             }
 
             // we're only interested in deltas that are about "our" resource
@@ -1354,7 +1343,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         + " resource has been removed.");
 
                 // close the editor
-                Display.getDefault().asyncExec(new Runnable() {
+                Display.getDefault().syncExec(new Runnable() {
                     public void run() {
                         getEditorSite().getPage().closeEditor(
                                 WorkflowEditor.this, false);
