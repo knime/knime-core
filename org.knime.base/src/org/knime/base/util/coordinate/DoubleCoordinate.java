@@ -43,6 +43,7 @@ import org.knime.core.data.DoubleValue;
  * values given an absolute maximum length.
  *
  * @author Christoph Sieb, University of Konstanz
+ * @author Stephan Sellien, University of Konstanz
  */
 public class DoubleCoordinate extends NumericCoordinate {
 
@@ -200,7 +201,7 @@ public class DoubleCoordinate extends NumericCoordinate {
      * {@inheritDoc}
      */
     @Override
-    public CoordinateMapping[] getTickPositionsInternal(
+    protected CoordinateMapping[] getTickPositionsInternal(
             final double absoluteLength) {
         PolicyStrategy strategy = getCurrentPolicy();
         if (strategy != null) {
@@ -304,8 +305,8 @@ public class DoubleCoordinate extends NumericCoordinate {
      * {@inheritDoc}
      */
     @Override
-    public double calculateMappedValueInternal(final DataCell domainValueCell,
-            final double absoluteLength) {
+    protected double calculateMappedValueInternal(
+            final DataCell domainValueCell, final double absoluteLength) {
 
         PolicyStrategy strategy = getCurrentPolicy();
         if (strategy != null) {

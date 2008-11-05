@@ -94,8 +94,8 @@ public abstract class PolicyStrategy {
             final double maxDomainValue);
 
     /**
-     * Calculates the mapped value.
-     * Additionally, values for infinity can be changed.
+     * Calculates the mapped value. Additionally, values for infinity can be
+     * changed.
      *
      * @param domainValueCell the value to be mapped
      * @param absoluteLength the absolute length
@@ -208,5 +208,19 @@ public abstract class PolicyStrategy {
      */
     protected double getNegativeInfinity() {
         return m_negativeInfinity;
+    }
+
+    /**
+     * Returns whether mapping and relabeling by {@link MappingMethod}s should
+     * be allowed for the ticks of this {@link PolicyStrategy}. The default
+     * value is <code>true</code>. An example for allowed mapping would be the
+     * a logarithmic scaling. An example where a mapping (logarithmic or
+     * square root) does not make sense is the percentage policy.
+     *
+     * @return <code>true</code>, if labels could be relabeled,
+     *         <code>false</code> else.
+     */
+    public boolean isMappingAllowed() {
+        return true;
     }
 }

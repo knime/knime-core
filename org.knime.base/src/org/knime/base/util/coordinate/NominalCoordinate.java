@@ -122,7 +122,7 @@ public class NominalCoordinate extends Coordinate {
      * @return the mapping of tick positions and corresponding domain values
      */
     @Override
-    public CoordinateMapping[] getTickPositionsInternal(
+    protected CoordinateMapping[] getTickPositionsWithLabels(
             final double absoluteLength) {
 
         if (m_numberPossibleValues <= 0) {
@@ -197,13 +197,12 @@ public class NominalCoordinate extends Coordinate {
                     reduced[i] = mappings[index];
                 } else {
                     reduced[i] =
-                            new NominalCoordinateMapping("...", 
-                                    mappings[index].getMappingValue());
+                            new NominalCoordinateMapping("...", mappings[index]
+                                    .getMappingValue());
                     if (leaveOut == 1) {
-                        String val =
-                                mappings[index].getDomainValueAsString();
+                        String val = mappings[index].getDomainValueAsString();
                         reduced[i] =
-                                new NominalCoordinateMapping(val, 
+                                new NominalCoordinateMapping(val,
                                         mappings[index].getMappingValue());
                     }
                     List<DataValue> tickValues = new ArrayList<DataValue>();
@@ -239,8 +238,8 @@ public class NominalCoordinate extends Coordinate {
      * {@inheritDoc}
      */
     @Override
-    public double calculateMappedValueInternal(final DataCell domainValueCell,
-            final double absoluteLength) {
+    protected double calculateMappedValueInternal(
+            final DataCell domainValueCell, final double absoluteLength) {
 
         // get the mapping for all values dependent on the absolute mapping
         // length

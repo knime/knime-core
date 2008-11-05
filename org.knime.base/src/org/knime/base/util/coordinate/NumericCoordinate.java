@@ -38,6 +38,7 @@ import org.knime.core.data.def.DoubleCell;
  * @see org.knime.base.util.coordinate.IntegerCoordinate
  *
  * @author Tobias Koetter, University of Konstanz
+ * @author Stephan Sellien, University of Konstanz
  */
 public abstract class NumericCoordinate extends Coordinate {
 
@@ -59,17 +60,54 @@ public abstract class NumericCoordinate extends Coordinate {
     }
 
     /**
-     * Returns an array with the position of all ticks and their corresponding
-     * domain values given an absolute length. The pre specified tick policy
-     * also influences the tick positions.
+     * Returns an array with the positions of all ticks and their corresponding
+     * domain values given an absolute length. The pre-specified tick policy
+     * also influences the tick positions, e.g. ascending or descending.
+     *
+     * @param absolutLength the absolute length the domain is mapped on
+     *
+     * @return the mapping of tick positions and corresponding domain values
+     */
+    protected abstract CoordinateMapping[] getTickPositionsInternal(
+            final double absolutLength);
+
+    /**
+     *
+     * Returns an array with the positions of all ticks and their corresponding
+     * domain values given an absolute length. The pre-specified tick policy
+     * also influences the tick positions, e.g. ascending or descending.
      *
      * @param absolutLength the absolute length the domain is mapped on
      *
      * @return the mapping of tick positions and corresponding domain values
      */
     @Override
-    public abstract CoordinateMapping[] getTickPositionsInternal(
-            final double absolutLength);
+    protected CoordinateMapping[] getTickPositionsWithLabels(
+            final double absolutLength) {
+        CoordinateMapping[] coordMap = getTickPositionsInternal(absolutLength);
+        if (coordMap == null || coordMap.length < 1
+                || getActiveMappingMethod() == null
+                || getCurrentPolicy() == null
+                || !getCurrentPolicy().isMappingAllowed()) {
+            return coordMap;
+        }
+        CoordinateMapping[] result = new CoordinateMapping[coordMap.length];
+
+        int index = 0;
+        for (CoordinateMapping cm : coordMap) {
+            // each numeric coordinate must have exactly one value per tick
+            // and each tick a numeric value ( = DoubleValue ) set.
+            DoubleValue value = (DoubleValue)cm.getValues()[0];
+            double val =
+                    getActiveMappingMethod().getLabel(
+                            new DoubleCell(value.getDoubleValue()));
+            result[index++] =
+                    new DoubleCoordinateMapping("" + val, val, cm
+                            .getMappingValue());
+        }
+
+        return result;
+    }
 
     /**
      * Calculates a numeric mapping assuming a
@@ -78,7 +116,7 @@ public abstract class NumericCoordinate extends Coordinate {
      * {@inheritDoc}
      */
     @Override
-    public abstract double calculateMappedValueInternal(
+    protected abstract double calculateMappedValueInternal(
             final DataCell domainValueCell, final double absolutLength);
 
     /**
@@ -136,7 +174,7 @@ public abstract class NumericCoordinate extends Coordinate {
      */
     public final double getMaxDomainValue() {
         DataCell cell = new DoubleCell(m_maxDomainValue);
-        cell = applyMappingMethods(cell);
+        cell = applyMappingMethod(cell);
         return ((DoubleValue)cell).getDoubleValue();
     }
 
@@ -145,12 +183,8 @@ public abstract class NumericCoordinate extends Coordinate {
      */
     @Override
     public double getPositiveInfinity() {
-        try {
-            return ((DoubleValue)applyMappingMethods(new DoubleCell(
+            return ((DoubleValue)applyMappingMethod(new DoubleCell(
                     Double.POSITIVE_INFINITY))).getDoubleValue();
-        } catch (IllegalArgumentException e) {
-            return super.getPositiveInfinity();
-        }
     }
 
     /**
@@ -158,12 +192,8 @@ public abstract class NumericCoordinate extends Coordinate {
      */
     @Override
     public double getNegativeInfinity() {
-        try {
-            return ((DoubleValue)applyMappingMethods(new DoubleCell(
+            return ((DoubleValue)applyMappingMethod(new DoubleCell(
                     Double.NEGATIVE_INFINITY))).getDoubleValue();
-        } catch (IllegalArgumentException e) {
-            return super.getNegativeInfinity();
-        }
     }
 
     /**
@@ -171,7 +201,7 @@ public abstract class NumericCoordinate extends Coordinate {
      */
     public final double getMinDomainValue() {
         DataCell cell = new DoubleCell(m_minDomainValue);
-        cell = applyMappingMethods(cell);
+        cell = applyMappingMethod(cell);
         return ((DoubleValue)cell).getDoubleValue();
     }
 

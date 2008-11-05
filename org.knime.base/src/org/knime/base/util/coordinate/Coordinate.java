@@ -25,11 +25,8 @@
  */
 package org.knime.base.util.coordinate;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -111,12 +108,16 @@ public abstract class Coordinate {
                 LogarithmicMappingMethod.ID_BASE_10, log10MappingMethod);
         addMappingMethod(DoubleValue.class, LogarithmicMappingMethod.ID_BASE_2,
                 ldMappingMethod);
+
+        SquareRootMappingMethod sqrt = new SquareRootMappingMethod();
+        addMappingMethod(
+                DoubleValue.class, SquareRootMappingMethod.ID_SQRT, sqrt);
+
     }
 
     private final Set<DataValue> m_desiredValues = new HashSet<DataValue>();
 
-    private final List<MappingMethod> m_activeMethods =
-            new LinkedList<MappingMethod>();
+    private MappingMethod m_activeMethod = null;
 
     private PolicyStrategy m_policy;
 
@@ -332,9 +333,9 @@ public abstract class Coordinate {
     DataColumnSpec getDataColumnSpec() {
         DataColumnSpecCreator creator = new DataColumnSpecCreator(m_columnSpec);
         DataCell newLowerBound =
-                applyMappingMethods(m_columnSpec.getDomain().getLowerBound());
+                applyMappingMethod(m_columnSpec.getDomain().getLowerBound());
         DataCell newUpperBound =
-                applyMappingMethods(m_columnSpec.getDomain().getUpperBound());
+                applyMappingMethod(m_columnSpec.getDomain().getUpperBound());
         creator.setDomain(new DataColumnDomainCreator(newLowerBound,
                 newUpperBound).createDomain());
         return creator.createSpec();
@@ -354,7 +355,7 @@ public abstract class Coordinate {
     @Deprecated
     public CoordinateMapping[] getTickPositions(final double absoluteLength,
             final boolean naturalMapping) {
-        return getTickPositionsInternal(absoluteLength);
+        return getTickPositionsWithLabels(absoluteLength);
     }
 
     /**
@@ -366,7 +367,7 @@ public abstract class Coordinate {
      * @return the mapping of tick positions and corresponding domain values
      */
     public CoordinateMapping[] getTickPositions(final double absoluteLength) {
-        return getTickPositionsInternal(absoluteLength);
+        return getTickPositionsWithLabels(absoluteLength);
     }
 
     /**
@@ -377,7 +378,7 @@ public abstract class Coordinate {
      *
      * @return the mapping of tick positions and corresponding domain values
      */
-    protected abstract CoordinateMapping[] getTickPositionsInternal(
+    protected abstract CoordinateMapping[] getTickPositionsWithLabels(
             final double absoluteLength);
 
     /**
@@ -397,7 +398,7 @@ public abstract class Coordinate {
     public double calculateMappedValue(final DataCell domainValueCell,
             final double absoluteLength) {
         return calculateMappedValueInternal(
-                applyMappingMethods(domainValueCell), absoluteLength);
+                applyMappingMethod(domainValueCell), absoluteLength);
     }
 
     /**
@@ -511,72 +512,45 @@ public abstract class Coordinate {
     }
 
     /**
-     * Sets the mapping methods which should be applied.
-     *
-     * @param methods a {@link List} of {@link MappingMethod}s
-     */
-    public void setActiveMappingMethods(final List<MappingMethod> methods) {
-        m_activeMethods.clear();
-        if (methods != null && methods.size() > 0) {
-            m_activeMethods.addAll(methods);
-        }
-    }
-
-    /**
-     * Adds mapping method which should be applied.
+     * Sets the mapping method which should be applied.
      *
      * @param method a {@link MappingMethod}
      */
-    public void addActiveMappingMethod(final MappingMethod method) {
-        if (method != null) {
-            m_activeMethods.add(method);
-        }
+    public void setActiveMappingMethod(final MappingMethod method) {
+        m_activeMethod = method;
     }
 
     /**
-     * Removes mapping method from applied mapping methods.
+     * Gets the mapping method which should be applied.
      *
-     * @param method a {@link MappingMethod}
+     * @return the {@link MappingMethod} which currently will be applied or
+     *         <code>null</code> if none
      */
-    public void removeActiveMappingMethod(final MappingMethod method) {
-        if (method != null) {
-            m_activeMethods.remove(method);
-        }
+    public MappingMethod getActiveMappingMethod() {
+        return m_activeMethod;
     }
 
     /**
-     * Gets the mapping methods which should be applied.
-     *
-     * @return a {@link List} of {@link MappingMethod}s. This list is not
-     *         modifiable!
-     */
-    public List<MappingMethod> getActiveMappingMethods() {
-        return Collections.unmodifiableList(m_activeMethods);
-    }
-
-    /**
-     * Applies the mapping methods.
+     * Applies the mapping method.
      *
      * @param datacell value to be mapped
      * @return the mapped value
      */
-    protected DataCell applyMappingMethods(final DataCell datacell) {
+    protected DataCell applyMappingMethod(final DataCell datacell) {
 
-//        System.out.print("Mapping " + datacell);
+        // System.out.print("Mapping " + datacell);
 
         DataCell cell = datacell;
-        if (m_activeMethods.size() > 0) {
-            for (MappingMethod method : m_activeMethods) {
-                cell = method.doMapping(cell);
-            }
+        if (m_activeMethod != null) {
+            cell = m_activeMethod.doMapping(cell);
         }
-//        System.out.println(" to: " + cell);
+        // System.out.println(" to: " + cell);
         return cell;
     }
 
     /**
-     * Returns the domain used in this moment after applying active mapping
-     * methods. This must not be equal to the original domain!
+     * Returns the domain used in this moment after applying the active mapping
+     * method. This must not be equal to the original domain!
      *
      * @return the domain
      */

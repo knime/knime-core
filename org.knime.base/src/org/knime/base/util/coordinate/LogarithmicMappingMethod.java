@@ -120,6 +120,9 @@ public class LogarithmicMappingMethod implements MappingMethod {
      * equal 0 and the upper bound is greater than 1 for scaling reasons.
      */
     public boolean isCompatibleWithDomain(final DataColumnDomain domain) {
+        if (domain == null || !domain.hasBounds()) {
+            return false;
+        }
         if (domain.getLowerBound().getType().isCompatible(DoubleValue.class)
                 && domain.getUpperBound().getType().isCompatible(
                         DoubleValue.class)) {
@@ -132,5 +135,18 @@ public class LogarithmicMappingMethod implements MappingMethod {
             }
         }
         return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public double getLabel(final DataCell cell) {
+        if (cell == null || !cell.getType().isCompatible(DoubleValue.class)) {
+            throw new IllegalArgumentException(
+                "DataCell must not be null and of type DoubleValue!");
+        }
+        double value = ((DoubleValue)cell).getDoubleValue();
+
+        return Math.pow(m_base, value);
     }
 }

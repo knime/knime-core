@@ -152,6 +152,10 @@ public class Axis extends JComponent {
 
     private JRadioButtonMenuItem m_notationScientificRB;
 
+    private JMenu m_mappingMethodMenu;
+
+    private JMenu m_notationsMenu;
+
     /**
      * Adds a {@link ChangeListener}, which is notified if repaint is
      * necessary.
@@ -384,6 +388,8 @@ public class Axis extends JComponent {
 
     private int getDecimals(final List<String> labels, final FontMetrics fm) {
         int decimals = 0;
+        int exponent = 0;
+        boolean negative = false;
         boolean tooLong = false;
 
         for (CoordinateMapping cm : m_coordMap) {
@@ -394,6 +400,9 @@ public class Axis extends JComponent {
                     l = "0";
                 } else {
                     l = formatDouble(value);
+                }
+                if (value < -1e-15) {
+                    negative = true;
                 }
             } catch (Exception e) {
                 // no number.. no formatting necessary
@@ -413,6 +422,10 @@ public class Axis extends JComponent {
                 if (temp > decimals) {
                     decimals = temp;
                 }
+                temp = l.length() - l.indexOf('E') - 1;
+                if (temp > exponent) {
+                    exponent = temp;
+                }
             } else if (l.contains(".")) {
                 int temp = l.length() - l.indexOf('.') - 1;
                 if (temp > decimals) {
@@ -420,6 +433,19 @@ public class Axis extends JComponent {
                 }
             }
         }
+
+        // exponent would not be greater than 3. Space for 4 Values should be
+        // given.
+        if (exponent + decimals > 4) {
+            decimals = 4 - exponent;
+        }
+
+        if (negative || m_horizontal) {
+            if (exponent + decimals > 3) {
+                decimals = 3 - exponent;
+            }
+        }
+
         if (tooLong) {
             if (m_notationScientificRB != null) {
                 m_notationScientificRB.setSelected(true);
@@ -462,20 +488,19 @@ public class Axis extends JComponent {
 
             // if (!m_coordinate.isNominal()) {
             // for the label we adjust the coordinates
-            int lablePixelLength = g.getFontMetrics().stringWidth(label);
+            int labelPixelLength = g.getFontMetrics().stringWidth(label);
 
             // place the label in the middle of a tick
-            if (!m_rotateXLabels) {
-                x -= lablePixelLength / 2;
+            if (!m_rotateXLabels || !getCoordinate().isNominal()) {
+                x -= labelPixelLength / 2;
             }
 
-            if (x + lablePixelLength > m_fullLength) {
+            if (x + labelPixelLength > m_fullLength) {
                 // if the label would be printed beyond the right border
-
-                if (m_rotateXLabels) {
-                    x = (int)(x - (0.25 * lablePixelLength));
+                if (m_rotateXLabels && getCoordinate().isNominal()) {
+                    x = (int)(x - (0.25 * labelPixelLength));
                 } else {
-                    x = m_fullLength - lablePixelLength;
+                    x = m_fullLength - labelPixelLength;
                 }
             }
             // }
@@ -591,14 +616,16 @@ public class Axis extends JComponent {
         if (getCoordinate() == null) {
             return null;
         }
+        m_currFormat = NORMAL;
         JPopupMenu popupMenu = new JPopupMenu();
         createNotationMenu(popupMenu);
 
         // policies
         if (m_coordinate != null) {
             List<PolicyStrategy> strategies = new LinkedList<PolicyStrategy>();
-            if (m_coordinate.getCompatiblePolicies() != null) {
-                strategies.addAll(m_coordinate.getCompatiblePolicies());
+            Set<PolicyStrategy>policies = m_coordinate.getCompatiblePolicies();
+            if (policies != null) {
+                strategies.addAll(policies);
                 Collections.sort(strategies, new Comparator<PolicyStrategy>() {
                     /**
                      * {@inheritDoc}
@@ -631,6 +658,20 @@ public class Axis extends JComponent {
                         public void itemStateChanged(final ItemEvent e) {
                             if (e.getStateChange() == ItemEvent.SELECTED) {
                                 m_coordinate.setPolicy(tempStrategy);
+                                // recreate popup menu
+                                setComponentPopupMenu(createPopupMenu());
+                                if (tempStrategy.isMappingAllowed()) {
+                                    m_mappingMethodMenu.setEnabled(true);
+                                    m_notationsMenu.setEnabled(true);
+                                } else {
+                                    // hide mapping methods
+                                    m_mappingMethodMenu.setEnabled(false);
+                                    m_notationsMenu.setEnabled(false);
+                                    if (getCoordinate() != null) {
+                                        getCoordinate().setActiveMappingMethod(
+                                                null);
+                                    }
+                                }
                                 notifyChangeListeners();
                             }
                         }
@@ -640,9 +681,9 @@ public class Axis extends JComponent {
 
             Set<MappingMethod> mappingMethods =
                     m_coordinate.getCompatibleMappingMethods();
-            JMenu mappingMethodMenu = new JMenu("Mapping Methods");
+            m_mappingMethodMenu = new JMenu("Mapping Methods");
             if (mappingMethods != null && mappingMethods.size() > 0) {
-                popupMenu.add(mappingMethodMenu);
+                popupMenu.add(m_mappingMethodMenu);
                 ButtonGroup buttons = new ButtonGroup();
                 final Map<MappingMethod, JRadioButtonMenuItem> checkboxes =
                         new HashMap<MappingMethod, JRadioButtonMenuItem>();
@@ -653,13 +694,12 @@ public class Axis extends JComponent {
                     @Override
                     public void itemStateChanged(final ItemEvent e) {
                         if (e.getStateChange() == ItemEvent.SELECTED) {
-                            List<MappingMethod> list =
-                                    new LinkedList<MappingMethod>();
-                            m_coordinate.setActiveMappingMethods(list);
+                            m_coordinate.setActiveMappingMethod(null);
+                            notifyChangeListeners();
                         }
                     }
                 });
-                mappingMethodMenu.add(none);
+                m_mappingMethodMenu.add(none);
                 for (MappingMethod method : mappingMethods) {
                     final MappingMethod tempMethod = method; // final needed
                     JRadioButtonMenuItem checkbox =
@@ -671,7 +711,7 @@ public class Axis extends JComponent {
                                             .getDomain()));
                     checkboxes.put(method, checkbox);
                     buttons.add(checkbox);
-                    if (m_coordinate.getActiveMappingMethods().contains(method)) {
+                    if (method.equals(m_coordinate.getActiveMappingMethod())) {
                         checkbox.setSelected(true);
                     }
                     checkbox.addItemListener(new ItemListener() {
@@ -679,48 +719,20 @@ public class Axis extends JComponent {
                          * {@inheritDoc}
                          */
                         public void itemStateChanged(final ItemEvent e) {
-                            int stateChange = e.getStateChange();
                             if (e.getStateChange() == ItemEvent.SELECTED) {
-                                if (!m_coordinate.getActiveMappingMethods()
-                                        .contains(tempMethod)) {
-                                    List<MappingMethod> list =
-                                            new LinkedList<MappingMethod>();
-                                    m_coordinate.setActiveMappingMethods(list);
-                                    m_coordinate
-                                            .addActiveMappingMethod(tempMethod);
-                                }
-                            } else if (stateChange == ItemEvent.DESELECTED) {
-                                m_coordinate
-                                        .removeActiveMappingMethod(tempMethod);
-                            }
-                            for (Map.Entry<MappingMethod, JRadioButtonMenuItem> entry : checkboxes
-                                    .entrySet()) {
-                                if (entry.getKey().isCompatibleWithDomain(
-                                        getCoordinate().getDomain())) {
-                                    entry.getValue().setEnabled(true);
-                                } else {
-                                    if (!entry.getValue().isSelected()) {
-                                        // the user should be able to disable a
-                                        // mapping method
-                                        entry.getValue().setEnabled(false);
-                                    }
-                                }
+                                m_coordinate.setActiveMappingMethod(tempMethod);
                             }
                             notifyChangeListeners();
                         }
                     });
-                    mappingMethodMenu.add(checkbox);
+                    m_mappingMethodMenu.add(checkbox);
                 }
 
-                for (Map.Entry<MappingMethod, JRadioButtonMenuItem> entry : checkboxes
-                        .entrySet()) {
+                for (Map.Entry<MappingMethod, JRadioButtonMenuItem> entry 
+                        : checkboxes.entrySet()) {
                     if (entry.getKey().isCompatibleWithDomain(
                             getCoordinate().getDomain())) {
                         entry.getValue().setEnabled(true);
-                    } else {
-                        if (!entry.getValue().isSelected()) {
-                            entry.getValue().setEnabled(false);
-                        }
                     }
                 }
             }
@@ -735,7 +747,7 @@ public class Axis extends JComponent {
         // notation
         if (m_coordinate != null && !m_coordinate.isNominal()) {
 
-            JMenu notationsMenu = new JMenu("Notations");
+            m_notationsMenu = new JMenu("Notations");
             ButtonGroup notationBG = new ButtonGroup();
 
             m_notationScientificRB = new JRadioButtonMenuItem("scientific");
@@ -764,9 +776,9 @@ public class Axis extends JComponent {
             });
             notationBG.add(m_notationNormalRB);
 
-            notationsMenu.add(m_notationScientificRB);
-            notationsMenu.add(m_notationNormalRB);
-            popupMenu.add(notationsMenu);
+            m_notationsMenu.add(m_notationScientificRB);
+            m_notationsMenu.add(m_notationNormalRB);
+            popupMenu.add(m_notationsMenu);
         }
     }
 

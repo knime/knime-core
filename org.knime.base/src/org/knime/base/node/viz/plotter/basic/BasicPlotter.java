@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   05.09.2006 (Fabian Dill): created
  */
@@ -54,43 +54,43 @@ import org.knime.core.node.NodeLogger;
 
 /**
  * Tha BasicPlotter provides means to add some simple, basic graphical forms to
- * the drawing pane, which are automatically mapped to the drawing pane's 
- * dimension. It may be used in the cases, where only the domain values for 
+ * the drawing pane, which are automatically mapped to the drawing pane's
+ * dimension. It may be used in the cases, where only the domain values for
  * these forms are known. There are some possibilities to add these basic forms
  * directly:
  * {@link #addEllipse(double, double, double, double, Color, Stroke, boolean)},
  * {@link #addLine(double[], Color, Stroke)},
  * {@link #addRectangle(double, double, double, double,Color, Stroke, boolean)},
  * {@link #addText(String, DataCell, DataCell, Color)}. If some other forms are
- * needed, the 
- * {@link org.knime.base.node.viz.plotter.basic.BasicDrawingElement} may be 
- * extended and added with the 
+ * needed, the
+ * {@link org.knime.base.node.viz.plotter.basic.BasicDrawingElement} may be
+ * extended and added with the
  * {@link #addBasicDrawingElement(BasicDrawingElement)}.
- * 
- * 
- * 
+ *
+ *
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public abstract class BasicPlotter extends AbstractPlotter {
-    
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             BasicPlotter.class);
-    
-    
+
+
     /**
      * Always provide a possibility to construct a customized plotter.
-     * 
+     *
      * @param panel the drawing pane
      * @param properties the properties
      */
-    public BasicPlotter(final AbstractDrawingPane panel, 
+    public BasicPlotter(final AbstractDrawingPane panel,
             final AbstractPlotterProperties properties) {
         super(panel, properties);
     }
-    
-    
+
+
     /**
-     * Constructs a plotter with a 
+     * Constructs a plotter with a
      * {@link org.knime.base.node.viz.plotter.basic.BasicDrawingPane} and the
      * {@link org.knime.base.node.viz.plotter.AbstractPlotterProperties}.
      *
@@ -98,11 +98,11 @@ public abstract class BasicPlotter extends AbstractPlotter {
     public BasicPlotter() {
         super(new BasicDrawingPane(), new AbstractPlotterProperties());
     }
-    
-    
-    
 
-    
+
+
+
+
     /**
      * {@inheritDoc}
      */
@@ -112,9 +112,9 @@ public abstract class BasicPlotter extends AbstractPlotter {
     }
 
     /**
-     * Plots the column in the table specified by the column index as a 
+     * Plots the column in the table specified by the column index as a
      * line plot.
-     * 
+     *
      * @param table the table containing the data to be plotted.
      * @param xIdx - the x column index specifying the data to be plotted.
      * @param yIdx - the x column index specifying the data to be plotted.
@@ -134,7 +134,7 @@ public abstract class BasicPlotter extends AbstractPlotter {
 //            return;
 //        }
         // x axis
-        DataColumnSpec xColSpec = table.getDataTableSpec().getColumnSpec(xIdx); 
+        DataColumnSpec xColSpec = table.getDataTableSpec().getColumnSpec(xIdx);
         if (xColSpec.getType().isCompatible(
                 NominalValue.class)) {
         Set<DataCell> rowKeys = new LinkedHashSet<DataCell>();
@@ -155,7 +155,7 @@ public abstract class BasicPlotter extends AbstractPlotter {
         double newYMin = ((DoubleValue)table.getDataTableSpec().getColumnSpec(
                 yIdx).getDomain().getLowerBound()).getDoubleValue();
         double newYMax = ((DoubleValue)table.getDataTableSpec().getColumnSpec(
-                yIdx).getDomain().getUpperBound()).getDoubleValue(); 
+                yIdx).getDomain().getUpperBound()).getDoubleValue();
         createYCoordinate(newYMin, newYMax);
 
         BasicLine line = new BasicLine();
@@ -182,23 +182,23 @@ public abstract class BasicPlotter extends AbstractPlotter {
                 line = new BasicLine();
                 line.setColor(color);
                 line.setStroke(stroke);
-            } 
+            }
 //            x++;
         }
         ((BasicDrawingPane)getDrawingPane()).addDrawingElement(line);
         fitToScreen();
-    }    
-    
+    }
+
 
     /**
-     * Plots the column in the table specified by the column index as a 
+     * Plots the column in the table specified by the column index as a
      * line plot.
-     * 
+     *
      * @param table the table containing the data to be plotted.
      * @param colIdx - the column index specifying the data to be plotted.
      * @param color the color of the line (may be null)
      * @param stroke the stroke of the line (may be null)
-     * @deprecated use {@link #addLine(DataArray, int, int, Color, Stroke)} 
+     * @deprecated use {@link #addLine(DataArray, int, int, Color, Stroke)}
      *  instead
      */
     @Deprecated
@@ -224,7 +224,7 @@ public abstract class BasicPlotter extends AbstractPlotter {
         double newYMin = ((DoubleValue)table.getDataTableSpec().getColumnSpec(
                 colIdx).getDomain().getLowerBound()).getDoubleValue();
         double newYMax = ((DoubleValue)table.getDataTableSpec().getColumnSpec(
-                colIdx).getDomain().getUpperBound()).getDoubleValue(); 
+                colIdx).getDomain().getUpperBound()).getDoubleValue();
         createYCoordinate(newYMin, newYMax);
 
         BasicLine line = new BasicLine();
@@ -251,31 +251,31 @@ public abstract class BasicPlotter extends AbstractPlotter {
                 line = new BasicLine();
                 line.setColor(color);
                 line.setStroke(stroke);
-            } 
+            }
             x++;
         }
         ((BasicDrawingPane)getDrawingPane()).addDrawingElement(line);
         fitToScreen();
     }
-    
+
     /**
-     * Paints the values in the double array as y-values and the x-values are 
-     * simply the position in the array, which implies, that the y-values are 
-     * equidistant. Color and Stroke might be <code>null</code>, then the 
+     * Paints the values in the double array as y-values and the x-values are
+     * simply the position in the array, which implies, that the y-values are
+     * equidistant. Color and Stroke might be <code>null</code>, then the
      * default values for them are used (the currently set color and stroke in
      * the graphics object).
-     * 
+     *
      * @param y the equidistant y values
-     * @param color color of the line, might be <code>null</code>, then the 
+     * @param color color of the line, might be <code>null</code>, then the
      * default color is used
-     * @param stroke stroke of the line, might be <code>null</code>, then the 
+     * @param stroke stroke of the line, might be <code>null</code>, then the
      * default  stroke is used
      */
-    public void addLine(final double[] y, final Color color, 
+    public void addLine(final double[] y, final Color color,
             final Stroke stroke) {
         if (!(getDrawingPane() instanceof BasicDrawingPane)) {
             return;
-        }        
+        }
         if (y.length == 0) {
             return;
         }
@@ -306,31 +306,31 @@ public abstract class BasicPlotter extends AbstractPlotter {
                     .calculateMappedValue(
                                 new IntCell(xCoords[i]),
                                 getDrawingPaneDimension().width);
-                Point p = new Point(mappedX, 
+                Point p = new Point(mappedX,
                         (int)getScreenYCoordinate(mappedValue));
                 line.addPoint(p);
                 line.addDomainValue(new DataCellPoint(
                         new DoubleCell(xCoords[i]),
                         new DoubleCell(value)));
         }
-        ((BasicDrawingPane)getDrawingPane()).addDrawingElement(line);    
+        ((BasicDrawingPane)getDrawingPane()).addDrawingElement(line);
         fitToScreen();
     }
-   
-    
+
+
     private boolean isLogarithmic(final Axis axis) {
         Coordinate coordinate = axis.getCoordinate();
-        for (MappingMethod mapMethod : coordinate.getActiveMappingMethods()) {
-            if (mapMethod instanceof LogarithmicMappingMethod) {
-                return true;
-            }
+        MappingMethod mapMethod = coordinate.getActiveMappingMethod();
+        if (mapMethod != null
+                && mapMethod instanceof LogarithmicMappingMethod) {
+            return true;
         }
         return false;
     }
-    
 
 
-    private List<Point> interpolateLine(final BasicDrawingElement line, 
+
+    private List<Point> interpolateLine(final BasicDrawingElement line,
             final boolean x, final boolean y) {
         // add points between every two points
         List<Point>newPoints = new ArrayList<Point>();
@@ -343,14 +343,14 @@ public abstract class BasicPlotter extends AbstractPlotter {
             double x2 = ((DoubleCell)domainValues.get(i + 1).getX())
                 .getDoubleValue();
             double y2 = ((DoubleCell)domainValues.get(i + 1).getY())
-                .getDoubleValue(); 
-            
+                .getDoubleValue();
+
 //            newPoints.add(line.getPoints().get(i));
-            
+
             double deltaX = x2 - x1;
             double deltaY = y2 - y1;
             double distance = Math.sqrt(
-                    (deltaX * deltaX) 
+                    (deltaX * deltaX)
                     + (deltaY * deltaY));
             for (int j = 0; j <= distance; j += 1) {
               double newX = x1 + (deltaX / distance) * j;
@@ -369,28 +369,28 @@ public abstract class BasicPlotter extends AbstractPlotter {
         }
         return newPoints;
     }
-    
-    
+
+
     /**
-     * Adds a line based on the points defined by the x and y values in the 
-     * referring double arrays. Mind, that the values are assumed to be domain 
+     * Adds a line based on the points defined by the x and y values in the
+     * referring double arrays. Mind, that the values are assumed to be domain
      * values.
-     * 
+     *
      * @param x the x coordinates (not mapped)
      * @param y the y coordinates (not mapped)
      * @param color the color
      * @param stroke the stroke
      */
-    public void addLine(final double[] x, final double[] y, final Color color, 
+    public void addLine(final double[] x, final double[] y, final Color color,
             final Stroke stroke) {
         if (!(getDrawingPane() instanceof BasicDrawingPane)) {
             return;
-        }        
+        }
         if (x.length == 0 || y.length == 0) {
             return;
         }
         if (x.length != y.length) {
-            throw new IllegalArgumentException("x and y coordinates must " 
+            throw new IllegalArgumentException("x and y coordinates must "
                     + "be of same length!");
         }
         BasicLine line = new BasicLine();
@@ -416,23 +416,23 @@ public abstract class BasicPlotter extends AbstractPlotter {
             double value = y[i];
             double mappedValue = getYAxis().getCoordinate()
                 .calculateMappedValue(
-                    new DoubleCell(value), 
+                    new DoubleCell(value),
                     getDrawingPaneDimension().height);
             int mappedX = (int)getXAxis().getCoordinate().calculateMappedValue(
                     new DoubleCell(x[i]), getDrawingPaneDimension().width);
-            Point p = new Point(mappedX, 
+            Point p = new Point(mappedX,
                     (int)getScreenYCoordinate(mappedValue));
             line.addPoint(p);
-            line.addDomainValue(new DataCellPoint(new DoubleCell(x[i]), 
+            line.addDomainValue(new DataCellPoint(new DoubleCell(x[i]),
                     new DoubleCell(value)));
         }
         ((BasicDrawingPane)getDrawingPane()).addDrawingElement(line);
     }
-    
-    
+
+
     /**
      * Adds an ellipse with the center point (!) and the height width.
-     * 
+     *
      * @param xCenter x
      * @param yCenter y
      * @param width width
@@ -441,15 +441,15 @@ public abstract class BasicPlotter extends AbstractPlotter {
      * @param stroke stroke
      * @param filled true if the ellipse should be filled.
      */
-    public void addEllipse(final double xCenter, final double yCenter, 
-            final double width, final double height, final Color color, 
+    public void addEllipse(final double xCenter, final double yCenter,
+            final double width, final double height, final Color color,
             final Stroke stroke, final boolean filled) {
         if (!(getDrawingPane() instanceof BasicDrawingPane)) {
             return;
-        }        
+        }
         double x = xCenter - (width / 2.0);
         double y = yCenter - (height / 2.0);
-//        LOGGER.debug("x: " + x + " y: "  + y + "w: " + width + " h: " 
+//        LOGGER.debug("x: " + x + " y: "  + y + "w: " + width + " h: "
 //        + height);
         createXCoordinate(x, x + width);
         createYCoordinate(y, y + height);
@@ -457,18 +457,18 @@ public abstract class BasicPlotter extends AbstractPlotter {
                 new DoubleCell(x), getDrawingPaneDimension().width);
         int mappedX2 = (int)getXAxis().getCoordinate().calculateMappedValue(
                 new DoubleCell(x + width), getDrawingPaneDimension().width);
-        
+
         int mappedY = (int) getYAxis().getCoordinate().calculateMappedValue(
                 new DoubleCell(y), getDrawingPaneDimension().height);
         int mappedY2 = (int) getYAxis().getCoordinate().calculateMappedValue(
                 new DoubleCell(y + height), getDrawingPaneDimension().height);
         BasicEllipse ellipse = new BasicEllipse(filled);
         ellipse.setPoints(
-                new Point(mappedX, mappedY), 
+                new Point(mappedX, mappedY),
                 new Point(mappedX2, mappedY2));
         ellipse.setDomainValues(new DataCellPoint(
-                new DoubleCell(x), new DoubleCell(y)), 
-                new DataCellPoint(new DoubleCell(x + width), 
+                new DoubleCell(x), new DoubleCell(y)),
+                new DataCellPoint(new DoubleCell(x + width),
                         new DoubleCell(y + height)));
         if (color != null) {
             ellipse.setColor(color);
@@ -479,11 +479,11 @@ public abstract class BasicPlotter extends AbstractPlotter {
         ((BasicDrawingPane)getDrawingPane()).addDrawingElement(ellipse);
         fitToScreen();
     }
-    
+
     /**
-     * Adds a rectangle defined by the upper-left corner and the width and 
+     * Adds a rectangle defined by the upper-left corner and the width and
      * height.
-     *  
+     *
      * @param x x
      * @param y y
      * @param width width
@@ -493,7 +493,7 @@ public abstract class BasicPlotter extends AbstractPlotter {
      * @param filled true if the rectangle should be filled.
      */
     public void addRectangle(final double x, final double y, final double width,
-            final double height, final Color color, final Stroke stroke, 
+            final double height, final Color color, final Stroke stroke,
             final boolean filled) {
         if (!(getDrawingPane() instanceof BasicDrawingPane)) {
             return;
@@ -504,18 +504,18 @@ public abstract class BasicPlotter extends AbstractPlotter {
                 new DoubleCell(x), getDrawingPaneDimension().width);
         int mappedX2 = (int)getXAxis().getCoordinate().calculateMappedValue(
                 new DoubleCell(x + width), getDrawingPaneDimension().width);
-        
+
         int mappedY1 = (int) getYAxis().getCoordinate().calculateMappedValue(
                 new DoubleCell(y), getDrawingPaneDimension().height);
         int mappedY2 = (int) getYAxis().getCoordinate().calculateMappedValue(
                 new DoubleCell(y + height), getDrawingPaneDimension().height);
         BasicRectangle rectangle = new BasicRectangle(filled);
         rectangle.setPoints(
-                new Point(mappedX1, (int)getScreenYCoordinate(mappedY1)), 
+                new Point(mappedX1, (int)getScreenYCoordinate(mappedY1)),
                 new Point(mappedX2, (int)getScreenYCoordinate(mappedY2)));
-        rectangle.setDomainValues(new DataCellPoint(new DoubleCell(x), 
-                new DoubleCell(y)), 
-                new DataCellPoint(new DoubleCell(x + width), 
+        rectangle.setDomainValues(new DataCellPoint(new DoubleCell(x),
+                new DoubleCell(y)),
+                new DataCellPoint(new DoubleCell(x + width),
                         new DoubleCell(y + height)));
         if (color != null) {
             rectangle.setColor(color);
@@ -526,11 +526,11 @@ public abstract class BasicPlotter extends AbstractPlotter {
         ((BasicDrawingPane)getDrawingPane()).addDrawingElement(rectangle);
         fitToScreen();
     }
-    
+
     /**
      * Adds a text at the position defined by the values of the both
      * {@link org.knime.core.data.DataCell}s (lower-left corner).
-     * 
+     *
      * @param text the text to be displayed
      * @param x left position of the text
      * @param y the bottom position of the text
@@ -539,7 +539,7 @@ public abstract class BasicPlotter extends AbstractPlotter {
      */
     public void addText(final String text, final DataCell x, final DataCell y,
             final Color color) {
-        if (getXAxis() == null || getXAxis().getCoordinate() == null 
+        if (getXAxis() == null || getXAxis().getCoordinate() == null
                 || getYAxis() == null || getYAxis().getCoordinate() == null) {
             return;
         }
@@ -553,11 +553,11 @@ public abstract class BasicPlotter extends AbstractPlotter {
         textElement.addPoint(new Point(mappedX, mappedY));
         ((BasicDrawingPane)getDrawingPane()).addDrawingElement(textElement);
     }
-    
+
     /**
-     * Adds a drawing element to the drawing pane. The mapping of the domain 
-     * values to the screen coordinates is done here 
-     * Only numeric values are supported. All the rest like color 
+     * Adds a drawing element to the drawing pane. The mapping of the domain
+     * values to the screen coordinates is done here
+     * Only numeric values are supported. All the rest like color
      * and stroke setting has to be done outside.
      * @param element a drawing element.
      */
@@ -574,7 +574,7 @@ public abstract class BasicPlotter extends AbstractPlotter {
             // determine the min and max values for the coordinates
             if (!p.getX().getType().isCompatible(DoubleValue.class)
                      || !p.getY().getType().isCompatible(DoubleValue.class)) {
-                LOGGER.warn("a basic drawing element can onyl be defined for " 
+                LOGGER.warn("a basic drawing element can onyl be defined for "
                         + "numeric values!");
                 return;
             }
@@ -583,7 +583,7 @@ public abstract class BasicPlotter extends AbstractPlotter {
             minX = Math.min(x, minX);
             maxX = Math.max(x, maxX);
             minY = Math.min(y, minY);
-            maxY = Math.max(y, maxY);            
+            maxY = Math.max(y, maxY);
         }
         createXCoordinate(minX, maxX);
         createYCoordinate(minY, maxY);
@@ -594,32 +594,32 @@ public abstract class BasicPlotter extends AbstractPlotter {
                     p.getX(), getDrawingPaneDimension().width);
             double mappedY = getYAxis().getCoordinate().calculateMappedValue(
                    p.getY(), getDrawingPaneDimension().height);
-            newPoints.add(new Point((int)mappedX, 
+            newPoints.add(new Point((int)mappedX,
                     (int)getScreenYCoordinate(mappedY)));
         }
         element.setPoints(newPoints);
         ((BasicDrawingPane)getDrawingPane()).addDrawingElement(element);
     }
-    
+
     /**
-     * Updates the size by mapping the domain values of the 
+     * Updates the size by mapping the domain values of the
      * {@link org.knime.base.node.viz.plotter.basic.BasicDrawingElement}s
      *  to the drawing pane's dimension.
-     *  
+     *
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#updateSize()
      */
     @Override
     public void updateSize() {
-//        if (getXAxis() == null || getXAxis().getCoordinate() == null 
+//        if (getXAxis() == null || getXAxis().getCoordinate() == null
 //                || getYAxis() == null || getYAxis().getCoordinate() == null) {
 //            return;
 //        }
         if (getDrawingPane() instanceof BasicDrawingPane) {
-            List<BasicDrawingElement> elements 
+            List<BasicDrawingElement> elements
                 = ((BasicDrawingPane)getDrawingPane()).getDrawingElements();
             if (elements != null) {
                 // create a copy to avoid concurrent modification exception
-                List<BasicDrawingElement> copy 
+                List<BasicDrawingElement> copy
                     = new ArrayList<BasicDrawingElement>(elements);
                 for (BasicDrawingElement element : copy) {
                     List<Point> newPoints = new LinkedList<Point>();
@@ -655,13 +655,13 @@ public abstract class BasicPlotter extends AbstractPlotter {
                     boolean yLog = isLogarithmic(getYAxis());
                     if (xLog || yLog) {
                         // add points
-                        List<Point>extrapolatedPoints = interpolateLine(element, 
+                        List<Point>extrapolatedPoints = interpolateLine(element,
                                 xLog, yLog);
                         element.setPoints(extrapolatedPoints);
-                    } 
+                    }
                 }
             }
         }
-    }    
-    
+    }
+
 }
