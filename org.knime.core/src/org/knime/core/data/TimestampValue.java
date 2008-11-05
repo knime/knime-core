@@ -22,14 +22,12 @@
  * History
  *   12.01.2007 (mb): created
  */
-package org.knime.timeseries.types;
+package org.knime.core.data;
 
 import java.util.Date;
 
 import javax.swing.Icon;
 
-import org.knime.core.data.DataValue;
-import org.knime.core.data.DataValueComparator;
 
 /**
  * Value interface of data cells holding day/time information.

@@ -22,7 +22,7 @@
  * History
  *   12.01.2007 (mb): created
  */
-package org.knime.timeseries.types;
+package org.knime.core.data.def;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -31,6 +31,7 @@ import java.util.Date;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.TimestampValue;
 
 /**
  * Implementation of a <code>DataCell</code> holding day/time
