@@ -29,6 +29,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Date;
 
@@ -424,14 +426,17 @@ public class ARFFWriterNodeModel extends NodeModel {
             throws InvalidSettingsException {
 
         // make sure to handle URLs
-        URL url = null;
+        URI uri = null;
         try {
-            url = ARFFReaderNodeModel.stringToURL(fileName);
+            URL url = ARFFReaderNodeModel.stringToURL(fileName);
+            uri = url.toURI();
         } catch (MalformedURLException mue) {
+            throw new InvalidSettingsException("Invalid file name");
+        } catch (URISyntaxException use) {
             throw new InvalidSettingsException("Invalid file name");
         }
 
-        File result = new File(url.getPath());
+        File result = new File(uri);
 
         if (result.isDirectory()) {
             throw new InvalidSettingsException("\"" + result.getAbsolutePath()
