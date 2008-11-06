@@ -346,7 +346,7 @@ public final class SingleNodeContainer extends NodeContainer
             switch (getState()) {
             case EXECUTED:
                 removeOutputTablesFromGlobalRepository();
-                m_node.reset(true);
+                m_node.reset();
                 // After reset we need explicit configure!
                 setState(State.IDLE);
                 return;
@@ -357,7 +357,7 @@ public final class SingleNodeContainer extends NodeContainer
                 setState(State.IDLE);
                 return;
             case CONFIGURED:
-                m_node.reset(true);
+                m_node.reset();
                 setState(State.IDLE);
                 return;
             default:
@@ -539,11 +539,11 @@ public final class SingleNodeContainer extends NodeContainer
                     setState(State.CONFIGURED);
                 }
             } else {
-                m_node.reset(false);  // we need to clean up remaining nonsense.
-                m_node.clearLoopStatus();  // ...and the loop status
-                // but node will not be reconfigured!
-                // (configure does not prepare execute but only tells us what
-                //  output execute() may create hence we do not need it here)
+                // also clean loop status:
+                m_node.clearLoopStatus();
+                // note was already reset/configured in doAfterExecute.
+                // in theory this should always be the correct state...
+                // TODO do better - also handle catastrophes
                 setState(State.CONFIGURED);
             }
             m_executionFuture = null;
@@ -588,11 +588,27 @@ public final class SingleNodeContainer extends NodeContainer
         if (success) {
             // output tables are made publicly available (for blobs)
             putOutputTablesIntoGlobalRepository(ec);
-        }
-        if (caughtContextStackException) {
-            LOGGER.warn(errorString);
-            m_node.notifyMessageListeners(
-                    new NodeMessage(NodeMessage.Type.ERROR, errorString));
+        } else {
+            // something went wrong: reset and configure node to reach
+            // a solid state again - but remember original node message!
+            NodeMessage orgMessage = m_node.getNodeMessage();
+            m_node.reset();
+            PortObjectSpec[] specs = new PortObjectSpec[m_node.getNrInPorts()];
+            for (int i = 0; i < specs.length; i++) {
+                specs[i] = inObjects[i].getSpec();
+            }
+            if (!m_node.configure(specs)) {
+                LOGGER.error("Configure failed after Execute failed!");
+            }
+            // and finally set old message again (or a new one if we had
+            // problems with the stack).
+            if (caughtContextStackException) {
+                LOGGER.warn(errorString);
+                m_node.notifyMessageListeners(
+                        new NodeMessage(NodeMessage.Type.ERROR, errorString));
+            } else {
+                m_node.notifyMessageListeners(orgMessage);
+            }
         }
         // clean up stuff and especially change states synchronized again
         getParent().doAfterExecution(SingleNodeContainer.this, success);
