@@ -36,6 +36,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.core.node.NodeLogger;
@@ -119,7 +120,7 @@ public class ThreadPool implements JobExecutor {
     private class Worker extends Thread {
         private final Object m_lock = new Object();
 
-        private Runnable m_runnable;
+        private RunnableFuture<?> m_runnable;
 
         private ThreadPool m_startedFrom;
 
@@ -156,6 +157,10 @@ public class ThreadPool implements JobExecutor {
 
                     try {
                         m_runnable.run();
+                        m_runnable.get();
+                    } catch (ExecutionException ex) {
+                        LOGGER.error("An exception occurred while executing "
+                                + "a runnable.", ex.getCause());
                     } catch (Exception ex) {
                         // prevent the worker from being terminated
                         LOGGER.error("An exception occurred while executing "
@@ -178,7 +183,7 @@ public class ThreadPool implements JobExecutor {
          *         <code>false</code> if not because the thread has already
          *         died
          */
-        public boolean wakeup(final Runnable r, final ThreadPool pool) {
+        public boolean wakeup(final RunnableFuture<?> r, final ThreadPool pool) {
             synchronized (m_lock) {
                 if (m_stopped || !isAlive()) {
                     return false;
@@ -317,7 +322,8 @@ public class ThreadPool implements JobExecutor {
         return ftask;
     }
 
-    private Worker wakeupWorker(final Runnable task, final ThreadPool pool) {
+    private Worker wakeupWorker(final RunnableFuture<?> task,
+            final ThreadPool pool) {
         synchronized (m_runningWorkers) {
             if (m_runningWorkers.size() - m_invisibleThreads.get() < m_maxThreads.get()) {
                 Worker w;
@@ -368,7 +374,7 @@ public class ThreadPool implements JobExecutor {
      * nothing more than submitting jobs.
      *
      * @param <T> Type of the argument (result type)
-     * @param r A callable, which will be executed by the 
+     * @param r A callable, which will be executed by the
      *          thread invoking this method.
      * @return T The result of the callable.
      * @throws IllegalThreadStateException if the current thread is not taken
