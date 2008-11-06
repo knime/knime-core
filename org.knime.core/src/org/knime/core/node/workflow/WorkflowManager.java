@@ -936,19 +936,21 @@ public final class WorkflowManager extends NodeContainer {
      * @param if true, mark nodes otherwise try to erase marks
      */
     private void markForExecutionAllNodes(final boolean flag) {
-        if (flag) {
-            markForExecutionAllAffectedNodes(-1);
-        } else {
-            for (NodeID id : m_workflow.getNodeIDs()) {
-                NodeContainer nc = m_workflow.getNode(id);
-                if (nc instanceof SingleNodeContainer) {
-                    ((SingleNodeContainer)nc).markForExecution(flag);
-                } else {
-                    assert nc instanceof WorkflowManager;
-                    ((WorkflowManager)nc).markForExecutionAllNodes(flag);
+        synchronized (m_workflowMutex) {
+            if (flag) {
+                markForExecutionAllAffectedNodes(-1);
+            } else {
+                for (NodeID id : m_workflow.getNodeIDs()) {
+                    NodeContainer nc = m_workflow.getNode(id);
+                    if (nc instanceof SingleNodeContainer) {
+                        ((SingleNodeContainer)nc).markForExecution(flag);
+                    } else {
+                        assert nc instanceof WorkflowManager;
+                        ((WorkflowManager)nc).markForExecutionAllNodes(flag);
+                    }
                 }
+                
             }
-            
         }
     }
 
@@ -1117,10 +1119,7 @@ public final class WorkflowManager extends NodeContainer {
     public void executeUpToHere(final NodeID... ids) {
         synchronized (m_workflowMutex) {
             for (NodeID id : ids) {
-        NodeContainer nc = getNodeContainer(id);
-                if (State.CONFIGURED.equals(nc.getState())) {
-                    markAndQueueNodeAndPredecessors(id, -1);
-                }
+                markAndQueueNodeAndPredecessors(id, -1);
             }
         }
     }
@@ -1955,7 +1954,23 @@ public final class WorkflowManager extends NodeContainer {
      * This method returns immediately, leaving it to the associated
      * executor to do the job. */
     public void executeAll() {
-        markForExecutionAllNodes(true);
+        Set<NodeID> endNodes = new HashSet<NodeID>();
+        for (NodeID id : m_workflow.getNodeIDs()) {
+            boolean hasNonParentSuccessors = false;
+            for (ConnectionContainer cc
+                    : m_workflow.getConnectionsBySource(id)) {
+                if (!cc.getDest().equals(this.getID())) {
+                    hasNonParentSuccessors = true;
+                    break;
+                }
+            }
+            if (!hasNonParentSuccessors) {
+                endNodes.add(id);
+            }
+        }
+        NodeID[] a = new NodeID[endNodes.size()];
+        endNodes.toArray(a);
+        executeUpToHere(a);
     }
 
     /////////////////////////////////////////////////////////
