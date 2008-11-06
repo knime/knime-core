@@ -641,6 +641,15 @@ public final class WorkflowManager extends NodeContainer {
                 return false;  // WFM outport index exists
             }
         }
+        // check if we are about to replace an existing connection
+        for (ConnectionContainer cc : m_workflow.getConnectionsByDest(dest)) {
+            if (cc.getDestPort() == destPort) {
+                // if that connection is not removable: fail
+                if (!canRemoveConnection(cc)) {
+                    return false;
+                }
+            }
+        }
         // check type compatibility
         PortType sourceType = (sourceNode != null
             ? sourceNode.getOutPort(sourcePort).getPortType()
