@@ -108,12 +108,6 @@ public abstract class NodeView<T extends NodeModel> {
     private Component m_activeComp;
 
     /**
-     * If the view is opened the first time, it will be centered and packed. All
-     * the following openings do not have an impact on these properties.
-     */
-    private boolean m_wasOpened = false;
-
-    /**
      * Remembers the first time the actual component was set. The reason is the
      * resizing, the first time the proper component (not the "no data"
      * component) is set. This resizing should only occur the first time.
@@ -283,7 +277,7 @@ public abstract class NodeView<T extends NodeModel> {
                 // repaint and pack if the view has not been opened yet or
                 // the underlying view component was added
                 // ensured to happen in the EDT thread
-                relayoutFrame(!m_wasOpened || m_componentSet);
+                relayoutFrame(false);
             }
         }
     }
@@ -335,7 +329,8 @@ public abstract class NodeView<T extends NodeModel> {
     }
 
     /**
-     * Initializes the view before opening.
+     * Initializes the view before opening. Packs and sets the location. Call
+     * this only once per view instance.
      */
     private void callOpenView() {
         try {
@@ -346,15 +341,13 @@ public abstract class NodeView<T extends NodeModel> {
         }
         m_nodeModel.registerView(this);
         callModelChanged();
-        if (!m_wasOpened) { // if the view was already visible
-            m_wasOpened = true;
-            if (m_comp != null) {
-                m_comp.invalidate();
-                m_comp.repaint();
-            }
-            m_frame.pack();
-            setLocation();
+
+        if (m_comp != null) {
+            m_comp.invalidate();
+            m_comp.repaint();
         }
+        m_frame.pack();
+        setLocation();
     }
 
     /**
@@ -373,7 +366,7 @@ public abstract class NodeView<T extends NodeModel> {
     }
 
     /**
-     * Creates and opens a new view. 
+     * Creates and opens a new view.
      * @param viewTitle the tile for this view
      * @return a {@link JFrame} with an initialized {@link NodeView}
      */
@@ -480,7 +473,7 @@ public abstract class NodeView<T extends NodeModel> {
             setTitle(m_frame.getName() + " " + suffix);
         }
     }
-    
+
     private void setTitle(final String title) {
         final Runnable runner = new Runnable() {
             public void run() {
@@ -489,8 +482,8 @@ public abstract class NodeView<T extends NodeModel> {
         };
         ViewUtils.invokeAndWaitInEDT(runner);
     }
-        
-        
+
+
 
     /**
      * @return The current view's title.
@@ -523,15 +516,19 @@ public abstract class NodeView<T extends NodeModel> {
              * {@inheritDoc}
              */
             public void run() {
+             // pack frame only when setting the component for the first time
+                boolean pack = false;
                 if (!m_nodeModel.hasContent() && m_noDataComp != null) {
                     setComponentIntern(m_noDataComp);
-                    m_componentSet = false;
                 } else {
                     setComponentIntern(comp);
+                    if (!m_componentSet) {
+                        pack = true;
+                    }
                     m_componentSet = true;
                 }
                 m_comp = comp;
-                relayoutFrame(false); // repaint without pack
+                relayoutFrame(pack);
             }
         };
         ViewUtils.invokeAndWaitInEDT(runner);
