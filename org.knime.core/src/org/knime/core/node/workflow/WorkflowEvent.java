@@ -54,16 +54,6 @@ public class WorkflowEvent {
      NODE_ADDED,
      /** Event: node removed from workflow. */
      NODE_REMOVED,
-     /** Event: node was configured. */
-     NODE_CONFIGURED,
-     /** Event: UI info attached to node has changed. */
-     NODE_FINISHED,
-     /** Event: node was reset. */
-     NODE_RESET,
-     /** Event: node is being executed. */
-     NODE_STARTED,
-     /** Event: node is waiting for execution. */
-     NODE_WAITING
     }
 
     private final NodeID m_id;

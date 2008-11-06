@@ -26,9 +26,7 @@ import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.EventObject;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
@@ -90,9 +88,7 @@ import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.eclipse.ui.views.properties.IPropertySheetPage;
 import org.eclipse.ui.views.properties.PropertySheetPage;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
@@ -117,7 +113,6 @@ import org.knime.workbench.editor2.actions.PasteAction;
 import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
-import org.knime.workbench.editor2.actions.job.ProgressMonitorJob;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
@@ -1180,51 +1175,18 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     }
 
-    private final Map<NodeID, ProgressMonitorJob> m_dummyNodeJobs =
-            new HashMap<NodeID, ProgressMonitorJob>();
-
     /**
      * Listener callback, listens to workflow events and triggers UI updates.
      *
      * {@inheritDoc}
      */
     public void workflowChanged(final WorkflowEvent event) {
-
         LOGGER.debug("Workflow event triggered: " + event.toString());
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-                // TODO Auto-generated method stub
-
                 markDirty();
                 updateActions();
-
-                if (event.getType().equals(WorkflowEvent.Type.NODE_WAITING)) {
-                    NodeContainer nc = (NodeContainer)event.getOldValue();
-
-                    NodeProgressMonitor pm =
-                            (NodeProgressMonitor)event.getNewValue();
-
-                    ProgressMonitorJob job =
-                            new ProgressMonitorJob(nc.getCustomName() + " ("
-                                    + nc.getName() + ")", pm, m_manager, nc,
-                                    "Queued for execution...");
-                    // Reverted as not properly ordered yet. Improve in next
-                    // version
-                    // job.schedule();
-
-                    Object o = m_dummyNodeJobs.put(event.getID(), job);
-                    assert (o == null);
-
-                } else if (event.getType().equals(
-                        WorkflowEvent.Type.NODE_FINISHED)) {
-                    // TODO: Cleanup, Review, Beautify.
-                    ProgressMonitorJob j =
-                            m_dummyNodeJobs.remove(event.getID());
-                    if (j != null) {
-                        j.finish();
-                    }
-                }
             }
         });
 
