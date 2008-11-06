@@ -132,7 +132,6 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
     @Override
     protected void reset() {
         m_modelInfo = null;
-        m_translator.getFromHiLiteHandler().fireClearHiLiteEvent();
         m_translator.removeAllToHiliteHandlers();
         m_translator.setMapper(null);
     }

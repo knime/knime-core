@@ -160,7 +160,6 @@ class EntropyNodeModel extends NodeModel {
     @Override
     protected void reset() {
         m_calculator = null;
-        m_translator.getFromHiLiteHandler().fireClearHiLiteEvent();
         m_translator.removeAllToHiliteHandlers();
         m_translator.setMapper(null);
     }

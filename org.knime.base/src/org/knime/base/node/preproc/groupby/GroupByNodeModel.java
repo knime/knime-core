@@ -289,7 +289,6 @@ public class GroupByNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_hilite.getFromHiLiteHandler().fireClearHiLiteEvent();
         m_hilite.removeAllToHiliteHandlers();
         m_hilite.setMapper(null);
     }

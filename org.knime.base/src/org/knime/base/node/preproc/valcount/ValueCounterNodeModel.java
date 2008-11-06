@@ -224,7 +224,6 @@ public class ValueCounterNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_translator.getFromHiLiteHandler().fireClearHiLiteEvent();
         m_translator.removeAllToHiliteHandlers();
         m_translator.setMapper(null);
     }

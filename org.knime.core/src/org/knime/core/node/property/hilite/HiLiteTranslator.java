@@ -30,18 +30,17 @@ import java.util.Set;
 import org.knime.core.data.RowKey;
 
 /**
- * A translator for hilite events between one source (from) 
- * {@link HiLiteHandler} and a number of target handlers (to). The source hilite 
- * handler is passed through the
- * constructor of this class. The target hilite handlers can be set
- * independently, as well as the mapping which is defined between {@link RowKey}
- * row keys and {@link RowKey} sets.
+ * A translator for hilite events between one source (from)
+ * {@link HiLiteHandler} and a number of target handlers (to). The source hilite
+ * handler is passed through the constructor of this class. The target hilite
+ * handlers can be set independently, as well as the mapping which is defined
+ * between {@link RowKey} row keys and {@link RowKey} sets.
  * <p>
  * This class hosts two listeners one which is registered with the source
  * handler and one which is registered with all target handlers. These listeners
  * are called when something changes either on the source or target side, and
- * then invoke the corresponding handlers on the other side to hilite,
- * unhilite, and clear mapped keys.
+ * then invoke the corresponding handlers on the other side to hilite, unhilite,
+ * and clear mapped keys.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -139,7 +138,7 @@ public final class HiLiteTranslator {
                 return;
             }
             if (m_mapper != null) {
-                // add all hilite keys from the event and all hilit keys
+                // add all hilite keys from the event and all hilite keys
                 // from the target hilite handlers
                 final Set<RowKey> all = new LinkedHashSet<RowKey>(
                         event.keys());
@@ -149,7 +148,7 @@ public final class HiLiteTranslator {
                 // check overlap with all mappings  
                 for (RowKey key : m_mapper.keySet()) {
                     final Set<RowKey> keys = m_mapper.getKeys(key);
-                    // if all mapped keys are hilit then fire event
+                    // if all mapped keys are hilite then fire event
                     if (all.containsAll(keys)) {
                         m_sourceHandler.fireHiLiteEventInternal(
                                 new KeyEvent(m_eventSource, key));
@@ -168,7 +167,7 @@ public final class HiLiteTranslator {
                 // check all mappings
                 for (RowKey key : m_mapper.keySet()) {
                     final Set<RowKey> keys = m_mapper.getKeys(key);
-                    // if at least one item is unhilit then fire event
+                    // if at least one item is unhilite then fire event
                     for (RowKey hilite : event.keys()) {
                         if (keys.contains(hilite)) {
                             m_sourceHandler.fireUnHiLiteEventInternal(
@@ -252,12 +251,14 @@ public final class HiLiteTranslator {
     /**
      * Removes the given target <code>HiLiteHandler</code> from the list of 
      * registered hilite handlers and removes the private target listener from 
-     * if the list of hilit keys is empty.
+     * if the list of hilite keys is empty.
      * 
      * @param targetHandler the target hilite handler to remove
      */
     public void removeToHiLiteHandler(final HiLiteHandler targetHandler) {
         if (targetHandler != null) {
+            m_sourceListener.unHiLite(new KeyEvent(targetHandler,
+                    m_sourceHandler.getHiLitKeys()));
             m_targetHandlers.remove(targetHandler);
             targetHandler.removeHiLiteListener(m_targetListener);
             if (m_targetHandlers.isEmpty()) {
@@ -268,8 +269,8 @@ public final class HiLiteTranslator {
 
     /**
      * Adds a new target <code>HiLiteHandler</code> to the list of registered 
-     * hilite handlers and adds the private target listener if the list of hilit
-     * keys is empty.
+     * hilite handlers and adds the private target listener if the list of 
+     * hilite keys is empty.
      * 
      * @param targetHandler the target hilite handler to add
      */
@@ -280,6 +281,9 @@ public final class HiLiteTranslator {
             }
             m_targetHandlers.add(targetHandler);
             targetHandler.addHiLiteListener(m_targetListener);
+            m_targetListener.hiLite(new KeyEvent(targetHandler,
+                    targetHandler.getHiLitKeys()));
+
         }
     }
     
@@ -299,7 +303,7 @@ public final class HiLiteTranslator {
      */
     public void removeAllToHiliteHandlers() {
         for (HiLiteHandler hh : m_targetHandlers) {
-            hh.removeHiLiteListener(m_targetListener);
+            removeToHiLiteHandler(hh);
         }
         m_targetHandlers.clear();
         m_sourceHandler.removeHiLiteListener(m_sourceListener);

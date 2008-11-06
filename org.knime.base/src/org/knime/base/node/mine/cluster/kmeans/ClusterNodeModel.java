@@ -560,7 +560,6 @@ public class ClusterNodeModel extends NodeModel {
     protected void reset() {
         // remove the clusters
         m_clusters = null;
-        m_translator.getFromHiLiteHandler().fireClearHiLiteEvent();
         m_translator.removeAllToHiliteHandlers();
         m_translator.setMapper(null);
     }

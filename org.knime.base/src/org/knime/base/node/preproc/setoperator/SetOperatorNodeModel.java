@@ -288,11 +288,9 @@ public class SetOperatorNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_hilite0.getFromHiLiteHandler().fireClearHiLiteEvent();
         m_hilite0.removeAllToHiliteHandlers();
-        m_hilite0.setMapper(null);
-        m_hilite1.getFromHiLiteHandler().fireClearHiLiteEvent();
         m_hilite1.removeAllToHiliteHandlers();
+        m_hilite0.setMapper(null);
         m_hilite1.setMapper(null);
     }
 }
