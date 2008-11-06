@@ -1959,7 +1959,33 @@ public final class WorkflowManager extends NodeContainer {
                 endNodes.add(id);
             }
         }
-        executeUpToHere(endNodes.toArray(new NodeID[endNodes.size()]));
+        // now use these "end nodes" to start executing all until we
+        // reach the beginning. Do NOT leave the workflow, though.
+        Set<NodeID> executedNodes = new HashSet<NodeID>();
+        while (endNodes.size() > 0) {
+            NodeID thisID = endNodes.iterator().next();
+            endNodes.remove(thisID);
+            // move all of the predecessors to the "end nodes"
+            for (ConnectionContainer cc
+                    : m_workflow.getConnectionsByDest(thisID)) {
+                NodeID nextID = cc.getSource();
+                if (!endNodes.contains(nextID)
+                        && !executedNodes.contains(nextID)
+                        && !nextID.equals(this.getID())) {
+                    endNodes.add(nextID);
+                }
+            }
+            // try to execute the current node
+            NodeContainer nc = m_workflow.getNode(thisID);
+            if (nc instanceof SingleNodeContainer) {
+                executeUpToHere(thisID);
+            } else {
+                assert nc instanceof WorkflowManager;
+                ((WorkflowManager)nc).executeAll();
+            }
+            // and finally move the current node to the other list
+            executedNodes.add(thisID);
+        }
     }
 
     /////////////////////////////////////////////////////////
