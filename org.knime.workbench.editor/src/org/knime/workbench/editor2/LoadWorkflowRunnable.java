@@ -64,6 +64,13 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
     
     private Throwable m_throwable = null;
 
+    /**
+     * 
+     * @param editor the {@link WorkflowEditor} for which the workflow should
+     * be loaded
+     * @param workflowFile the workflow file from which the workflow should be 
+     * loaded (or created = empty workflow file)
+     */
     public LoadWorkflowRunnable(final WorkflowEditor editor, 
             final File workflowFile) {
         m_editor = editor;
@@ -79,6 +86,10 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
         return m_throwable;
     }
     
+    /**
+     * 
+     * {@inheritDoc}
+     */
     public void run(final IProgressMonitor pm) {
         CheckThread checkThread = null;
         // indicates whether to create an empty workflow
@@ -133,6 +144,10 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
             m_throwable = ioe;
             if (m_workflowFile.length() == 0) {
                 LOGGER.info("New workflow created.");
+                // this is the only place to set this flag to true: we have an 
+                // empty workflow file, i.e. a new project was created
+                // bugfix 1555: if an expection is thrown DO NOT create empty 
+                // workflow 
                 createEmptyWorkflow = true;
             } else {
                 LOGGER.error("Could not load workflow from: "
@@ -148,25 +163,16 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
             m_editor.setWorkflowManager(null);
             m_editor.setLoadingCanceled(true);
             m_editor.setLoadingCanceledMessage(cee.getMessage());
-            /*
-        } catch (Exception we) {
-            // the workflow exception is a collection exception
-            // it is stored to show the errors in a window
-//            m_editor.setWorkflowException(we);
- *
- */
         } catch (Throwable e) {
             m_throwable = e;
             LOGGER.error("Workflow could not be loaded. " + e.getMessage(), e);
-            createEmptyWorkflow = true;
             m_editor.setWorkflowManager(null);
         } finally {
             // terminate the check thread
             checkThread.finished();
-            // create empty WFM if loading failed
-
+            // create empty WFM if a new workflow is created 
+            // (empty workflow file)
             if (createEmptyWorkflow) {
-                // && createEmptyWorkflow.intValue() == 0) {
                 m_editor.setWorkflowManager(WorkflowManager.ROOT
                         .createAndAddProject());
                 // save empty project immediately
