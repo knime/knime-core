@@ -700,7 +700,17 @@ public final class Node implements NodeModelWarningListener {
                             + newOutData[i].getClass().getName() + ")");
                     return false;
                 }
-                if (newOutData[i].getSpec() == null) {
+                PortObjectSpec spec;
+                try {
+                    spec = newOutData[i].getSpec();
+                } catch (Throwable t) {
+                    createErrorMessageAndNotify("PortObject \""
+                            + newOutData[i].getClass().getName() 
+                            + "\" threw " + t.getClass().getSimpleName() 
+                            + " on #getSpec() ", t);
+                    return false;
+                }
+                if (spec == null) {
                     createErrorMessageAndNotify("Implementation Error: "
                             + "PortObject \""
                             + newOutData[i].getClass().getName() + "\" must not"
@@ -985,8 +995,8 @@ public final class Node implements NodeModelWarningListener {
             }
         }
     }
-
-    /** Reverse operation to
+    
+    /** Reverse operation to 
      * {@link #putOutputTablesIntoGlobalRepository(HashMap)}. It will remove
      * all output tables and its delegates from the global table repository.
      * @param rep The global table rep.
