@@ -32,16 +32,13 @@ import org.knime.core.node.tableview.TableView;
  * @author Fabian Dill, University of Konstanz
  */
 public class BufferedDataTableView extends JComponent {
-    
-//    private static final NodeLogger LOGGER =
-//        NodeLogger.getLogger(BufferedDataTableView.class);
 
     private final TableView m_dataView;
 
     private DataTable m_table;
-    
 
-    /** Updates are synchronized on this object. Declaring the methods
+    /** 
+     * Updates are synchronized on this object. Declaring the methods
      * as synchronized (i.e. using "this" as mutex) does not work as swing
      * also acquires locks on this graphical object.
      */
@@ -49,9 +46,7 @@ public class BufferedDataTableView extends JComponent {
     
     /**
      * A view showing the data stored in the specified output port.
-     *
      * @param table table to display
-     *
      */
     public BufferedDataTableView(final DataTable table) {
         m_table = table;
@@ -64,12 +59,6 @@ public class BufferedDataTableView extends JComponent {
         updateDataTable();
     }
 
-    
-    /**
-     * Sets a new DataTable to display.
-     * 
-     * @param newDataTable The new data table (or null) to display in the view.
-     */
     private void updateDataTable() {
         synchronized (m_updateLock) {
             m_dataView.setDataTable(m_table);
@@ -79,7 +68,6 @@ public class BufferedDataTableView extends JComponent {
     }
         
     /**
-     * 
      * {@inheritDoc}
      */
     @Override
