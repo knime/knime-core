@@ -1133,7 +1133,8 @@ public final class WorkflowManager extends NodeContainer {
                 // and our inport is connected to their outport
                 if (predID.equals(this.getID())) {
                     // we are leaving this workflow!
-                    if (!markAndQueuePredecessors(predID, cc.getSourcePort())) {
+                    if (!getParent().markAndQueuePredecessors(predID,
+                            cc.getSourcePort())) {
                         // give up if this "branch" fails
                         return false;
                     }
