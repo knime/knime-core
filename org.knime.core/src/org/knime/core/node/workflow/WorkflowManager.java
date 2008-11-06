@@ -1351,9 +1351,6 @@ public final class WorkflowManager extends NodeContainer {
                     snc.getNode().setLoopStartNode(null);
                 }
                 snc.preExecuteNode();
-                notifyWorkflowListeners(new WorkflowEvent(
-                        WorkflowEvent.Type.NODE_STARTED, 
-                        snc.getID(), null, null));
             checkForNodeStateChanges(true);
         }
     }
@@ -1382,8 +1379,6 @@ public final class WorkflowManager extends NodeContainer {
             }
             // allow SNC to update states etc
             snc.postExecuteNode(success);
-            notifyWorkflowListeners(new WorkflowEvent(
-                    WorkflowEvent.Type.NODE_FINISHED, snc.getID(), null, null));
             boolean canConfigureSuccessors = true;
             // process loop context - only for "real" nodes:
             if (snc.getLoopRole().equals(LoopRole.BEGIN)) {
@@ -1630,8 +1625,6 @@ public final class WorkflowManager extends NodeContainer {
             assert nc instanceof WorkflowManager;
             ((WorkflowManager)nc).resetAll();
         }
-        notifyWorkflowListeners(new WorkflowEvent(
-                WorkflowEvent.Type.NODE_RESET, nodeID, null, null));
     }
 
     /** Reset node and notify listeners. */
@@ -1639,8 +1632,6 @@ public final class WorkflowManager extends NodeContainer {
             final SingleNodeContainer snc) {
         assert Thread.holdsLock(m_workflowMutex);
         snc.reset();
-        notifyWorkflowListeners(new WorkflowEvent(
-                WorkflowEvent.Type.NODE_RESET, snc.getID(), null, null));
     }
 
     /** Reset those nodes which are connected to a specific workflow
@@ -2334,9 +2325,6 @@ public final class WorkflowManager extends NodeContainer {
                     }
                 } else {
                     outputSpecsChanged = snc.configure(inSpecs);
-                    notifyWorkflowListeners(new WorkflowEvent(
-                            WorkflowEvent.Type.NODE_CONFIGURED, 
-                            snc.getID(), null, null));
                 }
 
                 // check if ScopeContextStacks have changed
