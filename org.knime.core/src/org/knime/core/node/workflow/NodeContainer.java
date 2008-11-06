@@ -201,6 +201,16 @@ public abstract class NodeContainer {
     }
 
     /////////////////////////////////////////////////
+    // Convenience functions for all derived classes
+    /////////////////////////////////////////////////
+
+    /**
+     * @return true of this node (or all nodes in this container) are
+     *   resetable.
+     */
+    abstract boolean isResetable();
+
+    /////////////////////////////////////////////////
     // List Management of Waiting Loop Head Nodes
     /////////////////////////////////////////////////
 
@@ -451,48 +461,6 @@ public abstract class NodeContainer {
         LOGGER.debug(this.getNameWithID() + " has new state: " + m_state);
         return changesMade;
     }
-
-    /* ---------- State changing actions ------------ */
-
-    /** Configure underlying node.
-     *
-     * @param specs input port object specifications
-     * @return true if configuration resulted in NEW output specs (meaning
-     *   that successors should probably be configured as well)
-     * @throws IllegalStateException in case of illegal entry state.
-     */
-    abstract boolean configureAsNodeContainer(final PortObjectSpec[] specs)
-    throws IllegalStateException;
-
-    /** Enable (or disable) queuing of underlying node for execution. This
-     * really only changes the state of the node and once all pre-conditions
-     * for execution are fulfilled (e.g. configuration succeeded and all
-     * ingoing objects are available) the node will be actually queued.
-     *
-     * @param flag determines if node is marked or unmarked for execution
-     * @throws IllegalStateException in case of illegal entry state.
-     */
-    abstract void markForExecutionAsNodeContainer(final boolean flag)
-    throws IllegalStateException;
-
-    /** Cancel execution of a marked, queued, or executing node. (Tolerate
-     * execute as this may happen throughout cancelation).
-     *
-     * @throws IllegalStateException
-     */
-    abstract void cancelExecutionAsNodeContainer()
-    throws IllegalStateException;
-
-    /** check if node can be safely reset.
-     * @return if node can be reset.
-     */
-    abstract boolean isResetableAsNodeContainer();
-
-    /** Reset underlying node and update state accordingly.
-     * @throws IllegalStateException in case of illegal entry state.
-     */
-    abstract void resetAsNodeContainer()
-    throws IllegalStateException;
 
     /* ------------ dialog -------------- */
 

@@ -186,7 +186,8 @@ public final class SingleNodeContainer extends NodeContainer
 
     /**
      * Set a new HiLiteHandler for an incoming connection.
-     *
+     * @param index index of port
+     * @param hdl new HiLiteHandler
      */
     void setInHiLiteHandler(final int index, final HiLiteHandler hdl) {
         m_node.setInHiLiteHandler(index, hdl);
@@ -260,8 +261,7 @@ public final class SingleNodeContainer extends NodeContainer
      * @return true if output specs have changed.
      * @throws IllegalStateException in case of illegal entry state.
      */
-    @Override
-    boolean configureAsNodeContainer(final PortObjectSpec[] inObjectSpecs) {
+    boolean configure(final PortObjectSpec[] inObjectSpecs) {
         synchronized (m_nodeMutex) {
             // remember old specs
             PortObjectSpec[] prevSpecs =
@@ -331,16 +331,17 @@ public final class SingleNodeContainer extends NodeContainer
      * @return if node can be reset.
      */
     @Override
-    boolean isResetableAsNodeContainer() {
+    boolean isResetable() {
         return (getState().equals(State.EXECUTED)
                 || getState().equals(State.MARKEDFOREXEC)
                 || getState().equals(State.CONFIGURED)
                 || getState().equals(State.UNCONFIGURED_MARKEDFOREXEC));
     }
 
-    /** {@inheritDoc} */
-    @Override
-    void resetAsNodeContainer() {
+    /** Reset underlying node and update state accordingly.
+     * @throws IllegalStateException in case of illegal entry state.
+     */
+    void reset() {
         synchronized (m_nodeMutex) {
             switch (getState()) {
             case EXECUTED:
@@ -366,9 +367,15 @@ public final class SingleNodeContainer extends NodeContainer
         }
     }
 
-    /** {@inheritDoc} */
-    @Override
-    void markForExecutionAsNodeContainer(final boolean flag) {
+    /** Enable (or disable) queuing of underlying node for execution. This
+     * really only changes the state of the node and once all pre-conditions
+     * for execution are fulfilled (e.g. configuration succeeded and all
+     * ingoing objects are available) the node will be actually queued.
+     *
+     * @param flag determines if node is marked or unmarked for execution
+     * @throws IllegalStateException in case of illegal entry state.
+     */
+    void markForExecution(final boolean flag) {
         synchronized (m_nodeMutex) {
             if (flag) {  // we want to mark the node for execution!
                 switch (getState()) {
@@ -426,7 +433,7 @@ public final class SingleNodeContainer extends NodeContainer
      * @param inData the incoming data for the execution
      * @throws IllegalStateException in case of illegal entry state.
      */
-    void queueAsNodeContainer(final PortObject[] inData) {
+    void queue(final PortObject[] inData) {
         synchronized (m_nodeMutex) {
             switch (getState()) {
             case MARKEDFOREXEC:
@@ -449,9 +456,12 @@ public final class SingleNodeContainer extends NodeContainer
     }
 
 
-    /** {@inheritDoc} */
-    @Override
-    void cancelExecutionAsNodeContainer() {
+    /** Cancel execution of a marked, queued, or executing node. (Tolerate
+     * execute as this may happen throughout cancelation).
+     *
+     * @throws IllegalStateException
+     */
+    void cancelExecution() {
         synchronized (m_nodeMutex) {
             switch (getState()) {
             case UNCONFIGURED_MARKEDFOREXEC:
@@ -529,7 +539,7 @@ public final class SingleNodeContainer extends NodeContainer
                     setState(State.CONFIGURED);
                 }
             } else {
-                m_node.reset(false);  // we need to clean up remaining nonsense...
+                m_node.reset(false);  // we need to clean up remaining nonsense.
                 m_node.clearLoopStatus();  // ...and the loop status
                 // but node will not be reconfigured!
                 // (configure does not prepare execute but only tells us what
@@ -615,7 +625,7 @@ public final class SingleNodeContainer extends NodeContainer
         }
         m_node.addToTemporaryTables(localTables);
     }
-    
+
     /** Removes all tables that were created by this node from the global
      * table repository. */
     private void removeOutputTablesFromGlobalRepository() {
@@ -703,6 +713,9 @@ public final class SingleNodeContainer extends NodeContainer
         }
     }
 
+    /**
+     * @return role of node within a loop
+     */
     Node.LoopRole getLoopRole() {
         return getNode().getLoopRole();
     }
@@ -721,7 +734,7 @@ public final class SingleNodeContainer extends NodeContainer
         // forward the event
         notifyProgressListeners(event);
     }
-
+    
     ///////////////////////////////////
     // NodeContainer->Node forwarding
     ///////////////////////////////////
