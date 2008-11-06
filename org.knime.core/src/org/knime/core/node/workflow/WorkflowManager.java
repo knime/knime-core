@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +74,6 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.ScopeLoopContext.RestoredScopeLoopContext;
-import org.knime.core.node.workflow.WorkflowEvent.Type;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -974,7 +974,7 @@ public final class WorkflowManager extends NodeContainer {
                     p.add(o);
                 }
             }
-            SortedMap<NodeID, Set<Integer>> sortedNodes =
+            LinkedHashMap<NodeID, Set<Integer>> sortedNodes =
                 m_workflow.createBackwardsBreadthFirstSortedList(p);
             for (NodeID thisID : sortedNodes.keySet()) {
                 if (!thisID.equals(getID())) { // skip WFM
@@ -1121,6 +1121,7 @@ public final class WorkflowManager extends NodeContainer {
             for (NodeID id : ids) {
                 markAndQueueNodeAndPredecessors(id, -1);
             }
+            checkForNodeStateChanges(true);
         }
     }
 
@@ -1392,7 +1393,7 @@ public final class WorkflowManager extends NodeContainer {
             // allow SNC to update states etc
             snc.postExecuteNode(success);
             notifyWorkflowListeners(new WorkflowEvent(
-                    Type.NODE_FINISHED, snc.getID(), null, null));
+                    WorkflowEvent.Type.NODE_FINISHED, snc.getID(), null, null));
             boolean canConfigureSuccessors = true;
             // process loop context - only for "real" nodes:
             if (snc.getLoopRole().equals(LoopRole.BEGIN)) {
@@ -1860,7 +1861,7 @@ public final class WorkflowManager extends NodeContainer {
             Set<ConnectionContainer> predNodes
                          = m_workflow.getConnectionsByDest(nodeID);
             for (ConnectionContainer conn : predNodes) {
-                assert conn.getDest() == nodeID;
+                assert conn.getDest().equals(nodeID);
                 NodeID predNodeID = conn.getSource();
                 NodeContainer predNode = m_workflow.getNode(predNodeID);
                 // TODO fix workaround for incoming meta connections
@@ -1968,9 +1969,7 @@ public final class WorkflowManager extends NodeContainer {
                 endNodes.add(id);
             }
         }
-        NodeID[] a = new NodeID[endNodes.size()];
-        endNodes.toArray(a);
-        executeUpToHere(a);
+        executeUpToHere(endNodes.toArray(new NodeID[endNodes.size()]));
     }
 
     /////////////////////////////////////////////////////////

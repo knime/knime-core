@@ -25,6 +25,7 @@ package org.knime.core.node.workflow;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -539,20 +540,21 @@ class Workflow {
         }
     }
 
-    /** Return map of node ids to set of port indices based on list of output
-     * ports. The map is sorted by traversing the graph backwards, breadth
-     * first, the set of port indices represents the input ports actually used
-     * within the graph covered. Include this WFM if any incoming ports are
-     * connected.
+    /**
+     * Return map of node ids to set of port indices based on list of output
+     * ports. The map's iterator returns the elements sorted by traversing the
+     * graph backwards, breadth first, the set of port indices represents the
+     * input ports actually used within the graph covered. Include this WFM if
+     * any incoming ports are connected.
      * 
-     * @param set of integers indicating the ports of interest
-     * @return backwards, BF sorted list of node ids
+     * @param outportIndices set of integers indicating the ports of interest
+     * @return BF sorted list of node ids
      */
-    SortedMap<NodeID, Set<Integer>> createBackwardsBreadthFirstSortedList(
+    LinkedHashMap<NodeID, Set<Integer>> createBackwardsBreadthFirstSortedList(
             final Set<Integer> outportIndices) {
         // this will our result
-        SortedMap<NodeID, Set<Integer>> sortedNodes
-                        = new TreeMap<NodeID, Set<Integer>>();
+        LinkedHashMap<NodeID, Set<Integer>> sortedNodes
+                        = new LinkedHashMap<NodeID, Set<Integer>>();
         // find everything that is connected to an output port of this workflow
         // with an index contained in the set and complete the list,
         // quick&dirty backwards depth first:
@@ -599,7 +601,7 @@ class Workflow {
      * @param inclusionList all nodes which are to be considered
      */
     private void expandListBackwardsBreadthFirst(
-            SortedMap<NodeID, Set<Integer>> sortedNodes,
+            final LinkedHashMap<NodeID, Set<Integer>> sortedNodes,
             final Set<NodeID> inclusionList) {
         // keep adding nodes until we can't find new ones anymore
         for (int i = 0; i < sortedNodes.size(); i++) {
