@@ -238,8 +238,10 @@ final class DBDialogPane extends JPanel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         String driverName = m_driver.getSelectedItem().toString();
         settings.addString("driver", driverName);
+        final File driverFile = 
+            DatabaseDriverLoader.getDriverFileForDriverClass(driverName);
         settings.addString("loaded_driver",
-                DatabaseDriverLoader.getDriverFileForDriverClass(driverName));
+                (driverFile == null ? null : driverFile.getAbsolutePath()));
         String url = m_db.getEditor().getItem().toString();
         settings.addString("database", url);     
         settings.addString("user", m_user.getText().trim());

@@ -138,8 +138,10 @@ public class DatabaseConnectionSettings {
         settings.addString("database", m_dbName);
         settings.addString("user", m_user);
         settings.addString("password", m_pass);
-        settings.addString("loaded_driver", 
-                DatabaseDriverLoader.getDriverFileForDriverClass(m_driver));
+        final File driverFile = 
+            DatabaseDriverLoader.getDriverFileForDriverClass(m_driver);
+        settings.addString("loaded_driver",
+                (driverFile == null ? null : driverFile.getAbsolutePath()));
         DRIVER_ORDER.add(m_driver);
         DRIVER_URLS.add(m_dbName);
     }
