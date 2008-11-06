@@ -115,6 +115,7 @@ import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.repository.RepositoryManager;
+import org.knime.workbench.ui.SyncExecQueueDispatcher;
 import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
 
 /**
@@ -1182,7 +1183,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     public void workflowChanged(final WorkflowEvent event) {
         LOGGER.debug("Workflow event triggered: " + event.toString());
-        Display.getDefault().asyncExec(new Runnable() {
+        SyncExecQueueDispatcher.asyncExec(new Runnable() {
             @Override
             public void run() {
                 markDirty();
@@ -1200,7 +1201,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             m_isDirty = true;
             m_manager.setDirty();
 
-            Display.getDefault().asyncExec(new Runnable() {
+            SyncExecQueueDispatcher.asyncExec(new Runnable() {
                 public void run() {
                     firePropertyChange(IEditorPart.PROP_DIRTY);
                 }

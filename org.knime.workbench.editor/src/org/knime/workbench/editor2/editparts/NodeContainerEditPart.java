@@ -71,6 +71,7 @@ import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.editor2.figures.ProgressFigure;
+import org.knime.workbench.ui.SyncExecQueueDispatcher;
 import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
 /**
@@ -301,38 +302,10 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
 
     public void stateChanged(final NodeStateEvent state) {
-        Display.getDefault().asyncExec(new Runnable() {
+        SyncExecQueueDispatcher.asyncExec(new Runnable() {
             public void run() {
                 NodeContainerFigure fig = (NodeContainerFigure)getFigure();
                 fig.setState(state.getState());
-                /*
-                if (state.getState().equals(NodeContainer.State.CONFIGURED)) {
-                    
-                    fig.setState(NodeContainerFigure.STATE_READY, "");
-                    
-                } else if (state.getState().equals(NodeContainer.State.IDLE)) {
-                    
-                        fig.setState(NodeContainerFigure.STATE_NOT_CONFIGURED, "");
-                        
-                } else if (state.getState().equals(NodeContainer.State.QUEUED)) {
-
-                    fig.setState(NodeContainerFigure.STATE_QUEUED, "");
-
-                } else if (state.getState().equals(NodeContainer.State.EXECUTING)) {
-                    
-                    fig.setState(NodeContainerFigure.STATE_EXECUTING, "");
-
-                    // deactivate edit part and set locking flag
-                    // NodeContainerEditPart.this.deactivateEditPolicies();
-                    m_isLocked = true;
-                } else if (state.getState().equals(NodeContainer.State.EXECUTED)) {
-                    
-                        fig.setState(NodeContainerFigure.STATE_EXECUTED, "");
-                    // re-activate edit part and clear locking flag
-                    // NodeContainerEditPart.this.activateEditPolicies();
-                    m_isLocked = false;
-                }
-                */
                 updateNodeStatus();
 
                 // reset the tooltip text of the outports
@@ -370,7 +343,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         //
         // As this code updates the UI it must be executed in the UI thread.
         //
-        Display.getDefault().asyncExec(new Runnable() {
+        SyncExecQueueDispatcher.asyncExec(new Runnable() {
             public void run() {
                 NodeContainerFigure fig = (NodeContainerFigure)getFigure();
                 fig.setMessage(messageEvent.getMessage());

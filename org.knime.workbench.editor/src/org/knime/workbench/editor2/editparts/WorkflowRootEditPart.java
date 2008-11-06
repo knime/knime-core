@@ -41,7 +41,6 @@ import org.eclipse.gef.SnapToHelper;
 import org.eclipse.gef.commands.CommandStackListener;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.rulers.RulerProvider;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
@@ -57,6 +56,7 @@ import org.knime.workbench.editor2.figures.ProgressToolTipHelper;
 import org.knime.workbench.editor2.figures.WorkflowFigure;
 import org.knime.workbench.editor2.figures.WorkflowLayout;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
+import org.knime.workbench.ui.SyncExecQueueDispatcher;
 
 /**
  * Root controller for the <code>WorkflowManager</code> model object. Consider
@@ -289,7 +289,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         LOGGER.debug("WorkflowRoot: workflow changed, refreshing "
                 + "children/connections..");
 
-        Display.getDefault().asyncExec(new Runnable() {
+        SyncExecQueueDispatcher.asyncExec(new Runnable() {
 
             public void run() {
 

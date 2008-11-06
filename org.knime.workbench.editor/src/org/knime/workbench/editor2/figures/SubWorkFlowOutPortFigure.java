@@ -29,7 +29,6 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PointList;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
@@ -37,6 +36,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.ui.SyncExecQueueDispatcher;
 
 /**
  * 
@@ -86,7 +86,7 @@ public class SubWorkFlowOutPortFigure extends NodeOutPortFigure
         NodeLogger.getLogger(SubWorkFlowOutPortFigure.class)
             .debug("port state changed to " + state.getState());
         m_currentState = state.getState();
-        Display.getDefault().asyncExec(new Runnable() {
+        SyncExecQueueDispatcher.asyncExec(new Runnable() {
 
             public void run() {
                 SubWorkFlowOutPortFigure.this.repaint();

@@ -60,6 +60,7 @@ import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
+import org.knime.workbench.ui.SyncExecQueueDispatcher;
 
 /**
  * This class is a filtered view on a knime project which hides utitility files
@@ -147,7 +148,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      */
     public void stateChanged(final NodeStateEvent state) {
         LOGGER.debug("state changed to " + state.getState());
-        Display.getDefault().asyncExec(new Runnable() {
+        SyncExecQueueDispatcher.asyncExec(new Runnable() {
             public void run() {
                 try {
                     String name =  ProjectWorkflowMap.findProjectFor(
