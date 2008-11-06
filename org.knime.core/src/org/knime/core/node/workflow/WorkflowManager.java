@@ -41,7 +41,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
@@ -2370,7 +2369,7 @@ public final class WorkflowManager extends NodeContainer {
     private void configureNodeAndSuccessors(final NodeID nodeId,
             final boolean configureMyself) {
         // create list of properly ordered nodes (each one appears only once!)
-        SortedMap<NodeID, Set<Integer>> nodes
+        LinkedHashMap<NodeID, Set<Integer>> nodes
              = m_workflow.getBreadthFirstListOfNodeAndSuccessors(nodeId, false);
         // remember which ones we did configure to avoid useless configurations
         // (this list does not contain nodes where configure() didn't change

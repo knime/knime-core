@@ -27,7 +27,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
@@ -179,15 +178,15 @@ class Workflow {
      * @param skipWFM if true, do not include WFM in the list
      * @return map as described above.
      */
-    SortedMap<NodeID, Set<Integer>> getBreadthFirstListOfNodeAndSuccessors(
+    LinkedHashMap<NodeID, Set<Integer>> getBreadthFirstListOfNodeAndSuccessors(
             final NodeID id, final boolean skipWFM) {
         // assemble unsorted list of successors
         HashSet<NodeID> inclusionList = new HashSet<NodeID>();
         completeSet(inclusionList, id, -1);
         // and then get all successors which are part of this list in a nice
         // BFS order
-        TreeMap<NodeID, Set<Integer>> bfsSortedNodes
-                    = new TreeMap<NodeID, Set<Integer>>();
+        LinkedHashMap<NodeID, Set<Integer>> bfsSortedNodes
+                    = new LinkedHashMap<NodeID, Set<Integer>>();
         // put the origin - not that none of it's ports (if any) are of
         // interest -  into the map
         bfsSortedNodes.put(id, new HashSet<Integer>());
@@ -208,13 +207,13 @@ class Workflow {
      * @param skipWFM if true, do not include WFM in the list
      * @return BF sorted list of node ids
      */
-    SortedMap<NodeID, Set<Integer>> createBreadthFirstSortedList(
+    LinkedHashMap<NodeID, Set<Integer>> createBreadthFirstSortedList(
             final Set<NodeID> ids,
             final boolean skipWFM) {
         // first create list of nodes without predecessor or only the WFM
         // itself (i.e. connected to outside "world" only.
-        SortedMap<NodeID, Set<Integer>> bfsSortedNodes
-                        = new TreeMap<NodeID, Set<Integer>>();
+        LinkedHashMap<NodeID, Set<Integer>> bfsSortedNodes
+                        = new LinkedHashMap<NodeID, Set<Integer>>();
         for (NodeID thisNode : ids) {
             // find the nodes in the list which are sources (i.e. not
             // preceeded by any others in the list)
@@ -295,7 +294,7 @@ class Workflow {
      * @param inclusionList complete list of nodes to be sorted breadth first
      */
     private void expandListBreadthFirst(
-            SortedMap<NodeID, Set<Integer>> bfsSortedNodes,
+            LinkedHashMap<NodeID, Set<Integer>> bfsSortedNodes,
             final Set<NodeID> inclusionList) {
         // keep adding nodes until we can't find new ones anymore
         for (int i = 0; i < bfsSortedNodes.size(); i++) {
