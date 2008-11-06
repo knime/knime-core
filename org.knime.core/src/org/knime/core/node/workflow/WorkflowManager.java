@@ -2273,8 +2273,16 @@ public final class WorkflowManager extends NodeContainer {
                 // create new ScopeContextStack
                 ScopeObjectStack oldSOS = null;
                 oldSOS = snc.getScopeObjectStack();
-                ScopeObjectStack scsc =
-                    new ScopeObjectStack(snc.getID(), scscs);
+                ScopeObjectStack scsc;
+                boolean scopeStackConflict = false;
+                try {
+                    scsc = new ScopeObjectStack(snc.getID(), scscs);
+                } catch (IllegalContextStackObjectException e) {
+                    LOGGER.warn("Unable to merge scope object stacks: " 
+                            + e.getMessage(), e);
+                    scsc = new ScopeObjectStack(snc.getID());
+                    scopeStackConflict = true;
+                }
                 if (snc.getLoopRole().equals(LoopRole.BEGIN)) {
                     // the stack will automatically add the ID of the
                     // head of the loop (the owner!)
@@ -2296,10 +2304,22 @@ public final class WorkflowManager extends NodeContainer {
                     oldHdl[i] = snc.getOutPort(i).getHiLiteHandler();
                 }
                 // configure node itself
-                boolean outputSpecsChanged = snc.configure(inSpecs);
-                notifyWorkflowListeners(new WorkflowEvent(
-                        WorkflowEvent.Type.NODE_CONFIGURED, 
-                        snc.getID(), null, null));
+                boolean outputSpecsChanged = false;
+                if (scopeStackConflict && !snc.getState().equals(State.IDLE)) {
+                    // FIXME how to invalidate the configure state of the node?
+                    snc.reset(); // can't configured due to stack clash
+                    // different output if any output spec was non-null
+                    for (PortObjectSpec s : inSpecs) {
+                        if (s != null) {
+                            outputSpecsChanged = true;
+                        }
+                    }
+                } else {
+                    outputSpecsChanged = snc.configure(inSpecs);
+                    notifyWorkflowListeners(new WorkflowEvent(
+                            WorkflowEvent.Type.NODE_CONFIGURED, 
+                            snc.getID(), null, null));
+                }
 
                 // check if ScopeContextStacks have changed
                 boolean stackChanged = false;
@@ -2868,8 +2888,16 @@ public final class WorkflowManager extends NodeContainer {
                     portObjects[i] = p.getPortObject();
                 }
             }
-            ScopeObjectStack inStack =
-                new ScopeObjectStack(cont.getID(), predStacks);
+            ScopeObjectStack inStack;
+            try {
+                inStack = new ScopeObjectStack(cont.getID(), predStacks);
+            } catch (IllegalContextStackObjectException ex) {
+                loadResult.addError("Errors creating scope object stack for " 
+                        + "node \"" + cont.getNameWithID() + "\", (resetting "
+                        + "scope variables): " + ex.getMessage());
+                needsReset = true;
+                inStack = new ScopeObjectStack(cont.getID());
+            }
             NodeContainerPersistor containerPersistor = persistorMap.get(bfsID);
             exec.setMessage(cont.getNameWithID());
             // two steps below: loadNodeContainer and loadContent
@@ -2903,7 +2931,8 @@ public final class WorkflowManager extends NodeContainer {
                 cont.setDirty();
             }
             boolean hasPredecessorFailed = false;
-            for (ConnectionContainer cc : m_workflow.getConnectionsByDest(bfsID)) {
+            for (ConnectionContainer cc 
+                    : m_workflow.getConnectionsByDest(bfsID)) {
                 if (failedNodes.contains(cc.getSource())) {
                     hasPredecessorFailed = true;
                 }
