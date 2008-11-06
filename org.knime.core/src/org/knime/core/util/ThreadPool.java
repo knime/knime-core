@@ -31,6 +31,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -158,6 +159,10 @@ public class ThreadPool implements JobExecutor {
                     try {
                         m_runnable.run();
                         m_runnable.get();
+                    } catch (InterruptedException ex) {
+                        LOGGER.debug("Thread was interrupted");
+                    } catch (CancellationException ex) {
+                        LOGGER.debug("Future was canceled");
                     } catch (ExecutionException ex) {
                         LOGGER.error("An exception occurred while executing "
                                 + "a runnable.", ex.getCause());

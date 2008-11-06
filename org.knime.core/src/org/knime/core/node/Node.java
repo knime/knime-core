@@ -661,6 +661,11 @@ public final class Node implements NodeModelWarningListener {
             if (th instanceof CanceledExecutionException
                      || th instanceof InterruptedException) {
                 // execution was canceled
+
+                // clear the flag so that the ThreadPool does not kill the
+                // thread
+                Thread.interrupted();
+
                 reset(true);
                 createWarningMessageAndNotify("Execution canceled");
                 return false;
@@ -980,8 +985,8 @@ public final class Node implements NodeModelWarningListener {
             }
         }
     }
-    
-    /** Reverse operation to 
+
+    /** Reverse operation to
      * {@link #putOutputTablesIntoGlobalRepository(HashMap)}. It will remove
      * all output tables and its delegates from the global table repository.
      * @param rep The global table rep.
