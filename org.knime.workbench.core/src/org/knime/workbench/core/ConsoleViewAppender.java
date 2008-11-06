@@ -22,7 +22,7 @@
  * History
  *   2005/04/19 (georg): created
  */
-package org.knime.workbench.ui;
+package org.knime.workbench.core;
 
 import java.io.IOException;
 import java.io.Writer;

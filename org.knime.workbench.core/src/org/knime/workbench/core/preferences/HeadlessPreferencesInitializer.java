@@ -16,12 +16,12 @@
  * website: www.knime.org
  * email: contact@knime.org
  */
-package org.knime.workbench.preferences;
+package org.knime.workbench.core.preferences;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.NodeLogger.LEVEL;
-import org.knime.workbench.repository.KNIMERepositoryPlugin;
+import org.knime.workbench.core.KNIMECorePlugin;
 
 /**
  *
@@ -35,7 +35,7 @@ public class HeadlessPreferencesInitializer extends
      */
     @Override
     public void initializeDefaultPreferences() {
-        IPreferenceStore store = KNIMERepositoryPlugin.getDefault()
+        IPreferenceStore store = KNIMECorePlugin.getDefault()
             .getPreferenceStore();
         store.setDefault(HeadlessPreferencesConstants.P_MAXIMUM_THREADS,
                 2 * Runtime.getRuntime().availableProcessors());
@@ -45,6 +45,10 @@ public class HeadlessPreferencesInitializer extends
 
         store.setDefault(HeadlessPreferencesConstants.P_LOGLEVEL_LOG_FILE,
                 LEVEL.DEBUG.name());
+
+        // set default values
+        store.setDefault(KNIMECorePlugin.P_LOGLEVEL_CONSOLE,
+                LEVEL.WARN.name());
     }
 
 }

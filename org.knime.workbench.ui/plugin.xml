@@ -152,20 +152,20 @@
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
-            category="org.knime.workbench.ui.headless"
+            category="org.knime.workbench.ui.preferences"
             class="org.knime.workbench.ui.preferences.MainPreferencePage"
             id="org.knime.workbench.ui.preferences.gui"
             name="KNIME GUI">
       </page>
       <page
-            category="org.knime.workbench.ui.headless"
+            category="org.knime.workbench.ui.preferences"
             class="org.knime.workbench.ui.masterkey.MasterKeyPreferencePage"
             id="org.knime.workbench.ui.preferences.masterkey"
             name="Master Key">
       </page>
       <page
             class="org.knime.workbench.ui.preferences.HeadlessPreferencePage"
-            id="org.knime.workbench.ui.headless"
+            id="org.knime.workbench.ui.preferences"
             name="KNIME">
       </page>
    </extension>

@@ -1,6 +1,4 @@
-/* @(#)$$RCSfile$$ 
- * $$Revision$$ $$Date$$ $$Author$$
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -26,10 +24,20 @@
  */
 package org.knime.workbench.core;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import org.eclipse.core.runtime.Plugin;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeLogger.LEVEL;
+import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
 import org.osgi.framework.BundleContext;
 
 
@@ -42,7 +50,7 @@ import org.osgi.framework.BundleContext;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class KNIMECorePlugin extends Plugin {
+public class KNIMECorePlugin extends AbstractUIPlugin {
 
     /** Make sure that this *always* matches the ID in plugin.xml. */
     public static final String PLUGIN_ID = "org.knime.workbench.core";
@@ -52,7 +60,21 @@ public class KNIMECorePlugin extends Plugin {
 
     // Resource bundle.
     private ResourceBundle m_resourceBundle;
+    
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            KNIMECorePlugin.class);
 
+    /** Preference constant: log level for console appender. */
+    public static final String P_LOGLEVEL_CONSOLE = "logging.loglevel.console";
+    
+    
+    /**
+     * Keeps list of <code>ConsoleViewAppender</code>. TODO FIXME remove
+     * static if you want to have a console for each Workbench
+     */
+    private static final ArrayList<ConsoleViewAppender> APPENDERS =
+            new ArrayList<ConsoleViewAppender>();
+    
     /**
      * The constructor.
      */
@@ -70,7 +92,111 @@ public class KNIMECorePlugin extends Plugin {
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
+        try {
+            // get the preference store
+            // with the preferences for nr threads and tempDir
+            IPreferenceStore pStore =
+                KNIMECorePlugin.getDefault().getPreferenceStore();
+            int maxThreads = pStore.getInt(
+                    HeadlessPreferencesConstants.P_MAXIMUM_THREADS);
+            String maxTString = System.getProperty("org.knime.core.maxThreads");
+            if (maxTString == null) {
+                if (maxThreads <= 0) {
+                    LOGGER.warn("Can set " + maxThreads
+                            + " as number of threads to use");
+                } else {
+                    KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(maxThreads);
+                    LOGGER.debug("Setting KNIME max thread count to "
+                            + maxThreads);
+                }
+            } else {
+                LOGGER.debug("Ignoring thread count from preference page (" 
+                        + maxThreads + "), since it has set by java property " 
+                        + "\"org.knime.core.maxThreads\" (" + maxTString + ")");
+            }
+            String tmpDir = pStore.getString(
+                    HeadlessPreferencesConstants.P_TEMP_DIR);
+            // check for existence and if writable
+            File tmpDirFile = new File(tmpDir);
+            if (!(tmpDirFile.isDirectory() && tmpDirFile.canWrite())) {
+                LOGGER.error("Can't set temp directory to \"" + tmpDir + "\", "
+                        + "not a directory or not writable");
+            } else {
+                System.setProperty("java.io.tmpdir", tmpDir);
+                LOGGER.debug("Setting temp dir environment variable "
+                        + "(java.io.tmpdir) to \"" + tmpDir + "\"");
+            }
 
+            // set log file level to stored
+            String logLevelFile =
+                pStore.getString(HeadlessPreferencesConstants
+                        .P_LOGLEVEL_LOG_FILE);
+            NodeLogger.setLevel(LEVEL.valueOf(logLevelFile));
+
+            pStore.addPropertyChangeListener(new IPropertyChangeListener() {
+
+                @Override
+                public void propertyChange(final PropertyChangeEvent event) {
+                    if (event.getProperty().equals(
+                            HeadlessPreferencesConstants.P_MAXIMUM_THREADS)) {
+                        int count;
+                        try {
+                            count = (Integer)event.getNewValue();
+                            KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(
+                                    count);
+                        } catch (Exception e) {
+                            LOGGER.warn("Unable to get maximum thread count "
+                                    + " from preference page.", e);
+                        }
+                    } else if (event.getProperty().equals(
+                            HeadlessPreferencesConstants.P_TEMP_DIR)) {
+                        System.setProperty("java.io.tmpdir", (String)event
+                                .getNewValue());
+                    } else if (event.getProperty().equals(
+                            HeadlessPreferencesConstants.P_LOGLEVEL_LOG_FILE)) {
+                        String newName = event.getNewValue().toString();
+                        LEVEL level = LEVEL.WARN;
+                        try {
+                            level = LEVEL.valueOf(newName);
+                        } catch (NullPointerException ne) {
+                            LOGGER.warn(
+                                    "Null is an invalid log level, using WARN");
+                        } catch (IllegalArgumentException iae) {
+                            LOGGER.warn("Invalid log level " + newName
+                                    + ", using WARN");
+                        }
+                        NodeLogger.setLevel(level);
+                    } else if (P_LOGLEVEL_CONSOLE.equals(
+                            event.getProperty())) {
+                        String newName = event.getNewValue().toString();
+                        setLogLevel(newName);
+                    }
+                }
+            });
+            // end property listener
+                            
+            String logLevelConsole =
+                pStore.getString(P_LOGLEVEL_CONSOLE);
+            // TODO: only if awt.headless ==  false
+            if (!Boolean.valueOf(
+                    System.getProperty("java.awt.headless", "false"))) {
+                try {
+                    ConsoleViewAppender.WARN_APPENDER.write(
+                            KNIMEConstants.WELCOME_MESSAGE);
+                    ConsoleViewAppender.WARN_APPENDER.write(
+                    "Log file is located at: "
+                    + KNIMEConstants.getKNIMEHomeDir() + File.separator
+                    + NodeLogger.LOG_FILE + "\n");
+                } catch (IOException ioe) {
+                    LOGGER.error("Could not print welcome message: ", ioe);
+                }
+                setLogLevel(logLevelConsole);
+            }
+        } catch (Throwable e) {
+            LOGGER.error("FATAL: error initializing KNIME"
+                    + " repository - check plugin.xml" + " and classpath", e);
+        }
+        
     }
 
     /**
@@ -81,10 +207,95 @@ public class KNIMECorePlugin extends Plugin {
      */
     @Override
     public void stop(final BundleContext context) throws Exception {
+        // remove appender listener from "our" NodeLogger
+        for (int i = 0; i < APPENDERS.size(); i++) {
+            removeAppender(APPENDERS.get(i));
+        }
         super.stop(context);
         plugin = null;
         m_resourceBundle = null;
     }
+    
+    
+    /**
+     * Register the appenders according to logLevel, i.e.
+     * PreferenceConstants.P_LOGLEVEL_DEBUG,
+     * PreferenceConstants.P_LOGLEVEL_INFO, etc.
+     *
+     * @param logLevel The new log level.
+     */
+    private static void setLogLevel(final String logLevel) {
+        // check if can create a console view
+        // only possible if we are not "headless"
+        if (Boolean.valueOf(System.getProperty("java.awt.headless", "false"))) {
+            return;
+        }
+        boolean changed = false;
+        if (logLevel.equals(LEVEL.DEBUG.name())) {
+            changed |= addAppender(ConsoleViewAppender.DEBUG_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.INFO_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.WARN_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.ERROR_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
+        } else if (logLevel.equals(LEVEL.INFO.name())) {
+            changed |= removeAppender(ConsoleViewAppender.DEBUG_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.INFO_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.WARN_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.ERROR_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
+        } else if (logLevel.equals(LEVEL.WARN.name())) {
+            changed |= removeAppender(ConsoleViewAppender.DEBUG_APPENDER);
+            changed |= removeAppender(ConsoleViewAppender.INFO_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.WARN_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.ERROR_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
+        } else if (logLevel.equals(LEVEL.ERROR.name())) {
+            changed |= removeAppender(ConsoleViewAppender.DEBUG_APPENDER);
+            changed |= removeAppender(ConsoleViewAppender.INFO_APPENDER);
+            changed |= removeAppender(ConsoleViewAppender.WARN_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.ERROR_APPENDER);
+            changed |= addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
+        } else {
+            LOGGER.warn("Invalid log level " + logLevel + "; setting to "
+                    + LEVEL.WARN.name());
+            setLogLevel(LEVEL.WARN.name());
+        }
+        if (changed) {
+            LOGGER.info("Setting console view log level to " + logLevel);
+        }
+    }
+
+
+    /**
+     * Add the given Appender to the NodeLogger.
+     *
+     * @param app Appender to add.
+     * @return If the given appender was not previously registered.
+     */
+    static boolean addAppender(final ConsoleViewAppender app) {
+        if (!APPENDERS.contains(app)) {
+            NodeLogger.addWriter(app, app.getLevel(), app.getLevel());
+            APPENDERS.add(app);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Removes the given Appender from the NodeLogger.
+     *
+     * @param app Appender to remove.
+     * @return If the given appended was previously registered.
+     */
+    static boolean removeAppender(final ConsoleViewAppender app) {
+        if (APPENDERS.contains(app)) {
+            NodeLogger.removeWriter(app);
+            APPENDERS.remove(app);
+            return true;
+        }
+        return false;
+    }
+    
 
     /**
      * Returns the shared instance.

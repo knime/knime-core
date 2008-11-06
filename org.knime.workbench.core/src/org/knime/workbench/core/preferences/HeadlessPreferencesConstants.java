@@ -16,7 +16,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  */
-package org.knime.workbench.preferences;
+package org.knime.workbench.core.preferences;
 
 /**
  *

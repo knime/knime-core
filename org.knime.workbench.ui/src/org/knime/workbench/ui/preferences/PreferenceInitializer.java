@@ -26,7 +26,6 @@ package org.knime.workbench.ui.preferences;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
@@ -43,10 +42,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         // get the preference store for the UI plugin
         IPreferenceStore store = KNIMEUIPlugin.getDefault()
                 .getPreferenceStore();
-
-        // set default values
-        store.setDefault(PreferenceConstants.P_LOGLEVEL_CONSOLE,
-                LEVEL.WARN.name());
         
         store.setDefault(PreferenceConstants.P_CONFIRM_RESET, true);
         
