@@ -666,7 +666,7 @@ public final class Node implements NodeModelWarningListener {
                 // thread
                 Thread.interrupted();
 
-                reset(true);
+                reset();
                 createWarningMessageAndNotify("Execution canceled");
                 return false;
             }
@@ -677,7 +677,7 @@ public final class Node implements NodeModelWarningListener {
                 message = message.concat("(\"" + th.getClass().getSimpleName()
                         + "\"): " + th.getMessage());
             }
-            reset(true);
+            reset();
             createErrorMessageAndNotify(message, th);
             return false;
         }
@@ -914,17 +914,12 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Resets this node without re-configuring it.
-     * @param cleanMessages Whether to clear the node message, mostly true
-     * but false if an execution has failed and we want to give the node model
-     * a chance to clear its intermediate results.
      */
-    public void reset(final boolean cleanMessages) {
+    public void reset() {
         m_logger.debug("reset");
         // if reset had no exception, reset node message
         m_model.resetModel();
-        if (cleanMessages) {
-            createResetMessageAndNotify();
-        }
+        createResetMessageAndNotify();
         // and make sure output ports are empty as well
         cleanOutPorts();
         // clear temporary tables that have been created during execute
@@ -1722,7 +1717,7 @@ public final class Node implements NodeModelWarningListener {
     public NodeMessage getNodeMessage() {
         return m_message;
     }
-
+    
     /**
      * Returns a string summary of this node.
      *
