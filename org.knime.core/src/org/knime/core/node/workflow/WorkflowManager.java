@@ -699,19 +699,11 @@ public final class WorkflowManager extends NodeContainer {
         if (!m_workflow.getConnectionsBySource(cc.getSource()).contains(cc)) {
             return false;
         }
-        // retrieve state of source and destination NodeContainer (could be WFM)
-        NodeContainer.State sourceState = cc.getSource().equals(this.getID())
-            ? this.getState()
-            : m_workflow.getNode(cc.getSource()).getState();
+        // retrieve state of destination NodeContainer (could be WFM)
         NodeContainer.State destState = cc.getDest().equals(this.getID())
             ? this.getState()
             : m_workflow.getNode(cc.getDest()).getState();
-        // make sure neither source nor destination are "in use"...
-        if (!(sourceState.equals(NodeContainer.State.IDLE)
-              || sourceState.equals(NodeContainer.State.CONFIGURED)
-              || sourceState.equals(NodeContainer.State.EXECUTED))) {
-            return false;
-        }
+        // make sure destination is "in use"...
         if (!(destState.equals(NodeContainer.State.IDLE)
               || destState.equals(NodeContainer.State.CONFIGURED)
               || destState.equals(NodeContainer.State.EXECUTED))) {
