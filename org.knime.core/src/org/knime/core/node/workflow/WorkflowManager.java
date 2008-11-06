@@ -748,8 +748,7 @@ public final class WorkflowManager extends NodeContainer {
             }
             // now check if other reasons forbit to delete this connection:
             if (!canRemoveConnection(cc)) {
-                throw new IllegalArgumentException(
-                        "Can not remove connection!");
+                throw new IllegalStateException("Can not remove connection!");
             }
             // check type and underlying nodes
             NodeID source = cc.getSource();
