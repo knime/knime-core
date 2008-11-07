@@ -1719,7 +1719,7 @@ public final class WorkflowManager extends NodeContainer {
     private boolean hasSuccessorInProgress(final NodeID nodeID) {
         NodeContainer nc = m_workflow.getNode(nodeID);
         if (nc == null) {  // we are talking about this WFM
-            assert nodeID == this.getID();
+            assert nodeID.equals(this.getID());
             return getParent().hasSuccessorInProgress(nodeID);
         }
         // else it's a node inside the WFM
