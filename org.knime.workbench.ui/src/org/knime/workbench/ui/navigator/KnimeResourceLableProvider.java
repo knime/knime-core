@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   27.06.2006 (sieb): created
  */
@@ -28,6 +28,7 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.DecoratingLabelProvider;
 import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.IFontProvider;
@@ -43,7 +44,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorRegistry;
 import org.eclipse.ui.IPropertyListener;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.internal.util.SWTResourceUtil;
 import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.eclipse.ui.model.IWorkbenchAdapter2;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
@@ -54,7 +54,7 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
 /**
  * Implements the label provider for the knime navigator. Mainly projects get
  * another image.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class KnimeResourceLableProvider extends LabelProvider implements
@@ -62,7 +62,7 @@ public class KnimeResourceLableProvider extends LabelProvider implements
 
     private static final Image PROJECT = KNIMEUIPlugin.getDefault().getImage(
             KNIMEUIPlugin.PLUGIN_ID, "icons/project_basic.png");
-    
+
     private static final Image EXECUTING = KNIMEUIPlugin.getDefault()
         .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_executing.png");
     private static final Image EXECUTED = KNIMEUIPlugin.getDefault()
@@ -71,18 +71,18 @@ public class KnimeResourceLableProvider extends LabelProvider implements
         .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_configured.png");
     private static final Image CLOSED = KNIMEUIPlugin.getDefault()
         .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_closed2.png");
-    
+
     private static final Image NODE = KNIMEUIPlugin.getDefault().getImage(
-            KNIMEUIPlugin.PLUGIN_ID, "icons/node.png"); 
-    
+            KNIMEUIPlugin.PLUGIN_ID, "icons/node.png");
+
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(
 //            KnimeResourceLableProvider.class);
-    
-    
+
+
     /**
      * Returns a workbench label provider that is hooked up to the decorator
      * mechanism.
-     * 
+     *
      * @return a new <code>DecoratingLabelProvider</code> which wraps a new
      *         <code>WorkbenchLabelProvider</code>
      */
@@ -121,9 +121,9 @@ public class KnimeResourceLableProvider extends LabelProvider implements
      * Returns an image descriptor that is based on the given descriptor, but
      * decorated with additional information relating to the state of the
      * provided object.
-     * 
+     *
      * Subclasses may reimplement this method to decorate an object's image.
-     * 
+     *
      * @param input The base image to decorate.
      * @param element The element used to look up decorations.
      * @return the resuling ImageDescriptor.
@@ -137,9 +137,9 @@ public class KnimeResourceLableProvider extends LabelProvider implements
     /**
      * Returns a label that is based on the given label, but decorated with
      * additional information relating to the state of the provided object.
-     * 
+     *
      * Subclasses may implement this method to decorate an object's label.
-     * 
+     *
      * @param input The base text to decorate.
      * @param element The element used to look up decorations.
      * @return the resulting text
@@ -166,7 +166,7 @@ public class KnimeResourceLableProvider extends LabelProvider implements
 
     /**
      * Returns the implementation of IWorkbenchAdapter for the given object.
-     * 
+     *
      * @param o the object to look up.
      * @return IWorkbenchAdapter or<code>null</code> if the adapter is not
      *         defined or the object is not adaptable.
@@ -181,7 +181,7 @@ public class KnimeResourceLableProvider extends LabelProvider implements
 
     /**
      * Returns the implementation of IWorkbenchAdapter2 for the given object.
-     * 
+     *
      * @param o the object to look up.
      * @return IWorkbenchAdapter2 or<code>null</code> if the adapter is not
      *         defined or the object is not adaptable.
@@ -213,7 +213,7 @@ public class KnimeResourceLableProvider extends LabelProvider implements
         } else if (element instanceof NodeContainer) {
             projectNode = (NodeContainer)element;
         }
-        if (projectNode != null) { 
+        if (projectNode != null) {
                 if (projectNode instanceof WorkflowManager
                         // display state only for projects
                         // with this check only projects (direct children of the
@@ -225,7 +225,7 @@ public class KnimeResourceLableProvider extends LabelProvider implements
                         img = EXECUTED;
                     } else if (projectNode.getState().equals(
                             NodeContainer.State.EXECUTING)) {
-                        img = EXECUTING;                        
+                        img = EXECUTING;
                     } else if (projectNode.getState().equals(
                             NodeContainer.State.CONFIGURED)
                             || projectNode.getState().equals(
@@ -245,7 +245,7 @@ public class KnimeResourceLableProvider extends LabelProvider implements
     @Override
     public final String getText(final Object element) {
         if (element instanceof NodeContainer) {
-            return ((NodeContainer)element).getName() 
+            return ((NodeContainer)element).getName()
                 + " (#" + ((NodeContainer)element).getID().getIndex() + ")";
         }
         // query the element for its label
@@ -287,10 +287,10 @@ public class KnimeResourceLableProvider extends LabelProvider implements
             return null;
         }
 
-        Font font = (Font)SWTResourceUtil.getFontTable().get(descriptor);
+        Font font = JFaceResources.getFontRegistry().get(descriptor.getName());
         if (font == null) {
             font = new Font(Display.getCurrent(), descriptor);
-            SWTResourceUtil.getFontTable().put(descriptor, font);
+            JFaceResources.getFontRegistry().put(descriptor.getName(), font.getFontData());
         }
         return font;
     }
@@ -307,10 +307,10 @@ public class KnimeResourceLableProvider extends LabelProvider implements
             return null;
         }
 
-        Color color = (Color)SWTResourceUtil.getColorTable().get(descriptor);
+        Color color = JFaceResources.getColorRegistry().get(descriptor.toString());
         if (color == null) {
             color = new Color(Display.getCurrent(), descriptor);
-            SWTResourceUtil.getColorTable().put(descriptor, color);
+            JFaceResources.getColorRegistry().put(descriptor.toString(), color.getRGB());
         }
         return color;
     }
