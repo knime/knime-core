@@ -1060,11 +1060,33 @@ public final class WorkflowManager extends NodeContainer {
      * Reset all nodes in this workflow. Make sure the reset is propagated
      * in the right order, that is, only actively reset the "left most"
      * nodes in the workflow or the ones connected to meta node input
+     * ports. The will also trigger resets of subsequent nodes.
+     */
+    public void resetAll() {
+        for (NodeID id : m_workflow.getNodeIDs()) {
+            boolean hasNonParentPredecessors = false;
+            for (ConnectionContainer cc
+                    : m_workflow.getConnectionsByDest(id)) {
+                if (!cc.getSource().equals(this.getID())) {
+                    hasNonParentPredecessors = true;
+                    break;
+                }
+            }
+            if (!hasNonParentPredecessors) {
+                resetAndConfigureNode(id);
+            }
+        }
+    }
+
+    /**
+     * Reset all nodes in this workflow. Make sure the reset is propagated
+     * in the right order, that is, only actively reset the "left most"
+     * nodes in the workflow or the ones connected to meta node input
      * ports.
      * Note that this routine will NOT trigger any resets connected to
      * possible outports of this WFM.
      */
-    public void resetAll() {
+    void resetAllNodesInWFM() {
         synchronized (m_workflowMutex) {
             if (!this.isResetable()) {
                 // only attempt to do this if possible.
@@ -1075,7 +1097,8 @@ public final class WorkflowManager extends NodeContainer {
                     = new ArrayList<NodeContainer>();
             // find all nodes that are directly connected to this meta nodes
             // input ports
-            Set<ConnectionContainer> cons = m_workflow.getConnectionsBySource(getID());
+            Set<ConnectionContainer> cons
+                        = m_workflow.getConnectionsBySource(getID());
             for (ConnectionContainer c : cons) {
                 NodeID id = c.getDest();
                 NodeContainer nc = m_workflow.getNode(id);
@@ -1581,7 +1604,8 @@ public final class WorkflowManager extends NodeContainer {
             }
         }
         // check for through connection
-        for (ConnectionContainer cc : m_workflow.getConnectionsBySource(getID())) {
+        for (ConnectionContainer cc
+                : m_workflow.getConnectionsBySource(getID())) {
             if (cc.getType().equals(
                     ConnectionContainer.ConnectionType.WFMTHROUGH)) {
                 return true;
@@ -1650,23 +1674,24 @@ public final class WorkflowManager extends NodeContainer {
         synchronized (m_workflowMutex) {
             // will contain source nodes (meta input nodes) connected to
             // correct port
-            ArrayList<NodeContainer> sourceNodes
-                    = new ArrayList<NodeContainer>();
+            HashMap<NodeContainer, Integer> sourceNodes
+                    = new HashMap<NodeContainer, Integer>();
             // find all nodes that are directly connected to this meta nodes
             // input port
-            for (ConnectionContainer cc :
-                          m_workflow.getConnectionsBySource(getID())) {
+            for (ConnectionContainer cc
+                          : m_workflow.getConnectionsBySource(getID())) {
                 NodeID id = cc.getDest();
                 NodeContainer nc = m_workflow.getNode(id);
                 if ((cc.getType().equals(ConnectionType.WFMIN))
-                        && (cc.getSourcePort() == inportIndex)) {
+                        &&    ((inportIndex < 0)
+                            || (cc.getSourcePort() == inportIndex))) {
                     // avoid WFMTHROUGH connections
-                    sourceNodes.add(nc);
+                    sourceNodes.put(nc, cc.getDestPort());
                 }
             }
             // and then reset those nodes (all of their successors will be
             // reset automatically)
-            for (NodeContainer nc : sourceNodes) {
+            for (NodeContainer nc : sourceNodes.keySet()) {
                 assert !this.getID().equals(nc.getID());
                 if (nc.isResetable()) {
                     this.resetSuccessors(nc.getID());
@@ -1675,8 +1700,9 @@ public final class WorkflowManager extends NodeContainer {
                                 (SingleNodeContainer)nc);
                     } else {
                         assert nc instanceof WorkflowManager;
-                        // FIXME: needs to remember ports!
-                        ((WorkflowManager)nc).resetAll();
+                        int portIndex = sourceNodes.get(nc.getID());
+                        ((WorkflowManager)nc).invokeResetOnPortSuccessors(
+                                portIndex);
                     }
                 }
             }
@@ -1749,7 +1775,8 @@ public final class WorkflowManager extends NodeContainer {
                         // this is ok, since we will never call this again
                         // while traversing a flow - this is the main entry
                         // point from the outside and should reset all kids.
-                        // (resetSuccessors() follows ports!)
+                        // (resetSuccessors() follows ports and will be
+                        // called throughout subsequent calls...)
                         ((WorkflowManager)nc).resetAll();
                     }
                     // and launch configure starting with this node
@@ -2990,7 +3017,7 @@ public final class WorkflowManager extends NodeContainer {
                 assert nc instanceof WorkflowManager;
                 WorkflowManager wfm = (WorkflowManager)nc;
                 if (wfm.isResetable()) {
-                    wfm.resetAll();
+                    wfm.resetAllNodesInWFM();
                 }
             }
             // make sure it's marked as dirty (meta nodes may not be resetable
