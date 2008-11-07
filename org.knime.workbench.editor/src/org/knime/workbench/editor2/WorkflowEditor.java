@@ -65,8 +65,11 @@ import org.eclipse.gef.ui.actions.WorkbenchPartAction;
 import org.eclipse.gef.ui.parts.GraphicalEditor;
 import org.eclipse.gef.ui.parts.GraphicalViewerKeyHandler;
 import org.eclipse.gef.ui.properties.UndoablePropertySheetEntry;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
@@ -549,6 +552,30 @@ public class WorkflowEditor extends GraphicalEditor implements
         ((WorkflowRootEditPart)getGraphicalViewer().getRootEditPart()
                 .getChildren().get(0))
                 .createToolTipHelper(getSite().getShell());
+        
+        parent.addDisposeListener(new DisposeListener() {
+
+            @Override
+            public void widgetDisposed(final DisposeEvent e) {
+                // bugfix 799: not possible to stop closing earlier if user 
+                // decides to NOT save it. Thus we have at least to try to 
+                // cancel all running nodes
+                try {
+                    if (m_manager.getState().executionInProgress()) {
+                        for (NodeContainer container 
+                                    : m_manager.getNodeContainers()) {
+                            m_manager.cancelExecution(container);
+                        }
+                    }
+                } catch (Throwable t) {
+                    // at least we have tried it
+                    LOGGER.error(
+                            "Could not cancel workflow manager for project "
+                            + m_fileResource.getProject().getName(), t);
+                }
+            }
+            
+        });
     }
 
     /**
@@ -896,7 +923,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     @Override
     public void doSave(final IProgressMonitor monitor) {
         LOGGER.debug("Saving workflow ...");
-
+        
         // // create progress monitor
         // EventLoopProgressMonitor monitor2 =
         // (EventLoopProgressMonitor)monitor;
@@ -921,7 +948,11 @@ public class WorkflowEditor extends GraphicalEditor implements
             });
             return;
         }
-
+        
+        // to be sure to mark dirty and inform the user about running nodes
+        // we ask for the state BEFORE saving
+        // this flag is evaluated at the end of this method
+        boolean wasInProgress = false;
         try {
             // make sure the resource is "fresh" before saving...
             // m_fileResource.refreshLocal(IResource.DEPTH_ONE, null);
@@ -934,6 +965,9 @@ public class WorkflowEditor extends GraphicalEditor implements
             SaveWorkflowRunnable saveWorflowRunnable =
                     new SaveWorkflowRunnable(this, file, exceptionMessage,
                             monitor);
+            
+            wasInProgress = m_manager.getState().executionInProgress();
+            
             ps.run(true, false, saveWorflowRunnable);
             // after saving the workflow, check for the import marker
             // and delete it
@@ -982,20 +1016,27 @@ public class WorkflowEditor extends GraphicalEditor implements
                 }
             });
         }
-        // try {
-        // // try to refresh project
-        // // m_fileResource.getProject().refreshLocal(IResource.DEPTH_INFINITE,
-        // // monitor);
-        //
-        // //archive attribute aendern
-        // } catch (CoreException e) {
-        // // TODO Auto-generated catch block
-        // LOGGER.debug("", e);
-        // }
-
-        // mark sub editors as saved
 
         monitor.done();
+        
+        // bugfix 799 (partly)
+        // check if the workflow manager is in execution
+        // this happens if the user pressed "Yes" on save confirmation dialog
+        // or simply saves (Ctrl+S)
+        if (wasInProgress) {
+            markDirty();
+            Display.getDefault().syncExec(new Runnable() {
+                @Override
+                public void run() {
+                    MessageDialog.openInformation(
+                            Display.getDefault().getActiveShell(),
+                            "Workflow in execution",
+                            "Executing nodes are not saved!");
+                }
+            });
+//            throw new OperationCanceledException(
+//                    "Workflow cannot be closed, while executing!");
+        } 
     }
 
     /**
