@@ -39,7 +39,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.WorkflowException;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.KNIMETimer;
@@ -101,7 +100,6 @@ public class KnimeTestCase extends TestCase {
     /**
      * Starts the workflow with the given settings file.
      *
-     * @throws WorkflowException
      * @throws IOException
      * @throws CanceledExecutionException
      * @throws InvalidSettingsException
@@ -110,7 +108,7 @@ public class KnimeTestCase extends TestCase {
      */
     @Override
     public void setUp() throws InvalidSettingsException,
-            CanceledExecutionException, IOException, WorkflowException {
+            CanceledExecutionException, IOException {
 
         // registers itself as appender to the logger:
         m_testConfig = new TestingConfig(100);
