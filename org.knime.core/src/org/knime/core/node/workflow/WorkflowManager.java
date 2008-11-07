@@ -1063,17 +1063,19 @@ public final class WorkflowManager extends NodeContainer {
      * ports. The will also trigger resets of subsequent nodes.
      */
     public void resetAll() {
-        for (NodeID id : m_workflow.getNodeIDs()) {
-            boolean hasNonParentPredecessors = false;
-            for (ConnectionContainer cc
-                    : m_workflow.getConnectionsByDest(id)) {
-                if (!cc.getSource().equals(this.getID())) {
-                    hasNonParentPredecessors = true;
-                    break;
+        synchronized (m_workflowMutex) {            
+            for (NodeID id : m_workflow.getNodeIDs()) {
+                boolean hasNonParentPredecessors = false;
+                for (ConnectionContainer cc
+                        : m_workflow.getConnectionsByDest(id)) {
+                    if (!cc.getSource().equals(this.getID())) {
+                        hasNonParentPredecessors = true;
+                        break;
+                    }
                 }
-            }
-            if (!hasNonParentPredecessors) {
-                resetAndConfigureNode(id);
+                if (!hasNonParentPredecessors) {
+                    resetAndConfigureNode(id);
+                }
             }
         }
     }
@@ -1171,7 +1173,8 @@ public final class WorkflowManager extends NodeContainer {
                     assert m_workflow.getNode(predID) != null;
                     // a "normal" node in this Workflow, mark it and its
                     // predecessors
-                    if (!markAndQueueNodeAndPredecessors(predID, cc.getSourcePort())) {
+                    if (!markAndQueueNodeAndPredecessors(predID,
+                            cc.getSourcePort())) {
                         // give up if this "branch" fails
                         return false;
                     }
@@ -1502,7 +1505,7 @@ public final class WorkflowManager extends NodeContainer {
                 currNode.addWaitingLoop(slc);
                 return;
             }
-            if (currNode.getState().equals(State.CONFIGURED)) {
+            if (this.canExecuteNode(id)) {
                 // we missed some nodes during the initial marking - most
                 // likely because these are in an untouched branch. Mark
                 // them now and return for now.
@@ -1514,11 +1517,25 @@ public final class WorkflowManager extends NodeContainer {
         // (3) reset the nodes in the body (only those -
         //     make sure end of loop is NOT reset)
         for (NodeID id : loopBodyNodes) {
-            invokeResetOnNode(id);
+            NodeContainer nc = m_workflow.getNode(id);
+            if (nc == null) {
+                throw new IllegalStateException("Node in loop body not in"
+                    + " same workflow as head&tail!");
+            }
+            if (nc instanceof SingleNodeContainer) {
+                ((SingleNodeContainer)nc).reset();
+            } else {
+                assert nc instanceof WorkflowManager;
+                // FIXME: only reset the nodes connected to relevant ports
+                ((WorkflowManager)nc).resetAllNodesInWFM();
+            }
         }
-        // (4) mark the origin of the loop to be executed again
+        // (4) allow access to tail node
+        ((SingleNodeContainer)headNode).getNode().setLoopEndNode(
+                ((SingleNodeContainer)tailNode).getNode());
+        // (5) mark the origin of the loop to be executed again
         ((SingleNodeContainer)headNode).enableReQueuing();
-        // (5) configure the nodes from start to rest (it's not
+        // (6) configure the nodes from start to rest (it's not
         //     so important if we configure more than the body)
         //     do NOT configure start of loop because otherwise
         //     we will re-create the ScopeContextStack and
@@ -1528,7 +1545,7 @@ public final class WorkflowManager extends NodeContainer {
         // configure, so we have to check here if the node
         // is really configured before...
         if (tailNode.getState().equals(State.CONFIGURED)) {
-            // (6) ... we enable the body to be queued again.
+            // (7) ... we enable the body to be queued again.
             for (NodeID id : loopBodyNodes) {
                 NodeContainer nc = m_workflow.getNode(id);
                 if (nc instanceof SingleNodeContainer) {
@@ -1538,12 +1555,9 @@ public final class WorkflowManager extends NodeContainer {
                     ((WorkflowManager)nc).markForExecutionAllNodes(true);
                 }
             }
-            // and (7) mark end of loop for re-execution
+            // and (8) mark end of loop for re-execution
             ((SingleNodeContainer)tailNode).markForExecution(true);
         }
-        // (8) allow access to tail node
-        ((SingleNodeContainer)headNode).getNode().setLoopEndNode(
-                ((SingleNodeContainer)tailNode).getNode());
         // (9) try to queue the head of this loop!
         assert headNode.getState().equals(State.MARKEDFOREXEC);
         queueIfQueuable(headNode);
