@@ -249,6 +249,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         m_threshold = settings.getDouble(CFG_THRESHOLD);
         m_fromString = settings.getBoolean(CFG_FROM_STRING);
         m_stringColumn.loadSettingsFrom(settings);
+        m_stringColumn.setEnabled(m_fromString);
         
         m_useMean = settings.getBoolean(CFG_USE_MEAN);
         m_meanPercentage = settings.getInt(CFG_MEAN_THRESHOLD);
@@ -260,13 +261,13 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                     + type + "'");
         }
         m_replace = settings.getBoolean(CFG_REPLACE, false);
-        
         try {
             // for backward compatibility try to load it
             m_includedColumns.loadSettingsFrom(settings);
         } catch (InvalidSettingsException ise) {
             // if not available: use all numeric columns
         }
+        m_includedColumns.setEnabled(!m_fromString);
     }
 
     private double[] calculateMeanValues(final DataTable input) {
