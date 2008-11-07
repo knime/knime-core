@@ -35,10 +35,8 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Plugin;
-import org.eclipse.swt.SWT;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.swt.widgets.Shell;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
@@ -115,8 +113,7 @@ public final class RepositoryManager {
     }
 
     private static void removeDuplicatesFromCategories(
-            final ArrayList<IConfigurationElement> allElements,
-            final StringBuffer errorString) {
+            final ArrayList<IConfigurationElement> allElements) {
 
         // brut force search
         for (int i = 0; i < allElements.size(); i++) {
@@ -155,7 +152,6 @@ public final class RepositoryManager {
                                 + "' is ignored.";
 
                         LOGGER.warn(message);
-                        errorString.append(message + "\n");
                     }
 
                     // remove from the end of the list
@@ -206,7 +202,7 @@ public final class RepositoryManager {
         // categories
         StringBuffer errorString = new StringBuffer();
         // remove duplicated categories
-        removeDuplicatesFromCategories(allElements, errorString);
+        removeDuplicatesFromCategories(allElements);
 
         // sort first by path-depth, so that everything is there in the
         // right order
@@ -253,7 +249,6 @@ public final class RepositoryManager {
                         + "' could not be created in parent path '"
                         + e.getAttribute("path") + "'.";
                 LOGGER.error(message, ex);
-                errorString.append(message + "\n");
             }
 
         } // for
@@ -326,7 +321,6 @@ public final class RepositoryManager {
                     }
                     
                     LOGGER.error(message, t);
-                    errorString.append(message + "\n");
                 }
 
             } // for configuration elements            
@@ -388,7 +382,6 @@ public final class RepositoryManager {
                         }
                         
                         LOGGER.error(message, t);
-                        errorString.append(message + "\n");
                     }
                 }
         }
@@ -398,32 +391,15 @@ public final class RepositoryManager {
         m_lock.release();
 
         // if errors occured show an information box
-        if (errorString.length() > 0 
-                && !"true".equals(System.getProperty("java.awt.headless"))) {
-
-            
-            // TODO: validate if the this works without getting the active shell
-            // get an appropriate shell
-            
+        if (errorString.length() > 0 && !Boolean.valueOf(
+                System.getProperty("java.awt.headless", "false"))) {            
             Display defaultDisplay = Display.getDefault();
-            if (defaultDisplay != null) {
-                /*
-                Shell[] parent = new Shell[1];
-                parent[0] = defaultDisplay.getActiveShell();
-                if (parent[0] == null) {
-                    parent = Display.getDefault().getShells();
-                }
-
-                if (parent[0] != null) {
-                    showErrorMessage(parent[0], errorString.toString());
-                }
+            if (defaultDisplay != null && !defaultDisplay.isDisposed()) {
+                showErrorMessage(defaultDisplay);
             }
-            */
-            showErrorMessage(errorString.toString());
             WorkbenchErrorLogger
-                    .warning("Could not load all contributed nodes: \n"
-                            + errorString);
-            }
+                .warning("Could not load all contributed nodes: \n"
+                    + errorString);
         }
 
     }
@@ -441,7 +417,7 @@ public final class RepositoryManager {
         }
     }
 
-    private void showErrorMessage(final String errorMessage) {
+    private void showErrorMessage(final Display display) {
         // create a dummy shell, to force the message box to the top
         // otherwise it could be lost in the background of the
         // desktop
@@ -451,22 +427,16 @@ public final class RepositoryManager {
             new Thread() {
                 @Override
                 public void run() {
-                    Display.getDefault().syncExec(new Runnable() {
+                    display.syncExec(new Runnable() {
                         public void run() {
-                            Shell dummy =
-                                    new Shell(Display.getDefault(),
-                                            SWT.DIALOG_TRIM | SWT.ON_TOP);
-                            MessageBox mb =
-                                    new MessageBox(dummy, SWT.ICON_WARNING
-                                            | SWT.OK | SWT.ON_TOP);
-                            mb.setText("KNIME extension(s) could not be " 
-                                    + "created or are duplicates!");
-                            mb.setMessage("Some contributed KNIME extensions"
-                                            + " could not be created or are " 
-                                            + "duplicates, they will be "
-                                            + "skipped: \n\n'"
-                                            + errorMessage.toString());
-                            mb.open();
+                            MessageDialog.openError(
+                                    display.getActiveShell(),
+                                    "Errors during initialization",
+                                    "Some contributed KNIME extensions"
+                                    + " could not be created or are " 
+                                    + "duplicates, they will be "
+                                    + "skipped. \n" 
+                                    + "For details please refer to the log.");
                         }
                     });
                 }
@@ -495,25 +465,4 @@ public final class RepositoryManager {
         return m_lock.tryAcquire();
     }
 
-    /**
-     * Loads a WFM from a config object.
-     * 
-     * @param settings
-     *            NodeSettings to load from.
-     * @return The workflow manager.s
-     */
-    // public WorkflowManager loadWorkflowFromConfig(final NodeSettings
-    // settings) {
-    // assert settings != null;
-    //
-    // WorkflowManager manager = new WorkflowManager();
-    // try {
-    // manager = new WorkflowManager(settings);
-    // } catch (InvalidSettingsException e) {
-    // LOGGER.error("Could not load workflow.");
-    // LOGGER.debug("Could not load workflow\n" + settings, e);
-    // }
-    //
-    // return manager;
-    // }
 }
