@@ -103,7 +103,8 @@ final class XMLConfig {
         // bug #1201 does not occur any more. Some time in time in the future
         // we may remove this part if no DTD-based XMLConfigs exist any more.
         // If some one messed with the file by hand, this may fail!
-        BufferedReader buf = new BufferedReader(new InputStreamReader(in));
+        BufferedReader buf = new BufferedReader(
+                new InputStreamReader(in, "UTF-8"));
         String line = buf.readLine(); // this must be the XML declaration
         if (line != null) {
             if (!"<?xml version=\"1.0\" encoding=\"UTF-8\"?>".equals(line.trim())) {
