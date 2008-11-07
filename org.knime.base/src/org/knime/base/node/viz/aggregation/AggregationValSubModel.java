@@ -231,7 +231,7 @@ implements Serializable, AggregationModel<S, H> {
             m_presentable = true;
         }
         m_shape = shape;
-        calculateHilitedRectangle(calculator);
+        calculateHilitedShape(calculator);
     }
 
     /**
@@ -270,10 +270,17 @@ implements Serializable, AggregationModel<S, H> {
     }
 
     /**
-     * @param presentable <code>true</code> if this section is presentable
+     * @param presentable <code>true</code> if this element is presentable
+     * @param calculator the hilite shape calculator
      */
-    protected void setPresentable(final boolean presentable) {
+    protected void setPresentable(final boolean presentable,
+            final HiliteShapeCalculator<S, H> calculator) {
+        if (m_presentable == presentable) {
+            return;
+        }
         m_presentable = presentable;
+        //recalculate the hilite shape
+        calculateHilitedShape(calculator);
     }
 
     /**
@@ -389,7 +396,7 @@ implements Serializable, AggregationModel<S, H> {
             }
         }
         if (changed) {
-            calculateHilitedRectangle(calculator);
+            calculateHilitedShape(calculator);
         }
         return changed;
     }
@@ -408,7 +415,7 @@ implements Serializable, AggregationModel<S, H> {
         }
         final boolean changed = m_hilitedRowKeys.removeAll(unhilitedKeys);
         if (changed) {
-            calculateHilitedRectangle(calculator);
+            calculateHilitedShape(calculator);
         }
         return changed;
     }
@@ -429,7 +436,7 @@ implements Serializable, AggregationModel<S, H> {
      * <code>null</code> if no rows are hilited.
      * @param calculator the hilite shape calculator
      */
-    protected void calculateHilitedRectangle(
+    protected void calculateHilitedShape(
             final HiliteShapeCalculator<S, H> calculator) {
         if (calculator == null) {
             return;

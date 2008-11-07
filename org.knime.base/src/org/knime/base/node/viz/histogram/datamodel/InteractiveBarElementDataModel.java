@@ -52,6 +52,6 @@ public class InteractiveBarElementDataModel extends BarElementDataModel {
     public void updateElementWidth(final int xCoord, final int elementWidth,
             final HistogramHiliteCalculator calculator) {
         super.updateElementWidth(xCoord, elementWidth, calculator);
-        calculateHilitedRectangle(calculator);
+        calculateHilitedShape(calculator);
     }
 }
