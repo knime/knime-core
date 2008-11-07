@@ -1184,6 +1184,9 @@ public class DenseBitVector {
      * @return the error message, or null if everything is alright
      */
     private String checkConsistency() {
+        /*
+         * This code has been commented out for performance reasons.
+         * If development starts again on this class, it could be re-activated.
         if (m_firstAddr != findFirstBitAddress()) {
             return "m_firstAddress is not set properly";
         }
@@ -1221,6 +1224,7 @@ public class DenseBitVector {
             }
 
         }
+        */
         return null;
     }
 
