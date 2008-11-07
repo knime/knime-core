@@ -592,18 +592,6 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         }
         if (uiInfoClassName != null) {
             inPortsBarUIInfo = loadUIInfoInstance(uiInfoClassName);
-            try {
-                // avoid NoClassDefFoundErrors by using magic class loader
-                inPortsBarUIInfo = (UIInformation)(GlobalClassCreator
-                        .createClass(uiInfoClassName).newInstance());
-            } catch (Exception e) {
-                String error =
-                    "Unable to load inport bar's UI information: "
-                    + e.getMessage();
-                getLogger().debug(error, e);
-                loadResult.addError(error);
-                inPortsBarUIInfo = null;
-            }
             if (inPortsBarUIInfo != null) {
                 try {
                     loadInPortsBarUIInfo(inPortsBarUIInfo, inPorts);
@@ -636,20 +624,6 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         }
         if (uiInfoClassName != null) {
             outPortsBarUIInfo = loadUIInfoInstance(uiInfoClassName);
-            try {
-                // avoid NoClassDefFoundErrors by using magic class loader
-                outPortsBarUIInfo = (UIInformation)(GlobalClassCreator
-                        .createClass(uiInfoClassName).newInstance());
-            } catch (Exception e) {
-                String error =
-                        "Unable to load outport bar's UI information "
-                                + "class \"" + uiInfoClassName
-                                + "\", no UI information available: "
-                                + e.getMessage();
-                getLogger().debug(error, e);
-                loadResult.addError(error);
-                outPortsBarUIInfo = null;
-            }
             if (outPortsBarUIInfo != null) {
                 try {
                     loadOutPortsBarUIInfo(outPortsBarUIInfo, outPorts);
