@@ -125,13 +125,16 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
             
             if (result.getGUIMustReportError()) {
                 assert result.hasErrors() : "No errors in workflow result";
-                final String er = result.getErrors();
+                LOGGER.error("Errors during load: " + result.getErrors());
                 Display.getDefault().asyncExec(new Runnable() {
  
                     public void run() {
                         MessageDialog.openError(new Shell(
                                 Display.getDefault().getActiveShell()),
-                                "Errors during load: ", er);
+                                "Errors during load: ", 
+                                "Not all nodes/connections could be restored.\n"
+                                + "Please refer to the log for detailed " 
+                                + "information.");
                     }
                     
                 });
