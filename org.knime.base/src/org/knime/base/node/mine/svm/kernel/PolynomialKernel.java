@@ -132,7 +132,9 @@ public class PolynomialKernel implements Kernel {
      * {@inheritDoc}
      */
     public double getDefaultParameter(final int index) {
-       if (index == 1) {
+       if (index == 0) {
+           return 1.0;
+       } else if (index == 1) {
            return 1.0;
        } else if (index == 2) {
            return 1.0;
