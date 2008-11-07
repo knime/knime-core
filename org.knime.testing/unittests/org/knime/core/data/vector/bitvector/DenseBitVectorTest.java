@@ -20,7 +20,7 @@
  * History
  *   22.08.2008 (ohl): created
  */
-package org.knime.core.data.collection.bitvector;
+package org.knime.core.data.vector.bitvector;
 
 import junit.framework.TestCase;
 

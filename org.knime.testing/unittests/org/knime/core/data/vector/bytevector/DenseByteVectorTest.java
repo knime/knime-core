@@ -20,11 +20,12 @@
  * History
  *   22.08.2008 (ohl): created
  */
-package org.knime.core.data.collection.bytevector;
+package org.knime.core.data.vector.bytevector;
 
 import junit.framework.TestCase;
 
-import org.knime.core.data.collection.bitvector.DenseBitVector;
+import org.knime.core.data.vector.bitvector.DenseBitVector;
+import org.knime.core.data.vector.bytevector.DenseByteVector;
 
 /**
  * Tests the {@link DenseBitVector} class.

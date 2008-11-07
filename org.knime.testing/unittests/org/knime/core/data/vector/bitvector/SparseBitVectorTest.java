@@ -20,7 +20,7 @@
  * History
  *   28.08.2008 (ohl): created
  */
-package org.knime.core.data.collection.bitvector;
+package org.knime.core.data.vector.bitvector;
 
 import java.util.Arrays;
 
