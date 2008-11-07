@@ -40,8 +40,8 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowEvent;
-import org.knime.core.node.workflow.WorkflowListener;
+import org.knime.core.node.workflow.NodeStateChangeListener;
+import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowOutPort;
 import org.knime.core.node.workflow.NodeContainer.State;
@@ -56,28 +56,13 @@ public class WorkflowTestCase extends TestCase {
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
     
     private WorkflowManager m_manager;
-    private WorkflowListener m_workflowListener;
     private ReentrantLock m_lock;
-    private Condition m_workflowStableCondition;
     
     /**
      * 
      */
     public WorkflowTestCase() {
         m_lock = new ReentrantLock();
-        m_workflowStableCondition = m_lock.newCondition();
-        m_workflowListener = new WorkflowListener() {
-            @Override
-            public void workflowChanged(WorkflowEvent event) {
-                m_lock.lock();
-                try {
-                    m_logger.info("Received " + event);
-                    m_workflowStableCondition.signalAll();
-                } finally {
-                    m_lock.unlock();
-                }
-            }
-        };
     }
     
     protected NodeID loadAndSetWorkflow() throws Exception {
@@ -111,13 +96,7 @@ public class WorkflowTestCase extends TestCase {
      * @param manager the manager to set
      */
     protected void setManager(WorkflowManager manager) {
-        if (m_manager != null) {
-            m_manager.removeListener(m_workflowListener);
-        }
         m_manager = manager;
-        if (m_manager != null) {
-            m_manager.addListener(m_workflowListener);
-        }
     }
     
     /**
@@ -125,18 +104,6 @@ public class WorkflowTestCase extends TestCase {
      */
     protected WorkflowManager getManager() {
         return m_manager;
-    }
-    
-    protected void lock() {
-        m_lock.lock();
-    }
-    
-    protected void unlock() {
-        m_lock.unlock();
-    }
-    
-    protected Condition getCondition() {
-        return m_workflowStableCondition;
     }
     
     protected void checkState(final NodeID id, 
@@ -280,19 +247,54 @@ public class WorkflowTestCase extends TestCase {
     
     protected void waitWhileNodeInExecution(final NodeContainer node) 
     throws Exception {
+        waitWhile(node, new Hold() {
+            @Override
+            protected boolean shouldHold() {
+                return node.getState().executionInProgress();
+            }
+        });
+    }
+        
+    protected void waitWhile(final NodeContainer nc, 
+            final Hold hold) throws Exception {
+        if (!hold.shouldHold()) {
+            return;
+        }
+        final Condition condition = m_lock.newCondition();
+        NodeStateChangeListener l = new NodeStateChangeListener() {
+            /** {@inheritDoc} */
+            @Override
+            public void stateChanged(final NodeStateEvent state) {
+                m_lock.lock();
+                try {
+                    m_logger.info("Received " + state);
+                    condition.signalAll();
+                } finally {
+                    m_lock.unlock();
+                }
+            }
+        };
+        nc.addNodeStateChangeListener(l);
         m_lock.lock();
         try {
-            m_logger.debug("node " + node.getNameWithID() 
-                    + " is " + node.getState());
-            while (node.getState().executionInProgress()) {
-                m_logger.debug("node " + node.getNameWithID() 
-                        + " is " + node.getState());
-                m_workflowStableCondition.await();
+            while (hold.shouldHold()) {
+                int secToWait = hold.getSecondsToWaitAtMost();
+                if (secToWait > 0) {
+                    if (!condition.await(secToWait, TimeUnit.SECONDS)) {
+                        m_logger.warn(
+                                "Timeout elapsed before condition was true");
+                        break;
+                    }
+                } else {
+                    condition.await();
+                }
             }
         } finally {
             m_lock.unlock();
+            nc.removeNodeStateChangeListener(l);
         }
     }
+    
     
     /** {@inheritDoc} */
     @Override
@@ -302,14 +304,18 @@ public class WorkflowTestCase extends TestCase {
             // in most cases we wait for individual nodes to finish. This
             // does not mean that the workflow state is also updated, give
             // it a second to finish its cleanup
-            if (m_manager.getState().executionInProgress()) {
-                m_lock.lock();
-                try {
-                    m_workflowStableCondition.await(2, TimeUnit.SECONDS);
-                } finally {
-                    m_lock.unlock();
+            waitWhile(m_manager, new Hold() {
+                /** {@inheritDoc} */
+                @Override
+                protected boolean shouldHold() {
+                    return m_manager.getState().executionInProgress();
                 }
-            }
+                /** {@inheritDoc} */
+                @Override
+                protected int getSecondsToWaitAtMost() {
+                    return 2;
+                }
+            });
             if (!WorkflowManager.ROOT.canRemoveNode(m_manager.getID())) {
                 String error = "Cannot remove workflow, dump follows";
                 m_logger.error(error);
@@ -334,4 +340,12 @@ public class WorkflowTestCase extends TestCase {
         }
         r.close();
     }
+    
+    protected abstract class Hold {
+        protected abstract boolean shouldHold();
+        protected int getSecondsToWaitAtMost() {
+            return -1;
+        }
+    }
+    
 }

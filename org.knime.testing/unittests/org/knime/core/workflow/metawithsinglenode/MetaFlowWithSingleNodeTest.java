@@ -75,7 +75,10 @@ public class MetaFlowWithSingleNodeTest extends WorkflowTestCase {
         checkMetaOutState(m_meta, 0, State.EXECUTED);
         checkState(m_tblView, State.EXECUTED);
         
-        checkState(getManager(), State.EXECUTED);
+        // state may not have propagated to workflow
+        waitWhileInExecution();
+        checkState(m_meta, State.EXECUTED);
+        
     }
     
     public void testExecuteLast() throws Exception {

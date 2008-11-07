@@ -81,7 +81,6 @@ public class ChainOfNodesTest extends WorkflowTestCase {
         checkState(m_rowFilter, State.EXECUTED);
         checkState(m_tblView, State.EXECUTED);
         
-        checkState(getManager(), State.EXECUTED);
     }
     
     public void testExecuteLast() throws Exception {
@@ -94,6 +93,7 @@ public class ChainOfNodesTest extends WorkflowTestCase {
     
     public void testExecuteAll() throws Exception {
         getManager().executeAllAndWaitUntilDone();
+        checkState(getManager(), State.EXECUTED);
         checkState(m_dataGen, State.EXECUTED);
         checkState(m_colFilter, State.EXECUTED);
         checkState(m_rowFilter, State.EXECUTED);
@@ -133,7 +133,7 @@ public class ChainOfNodesTest extends WorkflowTestCase {
     
     public void testDeleteConnectionTryExecuteInsertAgain() throws Exception {
         WorkflowManager m = getManager();
-        ConnectionContainer connection = findInConnection(m_tblView, 0);
+        ConnectionContainer connection = findInConnection(m_rowFilter, 0);
         assertNotNull(connection);
         // although the connection exists, we can replace it. This is heavily
         // used when old connections are overwritten. 
@@ -163,7 +163,7 @@ public class ChainOfNodesTest extends WorkflowTestCase {
     public void testExecuteDeleteConnection() throws Exception {
         WorkflowManager m = getManager();
         executeAndWait(m_tblView);
-        ConnectionContainer connection = findInConnection(m_tblView, 0);
+        ConnectionContainer connection = findInConnection(m_rowFilter, 0);
         assertTrue(m.canRemoveConnection(connection));
         m.removeConnection(connection);
         

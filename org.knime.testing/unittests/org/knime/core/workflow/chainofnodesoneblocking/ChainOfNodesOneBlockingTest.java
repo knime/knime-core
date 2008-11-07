@@ -66,7 +66,6 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
         
         executeAndWait(m_tblView);
         checkState(m_tblView, State.EXECUTED);
-        checkState(getManager(), State.EXECUTED);
     }
     
     public void testBlockingStates() throws Exception {
@@ -86,7 +85,7 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
             execLock.unlock();
         }
         // give the workflow manager time to wrap up
-        waitWhileInExecution();
+        waitWhileNodeInExecution(m_tblView);
     }
     
     public void testPropertiesOfExecutingNode() throws Exception {
@@ -96,16 +95,14 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
         try {
             m.executeUpToHere(m_tblView);
             checkState(m_blocker, State.MARKEDFOREXEC, State.EXECUTING);
-            NodeContainer blockerNC = m.getNodeContainer(m_blocker);
-            lock();
-            try {
-                while(blockerNC.getState().equals(State.MARKEDFOREXEC)
-                        || blockerNC.getState().equals(State.QUEUED)) {
-                    getCondition().await();
+            final NodeContainer blockerNC = m.getNodeContainer(m_blocker);
+            waitWhile(blockerNC, new Hold() {
+                @Override
+                protected boolean shouldHold() {
+                    return blockerNC.getState().equals(State.MARKEDFOREXEC)
+                    || blockerNC.getState().equals(State.QUEUED);
                 }
-            } finally {
-                unlock();
-            }
+            });
             checkState(m_blocker, State.EXECUTING);
             
             // test reset node
@@ -137,14 +134,12 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
             
             // test cancel node
             m.cancelExecution(blockerNC);
-            lock();
-            try {
-                while(!blockerNC.getState().equals(State.CONFIGURED)) {
-                    getCondition().await();
+            waitWhile(blockerNC, new Hold() {
+                @Override
+                protected boolean shouldHold() {
+                    return !blockerNC.getState().equals(State.CONFIGURED);
                 }
-            } finally {
-                unlock();
-            }
+            });
             checkState(m_blocker, State.CONFIGURED);
             checkState(m_colFilter, State.CONFIGURED);
             checkState(m_tblView, State.CONFIGURED);
