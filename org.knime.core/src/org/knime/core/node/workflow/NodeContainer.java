@@ -96,6 +96,8 @@ public abstract class NodeContainer {
     private final WorkflowManager m_parent;
 
     private JobExecutor m_jobExecutor;
+    
+    private NodeMessage m_nodeMessage;
 
     private boolean m_isDeletable;
 
@@ -167,6 +169,7 @@ public abstract class NodeContainer {
         m_customName = persistor.getCustomName();
         m_uiInformation = persistor.getUIInfo();
         m_isDeletable = persistor.isDeletable();
+        setNodeMessage(persistor.getNodeMessage());
         m_nodeContainerDirectory = persistor.getNodeContainerDirectory();
     }
 
@@ -319,10 +322,22 @@ public abstract class NodeContainer {
        return m_messageListeners.remove(listener);
    }
 
-   /** Get the message to be displayed to the user or null if nothing is set
-    * currently.
+   /** Get the message to be displayed to the user.
     * @return the node message consisting of type and message */
-   public abstract NodeMessage getNodeMessage();
+   public final NodeMessage getNodeMessage() {
+       return m_nodeMessage;
+   }
+   
+   /**
+    * @param newMessage the nodeMessage to set
+    */
+   public final void setNodeMessage(final NodeMessage newMessage) {
+       NodeMessage oldMessage = m_nodeMessage;
+       m_nodeMessage = newMessage == null ? NodeMessage.NONE : newMessage;
+       if (!m_nodeMessage.equals(oldMessage)) {
+           notifyMessageListeners(new NodeMessageEvent(getID(), m_nodeMessage));
+       }
+   }
 
    /**
     * Notifies all registered {@link NodeMessageListener}s about the new
@@ -330,7 +345,7 @@ public abstract class NodeContainer {
     *
     * @param e the new message event
     */
-   protected void notifyMessageListeners(final NodeMessageEvent e) {
+   protected final void notifyMessageListeners(final NodeMessageEvent e) {
        for (NodeMessageListener l : m_messageListeners) {
            l.messageChanged(e);
        }

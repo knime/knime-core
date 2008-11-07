@@ -32,7 +32,6 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 
@@ -105,7 +104,4 @@ public interface NodePersistor {
     PortObject getPortObject(final int outportIndex);
     String getPortObjectSummary(final int outportIndex);
     BufferedDataTable[] getInternalHeldTables();
-    // TODO should use template instead of final object creation, goes
-    // along with changes in Node class
-    NodeMessage getNodeMessage();
 }

@@ -98,9 +98,6 @@ public final class WorkflowManager extends NodeContainer {
     /** Name of this workflow (usually displayed at top of the node figure). */
     private String m_name = "Workflow Manager";
     
-    /** Summarization of internal nodes' message(s). */
-    private NodeMessage m_nodeMessage = NodeMessage.NONE;
-    
     /** Executor for asynchronous event notification. */
     private static final Executor WORKFLOW_NOTIFIER =
         Executors.newSingleThreadExecutor(new ThreadFactory() {
@@ -1869,12 +1866,6 @@ public final class WorkflowManager extends NodeContainer {
         return true;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public NodeMessage getNodeMessage() {
-        return m_nodeMessage;
-    }
-
     /**
      * Cancel execution of all children.
      */
@@ -2058,15 +2049,11 @@ public final class WorkflowManager extends NodeContainer {
             }
         }
         // set summarization message if any of the internal nodes has an error
-        NodeMessage newMessage = NodeMessage.NONE;
         if (internalNodeHasError) {
-            newMessage = new NodeMessage(NodeMessage.Type.ERROR,
-                    "Internal Error.");
-        }
-        if (!newMessage.equals(m_nodeMessage)) {
-            notifyMessageListeners(new NodeMessageEvent(this.getID(),
-                    newMessage));
-            m_nodeMessage = newMessage;
+            setNodeMessage(new NodeMessage(
+                    NodeMessage.Type.ERROR, "Error in sub flow."));
+        } else {
+            setNodeMessage(NodeMessage.NONE);
         }
         //
         assert nrNodes == m_workflow.getNrNodes();

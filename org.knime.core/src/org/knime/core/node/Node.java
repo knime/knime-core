@@ -114,9 +114,6 @@ public final class Node implements NodeModelWarningListener {
     /** The node's assigned node model. */
     private final NodeModel m_model;
 
-    /** the last fired message (or null if none available). */
-    private NodeMessage m_message;
-
     /** The node's dialog or <code>null</code> if not available. */
     private NodeDialogPane m_dialogPane;
 
@@ -273,10 +270,6 @@ public final class Node implements NodeModelWarningListener {
         LoadResult result = new LoadResult();
         boolean hasContent = loader.hasContent();
         m_model.setHasContent(hasContent);
-        NodeMessage nodeMessage = loader.getNodeMessage();
-        if (nodeMessage != null) {
-            notifyMessageListeners(nodeMessage);
-        }
         try {
             // this also validates the settings
             loadSettingsFrom(loader.getSettings());
@@ -1697,9 +1690,7 @@ public final class Node implements NodeModelWarningListener {
      *
      * @param message The message object.
      */
-    public void notifyMessageListeners(final NodeMessage message) {
-        // remember old message (in case we want to store status of this node)
-        m_message = message;
+    private void notifyMessageListeners(final NodeMessage message) {
         // fire event to all listeners
         for (NodeMessageListener listener : m_messageListeners) {
             try {
@@ -1711,13 +1702,6 @@ public final class Node implements NodeModelWarningListener {
         }
     }
 
-    /**
-     * @return Last fired message.
-     */
-    public NodeMessage getNodeMessage() {
-        return m_message;
-    }
-    
     /**
      * Returns a string summary of this node.
      *

@@ -31,6 +31,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.NodeMessage.Type;
 
 /**
  * 
@@ -92,11 +93,36 @@ class NodeContainerMetaPersistorVersion200 extends
         return settings.getString(KEY_CUSTOM_DESCRIPTION);
     }
 
+    /** {@inheritDoc} */
+    @Override
+    protected NodeMessage loadNodeMessage(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        if (settings.containsKey("node_message")) {
+            NodeSettingsRO sub = settings.getNodeSettings("node_message");
+            String typeS = sub.getString("type");
+            if (typeS == null) {
+                throw new InvalidSettingsException(
+                        "Message type must not be null");
+            }
+            Type type;
+            try {
+                type = Type.valueOf(typeS);
+            } catch (IllegalArgumentException iae) {
+                throw new InvalidSettingsException("Invalid message type: "
+                        + typeS, iae);
+            }
+            String message = sub.getString("message");
+            return new NodeMessage(type, message);
+        }
+        return null;
+    }
+    
     public void save(final NodeContainer nc, final NodeSettingsWO settings)
         throws IOException {
         saveCustomName(settings, nc);
         saveCustomDescription(settings, nc);
         saveState(settings, nc);
+        saveNodeMessage(settings, nc);
         saveIsDeletable(settings, nc);
     }
 
@@ -131,6 +157,16 @@ class NodeContainerMetaPersistorVersion200 extends
             final NodeContainer nc) {
         if (!nc.isDeletable()) {
             settings.addBoolean(CFG_IS_DELETABLE, false);
+        }
+    }
+
+    protected void saveNodeMessage(final NodeSettingsWO settings,
+            final NodeContainer nc) {
+        NodeMessage message = nc.getNodeMessage();
+        if (message != null && !message.getMessageType().equals(Type.RESET)) {
+            NodeSettingsWO sub = settings.addNodeSettings("node_message");
+            sub.addString("type", message.getMessageType().name());
+            sub.addString("message", message.getMessage());
         }
     }
 

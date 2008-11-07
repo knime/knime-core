@@ -39,9 +39,7 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion1xx;
-import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 public class NodePersistorVersion1xx implements NodePersistor {
@@ -56,8 +54,6 @@ public class NodePersistorVersion1xx implements NodePersistor {
     private boolean m_hasContent;
 
     private boolean m_isConfigured;
-
-    private NodeMessage m_nodeMessage;
 
     private ReferencedFile m_nodeDirectory;
 
@@ -117,11 +113,6 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return settings.getBoolean(CFG_ISCONFIGURED);
     }
 
-    protected NodeMessage loadNodeMessage(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        return null;
-    }
-    
     static ReferencedFile getNodeInternDirectory(final ReferencedFile nodeDir) {
         return new ReferencedFile(nodeDir, INTERN_FILE_DIR);
     }
@@ -373,14 +364,6 @@ public class NodePersistorVersion1xx implements NodePersistor {
                 NodeSettings.loadFromXML(new FileInputStream(configFile));
         }
     
-        try {
-            m_nodeMessage = loadNodeMessage(settings);
-        } catch (InvalidSettingsException ise) {
-            String e = "Unable to load node message: " + ise.getMessage();
-            result.addError(e);
-            getLogger().warn(e, ise);
-        }
-    
         m_modelSettings = settings;
         
         try {
@@ -470,9 +453,6 @@ public class NodePersistorVersion1xx implements NodePersistor {
         }
         loadIntTblsExec.setProgress(1.0);
         exec.setMessage("creating instance");
-        if (result.hasErrors()) {
-            m_nodeMessage = new NodeMessage(Type.ERROR, result.getErrors());
-        }
 
         exec.setMessage("Loading settings into node instance");
         result.addError(node.load(this, createExec));
@@ -558,11 +538,6 @@ public class NodePersistorVersion1xx implements NodePersistor {
     public void setInternalHeldTables(
             final BufferedDataTable[] internalHeldTables) {
         m_internalHeldTables = internalHeldTables;
-    }
-    
-    /** {@inheritDoc} */
-    public NodeMessage getNodeMessage() {
-        return m_nodeMessage;
     }
     
 }

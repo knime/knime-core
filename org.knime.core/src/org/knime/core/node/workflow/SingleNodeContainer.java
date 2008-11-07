@@ -60,7 +60,7 @@ import org.w3c.dom.Element;
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
 public final class SingleNodeContainer extends NodeContainer
-    implements NodeMessageListener, NodeProgressListener {
+    implements NodeProgressListener {
 
     /** my logger. */
     private static final NodeLogger LOGGER =
@@ -68,7 +68,7 @@ public final class SingleNodeContainer extends NodeContainer
 
     /** underlying node. */
     private final Node m_node;
-
+    
     /** remember ID of the job when this node is submitted to a JobExecutor. */
     private Future<?> m_executionFuture;
 
@@ -88,7 +88,7 @@ public final class SingleNodeContainer extends NodeContainer
         super(parent, id);
         m_node = n;
         setPortNames();
-        m_node.addMessageListener(this);
+        m_node.addMessageListener(new UnderlyingNodeMessageListener());
     }
 
     /**
@@ -106,7 +106,7 @@ public final class SingleNodeContainer extends NodeContainer
             + " did not provide Node instance for " + getClass().getSimpleName()
             + " with id \"" + id + "\"";
         setPortNames();
-        m_node.addMessageListener(this);
+        m_node.addMessageListener(new UnderlyingNodeMessageListener());
     }
     
     private void setPortNames() {
@@ -579,8 +579,8 @@ public final class SingleNodeContainer extends NodeContainer
         } catch (CanceledExecutionException e) {
             errorString = "Execution canceled";
             LOGGER.warn(errorString);
-            m_node.notifyMessageListeners(
-                    new NodeMessage(NodeMessage.Type.WARNING, errorString));
+            setNodeMessage(new NodeMessage(
+                    NodeMessage.Type.WARNING, errorString));
             success = false;
         }
         // execute node outside any synchronization!
@@ -591,7 +591,7 @@ public final class SingleNodeContainer extends NodeContainer
         } else {
             // something went wrong: reset and configure node to reach
             // a solid state again - but remember original node message!
-            NodeMessage orgMessage = m_node.getNodeMessage();
+            NodeMessage orgMessage = getNodeMessage();
             m_node.reset();
             PortObjectSpec[] specs = new PortObjectSpec[m_node.getNrInPorts()];
             for (int i = 0; i < specs.length; i++) {
@@ -604,10 +604,10 @@ public final class SingleNodeContainer extends NodeContainer
             // problems with the stack).
             if (caughtContextStackException) {
                 LOGGER.warn(errorString);
-                m_node.notifyMessageListeners(
-                        new NodeMessage(NodeMessage.Type.ERROR, errorString));
+                setNodeMessage(new NodeMessage(
+                        NodeMessage.Type.ERROR, errorString));
             } else {
-                m_node.notifyMessageListeners(orgMessage);
+                setNodeMessage(orgMessage);
             }
         }
         // clean up stuff and especially change states synchronized again
@@ -806,17 +806,6 @@ public final class SingleNodeContainer extends NodeContainer
 
     /** {@inheritDoc} */
     @Override
-    public NodeMessage getNodeMessage() {
-        return m_node.getNodeMessage();
-    }
-
-    /** {@inheritDoc} */
-    public void messageChanged(final NodeMessageEvent messageEvent) {
-        notifyMessageListeners(messageEvent);
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public NodeType getType() {
         return m_node.getType();
     }
@@ -856,6 +845,19 @@ public final class SingleNodeContainer extends NodeContainer
             final boolean preserveDeletableFlags) {
         return new CopySingleNodeContainerPersistor(
                 this, preserveDeletableFlags);
+    }
+    
+    /** The message listener that is added the Node and listens for messages
+     * that are set by failing execute methods are by the user 
+     * (setWarningMessage()).
+     */
+    private final class UnderlyingNodeMessageListener 
+        implements NodeMessageListener {
+        /** {@inheritDoc} */
+        @Override
+        public void messageChanged(final NodeMessageEvent messageEvent) {
+            SingleNodeContainer.this.setNodeMessage(messageEvent.getMessage());
+        }
     }
 
 }

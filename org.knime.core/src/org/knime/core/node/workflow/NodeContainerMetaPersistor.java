@@ -51,6 +51,8 @@ interface NodeContainerMetaPersistor {
 
     UIInformation getUIInfo();
     
+    NodeMessage getNodeMessage();
+    
     boolean isDeletable();
     
     boolean isDirtyAfterLoad();

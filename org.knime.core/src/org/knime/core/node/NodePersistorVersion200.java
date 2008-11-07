@@ -48,9 +48,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.port.PortObject.PortObjectSerializer;
 import org.knime.core.node.port.PortObjectSpec.PortObjectSpecSerializer;
-import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200;
-import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -96,7 +94,6 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         saveCustomName(node, settings);
         node.saveSettingsTo(settings);
         saveHasContent(node, settings);
-        saveNodeMessage(node, settings);
         ReferencedFile nodeInternDirRef = getNodeInternDirectory(nodeDirRef);
         File nodeInternDir = nodeInternDirRef.getFile();
         if (nodeInternDir.exists()) {
@@ -303,16 +300,6 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         settings.addBoolean("hasContent", hasContent);
     }
 
-    protected void saveNodeMessage(final Node node,
-            final NodeSettingsWO settings) {
-        NodeMessage message = node.getNodeMessage();
-        if (message != null && !message.getMessageType().equals(Type.RESET)) {
-            NodeSettingsWO sub = settings.addNodeSettings("node_message");
-            sub.addString("type", message.getMessageType().name());
-            sub.addString("message", message.getMessage());
-        }
-    }
-
     protected void saveNodeInternDirectory(final Node node,
             final File nodeInternDir, final NodeSettingsWO settings,
             final ExecutionMonitor exec) throws CanceledExecutionException {
@@ -353,30 +340,6 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         return false;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    protected NodeMessage loadNodeMessage(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        if (settings.containsKey("node_message")) {
-            NodeSettingsRO sub = settings.getNodeSettings("node_message");
-            String typeS = sub.getString("type");
-            if (typeS == null) {
-                throw new InvalidSettingsException(
-                        "Message type must not be null");
-            }
-            Type type;
-            try {
-                type = Type.valueOf(typeS);
-            } catch (IllegalArgumentException iae) {
-                throw new InvalidSettingsException("Invalid message type: "
-                        + typeS, iae);
-            }
-            String message = sub.getString("message");
-            return new NodeMessage(type, message);
-        }
-        return null;
-    }
-    
     /** {@inheritDoc} */
     @Override
     protected void loadInternalHeldTables(final Node node, ExecutionMonitor execMon,
