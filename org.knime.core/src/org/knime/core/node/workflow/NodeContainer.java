@@ -594,6 +594,21 @@ public abstract class NodeContainer {
     public final String getNameWithID() {
         return getName() + " " + getID().toString();
     }
+    
+    /**
+     * 
+     * @return the display label for {@link NodeView}, {@link OutPortView} and
+     * {@link NodeDialog}
+     */
+    public String getDisplayLabel() {
+        String label = getID().getIDWithoutRoot() + " - "
+            + getName();
+        String customName = getCustomName();
+        if (customName != null && customName.trim().length() > 0) {
+            label += " (" + customName + ")";
+        }
+        return label;
+    }
 
     public String getCustomName() {
         return m_customName;

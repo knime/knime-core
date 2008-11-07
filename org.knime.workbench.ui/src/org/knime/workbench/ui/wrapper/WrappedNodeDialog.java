@@ -185,9 +185,8 @@ public class WrappedNodeDialog extends Dialog {
         // + " the '" + m_nodeContainer.getNodeName() + "' node.");
 
         // create the dialogs' panel and pass it to the SWT wrapper composite
-        getShell().setText("Dialog - " + m_nodeContainer.getName() + " #"
-                + m_nodeContainer.getID().getIndex());
-
+        getShell().setText("Dialog - " + m_nodeContainer.getDisplayLabel());
+        
         JPanel p = m_dialogPane.getPanel();
         m_wrapper = new Panel2CompositeWrapper(m_container, p, SWT.EMBEDDED);
         m_wrapper.setLayoutData(new GridData(GridData.FILL_BOTH));

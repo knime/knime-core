@@ -127,7 +127,7 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
                 + ((GraphicalEditPart)getParent()).getFigure());
         return new WorkflowOutPortFigure(getType(),
                 getManager().getNrOutPorts(), getIndex(), 
-                getManager().getName());
+                getManager().getDisplayLabel());
     }
 
 
