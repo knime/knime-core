@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Dec 18, 2006 (sieb): created
  */
@@ -40,12 +40,11 @@ import org.eclipse.update.ui.UpdateJob;
 
 /**
  * Custom action to open the install wizard.
- * 
+ *
  * @author Christoph, University of Konstanz
  */
 public class InvokeInstallSiteAction extends Action {
-
-    private final static String ID = "INVOKE_INSTALL_SITE_ACTION";
+    private static final String ID = "INVOKE_INSTALL_SITE_ACTION";
 
     /**
      * Constructor.
@@ -57,6 +56,7 @@ public class InvokeInstallSiteAction extends Action {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void run() {
         openInstaller();
     }
@@ -75,7 +75,7 @@ public class InvokeInstallSiteAction extends Action {
             UpdateSearchScope scope = new UpdateSearchScope();
             scope.setFeatureProvidedSitesEnabled(true);
             scope.addSearchSite("KNIME",
-                    new URL("http://www.knime.org/update"), new String[0]);
+                    new URL("http://www.knime.org/update_2.x"), new String[0]);
 
             UpdateSearchRequest searchRequest =
                     new UpdateSearchRequest(category, scope);
@@ -88,7 +88,7 @@ public class InvokeInstallSiteAction extends Action {
             job.setPriority(Job.INTERACTIVE);
 
             getOperation().run(UpdateUI.getActiveWorkbenchShell(), job);
-            
+
             // OLD WAY: Started to early (user had to select update or install)
             // InstallWizardAction installWizardAction = new
             // InstallWizardAction();
@@ -98,19 +98,25 @@ public class InvokeInstallSiteAction extends Action {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getDescription() {
         return "Opens the KNIME update site to install "
-                + "additional KNIMIE features.";
+                + "additional KNIME features.";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getText() {
         return "Update KNIME...";
     }
 
     /**
-     * Returns the id of this action
+     * {@inheritDoc}
      */
     @Override
     public String getId() {
