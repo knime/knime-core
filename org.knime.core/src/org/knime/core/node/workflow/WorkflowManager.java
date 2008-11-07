@@ -3178,10 +3178,14 @@ public final class WorkflowManager extends NodeContainer {
                     }
                 }
                 boolean hasData = true;
-                for (int i = 0; i < nc.getNrOutPorts(); i++) {
-                    NodeOutPort p = nc.getOutPort(i);
-                    hasData &= p != null && p.getPortObject() != null
-                        && p.getPortObjectSpec() != null;
+                // meta nodes don't need to provide output data and can still
+                // be executed.
+                if (nc instanceof SingleNodeContainer) {
+                    for (int i = 0; i < nc.getNrOutPorts(); i++) {
+                        NodeOutPort p = nc.getOutPort(i);
+                        hasData &= p != null && p.getPortObject() != null
+                            && p.getPortObjectSpec() != null;
+                    }
                 }
                 if (!hasData && nc.getState().equals(State.EXECUTED)) {
                     wasClean = false;
