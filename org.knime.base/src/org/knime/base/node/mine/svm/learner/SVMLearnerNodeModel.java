@@ -60,6 +60,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -78,6 +79,9 @@ import org.knime.core.util.ThreadPool;
  * @author cebron, University of Konstanz
  */
 public class SVMLearnerNodeModel extends NodeModel {
+
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(SVMLearnerNodeModel.class);
 
     /**
      * Key to store the parameter c in the NodeSettings.
@@ -422,7 +426,14 @@ public class SVMLearnerNodeModel extends NodeModel {
                 .entrySet()) {
             Vector<SettingsModelDouble> kernelsettings = entry.getValue();
             for (SettingsModelDouble smd : kernelsettings) {
-                smd.loadSettingsFrom(settings);
+               try {
+                    smd.loadSettingsFrom(settings);
+                } catch (InvalidSettingsException ise) {
+                    // it's not bad if a parameter is missing. This may be
+                    // an old version, but inform the user.
+                    LOGGER.warn("Did not find " + smd.toString() + " in the"
+                            + " NodeSettings. Using default value instead.");
+                }
             }
         }
     }
@@ -519,14 +530,22 @@ public class SVMLearnerNodeModel extends NodeModel {
             }
 
         }
-        for (Map.Entry<KernelType, Vector<SettingsModelDouble>>
-        entry : m_kernelParameters
-                .entrySet()) {
+
+        for (Map.Entry<KernelType, Vector<SettingsModelDouble>> entry
+            : m_kernelParameters.entrySet()) {
             Vector<SettingsModelDouble> kernelsettings = entry.getValue();
             for (SettingsModelDouble smd : kernelsettings) {
-                smd.validateSettings(settings);
+                try {
+                    smd.validateSettings(settings);
+                } catch (InvalidSettingsException ise) {
+                    // it's not bad if a parameter is missing. This may be
+                    // an old version, but inform the user.
+                    LOGGER.warn("Did not find " + smd.toString() + " in the"
+                            + " NodeSettings. Using default value instead.");
+                }
             }
         }
+
         m_paramC.validateSettings(settings);
         m_classcol.validateSettings(settings);
     }
