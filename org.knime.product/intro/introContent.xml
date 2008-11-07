@@ -8,9 +8,9 @@
         <group id="links-background">
         <group id="page-links">
         
-            <link label="Open KNIME workbench" url="http://org.eclipse.ui.intro/switchToLaunchBar" 
+            <link label="Open KNIME workbench" url="http://org.eclipse.ui.intro/createProjectFromIntro" 
                 id="launch">                
-                <text>Closes this intro page and starts the KNIME workbench.</text>
+                <text>Closes this intro page, starts the KNIME workbench and creates an empty KNIME workflow.</text>
             </link>
             
                  

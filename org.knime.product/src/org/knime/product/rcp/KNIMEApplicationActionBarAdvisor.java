@@ -42,6 +42,7 @@ import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
+import org.eclipse.ui.ide.IDEActionFactory;
 import org.knime.workbench.help.intro.InvokeInstallSiteAction;
 import org.knime.workbench.ui.navigator.ExportKnimeWorkflowAction;
 import org.knime.workbench.ui.navigator.ImportKnimeWorkflowAction;
@@ -89,7 +90,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     
     private IWorkbenchAction m_closeAllAction;
 
-//    private IWorkbenchAction m_changeWorkspaceAction;
+    private IWorkbenchAction m_changeWorkspaceAction;
     
 
     private IAction m_updateKnimeAction;
@@ -150,9 +151,9 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         register(m_saveAllAction);
         m_exitAction = ActionFactory.QUIT.create(window);
         register(m_exitAction);
-//        m_changeWorkspaceAction =
-//                IDEActionFactory.OPEN_WORKSPACE.create(window);
-//        register(m_changeWorkspaceAction);
+        m_changeWorkspaceAction = 
+                IDEActionFactory.OPEN_WORKSPACE.create(window);
+        register(m_changeWorkspaceAction);
         m_updateKnimeAction = new InvokeInstallSiteAction();
         register(m_updateKnimeAction);
         m_preferencesAction = ActionFactory.PREFERENCES.create(window);
@@ -257,7 +258,8 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         
         fileMenu.add(m_importWorkflowAction);
         fileMenu.add(m_exportWorkflowAction);
-        
+        fileMenu.add(new Separator());
+        fileMenu.add(m_changeWorkspaceAction);
         fileMenu.add(new Separator());
         fileMenu.add(m_preferencesAction);
         fileMenu.add(m_updateKnimeAction);

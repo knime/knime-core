@@ -21,6 +21,7 @@
  */
 package org.knime.product.rcp;
 
+import org.eclipse.core.net.proxy.IProxyService;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
@@ -65,5 +66,17 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
     public WorkbenchWindowAdvisor createWorkbenchWindowAdvisor(
             final IWorkbenchWindowConfigurer configurer) {
         return new KNIMEApplicationWorkbenchWindowAdvisor(configurer);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void postStartup() {
+        super.postStartup();
+        // initialize org.eclipse.core.net so that the Authenticator
+        // for the Update Manager is set and it ask the user for a password
+        // if the Update Site is password protected
+        IProxyService.class.getName();
     }
 }
