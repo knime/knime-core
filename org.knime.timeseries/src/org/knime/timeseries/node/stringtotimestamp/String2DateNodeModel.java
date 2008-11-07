@@ -22,7 +22,7 @@
  * History
  *   Jan 14, 2007 (rs): created
  */
-package org.knime.base.node.timeseries.stringtotimestamp;
+package org.knime.timeseries.node.stringtotimestamp;
 
 import java.io.File;
 import java.io.IOException;

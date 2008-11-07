@@ -13,8 +13,7 @@ Require-Bundle: org.eclipse.core.runtime,
 Eclipse-LazyStart: true
 Bundle-ClassPath: knime-timeseries-patches.jar,
  knime-timeseries.jar
-Export-Package: org.knime.base.node.timeseries.stringtotimestamp,
- org.knime.timeseries,
+Export-Package: org.knime.timeseries,
  org.knime.timeseries.node.FilterWindows,
  org.knime.timeseries.node.MA,
  org.knime.timeseries.node.Segmentation.ExtractFromTo,
@@ -24,5 +23,6 @@ Export-Package: org.knime.base.node.timeseries.stringtotimestamp,
  org.knime.timeseries.node.display,
  org.knime.timeseries.node.display.barchart,
  org.knime.timeseries.node.display.timeplot,
- org.knime.timeseries.node.fuzzyCPmeans
+ org.knime.timeseries.node.fuzzyCPmeans,
+ org.knime.timeseries.node.stringtotimestamp
 
