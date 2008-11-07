@@ -98,7 +98,6 @@ import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowEvent;
-import org.knime.core.node.workflow.WorkflowException;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
@@ -178,13 +177,6 @@ public class WorkflowEditor extends GraphicalEditor implements
     private PropertySheetPage m_undoablePropertySheetPage;
 
     private final WorkflowSelectionTool m_selectionTool;
-
-    /**
-     * Stores possible exceptions from the workflow manager that can occur
-     * during loading the workflow. The WorkflowException is a collection
-     * exception (possible exceptions for each node).
-     */
-    private WorkflowException m_workflowException;
 
     private boolean m_loadingCanceled;
 
@@ -270,9 +262,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         NodeLogger.getLogger(WorkflowEditor.class).debug(
                 "Opening workflow Editor on " + input.getName());
 
-        // reset the workflow exception
-        m_workflowException = null;
-
         // store site and input
         setSite(site);
         setInput(input);
@@ -286,34 +275,6 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // add this editor as a listener to WorkflowEvents
         m_manager.addListener(this);
-
-        // in case there occurred exceptions during loading the workflow
-        // display them
-        if (m_workflowException != null) {
-
-            StringBuilder sb = new StringBuilder();
-            sb.append("Exceptions occurred during workflow loading!\n\n");
-
-            WorkflowException we = m_workflowException;
-            int counter = 1;
-            do {
-                sb.append(counter + ". Exception:\n");
-                String weMsg = we.getMessage();
-
-                if (weMsg == null) {
-                    sb.append("no details available");
-                } else {
-                    sb.append(weMsg);
-                }
-
-                sb.append("\n");
-                we = we.getNextException();
-                counter++;
-            } while (we != null);
-
-            // show message
-            showInfoMessage("Workflow could not be loaded ...", sb.toString());
-        }
     }
 
     private List<IEditorPart> getSubEditors() {
@@ -565,7 +526,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         for (NodeContainer container 
                                     : m_manager.getNodeContainers()) {
                             m_manager.cancelExecution(container);
-                        }
+    }
                     }
                 } catch (Throwable t) {
                     // at least we have tried it
@@ -923,7 +884,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     @Override
     public void doSave(final IProgressMonitor monitor) {
         LOGGER.debug("Saving workflow ...");
-        
+
         // // create progress monitor
         // EventLoopProgressMonitor monitor2 =
         // (EventLoopProgressMonitor)monitor;
@@ -948,7 +909,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             });
             return;
         }
-        
+
         // to be sure to mark dirty and inform the user about running nodes
         // we ask for the state BEFORE saving
         // this flag is evaluated at the end of this method
@@ -1018,7 +979,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
 
         monitor.done();
-        
+
         // bugfix 799 (partly)
         // check if the workflow manager is in execution
         // this happens if the user pressed "Yes" on save confirmation dialog
@@ -1475,17 +1436,6 @@ public class WorkflowEditor extends GraphicalEditor implements
     void setLoadingCanceledMessage(final String message) {
         m_loadingCanceled = true;
         m_loadingCanceledMessage = message;
-    }
-
-    /**
-     * Set if the workflow loading process encountered an exception. Should only
-     * be invoked during workflow loading.
-     *
-     * @param exception the exception to set
-     * @see LoadWorkflowRunnable
-     */
-    void setWorkflowException(final WorkflowException exception) {
-        m_workflowException = exception;
     }
 
     /**
