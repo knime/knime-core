@@ -36,6 +36,11 @@
             factory-class="org.knime.timeseries.node.fuzzyCPmeans.FuzzyPearsonClusterNodeFactory"
             id="org.knime.timeseries.node.fuzzyCPmeans.FuzzyPearsonClusterNodeFactory">
       </node>
+      <node
+            category-path="/timeseries"
+            factory-class="org.knime.base.node.timeseries.stringtotimestamp.String2DateNodeFactory"
+            id="org.knime.base.node.timeseries.stringtotimestamp.String2DateNodeFactory">
+      </node>
    </extension>
 
    <extension
