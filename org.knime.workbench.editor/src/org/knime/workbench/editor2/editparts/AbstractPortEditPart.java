@@ -235,7 +235,6 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
             Display.getDefault().asyncExec(new Runnable() {
                 @Override
                 public void run() {
-    
                     ConnectionContainer c = null;
     
                     if (event.getType().equals(
@@ -370,9 +369,11 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * of columns and rows.
      */
     public void rebuildTooltip() {
-        NodeOutPort port = getNodeContainer().getOutPort(getIndex());
-        String tooltip = getTooltipText(port.getPortName(), port);
-        ((NewToolTipFigure)getFigure().getToolTip()).setText(tooltip);
+        if (getIndex() < getNodeContainer().getNrOutPorts()) {
+            NodeOutPort port = getNodeContainer().getOutPort(getIndex());
+            String tooltip = getTooltipText(port.getPortName(), port);
+            ((NewToolTipFigure)getFigure().getToolTip()).setText(tooltip);
+        }
     }
 
 }

@@ -32,14 +32,19 @@ import org.eclipse.draw2d.IFigure;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.NodeOutPort;
+import org.knime.core.node.workflow.NodeStateChangeListener;
+import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowOutPort;
 import org.knime.workbench.editor2.figures.SubWorkFlowOutPortFigure;
+import org.knime.workbench.ui.SyncExecQueueDispatcher;
 
 /**
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class SubWorkFlowOutPortEditPart extends AbstractPortEditPart {
+public class SubWorkFlowOutPortEditPart extends AbstractPortEditPart 
+    implements NodeStateChangeListener {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             SubWorkFlowOutPortEditPart.class);
@@ -68,14 +73,16 @@ public class SubWorkFlowOutPortEditPart extends AbstractPortEditPart {
         WorkflowOutPort model = (WorkflowOutPort)getModel();
         LOGGER.debug("model: " + getModel() 
                 + " state: " + model.getNodeState());
+
+        NodeOutPort port = getNodeContainer().getOutPort(getIndex());
+        String tooltip = getTooltipText(port.getPortName(), port);
+        
         SubWorkFlowOutPortFigure f = new SubWorkFlowOutPortFigure(
                 getType(), getIndex(), 
                 getNodeContainer().getNrOutPorts(), 
-                getNodeContainer().getOutPort(getIndex()).getPortName(),
-                model.getNodeState());
-        model.addNodeStateChangeListener(f);
+                tooltip, model.getNodeState());
+        model.addNodeStateChangeListener(this);
         return f;
-        // TODO: maybe set the initial state of the port
     }
     
     /**
@@ -121,8 +128,24 @@ public class SubWorkFlowOutPortEditPart extends AbstractPortEditPart {
     public void removeNotify() {
         super.removeNotify();
         // TODO remove the figure from the model
-        ((WorkflowOutPort)getModel()).removeNodeStateChangeListener(
-                (SubWorkFlowOutPortFigure)getFigure());
+        ((WorkflowOutPort)getModel()).removeNodeStateChangeListener(this);
+    }
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public void stateChanged(final NodeStateEvent state) {
+        SyncExecQueueDispatcher.asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                ((SubWorkFlowOutPortFigure)getFigure()).setState(
+                        state.getState());
+                rebuildTooltip();
+                getFigure().repaint();
+            }
+        });
     }
 
 }
