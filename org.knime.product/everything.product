@@ -58,40 +58,25 @@ Uses: Java, GEF, Log4J
       <feature id="org.eclipse.rcp" version="0.0.0"/>
       <feature id="org.eclipse.gef" version="0.0.0"/>
       <feature id="org.eclipse.platform" version="0.0.0"/>
-      <feature id="com.lowagie.itext" version="0.0.0"/>
-      <feature id="org.apache.commons.codec" version="0.0.0"/>
-      <feature id="org.apache.derby.core" version="0.0.0"/>
-      <feature id="org.eclipse.datatools.connectivity.oda.designer.feature" version="0.0.0"/>
-      <feature id="org.eclipse.datatools.connectivity.oda.feature" version="0.0.0"/>
-      <feature id="org.eclipse.datatools.enablement.oda.designer.feature" version="0.0.0"/>
-      <feature id="org.eclipse.datatools.enablement.oda.feature" version="0.0.0"/>
-      <feature id="org.eclipse.emf" version="0.0.0"/>
-      <feature id="org.eclipse.emf.ecore.sdo" version="0.0.0"/>
-      <feature id="org.eclipse.emf.mapping.ui" version="0.0.0"/>
-      <feature id="org.eclipse.jdt" version="0.0.0"/>
-      <feature id="org.eclipse.pde" version="0.0.0"/>
-      <feature id="org.mozilla.rhino" version="0.0.0"/>
-      <feature id="org.w3c.sac" version="0.0.0"/>
-      <feature id="org.eclipse.birt" version="0.0.0"/>
       <feature id="org.knime.features.base" version="2.0.0.0017855"/>
       <feature id="org.knime.features.chem.types" version="2.0.0.0017855"/>
       <feature id="org.knime.features.ext.chem.cdk" version="2.0.0.0017855"/>
       <feature id="org.knime.features.ext.chem.tools" version="2.0.0.0017855"/>
-      <feature id="org.knime.features.ext.chem.plants" version="2.0.0.0017855"/>
       <feature id="org.knime.features.ext.jfreechart" version="2.0.0.0017855"/>
       <feature id="org.knime.features.ext.jython" version="2.0.0.0017855"/>
       <feature id="org.knime.features.ext.r" version="2.0.0.0017855"/>
       <feature id="org.knime.features.ext.weka" version="2.0.0.0017855"/>
       <feature id="org.knime.features.wizard" version="2.0.0.0017855"/>
-      <feature id="org.knime.features.testing" version="2.0.0.0017855"/>
       <feature id="org.knime.features.product" version="2.0.0.0017855"/>
       <feature id="org.knime.features.ext.jep" version="2.0.0.0017855"/>
       <feature id="org.knime.features.ext.birt" version="2.0.0.0017855"/>
       <feature id="org.knime.features.ext.poi" version="2.0.0.0017855"/>
       <feature id="org.knime.features.ext.exttool" version="2.0.0.0017855"/>
-      <feature id="org.knime.features.timeseries" version="2.0.0.0017855"/>
       <feature id="org.knime.features.ext.r.bin" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.chem.plants" version="2.0.0.0017855"/>
       <feature id="org.knime.features.ext.scripting" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.testing" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.timeseries" version="2.0.0.0017855"/>
    </features>
 
 </product>
