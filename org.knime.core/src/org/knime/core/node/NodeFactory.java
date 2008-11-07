@@ -467,10 +467,7 @@ public abstract class NodeFactory<T extends NodeModel> {
             throw new IllegalArgumentException(elemName + " is not supported "
                     + " inside the node factory xml file any more. "
                     + "It has been replaced by portIn/portOut. "
-                    + "(Also update the publicID of the factory xml.)");
-        } else if ("dataIn".equals(elemName) || "dataOut".equals(elemName)) {
-            m_logger.coding("Please do not use " + elemName
-                    + " any more. It has been replaced by portIn/portOut.");
+                    + "Also update the publicID of the factory xml to 2.0.");
         }
 
         final List<PortDescription> portList;
