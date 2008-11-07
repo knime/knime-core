@@ -257,7 +257,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
                                 .isSelected());
                         getDrawingPane().repaint();
                     }
-            
+
         });
         m_width = 400;
         m_height = 400;
@@ -272,7 +272,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
                                         .getPreferredSize().height));
         m_drawingPane.setBackground(Color.white);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-//        JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, 
+//        JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
 //                m_scroller, m_properties);
 //        add(split);
         add(m_scroller);
@@ -280,8 +280,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         addComponentListener(this);
 
         m_hiliteHandler = new HiLiteHandler();
-        
-        
+
+
     }
 
     /*----------- viewing methods ---------*/
@@ -780,7 +780,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      *
      * @param ids the keys to be hilited.
      * @see org.knime.core.node.property.hilite.HiLiteHandler#fireHiLiteEvent(
-     *      org.knime.core.data.DataCell[])
+     *      RowKey...)
      */
     public void delegateHiLite(final RowKey... ids) {
         if (m_hiliteHandler != null) {
@@ -807,7 +807,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * @param ids the ids to be checked.
      * @return true if all passed keys are hilited
      * @see org.knime.core.node.property.hilite.HiLiteHandler#isHiLit(
-     *      org.knime.core.data.DataCell[])
+     *      RowKey...)
      */
     public boolean delegateIsHiLit(final RowKey... ids) {
         if (m_hiliteHandler != null) {
@@ -822,7 +822,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * @param ids the ids to be checked.
      * @return true if all passed keys are hilited
      * @see org.knime.core.node.property.hilite.HiLiteHandler#isHiLit(
-     *      org.knime.core.data.DataCell[])
+     *      RowKey...)
      */
     public boolean delegateIsHiLit(final Set<RowKey> ids) {
         RowKey[] cells = new RowKey[ids.size()];

@@ -201,8 +201,9 @@ public class DialogComponentButtonGroup extends DialogComponent {
      * orientation
      * @param defaultElement the default element which should be selected
      * @param elements the labels/action commands of the buttons
-     * @deprecated use
-     * {@link DialogComponentButtonGroup#DialogComponentButtonGroup(SettingsModelString, String, boolean, String...)}
+     * @deprecated use {@link DialogComponentButtonGroup
+     *      #DialogComponentButtonGroup(SettingsModelString, boolean, String,
+     *      String...)}
      * instead
      */
     @Deprecated

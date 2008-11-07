@@ -31,7 +31,7 @@ import org.knime.core.data.DataValueComparator;
 
 /**
  * Compares to {@link DataValue} using the general available
- * {@link DataValue.toString} method.
+ * {@link DataValue#toString()} method.
  * @author Tobias Koetter, University of Konstanz
  */
 public final class GeneralDataValueComparator extends DataValueComparator {

@@ -36,16 +36,16 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeDialog;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.port.PortObjectSpec;
@@ -219,7 +219,7 @@ public abstract class NodeContainer {
 
     /** add a loop to the list of waiting loops.
      *
-     * @param so ScopeObject of the loop.
+     * @param slc ScopeObject of the loop.
      */
     public void addWaitingLoop(final ScopeLoopContext slc) {
         if (!m_listOfWaitingLoops.contains(slc)) {

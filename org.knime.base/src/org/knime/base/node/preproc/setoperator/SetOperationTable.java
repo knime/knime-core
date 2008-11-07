@@ -25,6 +25,13 @@
 
 package org.knime.base.node.preproc.setoperator;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
+import org.knime.base.data.sort.SortedTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -39,14 +46,6 @@ import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-
-import org.knime.base.data.sort.SortedTable;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 
 
 /**
@@ -157,7 +156,6 @@ public class SetOperationTable {
      * @param skipMissing <code>true</code> if missing cells should be skipped
      * @param sortInMemory <code>true</code> if the sorting should be
      * performed in memory
-     * @param
      * @throws CanceledExecutionException if the operation was canceled
      */
     public SetOperationTable(final ExecutionContext exec,

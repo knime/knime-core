@@ -27,7 +27,8 @@
 The
 <b>xvalidation</b>
 package contains all classes for a cross validation flow. The workflow between
-the {@link XValidatePartionModel} node and the {@link AggregateOutputNodeModel}
+the {@link org.knime.base.node.meta.xvalidation.XValidatePartionModel} node and
+the {@link org.knime.base.node.meta.xvalidation.AggregateOutputNodeModel}
 node should consist of at least a learner and its predictor. The output of
 the predictor should be connected to the aggregator node. The class column set
 in the aggregator node and the predictor has to be the same.

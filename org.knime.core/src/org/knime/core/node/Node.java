@@ -698,8 +698,8 @@ public final class Node implements NodeModelWarningListener {
                     spec = newOutData[i].getSpec();
                 } catch (Throwable t) {
                     createErrorMessageAndNotify("PortObject \""
-                            + newOutData[i].getClass().getName() 
-                            + "\" threw " + t.getClass().getSimpleName() 
+                            + newOutData[i].getClass().getName()
+                            + "\" threw " + t.getClass().getSimpleName()
                             + " on #getSpec() ", t);
                     return false;
                 }
@@ -983,8 +983,8 @@ public final class Node implements NodeModelWarningListener {
             }
         }
     }
-    
-    /** Reverse operation to 
+
+    /** Reverse operation to
      * {@link #putOutputTablesIntoGlobalRepository(HashMap)}. It will remove
      * all output tables and its delegates from the global table repository.
      * @param rep The global table rep.
@@ -1389,7 +1389,7 @@ public final class Node implements NodeModelWarningListener {
     // }
     /**
      * @param inSpecs The input specs, which will be forwarded to the dialog's
-     *            {@link NodeDialogPane# loadSettingsFrom(NodeSettingsRO,
+     *            {@link NodeDialogPane#loadSettingsFrom(NodeSettingsRO,
      *            PortObjectSpec[])}.
      * @param scopeStack The stack of variables.
      * @return The dialog pane which holds all the settings' components. In
