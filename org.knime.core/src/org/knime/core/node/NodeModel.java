@@ -68,10 +68,10 @@ public abstract class NodeModel {
 
     /** Holds the input hilite handler for each input. */
     private final HiLiteHandler[] m_inHiLiteHdls;
-
-    /** Hilite adapter returned in
+    
+    /** Hilite adapter returned in 
      * {@link NodeModel#getInHiLiteHandler(int)} when the current in-port
-     * hilite handler is <code>null</code>, e.g. the node is not fully
+     * hilite handler is <code>null</code>, e.g. the node is not fully 
      * connected.
      */
     private static final HiLiteHandler HILITE_ADAPTER = new HiLiteHandler();
@@ -104,7 +104,7 @@ public abstract class NodeModel {
             final int nrOutDataPorts) {
         this(createPOs(nrInDataPorts), createPOs(nrOutDataPorts));
     }
-
+    
     private static PortType[] createPOs(final int nrDataPorts) {
         PortType[] portTypes = new PortType[nrDataPorts];
         Arrays.fill(portTypes, BufferedDataTable.TYPE);
@@ -353,7 +353,7 @@ public abstract class NodeModel {
      * Invokes the abstract <code>#execute()</code> method of this model. In
      * addition, this method notifies all assigned views of the model about the
      * changes.
-     *
+     * 
      * @param data An array of <code>DataTable</code> objects holding the data
      *            from the inputs.
      * @param exec The execution monitor which is passed to the execute method
@@ -362,18 +362,18 @@ public abstract class NodeModel {
      *         <code>DataTable</code> elements, as many as the node has
      *         outputs.
      * @throws Exception any exception or error that is fired in the derived
-     *             model will be just forwarded. It may throw an
+     *             model will be just forwarded. It may throw an 
      *             CanceledExecutionException if the user pressed cancel during
      *             execution. Even if the derived model doesn't check, the
-     *             result will be discarded and the exception thrown.
+     *             result will be discarded and the exception thrown. 
      * @throws IllegalStateException If the number of <code>PortObject</code>
      *             objects returned by the derived <code>NodeModel</code>
-     *             does not match the number of outputs. Or if any of them is
+     *             does not match the number of outputs. Or if any of them is 
      *             null.
      * @see #execute(PortObject[],ExecutionContext)
      */
-    protected final PortObject[] executeModel(final PortObject[] data,
-            final ExecutionContext exec)
+    protected final PortObject[] executeModel(final PortObject[] data, 
+            final ExecutionContext exec) 
         throws Exception {
         assert (data != null && data.length == getNrInPorts());
         assert (exec != null);
@@ -389,13 +389,13 @@ public abstract class NodeModel {
             throw new CanceledExecutionException(
                     "Result discarded due to user cancel");
         }
-
+        
         if (outData == null) {
             outData = new PortObject[getNrOutPorts()];
         }
-
-        /* Cleanup operation for nodes that just pass on their input
-         * data table. We need to wrap those here so that the framework
+        
+        /* Cleanup operation for nodes that just pass on their input 
+         * data table. We need to wrap those here so that the framework 
          * explicitly references them (instead of copying) */
         for (int i = 0; i < outData.length; i++) {
             if (outData[i] instanceof BufferedDataTable) {
@@ -483,7 +483,7 @@ public abstract class NodeModel {
 
     /**
      * @return <code>true</code> if this model has been executed and therefore
-     * possibly has content that can be displayed in a view,
+     * possibly has content that can be displayed in a view, 
      * <code>false</code> otherwise.
      */
     final boolean hasContent() {
@@ -530,7 +530,7 @@ public abstract class NodeModel {
             final ExecutionContext exec) throws Exception {
         // default implementation: the standard version needs to hold: all
         // ports are data ports!
-
+        
         // (1) case PortObjects to BufferedDataTable
         BufferedDataTable[] inTables = new BufferedDataTable[inData.length];
         for (int i = 0; i < inData.length; i++) {
@@ -548,7 +548,7 @@ public abstract class NodeModel {
         // (3) return new POs (upcast from BDT automatic)
         return outData;
     }
-
+    
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec)
         throws Exception {
@@ -667,7 +667,7 @@ public abstract class NodeModel {
 
     /**
      * Returns the <code>HiLiteHandler</code> for the given input index, if the
-     * current in-port hilite handler is <code>null</code> an
+     * current in-port hilite handler is <code>null</code> an 
      * <code>HiLiteHandlerAdapter</code> is created and returned.
      *
      * @param inIndex in-port index
@@ -682,23 +682,23 @@ public abstract class NodeModel {
         }
         return m_inHiLiteHdls[correctIndex];
     }
-
-    /** Returns the argument. This method is overridden in class
-     * {@link NodeModel} to handle incoming model ports appropriately
+    
+    /** Returns the argument. This method is overridden in class 
+     * {@link NodeModel} to handle incoming model ports appropriately 
      * (no hilite handlers at deprecated model ports).
      * @param portIndex The simulated port index
      * @return The true port index
-     */
+     */  
     int getTrueHiliteHandlerPortIndex(final int portIndex) {
         return portIndex;
     }
-
-    /** Returns the argument. This method is overridden in class
-     * {@link NodeModel} to handle incoming model ports appropriately
+    
+    /** Returns the argument. This method is overridden in class 
+     * {@link NodeModel} to handle incoming model ports appropriately 
      * (no hilite handlers at deprecated model ports).
      * @param portIndex The true port index
      * @return The simulated port index
-     */
+     */  
     int getSimulatedHiliteHandlerPortIndex(final int portIndex) {
         return portIndex;
     }
@@ -779,7 +779,7 @@ public abstract class NodeModel {
         // make sure we conveniently have TableSpecs.
         // Rather empty ones than null
         for (int i = 0; i < copyInSpecs.length; i++) {
-            if (copyInSpecs[i] == null
+            if (copyInSpecs[i] == null 
                     && BufferedDataTable.TYPE.equals(m_inPortTypes[i])) {
                 // only mimic empty table for real table connections
                 copyInSpecs[i] = new DataTableSpec();
@@ -832,7 +832,7 @@ public abstract class NodeModel {
     throws InvalidSettingsException {
         // default implementation: the standard version needs to hold: all
         // ports are data ports!
-
+        
         // (1) case PortObjectSpecs to DataTableSpecs
         DataTableSpec[] inDataSpecs = new DataTableSpec[inSpecs.length];
         for (int i = 0; i < inSpecs.length; i++) {
@@ -850,10 +850,10 @@ public abstract class NodeModel {
         // (3) return new POs (upcast from DataSpecs automatic)
         return outDataSpecs;
     }
-
-    /**
+    
+    /** 
      * Simple implementation processing only BufferedDataTables.
-     *
+     * 
      * @param inSpecs the specs of the input tables
      * @return the specs of the outgoing tables. The array's length must
      *         match the number of output ports. If no specs can be created
@@ -871,7 +871,7 @@ public abstract class NodeModel {
     /////////////////////////
     // Warning handling
     /////////////////////////
-
+    
     /**
      * Sets an optional warning message by the implementing node model.
      *
@@ -882,11 +882,19 @@ public abstract class NodeModel {
         m_warningMessage = warningMessage;
         notifyWarningListeners(m_warningMessage);
     }
+    
+    /**
+     * Get the most recently set warning message.
+     * @return the warningMessage that is currently set (or null)
+     */
+    protected final String getWarningMessage() {
+        return m_warningMessage;
+    }
 
     /**
      * Adds a warning listener to this node. Ignored if the listener is already
      * registered.
-     *
+     * 
      * @param listener The listener to add.
      */
     public void addWarningListener(final NodeModelWarningListener listener) {
@@ -900,7 +908,7 @@ public abstract class NodeModel {
     /**
      * Removes a warning listener from this node. Ignored if the listener is
      * not registered.
-     *
+     * 
      * @param listener The listener to remove.
      */
     public void removeWarningListener(
@@ -924,12 +932,12 @@ public abstract class NodeModel {
             }
         }
     }
-
+    
     /** Holds the ScopeContext Stack of this node. */
     private ScopeObjectStack m_scopeContextStackContainer;
 
     /** Get the value of the String variable with the given name leaving the
-     * variable stack unmodified.
+     * variable stack unmodified. 
      * @param name Name of the variable
      * @return The value of the string variable
      * @throws NullPointerException If the argument is null
@@ -940,7 +948,7 @@ public abstract class NodeModel {
         return m_scopeContextStackContainer.peekScopeVariable(
                 name, ScopeVariable.Type.STRING).getStringValue();
     }
-
+    
     /** Put a new variable of type double onto the stack. If such variable
      * already exists, its value will be (virtually) overwritten.
      * @param name The name of the variable.
@@ -951,9 +959,9 @@ public abstract class NodeModel {
             final String name, final double value) {
         m_scopeContextStackContainer.push(new ScopeVariable(name, value));
     }
-
+    
     /** Get the value of the double variable with the given name leaving the
-     * variable stack unmodified.
+     * variable stack unmodified. 
      * @param name Name of the variable
      * @return The assignment value of the variable
      * @throws NullPointerException If the argument is null
@@ -964,7 +972,7 @@ public abstract class NodeModel {
         return m_scopeContextStackContainer.peekScopeVariable(
                 name, ScopeVariable.Type.DOUBLE).getDoubleValue();
     }
-
+    
     /** Put a new variable of type integer onto the stack. If such variable
      * already exists, its value will be (virtually) overwritten.
      * @param name The name of the variable.
@@ -975,9 +983,9 @@ public abstract class NodeModel {
             final String name, final int value) {
         m_scopeContextStackContainer.push(new ScopeVariable(name, value));
     }
-
+    
     /** Get the value of the integer variable with the given name leaving the
-     * variable stack unmodified.
+     * variable stack unmodified. 
      * @param name Name of the variable
      * @return The value of the integer variable
      * @throws NullPointerException If the argument is null
@@ -988,7 +996,7 @@ public abstract class NodeModel {
         return m_scopeContextStackContainer.peekScopeVariable(
                 name, ScopeVariable.Type.INTEGER).getIntValue();
     }
-
+    
     /** Put a new variable of type String onto the stack. If such variable
      * already exists, its value will be (virtually) overwritten.
      * @param name The name of the variable.
@@ -999,7 +1007,7 @@ public abstract class NodeModel {
             final String name, final String value) {
         m_scopeContextStackContainer.push(new ScopeVariable(name, value));
     }
-
+    
     /** Informs WorkflowManager after execute to continue the loop.
      * Call by the tail of the loop! This will result in both
      * this Node as well as the creator of the ScopeContext to be
@@ -1020,31 +1028,31 @@ public abstract class NodeModel {
     }
 
     private ScopeLoopContext m_loopStatus;
-
+    
     protected final ScopeLoopContext getLoopStatus() {
         return m_loopStatus;
     }
-
+    
     protected final void clearLoopStatus() {
         m_loopStatus = null;
     }
-
+    
     private NodeModel m_loopEndNode = null;
-
+    
     protected final NodeModel getLoopEndNode() {
         return m_loopEndNode;
     }
-
+    
     public void setLoopEndNode(final NodeModel end) {
         m_loopEndNode = end;
     }
 
     private LoopStartNode m_loopStartNode = null;
-
+    
     protected final LoopStartNode getLoopStartNode() {
         return m_loopStartNode;
     }
-
+    
     public void setLoopStartNode(final LoopStartNode start) {
         m_loopStartNode = start;
     }
