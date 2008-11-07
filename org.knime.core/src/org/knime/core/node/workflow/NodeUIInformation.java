@@ -42,7 +42,7 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @author Florian Georg, University of Konstanz
  */
-public class ModellingNodeExtraInfo implements UIInformation {
+public class NodeUIInformation implements UIInformation {
     /** TODO: Version id of this extra info implementation. */
     // private static final String VERSION = "1.0";
 
@@ -55,10 +55,10 @@ public class ModellingNodeExtraInfo implements UIInformation {
     private int[] m_bounds = new int[]{0, 0, -1, -1};
 
     /**
-     * Constructs a <code>ModellingConnectionExtraInfo</code>.
+     * Constructs a <code>ConnectionUIInformation</code>.
      *
      */
-    public ModellingNodeExtraInfo() {
+    public NodeUIInformation() {
     }
 
     /**
@@ -134,8 +134,8 @@ public class ModellingNodeExtraInfo implements UIInformation {
      * {@inheritDoc}
      */
     @Override
-    public ModellingNodeExtraInfo clone() {
-        ModellingNodeExtraInfo newObject = new ModellingNodeExtraInfo();
+    public NodeUIInformation clone() {
+        NodeUIInformation newObject = new NodeUIInformation();
         newObject.m_bounds = this.m_bounds.clone();
         return newObject;
     }

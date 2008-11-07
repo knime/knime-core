@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.ModellingNodeExtraInfo;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -100,7 +100,7 @@ public class CreateNodeCommand extends Command {
             return;
         }
         // create extra info and set it
-        ModellingNodeExtraInfo info = new ModellingNodeExtraInfo();
+        NodeUIInformation info = new NodeUIInformation();
         info.setNodeLocation(m_location.x, m_location.y, -1, -1);
         m_container.setUIInformation(info);
 

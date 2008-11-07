@@ -37,7 +37,7 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class ModellingConnectionExtraInfo implements UIInformation {
+public class ConnectionUIInformation implements UIInformation {
     /** The key under which the type is registered. * */
     public static final String KEY_VERSION = "extrainfo.conn.version";
 
@@ -47,10 +47,10 @@ public class ModellingConnectionExtraInfo implements UIInformation {
     private final ArrayList<int[]> m_bendpoints = new ArrayList<int[]>();
 
     /**
-     * Constructs a <code>ModellingConnectionExtraInfo</code>.
+     * Constructs a <code>ConnectionUIInformation</code>.
      * 
      */
-    public ModellingConnectionExtraInfo() {
+    public ConnectionUIInformation() {
 
     }
 
@@ -146,9 +146,9 @@ public class ModellingConnectionExtraInfo implements UIInformation {
     
     /** {@inheritDoc} */
     @Override
-    public ModellingConnectionExtraInfo clone() {
-        ModellingConnectionExtraInfo newObject 
-            = new ModellingConnectionExtraInfo();
+    public ConnectionUIInformation clone() {
+        ConnectionUIInformation newObject 
+            = new ConnectionUIInformation();
         newObject.m_bendpoints.clear();
         for (int [] bendpoint : this.m_bendpoints) {
             newObject.m_bendpoints.add(new int[] {

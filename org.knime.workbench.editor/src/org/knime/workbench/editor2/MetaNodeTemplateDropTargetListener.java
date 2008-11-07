@@ -26,7 +26,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
-import org.knime.core.node.workflow.ModellingNodeExtraInfo;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -124,10 +124,10 @@ public class MetaNodeTemplateDropTargetListener
         // create UI info
         NodeContainer newNode = m_editor.getWorkflowManager().getNodeContainer(
                 copied[0]);
-        ModellingNodeExtraInfo uiInfo = (ModellingNodeExtraInfo)newNode
+        NodeUIInformation uiInfo = (NodeUIInformation)newNode
             .getUIInformation();
         if (uiInfo == null) {
-            uiInfo = new ModellingNodeExtraInfo();
+            uiInfo = new NodeUIInformation();
         }
         event.x = event.display.getCursorLocation().x;
         event.y = event.display.getCursorLocation().y;

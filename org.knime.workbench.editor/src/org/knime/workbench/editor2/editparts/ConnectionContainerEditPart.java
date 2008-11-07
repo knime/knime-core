@@ -41,7 +41,7 @@ import org.eclipse.gef.editpolicies.ConnectionEndpointEditPolicy;
 import org.eclipse.gef.requests.ChangeBoundsRequest;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.ModellingConnectionExtraInfo;
+import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.UIInformation;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
@@ -165,9 +165,9 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     protected void refreshVisuals() {
         super.refreshVisuals();
         LOGGER.debug("refreshing visuals for: " + getModel());
-        ModellingConnectionExtraInfo ei = null;
+        ConnectionUIInformation ei = null;
         ei =
-                (ModellingConnectionExtraInfo) ((ConnectionContainer)getModel())
+                (ConnectionUIInformation) ((ConnectionContainer)getModel())
                         .getUIInfo();
         LOGGER.debug("modelling info: " + ei);
         if (ei == null) {

@@ -27,7 +27,7 @@ package org.knime.workbench.editor2.commands;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.commands.Command;
-import org.knime.core.node.workflow.ModellingNodeExtraInfo;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
 
@@ -43,7 +43,7 @@ public class ChangeWorkflowPortBarCommand extends Command {
 
     private final AbstractWorkflowPortBarEditPart m_bar;
 
-    private  ModellingNodeExtraInfo m_extraInfo;
+    private  NodeUIInformation m_extraInfo;
 
     /**
      *
@@ -82,9 +82,9 @@ public class ChangeWorkflowPortBarCommand extends Command {
     @Override
     public void execute() {
         WorkflowPortBar barModel = (WorkflowPortBar)m_bar.getModel();
-        m_extraInfo = (ModellingNodeExtraInfo) barModel.getUIInfo();
+        m_extraInfo = (NodeUIInformation) barModel.getUIInfo();
         if (m_extraInfo == null) {
-            m_extraInfo = new ModellingNodeExtraInfo();
+            m_extraInfo = new NodeUIInformation();
         }
         m_extraInfo.setBounds(new int[] {
                 m_newBounds.x,

@@ -25,7 +25,7 @@
 package org.knime.workbench.editor2.model;
 
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.ModellingNodeExtraInfo;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -53,18 +53,18 @@ public class WorkflowPortBar {
         return m_manager;
     }
     
-    public ModellingNodeExtraInfo getUIInfo() {
+    public NodeUIInformation getUIInfo() {
         // retrieve the ui info directly from manager
         if (m_in) {
             LOGGER.debug("getting ui info: " + m_manager.getInPortsBarUIInfo());
-            return (ModellingNodeExtraInfo)m_manager.getInPortsBarUIInfo();
+            return (NodeUIInformation)m_manager.getInPortsBarUIInfo();
         } else {
             LOGGER.debug("getting ui info: " + m_manager.getOutPortsBarUIInfo());
-            return (ModellingNodeExtraInfo)m_manager.getOutPortsBarUIInfo();
+            return (NodeUIInformation)m_manager.getOutPortsBarUIInfo();
         }
     }
     
-    public void setUIInfo(final ModellingNodeExtraInfo uiInfo) {
+    public void setUIInfo(final NodeUIInformation uiInfo) {
         LOGGER.debug("setting ui info to: " + uiInfo);
         // set here the ui info directly into the manager
         if (m_in) {

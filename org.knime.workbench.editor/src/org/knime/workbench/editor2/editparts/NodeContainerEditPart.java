@@ -47,7 +47,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.NodeFactory.NodeType;
-import org.knime.core.node.workflow.ModellingNodeExtraInfo;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessageEvent;
@@ -161,7 +161,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         //
         //
         if (getNodeContainer().getUIInformation() != null) {
-            initFigureFromExtraInfo((ModellingNodeExtraInfo)getNodeContainer()
+            initFigureFromExtraInfo((NodeUIInformation)getNodeContainer()
                     .getUIInformation());
             m_figureInitialized = true;
         } else {
@@ -172,7 +172,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             // NOTE: This is done for nodes that are created from code
             // e.g. cross validation node creates a partitioner and
             // has no knowledge about a extrainfo
-            ModellingNodeExtraInfo info = new ModellingNodeExtraInfo();
+            NodeUIInformation info = new NodeUIInformation();
             info.setNodeLocation(0, 0, -1, -1);
             getNodeContainer().setUIInformation(info);
 
@@ -373,9 +373,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
                     // provide some info from the extra info object to the
                     // figure
-                    ModellingNodeExtraInfo ei = null;
+                    NodeUIInformation ei = null;
                     ei =
-                            (ModellingNodeExtraInfo)getNodeContainer()
+                            (NodeUIInformation)getNodeContainer()
                                     .getUIInformation();
 
                     //
@@ -436,7 +436,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      *
      * @param ei Extra info to provide to the figure
      */
-    private void initFigureFromExtraInfo(final ModellingNodeExtraInfo ei) {
+    private void initFigureFromExtraInfo(final NodeUIInformation ei) {
 
         LOGGER.debug("Initializing figure from NodeExtraInfo..");
         m_figureInitialized = true;

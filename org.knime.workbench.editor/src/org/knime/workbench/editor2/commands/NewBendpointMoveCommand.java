@@ -28,7 +28,7 @@ import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.ZoomManager;
-import org.knime.core.node.workflow.ModellingConnectionExtraInfo;
+import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 
@@ -44,7 +44,7 @@ public class NewBendpointMoveCommand extends Command {
 
     private int m_index;
 
-    private ModellingConnectionExtraInfo m_extraInfo;
+    private ConnectionUIInformation m_extraInfo;
 
     //private AbsoluteBendpoint m_bendpoint;
 
@@ -63,7 +63,7 @@ public class NewBendpointMoveCommand extends Command {
             final ConnectionContainerEditPart connection,
             final int index, final Point newLocation,
             final ZoomManager zoomManager) {
-        m_extraInfo = (ModellingConnectionExtraInfo)connection
+        m_extraInfo = (ConnectionUIInformation)connection
             .getUIInformation();
         m_connection = connection;
 

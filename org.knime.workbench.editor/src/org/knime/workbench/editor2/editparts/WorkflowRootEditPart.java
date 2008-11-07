@@ -43,7 +43,7 @@ import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.rulers.RulerProvider;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.ModellingNodeExtraInfo;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowEvent;
@@ -134,10 +134,10 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         if (wfm.getNrWorkflowIncomingPorts() > 0) {
             if (m_inBar == null) {
                 m_inBar = new WorkflowPortBar(wfm, true);
-                ModellingNodeExtraInfo uiInfo = (ModellingNodeExtraInfo)
+                NodeUIInformation uiInfo = (NodeUIInformation)
                 wfm.getInPortsBarUIInfo();
                 if (uiInfo != null && uiInfo.isFilledProperly()) {
-                    m_inBar.setUIInfo((ModellingNodeExtraInfo)
+                    m_inBar.setUIInfo((NodeUIInformation)
                             wfm.getInPortsBarUIInfo());
                 }
             }
@@ -146,10 +146,10 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         if (wfm.getNrWorkflowOutgoingPorts() > 0) {
             if (m_outBar == null) {
                 m_outBar = new WorkflowPortBar(wfm, false);
-                ModellingNodeExtraInfo uiInfo = (ModellingNodeExtraInfo)
+                NodeUIInformation uiInfo = (NodeUIInformation)
                 wfm.getOutPortsBarUIInfo();
                 if (uiInfo != null && uiInfo.isFilledProperly()) {
-                    m_outBar.setUIInfo((ModellingNodeExtraInfo)
+                    m_outBar.setUIInfo((NodeUIInformation)
                             wfm.getOutPortsBarUIInfo());
                 }                
             }
