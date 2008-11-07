@@ -30,7 +30,7 @@ import javax.swing.event.ChangeListener;
 import org.knime.base.node.mine.subgroupminer.apriori.AprioriAlgorithmFactory;
 import org.knime.base.node.mine.subgroupminer.freqitemset.FrequentItemSet;
 import org.knime.base.node.mine.subgroupminer.freqitemset.FrequentItemSetTable;
-import org.knime.core.data.collection.bitvector.BitVectorValue;
+import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;

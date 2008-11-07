@@ -20,7 +20,7 @@
  * History
  *   02.09.2008 (ohl): created
  */
-package org.knime.core.data.collection.bytevector;
+package org.knime.core.data.vector.bytevector;
 
 import javax.swing.Icon;
 

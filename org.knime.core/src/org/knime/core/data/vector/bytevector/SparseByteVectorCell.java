@@ -20,7 +20,7 @@
  * History
  *   03.09.2008 (ohl): created
  */
-package org.knime.core.data.collection.bytevector;
+package org.knime.core.data.vector.bytevector;
 
 import java.io.IOException;
 
@@ -30,21 +30,21 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.collection.bitvector.DenseBitVectorCellFactory;
+import org.knime.core.data.vector.bitvector.SparseBitVectorCellFactory;
 
 /**
  *
  * @author ohl, University of Konstanz
  */
-public class DenseByteVectorCell extends DataCell implements ByteVectorValue {
+public class SparseByteVectorCell extends DataCell implements ByteVectorValue {
     /**
      * Convenience access member for
-     * <code>DataType.getType(DenseByteVectorCell.class)</code>.
+     * <code>DataType.getType(SparseByteVectorCell.class)</code>.
      *
      * @see DataType#getType(Class)
      */
     public static final DataType TYPE =
-            DataType.getType(DenseByteVectorCell.class);
+            DataType.getType(SparseByteVectorCell.class);
 
     /**
      * Returns the preferred value class of this cell implementation. This
@@ -57,8 +57,8 @@ public class DenseByteVectorCell extends DataCell implements ByteVectorValue {
         return ByteVectorValue.class;
     }
 
-    private static final DataCellSerializer<DenseByteVectorCell> SERIALIZER =
-            new DenseByteVectorSerializer();
+    private static final DataCellSerializer<SparseByteVectorCell> SERIALIZER =
+            new SparseByteVectorSerializer();
 
     /**
      * Returns the factory to read/write DataCells of this class from/to a
@@ -67,20 +67,20 @@ public class DenseByteVectorCell extends DataCell implements ByteVectorValue {
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
      */
-    public static final DataCellSerializer<DenseByteVectorCell> getCellSerializer() {
+    public static final DataCellSerializer<SparseByteVectorCell> getCellSerializer() {
         return SERIALIZER;
     }
 
-    private final DenseByteVector m_byteVector;
+    private final SparseByteVector m_byteVector;
 
     /**
-     * Use the {@link DenseBitVectorCellFactory} to create instances of this
+     * Use the {@link SparseBitVectorCellFactory} to create instances of this
      * cell.
      *
      * @param byteVector the byte vector a copy of which is stored in this cell.
      */
-    DenseByteVectorCell(final DenseByteVector byteVector) {
-        m_byteVector = new DenseByteVector(byteVector);
+    SparseByteVectorCell(final SparseByteVector byteVector) {
+        m_byteVector = new SparseByteVector(byteVector);
     }
 
     /**
@@ -88,7 +88,7 @@ public class DenseByteVectorCell extends DataCell implements ByteVectorValue {
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
-        return ((DenseByteVectorCell)dc).m_byteVector.equals(m_byteVector);
+        return ((SparseByteVectorCell)dc).m_byteVector.equals(m_byteVector);
     }
 
     /**
@@ -120,10 +120,7 @@ public class DenseByteVectorCell extends DataCell implements ByteVectorValue {
      */
     @Override
     public int get(final long index) {
-        if (index > Integer.MAX_VALUE) {
-            throw new ArrayIndexOutOfBoundsException("Index too large.");
-        }
-        return m_byteVector.get((int)index);
+        return m_byteVector.get(index);
     }
 
     /**
@@ -147,10 +144,7 @@ public class DenseByteVectorCell extends DataCell implements ByteVectorValue {
      */
     @Override
     public long nextCountIndex(final long startIdx) {
-        if (startIdx > Integer.MAX_VALUE) {
-            return -1;
-        }
-        return m_byteVector.nextCountIndex((int)startIdx);
+        return m_byteVector.nextCountIndex(startIdx);
     }
 
     /**
@@ -158,10 +152,7 @@ public class DenseByteVectorCell extends DataCell implements ByteVectorValue {
      */
     @Override
     public long nextZeroIndex(final long startIdx) {
-        if (startIdx > Integer.MAX_VALUE) {
-            return -1;
-        }
-        return m_byteVector.nextZeroIndex((int)startIdx);
+        return m_byteVector.nextZeroIndex(startIdx);
     }
 
     /**
@@ -173,26 +164,31 @@ public class DenseByteVectorCell extends DataCell implements ByteVectorValue {
     }
 
     /**
-     * Returns a clone of the internal dense byte vector.
-     * @return a copy of the internal dense byte vector.
+     * Returns a clone of the internal sparse byte vector.
+     * @return a copy of the internal sparse byte vector.
      */
-    public DenseByteVector getByteVectorCopy() {
-        return new DenseByteVector(m_byteVector);
+    public SparseByteVector getByteVectorCopy() {
+        return new SparseByteVector(m_byteVector);
     }
 
     /** Factory for (de-)serializing a DenseBitVectorCell. */
-    private static class DenseByteVectorSerializer implements
-            DataCellSerializer<DenseByteVectorCell> {
+    private static class SparseByteVectorSerializer implements
+            DataCellSerializer<SparseByteVectorCell> {
 
         /**
          * {@inheritDoc}
          */
-        public void serialize(final DenseByteVectorCell cell,
+        public void serialize(final SparseByteVectorCell cell,
                 final DataCellDataOutput out) throws IOException {
 
-            byte[] cnts = cell.m_byteVector.getAllCountsAsBytes();
-            out.writeInt(cnts.length);
-            for (int i = 0; i < cnts.length; i++) {
+            long length = cell.m_byteVector.length();
+            long[] idxs = cell.m_byteVector.getAllCountIndices();
+            byte[] cnts = cell.m_byteVector.getAllCounts();
+            assert idxs.length == cnts.length;
+            out.writeLong(length);
+            out.writeInt(idxs.length);
+            for (int i = 0; i < idxs.length; i++) {
+                out.writeLong(idxs[i]);
                 out.writeByte(cnts[i]);
             }
         }
@@ -200,14 +196,18 @@ public class DenseByteVectorCell extends DataCell implements ByteVectorValue {
         /**
          * {@inheritDoc}
          */
-        public DenseByteVectorCell deserialize(final DataCellDataInput input)
+        public SparseByteVectorCell deserialize(final DataCellDataInput input)
                 throws IOException {
+            long length = input.readLong();
             int arrayLength = input.readInt();
+            long[] idxs = new long[arrayLength];
             byte[] cnts = new byte[arrayLength];
             for (int i = 0; i < arrayLength; i++) {
+                idxs[i] = input.readLong();
                 cnts[i] = input.readByte();
             }
-            return new DenseByteVectorCell(new DenseByteVector(cnts));
+            return new SparseByteVectorCell(new SparseByteVector(length, idxs,
+                    cnts));
         }
     }
 

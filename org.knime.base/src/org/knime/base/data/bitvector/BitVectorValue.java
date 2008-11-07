@@ -42,7 +42,7 @@ import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
  *
  * @author Michael Berthold, University of Konstanz
  * @deprecated use the
- *             {@link org.knime.core.data.collection.bitvector.BitVectorValue}
+ *             {@link org.knime.core.data.vector.bitvector.BitVectorValue}
  *             in the core plug-in instead.
  */
 public interface BitVectorValue extends DataValue {

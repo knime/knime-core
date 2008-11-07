@@ -31,7 +31,7 @@ import java.util.List;
 import org.knime.base.node.mine.subgroupminer.freqitemset.AssociationRule;
 import org.knime.base.node.mine.subgroupminer.freqitemset.FrequentItemSet;
 import org.knime.base.node.mine.subgroupminer.freqitemset.TIDFrequentItemSet;
-import org.knime.core.data.collection.bitvector.BitVectorValue;
+import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;

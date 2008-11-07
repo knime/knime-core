@@ -20,7 +20,7 @@
  * History
  *   04.11.2008 (ohl): created
  */
-package org.knime.core.data.collection.bytevector;
+package org.knime.core.data.vector.bytevector;
 
 import org.knime.core.data.DataCell;
 

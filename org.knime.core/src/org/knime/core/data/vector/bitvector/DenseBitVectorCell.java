@@ -20,7 +20,7 @@
  * History
  *   29.08.2008 (ohl): created
  */
-package org.knime.core.data.collection.bitvector;
+package org.knime.core.data.vector.bitvector;
 
 import java.io.IOException;
 
@@ -34,25 +34,23 @@ import org.knime.core.data.DataValue;
 /**
  * Stores Zeros and Ones in a vector, i.e. with fixed positions. The vector has
  * a fixed length. <br />
- * Implementation assumes that the vector is only sparsely populated with '1's.
- * It stores the indices of the ones. For densely populated vectors
- * {@link DenseBitVector} is more suitable.<br />
- * The length of the vector is restricted to {@link Long#MAX_VALUE} (i.e.
- * 9223372036854775807). The number of ones that can be stored is limited to
- * {@link Integer#MAX_VALUE} (which is 2147483647), in which case it uses about
- * 16Gbyte of memory.<br />
+ * Implementation stores the bits in a collection of longs (64 bit words). Thus
+ * it can be used for well populated vectors. Its length is restricted to ({@link Integer#MAX_VALUE} -
+ * 1) * 64 (i.e. 137438953344, in which case it uses around 16GigaByte of
+ * memory).<br />
  *
  * @author ohl, University of Konstanz
  */
-public class SparseBitVectorCell extends DataCell implements BitVectorValue {
+public class DenseBitVectorCell extends DataCell implements BitVectorValue {
+
     /**
      * Convenience access member for
-     * <code>DataType.getType(SparseBitVectorCell.class)</code>.
+     * <code>DataType.getType(DenseBitVectorCell.class)</code>.
      *
      * @see DataType#getType(Class)
      */
     public static final DataType TYPE =
-            DataType.getType(SparseBitVectorCell.class);
+            DataType.getType(DenseBitVectorCell.class);
 
     /**
      * Returns the preferred value class of this cell implementation. This
@@ -65,8 +63,8 @@ public class SparseBitVectorCell extends DataCell implements BitVectorValue {
         return BitVectorValue.class;
     }
 
-    private static final DataCellSerializer<SparseBitVectorCell> SERIALIZER =
-            new SparseBitVectorSerializer();
+    private static final DataCellSerializer<DenseBitVectorCell> SERIALIZER =
+            new DenseBitVectorSerializer();
 
     /**
      * Returns the factory to read/write DataCells of this class from/to a
@@ -75,20 +73,20 @@ public class SparseBitVectorCell extends DataCell implements BitVectorValue {
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
      */
-    public static final DataCellSerializer<SparseBitVectorCell> getCellSerializer() {
+    public static final DataCellSerializer<DenseBitVectorCell> getCellSerializer() {
         return SERIALIZER;
     }
 
-    private final SparseBitVector m_bitVector;
+    private final DenseBitVector m_bitVector;
 
     /**
-     * Use the {@link SparseBitVectorCellFactory} to create instances of this
+     * Use the {@link DenseBitVectorCellFactory} to create instances of this
      * cell.
      *
      * @param bitVector the bit vector to store in this cell.
      */
-    SparseBitVectorCell(final SparseBitVector bitVector) {
-        m_bitVector = new SparseBitVector(bitVector);
+    DenseBitVectorCell(final DenseBitVector bitVector) {
+        m_bitVector = new DenseBitVector(bitVector);
     }
 
     /**
@@ -96,7 +94,7 @@ public class SparseBitVectorCell extends DataCell implements BitVectorValue {
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
-        return ((SparseBitVectorCell)dc).m_bitVector.equals(m_bitVector);
+        return ((DenseBitVectorCell)dc).m_bitVector.equals(m_bitVector);
     }
 
     /**
@@ -112,7 +110,7 @@ public class SparseBitVectorCell extends DataCell implements BitVectorValue {
      */
     @Override
     public String toString() {
-        return m_bitVector.toString();
+        return m_bitVector.toBinaryString();
     }
 
     /**
@@ -136,8 +134,8 @@ public class SparseBitVectorCell extends DataCell implements BitVectorValue {
      *
      * @return a copy of the internal dense bit vector.
      */
-    public SparseBitVector getBitVectorCopy() {
-        return new SparseBitVector(m_bitVector);
+    public DenseBitVector getBitVectorCopy() {
+        return new DenseBitVector(m_bitVector);
     }
 
     /**
@@ -189,36 +187,35 @@ public class SparseBitVectorCell extends DataCell implements BitVectorValue {
     }
 
     /** Factory for (de-)serializing a DenseBitVectorCell. */
-    private static class SparseBitVectorSerializer implements
-            DataCellSerializer<SparseBitVectorCell> {
+    private static class DenseBitVectorSerializer implements
+            DataCellSerializer<DenseBitVectorCell> {
 
         /**
          * {@inheritDoc}
          */
-        public void serialize(final SparseBitVectorCell cell,
+        public void serialize(final DenseBitVectorCell cell,
                 final DataCellDataOutput out) throws IOException {
-
-            long[] idx = cell.m_bitVector.getAllOneIndices();
+            long[] bits = cell.m_bitVector.getAllBits();
             long length = cell.length();
             out.writeLong(length);
-            out.writeInt(idx.length);
-            for (int i = 0; i < idx.length; i++) {
-                out.writeLong(idx[i]);
+            out.writeInt(bits.length);
+            for (int i = 0; i < bits.length; i++) {
+                out.writeLong(bits[i]);
             }
         }
 
         /**
          * {@inheritDoc}
          */
-        public SparseBitVectorCell deserialize(final DataCellDataInput input)
+        public DenseBitVectorCell deserialize(final DataCellDataInput input)
                 throws IOException {
             long length = input.readLong();
             int arrayLength = input.readInt();
-            long[] idx = new long[arrayLength];
+            long[] bits = new long[arrayLength];
             for (int i = 0; i < arrayLength; i++) {
-                idx[i] = input.readLong();
+                bits[i] = input.readLong();
             }
-            return new SparseBitVectorCell(new SparseBitVector(length, idx));
+            return new DenseBitVectorCell(new DenseBitVector(bits, length));
         }
     }
 

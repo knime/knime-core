@@ -20,11 +20,11 @@
  * History
  *   29.08.2008 (ohl): created
  */
-package org.knime.core.data.collection.bytevector;
+package org.knime.core.data.vector.bytevector;
 
 import java.util.Arrays;
 
-import org.knime.core.data.collection.bitvector.SparseBitVector;
+import org.knime.core.data.vector.bitvector.SparseBitVector;
 
 /**
  * A vector of fixed length holding byte counts at specific positions. Only

@@ -18,9 +18,9 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   29.08.2008 (ohl): created
+ *   03.09.2008 (ohl): created
  */
-package org.knime.core.data.collection.bitvector;
+package org.knime.core.data.vector.bytevector;
 
 import java.io.IOException;
 
@@ -30,41 +30,35 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.vector.bitvector.DenseBitVectorCellFactory;
 
 /**
- * Stores Zeros and Ones in a vector, i.e. with fixed positions. The vector has
- * a fixed length. <br />
- * Implementation stores the bits in a collection of longs (64 bit words). Thus
- * it can be used for well populated vectors. Its length is restricted to ({@link Integer#MAX_VALUE} -
- * 1) * 64 (i.e. 137438953344, in which case it uses around 16GigaByte of
- * memory).<br />
  *
  * @author ohl, University of Konstanz
  */
-public class DenseBitVectorCell extends DataCell implements BitVectorValue {
-
+public class DenseByteVectorCell extends DataCell implements ByteVectorValue {
     /**
      * Convenience access member for
-     * <code>DataType.getType(DenseBitVectorCell.class)</code>.
+     * <code>DataType.getType(DenseByteVectorCell.class)</code>.
      *
      * @see DataType#getType(Class)
      */
     public static final DataType TYPE =
-            DataType.getType(DenseBitVectorCell.class);
+            DataType.getType(DenseByteVectorCell.class);
 
     /**
      * Returns the preferred value class of this cell implementation. This
      * method is called per reflection to determine which is the preferred
      * renderer, comparator, etc.
      *
-     * @return BitVectorValue.class;
+     * @return ByteVectorValue.class;
      */
     public static final Class<? extends DataValue> getPreferredValueClass() {
-        return BitVectorValue.class;
+        return ByteVectorValue.class;
     }
 
-    private static final DataCellSerializer<DenseBitVectorCell> SERIALIZER =
-            new DenseBitVectorSerializer();
+    private static final DataCellSerializer<DenseByteVectorCell> SERIALIZER =
+            new DenseByteVectorSerializer();
 
     /**
      * Returns the factory to read/write DataCells of this class from/to a
@@ -73,20 +67,20 @@ public class DenseBitVectorCell extends DataCell implements BitVectorValue {
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
      */
-    public static final DataCellSerializer<DenseBitVectorCell> getCellSerializer() {
+    public static final DataCellSerializer<DenseByteVectorCell> getCellSerializer() {
         return SERIALIZER;
     }
 
-    private final DenseBitVector m_bitVector;
+    private final DenseByteVector m_byteVector;
 
     /**
      * Use the {@link DenseBitVectorCellFactory} to create instances of this
      * cell.
      *
-     * @param bitVector the bit vector to store in this cell.
+     * @param byteVector the byte vector a copy of which is stored in this cell.
      */
-    DenseBitVectorCell(final DenseBitVector bitVector) {
-        m_bitVector = new DenseBitVector(bitVector);
+    DenseByteVectorCell(final DenseByteVector byteVector) {
+        m_byteVector = new DenseByteVector(byteVector);
     }
 
     /**
@@ -94,7 +88,7 @@ public class DenseBitVectorCell extends DataCell implements BitVectorValue {
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
-        return ((DenseBitVectorCell)dc).m_bitVector.equals(m_bitVector);
+        return ((DenseByteVectorCell)dc).m_byteVector.equals(m_byteVector);
     }
 
     /**
@@ -102,7 +96,7 @@ public class DenseBitVectorCell extends DataCell implements BitVectorValue {
      */
     @Override
     public int hashCode() {
-        return m_bitVector.hashCode();
+        return m_byteVector.hashCode();
     }
 
     /**
@@ -110,48 +104,26 @@ public class DenseBitVectorCell extends DataCell implements BitVectorValue {
      */
     @Override
     public String toString() {
-        return m_bitVector.toBinaryString();
+        return m_byteVector.toString();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String toHexString() {
-        return m_bitVector.toHexString();
+    public int cardinality() {
+        return m_byteVector.cardinality();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String toBinaryString() {
-        return m_bitVector.toBinaryString();
-    }
-
-    /**
-     * Returns a clone of the internal dense bit vector.
-     *
-     * @return a copy of the internal dense bit vector.
-     */
-    public DenseBitVector getBitVectorCopy() {
-        return new DenseBitVector(m_bitVector);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public long cardinality() {
-        return m_bitVector.cardinality();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean get(final long index) {
-        return m_bitVector.get(index);
+    public int get(final long index) {
+        if (index > Integer.MAX_VALUE) {
+            throw new ArrayIndexOutOfBoundsException("Index too large.");
+        }
+        return m_byteVector.get((int)index);
     }
 
     /**
@@ -159,7 +131,7 @@ public class DenseBitVectorCell extends DataCell implements BitVectorValue {
      */
     @Override
     public boolean isEmpty() {
-        return m_bitVector.isEmpty();
+        return m_byteVector.isEmpty();
     }
 
     /**
@@ -167,55 +139,75 @@ public class DenseBitVectorCell extends DataCell implements BitVectorValue {
      */
     @Override
     public long length() {
-        return m_bitVector.length();
+        return m_byteVector.length();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public long nextClearBit(final long startIdx) {
-        return m_bitVector.nextClearBit(startIdx);
+    public long nextCountIndex(final long startIdx) {
+        if (startIdx > Integer.MAX_VALUE) {
+            return -1;
+        }
+        return m_byteVector.nextCountIndex((int)startIdx);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public long nextSetBit(final long startIdx) {
-        return m_bitVector.nextSetBit(startIdx);
+    public long nextZeroIndex(final long startIdx) {
+        if (startIdx > Integer.MAX_VALUE) {
+            return -1;
+        }
+        return m_byteVector.nextZeroIndex((int)startIdx);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long sumOfAllCounts() {
+        return m_byteVector.sumOfAllCounts();
+    }
+
+    /**
+     * Returns a clone of the internal dense byte vector.
+     * @return a copy of the internal dense byte vector.
+     */
+    public DenseByteVector getByteVectorCopy() {
+        return new DenseByteVector(m_byteVector);
     }
 
     /** Factory for (de-)serializing a DenseBitVectorCell. */
-    private static class DenseBitVectorSerializer implements
-            DataCellSerializer<DenseBitVectorCell> {
+    private static class DenseByteVectorSerializer implements
+            DataCellSerializer<DenseByteVectorCell> {
 
         /**
          * {@inheritDoc}
          */
-        public void serialize(final DenseBitVectorCell cell,
+        public void serialize(final DenseByteVectorCell cell,
                 final DataCellDataOutput out) throws IOException {
-            long[] bits = cell.m_bitVector.getAllBits();
-            long length = cell.length();
-            out.writeLong(length);
-            out.writeInt(bits.length);
-            for (int i = 0; i < bits.length; i++) {
-                out.writeLong(bits[i]);
+
+            byte[] cnts = cell.m_byteVector.getAllCountsAsBytes();
+            out.writeInt(cnts.length);
+            for (int i = 0; i < cnts.length; i++) {
+                out.writeByte(cnts[i]);
             }
         }
 
         /**
          * {@inheritDoc}
          */
-        public DenseBitVectorCell deserialize(final DataCellDataInput input)
+        public DenseByteVectorCell deserialize(final DataCellDataInput input)
                 throws IOException {
-            long length = input.readLong();
             int arrayLength = input.readInt();
-            long[] bits = new long[arrayLength];
+            byte[] cnts = new byte[arrayLength];
             for (int i = 0; i < arrayLength; i++) {
-                bits[i] = input.readLong();
+                cnts[i] = input.readByte();
             }
-            return new DenseBitVectorCell(new DenseBitVector(bits, length));
+            return new DenseByteVectorCell(new DenseByteVector(cnts));
         }
     }
 

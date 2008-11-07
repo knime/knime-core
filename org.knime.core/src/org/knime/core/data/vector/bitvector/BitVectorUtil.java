@@ -21,7 +21,7 @@
  * History
  *   06.11.2008 (thiel): created
  */
-package org.knime.core.data.collection.bitvector;
+package org.knime.core.data.vector.bitvector;
 
 /**
  * A utility class providing methods to apply set operations like "AND", "OR", 
