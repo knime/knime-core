@@ -457,19 +457,6 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             }
             if (uiInfoClassName != null) {
                 uiInfo = loadUIInfoInstance(uiInfoClassName);
-                try {
-                    // avoid NoClassDefFoundErrors by using magic class loader
-                    uiInfo = (UIInformation)(GlobalClassCreator
-                            .createClass(uiInfoClassName).newInstance());
-                } catch (Exception e) {
-                    String error = "Unable to load UI information class \""
-                        + uiInfoClassName + "\" to node with ID suffix " 
-                        + nodeIDSuffix + ", no UI information available: "
-                        + e.getMessage();
-                    getLogger().debug(error, e);
-                    loadResult.addError(error);
-                    uiInfo = null;
-                }
                 if (uiInfo != null) {
                     try {
                         loadUIInfoSettings(uiInfo, nodeSetting);
@@ -718,6 +705,17 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return null;
     }
     
+    protected String fixUIInfoClassName(final String name) {
+        if (("org.knime.workbench.editor2.extrainfo." 
+                + "ModellingNodeExtraInfo").equals(name)) {
+            return "org.knime.core.node.workflow.NodeUIInformation";
+        } else if (("org.knime.workbench.editor2.extrainfo." 
+                + "ModellingConnectionExtraInfo").equals(name)) {
+            return "org.knime.core.node.workflow.ConnectionUIInformation";
+        }
+        return name;
+    }
+    
     /**
      * Creates the <code>UIInformaion</code> from given settings, describing
      * whatever additional information was stored (graphical layout?).
@@ -729,13 +727,24 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         if (className == null) {
             return null;
         }
+        String fixedName = fixUIInfoClassName(className);
         try {
             // avoid NoClassDefFoundErrors by using magic class loader
             return (UIInformation)(GlobalClassCreator
-                    .createClass(className).newInstance());
+                    .createClass(fixedName).newInstance());
         } catch (Exception e) {
-            getLogger().warn("UIInfo class \"" + className 
-                    + "\" could not be loaded", e);
+            StringBuilder b = new StringBuilder();
+            b.append("UIInfo class \"");
+            b.append(className);
+            b.append("\"");
+            if (!className.equals(fixedName)) {
+                b.append(" programmatically changed to \"");
+                b.append(fixedName).append("\"");
+            }
+            b.append(" could not be loaded: ");
+            b.append(e.getMessage());
+            String error = b.toString();
+            getLogger().warn(error, e);
             return null;
         }
     }
