@@ -3212,6 +3212,17 @@ public final class WorkflowManager extends NodeContainer {
         }
     }
     
+    /** {@inheritDoc} */
+    @Override
+    public void setDirty() {
+        boolean sendEvent = !isDirty();
+        super.setDirty();
+        if (sendEvent) {
+            notifyWorkflowListeners(new WorkflowEvent(
+                    WorkflowEvent.Type.WORKFLOW_DIRTY, getID(), null, null));
+        }
+    }
+    
     //////////////////////////////////////
     // NodeContainer implementations
     // (WorkflowManager acts as meta node)
