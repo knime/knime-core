@@ -25,8 +25,8 @@
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
+import org.knime.core.node.workflow.ModellingConnectionExtraInfo;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
-import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 
 /**
  * Command for deletion of connection bendpoints.

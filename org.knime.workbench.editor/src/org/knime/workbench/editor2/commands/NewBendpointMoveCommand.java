@@ -28,9 +28,9 @@ import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.ZoomManager;
+import org.knime.core.node.workflow.ModellingConnectionExtraInfo;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
-import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 
 /**
  * Command for moving an absolute bendpoint on the connection.

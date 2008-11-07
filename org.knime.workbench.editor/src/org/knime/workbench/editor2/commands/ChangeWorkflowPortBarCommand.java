@@ -27,8 +27,8 @@ package org.knime.workbench.editor2.commands;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.commands.Command;
+import org.knime.core.node.workflow.ModellingNodeExtraInfo;
 import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
-import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
 
 /**

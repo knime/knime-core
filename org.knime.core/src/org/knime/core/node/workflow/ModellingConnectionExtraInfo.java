@@ -22,14 +22,13 @@
  * History
  *   09.07.2005 (Florian Georg): created
  */
-package org.knime.workbench.editor2.extrainfo;
+package org.knime.core.node.workflow;
 
 import java.util.ArrayList;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.UIInformation;
 
 /**
  * Default implementation of a connection extra info.

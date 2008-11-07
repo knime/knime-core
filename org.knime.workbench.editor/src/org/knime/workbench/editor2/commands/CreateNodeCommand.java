@@ -31,10 +31,10 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.ModellingNodeExtraInfo;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
 /**
  * GEF command for adding a <code>Node</code> to the

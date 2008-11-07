@@ -43,7 +43,6 @@ Export-Package: org.knime.workbench,
  org.knime.workbench.editor2.editparts.anchor,
  org.knime.workbench.editor2.editparts.policy,
  org.knime.workbench.editor2.editparts.snap,
- org.knime.workbench.editor2.extrainfo,
  org.knime.workbench.editor2.figures,
  org.knime.workbench.editor2.meta,
  org.knime.workbench.editor2.model

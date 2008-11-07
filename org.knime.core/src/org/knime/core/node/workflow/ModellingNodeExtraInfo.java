@@ -22,12 +22,11 @@
  * History
  *   30.05.2005 (Florian Georg): created
  */
-package org.knime.workbench.editor2.extrainfo;
+package org.knime.core.node.workflow;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.UIInformation;
 
 /**
  * Special <code>NodeExtraInfo</code> object used by the workflow editor.

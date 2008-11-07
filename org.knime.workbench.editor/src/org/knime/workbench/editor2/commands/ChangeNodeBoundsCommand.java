@@ -26,8 +26,8 @@
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
+import org.knime.core.node.workflow.ModellingNodeExtraInfo;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
 /**
  * GEF Command for changing the bounds of a <code>NodeContainer</code> in the

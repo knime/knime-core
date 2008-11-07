@@ -34,6 +34,8 @@ import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.ModellingConnectionExtraInfo;
+import org.knime.core.node.workflow.ModellingNodeExtraInfo;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.editor2.ClipboardWorkflowManager;
@@ -41,8 +43,6 @@ import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
-import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
-import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
 /**
  * Implements the clipboard paste action to paste nodes and connections from the

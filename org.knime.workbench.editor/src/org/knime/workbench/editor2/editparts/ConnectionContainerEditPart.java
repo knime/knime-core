@@ -41,6 +41,7 @@ import org.eclipse.gef.editpolicies.ConnectionEndpointEditPolicy;
 import org.eclipse.gef.requests.ChangeBoundsRequest;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.ModellingConnectionExtraInfo;
 import org.knime.core.node.workflow.UIInformation;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
@@ -48,7 +49,6 @@ import org.knime.workbench.editor2.commands.ChangeBendPointLocationCommand;
 import org.knime.workbench.editor2.editparts.policy.ConnectionBendpointEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.NewConnectionComponentEditPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapOffBendPointConnectionRouter;
-import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 
 /**
  * EditPart controlling a <code>ConnectionContainer</code> object in the

@@ -25,8 +25,8 @@
 package org.knime.workbench.editor2.model;
 
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.ModellingNodeExtraInfo;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
 /**
  * 
