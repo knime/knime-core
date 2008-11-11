@@ -208,9 +208,6 @@ public class GroupByNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_groupByCols.saveSettingsTo(settings);
-//        m_numericColMethod.saveSettingsTo(settings);
-//        m_nominalColMethod.saveSettingsTo(settings);
-//        m_moveGroupCols2Front.saveSettingsTo(settings);
         m_maxUniqueValues.saveSettingsTo(settings);
         m_enableHilite.saveSettingsTo(settings);
         m_sortInMemory.saveSettingsTo(settings);

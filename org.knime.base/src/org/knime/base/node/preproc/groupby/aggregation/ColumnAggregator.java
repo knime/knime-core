@@ -48,29 +48,29 @@ public class ColumnAggregator {
     private static final String CNFG_COL_TYPES = "columnTypes";
     private static final String CNFG_AGGR_METHODS = "aggregationMethod";
 
-    private final DataColumnSpec m_colSpec;
+    private final DataColumnSpec m_origColSpec;
     private final AggregationMethod m_method;
     private AggregationOperator m_operator;
 
     /**Constructor for class ColumnAggregator.
-     * @param colSpec the {@link DataColumnSpec} of the column
-     * @param method the {@link AggregationMethod} to use
+     * @param origColSpec the {@link DataColumnSpec} of the original column
+     * @param method the {@link AggregationMethod} to use for the given column
      *
      */
-    public ColumnAggregator(final DataColumnSpec colSpec,
+    public ColumnAggregator(final DataColumnSpec origColSpec,
             final AggregationMethod method) {
-        if (colSpec == null) {
+        if (origColSpec == null) {
             throw new NullPointerException("colSpec must not be null");
         }
         if (method == null) {
             throw new NullPointerException("method must not be null");
         }
-        if (!method.isCompatible(colSpec)) {
+        if (!method.isCompatible(origColSpec)) {
             throw new IllegalArgumentException("Aggregation method '"
                     + method.getLabel() + "' not valid for column '"
-                    + colSpec.getName() + "'");
+                    + origColSpec.getName() + "'");
         }
-        m_colSpec = colSpec;
+        m_origColSpec = origColSpec;
         m_method = method;
     }
 
@@ -78,21 +78,21 @@ public class ColumnAggregator {
      * @return the colName
      */
     public String getColName() {
-        return m_colSpec.getName();
+        return m_origColSpec.getName();
     }
 
     /**
      * @return the {@link DataColumnSpec}
      */
     public DataColumnSpec getColSpec() {
-        return m_colSpec;
+        return m_origColSpec;
     }
 
     /**
      * @return the {@link DataType} of this column
      */
     public DataType getDataType() {
-        return m_colSpec.getType();
+        return m_origColSpec.getType();
     }
 
     /**
@@ -108,7 +108,7 @@ public class ColumnAggregator {
      */
     public AggregationOperator getOperator(final int maxUniqueValues) {
         if (m_operator == null) {
-            m_operator = m_method.getOperator(maxUniqueValues);
+            m_operator = m_method.getOperator(m_origColSpec, maxUniqueValues);
         }
         return m_operator;
     }

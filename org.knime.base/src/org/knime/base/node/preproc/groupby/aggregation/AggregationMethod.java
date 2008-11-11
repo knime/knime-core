@@ -44,9 +44,9 @@ public enum AggregationMethod {
 
 //The numerical methods
     /**Minimum.*/
-    MIN(NumericOperators.getInstance().new MinOperator(0)),
+    MIN(NumericOperators.getInstance().new MinOperator(null, 0)),
     /**Maximum.*/
-    MAX(NumericOperators.getInstance().new MaxOperator(0)),
+    MAX(NumericOperators.getInstance().new MaxOperator(null, 0)),
     /**Average.*/
     MEAN(NumericOperators.getInstance().new MeanOperator(0)),
     /**Sum.*/
@@ -108,11 +108,13 @@ public enum AggregationMethod {
     }
 
     /**
+     * @param origColSpec the {@link DataColumnSpec} of the original column
      * @param maxUniqueValues the maximum number of unique values
      * @return the operator of this method
      */
-    public AggregationOperator getOperator(final int maxUniqueValues) {
-        return m_operator.createInstance(maxUniqueValues);
+    public AggregationOperator getOperator(final DataColumnSpec origColSpec,
+            final int maxUniqueValues) {
+        return m_operator.createInstance(origColSpec, maxUniqueValues);
     }
 
     /**

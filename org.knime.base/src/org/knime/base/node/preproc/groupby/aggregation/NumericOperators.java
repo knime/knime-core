@@ -26,7 +26,9 @@
 package org.knime.base.node.preproc.groupby.aggregation;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 
@@ -55,8 +57,6 @@ public final class NumericOperators {
         return instance;
     }
 
-
-
     /**
      * Returns the minimum per group.
      *
@@ -65,13 +65,22 @@ public final class NumericOperators {
     final class MinOperator extends AggregationOperator {
 
         private DataCell m_minVal = null;
+        private final DataValueComparator m_comparator;
 
         /**Constructor for class MinOperator.
+         * @param origColSpec the {@link DataColumnSpec} of the original column
          * @param maxUniqueValues the maximum number of unique values
          */
-        MinOperator(final int maxUniqueValues) {
+        MinOperator(final DataColumnSpec origColSpec,
+                final int maxUniqueValues) {
             super("Minimum", true, "Min(" + PLACE_HOLDER + ")", false, true,
                     maxUniqueValues);
+            if (origColSpec == null) {
+                //this could only happen in the enumeration definition
+                m_comparator = DoubleCell.TYPE.getComparator();
+            } else {
+                m_comparator = origColSpec.getType().getComparator();
+            }
         }
 
         /**
@@ -86,8 +95,12 @@ public final class NumericOperators {
          * {@inheritDoc}
          */
         @Override
-        public AggregationOperator createInstance(final int maxUniqueValues) {
-            return new MinOperator(maxUniqueValues);
+        public AggregationOperator createInstance(
+                final DataColumnSpec origColSpec, final int maxUniqueValues) {
+            if (origColSpec == null) {
+                throw new NullPointerException("origColSpec must not be null");
+            }
+            return new MinOperator(origColSpec, maxUniqueValues);
         }
 
         /**
@@ -98,8 +111,7 @@ public final class NumericOperators {
             if (cell.isMissing()) {
                 return false;
             }
-            if (m_minVal == null
-                    || cell.getType().getComparator().compare(cell, m_minVal)
+            if (m_minVal == null || m_comparator.compare(cell, m_minVal)
                         < 0) {
                 m_minVal = cell;
             }
@@ -135,12 +147,22 @@ public final class NumericOperators {
 
         private DataCell m_maxVal = null;
 
+        private final DataValueComparator m_comparator;
+
         /**Constructor for class MinOperator.
+         * @param origColSpec the {@link DataColumnSpec} of the original column
          * @param maxUniqueValues the maximum number of unique values
          */
-        MaxOperator(final int maxUniqueValues) {
+        MaxOperator(final DataColumnSpec origColSpec,
+                final int maxUniqueValues) {
             super("Maximum", true, "Max(" + PLACE_HOLDER + ")", false, true,
                     maxUniqueValues);
+            if (origColSpec == null) {
+                //this could only happen in the enumeration definition
+                m_comparator = DoubleCell.TYPE.getComparator();
+            } else {
+                m_comparator = origColSpec.getType().getComparator();
+            }
         }
 
         /**
@@ -155,8 +177,12 @@ public final class NumericOperators {
          * {@inheritDoc}
          */
         @Override
-        public AggregationOperator createInstance(final int maxUniqueValues) {
-            return new MaxOperator(maxUniqueValues);
+        public AggregationOperator createInstance(
+                final DataColumnSpec origColSpec, final int maxUniqueValues) {
+            if (origColSpec == null) {
+                throw new NullPointerException("origColSpec must not be null");
+            }
+            return new MaxOperator(origColSpec, maxUniqueValues);
         }
 
         /**
@@ -167,8 +193,7 @@ public final class NumericOperators {
             if (cell.isMissing()) {
                 return false;
             }
-            if (m_maxVal == null
-                    || cell.getType().getComparator().compare(cell, m_maxVal)
+            if (m_maxVal == null || m_comparator.compare(cell, m_maxVal)
                     > 0) {
                 m_maxVal = cell;
             }
@@ -226,7 +251,8 @@ public final class NumericOperators {
          * {@inheritDoc}
          */
         @Override
-        public AggregationOperator createInstance(final int maxUniqueValues) {
+        public AggregationOperator createInstance(
+                final DataColumnSpec origColSpec, final int maxUniqueValues) {
             return new MeanOperator(maxUniqueValues);
         }
 
@@ -296,7 +322,8 @@ public final class NumericOperators {
          * {@inheritDoc}
          */
         @Override
-        public AggregationOperator createInstance(final int maxUniqueValues) {
+        public AggregationOperator createInstance(
+                final DataColumnSpec origColSpec, final int maxUniqueValues) {
             return new SumOperator(maxUniqueValues);
         }
 
@@ -386,7 +413,8 @@ public final class NumericOperators {
          * {@inheritDoc}
          */
         @Override
-        public AggregationOperator createInstance(final int maxUniqueValues) {
+        public AggregationOperator createInstance(
+                final DataColumnSpec origColSpec, final int maxUniqueValues) {
             return new VarianceOperator(maxUniqueValues);
         }
 
@@ -460,7 +488,8 @@ public final class NumericOperators {
          * {@inheritDoc}
          */
         @Override
-        public AggregationOperator createInstance(final int maxUniqueValues) {
+        public AggregationOperator createInstance(
+                final DataColumnSpec origColSpec, final int maxUniqueValues) {
             return new StdDeviationOperator(maxUniqueValues);
         }
 
