@@ -1869,33 +1869,16 @@ public final class WorkflowManager extends NodeContainer {
                         return true;
                     }
                 }
-                return false;
             } else {
                 assert nc instanceof SingleNodeContainer;
                 // node itself needs to be configured.
-                if (!nc.getState().equals(NodeContainer.State.CONFIGURED)) {
-                    return false;
-                }
-                // all immediate predecessors must be executed.
-                Set<ConnectionContainer> predNodes
-                             = m_workflow.getConnectionsByDest(nodeID);
-                for (ConnectionContainer conn : predNodes) {
-                    assert conn.getDest().equals(nodeID);
-                    NodeID predNodeID = conn.getSource();
-                    NodeContainer predNode = m_workflow.getNode(predNodeID);
-                    // TODO fix workaround for incoming meta connections
-                    if (predNode != null && !predNode.getState().equals(
-                            NodeContainer.State.EXECUTED)) {
-                        return false;
-                    }
-                    if (predNode == null) {
-                        assert predNodeID == this.getID();
-                        return getParent().canExecuteNode(predNodeID);
-                    }
+                if (nc.getState().equals(NodeContainer.State.CONFIGURED)) {
+                    return true;
                 }
             }
         }
-        return true;
+        // all other cases: not executable!
+        return false;
     }
 
     /**
