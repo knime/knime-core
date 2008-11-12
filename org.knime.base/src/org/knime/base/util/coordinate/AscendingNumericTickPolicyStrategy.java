@@ -245,7 +245,11 @@ public class AscendingNumericTickPolicyStrategy extends PolicyStrategy {
                     result.add(value);
                 }
             }
-            value += step;
+            int m = 1;
+            while (value + m * step == value) {
+                m++;
+            }
+            value += m * step;
         }
 
         if (result.get(result.size() - 1) < maximum) {
