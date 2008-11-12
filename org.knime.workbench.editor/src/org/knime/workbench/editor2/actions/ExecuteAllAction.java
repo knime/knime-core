@@ -132,6 +132,7 @@ public class ExecuteAllAction extends AbstractNodeAction {
             // is not updated correctly.
             getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
         } catch (Exception e) {
+            LOGGER.error("Failed to complete execute all command: ", e);
             // ignore
         }
     }
