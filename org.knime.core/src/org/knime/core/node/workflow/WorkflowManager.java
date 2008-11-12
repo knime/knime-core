@@ -928,24 +928,21 @@ public final class WorkflowManager extends NodeContainer {
      * configured (if not already) and all inputs are available they
      * will be queued "automatically" (usually triggered by doAfterExecution
      * of the predecessors).
+     * This does NOT affect any predecessors of this workflow!
      * 
-     * @param if true, mark nodes otherwise try to erase marks
+     * @param flag mark nodes if true, otherwise try to erase marks
      */
-    private void markForExecutionAllNodes(final boolean flag) {
+    private void markForExecutionAllNodesInWorkflow(final boolean flag) {
         synchronized (m_workflowMutex) {
-            if (flag) {
-                markForExecutionAllAffectedNodes(-1);
-            } else {
-                for (NodeID id : m_workflow.getNodeIDs()) {
-                    NodeContainer nc = m_workflow.getNode(id);
-                    if (nc instanceof SingleNodeContainer) {
-                        ((SingleNodeContainer)nc).markForExecution(flag);
-                    } else {
-                        assert nc instanceof WorkflowManager;
-                        ((WorkflowManager)nc).markForExecutionAllNodes(flag);
-                    }
+            for (NodeID id : m_workflow.getNodeIDs()) {
+                NodeContainer nc = m_workflow.getNode(id);
+                if (nc instanceof SingleNodeContainer) {
+                    ((SingleNodeContainer)nc).markForExecution(flag);
+                } else {
+                    assert nc instanceof WorkflowManager;
+                    ((WorkflowManager)nc).
+                            markForExecutionAllNodesInWorkflow(flag);
                 }
-                
             }
         }
     }
@@ -987,10 +984,10 @@ public final class WorkflowManager extends NodeContainer {
                             break;
                         case MARKEDFOREXEC:
                         case UNCONFIGURED_MARKEDFOREXEC:
-                                snc.markForExecution(true);
+                            // tolerate those states - nodes are already marked.
                             break;
                         default: // already running
-                            // TODO other states. Not really reason for warning?
+                            // TODO other states. Any reason to bomb?
                         }
                     } else {
                         assert thisNode instanceof WorkflowManager;
@@ -1049,7 +1046,7 @@ public final class WorkflowManager extends NodeContainer {
                 }
             }
         } else { // WFM
-            this.markForExecutionAllNodes(false);
+            this.markForExecutionAllNodesInWorkflow(false);
             // unmark successors of this metanode
             getParent().disableNodeForExecution(this.getID());
         }
@@ -1081,10 +1078,7 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     /**
-     * Reset all nodes in this workflow. Make sure the reset is propagated
-     * in the right order, that is, only actively reset the "left most"
-     * nodes in the workflow or the ones connected to meta node input
-     * ports.
+     * Reset all nodes in this workflow.
      * Note that this routine will NOT trigger any resets connected to
      * possible outports of this WFM.
      */
@@ -1094,34 +1088,16 @@ public final class WorkflowManager extends NodeContainer {
                 // only attempt to do this if possible.
                 return;
             }
-            // will contain source nodes (meta input nodes) or 0-input nodes
-            ArrayList<NodeContainer> sourceNodes
-                    = new ArrayList<NodeContainer>();
-            // find all nodes that are directly connected to this meta nodes
-            // input ports
-            Set<ConnectionContainer> cons
-                        = m_workflow.getConnectionsBySource(getID());
-            for (ConnectionContainer c : cons) {
-                NodeID id = c.getDest();
+            for (NodeID id : m_workflow.getNodeIDs()) {
+                // we don't need to worry about the correct order since
+                // we will reset everything in here anyway.
                 NodeContainer nc = m_workflow.getNode(id);
-                if (c.getType().equals(ConnectionType.WFMIN)) {
-                    // avoid WFMTHROUGH connections
-                    sourceNodes.add(nc);
-                }
-            }
-            // look for nodes with no predecessor (or at least no in-conns)
-            for (NodeID nid : m_workflow.getNodeIDs()) {
-                if (m_workflow.getConnectionsBySource(nid).size() == 0) {
-                    sourceNodes.add(m_workflow.getNode(nid));
-                }
-            }
-            // and finally reset those nodes (all of their successors will be
-            // reset automatically)
-            for (NodeContainer nc : sourceNodes) {
-                assert !this.getID().equals(nc.getID());
-                if (nc.isResetable()) {
-                    this.resetSuccessors(nc.getID());
-                    invokeResetOnNode(nc.getID());
+                assert nc != null;
+                if (nc instanceof SingleNodeContainer) {
+                    ((SingleNodeContainer)nc).reset();
+                } else {
+                    assert nc instanceof WorkflowManager;
+                    ((WorkflowManager)nc).resetAllNodesInWFM();
                 }
             }
             // don't let the WFM decide on the state himself - for example,
@@ -1267,7 +1243,8 @@ public final class WorkflowManager extends NodeContainer {
                         }
                     }
                 } else {
-                    if (!markAndQueueNodeAndPredecessors(predID, cc.getSourcePort())) {
+                    if (!markAndQueueNodeAndPredecessors(predID,
+                            cc.getSourcePort())) {
                         return false;
                     }
                 }
@@ -1530,12 +1507,7 @@ public final class WorkflowManager extends NodeContainer {
                 ((WorkflowManager)nc).resetAllNodesInWFM();
             }
         }
-        // (4) allow access to tail node
-        ((SingleNodeContainer)headNode).getNode().setLoopEndNode(
-                ((SingleNodeContainer)tailNode).getNode());
-        // (5) mark the origin of the loop to be executed again
-        ((SingleNodeContainer)headNode).enableReQueuing();
-        // (6) configure the nodes from start to rest (it's not
+        // (4) configure the nodes from start to rest (it's not
         //     so important if we configure more than the body)
         //     do NOT configure start of loop because otherwise
         //     we will re-create the ScopeContextStack and
@@ -1545,19 +1517,24 @@ public final class WorkflowManager extends NodeContainer {
         // configure, so we have to check here if the node
         // is really configured before...
         if (tailNode.getState().equals(State.CONFIGURED)) {
-            // (7) ... we enable the body to be queued again.
+            // (5) ... we enable the body to be queued again.
             for (NodeID id : loopBodyNodes) {
                 NodeContainer nc = m_workflow.getNode(id);
                 if (nc instanceof SingleNodeContainer) {
                     ((SingleNodeContainer)nc).markForExecution(true);
                 } else {
                     // FIXME - check ports
-                    ((WorkflowManager)nc).markForExecutionAllNodes(true);
+                    ((WorkflowManager)nc).markForExecutionAllNodesInWorkflow(true);
                 }
             }
-            // and (8) mark end of loop for re-execution
+            // and (6) mark end of loop for re-execution
             ((SingleNodeContainer)tailNode).markForExecution(true);
         }
+        // (7) allow access to tail node
+        ((SingleNodeContainer)headNode).getNode().setLoopEndNode(
+                ((SingleNodeContainer)tailNode).getNode());
+        // (8) mark the origin of the loop to be executed again
+        ((SingleNodeContainer)headNode).enableReQueuing();
         // (9) try to queue the head of this loop!
         assert headNode.getState().equals(State.MARKEDFOREXEC);
         queueIfQueuable(headNode);
