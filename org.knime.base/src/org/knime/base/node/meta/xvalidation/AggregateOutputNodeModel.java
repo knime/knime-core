@@ -177,7 +177,12 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
         if (count == 0) {
             m_predictionTable =
                     exec.createDataContainer(inData[0].getDataTableSpec());
+        } else if (m_predictionTable == null) {
+            throw new Exception(
+                    "Loop Head claims this is NOT the first iteration"
+                    + " but the tail believes it is?!");
         }
+
         final BufferedDataTable in = inData[0];
 
         final int rowCount = in.getRowCount();
