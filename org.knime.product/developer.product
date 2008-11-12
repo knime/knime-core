@@ -3,6 +3,7 @@
 
 <product name="Eclipse platform" id="org.eclipse.sdk.ide" application="org.eclipse.ui.ide.workbench" useFeatures="true">
 
+
    <configIni use="default"/>
 
    <launcherArgs>
@@ -23,15 +24,10 @@ org.eclipse.platform</programArgs>
    <launcher name="eclipse">
       <solaris/>
       <win useIco="false">
-         <bmp
-            winSmallHigh="/org.knime.product/icons/bmp/knime16.bmp"
-            winSmallLow="/org.knime.product/icons/bmp/knime16x8.bmp"
-            winMediumHigh="/org.knime.product/icons/bmp/knime32.bmp"
-            winMediumLow="/org.knime.product/icons/bmp/knime32x8.bmp"
-            winLargeHigh="/org.knime.product/icons/bmp/knime48.bmp"
-            winLargeLow="/org.knime.product/icons/bmp/knime48x8.bmp"/>
+         <bmp/>
       </win>
    </launcher>
+
 
    <vm>
    </vm>
