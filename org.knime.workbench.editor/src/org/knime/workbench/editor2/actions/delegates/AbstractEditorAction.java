@@ -32,7 +32,6 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorActionDelegate;
 import org.eclipse.ui.IEditorPart;
 import org.knime.core.node.workflow.NodeStateChangeListener;
@@ -40,6 +39,7 @@ import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.ui.SyncExecQueueDispatcher;
 
 /**
  * Abstract base class for Editor Actions.
@@ -155,7 +155,7 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
         private void asyncExec() {
             if (!m_isQueued) {
                 m_isQueued = true;
-                Display.getDefault().asyncExec(this);
+                SyncExecQueueDispatcher.asyncExec(this);
             }
         }
     }

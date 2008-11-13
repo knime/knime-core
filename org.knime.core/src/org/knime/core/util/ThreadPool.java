@@ -31,11 +31,13 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.core.node.NodeLogger;
@@ -117,7 +119,7 @@ public class ThreadPool {
     private class Worker extends Thread {
         private final Object m_lock = new Object();
 
-        private Runnable m_runnable;
+        private RunnableFuture<?> m_runnable;
 
         private ThreadPool m_startedFrom;
 
@@ -154,6 +156,14 @@ public class ThreadPool {
 
                     try {
                         m_runnable.run();
+                        m_runnable.get();
+                    } catch (InterruptedException ex) {
+                        LOGGER.debug("Thread was interrupted");
+                    } catch (CancellationException ex) {
+                        LOGGER.debug("Future was canceled");
+                    } catch (ExecutionException ex) {
+                        LOGGER.error("An exception occurred while executing "
+                                + "a runnable.", ex.getCause());
                     } catch (Exception ex) {
                         // prevent the worker from being terminated
                         LOGGER.error("An exception occurred while executing "
@@ -176,7 +186,7 @@ public class ThreadPool {
          *         <code>false</code> if not because the thread has already
          *         died
          */
-        public boolean wakeup(final Runnable r, final ThreadPool pool) {
+        public boolean wakeup(final RunnableFuture<?> r, final ThreadPool pool) {
             synchronized (m_lock) {
                 if (m_stopped || !isAlive()) {
                     return false;
@@ -315,7 +325,8 @@ public class ThreadPool {
         return ftask;
     }
 
-    private Worker wakeupWorker(final Runnable task, final ThreadPool pool) {
+    private Worker wakeupWorker(final RunnableFuture<?> task,
+            final ThreadPool pool) {
         synchronized (m_runningWorkers) {
             if (m_runningWorkers.size() - m_invisibleThreads.get() < m_maxThreads.get()) {
                 Worker w;
@@ -366,7 +377,7 @@ public class ThreadPool {
      * nothing more than submitting jobs.
      *
      * @param <T> Type of the argument (result type)
-     * @param r A callable, which will be executed by the 
+     * @param r A callable, which will be executed by the
      *          thread invoking this method.
      * @return T The result of the callable.
      * @throws IllegalThreadStateException if the current thread is not taken

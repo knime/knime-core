@@ -84,11 +84,12 @@ public abstract class AggregationOperator {
     /**
      * Creates a new instance of this operator.
      *
+     * @param origColSpec the {@link DataColumnSpec} of the original column
      * @param maxUniqueValues the maximum number of unique values
      * @return a new instance of this operator
      */
     public abstract AggregationOperator createInstance(
-            final int maxUniqueValues);
+            DataColumnSpec origColSpec, final int maxUniqueValues);
 
     /**
      * @return the maxUniqueValues

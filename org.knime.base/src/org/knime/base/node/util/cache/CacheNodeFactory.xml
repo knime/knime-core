@@ -17,7 +17,7 @@
         </intro>
     </fullDescription>
     <ports>
-        <dataIn index="0" name="Input table to cache.">Input table to cache.</dataIn>
-        <dataOut index="0" name="Cached table">As input table, only cached.</dataOut>
+        <inPort index="0" name="Input table to cache.">Input table to cache.</inPort>
+        <outPort index="0" name="Cached table">As input table, only cached.</outPort>
     </ports>
 </knimeNode>

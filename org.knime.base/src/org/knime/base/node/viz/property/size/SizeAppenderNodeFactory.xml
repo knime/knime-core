@@ -28,8 +28,8 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Table">Table to which size settings should be applied to</dataIn>
-		<dataOut index="0" name="Table with sizes">Input table with size information applied to one column</dataOut>
-		<modelIn index="0" name="Size model">Size model which size settings</modelIn>
+		<inPort index="0" name="Size model">Size model which size settings</inPort>
+		<inPort index="1" name="Table">Table to which size settings should be applied to</inPort>
+		<outPort index="0" name="Table with sizes">Input table with size information applied to one column</outPort>
 	</ports>	
 </knimeNode>

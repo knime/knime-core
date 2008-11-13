@@ -34,9 +34,6 @@ package org.knime.workbench.ui.preferences;
  */
 public interface PreferenceConstants {
 
-    /** Preference constant: log level for console appender. */
-    public static final String P_LOGLEVEL_CONSOLE = "logging.loglevel.console";
-
     /** Preference constant: whether user needs to confirm reset actions. */
     public static final String P_CONFIRM_RESET = "knime.confirm.reset";
     

@@ -40,7 +40,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Input Data">Data to define bins</dataIn>
-		<dataOut index="0" name="Binned Data">Data with bins defined</dataOut>
+		<inPort index="0" name="Input Data">Data to define bins</inPort>
+		<outPort index="0" name="Binned Data">Data with bins defined</outPort>
 	</ports>	
 </knimeNode>

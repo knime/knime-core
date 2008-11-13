@@ -48,7 +48,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Input Table">Input data table with column containing the cells to split</dataIn>
-		<dataOut index="0" name="Output Table">Output data table with additional columns.</dataOut>
+		<inPort index="0" name="Input Table">Input data table with column containing the cells to split</inPort>
+		<outPort index="0" name="Output Table">Output data table with additional columns.</outPort>
 	</ports>	
 </knimeNode>

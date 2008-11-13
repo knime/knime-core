@@ -21,23 +21,15 @@
  */
 package org.knime.workbench.repository;
 
-import java.io.File;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
-import org.eclipse.jface.util.IPropertyChangeListener;
-import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeLogger.LEVEL;
-import org.knime.workbench.core.WorkbenchErrorLogger;
-import org.knime.workbench.preferences.HeadlessPreferencesConstants;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -84,85 +76,9 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
         super.start(context);
         // Do the actual work: load the repository
         try {
-            // get the preference store
-            // with the preferences for nr threads and tempDir
-            IPreferenceStore pStore =
-                KNIMERepositoryPlugin.getDefault().getPreferenceStore();
-            int maxThreads = pStore.getInt(
-                    HeadlessPreferencesConstants.P_MAXIMUM_THREADS);
-            String maxTString = System.getProperty("org.knime.core.maxThreads");
-            if (maxTString == null) {
-                if (maxThreads <= 0) {
-                    LOGGER.warn("Can set " + maxThreads
-                            + " as number of threads to use");
-                } else {
-                    KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(maxThreads);
-                    LOGGER.debug("Setting KNIME max thread count to "
-                            + maxThreads);
-                }
-            } else {
-                LOGGER.debug("Ignoring thread count from preference page (" 
-                        + maxThreads + "), since it has set by java property " 
-                        + "\"org.knime.core.maxThreads\" (" + maxTString + ")");
-            }
-            String tmpDir = pStore.getString(
-                    HeadlessPreferencesConstants.P_TEMP_DIR);
-            // check for existence and if writable
-            File tmpDirFile = new File(tmpDir);
-            if (!(tmpDirFile.isDirectory() && tmpDirFile.canWrite())) {
-                LOGGER.error("Can't set temp directory to \"" + tmpDir + "\", "
-                        + "not a directory or not writable");
-            } else {
-                System.setProperty("java.io.tmpdir", tmpDir);
-                LOGGER.debug("Setting temp dir environment variable "
-                        + "(java.io.tmpdir) to \"" + tmpDir + "\"");
-            }
-
-            // set log file level to stored
-            String logLevelFile =
-                pStore.getString(HeadlessPreferencesConstants
-                        .P_LOGLEVEL_LOG_FILE);
-            NodeLogger.setLevel(LEVEL.valueOf(logLevelFile));
-
-            pStore.addPropertyChangeListener(new IPropertyChangeListener() {
-
-                @Override
-                public void propertyChange(final PropertyChangeEvent event) {
-                    if (event.getProperty().equals(
-                            HeadlessPreferencesConstants.P_MAXIMUM_THREADS)) {
-                        int count;
-                        try {
-                            count = (Integer)event.getNewValue();
-                            KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(
-                                    count);
-                        } catch (Exception e) {
-                            LOGGER.warn("Unable to get maximum thread count "
-                                    + " from preference page.", e);
-                        }
-                    } else if (event.getProperty().equals(
-                            HeadlessPreferencesConstants.P_TEMP_DIR)) {
-                        System.setProperty("java.io.tmpdir", (String)event
-                                .getNewValue());
-                    } else if (event.getProperty().equals(
-                            HeadlessPreferencesConstants.P_LOGLEVEL_LOG_FILE)) {
-                        String newName = event.getNewValue().toString();
-                        LEVEL level = LEVEL.WARN;
-                        try {
-                            level = LEVEL.valueOf(newName);
-                        } catch (NullPointerException ne) {
-                            LOGGER.warn(
-                                    "Null is an invalid log level, using WARN");
-                        } catch (IllegalArgumentException iae) {
-                            LOGGER.warn("Invalid log level " + newName
-                                    + ", using WARN");
-                        }
-                        NodeLogger.setLevelIntern(level);
-                    }
-                }
-            });
             RepositoryManager.INSTANCE.create();
         } catch (Throwable e) {
-            WorkbenchErrorLogger.error("FATAL: error initializing KNIME"
+            LOGGER.error("FATAL: error initializing KNIME"
                     + " repository - check plugin.xml" + " and classpath", e);
         }
     }

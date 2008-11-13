@@ -152,8 +152,12 @@ public class NodeContainerOutPort extends NodePortAdaptor
     // TODO: return component with convenience method for Frame construction.
     public void openPortView(final String name) {
         if (m_portView == null) {
-            setPortView(new OutPortView(m_snc.getName() + " #" 
-                    + m_snc.getID().getIndex(), getPortName()));
+            setPortView(new OutPortView(m_snc.getDisplayLabel(), 
+                    getPortName()));
+        } else {
+            // the custom name might have changed meanwhile
+            m_portView.setTitle(getPortName() + " - " 
+                    + m_snc.getDisplayLabel());
         }
         m_portView.openView();
         m_portView.update(getPortObject(), getPortObjectSpec());

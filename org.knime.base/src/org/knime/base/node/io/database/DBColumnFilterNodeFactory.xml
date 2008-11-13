@@ -42,11 +42,11 @@
     </fullDescription>
     
     <ports>
-        <modelIn index="0" name="Database Connection">
+        <inPort index="0" name="Database Connection">
             Table in database with columns to exclude
-        </modelIn>
-        <modelOut index="0" name="Database Connection">
+        </inPort>
+        <outPort index="0" name="Database Connection">
             Table in the database with excluded columns
-        </modelOut>
+        </outPort>
     </ports>    
 </knimeNode>

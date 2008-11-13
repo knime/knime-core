@@ -30,8 +30,8 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
 import org.knime.core.data.StringValue;
-import org.knime.core.data.collection.bitvector.DenseBitVectorCell;
-import org.knime.core.data.collection.bitvector.DenseBitVectorCellFactory;
+import org.knime.core.data.vector.bitvector.DenseBitVectorCell;
+import org.knime.core.data.vector.bitvector.DenseBitVectorCellFactory;
 import org.knime.core.node.NodeLogger;
 
 /**

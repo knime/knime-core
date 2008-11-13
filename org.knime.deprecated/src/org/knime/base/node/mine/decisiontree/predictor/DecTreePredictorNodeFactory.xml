@@ -21,9 +21,9 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Data to classify">Input data to classify</dataIn>
-		<dataOut index="0" name="Classified Data">The input table with one column added containing the classification</dataOut>
-		<modelIn index="0" name="Decision Tree Model">A previously learned decision tree model</modelIn>
+		<inPort index="1" name="Data to classify">Input data to classify</inPort>
+		<inPort index="0" name="Decision Tree Model">A previously learned decision tree model</inPort>
+		<outPort index="0" name="Classified Data">The input table with one column added containing the classification</outPort>
 	</ports>
 	
 	<views>

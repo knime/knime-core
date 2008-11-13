@@ -195,7 +195,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      * The default split quality measure.
      */
     public static final String DEFAULT_SPLIT_QUALITY_MEASURE =
-            SPLIT_QUALITY_GAIN_RATIO;
+            SPLIT_QUALITY_GINI;
 
     /**
      * The default confidence threshold for pruning.
@@ -252,13 +252,13 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
     /**
      * The pruning method used for pruning.
      */
-    private final SettingsModelString m_pruningMethod = 
+    private final SettingsModelString m_pruningMethod =
         DecisionTreeLearnerNodeDialog.createSettingsPruningMethod();
 
     /**
      * The quality measure to determine the split point.
      */
-    private final SettingsModelString m_splitQualityMeasureType = 
+    private final SettingsModelString m_splitQualityMeasureType =
         DecisionTreeLearnerNodeDialog.createSettingsQualityMeasure();
 
     /**
@@ -286,10 +286,10 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
     private double m_alloverRowCount;
 
-    private final SettingsModelIntegerBounded m_minNumberRecordsPerNode = 
+    private final SettingsModelIntegerBounded m_minNumberRecordsPerNode =
         DecisionTreeLearnerNodeDialog.createSettingsMinNumRecords();
 
-    private final SettingsModelBoolean m_averageSplitpoint = 
+    private final SettingsModelBoolean m_averageSplitpoint =
         DecisionTreeLearnerNodeDialog.createSettingsSplitPoint();
 
     private final SettingsModelBoolean m_binaryNominalSplitMode =
@@ -429,14 +429,14 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                 + (System.currentTimeMillis() - timer));
 
         // the decision tree model saved as PMML at the second out-port
-        m_decisionTree = new DecisionTree(root, 
+        m_decisionTree = new DecisionTree(root,
                 m_classifyColumn.getStringValue());
 
         // prune the tree
         timer = System.currentTimeMillis();
-        exec.setMessage("Prune tree with " 
+        exec.setMessage("Prune tree with "
                 + m_pruningMethod.getStringValue() + "...");
-        LOGGER.info("Pruning tree with " 
+        LOGGER.info("Pruning tree with "
                 + m_pruningMethod.getStringValue() + "...");
         pruneTree();
         LOGGER.info("Tree pruned in (ms) "
@@ -458,11 +458,11 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         if (warningMessageSb.length() > 0) {
             setWarningMessage(warningMessageSb.toString());
         }
-        
+
         // reset the number available threads
-        parallelProcessing.reset();        
+        parallelProcessing.reset();
         parallelProcessing = null;
-        
+
         // no data out table is created -> return an empty table array
         exec.setMessage("Creating PMML decision tree model...");
         return new PortObject[]{
@@ -495,7 +495,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             Iterator<DataRow> rowIterator = inData.iterator();
             while (rowIterator.hasNext() && maxRowsForHiliting > count) {
                 DataRow row = rowIterator.next();
-                m_decisionTree.addCoveredPattern(row, 
+                m_decisionTree.addCoveredPattern(row,
                         inData.getDataTableSpec());
                 count++;
             }
@@ -569,7 +569,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             LOGGER.info("Finding best split...");
             SplitFinder splittFinder =
                     new SplitFinder(table, splitQualityMeasure,
-                          m_averageSplitpoint.getBooleanValue(), 
+                          m_averageSplitpoint.getBooleanValue(),
                           m_minNumberRecordsPerNode.getIntValue(),
                           m_binaryNominalSplitMode.getBooleanValue(),
                           m_maxNumNominalsForCompleteComputation.getIntValue());
@@ -593,7 +593,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                 double value =
                         m_finishedCounter.incrementAndGet(table
                                 .getSumOfWeights());
-                exec.setProgress(value / m_alloverRowCount, 
+                exec.setProgress(value / m_alloverRowCount,
                        "Created node with id " + nodeId + " at level " + depth);
                 return new DecisionTreeNodeLeaf(nodeId, majorityClass,
                         frequencies);
@@ -601,7 +601,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
             // partition the attribute lists according to this split
             LOGGER.info("Partition data... ");
-            Partitioner partitioner = new Partitioner(table, split, 
+            Partitioner partitioner = new Partitioner(table, split,
                     m_minNumberRecordsPerNode.getIntValue());
             LOGGER.info("Data partitioned.");
             if (LOGGER.isInfoEnabled()) {
@@ -614,7 +614,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                 double value =
                         m_finishedCounter.incrementAndGet(table
                                 .getSumOfWeights());
-                exec.setProgress(value / m_alloverRowCount, 
+                exec.setProgress(value / m_alloverRowCount,
                        "Created node with id " + nodeId + " at level " + depth);
                 return new DecisionTreeNodeLeaf(nodeId, majorityClass,
                         frequencies);
@@ -633,7 +633,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             int i = 0;
             for (InMemoryTable partitionTable : partitionTables) {
                 exec.checkCanceled();
-                if (partitionTable.getNumberDataRows() * m_numberAttributes 
+                if (partitionTable.getNumberDataRows() * m_numberAttributes
                         < 10000 || !parallelProcessing.isThreadAvailable()) {
                     children[i] = buildTree(partitionTable, exec, depth + 1,
                             splitQualityMeasure, parallelProcessing);
@@ -652,7 +652,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                 i++;
             }
 
-            // retrieve all results from the thread array the getResultNode 
+            // retrieve all results from the thread array the getResultNode
             // method is a blocking method until the result is available
             // NOTE: the non parallel calculated children have been
             // already assigned to the child array
@@ -746,7 +746,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         return new PortObjectSpec[]{createPMMLSpec(inSpec)};
     }
 
-    private PMMLPortObjectSpec createPMMLSpec(final DataTableSpec spec) 
+    private PMMLPortObjectSpec createPMMLSpec(final DataTableSpec spec)
         throws InvalidSettingsException {
         PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(spec);
         Set<String> targetCols = new HashSet<String>();
@@ -810,14 +810,14 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        SettingsModelString classifyColumn = 
+        SettingsModelString classifyColumn =
             m_classifyColumn.createCloneWithValidatedValue(settings);
-        if (classifyColumn.getStringValue() == null 
+        if (classifyColumn.getStringValue() == null
                 || classifyColumn.getStringValue().equals("")) {
             throw new InvalidSettingsException(
                     "Classification column not set.");
         }
-        
+
         m_averageSplitpoint.validateSettings(settings);
         m_binaryNominalSplitMode.validateSettings(settings);
         m_pruningMethod.validateSettings(settings);
@@ -900,9 +900,9 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         private Exception m_exception;
 
         private final int m_threadIndex;
-        
+
         private final SplitQualityMeasure m_splitQM;
-        
+
         private final ParallelProcessing m_parallelProcessing;
 
         private ParallelBuilding(final String name, final InMemoryTable table,

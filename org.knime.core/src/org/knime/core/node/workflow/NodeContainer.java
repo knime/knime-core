@@ -96,6 +96,8 @@ public abstract class NodeContainer {
     private final WorkflowManager m_parent;
 
     private NodeExecutionJobManager m_jobExecutor;
+    
+    private NodeMessage m_nodeMessage;
 
     private boolean m_isDeletable;
 
@@ -166,6 +168,7 @@ public abstract class NodeContainer {
         m_customName = persistor.getCustomName();
         m_uiInformation = persistor.getUIInfo();
         m_isDeletable = persistor.isDeletable();
+        setNodeMessage(persistor.getNodeMessage());
         m_nodeContainerDirectory = persistor.getNodeContainerDirectory();
     }
 
@@ -200,12 +203,22 @@ public abstract class NodeContainer {
     }
 
     /////////////////////////////////////////////////
+    // Convenience functions for all derived classes
+    /////////////////////////////////////////////////
+
+    /**
+     * @return true of this node (or all nodes in this container) are
+     *   resetable.
+     */
+    abstract boolean isResetable();
+
+    /////////////////////////////////////////////////
     // List Management of Waiting Loop Head Nodes
     /////////////////////////////////////////////////
 
     /** add a loop to the list of waiting loops.
      *
-     * @param so ScopeObject of the loop.
+     * @param slc ScopeObject of the loop.
      */
     public void addWaitingLoop(final ScopeLoopContext slc) {
         if (!m_listOfWaitingLoops.contains(slc)) {
@@ -308,10 +321,22 @@ public abstract class NodeContainer {
        return m_messageListeners.remove(listener);
    }
 
-   /** Get the message to be displayed to the user or null if nothing is set
-    * currently.
+   /** Get the message to be displayed to the user.
     * @return the node message consisting of type and message */
-   public abstract NodeMessage getNodeMessage();
+   public final NodeMessage getNodeMessage() {
+       return m_nodeMessage;
+   }
+   
+   /**
+    * @param newMessage the nodeMessage to set
+    */
+   public final void setNodeMessage(final NodeMessage newMessage) {
+       NodeMessage oldMessage = m_nodeMessage;
+       m_nodeMessage = newMessage == null ? NodeMessage.NONE : newMessage;
+       if (!m_nodeMessage.equals(oldMessage)) {
+           notifyMessageListeners(new NodeMessageEvent(getID(), m_nodeMessage));
+       }
+   }
 
    /**
     * Notifies all registered {@link NodeMessageListener}s about the new
@@ -319,7 +344,7 @@ public abstract class NodeContainer {
     *
     * @param e the new message event
     */
-   protected void notifyMessageListeners(final NodeMessageEvent e) {
+   protected final void notifyMessageListeners(final NodeMessageEvent e) {
        for (NodeMessageListener l : m_messageListeners) {
            l.messageChanged(e);
        }
@@ -451,48 +476,6 @@ public abstract class NodeContainer {
         return changesMade;
     }
 
-    /* ---------- State changing actions ------------ */
-
-    /** Configure underlying node.
-     *
-     * @param specs input port object specifications
-     * @return true if configuration resulted in NEW output specs (meaning
-     *   that successors should probably be configured as well)
-     * @throws IllegalStateException in case of illegal entry state.
-     */
-    abstract boolean configureAsNodeContainer(final PortObjectSpec[] specs)
-    throws IllegalStateException;
-
-    /** Enable (or disable) queuing of underlying node for execution. This
-     * really only changes the state of the node and once all pre-conditions
-     * for execution are fulfilled (e.g. configuration succeeded and all
-     * ingoing objects are available) the node will be actually queued.
-     *
-     * @param flag determines if node is marked or unmarked for execution
-     * @throws IllegalStateException in case of illegal entry state.
-     */
-    abstract void markForExecutionAsNodeContainer(final boolean flag)
-    throws IllegalStateException;
-
-    /** Cancel execution of a marked, queued, or executing node. (Tolerate
-     * execute as this may happen throughout cancelation).
-     *
-     * @throws IllegalStateException
-     */
-    abstract void cancelExecutionAsNodeContainer()
-    throws IllegalStateException;
-
-    /** check if node can be safely reset.
-     * @return if node can be reset.
-     */
-    abstract boolean isResetableAsNodeContainer();
-
-    /** Reset underlying node and update state accordingly.
-     * @throws IllegalStateException in case of illegal entry state.
-     */
-    abstract void resetAsNodeContainer()
-    throws IllegalStateException;
-
     /* ------------ dialog -------------- */
 
     /** Return a NodeDialogPane for a node which can be embedded into
@@ -608,6 +591,21 @@ public abstract class NodeContainer {
 
     public final String getNameWithID() {
         return getName() + " " + getID().toString();
+    }
+    
+    /**
+     * 
+     * @return the display label for {@link NodeView}, {@link OutPortView} and
+     * {@link NodeDialog}
+     */
+    public String getDisplayLabel() {
+        String label = getID().getIDWithoutRoot() + " - "
+            + getName();
+        String customName = getCustomName();
+        if (customName != null && customName.trim().length() > 0) {
+            label += " (" + customName + ")";
+        }
+        return label;
     }
 
     public String getCustomName() {

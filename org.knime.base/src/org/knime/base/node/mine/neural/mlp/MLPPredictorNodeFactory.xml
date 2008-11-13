@@ -17,8 +17,8 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name = "Test Data">Datatable with test data to classify</dataIn>
-		<dataOut index="0" name = "Classified Data">Datatable with classified data</dataOut>
-		<modelIn index="0" name = "Trained MLP">Trained MLP Neural Network</modelIn>
+		<inPort index="0" name = "Trained MLP">Trained MLP Neural Network</inPort>
+		<inPort index="1" name = "Test Data">Datatable with test data to classify</inPort>
+		<outPort index="0" name = "Classified Data">Datatable with classified data</outPort>
 	</ports>	
 </knimeNode>

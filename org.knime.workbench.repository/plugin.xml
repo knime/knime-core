@@ -20,11 +20,5 @@ a data &quot;workflow&quot;
          </description>
       </view>
    </extension>
-   <extension
-         point="org.eclipse.core.runtime.preferences">
-      <initializer
-            class="org.knime.workbench.preferences.HeadlessPreferencesInitializer">
-      </initializer>
-   </extension>
 
 </plugin>

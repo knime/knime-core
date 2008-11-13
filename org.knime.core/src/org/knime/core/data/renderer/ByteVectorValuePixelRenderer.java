@@ -28,7 +28,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Insets;
 
-import org.knime.core.data.collection.bytevector.ByteVectorValue;
+import org.knime.core.data.vector.bytevector.ByteVectorValue;
 
 /**
  * Paints {@link ByteVectorValue} elements. Each count is represented by a

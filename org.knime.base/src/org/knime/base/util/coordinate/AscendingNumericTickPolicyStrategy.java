@@ -25,6 +25,7 @@
 package org.knime.base.util.coordinate;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -151,7 +152,7 @@ public class AscendingNumericTickPolicyStrategy extends PolicyStrategy {
                 (maxDomainValue == Double.POSITIVE_INFINITY ? Double.MAX_VALUE
                         : maxDomainValue);
 
-        int count = (int)Math.ceil(absoluteLength / tickDistance) + 1;
+        int count = (int)Math.floor(absoluteLength / tickDistance);
 
         Double[] values = makeTicks(minimum, maximum, count);
         count = values.length;
@@ -224,7 +225,7 @@ public class AscendingNumericTickPolicyStrategy extends PolicyStrategy {
 
         double value = minimum;
 
-        while (value + EPSILON * step < maximum) {
+        while (value + 0.55 * step < maximum) {
             if (result.size() == 0
                     || result.get(result.size() - 1) + EPSILON * step < value) {
 
@@ -244,7 +245,11 @@ public class AscendingNumericTickPolicyStrategy extends PolicyStrategy {
                     result.add(value);
                 }
             }
-            value += step;
+            int m = 1;
+            while (value + m * step == value) {
+                m++;
+            }
+            value += m * step;
         }
 
         if (result.get(result.size() - 1) < maximum) {
@@ -264,6 +269,8 @@ public class AscendingNumericTickPolicyStrategy extends PolicyStrategy {
             }
         }
 
+        Collections.sort(result);
+
         return result.toArray(new Double[0]);
     }
 
@@ -281,6 +288,7 @@ public class AscendingNumericTickPolicyStrategy extends PolicyStrategy {
             nrTicks = 1;
         }
         int diff = Math.max((maxDomainValue - minDomainValue) / nrTicks, 1);
+
         List<CoordinateMapping> mapping = new LinkedList<CoordinateMapping>();
         for (int i = 0; minDomainValue + i * diff <= maxDomainValue; i++) {
             int domValue = Math.round(minDomainValue + i * diff);

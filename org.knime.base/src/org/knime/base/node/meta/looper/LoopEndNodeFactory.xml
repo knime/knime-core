@@ -14,7 +14,7 @@
     </fullDescription>
 
     <ports>
-        <dataIn index="0" name="Any datatable">Any datatable</dataIn>
-        <dataOut index="0" name="Collected results">Collected results from the loop body</dataOut>
+        <inPort index="0" name="Any datatable">Any datatable</inPort>
+        <outPort index="0" name="Collected results">Collected results from the loop body</outPort>
     </ports>
 </knimeNode>

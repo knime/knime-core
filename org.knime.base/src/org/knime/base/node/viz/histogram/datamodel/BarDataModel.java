@@ -279,7 +279,7 @@ implements Serializable {
         final int barWidth = (int)barRectangle.getWidth();
         final int noOfElements = getNoOfElements();
         setPresentable(elementsFitInBar(layout, barElementColors,
-                noOfElements, barWidth, barHeight));
+                noOfElements, barWidth, barHeight), calculator);
         if (!isPresentable()) {
             return;
         }
@@ -430,7 +430,7 @@ implements Serializable {
                                     + " No of elements: " + getNoOfElements());
                         }
                         if (elementHeight < 1) {
-                            LOGGER.warn(
+                            LOGGER.info(
                                     "******Unable to correct height diff. for "
                                     + "bar " + barAggrVal
                                     + ". Last element to low for height "
@@ -483,7 +483,7 @@ implements Serializable {
         final int barX = (int)barRectangle.getX();
         final int noOfElements = getNoOfElements();
         setPresentable(elementsFitInBar(layout, barElementColors,
-                noOfElements, barWidth, barHeight));
+                noOfElements, barWidth, barHeight), calculator);
         if (!isPresentable()) {
             //if the elements doesn't fit any way return here
             return;

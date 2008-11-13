@@ -83,6 +83,12 @@ final class CopyNodeContainerMetaPersistor implements
             return State.CONFIGURED;
         }
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public NodeMessage getNodeMessage() {
+        return m_original.getNodeMessage();
+    }
 
     /** {@inheritDoc} */
     @Override

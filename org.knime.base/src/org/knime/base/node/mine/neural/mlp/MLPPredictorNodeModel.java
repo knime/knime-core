@@ -77,7 +77,7 @@ public class MLPPredictorNodeModel extends NodeModel {
     private MultiLayerPerceptron m_mlp;
 
     /*
-     * Tehe number of possible values in the class column.
+     * The number of possible values in the class column.
      */
     private int m_nrPossValues;
 

@@ -16,8 +16,8 @@
 	</fullDescription>
 	
 	<ports>
-        <dataIn name="Test data" index="0">The data table with the yet unclassified patterns.</dataIn>
-        <dataOut name="Classified data" index="0">The input table with predicted values.</dataOut>
-        <modelIn name="Regression coefficients" index="0">The computed regression coefficients.</modelIn>
+        <inPort name="Regression coefficients" index="0">The computed regression coefficients.</inPort>
+        <inPort name="Test data" index="1">The data table with the yet unclassified patterns.</inPort>
+        <outPort name="Classified data" index="0">The input table with predicted values.</outPort>
 	</ports>
 </knimeNode>

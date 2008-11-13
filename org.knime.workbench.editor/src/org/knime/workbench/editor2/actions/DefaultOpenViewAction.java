@@ -140,10 +140,8 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
                         try {
-                            // TODO opens always view at port 0
                             final String title = cont.getViewName(0) + " - " 
-                                + cont.getName() + " #" 
-                                + cont.getID().getIndex();
+                                + cont.getDisplayLabel();
                             cont.getView(0).createFrame(title);
                         } catch (Throwable t) {
                             MessageBox mb = new MessageBox(

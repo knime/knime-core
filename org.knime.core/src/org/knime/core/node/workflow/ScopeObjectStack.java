@@ -24,6 +24,7 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -63,8 +64,11 @@ public final class ScopeObjectStack {
     private ScopeObjectStack() {
         m_nodeID = WorkflowManager.ROOT.getID();
         m_stack = new Vector<ScopeObject>();
-        push(new ScopeVariable("knime.workspace",
-                KNIMEPath.getWorkspaceDirPath().getAbsolutePath(), true));
+        File wsDirPath = KNIMEPath.getWorkspaceDirPath();
+        if (wsDirPath != null) {
+            push(new ScopeVariable(
+                    "knime.workspace", wsDirPath.getAbsolutePath(), true));
+        }
         for (Map.Entry<Object, Object> p : System.getProperties().entrySet()) {
             String name = p.getKey().toString();
             Pair<String, Type> varDef = getVariableDefinition(name);

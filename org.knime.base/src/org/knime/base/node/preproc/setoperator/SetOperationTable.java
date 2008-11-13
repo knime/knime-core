@@ -25,6 +25,13 @@
 
 package org.knime.base.node.preproc.setoperator;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
+import org.knime.base.data.sort.SortedTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -39,14 +46,6 @@ import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-
-import org.knime.base.data.sort.SortedTable;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 
 
 /**
@@ -157,7 +156,6 @@ public class SetOperationTable {
      * @param skipMissing <code>true</code> if missing cells should be skipped
      * @param sortInMemory <code>true</code> if the sorting should be
      * performed in memory
-     * @param
      * @throws CanceledExecutionException if the operation was canceled
      */
     public SetOperationTable(final ExecutionContext exec,
@@ -266,8 +264,8 @@ public class SetOperationTable {
             final CellIterator iter1, final CellIterator iter2,
             final SetOperation op, final DataValueComparator comp)
     throws CanceledExecutionException {
-        //reset the rowid
-        m_rowId = 0;
+        //reset the rowid to minus 1 to use the ++m_rowId
+        m_rowId = -1;
         final BufferedDataContainer dc = exec.createDataContainer(resultSpec);
         if ((SetOperation.OR.equals(op) && (iter1.getRowCount() < 1
                 && iter2.getRowCount() < 1))
@@ -395,7 +393,8 @@ public class SetOperationTable {
         if (result != null) {
             if (result.equals(oldResult)) {
                 if (m_enableHilite) {
-                    final RowKey currentKey = new RowKey("Row" + m_rowId);
+                    assert (m_rowId >= 0);
+                    final RowKey currentKey = RowKey.createRowKey(m_rowId);
                     if (keyCell0 != null) {
                         final Set<RowKey> map0 =
                             m_hiliteMapping0.get(currentKey);
@@ -413,7 +412,7 @@ public class SetOperationTable {
                 m_missingCounter++;
                 return oldResult;
             } else {
-                final RowKey rowKey = new RowKey("Row" + ++m_rowId);
+                final RowKey rowKey = RowKey.createRowKey(++m_rowId);
                 dc.addRowToTable(new DefaultRow(rowKey, result));
                 if (m_enableHilite) {
                     if (keyCell0 != null) {

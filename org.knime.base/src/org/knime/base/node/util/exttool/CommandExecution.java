@@ -244,9 +244,13 @@ public class CommandExecution extends Observable {
             exec.setProgress("External command done.");
             LOGGER.info("External commands terminated with exit code: "
                     + exitVal);
-
+        } catch (InterruptedException ie) {
+            throw ie;
+        } catch (Exception e) {
+            LOGGER.error("Execution failed (with exception)", e);
+            throw e;
         } catch (Throwable t) {
-            LOGGER.error("Execution failed (with exception)", t);
+            LOGGER.fatal("Execution failed (with exception)", t);
             throw new Exception(t);
         }
 

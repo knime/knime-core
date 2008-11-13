@@ -43,6 +43,14 @@ public interface MappingMethod {
     public DataCell doMapping(DataCell cell);
 
     /**
+     * Maps a value back to the original domain value for tick generation.
+     * Is the inverse function.
+     * @param cell the value
+     * @return the inverse value of cell according to this mapping
+     */
+    public double getLabel(DataCell cell);
+
+    /**
      * Returns the display name of this {@link MappingMethod}.
      * @return the display name
      */

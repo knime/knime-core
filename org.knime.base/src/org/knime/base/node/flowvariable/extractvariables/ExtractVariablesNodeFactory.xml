@@ -14,8 +14,8 @@
     </fullDescription>
     
     <ports>
-        <dataIn index="0" name="Data connection">
-          Port object holding data connection (and variables).</dataIn>
-        <dataOut index="0" name="Variable port">The variable values.</dataOut>
+        <inPort index="0" name="Data connection">
+          Port object holding data connection (and variables).</inPort>
+        <outPort index="0" name="Variable port">The variable values.</outPort>
 	</ports>
 </knimeNode>

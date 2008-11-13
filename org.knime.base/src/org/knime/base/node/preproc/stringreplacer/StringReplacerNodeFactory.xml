@@ -31,9 +31,9 @@
     </fullDescription>
 
     <ports>
-        <dataIn index="0" name="Input">Arbitrary input data.</dataIn>
-        <dataOut index="0" name="Input with replaced values">
+        <inPort index="0" name="Input">Arbitrary input data.</inPort>
+        <outPort index="0" name="Input with replaced values">
             Input table with replaced values or an additional column.
-        </dataOut>
+        </outPort>
     </ports>
 </knimeNode>

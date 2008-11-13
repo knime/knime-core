@@ -49,12 +49,12 @@
 	</fullDescription>
 		
 	<ports>
-		<dataIn name="Any input table" index="0">
+		<inPort name="Any input table" index="0">
 			Data table containing the data to map.
-		</dataIn>
-		<dataOut name="The input data and the mapped data" index="0">
+		</inPort>
+		<outPort name="The input data and the mapped data" index="0">
 			The input data and the mapped data.
-		</dataOut>
+		</outPort>
 	</ports>	
 </knimeNode>
 

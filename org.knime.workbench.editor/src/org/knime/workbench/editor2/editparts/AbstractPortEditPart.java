@@ -222,38 +222,44 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     }
 
     /**
-     * We're just interessted in events that have something to do with our port.
+     * We're just interested in events that have something to do with our port.
      * In this case we need to update the connections and visuals.
      *
      * @param event the workflow event
      */
     public void workflowChanged(final WorkflowEvent event) {
-        Display.getDefault().asyncExec(new Runnable() {
-            @Override
-            public void run() {
-
-                ConnectionContainer c = null;
-
-                if (event.getType().equals(WorkflowEvent.Type.CONNECTION_ADDED)) {
-                    c = (ConnectionContainer)event.getNewValue();
-                } else if (event.getType().equals(
+        if (event.getType().equals(WorkflowEvent.Type.CONNECTION_ADDED)
+                || event.getType().equals(
                         WorkflowEvent.Type.CONNECTION_REMOVED)) {
-                    c = (ConnectionContainer)event.getOldValue();
-                }
-
-                // if we have a connection to refresh...
-                if (c != null && getNodeContainer() != null) {
-                    // only refresh if we are actually involved in the
-                    // connection change
-                    if (c.getSource() == getNodeContainer().getID()
-                            || c.getDest() == getNodeContainer().getID()) {
-                        refreshChildren();
-                        refreshSourceConnections();
-                        refreshTargetConnections();
+            // only enqueue runnable if we are interested in this event
+            Display.getDefault().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    ConnectionContainer c = null;
+    
+                    if (event.getType().equals(
+                            WorkflowEvent.Type.CONNECTION_ADDED)) {
+                        c = (ConnectionContainer)event.getNewValue();
+                    } else if (event.getType().equals(
+                            WorkflowEvent.Type.CONNECTION_REMOVED)) {
+                        c = (ConnectionContainer)event.getOldValue();
+                    }
+    
+                    // if we have a connection to refresh...
+                    if (c != null && getNodeContainer() != null) {
+                        // only refresh if we are actually involved in the
+                        // connection change
+                        if (c.getSource().equals(getNodeContainer().getID())
+                                || c.getDest().equals(
+                                        getNodeContainer().getID())) {
+                            refreshChildren();
+                            refreshSourceConnections();
+                            refreshTargetConnections();
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
     /**
@@ -363,9 +369,11 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * of columns and rows.
      */
     public void rebuildTooltip() {
-        NodeOutPort port = getNodeContainer().getOutPort(getIndex());
-        String tooltip = getTooltipText(port.getPortName(), port);
-        ((NewToolTipFigure)getFigure().getToolTip()).setText(tooltip);
+        if (getIndex() < getNodeContainer().getNrOutPorts()) {
+            NodeOutPort port = getNodeContainer().getOutPort(getIndex());
+            String tooltip = getTooltipText(port.getPortName(), port);
+            ((NewToolTipFigure)getFigure().getToolTip()).setText(tooltip);
+        }
     }
 
 }

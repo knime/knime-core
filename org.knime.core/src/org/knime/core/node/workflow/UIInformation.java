@@ -53,9 +53,10 @@ public interface UIInformation extends Cloneable {
      * @see #save
      */
     void load(final NodeSettingsRO config) throws InvalidSettingsException;
-    
+
     /** UIInformation objects are cloneable without further restriction.
-     * {@inheritDoc} */
+     *
+     * @return a clone of this object
+     */
     public UIInformation clone();
-    
 }

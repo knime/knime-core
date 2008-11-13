@@ -70,6 +70,9 @@ public abstract class AbstractWorkflowPortBarFigure extends RectangleFigure {
      */
     public void setInitialized(final boolean initialized) {
         m_isInitialized = initialized;
+        if (initialized) {
+            revalidate();
+        }
     }
     
     /**
@@ -92,6 +95,5 @@ public abstract class AbstractWorkflowPortBarFigure extends RectangleFigure {
         return new Dimension(AbstractPortFigure.WF_PORT_SIZE + 10, 
                 AbstractPortFigure.WF_PORT_SIZE + 10);
     }
-    
 
 }

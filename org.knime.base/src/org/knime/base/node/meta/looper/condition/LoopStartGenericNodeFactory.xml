@@ -14,7 +14,7 @@
     </fullDescription>
 
     <ports>
-        <dataIn index="0" name="Any port object">Port object being passed on to output port</dataIn>
-        <dataOut index="0" name="Unaltered input">The unaltered input connection object (first input port)</dataOut>
+        <inPort index="0" name="Any port object">Port object being passed on to output port</inPort>
+        <outPort index="0" name="Unaltered input">The unaltered input connection object (first input port)</outPort>
     </ports>
 </knimeNode>

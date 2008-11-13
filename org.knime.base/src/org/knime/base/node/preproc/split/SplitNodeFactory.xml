@@ -20,8 +20,8 @@
 		</option>
 	</fullDescription>
     <ports>
-        <dataIn index="0" name="Table to split">Table to split.</dataIn>
-        <dataOut index="0" name="Splitted table, Top partition">Input table with the columns as defined in the dialog's left list.</dataOut>
-        <dataOut index="1" name="Splitted table, Bottom partition">Input table with the columns as defined in the dialog's right list.</dataOut>
+        <inPort index="0" name="Table to split">Table to split.</inPort>
+        <outPort index="0" name="Splitted table, Top partition">Input table with the columns as defined in the dialog's left list.</outPort>
+        <outPort index="1" name="Splitted table, Bottom partition">Input table with the columns as defined in the dialog's right list.</outPort>
 	</ports>
 </knimeNode>

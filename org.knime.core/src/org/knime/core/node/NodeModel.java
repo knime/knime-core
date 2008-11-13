@@ -779,15 +779,10 @@ public abstract class NodeModel {
         // make sure we conveniently have TableSpecs.
         // Rather empty ones than null
         for (int i = 0; i < copyInSpecs.length; i++) {
-            if (copyInSpecs[i] == null) {
-                if (m_inPortTypes[i].getPortObjectSpecClass().isAssignableFrom(
-                        DataTableSpec.class)) {
-                    // replace with an empty data table spec
-                    copyInSpecs[i] = new DataTableSpec();
-                } else {
-                    // TODO: is this really what we want?
-                    copyInSpecs[i] = null;
-                }
+            if (copyInSpecs[i] == null 
+                    && BufferedDataTable.TYPE.equals(m_inPortTypes[i])) {
+                // only mimic empty table for real table connections
+                copyInSpecs[i] = new DataTableSpec();
             }
         }
         // CALL CONFIGURE
@@ -859,9 +854,13 @@ public abstract class NodeModel {
     /** 
      * Simple implementation processing only BufferedDataTables.
      * 
-     * @param inSpecs
-     * @return
-     * @throws InvalidSettingsException
+     * @param inSpecs the specs of the input tables
+     * @return the specs of the outgoing tables. The array's length must
+     *         match the number of output ports. If no specs can be created
+     *         it may return <code>null</code> or an array with
+     *         <code>null</code> entries.
+     * @throws InvalidSettingsException if the settings and the input specs
+     *         do not match in some way
      */
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
     throws InvalidSettingsException {
@@ -882,6 +881,14 @@ public abstract class NodeModel {
         // message changed, set new one and notify listeners.
         m_warningMessage = warningMessage;
         notifyWarningListeners(m_warningMessage);
+    }
+    
+    /**
+     * Get the most recently set warning message.
+     * @return the warningMessage that is currently set (or null)
+     */
+    protected final String getWarningMessage() {
+        return m_warningMessage;
     }
 
     /**

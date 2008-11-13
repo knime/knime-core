@@ -39,7 +39,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Input Data">Any input data.</dataIn>
-		<dataOut index="0" name="Output Data">Input data with corrected specification.</dataOut>
+		<inPort index="0" name="Input Data">Any input data.</inPort>
+		<outPort index="0" name="Output Data">Input data with corrected specification.</outPort>
 	</ports>	
 </knimeNode>

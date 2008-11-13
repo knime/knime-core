@@ -23,7 +23,7 @@
 	</fullDescription>
 	
 	<ports>
-		<modelIn index="0" name="Database Connection">Database connection</modelIn>
-		<modelOut index="0" name="Database Connection">Database connection with wrapped SQL query</modelOut>
+		<inPort index="0" name="Database Connection">Database connection</inPort>
+		<outPort index="0" name="Database Connection">Database connection with wrapped SQL query</outPort>
 	</ports>	
 </knimeNode>

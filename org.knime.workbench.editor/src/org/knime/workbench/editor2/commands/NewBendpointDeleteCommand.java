@@ -25,8 +25,8 @@
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
+import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
-import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 
 /**
  * Command for deletion of connection bendpoints.
@@ -36,7 +36,7 @@ import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 public class NewBendpointDeleteCommand extends Command {
     private int m_index;
 
-    private ModellingConnectionExtraInfo m_extraInfo;
+    private ConnectionUIInformation m_extraInfo;
 
     private int[] m_point;
 
@@ -52,7 +52,7 @@ public class NewBendpointDeleteCommand extends Command {
             final ConnectionContainerEditPart connection,
             final int index) {
         m_connection = connection;
-        m_extraInfo = (ModellingConnectionExtraInfo) connection
+        m_extraInfo = (ConnectionUIInformation) connection
             .getUIInformation();
         m_index = index;
     }

@@ -24,12 +24,12 @@
  */
 package org.knime.timeseries.node.Segmentation.OneSampleperDay;
 
+import org.knime.core.data.TimestampValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.timeseries.types.TimestampValue;
 
 /**
  * This dialog lets the user choose the column that contains the string values

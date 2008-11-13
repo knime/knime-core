@@ -94,8 +94,7 @@ public class OpenViewAction extends Action {
                 + m_index + ")");
         try {
             final String title = m_nodeContainer.getViewName(m_index) + " - " 
-                + m_nodeContainer.getName() + " #" 
-                + m_nodeContainer.getID().getIndex();
+                + m_nodeContainer.getDisplayLabel();            
             Display.getDefault().asyncExec(new Runnable() {
                 @Override
                 public void run() {                    

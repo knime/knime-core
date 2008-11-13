@@ -26,12 +26,12 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.editparts.ZoomManager;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.editor2.ClipboardWorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
 /**
  * Implements the clipboard paste action to paste nodes and connections from the
@@ -88,8 +88,8 @@ public class PasteActionContextMenu extends PasteAction {
             NodeContainer nc = getManager().getNodeContainer(ids[i]);
             // finaly change the extra info so that the copies are
             // located differently (if not null)
-            ModellingNodeExtraInfo extraInfo =
-                    (ModellingNodeExtraInfo)nc.getUIInformation();
+            NodeUIInformation extraInfo =
+                    (NodeUIInformation)nc.getUIInformation();
             int currentX = extraInfo.getBounds()[0];
             int currentY = extraInfo.getBounds()[1];
             if (currentX < smallestX) {

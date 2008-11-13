@@ -45,9 +45,9 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Data wit collection column">
-		  Input data with collection column to split</dataIn>
-		<dataOut index="0" name="Input data with newly appended columns">
-		The input data along with a newly append columns.</dataOut>
+		<inPort index="0" name="Data wit collection column">
+		  Input data with collection column to split</inPort>
+		<outPort index="0" name="Input data with newly appended columns">
+		The input data along with a newly append columns.</outPort>
 	</ports>
 </knimeNode>

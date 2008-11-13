@@ -15,6 +15,6 @@
 	</fullDescription>
 	
 	<ports>
-		<modelIn index="0" name="Object">The object to write out.</modelIn>
+		<inPort index="0" name="Object">The object to write out.</inPort>
 	</ports>	
 </knimeNode>

@@ -32,15 +32,15 @@
 	</fullDescription>
 
 	<ports>
-		<dataIn index="0" name="Test Data">
-			Test data matching the PNN Model structure.
-		</dataIn>
-    	<dataOut index="0" name="Predicted Data">
-    		Predicted data with one additional classification column.
-    	</dataOut>
-		<modelIn index="0" name="PNN Model">
+		<inPort index="0" name="PNN Model">
 			PNN Model to which test data is applied.
-		</modelIn>
+		</inPort>
+		<inPort index="1" name="Test Data">
+			Test data matching the PNN Model structure.
+		</inPort>
+    	<outPort index="0" name="Predicted Data">
+    		Predicted data with one additional classification column.
+    	</outPort>
 	</ports>
 	
 </knimeNode>

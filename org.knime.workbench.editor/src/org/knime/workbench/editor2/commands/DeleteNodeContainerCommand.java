@@ -34,6 +34,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowManagerInput;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.figures.NodeContainerFigure;
 
 /**
  * This is the command to delete <code>NodeContainer</code>s from the
@@ -117,6 +118,9 @@ public class DeleteNodeContainerCommand extends Command {
                     mb.setText("Operation not allowed");
                     mb.setMessage("You cannot remove this node");
                     mb.open();
+                    if (m_part.getFigure() instanceof NodeContainerFigure) {
+                        ((NodeContainerFigure)m_part.getFigure()).unmark();
+                    }
                 }
                 
             });

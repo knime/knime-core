@@ -28,9 +28,9 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
-import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 
 /**
  * GEF Command for changing the location of a <code>ConnectionContainer</code>
@@ -44,7 +44,7 @@ public class ChangeBendPointLocationCommand extends Command {
 
     private ConnectionContainerEditPart m_container;
 
-    private ModellingConnectionExtraInfo m_extraInfo;
+    private ConnectionUIInformation m_extraInfo;
 
     private ZoomManager m_zoomManager;
 
@@ -59,11 +59,11 @@ public class ChangeBendPointLocationCommand extends Command {
         if (container == null
                 || container.getUIInformation() == null
                 || !(container.getUIInformation() 
-                        instanceof ModellingConnectionExtraInfo)) {
+                        instanceof ConnectionUIInformation)) {
             return;
         }
 
-        m_extraInfo = (ModellingConnectionExtraInfo)container
+        m_extraInfo = (ConnectionUIInformation)container
             .getUIInformation();
         m_locationShift = locationShift;
         m_container = container;

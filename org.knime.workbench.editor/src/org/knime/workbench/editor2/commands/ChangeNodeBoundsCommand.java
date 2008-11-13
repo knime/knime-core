@@ -26,8 +26,8 @@
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
 /**
  * GEF Command for changing the bounds of a <code>NodeContainer</code> in the
@@ -43,7 +43,7 @@ public class ChangeNodeBoundsCommand extends Command {
 
     private final NodeContainer m_container;
 
-    private final ModellingNodeExtraInfo m_extraInfo;
+    private final NodeUIInformation m_extraInfo;
 
     /**
      *
@@ -54,7 +54,7 @@ public class ChangeNodeBoundsCommand extends Command {
             final int[] newBounds) {
         // right info type
 
-        m_extraInfo = (ModellingNodeExtraInfo) container.getUIInformation();
+        m_extraInfo = (NodeUIInformation) container.getUIInformation();
         m_oldBounds = m_extraInfo.getBounds();
         m_newBounds = newBounds;
         m_container = container;

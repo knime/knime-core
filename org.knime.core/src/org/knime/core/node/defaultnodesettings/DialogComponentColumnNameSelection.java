@@ -231,11 +231,10 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
 
     /** Returns the {@link DataColumnSpec} of the currently selected item.
      * This method delegates to
-     *{@link ColumnSelectionPanel#getSelectedColumnAsSpec()}.
+     * {@link ColumnSelectionPanel#getSelectedColumnAsSpec()}.
      * @return The currently selected item as {@link DataColumnSpec} or null
      * if none is selected (the list is empty) or the RowID should be used
      * (check return value of the useRowID method).
-     * @see #useRowID
      */
     public final DataColumnSpec getSelectedAsSpec() {
         return m_chooser.getSelectedColumnAsSpec();
@@ -246,7 +245,6 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
      * @return The name of the currently selected item or null if none is
      * selected (the list is empty) or the RowID should be used
      * (check return value of the useRowID method).
-     * @see #useRowID
      */
     public final String getSelected() {
         return m_chooser.getSelectedColumn();

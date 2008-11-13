@@ -13,7 +13,7 @@
 		</intro>
 	</fullDescription>
     <ports>
-        <dataIn index="0" name="Any input table">Table whose columns shall be renamed/retyped.</dataIn>
-        <dataOut index="0" name="Renamed/Retyped table">Table from input but with customized column specifications.</dataOut>
+        <inPort index="0" name="Any input table">Table whose columns shall be renamed/retyped.</inPort>
+        <outPort index="0" name="Renamed/Retyped table">Table from input but with customized column specifications.</outPort>
 	</ports>
 </knimeNode>

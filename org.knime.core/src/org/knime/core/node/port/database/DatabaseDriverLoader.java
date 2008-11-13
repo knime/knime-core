@@ -58,8 +58,8 @@ public final class DatabaseDriverLoader {
         NodeLogger.getLogger(DatabaseDriverLoader.class);
     
     /** Map from driver file to driver class. */
-    private static final Map<String, String> DRIVERFILE_TO_DRIVERCLASS
-        = new LinkedHashMap<String, String>();
+    private static final Map<String, File> DRIVERFILE_TO_DRIVERCLASS
+        = new LinkedHashMap<String, File>();
     
     /**
      * Name of the standard JDBC-ODBC database driver, 
@@ -177,12 +177,17 @@ public final class DatabaseDriverLoader {
      * @throws IOException {@link IOException}
      */
     public static final void loadDriver(final File file) throws IOException {
-        String fileName = file.getAbsolutePath();
         if (file.isDirectory()) {
             // not yet supported
-        } else if (fileName.endsWith(".jar") || fileName.endsWith(".zip")) {
-            DRIVER_LIBRARY_HISTORY.add(fileName);
+            return;
+        }
+        if (DRIVERFILE_TO_DRIVERCLASS.containsValue(file)) {
+            return;
+        }
+        final String fileName = file.getAbsolutePath();
+        if (fileName.endsWith(".jar") || fileName.endsWith(".zip")) {
             readZip(file, new JarFile(file));
+            DRIVER_LIBRARY_HISTORY.add(fileName);
         }
     }
 
@@ -204,8 +209,7 @@ public final class DatabaseDriverLoader {
                         WrappedDriver d = new WrappedDriver(
                                 (Driver)c.newInstance());
                         DRIVER_MAP.put(d.toString(), d);
-                        DRIVERFILE_TO_DRIVERCLASS.put(d.toString(), 
-                                file.getAbsolutePath());
+                        DRIVERFILE_TO_DRIVERCLASS.put(d.toString(), file);
                     }
                 } catch (Throwable t) {
                     // ignored
@@ -259,7 +263,7 @@ public final class DatabaseDriverLoader {
      * @param driverClass driver class name
      * @return driver file location
      */
-    public static final String getDriverFileForDriverClass(
+    public static final File getDriverFileForDriverClass(
             final String driverClass) {
         return DRIVERFILE_TO_DRIVERCLASS.get(driverClass);
     }

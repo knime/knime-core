@@ -50,6 +50,8 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
 
     private State m_state = State.IDLE;
     
+    private NodeMessage m_nodeMessage;
+    
     private boolean m_isDeletable = true;
     
     private boolean m_isDirtyAfterLoad;
@@ -99,6 +101,12 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     /** {@inheritDoc} */
     public State getState() {
         return m_state;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public NodeMessage getNodeMessage() {
+        return m_nodeMessage;
     }
     
     /** {@inheritDoc} */
@@ -156,6 +164,13 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             getLogger().debug(error, e);
             setDirtyAfterLoad();
             m_state = State.IDLE;
+        }
+        try {
+            m_nodeMessage = loadNodeMessage(settings);
+        } catch (InvalidSettingsException ise) {
+            String e = "Unable to load node message: " + ise.getMessage();
+            loadResult.addError(e);
+            getLogger().warn(e, ise);
         }
         m_isDeletable = loadIsDeletable(settings);
         return loadResult;
@@ -222,6 +237,13 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             return State.IDLE;
         }
     }
+    
+    protected NodeMessage loadNodeMessage(final NodeSettingsRO settings)
+    throws InvalidSettingsException {
+        return null;
+    }
+
+
     
     protected boolean loadIsDeletable(final NodeSettingsRO settings) {
         return true;

@@ -16,10 +16,10 @@
 		</intro>
 	</fullDescription>
 	<ports>
-		<dataIn name="Input Data" index="0">The data table to bin (discretize).</dataIn>
-		<dataOut name="Binned Data" index="0">The binned data table.</dataOut>
-		<modelIn name="Binning Model" index="0">The model representing the 
+		<inPort name="Binning Model" index="0">The model representing the 
 			binning. Contains the intervals for each bin of each column.
-		</modelIn>
+		</inPort>
+		<inPort name="Input Data" index="1">The data table to bin (discretize).</inPort>
+		<outPort name="Binned Data" index="0">The binned data table.</outPort>
 	</ports>
 </knimeNode>

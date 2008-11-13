@@ -26,7 +26,7 @@ package org.knime.core.data.renderer;
 
 import java.awt.Dimension;
 
-import org.knime.core.data.collection.bitvector.BitVectorValue;
+import org.knime.core.data.vector.bitvector.BitVectorValue;
 
 /**
  *

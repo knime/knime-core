@@ -15,7 +15,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataOut index="0" name="Data read from Database">Database read from database</dataOut>
-		<modelIn index="0" name="Database Connection">Database connection to a table</modelIn>
+		<inPort index="0" name="Database Connection">Database connection to a table</inPort>
+		<outPort index="0" name="Data read from Database">Database read from database</outPort>
 	</ports>	
 </knimeNode>

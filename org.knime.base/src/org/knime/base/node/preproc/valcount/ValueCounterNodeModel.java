@@ -181,9 +181,7 @@ public class ValueCounterNodeModel extends NodeModel {
                 temp.put(newKey, entry.getValue());
             }
             m_translator.setMapper(new DefaultHiLiteMapper(temp));
-        } else {
-            m_translator.setMapper(new DefaultHiLiteMapper(
-                    new HashMap<RowKey, Set<RowKey>>()));
+            m_translator.addToHiLiteHandler(getInHiLiteHandler(0));
         }
         return new BufferedDataTable[]{cont.getTable()};
     }
@@ -204,7 +202,10 @@ public class ValueCounterNodeModel extends NodeModel {
             try {
                 m_translator.setMapper(DefaultHiLiteMapper.load(s));
             } catch (InvalidSettingsException ex) {
-                throw new IOException(ex.getMessage());
+                m_translator.setMapper(null);
+                throw new IOException(ex);
+            } finally {
+                m_translator.addToHiLiteHandler(getInHiLiteHandler(0));
             }
         }
     }
@@ -223,6 +224,7 @@ public class ValueCounterNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
+        m_translator.removeAllToHiliteHandlers();
         m_translator.setMapper(null);
     }
 
@@ -233,13 +235,15 @@ public class ValueCounterNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        NodeSettings s = new NodeSettings("Hiliting");
-        ((DefaultHiLiteMapper)m_translator.getMapper()).save(s);
-        File f = new File(nodeInternDir, "Hiliting.conf.gz");
-        OutputStream out = new GZIPOutputStream(new BufferedOutputStream(
-                new FileOutputStream(f)));
-        s.saveToXML(out);
-        out.close();
+        if (m_settings.hiliting()) {
+            NodeSettings s = new NodeSettings("Hiliting");
+            ((DefaultHiLiteMapper)m_translator.getMapper()).save(s);
+            File f = new File(nodeInternDir, "Hiliting.conf.gz");
+            OutputStream out = new GZIPOutputStream(new BufferedOutputStream(
+                    new FileOutputStream(f)));
+            s.saveToXML(out);
+            out.close();
+        }
     }
 
     /**
@@ -258,16 +262,6 @@ public class ValueCounterNodeModel extends NodeModel {
             throws InvalidSettingsException {
         ValueCounterSettings s = new ValueCounterSettings();
         s.loadSettings(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void setInHiLiteHandler(final int id, final HiLiteHandler hdl) {
-        assert (id == 0);
-        m_translator.removeAllToHiliteHandlers();
-        m_translator.addToHiLiteHandler(hdl);
     }
 
     /**

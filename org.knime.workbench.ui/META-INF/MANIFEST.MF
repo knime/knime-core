@@ -11,8 +11,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.resources,
  org.eclipse.ui.ide,
  org.knime.workbench.core,
- org.knime.workbench.repository,
- org.eclipse.ui.console
+ org.knime.workbench.repository
 Eclipse-LazyStart: true
 Provide-Package: org.knime.workbench.ui,
  org.knime.workbench.ui.preferences,

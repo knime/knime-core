@@ -47,6 +47,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessageEvent;
@@ -68,9 +69,9 @@ import org.knime.workbench.editor2.directnodeedit.UserNodeNameCellEditorLocator;
 import org.knime.workbench.editor2.directnodeedit.UserNodeNameDirectEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.NodeContainerComponentEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
-import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.editor2.figures.ProgressFigure;
+import org.knime.workbench.ui.SyncExecQueueDispatcher;
 import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
 /**
@@ -160,7 +161,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         //
         //
         if (getNodeContainer().getUIInformation() != null) {
-            initFigureFromExtraInfo((ModellingNodeExtraInfo)getNodeContainer()
+            initFigureFromExtraInfo((NodeUIInformation)getNodeContainer()
                     .getUIInformation());
             m_figureInitialized = true;
         } else {
@@ -171,7 +172,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             // NOTE: This is done for nodes that are created from code
             // e.g. cross validation node creates a partitioner and
             // has no knowledge about a extrainfo
-            ModellingNodeExtraInfo info = new ModellingNodeExtraInfo();
+            NodeUIInformation info = new NodeUIInformation();
             info.setNodeLocation(0, 0, -1, -1);
             getNodeContainer().setUIInformation(info);
 
@@ -301,38 +302,10 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
 
     public void stateChanged(final NodeStateEvent state) {
-        Display.getDefault().asyncExec(new Runnable() {
+        SyncExecQueueDispatcher.asyncExec(new Runnable() {
             public void run() {
                 NodeContainerFigure fig = (NodeContainerFigure)getFigure();
                 fig.setState(state.getState());
-                /*
-                if (state.getState().equals(NodeContainer.State.CONFIGURED)) {
-                    
-                    fig.setState(NodeContainerFigure.STATE_READY, "");
-                    
-                } else if (state.getState().equals(NodeContainer.State.IDLE)) {
-                    
-                        fig.setState(NodeContainerFigure.STATE_NOT_CONFIGURED, "");
-                        
-                } else if (state.getState().equals(NodeContainer.State.QUEUED)) {
-
-                    fig.setState(NodeContainerFigure.STATE_QUEUED, "");
-
-                } else if (state.getState().equals(NodeContainer.State.EXECUTING)) {
-                    
-                    fig.setState(NodeContainerFigure.STATE_EXECUTING, "");
-
-                    // deactivate edit part and set locking flag
-                    // NodeContainerEditPart.this.deactivateEditPolicies();
-                    m_isLocked = true;
-                } else if (state.getState().equals(NodeContainer.State.EXECUTED)) {
-                    
-                        fig.setState(NodeContainerFigure.STATE_EXECUTED, "");
-                    // re-activate edit part and clear locking flag
-                    // NodeContainerEditPart.this.activateEditPolicies();
-                    m_isLocked = false;
-                }
-                */
                 updateNodeStatus();
 
                 // reset the tooltip text of the outports
@@ -370,7 +343,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         //
         // As this code updates the UI it must be executed in the UI thread.
         //
-        Display.getDefault().asyncExec(new Runnable() {
+        SyncExecQueueDispatcher.asyncExec(new Runnable() {
             public void run() {
                 NodeContainerFigure fig = (NodeContainerFigure)getFigure();
                 fig.setMessage(messageEvent.getMessage());
@@ -400,9 +373,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
                     // provide some info from the extra info object to the
                     // figure
-                    ModellingNodeExtraInfo ei = null;
+                    NodeUIInformation ei = null;
                     ei =
-                            (ModellingNodeExtraInfo)getNodeContainer()
+                            (NodeUIInformation)getNodeContainer()
                                     .getUIInformation();
 
                     //
@@ -463,7 +436,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      *
      * @param ei Extra info to provide to the figure
      */
-    private void initFigureFromExtraInfo(final ModellingNodeExtraInfo ei) {
+    private void initFigureFromExtraInfo(final NodeUIInformation ei) {
 
         LOGGER.debug("Initializing figure from NodeExtraInfo..");
         m_figureInitialized = true;

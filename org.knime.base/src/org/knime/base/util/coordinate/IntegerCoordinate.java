@@ -21,7 +21,6 @@
  *
  * History
  *   21.07.2006 (koetter): created
- *   25.03.2008 (sellien): redesigned
  */
 package org.knime.base.util.coordinate;
 
@@ -53,16 +52,26 @@ class IntegerCoordinate extends NumericCoordinate {
      * {@inheritDoc}
      */
     @Override
-    public CoordinateMapping[] getTickPositionsInternal(
+    protected CoordinateMapping[] getTickPositionsInternal(
             final double absoluteLength) {
         PolicyStrategy strategy = getCurrentPolicy();
         if (strategy != null) {
             strategy.setValues(getDesiredValues());
-            CoordinateMapping[] mapping =
-                    strategy.getTickPositions((int)absoluteLength,
-                            (int)getMinDomainValue(), (int)getMaxDomainValue(),
-                            Coordinate.DEFAULT_ABSOLUTE_TICK_DIST,
-                            getNegativeInfinity(), getPositiveInfinity());
+            CoordinateMapping[] mapping = null;
+            if (getMinDomainValue() % 1 == 0 && getMaxDomainValue() % 1 == 0) {
+                mapping =
+                        strategy.getTickPositions((int)absoluteLength,
+                                (int)getMinDomainValue(),
+                                (int)getMaxDomainValue(),
+                                Coordinate.DEFAULT_ABSOLUTE_TICK_DIST,
+                                getNegativeInfinity(), getPositiveInfinity());
+            } else {
+                mapping =
+                        strategy.getTickPositions((int)absoluteLength,
+                                getMinDomainValue(), getMaxDomainValue(),
+                                Coordinate.DEFAULT_ABSOLUTE_TICK_DIST,
+                                getNegativeInfinity(), getPositiveInfinity());
+            }
             List<CoordinateMapping> mappings =
                     new ArrayList<CoordinateMapping>();
             boolean hasNegInfinity = false;
@@ -88,11 +97,11 @@ class IntegerCoordinate extends NumericCoordinate {
                             hasPosInfinity = true;
                         }
                     } else {
-                        if (doubleVal % 1 == 0) {
-                            // is integer
-                            mappings.add(new IntegerCoordinateMapping(""
-                                    + value, value, map.getMappingValue()));
-                        }
+                        // if (doubleVal % 1 == 0) {
+                        // is integer
+                        mappings.add(new IntegerCoordinateMapping("" + value,
+                                value, map.getMappingValue()));
+                        // }
                     }
 
                 } catch (NumberFormatException e) {
@@ -114,8 +123,8 @@ class IntegerCoordinate extends NumericCoordinate {
      * {@inheritDoc}
      */
     @Override
-    public double calculateMappedValueInternal(final DataCell domainValueCell,
-            final double absoluteLength) {
+    protected double calculateMappedValueInternal(
+            final DataCell domainValueCell, final double absoluteLength) {
         return getCurrentPolicy().calculateMappedValue(domainValueCell,
                 absoluteLength, getMinDomainValue(), getMaxDomainValue());
     }

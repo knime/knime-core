@@ -24,9 +24,6 @@
  */
 package org.knime.workbench.ui;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
@@ -37,9 +34,7 @@ import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.core.util.KnimeEncryption;
 import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.ui.favorites.FavoriteNodesManager;
@@ -71,13 +66,6 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(KNIMEUIPlugin.class);
 
-
-    /**
-     * Keeps list of <code>ConsoleViewAppender</code>. TODO FIXME remove
-     * static if you want to have a console for each Workbench
-     */
-    private static final ArrayList<ConsoleViewAppender> APPENDERS =
-            new ArrayList<ConsoleViewAppender>();
 
     /**
      * The constructor.
@@ -135,10 +123,6 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
                         LOGGER.warn("Unable to set maximum number of "
                                 + "last used nodes", e);
                     }
-                } else if (PreferenceConstants.P_LOGLEVEL_CONSOLE.equals(
-                        prop)) {
-                    String newName = event.getNewValue().toString();
-                    setLogLevel(newName);
                 }
 
             }
@@ -150,95 +134,10 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
         } catch (Exception e) {
             LOGGER.error("Error during loading of node usage history: ", e);
         }
-
-        String logLevelConsole =
-            prefStore.getString(PreferenceConstants.P_LOGLEVEL_CONSOLE);
-        try {
-            ConsoleViewAppender.WARN_APPENDER
-                .write(KNIMEConstants.WELCOME_MESSAGE);
-            ConsoleViewAppender.WARN_APPENDER.write("Log file is located at: "
-                    + KNIMEConstants.getKNIMEHomeDir() + File.separator
-                    + NodeLogger.LOG_FILE + "\n");
-        } catch (IOException ioe) {
-            LOGGER.error("Could not print welcome message: ", ioe);
-        }
-        setLogLevel(logLevelConsole);
     }
 
 
-    /**
-     * Register the appenders according to logLevel, i.e.
-     * PreferenceConstants.P_LOGLEVEL_DEBUG,
-     * PreferenceConstants.P_LOGLEVEL_INFO, etc.
-     *
-     * @param logLevel The new log level.
-     */
-    private static void setLogLevel(final String logLevel) {
-        boolean changed = false;
-        if (logLevel.equals(LEVEL.DEBUG.name())) {
-            changed |= addAppender(ConsoleViewAppender.DEBUG_APPENDER);
-            changed |= addAppender(ConsoleViewAppender.INFO_APPENDER);
-            changed |= addAppender(ConsoleViewAppender.WARN_APPENDER);
-            changed |= addAppender(ConsoleViewAppender.ERROR_APPENDER);
-            changed |= addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
-        } else if (logLevel.equals(LEVEL.INFO.name())) {
-            changed |= removeAppender(ConsoleViewAppender.DEBUG_APPENDER);
-            changed |= addAppender(ConsoleViewAppender.INFO_APPENDER);
-            changed |= addAppender(ConsoleViewAppender.WARN_APPENDER);
-            changed |= addAppender(ConsoleViewAppender.ERROR_APPENDER);
-            changed |= addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
-        } else if (logLevel.equals(LEVEL.WARN.name())) {
-            changed |= removeAppender(ConsoleViewAppender.DEBUG_APPENDER);
-            changed |= removeAppender(ConsoleViewAppender.INFO_APPENDER);
-            changed |= addAppender(ConsoleViewAppender.WARN_APPENDER);
-            changed |= addAppender(ConsoleViewAppender.ERROR_APPENDER);
-            changed |= addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
-        } else if (logLevel.equals(LEVEL.ERROR.name())) {
-            changed |= removeAppender(ConsoleViewAppender.DEBUG_APPENDER);
-            changed |= removeAppender(ConsoleViewAppender.INFO_APPENDER);
-            changed |= removeAppender(ConsoleViewAppender.WARN_APPENDER);
-            changed |= addAppender(ConsoleViewAppender.ERROR_APPENDER);
-            changed |= addAppender(ConsoleViewAppender.FATAL_ERROR_APPENDER);
-        } else {
-            LOGGER.warn("Invalid log level " + logLevel + "; setting to "
-                    + LEVEL.WARN.name());
-            setLogLevel(LEVEL.WARN.name());
-        }
-        if (changed) {
-            LOGGER.info("Setting console view log level to " + logLevel);
-        }
-    }
 
-
-    /**
-     * Add the given Appender to the NodeLogger.
-     *
-     * @param app Appender to add.
-     * @return If the given appender was not previously registered.
-     */
-    static boolean addAppender(final ConsoleViewAppender app) {
-        if (!APPENDERS.contains(app)) {
-            NodeLogger.addWriter(app, app.getLevel(), app.getLevel());
-            APPENDERS.add(app);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Removes the given Appender from the NodeLogger.
-     *
-     * @param app Appender to remove.
-     * @return If the given appended was previously registered.
-     */
-    static boolean removeAppender(final ConsoleViewAppender app) {
-        if (APPENDERS.contains(app)) {
-            NodeLogger.removeWriter(app);
-            APPENDERS.remove(app);
-            return true;
-        }
-        return false;
-    }
 
 
     /**
@@ -259,10 +158,6 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
         // @see FavoritesView#frequentHistoryChanged
         if (FavoriteNodesManager.wasInitialized()) {
             FavoriteNodesManager.getInstance().saveFavoriteNodes();
-        }
-        // remove appender listener from "our" NodeLogger
-        for (int i = 0; i < APPENDERS.size(); i++) {
-            removeAppender(APPENDERS.get(i));
         }
         if (MetaNodeTemplateRepositoryView.wasInitialized()) {
             MetaNodeTemplateRepositoryView.getInstance().dispose();

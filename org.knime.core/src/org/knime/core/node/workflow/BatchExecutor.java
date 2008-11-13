@@ -115,14 +115,11 @@ public final class BatchExecutor {
      *
      * @param args a workflow directory or a zip input and output file
      * @throws IOException Delegated from WFM
-     * @throws WorkflowException Delegated from WFM
-     * @throws WorkflowInExecutionException Delegated from WFM
      * @throws CanceledExecutionException Delegated from WFM
      * @throws InvalidSettingsException Delegated from WFM
      */
     public static void main(final String[] args) throws IOException,
-            InvalidSettingsException, CanceledExecutionException,
-            WorkflowInExecutionException, WorkflowException {
+            InvalidSettingsException, CanceledExecutionException {
         int returnVal = mainRun(args);
         System.exit(returnVal);
     }
@@ -137,12 +134,9 @@ public final class BatchExecutor {
      * @throws IOException Delegated from WFM
      * @throws InvalidSettingsException Delegated from WFM
      * @throws CanceledExecutionException Delegated from WFM
-     * @throws WorkflowInExecutionException Delegated from WFM
-     * @throws WorkflowException Delegated from WFM
      */
     public static int mainRun(final String[] args) throws IOException,
-        InvalidSettingsException, CanceledExecutionException,
-        WorkflowInExecutionException, WorkflowException {
+        InvalidSettingsException, CanceledExecutionException {
         long t = System.currentTimeMillis();
         if (args.length < 1) {
             usage();

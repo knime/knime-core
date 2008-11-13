@@ -29,9 +29,9 @@ import java.util.List;
 
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodePort;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 import org.knime.workbench.editor2.figures.WorkflowOutPortBarFigure;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
 
@@ -63,7 +63,7 @@ public class WorkflowOutPortBarEditPart
     @Override
     protected IFigure createFigure() {
         WorkflowOutPortBarFigure fig = new WorkflowOutPortBarFigure();
-        ModellingNodeExtraInfo uiInfo = ((WorkflowPortBar)getModel())
+        NodeUIInformation uiInfo = ((WorkflowPortBar)getModel())
             .getUIInfo();
         if (uiInfo != null && uiInfo.isFilledProperly()) {
             int[] bounds = uiInfo.getBounds();

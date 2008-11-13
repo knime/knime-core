@@ -59,8 +59,8 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Data to Database">
+		<inPort index="0" name="Data to Database">
 			Table with data to write into database
-		</dataIn>
+		</inPort>
 	</ports>	
 </knimeNode>

@@ -26,6 +26,7 @@
 package org.knime.base.node.preproc.groupby.aggregation;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.ListCell;
@@ -116,7 +117,8 @@ public final class Operators {
          * {@inheritDoc}
          */
         @Override
-        public AggregationOperator createInstance(final int maxUniqueValues) {
+        public AggregationOperator createInstance(
+                final DataColumnSpec origColSpec, final int maxUniqueValues) {
             return new FirstOperator(maxUniqueValues);
         }
 
@@ -170,7 +172,8 @@ public final class Operators {
          * {@inheritDoc}
          */
         @Override
-        public AggregationOperator createInstance(final int maxUniqueValues) {
+        public AggregationOperator createInstance(
+                final DataColumnSpec origColSpec, final int maxUniqueValues) {
             return new FirstValueOperator(maxUniqueValues);
         }
 
@@ -233,7 +236,8 @@ public final class Operators {
          * {@inheritDoc}
          */
         @Override
-        public AggregationOperator createInstance(final int maxUniqueValues) {
+        public AggregationOperator createInstance(
+                final DataColumnSpec origColSpec, final int maxUniqueValues) {
             return new LastOperator(maxUniqueValues);
         }
 
@@ -284,7 +288,8 @@ public final class Operators {
          * {@inheritDoc}
          */
         @Override
-        public AggregationOperator createInstance(final int maxUniqueValues) {
+        public AggregationOperator createInstance(
+                final DataColumnSpec origColSpec, final int maxUniqueValues) {
             return new LastValueOperator(maxUniqueValues);
         }
 
@@ -337,7 +342,8 @@ public final class Operators {
          * {@inheritDoc}
          */
         @Override
-        public AggregationOperator createInstance(final int maxUniqueValues) {
+        public AggregationOperator createInstance(
+                final DataColumnSpec origColSpec, final int maxUniqueValues) {
             return new ModeOperator(maxUniqueValues);
         }
 
@@ -425,7 +431,8 @@ public final class Operators {
          * {@inheritDoc}
          */
         @Override
-        public AggregationOperator createInstance(final int maxUniqueValues) {
+        public AggregationOperator createInstance(
+                final DataColumnSpec origColSpec, final int maxUniqueValues) {
             return new ConcatenateOperator(maxUniqueValues);
         }
 
@@ -506,7 +513,8 @@ public final class Operators {
          * {@inheritDoc}
          */
         @Override
-        public AggregationOperator createInstance(final int maxUniqueValues) {
+        public AggregationOperator createInstance(
+                final DataColumnSpec origColSpec, final int maxUniqueValues) {
             return new UniqueConcatenateOperator(maxUniqueValues);
         }
 
@@ -585,7 +593,8 @@ public final class Operators {
          * {@inheritDoc}
          */
         @Override
-        public AggregationOperator createInstance(final int maxUniqueValues) {
+        public AggregationOperator createInstance(
+                final DataColumnSpec origColSpec, final int maxUniqueValues) {
             return new UniqueCountOperator(maxUniqueValues);
         }
 
@@ -666,7 +675,8 @@ public final class Operators {
          * {@inheritDoc}
          */
         @Override
-        public AggregationOperator createInstance(final int maxUniqueValues) {
+        public AggregationOperator createInstance(
+                final DataColumnSpec origColSpec, final int maxUniqueValues) {
             return new CountOperator(maxUniqueValues);
         }
 
@@ -726,7 +736,8 @@ public final class Operators {
          * {@inheritDoc}
          */
         @Override
-        public AggregationOperator createInstance(final int maxUniqueValues) {
+        public AggregationOperator createInstance(
+                final DataColumnSpec origColSpec, final int maxUniqueValues) {
             return new ListCellOperator(maxUniqueValues);
         }
 
@@ -794,7 +805,8 @@ public final class Operators {
          * {@inheritDoc}
          */
         @Override
-        public AggregationOperator createInstance(final int maxUniqueValues) {
+        public AggregationOperator createInstance(
+                final DataColumnSpec origColSpec, final int maxUniqueValues) {
             return new SetCellOperator(maxUniqueValues);
         }
 

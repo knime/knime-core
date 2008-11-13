@@ -24,6 +24,7 @@
  */
 package org.knime.workbench.ui.wizards.export;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -321,26 +322,16 @@ public class WorkflowExportPage extends WizardPage {
             return;
         }
 
-        if (fileName.length() == 0) {
+        if (fileName.length() == 0 || fileName.endsWith(File.separator)) {
             updateStatus("File name must be specified");
             return;
         }
 
-        int dotLoc = fileName.lastIndexOf('.');
-        if (dotLoc != -1) {
-            String prefix = fileName.substring(0, dotLoc);
-            String ext = fileName.substring(dotLoc + 1);
-            if (!ext.equalsIgnoreCase("zip")) {
-                updateStatus("File extension must be \"zip\"");
-                return;
-            }
-
-            if (prefix.trim().equals("")) {
-                updateStatus("The file name prefix must not be an "
-                        + "empty string or consist only of space characters.");
-                return;
-            }
+        if (!fileName.toLowerCase().endsWith(".zip")) {
+            updateStatus("File extension must be \"zip\"");
+            return;
         }
+        
         updateStatus(null);
     }
 

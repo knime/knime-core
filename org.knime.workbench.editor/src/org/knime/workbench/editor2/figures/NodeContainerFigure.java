@@ -520,13 +520,19 @@ public class NodeContainerFigure extends RectangleFigure {
         if (msg == null || msg.getMessageType() == null) {
             removeMessages();
             NodeLogger.getLogger(NodeContainerFigure.class).warn(
-                    "Recieved NULL message!");
-        } else if (msg.getMessageType().equals(NodeMessage.Type.RESET)) {
-            removeMessages();
-        } else if (msg.getMessageType().equals(NodeMessage.Type.WARNING)) {
-            m_infoWarnErrorPanel.setWarning(msg.getMessage());
-        } else if (msg.getMessageType().equals(NodeMessage.Type.ERROR)) {
-            m_infoWarnErrorPanel.setError(msg.getMessage());
+                    "Received NULL message!");
+        } else {
+            switch (msg.getMessageType()) {
+            case RESET:
+                removeMessages();
+                break;
+            case WARNING:
+                m_infoWarnErrorPanel.setWarning(msg.getMessage());
+                break;
+            case ERROR:
+                m_infoWarnErrorPanel.setError(msg.getMessage());
+                break;
+            }
         }
         m_statusFigure.repaint();
     }

@@ -199,15 +199,14 @@ final class DBDialogPane extends JPanel {
         String password = settings.getString("password", null);
         m_pass.setText(password == null ? "" : password);
         m_passwordChanged = false;
-        // loaded driver: need to load settings before 1.2
-        String[] loadedDriver = settings.getStringArray("loaded_driver",
-                new String[0]);
-        for (String driver : loadedDriver) {
+        // loaded driver
+        String loadedDriver = settings.getString("loaded_driver", null);
+        if (loadedDriver != null) {
             try {
-                DatabaseDriverLoader.loadDriver(new File(driver));
+                DatabaseDriverLoader.loadDriver(new File(loadedDriver));
             } catch (Throwable t) {
-                LOGGER.warn("Could not load driver \"" + driver + "\", reason: "
-                        + t.getMessage(), t);
+                LOGGER.warn("Could not load driver \"" + loadedDriver 
+                        + "\", reason: " + t.getMessage(), t);
             }
         }
         updateDriver();
@@ -239,6 +238,10 @@ final class DBDialogPane extends JPanel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         String driverName = m_driver.getSelectedItem().toString();
         settings.addString("driver", driverName);
+        final File driverFile = 
+            DatabaseDriverLoader.getDriverFileForDriverClass(driverName);
+        settings.addString("loaded_driver",
+                (driverFile == null ? null : driverFile.getAbsolutePath()));
         String url = m_db.getEditor().getItem().toString();
         settings.addString("database", url);     
         settings.addString("user", m_user.getText().trim());

@@ -29,21 +29,18 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PointList;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.editor2.editparts.SubWorkFlowOutPortEditPart;
 
 /**
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class SubWorkFlowOutPortFigure extends NodeOutPortFigure 
-    implements NodeStateChangeListener {
+public class SubWorkFlowOutPortFigure extends NodeOutPortFigure {
     
     /** Red traffic light. * */
     public static final Image RED =
@@ -77,24 +74,18 @@ public class SubWorkFlowOutPortFigure extends NodeOutPortFigure
         }
         m_currentImage = RED;
     }
-
+    
     /**
+     * Called by the 
+     * {@link SubWorkFlowOutPortEditPart#stateChanged(NodeStateEvent)} in order 
+     * to provide a correct tooltip and icon. 
      * 
-     * {@inheritDoc}
+     * @param state current state of the port (idle/spec/data)
      */
-    public void stateChanged(final NodeStateEvent state) {
-        NodeLogger.getLogger(SubWorkFlowOutPortFigure.class)
-            .debug("port state changed to " + state.getState());
-        m_currentState = state.getState();
-        Display.getDefault().asyncExec(new Runnable() {
-
-            public void run() {
-                SubWorkFlowOutPortFigure.this.repaint();
-            }
-            
-        });
-        
+    public void setState(final NodeContainer.State state) {
+        m_currentState = state; 
     }
+
     
     /**
      * Outlines the shape, the points of the actual shape are set in 

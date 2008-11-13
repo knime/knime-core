@@ -28,10 +28,10 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
-import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 import org.knime.workbench.editor2.figures.AbstractWorkflowPortBarFigure;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
 
@@ -48,7 +48,7 @@ public abstract class AbstractWorkflowPortBarEditPart
      */
     @Override
     protected void refreshVisuals() {
-        ModellingNodeExtraInfo uiInfo = ((WorkflowPortBar)getModel())
+        NodeUIInformation uiInfo = ((WorkflowPortBar)getModel())
             .getUIInfo();
         if (uiInfo != null && uiInfo.isFilledProperly()
                 && !((AbstractWorkflowPortBarFigure)getFigure())

@@ -18,8 +18,8 @@
 		</intro>
 	</fullDescription>
     <ports>
-        <dataIn index="0" name="Table to normalize">Table requiring normalization of some or all columns.</dataIn>
-        <dataOut index="0" name="Normalized output">The input data normalized according to the normalization parameters.</dataOut>
-        <modelIn index="0" name="Model">Normalization parameters</modelIn>
+        <inPort index="0" name="Model">Normalization parameters</inPort>
+        <inPort index="1" name="Table to normalize">Table requiring normalization of some or all columns.</inPort>
+        <outPort index="0" name="Normalized output">The input data normalized according to the normalization parameters.</outPort>
 	</ports>
 </knimeNode>

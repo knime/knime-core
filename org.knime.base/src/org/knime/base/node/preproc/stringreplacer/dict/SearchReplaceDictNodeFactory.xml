@@ -42,7 +42,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Input">Arbitrary input data.</dataIn>
-		<dataOut index="0" name="Input with amended column">Input data but with input target column replaced or with an additional column.</dataOut>
+		<inPort index="0" name="Input">Arbitrary input data.</inPort>
+		<outPort index="0" name="Input with amended column">Input data but with input target column replaced or with an additional column.</outPort>
 	</ports>	
 </knimeNode>

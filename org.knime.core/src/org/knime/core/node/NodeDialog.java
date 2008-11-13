@@ -92,9 +92,9 @@ public final class NodeDialog {
         m_node = node;
         // keep node dialog pane and init this dialog
         m_dialogPane = pane;
-        m_dialog = initDialog("Dialog - " + node.getName() + " #"
-                + node.getID().getIndex());
-
+        
+        m_dialog = initDialog("Dialog - " + node.getDisplayLabel());
+        
         // init OK and Cancel button
         JPanel control = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 

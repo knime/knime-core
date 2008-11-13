@@ -28,7 +28,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Insets;
 
-import org.knime.core.data.collection.bitvector.BitVectorValue;
+import org.knime.core.data.vector.bitvector.BitVectorValue;
 
 /**
  * Paints {@link BitVectorValue} elements. Each bit is represented by a little

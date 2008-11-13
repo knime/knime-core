@@ -76,7 +76,7 @@ public class SingleNodeContainerPersistorVersion1xx
     private LoadNodeModelSettingsFailPolicy m_settingsFailPolicy;
     
     SingleNodeContainerPersistorVersion1xx(
-            WorkflowPersistorVersion1xx workflowPersistor, 
+            final WorkflowPersistorVersion1xx workflowPersistor, 
             final String versionString) {
         if (workflowPersistor == null || versionString == null) {
             throw new NullPointerException();
@@ -276,7 +276,15 @@ public class SingleNodeContainerPersistorVersion1xx
     protected String loadNodeFactoryClassName(
             final NodeSettingsRO parentSettings, final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        return parentSettings.getString(KEY_FACTORY_NAME);
+        String factoryName = parentSettings.getString(KEY_FACTORY_NAME);
+
+        // This is a hack to load old J48 Nodes Model from pre-2.0 workflows
+        if ("org.knime.ext.weka.j48_2.WEKAJ48NodeFactory2".equals(factoryName)
+                || "org.knime.ext.weka.j48.WEKAJ48NodeFactory".equals(factoryName)) {
+            return "org.knime.ext.weka.knimeJ48.KnimeJ48NodeFactory";
+        } else {
+            return factoryName;
+        }
     }
 
     @SuppressWarnings("unchecked")

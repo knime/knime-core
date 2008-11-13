@@ -69,7 +69,7 @@ class EntropyNodeModel extends NodeModel {
 
     private EntropyCalculator m_calculator;
 
-    private final HiLiteTranslator m_translator;
+    private final HiLiteTranslator m_translator = new HiLiteTranslator();
 
     /**
      * The Entropy node model with two data inports for the two clustering
@@ -78,7 +78,6 @@ class EntropyNodeModel extends NodeModel {
      */
     EntropyNodeModel(final boolean enableOutput) {
         super(2, enableOutput ? 1 : 0);
-        m_translator = new HiLiteTranslator();
     }
 
     /**
@@ -146,6 +145,7 @@ class EntropyNodeModel extends NodeModel {
                 referenceColIndex, clusteringColIndex, exec);
         Map<RowKey, Set<RowKey>> map = m_calculator.getClusteringMap();
         m_translator.setMapper(new DefaultHiLiteMapper(map));
+        m_translator.addToHiLiteHandler(getInHiLiteHandler(INPORT_CLUSTERING));
         if (getNrOutPorts() > 0) {
             BufferedDataTable out = exec.createBufferedDataTable(
                     m_calculator.getScoreTable(), exec);
@@ -160,6 +160,7 @@ class EntropyNodeModel extends NodeModel {
     @Override
     protected void reset() {
         m_calculator = null;
+        m_translator.removeAllToHiliteHandlers();
         m_translator.setMapper(null);
     }
 
@@ -190,19 +191,6 @@ class EntropyNodeModel extends NodeModel {
         }
         return new DataTableSpec[0];
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void setInHiLiteHandler(final int inIndex,
-            final HiLiteHandler hiLiteHdl) {
-        if (inIndex == INPORT_CLUSTERING) {
-            m_translator.removeAllToHiliteHandlers();
-            m_translator.addToHiLiteHandler(hiLiteHdl);
-        }
-        super.setInHiLiteHandler(inIndex, hiLiteHdl);
-    }
     
     /** {@inheritDoc} */
     @Override
@@ -225,9 +213,13 @@ class EntropyNodeModel extends NodeModel {
             m_translator.setMapper(new DefaultHiLiteMapper(m_calculator
                     .getClusteringMap()));
         } catch (InvalidSettingsException ise) {
+            m_translator.setMapper(null);
             IOException ioe = new IOException("Unable to read settings.");
             ioe.initCause(ise);
             throw ioe;
+        } finally {
+            m_translator.addToHiLiteHandler(
+                    getInHiLiteHandler(INPORT_CLUSTERING));
         }
     }
 

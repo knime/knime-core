@@ -29,6 +29,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Stroke;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -69,7 +70,7 @@ public abstract class BasicDrawingElement {
     private static final Stroke DEFAULT_STROKE = new BasicStroke(1);
     
     /** Original (domain) values. */
-    private List<DataCellPoint> m_domainValues;
+    private List<DataCellPoint> m_domainValues = new ArrayList<DataCellPoint>();
     
     /**
      * Creates an empty shape with default color(black) and default stroke.

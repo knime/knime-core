@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.knime.core.node.NodeLogger.LEVEL;
+import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
@@ -49,6 +50,7 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
 public class MainPreferencePage extends FieldEditorPreferencePage implements
 IWorkbenchPreferencePage {
 
+    private RadioGroupFieldEditor m_consoleLogEditor;
 
     /**
      * Constructor .
@@ -69,8 +71,8 @@ IWorkbenchPreferencePage {
         Composite parent = getFieldEditorParent();
 
         // Specify the minimum log level for the console
-        addField(new RadioGroupFieldEditor(
-                PreferenceConstants.P_LOGLEVEL_CONSOLE, 
+        m_consoleLogEditor = new RadioGroupFieldEditor(
+                KNIMECorePlugin.P_LOGLEVEL_CONSOLE, 
                 "Console View Log Level", 4,
                 new String[][] {
                         {"&DEBUG", LEVEL.DEBUG.name()},
@@ -80,8 +82,8 @@ IWorkbenchPreferencePage {
                         {"&WARN", LEVEL.WARN.name()},
 
                         {"&ERROR", LEVEL.ERROR.name()} },
-                        parent));
-
+                        parent);
+        addField(m_consoleLogEditor);
 
         addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_RESET, 
                 "Confirm Node Reset", parent));
@@ -118,5 +120,29 @@ IWorkbenchPreferencePage {
     public void init(final IWorkbench workbench) {
         // we use the pref store of the UI plugin
         setPreferenceStore(KNIMEUIPlugin.getDefault().getPreferenceStore());
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    protected void initialize() {
+        super.initialize();
+        m_consoleLogEditor.setPreferenceStore(KNIMECorePlugin.getDefault()
+                .getPreferenceStore());
+        m_consoleLogEditor.load();
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    protected void performDefaults() {
+        super.performDefaults();
+        m_consoleLogEditor.setPreferenceStore(KNIMECorePlugin.getDefault()
+                .getPreferenceStore());
+        m_consoleLogEditor.loadDefault();
     }
 }

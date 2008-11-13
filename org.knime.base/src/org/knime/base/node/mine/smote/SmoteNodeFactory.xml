@@ -57,7 +57,7 @@
 		</option>
 	</fullDescription>
     <ports>
-        <dataIn index="0" name="Input data">Table containing labeled data for oversampling.</dataIn>
-        <dataOut index="0" name="Oversampled data">Oversampled data (input table with appended rows).</dataOut>
+        <inPort index="0" name="Input data">Table containing labeled data for oversampling.</inPort>
+        <outPort index="0" name="Oversampled data">Oversampled data (input table with appended rows).</outPort>
 	</ports>
 </knimeNode>

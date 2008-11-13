@@ -87,7 +87,7 @@ public class PivotNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_hiliting =
         PivotNodeDialogPane.createSettingsEnableHiLite();
-    
+
     private final SettingsModelBoolean m_ignoreMissValues =
         PivotNodeDialogPane.createSettingsMissingValues();
 
@@ -187,7 +187,7 @@ public class PivotNodeModel extends NodeModel {
             new LinkedHashMap<Pair<DataCell, DataCell>, Double[]>();
         // list of pivot values
         final Set<DataCell> pivotList = new LinkedHashSet<DataCell>();
-        DataColumnSpec pivotSpec = inspec.getColumnSpec(pivot);
+        final DataColumnSpec pivotSpec = inspec.getColumnSpec(pivot);
         if (pivotSpec.getDomain().hasValues()) {
             pivotList.addAll(pivotSpec.getDomain().getValues());
         }
@@ -241,7 +241,7 @@ public class PivotNodeModel extends NodeModel {
         }
         // check pivoted elements for missing values
         if (containsMissing) {
-            setWarningMessage("Pivot column \"" + m_pivot.getStringValue() 
+            setWarningMessage("Pivot column \"" + m_pivot.getStringValue()
                 + "\" contains missing values which are ignored.");
         }
 
@@ -272,6 +272,7 @@ public class PivotNodeModel extends NodeModel {
         buf.close();
         if (m_hiliting.getBooleanValue()) {
             m_hilite.setMapper(new DefaultHiLiteMapper(mapping));
+            m_hilite.addToHiLiteHandler(getInHiLiteHandler(0));
         }
         return new BufferedDataTable[]{buf.getTable()};
     }
@@ -289,6 +290,7 @@ public class PivotNodeModel extends NodeModel {
                     new File(nodeInternDir, "hilite_mapping.xml.gz"))));
             try {
                 m_hilite.setMapper(DefaultHiLiteMapper.load(config));
+                m_hilite.addToHiLiteHandler(getInHiLiteHandler(0));
             } catch (final InvalidSettingsException ex) {
                 throw new IOException(ex.getMessage());
             }
@@ -307,7 +309,12 @@ public class PivotNodeModel extends NodeModel {
         m_aggMethod.loadSettingsFrom(settings);
         m_makeAgg.loadSettingsFrom(settings);
         m_hiliting.loadSettingsFrom(settings);
-        m_ignoreMissValues.loadSettingsFrom(settings);
+        try {
+            m_ignoreMissValues.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            // new with 1.3.5
+            m_ignoreMissValues.setBooleanValue(true);
+        }
     }
 
     /**
@@ -315,7 +322,7 @@ public class PivotNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_hilite.getFromHiLiteHandler().fireClearHiLiteEvent();
+        m_hilite.removeAllToHiliteHandlers();
         m_hilite.setMapper(null);
     }
 
@@ -360,19 +367,7 @@ public class PivotNodeModel extends NodeModel {
         m_aggMethod.validateSettings(settings);
         m_makeAgg.validateSettings(settings);
         m_hiliting.validateSettings(settings);
-        m_ignoreMissValues.validateSettings(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void setInHiLiteHandler(final int inIndex,
-            final HiLiteHandler hiLiteHdl) {
-        m_hilite.removeAllToHiliteHandlers();
-        if (hiLiteHdl != null) {
-            m_hilite.addToHiLiteHandler(hiLiteHdl);
-        }
+        // m_ignoreMissValues.validateSettings(settings);
     }
 
     /**

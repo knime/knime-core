@@ -61,8 +61,8 @@ import org.w3c.dom.Element;
  *
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
-public final class SingleNodeContainer extends NodeContainer implements
-        NodeMessageListener, NodeProgressListener {
+public final class SingleNodeContainer extends NodeContainer
+    implements NodeProgressListener {
 
     /** my logger. */
     private static final NodeLogger LOGGER =
@@ -124,7 +124,7 @@ public final class SingleNodeContainer extends NodeContainer implements
         super(parent, id);
         m_node = n;
         setPortNames();
-        m_node.addMessageListener(this);
+        m_node.addMessageListener(new UnderlyingNodeMessageListener());
     }
 
     /**
@@ -142,7 +142,7 @@ public final class SingleNodeContainer extends NodeContainer implements
                 + " did not provide Node instance for "
                 + getClass().getSimpleName() + " with id \"" + id + "\"";
         setPortNames();
-        m_node.addMessageListener(this);
+        m_node.addMessageListener(new UnderlyingNodeMessageListener());
     }
     
     private void setPortNames() {
@@ -231,7 +231,8 @@ public final class SingleNodeContainer extends NodeContainer implements
 
     /**
      * Set a new HiLiteHandler for an incoming connection.
-     *
+     * @param index index of port
+     * @param hdl new HiLiteHandler
      */
     void setInHiLiteHandler(final int index, final HiLiteHandler hdl) {
         m_node.setInHiLiteHandler(index, hdl);
@@ -308,8 +309,7 @@ public final class SingleNodeContainer extends NodeContainer implements
      * @return true if output specs have changed.
      * @throws IllegalStateException in case of illegal entry state.
      */
-    @Override
-    boolean configureAsNodeContainer(final PortObjectSpec[] inObjectSpecs) {
+    boolean configure(final PortObjectSpec[] inObjectSpecs) {
         synchronized (m_nodeMutex) {
             // remember old specs
             PortObjectSpec[] prevSpecs = new PortObjectSpec[getNrOutPorts()];
@@ -379,20 +379,22 @@ public final class SingleNodeContainer extends NodeContainer implements
      * @return if node can be reset.
      */
     @Override
-    boolean isResetableAsNodeContainer() {
+    boolean isResetable() {
         return (getState().equals(State.EXECUTED)
                 || getState().equals(State.MARKEDFOREXEC)
                 || getState().equals(State.CONFIGURED) || getState().equals(
                 State.UNCONFIGURED_MARKEDFOREXEC));
     }
 
-    /** {@inheritDoc} */
-    @Override
-    void resetAsNodeContainer() {
+    /** Reset underlying node and update state accordingly.
+     * @throws IllegalStateException in case of illegal entry state.
+     */
+    void reset() {
         synchronized (m_nodeMutex) {
             switch (getState()) {
             case EXECUTED:
-                m_node.reset(true);
+                removeOutputTablesFromGlobalRepository();
+                m_node.reset();
                 // After reset we need explicit configure!
                 setState(State.IDLE);
                 return;
@@ -403,7 +405,7 @@ public final class SingleNodeContainer extends NodeContainer implements
                 setState(State.IDLE);
                 return;
             case CONFIGURED:
-                m_node.reset(true);
+                m_node.reset();
                 setState(State.IDLE);
                 return;
             default:
@@ -413,9 +415,15 @@ public final class SingleNodeContainer extends NodeContainer implements
         }
     }
 
-    /** {@inheritDoc} */
-    @Override
-    void markForExecutionAsNodeContainer(final boolean flag) {
+    /** Enable (or disable) queuing of underlying node for execution. This
+     * really only changes the state of the node and once all pre-conditions
+     * for execution are fulfilled (e.g. configuration succeeded and all
+     * ingoing objects are available) the node will be actually queued.
+     *
+     * @param flag determines if node is marked or unmarked for execution
+     * @throws IllegalStateException in case of illegal entry state.
+     */
+    void markForExecution(final boolean flag) {
         synchronized (m_nodeMutex) {
             if (flag) {  // we want to mark the node for execution!
                 switch (getState()) {
@@ -473,7 +481,7 @@ public final class SingleNodeContainer extends NodeContainer implements
      * @param inData the incoming data for the execution
      * @throws IllegalStateException in case of illegal entry state.
      */
-    void queueAsNodeContainer(final PortObject[] inData) {
+    void queue(final PortObject[] inData) {
         synchronized (m_nodeMutex) {
             switch (getState()) {
             case MARKEDFOREXEC:
@@ -486,7 +494,7 @@ public final class SingleNodeContainer extends NodeContainer implements
                 } catch (Throwable t) {
                     String error = "Failed to submit job to job executor \"" 
                         + jobManager + "\": " + t.getMessage();
-                    m_node.notifyMessageListeners(new NodeMessage(
+                    setNodeMessage(new NodeMessage(
                             NodeMessage.Type.ERROR, error));
                     LOGGER.error(error, t);
                     try {
@@ -506,9 +514,12 @@ public final class SingleNodeContainer extends NodeContainer implements
     }
 
 
-    /** {@inheritDoc} */
-    @Override
-    void cancelExecutionAsNodeContainer() {
+    /** Cancel execution of a marked, queued, or executing node. (Tolerate
+     * execute as this may happen throughout cancelation).
+     *
+     * @throws IllegalStateException
+     */
+    void cancelExecution() {
         synchronized (m_nodeMutex) {
             switch (getState()) {
             case UNCONFIGURED_MARKEDFOREXEC:
@@ -586,11 +597,11 @@ public final class SingleNodeContainer extends NodeContainer implements
                     setState(State.CONFIGURED);
                 }
             } else {
-                m_node.reset(false);  // we need to clean up remaining nonsense
-                m_node.clearLoopStatus();  // ...and the loop status
-                // but node will not be reconfigured!
-                // (configure does not prepare execute but only tells us what
-                //  output execute() may create hence we do not need it here)
+                // also clean loop status:
+                m_node.clearLoopStatus();
+                // note was already reset/configured in doAfterExecute.
+                // in theory this should always be the correct state...
+                // TODO do better - also handle catastrophes
                 setState(State.CONFIGURED);
             }
             m_executionJob = null;
@@ -611,7 +622,7 @@ public final class SingleNodeContainer extends NodeContainer implements
             getParent().doBeforeExecution(SingleNodeContainer.this);
         } catch (IllegalContextStackObjectException e) {
             LOGGER.warn(e.getMessage());
-            m_node.notifyMessageListeners(new NodeMessage(
+            setNodeMessage(new NodeMessage(
                     NodeMessage.Type.ERROR, e.getMessage()));
             throw e;
         }
@@ -636,7 +647,7 @@ public final class SingleNodeContainer extends NodeContainer implements
         } catch (CanceledExecutionException e) {
             String errorString = "Execution canceled";
             LOGGER.warn(errorString);
-            m_node.notifyMessageListeners(new NodeMessage(
+            setNodeMessage(new NodeMessage(
                     NodeMessage.Type.WARNING, errorString));
             success = false;
         }
@@ -645,6 +656,20 @@ public final class SingleNodeContainer extends NodeContainer implements
         if (success) {
             // output tables are made publicly available (for blobs)
             putOutputTablesIntoGlobalRepository(ec);
+        } else {
+            // something went wrong: reset and configure node to reach
+            // a solid state again - but remember original node message!
+            NodeMessage orgMessage = getNodeMessage();
+            m_node.reset();
+            PortObjectSpec[] specs = new PortObjectSpec[m_node.getNrInPorts()];
+            for (int i = 0; i < specs.length; i++) {
+                specs[i] = inObjects[i].getSpec();
+            }
+            if (!m_node.configure(specs)) {
+                LOGGER.error("Configure failed after Execute failed!");
+            }
+            // TODO don't remove the stack conflict message (if any)
+            setNodeMessage(orgMessage);
         }
         return success;
     }
@@ -707,6 +732,14 @@ public final class SingleNodeContainer extends NodeContainer implements
             }
         }
         m_node.addToTemporaryTables(localTables);
+    }
+
+    /** Removes all tables that were created by this node from the global
+     * table repository. */
+    private void removeOutputTablesFromGlobalRepository() {
+        HashMap<Integer, ContainerTable> globalRep =
+            getParent().getGlobalTableRepository();
+        m_node.removeOutputTablesFromGlobalRepository(globalRep);
     }
 
     // //////////////////////////////////////
@@ -840,6 +873,9 @@ public final class SingleNodeContainer extends NodeContainer implements
         }
     }
 
+    /**
+     * @return role of node within a loop
+     */
     Node.LoopRole getLoopRole() {
         return getNode().getLoopRole();
     }
@@ -912,17 +948,6 @@ public final class SingleNodeContainer extends NodeContainer implements
         synchronized (m_nodeMutex) {
             m_node.loadSettingsFromDialog();
         }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public NodeMessage getNodeMessage() {
-        return m_node.getNodeMessage();
-    }
-
-    /** {@inheritDoc} */
-    public void messageChanged(final NodeMessageEvent messageEvent) {
-        notifyMessageListeners(messageEvent);
     }
 
     /** {@inheritDoc} */
@@ -1113,6 +1138,19 @@ public final class SingleNodeContainer extends NodeContainer implements
             return m_memoryPolicy;
         }
 
+    }
+
+    /** The message listener that is added the Node and listens for messages
+     * that are set by failing execute methods are by the user 
+     * (setWarningMessage()).
+     */
+    private final class UnderlyingNodeMessageListener 
+        implements NodeMessageListener {
+        /** {@inheritDoc} */
+        @Override
+        public void messageChanged(final NodeMessageEvent messageEvent) {
+            SingleNodeContainer.this.setNodeMessage(messageEvent.getMessage());
+        }
     }
 
 }

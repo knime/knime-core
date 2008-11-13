@@ -41,10 +41,10 @@
         </option>
 	</fullDescription>
     <ports>
-        <dataIn index="0" name="Table to partition">Table to partition.</dataIn>
-        <dataOut index="0" name="First partition (as defined in dialog)">
-	        First partition (as defined in dialog).</dataOut>
-        <dataOut index="1" name="Second partition (remaining rows)">
-        	Second partition (remaining rows).</dataOut>
+        <inPort index="0" name="Table to partition">Table to partition.</inPort>
+        <outPort index="0" name="First partition (as defined in dialog)">
+	        First partition (as defined in dialog).</outPort>
+        <outPort index="1" name="Second partition (remaining rows)">
+        	Second partition (remaining rows).</outPort>
 	</ports>
 </knimeNode>

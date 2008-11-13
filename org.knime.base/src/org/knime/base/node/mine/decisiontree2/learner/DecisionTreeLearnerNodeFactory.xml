@@ -79,15 +79,15 @@
 		</option>
 	</fullDescription>
 	<ports>
-		<dataIn index="0" name="Input data">
+		<inPort index="0" name="Input data">
 				The pre-classified data that should be used to induce the decision tree.
 				At least one attribute must be nominal.
-		</dataIn>
-		<modelOut index="0" name="Decision Tree Model">
+		</inPort>
+		<outPort index="0" name="Decision Tree Model">
 			The induced decision tree. The model can be used to classify
 			data with unknown target (class) attribute. To do so, connect the 
 			model out port to the "Decision Tree Predictor" node.
-		</modelOut>
+		</outPort>
 	</ports>
 	<views>
 		<view index="0" name="Decision Tree View">
@@ -98,7 +98,7 @@
 			has led to this child. The class value in single quotes states the
 			majority class in this node. The value in round brackets states
 			(x of y) where x is the quantity of the majority class and y is the
-			allover count of examples in this node. The bar with the black border
+			total count of examples in this node. The bar with the black border
 			and partly filled with yellow color represents the amount
 			of records that belongs to the node relatively to the parent node.
 			The colored pie chart renders the distribution of the color attribute

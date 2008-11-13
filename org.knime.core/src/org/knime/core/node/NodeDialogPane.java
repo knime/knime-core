@@ -59,7 +59,6 @@ import org.knime.core.node.Node.SettingsLoaderAndWriter;
 import org.knime.core.node.config.ConfigEditJTree;
 import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeExecutorJobManagerDialogTab;
 import org.knime.core.node.workflow.ScopeObjectStack;
@@ -134,10 +133,6 @@ public abstract class NodeDialogPane {
      * (from the menu). */
     private PortObjectSpec[] m_specs;
 
-    /** The port types that were provided to the most recent
-     * internalLoadSettingsFrom invocation. See m_specs field for details. */
-    private PortType[] m_portTypes;
-
     /** The underlying panel which keeps all the tabs. */
     private final JPanel m_panel;
 
@@ -194,15 +189,11 @@ public abstract class NodeDialogPane {
         return result;
     }
 
-    // TODO make method final, remove portTypes argument (added to enable
-    // type checking in class NodeDialogPane
     /** Method being called from the node when the dialog shall load the
      * settings from a NodeSettingsRO object. This method will call the
      * abstract loadSettingsFrom method and finally load internals
      * (i.e. memory policy of outports, if any).
      * @param settings To load from.
-     * @param portTypes Types of input port, used for type checking in derived
-     * {@link NodeDialogPane} class.
      * @param specs The DTSs from the inports.
      * @param scopeStack Scope object stack (contains flow variables)
      * @throws NotConfigurableException
@@ -210,12 +201,10 @@ public abstract class NodeDialogPane {
      * @see #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])
      */
     void internalLoadSettingsFrom(final NodeSettingsRO settings,
-            final PortType[] portTypes, final PortObjectSpec[] specs,
-            final ScopeObjectStack scopeStack)
+            final PortObjectSpec[] specs, final ScopeObjectStack scopeStack)
         throws NotConfigurableException {
         NodeSettings modelSettings = null;
         m_scopeObjectStack = scopeStack;
-        m_portTypes = portTypes;
         m_specs = specs;
         try {
             SettingsLoaderAndWriter l = SettingsLoaderAndWriter.load(settings);
@@ -462,12 +451,7 @@ public abstract class NodeDialogPane {
     public final void loadSettingsFrom(final InputStream in)
         throws NotConfigurableException, IOException {
         NodeSettingsRO settings = NodeSettings.loadFromXML(in);
-        if (m_portTypes == null) {
-            throw new NotConfigurableException("No information on incoming "
-                    + "ports availabe");
-        }
-        internalLoadSettingsFrom(
-                settings, m_portTypes, m_specs, m_scopeObjectStack);
+        internalLoadSettingsFrom(settings, m_specs, m_scopeObjectStack);
     }
 
     /**

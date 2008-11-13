@@ -18,6 +18,6 @@
 	</fullDescription>
 	
 	<ports>
-		<modelIn index="0" name="Database Connection">Database connection to a table</modelIn>
+		<inPort index="0" name="Database Connection">Database connection to a table</inPort>
 	</ports>	
 </knimeNode>

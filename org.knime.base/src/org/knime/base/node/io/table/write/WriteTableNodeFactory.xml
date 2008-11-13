@@ -18,6 +18,6 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn name="Table to be saved" index="0">The table to write to a file</dataIn>
+		<inPort name="Table to be saved" index="0">The table to write to a file</inPort>
 	</ports>	
 </knimeNode>

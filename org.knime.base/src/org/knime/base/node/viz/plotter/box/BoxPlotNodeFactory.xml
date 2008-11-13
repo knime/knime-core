@@ -82,10 +82,10 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Display data">Data to display</dataIn>
-		<dataOut index="0" name="Robust Statistics">DataTable with statistics 
+		<inPort index="0" name="Display data">Data to display</inPort>
+		<outPort index="0" name="Robust Statistics">DataTable with statistics 
 		for each column: minimum, smallest value (non-outlier), Q1, 
-		median, Q3, largest value (non-outlier), and maximum.</dataOut>
+		median, Q3, largest value (non-outlier), and maximum.</outPort>
 	</ports>	
 	<views>
 		<view index="0" name="Box Plot">

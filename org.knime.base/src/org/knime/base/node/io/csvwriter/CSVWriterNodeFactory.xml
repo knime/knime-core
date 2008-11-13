@@ -103,7 +103,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Input table">The Datatable to write out.</dataIn>
+		<inPort index="0" name="Input table">The Datatable to write out.</inPort>
 	</ports>	
 </knimeNode>
 

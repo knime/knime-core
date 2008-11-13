@@ -28,8 +28,8 @@
         </option>
 		</fullDescription>
     <ports>
-        <dataIn index="0" name="First table to concatenate">Table contributing the rows of the first part of the output table.</dataIn>
-        <dataIn index="1" name="Second table to concatenate">Table contributing the rows of the second part of the output table.</dataIn>
-        <dataOut index="0" name="Concatenated table">Table with rows from both tables.</dataOut>
+        <inPort index="0" name="First table to concatenate">Table contributing the rows of the first part of the output table.</inPort>
+        <inPort index="1" name="Second table to concatenate">Table contributing the rows of the second part of the output table.</inPort>
+        <outPort index="0" name="Concatenated table">Table with rows from both tables.</outPort>
 	</ports>
 </knimeNode>

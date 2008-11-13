@@ -206,6 +206,23 @@ public final class BufferedDataTable implements DataTable, PortObject {
         }
     }
     
+    /** Remove this table and all of its delegates from the table repository,
+     * if and only if its owner is the argument node.
+     * @param rep The repository to be removed from.
+     * @param owner The dedicated owner.
+     */
+    void removeFromTableRepository(final HashMap<Integer, ContainerTable> rep,
+            final Node owner) {
+        if (getOwner() != owner) { // can safely test for hard references here
+            return;
+        }
+        BufferedDataTable[] references = m_delegate.getReferenceTables();
+        for (BufferedDataTable reference : references) {
+            reference.removeFromTableRepository(rep, owner);
+        }
+        m_delegate.removeFromTableRepository(rep);
+    }
+    
     /**
      * {@inheritDoc}
      */

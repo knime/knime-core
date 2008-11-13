@@ -50,11 +50,11 @@
 		</option>
 	</fullDescription>
 	<ports>
-		<dataIn index="0" name="Numeric input data">Numeric input data to evaluate</dataIn>
-		<dataOut index="0" name="Correlation measure">Correlation variables in a square matrix</dataOut>
-		<modelOut name="Correlation Model" index="0">
+		<inPort index="0" name="Numeric input data">Numeric input data to evaluate</inPort>
+		<outPort index="0" name="Correlation measure">Correlation variables in a square matrix</outPort>
+		<outPort name="Correlation Model" index="1">
 			A model containing the correlation measures. This model is appropriate 
-			to be read by the Correlation Filter node.</modelOut>
+			to be read by the Correlation Filter node.</outPort>
 	</ports>
 	<views>
 	<view name="Correlation Matrix" index="0">Squared table view showing the

@@ -24,10 +24,10 @@
         Name of colun containing timestamp data</option>
     </fullDescription>
     <ports>
-        <dataIn index="0" name="Input column">
-        Table containing string event column.</dataIn>
-        <dataOut index="0" name="Wrapped output">
+        <inPort index="0" name="Input column">
+        Table containing string event column.</inPort>
+        <outPort index="0" name="Wrapped output">
         Table containing the time series between event i 
-        and event i+1 and date as specified in dialog panel.</dataOut>
+        and event i+1 and date as specified in dialog panel.</outPort>
     </ports>
 </knimeNode>

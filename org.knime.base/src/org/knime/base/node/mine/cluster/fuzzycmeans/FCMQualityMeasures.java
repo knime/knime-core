@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 19, 2007 (cebron): created
  */
@@ -30,29 +30,29 @@ import org.knime.base.util.math.MathUtils;
 /**
  * Utility class to compute several cluster quality measures based on
  * a Fuzzy c-means clustering.
- * 
+ *
  * @author cebron, University of Konstanz
  */
 public class FCMQualityMeasures {
 
     private double[][] m_clustercenters;
-    
+
     private double[][] m_memberships;
-    
+
     private double[][] m_data;
-    
+
     private double m_fuzzifier;
-    
+
     private double m_iDF;
-    
+
     /*
      * Sum of all within-cluster variations
      */
     private double m_allsum = 0;
-    
+
     /**
      * Constructor.
-     * Quality measures are calculated directly on double arrays of cluster 
+     * Quality measures are calculated directly on double arrays of cluster
      * prototypes and membership matrix.
      * @param clustercenters the clustercenters as 2-dimensional double-array.
      * @param memberships the membership matrix as 2-dimensional double-array.
@@ -68,7 +68,7 @@ public class FCMQualityMeasures {
         m_data = data;
         m_fuzzifier = fuzzifier;
     }
-    
+
     /**
      * The partition coefficient is 1 for non-fuzzy cluster partition.
      * The smallest value is 1/Number of clusters, if every datapoint
@@ -85,7 +85,7 @@ public class FCMQualityMeasures {
         sum /= m_memberships.length;
         return sum;
     }
-    
+
     /**
      * Partition entropy (should be maximized).
      * @return partition entropy of the clustering.
@@ -100,9 +100,9 @@ public class FCMQualityMeasures {
         sum /= m_memberships.length;
         return sum;
     }
-    
+
     /**
-     * The Xie-Beni index, also called the compactness and separation 
+     * The Xie-Beni index, also called the compactness and separation
      * validity function, is an index that involves the membership values
      * and the dataset.
      * @return the Xie-Beni index.
@@ -129,13 +129,17 @@ public class FCMQualityMeasures {
         denominator = mindistance * m_data.length;
         return numerator / denominator;
     }
-    
+
     /**
      * Computes the fuzzy  cobariance matrix of a cluster.
      * @param cluster the cluster index.
      * @return covariance matrix.
      */
     public double[][] computeFuzzyCovarianceMatrix(final int cluster) {
+        if (m_data.length == 0) {
+            // empty datatable?
+            return new double[1][1];
+        }
         double summemberships = 0;
         int nrFeatures = m_data[0].length;
         double[][] summatrix = new double[nrFeatures][nrFeatures];
@@ -165,12 +169,12 @@ public class FCMQualityMeasures {
         }
         return summatrix;
     }
-    
+
     /**
      * Calculates the Within-Cluster Variation for each cluster. We take 'crisp'
      * cluster centers to determine the membership from a datarow to a cluster
      * center.
-     * 
+     *
      * @return withinClusterVariations
      */
     public double[] getWithinClusterVariations() {
@@ -201,10 +205,10 @@ public class FCMQualityMeasures {
         m_allsum = (m_allsum / m_clustercenters.length);
         return withinclustervariations;
     }
-    
+
     /**
      * Calculates the Between-Cluster Variation.
-     * 
+     *
      * @return the between cluster variation.
      */
     public double getBetweenClusterVariation() {
@@ -232,7 +236,7 @@ public class FCMQualityMeasures {
         }
         return distance;
     }
-    
+
     /**
      * Helper method to determine the winner cluster center (The cluster center
      * to which the DataRow has the highest membership value).
@@ -250,7 +254,7 @@ public class FCMQualityMeasures {
         }
         return max;
     }
-    
+
     /**
      * Computes the Fuzzy HyperVolume for a given cluster.
      * @param c the cluster index to use.
@@ -260,7 +264,7 @@ public class FCMQualityMeasures {
         double[][] covarianceMatrix = computeFuzzyCovarianceMatrix(c);
         return Math.sqrt(determinant(covarianceMatrix));
     }
-    
+
     /*
      * Helper method for subtraction of two vectors.
      */
@@ -273,8 +277,8 @@ public class FCMQualityMeasures {
         }
         return result;
     }
-    
-    
+
+
     /*
      * Transforms the matrix into a triangle matrix, containing zero's above the
      * diagonal.
@@ -326,20 +330,20 @@ public class FCMQualityMeasures {
         return trianglematrix;
     }
 
-    
+
     /*
      * Gauss-algorithm for computing a determinant by transforming the matrix
      * into a triangle matrix and computing the product of the diagonal.
      */
     private double determinant(final double[][] matrix) {
-       
+
         int diagonallength = matrix.length;
         double det = 1;
         double[][] trianglematrix = upperTriangle(matrix);
         // multiply down diagonal
         for (int i = 0; i < diagonallength; i++) {
             det = det * trianglematrix[i][i];
-        } 
+        }
         det = det * m_iDF; // adjust w/ determinant factor
         return det;
     }

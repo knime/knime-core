@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 28, 2008 (wiswedel): created
  */
@@ -41,13 +41,13 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class ExtractVariablesNodeModel extends NodeModel {
 
     /** One input, one output.
-     * @param inOutType Type of first inport. */
+     * @param inType Type of first inport. */
     protected ExtractVariablesNodeModel(final PortType inType) {
         super(new PortType[]{inType},
                 new PortType[]{FlowVariablePortObject.TYPE});
@@ -62,7 +62,7 @@ public class ExtractVariablesNodeModel extends NodeModel {
         // simply output a dummy "Variable"-Port spec.
         return new PortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected PortObject[] execute(final PortObject[] inData,
@@ -72,7 +72,7 @@ public class ExtractVariablesNodeModel extends NodeModel {
         // simply output a dummy "Variable"-Port object.
         return new PortObject[]{new FlowVariablePortObject()};
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected void reset() {

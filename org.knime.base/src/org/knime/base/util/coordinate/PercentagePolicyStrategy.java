@@ -88,4 +88,12 @@ public class PercentagePolicyStrategy extends
                 (double)maxDomainValue, (double)tickDistance);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isMappingAllowed() {
+        return false;
+    }
+
 }

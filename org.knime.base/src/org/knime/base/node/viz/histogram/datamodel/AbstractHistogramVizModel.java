@@ -433,7 +433,8 @@ public abstract class AbstractHistogramVizModel {
      * Calculates the current preferred width of the bars.
      */
     private void checkBinWidth() {
-        if (m_drawingSpace == null) {
+        if (m_drawingSpace == null || (m_drawingSpace.getHeight() <= 0
+                && m_drawingSpace.getWidth() <= 0)) {
             return;
         }
         int binWidth = m_binWidth;
@@ -465,7 +466,8 @@ public abstract class AbstractHistogramVizModel {
      * Calculates the maximum width per bar for the current display settings.
      */
     private void calculateMaxBinWidth() {
-        if (m_drawingSpace == null) {
+        if (m_drawingSpace == null || (m_drawingSpace.getHeight() <= 0
+                && m_drawingSpace.getWidth() <= 0)) {
             return;
         }
         //we have to use the getBinCaptions method which checks if the missing
@@ -543,7 +545,8 @@ public abstract class AbstractHistogramVizModel {
             m_maxNoOfBins = values.size();
             return;
         }
-        if (m_drawingSpace == null) {
+        if (m_drawingSpace == null || (m_drawingSpace.getHeight() <= 0
+                && m_drawingSpace.getWidth() <= 0)) {
             //if no drawing space is defined we set the maximum number
             //of bins to the current number of bins
             m_maxNoOfBins = m_bins.size();

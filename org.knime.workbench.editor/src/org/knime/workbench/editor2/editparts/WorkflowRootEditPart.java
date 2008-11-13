@@ -41,9 +41,9 @@ import org.eclipse.gef.SnapToHelper;
 import org.eclipse.gef.commands.CommandStackListener;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.rulers.RulerProvider;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowEvent;
@@ -52,11 +52,11 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowContainerEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowXYLayoutPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapToPortGeometry;
-import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 import org.knime.workbench.editor2.figures.ProgressToolTipHelper;
 import org.knime.workbench.editor2.figures.WorkflowFigure;
 import org.knime.workbench.editor2.figures.WorkflowLayout;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
+import org.knime.workbench.ui.SyncExecQueueDispatcher;
 
 /**
  * Root controller for the <code>WorkflowManager</code> model object. Consider
@@ -134,10 +134,10 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         if (wfm.getNrWorkflowIncomingPorts() > 0) {
             if (m_inBar == null) {
                 m_inBar = new WorkflowPortBar(wfm, true);
-                ModellingNodeExtraInfo uiInfo = (ModellingNodeExtraInfo)
+                NodeUIInformation uiInfo = (NodeUIInformation)
                 wfm.getInPortsBarUIInfo();
                 if (uiInfo != null && uiInfo.isFilledProperly()) {
-                    m_inBar.setUIInfo((ModellingNodeExtraInfo)
+                    m_inBar.setUIInfo((NodeUIInformation)
                             wfm.getInPortsBarUIInfo());
                 }
             }
@@ -146,10 +146,10 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         if (wfm.getNrWorkflowOutgoingPorts() > 0) {
             if (m_outBar == null) {
                 m_outBar = new WorkflowPortBar(wfm, false);
-                ModellingNodeExtraInfo uiInfo = (ModellingNodeExtraInfo)
+                NodeUIInformation uiInfo = (NodeUIInformation)
                 wfm.getOutPortsBarUIInfo();
                 if (uiInfo != null && uiInfo.isFilledProperly()) {
-                    m_outBar.setUIInfo((ModellingNodeExtraInfo)
+                    m_outBar.setUIInfo((NodeUIInformation)
                             wfm.getOutPortsBarUIInfo());
                 }                
             }
@@ -289,7 +289,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         LOGGER.debug("WorkflowRoot: workflow changed, refreshing "
                 + "children/connections..");
 
-        Display.getDefault().asyncExec(new Runnable() {
+        SyncExecQueueDispatcher.asyncExec(new Runnable() {
 
             public void run() {
 

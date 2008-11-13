@@ -369,9 +369,16 @@ implements Serializable, AggregationModel<S, H> {
 
     /**
      * @param presentable <code>true</code> if this element is presentable
+     * @param calculator the hilite shape calculator
      */
-    protected void setPresentable(final boolean presentable) {
+    protected void setPresentable(final boolean presentable,
+            final HiliteShapeCalculator<S, H> calculator) {
+        if (m_presentable == presentable) {
+            return;
+        }
         m_presentable = presentable;
+        //recalculate the hilite shape
+        calculateHiliteShape(calculator);
     }
 
     /**

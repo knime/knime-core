@@ -35,8 +35,8 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Training Data">Input port for the training data</dataIn>
-		<dataIn index="1" name="Test Data">Input port for the test data</dataIn>
-		<dataOut index="0" name="Classified Data">Output data with class labels</dataOut>
+		<inPort index="0" name="Training Data">Input port for the training data</inPort>
+		<inPort index="1" name="Test Data">Input port for the test data</inPort>
+		<outPort index="0" name="Classified Data">Output data with class labels</outPort>
 	</ports>
 </knimeNode>

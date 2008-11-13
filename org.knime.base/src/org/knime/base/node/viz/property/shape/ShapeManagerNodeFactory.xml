@@ -38,8 +38,8 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Table">Table to which shape settings should be applied to</dataIn>
-		<dataOut index="0" name="Table with shapes">Same table with shape information applied to one column</dataOut>
-		<modelOut index="0" name="Shape Model">Shapes applied to the input table</modelOut>
+		<inPort index="0" name="Table">Table to which shape settings should be applied to</inPort>
+		<outPort index="0" name="Table with shapes">Same table with shape information applied to one column</outPort>
+		<outPort index="1" name="Shape Model">Shapes applied to the input table</outPort>
 	</ports>	
 </knimeNode>

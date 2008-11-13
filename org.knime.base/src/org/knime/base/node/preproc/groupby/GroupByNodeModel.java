@@ -177,6 +177,7 @@ public class GroupByNodeModel extends NodeModel {
                     new FileInputStream(new File("hilite_mapping.xml.gz")));
             try {
                 m_hilite.setMapper(DefaultHiLiteMapper.load(config));
+                m_hilite.addToHiLiteHandler(getInHiLiteHandler(0));
             } catch (final InvalidSettingsException ex) {
                 throw new IOException(ex.getMessage());
             }
@@ -207,9 +208,6 @@ public class GroupByNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_groupByCols.saveSettingsTo(settings);
-//        m_numericColMethod.saveSettingsTo(settings);
-//        m_nominalColMethod.saveSettingsTo(settings);
-//        m_moveGroupCols2Front.saveSettingsTo(settings);
         m_maxUniqueValues.saveSettingsTo(settings);
         m_enableHilite.saveSettingsTo(settings);
         m_sortInMemory.saveSettingsTo(settings);
@@ -288,20 +286,8 @@ public class GroupByNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_hilite.getFromHiLiteHandler().fireClearHiLiteEvent();
-        m_hilite.setMapper(null);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void setInHiLiteHandler(final int inIndex,
-            final HiLiteHandler hiLiteHdl) {
         m_hilite.removeAllToHiliteHandlers();
-        if (hiLiteHdl != null) {
-            m_hilite.addToHiLiteHandler(hiLiteHdl);
-        }
+        m_hilite.setMapper(null);
     }
 
     /**
@@ -323,28 +309,13 @@ public class GroupByNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "No input specification available.");
         }
-        final List<String> groupByCols = m_groupByCols.getIncludeList();
         final DataTableSpec origSpec = (DataTableSpec)inSpecs[0];
-        //we have to explicit set the all not group columns in the
-        //exclude list of the SettingsModelFilterString
-        final Collection<String> exclList =
-            getExcludeList(origSpec, groupByCols);
-        m_groupByCols.setExcludeList(exclList);
-        try {
-            GroupByTable.checkGroupCols(origSpec, groupByCols);
-        } catch (final IllegalArgumentException e) {
-            throw new InvalidSettingsException(
-                    "Please define the group by column(s)");
-        }
-        if (origSpec.getNumColumns() > 1
-                && groupByCols.size() == origSpec.getNumColumns()) {
-            setWarningMessage("All columns selected as group by column");
-        }
         if (origSpec.getNumColumns() < 1) {
             setWarningMessage(
                     "Input table should contain at least one column");
         }
 
+        final List<String> groupByCols = m_groupByCols.getIncludeList();
         //be compatible to the previous version
         checkColumnAggregators(groupByCols, origSpec);
         //remove all invalid column aggregators
@@ -361,6 +332,23 @@ public class GroupByNodeModel extends NodeModel {
 
         if (m_columnAggregators.isEmpty()) {
             setWarningMessage("No aggregation column defined");
+        }
+
+        //we have to explicit set the all not group columns in the
+        //exclude list of the SettingsModelFilterString
+        final Collection<String> exclList =
+            getExcludeList(origSpec, groupByCols);
+        m_groupByCols.setExcludeList(exclList);
+        //remove all invalid group columns
+        try {
+            GroupByTable.checkGroupCols(origSpec, groupByCols);
+        } catch (final IllegalArgumentException e) {
+            throw new InvalidSettingsException(
+                    "Please define the group by column(s)");
+        }
+        if (origSpec.getNumColumns() > 1
+                && groupByCols.size() == origSpec.getNumColumns()) {
+            setWarningMessage("All columns selected as group by column");
         }
         final DataTableSpec spec = GroupByTable.createGroupByTableSpec(
                 origSpec, groupByCols,
@@ -416,6 +404,7 @@ public class GroupByNodeModel extends NodeModel {
         if (m_enableHilite.getBooleanValue()) {
             m_hilite.setMapper(new DefaultHiLiteMapper(
                     resultTable.getHiliteMapping()));
+            m_hilite.addToHiLiteHandler(getInHiLiteHandler(0));
         }
         //check for skipped columns
         final String warningMsg = resultTable.getSkippedGroupsMessage(3, 3);

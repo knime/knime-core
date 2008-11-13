@@ -54,16 +54,8 @@ public class WorkflowEvent {
      NODE_ADDED,
      /** Event: node removed from workflow. */
      NODE_REMOVED,
-     /** Event: node was configured. */
-     NODE_CONFIGURED,
-     /** Event: UI info attached to node has changed. */
-     NODE_FINISHED,
-     /** Event: node was reset. */
-     NODE_RESET,
-     /** Event: node is being executed. */
-     NODE_STARTED,
-     /** Event: node is waiting for execution. */
-     NODE_WAITING
+     /** Event: workflow is marked as dirty. */
+     WORKFLOW_DIRTY,
     }
 
     private final NodeID m_id;
@@ -126,10 +118,15 @@ public class WorkflowEvent {
      */
     @Override
     public String toString() {
-        return "WorkflowEvent [type=" + getClass().getSimpleName()
-                + ";old=" + m_oldValue
-                + ";new=" + m_newValue + ";timestamp="
-                + DateFormat.getDateTimeInstance().format(new Date(m_timestamp))
-                + "]";
+        StringBuilder b = new StringBuilder(getClass().getSimpleName());
+        b.append(" [type=").append(m_type);
+        b.append(";node=").append(m_id);
+        b.append(";old=").append(m_oldValue);
+        b.append(";new=").append(m_newValue);
+        b.append(";timestamp=");
+        b.append(DateFormat.getDateTimeInstance().format(
+                new Date(m_timestamp)));
+        b.append("]");
+        return b.toString();
     }
 }

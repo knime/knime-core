@@ -43,11 +43,11 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Training data">Datatable with training data. Make
-		sure that the data are normalized!</dataIn>
-		<dataOut index="0" name="Cluster Memberships">Input table extended
-		 by cluster membership</dataOut>
-		<modelOut index="0" name="Prototypes">Cluster centers</modelOut>
+		<inPort index="0" name="Training data">Datatable with training data. Make
+		sure that the data are normalized!</inPort>
+		<outPort index="0" name="Cluster Memberships">Input table extended
+		 by cluster membership</outPort>
+		<outPort index="1" name="Prototypes">Cluster centers</outPort>
 	</ports>
 	<views>
 		<view index="0" name="Statistics View">

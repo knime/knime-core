@@ -33,17 +33,17 @@
 		</option>
 	</fullDescription>
 	<ports>
-		<dataIn index="0" name="Reference clustering">
+		<inPort index="0" name="Reference clustering">
 			Table containing reference clustering.
-		</dataIn>
-		<dataIn index="1" name="Clustering to score">
+		</inPort>
+		<inPort index="1" name="Clustering to score">
 			Table containing clustering (to score).
-		</dataIn>
-		<dataOut index="0" name="Quality Table">
+		</inPort>
+		<outPort index="0" name="Quality Table">
 			Table containing entropy values for each cluster. The last row
 			contains statistics on the entire clustering. It corresponds to
 			the table show in the Statistics View.
-		</dataOut>
+		</outPort>
 	</ports>
 	<views>
 		<view index="0" name="Statistics View">

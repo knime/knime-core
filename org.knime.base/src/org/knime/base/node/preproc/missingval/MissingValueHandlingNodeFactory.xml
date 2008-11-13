@@ -47,7 +47,7 @@
 	    </option>
 	</fullDescription>
     <ports>
-        <dataIn index="0" name="Table with missing values">Table potentially containing missing values.</dataIn>
-        <dataOut index="0" name="Corrected table">Table where missing values have been handled.</dataOut>
+        <inPort index="0" name="Table with missing values">Table potentially containing missing values.</inPort>
+        <outPort index="0" name="Corrected table">Table where missing values have been handled.</outPort>
 	</ports>
 </knimeNode>

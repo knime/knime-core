@@ -31,8 +31,8 @@
 		</option>
 	</fullDescription>
     <ports>
-		<dataOut index="0" name="Random data with cluster ID">Contains the data with the cluster id as last column</dataOut>
-		<dataOut index="1" name="Cluster centers">Contains the cluster centers. The attributes in the universes where
-			the cluster is not located, are filled with missing values.</dataOut>
+		<outPort index="0" name="Random data with cluster ID">Contains the data with the cluster id as last column</outPort>
+		<outPort index="1" name="Cluster centers">Contains the cluster centers. The attributes in the universes where
+			the cluster is not located, are filled with missing values.</outPort>
 	</ports>
 </knimeNode>

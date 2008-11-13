@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd" >
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd" >
 <knimeNode icon="pivot.png" type="Manipulator">
     <name>Pivoting</name>
     <shortDescription>Node computes an aggregation value between all 
@@ -42,12 +42,12 @@
         </option>
     </fullDescription>
     <ports>
-        <dataIn index="0" name="Data table">Input table with at least two 
+        <inPort index="0" name="Data table">Input table with at least two 
         columns used to group against the pivot column. In addition, an 
         aggregation column can be applied.
-        </dataIn>
-        <dataOut index="0" name="Pivoting table">Pivoting table with aggregated 
+        </inPort>
+        <outPort index="0" name="Pivoting table">Pivoting table with aggregated 
             values of co-occurrences between pivot and group column.
-		</dataOut>
+		</outPort>
     </ports>
 </knimeNode>

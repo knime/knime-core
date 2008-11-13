@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision: 5409 $ $Date: 2006-08-08 16:17:11 +0200 (Di, 08 Aug 2006) $ $Author: meinl $
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -26,22 +24,28 @@
  */
 package org.knime.workbench.help.intro;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
 
-import org.eclipse.jface.wizard.WizardDialog;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.INewWizard;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.internal.IWorkbenchHelpContextIds;
-import org.eclipse.ui.internal.Workbench;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.intro.IIntroManager;
+import org.eclipse.ui.intro.IIntroPart;
 import org.eclipse.ui.intro.IIntroSite;
 import org.eclipse.ui.intro.config.IIntroAction;
-
 import org.knime.workbench.ui.wizards.project.NewProjectWizard;
 
 /**
+ * This action is called when the user clicks "Open KNIME Workbench" in the
+ * intro page. It creates a new project with the standard name "KNIME_project".
+ * Since the workspace must be empty (otherwise the intro page won't show up)
+ * this name can be securely used.
  * 
- * @author Florian Georg, University of Konstanz
+ * @see NewProjectWizard
+ * 
+ * @author Fabian Dill, University of Konstanz
  */
 public class NewProjectWizardIntroAction implements IIntroAction {
 
@@ -50,24 +54,32 @@ public class NewProjectWizardIntroAction implements IIntroAction {
      */
     public void run(final IIntroSite site, final Properties params) {
 
-        // create a new NewProjectWizard
-        INewWizard wizard = new NewProjectWizard();
-
-        // get the active workbench window
-        IWorkbenchWindow window = Workbench.getInstance()
-                .getActiveWorkbenchWindow();
-
-        // init the wizard
-        wizard.init(window.getWorkbench(), null);
-
-        // get the parent shell and create a dialog from the wizard
-        Shell parent = window.getShell();
-        WizardDialog dialog = new WizardDialog(parent, wizard);
-        dialog.create();
-        window.getWorkbench().getHelpSystem().setHelp(dialog.getShell(),
-                IWorkbenchHelpContextIds.NEW_WIZARD_SHORTCUT);
-
-        dialog.open();
+        try {
+            // close the intro page
+            IIntroManager introManager =
+                    PlatformUI.getWorkbench().getIntroManager();
+            IIntroPart introPart = introManager.getIntro();
+            if (introPart != null) {
+                introManager.closeIntro(introPart);
+            }
+            PlatformUI.getWorkbench().getProgressService().busyCursorWhile(
+                    new IRunnableWithProgress() {
+                        @Override
+                        public void run(final IProgressMonitor monitor)
+                                throws InvocationTargetException,
+                                InterruptedException {
+                            try {
+                                // call static method on NewProjectWizard
+                                NewProjectWizard.doFinish("KNIME_project",
+                                        monitor);
+                            } catch (CoreException ce) {
+                                throw new RuntimeException(ce);
+                            }
+                        }
+                    });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

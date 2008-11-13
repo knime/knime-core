@@ -33,12 +33,12 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.Wizard;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
 /**
  * One page wizard to create a meta node by defining the number and type of in
@@ -162,7 +162,7 @@ public class AddMetaNodeWizard extends Wizard {
                 meta.getID());
         ((WorkflowManager)cont).setName(name);
         // create extra info and set it
-        ModellingNodeExtraInfo info = new ModellingNodeExtraInfo();
+        NodeUIInformation info = new NodeUIInformation();
 
         Viewport viewPort = ((ScalableFreeformRootEditPart)m_wfEditor
                 .getViewer().getRootEditPart()).getZoomManager().getViewport();

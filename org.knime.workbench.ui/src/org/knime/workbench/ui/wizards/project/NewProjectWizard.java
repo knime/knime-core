@@ -46,6 +46,7 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IViewReference;
@@ -189,7 +190,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
      * @param monitor Progress monitor
      * @throws CoreException if error while creating the project
      */
-    protected void doFinish(final String projectName,
+    public static void doFinish(final String projectName,
             final IProgressMonitor monitor) throws CoreException {
 
         IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
@@ -225,7 +226,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
         // open the model file in the editor
         monitor.setTaskName("Opening file for editing...");
-        getShell().getDisplay().asyncExec(new Runnable() {
+        Display.getDefault().asyncExec(new Runnable() {
             public void run() {
                 IWorkbenchPage page =
                         PlatformUI.getWorkbench().getActiveWorkbenchWindow()
@@ -242,7 +243,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 //        project.getProject().refreshLocal(IResource.DEPTH_ONE, monitor);
     }
 
-    private void throwCoreException(final String message) throws CoreException {
+    private static void throwCoreException(final String message) throws CoreException {
         IStatus status =
                 new Status(IStatus.ERROR, "org.knime.workbench.ui", IStatus.OK,
                         message, null);

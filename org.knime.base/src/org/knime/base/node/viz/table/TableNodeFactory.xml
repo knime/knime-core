@@ -9,8 +9,8 @@
             rows can be selected and hilited.</intro>
     </fullDescription>
     <ports>
-        <dataIn index="0" name="Input to display">
-                Input table to display.</dataIn>
+        <inPort index="0" name="Input to display">
+                Input table to display.</inPort>
     </ports>
     <views>
     	<view index="0" name="Table View">

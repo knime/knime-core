@@ -96,6 +96,11 @@ public class CSVWriterNodeModel extends NodeModel {
 
         // check consistency of settings
 
+        String fileName = fws.getFileName();
+        if (fileName == null || fileName.length() == 0) {
+            throw new InvalidSettingsException("Missing output file name.");
+        }
+
         // the separator must not be contained in the missing value pattern
         // nor in the quote begin pattern.
         if (notEmpty(fws.getColSeparator())) {

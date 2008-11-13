@@ -95,7 +95,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Display data">Data to display</dataIn>
+		<inPort index="0" name="Display data">Data to display</inPort>
 	</ports>	
 	<views>
 		<view index="0" name="Scatter Matrix">

@@ -26,7 +26,6 @@ package org.knime.core.node;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.workflow.NodeMessage;
 
 /**
  * 
@@ -45,6 +44,5 @@ public interface NodeContentPersistor {
     PortObject getPortObject(final int outportIndex);
     String getPortObjectSummary(final int outportIndex);
     BufferedDataTable[] getInternalHeldTables();
-    NodeMessage getNodeMessage();
 
 }

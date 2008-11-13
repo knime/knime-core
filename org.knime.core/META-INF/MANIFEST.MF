@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Core API
-Bundle-SymbolicName: org.knime.core;singleton=true
+Bundle-SymbolicName: org.knime.core;singleton:=true
 Bundle-Version: 2.1.0.0018128
 Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
 Bundle-ClassPath: knime-core-patches.jar,
@@ -9,14 +9,14 @@ Provide-Package: log4j,
  org.knime.core,
  org.knime.core.data,
  org.knime.core.data.collection,
- org.knime.core.data.collection.bitvector,
- org.knime.core.data.collection.bytevector,
  org.knime.core.data.container,
  org.knime.core.data.def,
  org.knime.core.data.icon,
  org.knime.core.data.property,
  org.knime.core.data.renderer,
  org.knime.core.data.util,
+ org.knime.core.data.vector.bitvector,
+ org.knime.core.data.vector.bytevector,
  org.knime.core.eclipseUtil,
  org.knime.core.internal,
  org.knime.core.node,
@@ -41,3 +41,5 @@ Require-Bundle: org.eclipse.core.runtime;reprovide=true,
  org.apache.log4j
 Eclipse-LazyStart: true
 Eclipse-RegisterBuddy: org.apache.log4j
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ManifestVersion: 2

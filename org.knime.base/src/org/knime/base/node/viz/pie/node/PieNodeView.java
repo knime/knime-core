@@ -24,12 +24,11 @@
  */
 package org.knime.base.node.viz.pie.node;
 
-import org.knime.core.node.NodeView;
-import org.knime.core.node.property.hilite.HiLiteHandler;
-
 import org.knime.base.node.viz.pie.datamodel.PieVizModel;
 import org.knime.base.node.viz.pie.impl.PiePlotter;
 import org.knime.base.node.viz.pie.impl.PieProperties;
+import org.knime.core.node.NodeView;
+import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * The abstract node view which contains the pie chart panel.
@@ -37,7 +36,7 @@ import org.knime.base.node.viz.pie.impl.PieProperties;
  * @author Tobias Koetter, University of Konstanz
  * @param <P> the {@link PieProperties} implementation
  * @param <D> the {@link PieVizModel}implementation
- * @param <T> the {@lin PieNodeModel} implementation
+ * @param <T> the {@link PieNodeModel} implementation
  *
  */
 public abstract class PieNodeView<P extends PieProperties<D>,

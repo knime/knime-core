@@ -24,12 +24,14 @@
  */
 package org.knime.base.data.bitvector;
 
+import java.util.List;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.collection.bitvector.DenseBitVector;
-import org.knime.core.data.collection.bitvector.DenseBitVectorCellFactory;
+import org.knime.core.data.vector.bitvector.DenseBitVector;
+import org.knime.core.data.vector.bitvector.DenseBitVectorCellFactory;
 
 /**
  *
@@ -44,6 +46,8 @@ public class Numeric2BitVectorMeanCellFactory extends BitVectorCellFactory {
     private int m_totalNrOf0s;
 
     private int m_totalNrOf1s;
+    
+    private final List<Integer>m_columns;
 
     /**
      *
@@ -53,10 +57,12 @@ public class Numeric2BitVectorMeanCellFactory extends BitVectorCellFactory {
      *            (percentage of the mean)
      */
     public Numeric2BitVectorMeanCellFactory(final DataColumnSpec bitColSpec,
-            final double[] meanValues, final double meanThreshold) {
+            final double[] meanValues, final double meanThreshold, 
+            final List<Integer>columns) {
         super(bitColSpec);
         m_meanValues = meanValues;
         m_meanFactor = meanThreshold;
+        m_columns = columns;
     }
 
     /**
@@ -89,16 +95,14 @@ public class Numeric2BitVectorMeanCellFactory extends BitVectorCellFactory {
     @Override
     public DataCell getCell(final DataRow row) {
         incrementNrOfRows();
-        DenseBitVector bitSet = new DenseBitVector(row.getNumCells());
-        for (int i = 0; i < row.getNumCells(); i++) {
-            if (!row.getCell(i).getType().isCompatible(DoubleValue.class)) {
-                continue;
-            }
-            if (row.getCell(i).isMissing()) {
+        DenseBitVector bitSet = new DenseBitVector(m_columns.size());
+        for (int i = 0; i < m_columns.size(); i++) {
+            DataCell cell = row.getCell(m_columns.get(i));
+            if (cell.isMissing()) {
                 m_totalNrOf0s++;
                 continue;
             }
-            double currValue = ((DoubleValue)row.getCell(i)).getDoubleValue();
+            double currValue = ((DoubleValue)cell).getDoubleValue();
             if (currValue >= (m_meanFactor * m_meanValues[i])) {
                 bitSet.set(i);
                 m_totalNrOf1s++;

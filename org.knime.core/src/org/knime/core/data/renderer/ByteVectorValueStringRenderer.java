@@ -22,7 +22,7 @@
  */
 package org.knime.core.data.renderer;
 
-import org.knime.core.data.collection.bytevector.ByteVectorValue;
+import org.knime.core.data.vector.bytevector.ByteVectorValue;
 
 /**
  * Renderer for byte vector values showing the string representation.

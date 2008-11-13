@@ -40,8 +40,8 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Input">Arbitrary input data.</dataIn>
-		<dataOut index="0" name="Input with comparison column">
-		Input data plus comparison column</dataOut>
+		<inPort index="0" name="Input">Arbitrary input data.</inPort>
+		<outPort index="0" name="Input with comparison column">
+		Input data plus comparison column</outPort>
 	</ports>	
 </knimeNode>

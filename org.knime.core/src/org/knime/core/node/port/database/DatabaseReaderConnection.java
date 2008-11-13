@@ -31,6 +31,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
 
 import org.knime.core.data.DataCell;
@@ -68,7 +69,7 @@ public final class DatabaseReaderConnection {
     
     private DatabaseQueryConnectionSettings m_conn;
     
-    private PreparedStatement m_stmt;
+    private Statement m_stmt;
     
     /**
      * Creates a empty handle for a new connection.
@@ -105,14 +106,33 @@ public final class DatabaseReaderConnection {
      *         established
      */
     public DataTableSpec getDataTableSpec() throws SQLException {
-        if (m_spec == null) {
+        if (m_spec == null || m_stmt == null) {
             try {
                 String tableID = "table_" + hashCode();
                 String pQuery = "SELECT * FROM (" + m_conn.getQuery() + ") " 
                     + tableID + " WHERE 1 = 0";
-                m_stmt = m_conn.createConnection().prepareStatement(pQuery);
-                m_stmt.execute();
-                m_spec = createTableSpec(m_stmt.getMetaData());
+                ResultSet result = null;
+                try {
+                    // try to see if prepared statements are supported
+                    m_stmt = m_conn.createConnection().prepareStatement(pQuery);
+                    ((PreparedStatement) m_stmt).execute();
+                    m_spec = createTableSpec(
+                            ((PreparedStatement) m_stmt).getMetaData());
+                } catch (SQLException e) {
+                    LOGGER.warn("PreparedStatment not support by database: ", e);
+                    // otherwise use standard statement
+                    m_stmt = m_conn.createConnection().createStatement();
+                    result = m_stmt.executeQuery(pQuery);
+                    m_spec = createTableSpec(result.getMetaData());
+                } finally {
+                    if (result != null) {
+                        result.close();
+                    }
+                    // ensure we have a non-prepared statement to access data
+                    if (m_stmt == null || m_stmt instanceof PreparedStatement) {
+                        m_stmt = m_conn.createConnection().createStatement();   
+                    }
+                }
             } catch (SQLException sql) {
                 if (m_stmt != null) {
                     try {
@@ -140,17 +160,7 @@ public final class DatabaseReaderConnection {
     public BufferedDataTable createTable(final ExecutionContext exec)
             throws CanceledExecutionException, SQLException {
         final DataTableSpec spec = getDataTableSpec();
-        if (m_stmt == null) {
-            try {
-                m_stmt = m_conn.createConnection().prepareStatement(
-                        m_conn.getQuery());
-            } catch (Throwable t) {
-                throw new SQLException(t);
-            }   
-        } else {
-            m_stmt.execute(m_conn.getQuery());
-        }
-        final ResultSet result = m_stmt.getResultSet();
+        final ResultSet result = m_stmt.executeQuery(m_conn.getQuery());
         BufferedDataTable table = exec.createBufferedDataTable(new DataTable() {
             /**
              * {@inheritDoc}
@@ -168,7 +178,8 @@ public final class DatabaseReaderConnection {
             }
 
         }, exec);
-        result.close();
+        m_stmt.close();
+        m_stmt = null;
         return table;
     }
     
@@ -196,8 +207,8 @@ public final class DatabaseReaderConnection {
         }
         buf.close();
         DataTable table = buf.getTable();
-        result.close();
         m_stmt.close();
+        m_stmt = null;
         return table;
     }
 
@@ -251,6 +262,10 @@ public final class DatabaseReaderConnection {
     private class DBRowIterator extends RowIterator {
         
         private final ResultSet m_result;
+        
+        private boolean m_hasExceptionReported = false;
+        
+        private int m_rowCounter = 1;
 
         /**
          * Creates new iterator.
@@ -275,9 +290,7 @@ public final class DatabaseReaderConnection {
                 try {
                     m_result.close();
                 } catch (SQLException e) {
-                    LOGGER.error("SQL Exception: ", e);
-                } catch (Throwable t) {
-                    LOGGER.fatal("Unknown error: ", t);
+                    LOGGER.error("SQL Exception while closing result set: ", e);
                 }
             }
             return ret;
@@ -300,7 +313,7 @@ public final class DatabaseReaderConnection {
                             cells[i] = new IntCell(integer);
                         }
                     } catch (SQLException sqle) {
-                        LOGGER.error("SQL Exception reading Int:", sqle);
+                        handlerException("SQL Exception reading Int:", sqle);
                         cells[i] = DataType.getMissingCell();
                     }
                 } else if (type.isCompatible(DoubleValue.class)) {
@@ -312,7 +325,7 @@ public final class DatabaseReaderConnection {
                             cells[i] = new DoubleCell(dbl);
                         }
                     } catch (SQLException sqle) {
-                        LOGGER.error("SQL Exception reading Double:", sqle);
+                        handlerException("SQL Exception reading Double:", sqle);
                         cells[i] = DataType.getMissingCell();
                     }
                 } else {
@@ -347,15 +360,17 @@ public final class DatabaseReaderConnection {
                                 s = writer.toString();
                             }
                         } else {
-                            s = m_result.getString(i + 1);
-                            if (wasNull()) {
+                            Object o = m_result.getObject(i + 1);
+                            if (o == null || wasNull()) {
                                 s = null;
+                            } else {
+                                s = o.toString();
                             }
                         }
                     } catch (SQLException sqle) {
-                        LOGGER.error("SQL Exception reading String:", sqle);
+                        handlerException("SQL Exception reading Object:", sqle);
                     } catch (IOException ioe) {
-                        LOGGER.error("I/O Exception reading String:", ioe);
+                        handlerException("I/O Exception reading Object:", ioe);
                     }
                     if (s == null) {
                         cells[i] = DataType.getMissingCell();
@@ -364,11 +379,13 @@ public final class DatabaseReaderConnection {
                     }
                 }
             }
-            int rowId = cells.hashCode();
+            m_rowCounter++;
+            int rowId = m_rowCounter;
             try {
                 rowId = m_result.getRow();
             } catch (SQLException sqle) {
-                LOGGER.error("SQL Exception:", sqle);
+                 handlerException(
+                         "SQL Exception while retrieving row id:", sqle);
             }
             return new DefaultRow(RowKey.createRowKey(rowId), cells);
         }
@@ -377,8 +394,18 @@ public final class DatabaseReaderConnection {
             try {
                 return m_result.wasNull();
             } catch (SQLException sqle) {
-                LOGGER.error("SQL Exception:", sqle);
+                handlerException("SQL Exception:", sqle);
                 return true;
+            }
+        }
+        
+        private void handlerException(final String msg, final Exception e) {
+            if (m_hasExceptionReported) {
+                LOGGER.debug(msg, e);
+            } else {
+                m_hasExceptionReported = true;
+                LOGGER.error(msg + " - all further errors are suppressed "
+                        + "and reported on debug level only", e);
             }
         }
 

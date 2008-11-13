@@ -249,10 +249,10 @@ public class SetOperatorNodeModel extends NodeModel {
     private void initializeHiliteHandler(
             final DefaultHiLiteMapper defaultHiLiteMapper,
             final DefaultHiLiteMapper defaultHiLiteMapper2) {
-        m_hilite0.addToHiLiteHandler(getInHiLiteHandler(0));
         m_hilite0.setMapper(defaultHiLiteMapper);
-        m_hilite1.addToHiLiteHandler(getInHiLiteHandler(1));
         m_hilite1.setMapper(defaultHiLiteMapper2);
+        m_hilite0.addToHiLiteHandler(getInHiLiteHandler(0));
+        m_hilite1.addToHiLiteHandler(getInHiLiteHandler(1));
     }
 
     /**
@@ -289,10 +289,8 @@ public class SetOperatorNodeModel extends NodeModel {
     @Override
     protected void reset() {
         m_hilite0.removeAllToHiliteHandlers();
-        m_hilite0.getFromHiLiteHandler().fireClearHiLiteEvent();
-        m_hilite0.setMapper(null);
         m_hilite1.removeAllToHiliteHandlers();
-        m_hilite1.getFromHiLiteHandler().fireClearHiLiteEvent();
+        m_hilite0.setMapper(null);
         m_hilite1.setMapper(null);
     }
 }

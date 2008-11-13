@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Visualizer" icon="./cond_box.png" >
     <name>Conditional Box Plot</name>
     
@@ -92,10 +92,10 @@
     </fullDescription>
     
     <ports>
-        <dataIn index="0" name="Display data">Data to display</dataIn>
-        <dataOut index="0" name="Robust Statistics">DataTable with statistics 
+        <inPort index="0" name="Display data">Data to display</inPort>
+        <outPort index="0" name="Robust Statistics">DataTable with statistics 
         for each class: minimum, smallest value (non-outlier), Q1, 
-        median, Q3, largest value (non-outlier), and maximum.</dataOut>
+        median, Q3, largest value (non-outlier), and maximum.</outPort>
     </ports>    
     <views>
         <view index="0" name="Conditional Box Plot">

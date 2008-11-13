@@ -148,6 +148,7 @@ Export-Package: org.knime.base.collection.list.create,
  org.knime.base.node.preproc.stringreplacer.dict,
  org.knime.base.node.preproc.transpose,
  org.knime.base.node.preproc.valcount,
+ org.knime.base.node.rules,
  org.knime.base.node.util,
  org.knime.base.node.util.cache,
  org.knime.base.node.util.exttool,
@@ -197,3 +198,4 @@ Export-Package: org.knime.base.collection.list.create,
  org.knime.base.util.kdtree,
  org.knime.base.util.math,
  org.knime.base.util.pmml.samples
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6

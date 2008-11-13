@@ -184,6 +184,13 @@
             name="Cross Validation"
             path="/loopsupport">
       </category>
+      <category
+            after="meta"
+            description="miscellaneous nodes"
+            icon="icons/missing.gif"
+            level-id="misc"
+            name="Misc"
+            path="/"/>      
    </extension>
             
      <extension
@@ -453,6 +460,7 @@
          factory-class="org.knime.base.node.preproc.discretization.caim2.modelcreator.CAIMDiscretization2NodeFactory"
          id="org.knime.base.node.preproc.discretization.caim.modelcreator.CAIMDiscretizationNodeFactory"/>
     <node
+         after="org.knime.base.node.preproc.discretization.caim2.modelcreator.CAIMDiscretizationNodeFactory"
    		 category-path="/manipulation/column"
          factory-class="org.knime.base.node.preproc.discretization.caim2.modelapply.Discretization2ApplyNodeFactory"
          id="org.knime.base.node.preproc.discretization.caim.modelapply.DiscretizationApplyNodeFactory"/>
@@ -846,6 +854,11 @@
             expert-flag="false"
             factory-class="org.knime.base.node.preproc.filter.nominal.NominalValueRowFilterNodeFactory"
             id="org.knime.base.node.preproc.filter.nominal.NominalValueRowFilterNodeFactory">
+      </node>
+      <node
+            category-path="/misc"
+            factory-class="org.knime.base.node.rules.RuleEngineNodeFactory"
+            id="org.knime.base.node.rules.RuleEngineNodeFactory">
       </node>
       
    </extension>

@@ -29,10 +29,10 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
-import org.eclipse.ui.internal.Workbench;
+import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger.LEVEL;
-import org.knime.workbench.preferences.HeadlessPreferencesConstants;
-import org.knime.workbench.repository.KNIMERepositoryPlugin;
+import org.knime.workbench.core.KNIMECorePlugin;
+import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
 
 /**
  *
@@ -55,7 +55,7 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
 
         // get the preference store for the UI plugin
         IPreferenceStore store =
-                KNIMERepositoryPlugin.getDefault().getPreferenceStore();
+                KNIMECorePlugin.getDefault().getPreferenceStore();
         m_tempPath = store.getString(HeadlessPreferencesConstants.P_TEMP_DIR);
     }
 
@@ -151,7 +151,7 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
 
         // get the preference store for the UI plugin
         IPreferenceStore store =
-                KNIMERepositoryPlugin.getDefault().getPreferenceStore();
+                KNIMECorePlugin.getDefault().getPreferenceStore();
         String currentTmpDir =
                 store.getString(HeadlessPreferencesConstants.P_TEMP_DIR);
         boolean tempDirChanged = !m_tempPath.equals(currentTmpDir);
@@ -170,7 +170,7 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
                 return;
             }
 
-            Workbench.getInstance().restart();
+            PlatformUI.getWorkbench().restart();
         }
     }
 
@@ -180,7 +180,7 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
     @Override
     public void init(final IWorkbench workbench) {
         // we use the pref store of the UI plugin
-        setPreferenceStore(KNIMERepositoryPlugin.getDefault()
+        setPreferenceStore(KNIMECorePlugin.getDefault()
                 .getPreferenceStore());
     }
 

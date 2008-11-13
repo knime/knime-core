@@ -26,9 +26,7 @@ import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.EventObject;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
@@ -67,8 +65,11 @@ import org.eclipse.gef.ui.actions.WorkbenchPartAction;
 import org.eclipse.gef.ui.parts.GraphicalEditor;
 import org.eclipse.gef.ui.parts.GraphicalViewerKeyHandler;
 import org.eclipse.gef.ui.properties.UndoablePropertySheetEntry;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
@@ -90,16 +91,13 @@ import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.eclipse.ui.views.properties.IPropertySheetPage;
 import org.eclipse.ui.views.properties.PropertySheetPage;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowEvent;
-import org.knime.core.node.workflow.WorkflowException;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
@@ -117,9 +115,9 @@ import org.knime.workbench.editor2.actions.PasteAction;
 import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
-import org.knime.workbench.editor2.actions.job.ProgressMonitorJob;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.repository.RepositoryManager;
+import org.knime.workbench.ui.SyncExecQueueDispatcher;
 import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
 
 /**
@@ -179,13 +177,6 @@ public class WorkflowEditor extends GraphicalEditor implements
     private PropertySheetPage m_undoablePropertySheetPage;
 
     private final WorkflowSelectionTool m_selectionTool;
-
-    /**
-     * Stores possible exceptions from the workflow manager that can occur
-     * during loading the workflow. The WorkflowException is a collection
-     * exception (possible exceptions for each node).
-     */
-    private WorkflowException m_workflowException;
 
     private boolean m_loadingCanceled;
 
@@ -271,9 +262,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         NodeLogger.getLogger(WorkflowEditor.class).debug(
                 "Opening workflow Editor on " + input.getName());
 
-        // reset the workflow exception
-        m_workflowException = null;
-
         // store site and input
         setSite(site);
         setInput(input);
@@ -287,34 +275,6 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // add this editor as a listener to WorkflowEvents
         m_manager.addListener(this);
-
-        // in case there occurred exceptions during loading the workflow
-        // display them
-        if (m_workflowException != null) {
-
-            StringBuilder sb = new StringBuilder();
-            sb.append("Exceptions occurred during workflow loading!\n\n");
-
-            WorkflowException we = m_workflowException;
-            int counter = 1;
-            do {
-                sb.append(counter + ". Exception:\n");
-                String weMsg = we.getMessage();
-
-                if (weMsg == null) {
-                    sb.append("no details available");
-                } else {
-                    sb.append(weMsg);
-                }
-
-                sb.append("\n");
-                we = we.getNextException();
-                counter++;
-            } while (we != null);
-
-            // show message
-            showInfoMessage("Workflow could not be loaded ...", sb.toString());
-        }
     }
 
     private List<IEditorPart> getSubEditors() {
@@ -553,6 +513,30 @@ public class WorkflowEditor extends GraphicalEditor implements
         ((WorkflowRootEditPart)getGraphicalViewer().getRootEditPart()
                 .getChildren().get(0))
                 .createToolTipHelper(getSite().getShell());
+        
+        parent.addDisposeListener(new DisposeListener() {
+
+            @Override
+            public void widgetDisposed(final DisposeEvent e) {
+                // bugfix 799: not possible to stop closing earlier if user 
+                // decides to NOT save it. Thus we have at least to try to 
+                // cancel all running nodes
+                try {
+                    if (m_manager.getState().executionInProgress()) {
+                        for (NodeContainer container 
+                                    : m_manager.getNodeContainers()) {
+                            m_manager.cancelExecution(container);
+    }
+                    }
+                } catch (Throwable t) {
+                    // at least we have tried it
+                    LOGGER.error(
+                            "Could not cancel workflow manager for project "
+                            + m_fileResource.getProject().getName(), t);
+                }
+            }
+            
+        });
     }
 
     /**
@@ -621,6 +605,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         // LOGGER.debug("Created new WFM object as input");
 
         LOGGER.debug("Resource File's project: " + m_fileResource.getProject());
+        
         final File file = m_fileResource.getLocation().toFile();
         try {
             // FIXME:
@@ -639,10 +624,6 @@ public class WorkflowEditor extends GraphicalEditor implements
             LoadWorkflowRunnable loadWorflowRunnable =
                     new LoadWorkflowRunnable(this, file);
             ps.busyCursorWhile(loadWorflowRunnable);
-            ProjectWorkflowMap.putWorkflow(
-                    m_fileResource.getProject().getName(), 
-                    m_manager);
-
             // check if the editor should be disposed
             if (m_manager == null) {
                 if (m_loadingCanceled) {
@@ -661,11 +642,14 @@ public class WorkflowEditor extends GraphicalEditor implements
                     });
                     throw new OperationCanceledException(
                             m_loadingCanceledMessage);
-                } else {
-                    throw new RuntimeException("Workflow could not be loaded");
+                } else if (loadWorflowRunnable.getThrowable() != null) {
+                    throw new RuntimeException(
+                            loadWorflowRunnable.getThrowable());
                 }
             }
-
+            ProjectWorkflowMap.putWorkflow(
+                    m_fileResource.getProject().getName(), 
+                    m_manager);
             m_manager.addListener(this);
             m_manager.addNodeStateChangeListener(this);
         } catch (InterruptedException ie) {
@@ -926,6 +910,10 @@ public class WorkflowEditor extends GraphicalEditor implements
             return;
         }
 
+        // to be sure to mark dirty and inform the user about running nodes
+        // we ask for the state BEFORE saving
+        // this flag is evaluated at the end of this method
+        boolean wasInProgress = false;
         try {
             // make sure the resource is "fresh" before saving...
             // m_fileResource.refreshLocal(IResource.DEPTH_ONE, null);
@@ -938,6 +926,9 @@ public class WorkflowEditor extends GraphicalEditor implements
             SaveWorkflowRunnable saveWorflowRunnable =
                     new SaveWorkflowRunnable(this, file, exceptionMessage,
                             monitor);
+            
+            wasInProgress = m_manager.getState().executionInProgress();
+            
             ps.run(true, false, saveWorflowRunnable);
             // after saving the workflow, check for the import marker
             // and delete it
@@ -986,20 +977,27 @@ public class WorkflowEditor extends GraphicalEditor implements
                 }
             });
         }
-        // try {
-        // // try to refresh project
-        // // m_fileResource.getProject().refreshLocal(IResource.DEPTH_INFINITE,
-        // // monitor);
-        //
-        // //archive attribute aendern
-        // } catch (CoreException e) {
-        // // TODO Auto-generated catch block
-        // LOGGER.debug("", e);
-        // }
-
-        // mark sub editors as saved
 
         monitor.done();
+
+        // bugfix 799 (partly)
+        // check if the workflow manager is in execution
+        // this happens if the user pressed "Yes" on save confirmation dialog
+        // or simply saves (Ctrl+S)
+        if (wasInProgress) {
+            markDirty();
+            Display.getDefault().syncExec(new Runnable() {
+                @Override
+                public void run() {
+                    MessageDialog.openInformation(
+                            Display.getDefault().getActiveShell(),
+                            "Workflow in execution",
+                            "Executing nodes are not saved!");
+                }
+            });
+//            throw new OperationCanceledException(
+//                    "Workflow cannot be closed, while executing!");
+        } 
     }
 
     /**
@@ -1180,51 +1178,18 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     }
 
-    private final Map<NodeID, ProgressMonitorJob> m_dummyNodeJobs =
-            new HashMap<NodeID, ProgressMonitorJob>();
-
     /**
      * Listener callback, listens to workflow events and triggers UI updates.
      *
      * {@inheritDoc}
      */
     public void workflowChanged(final WorkflowEvent event) {
-
         LOGGER.debug("Workflow event triggered: " + event.toString());
-        Display.getDefault().asyncExec(new Runnable() {
+        SyncExecQueueDispatcher.asyncExec(new Runnable() {
             @Override
             public void run() {
-                // TODO Auto-generated method stub
-
                 markDirty();
                 updateActions();
-
-                if (event.getType().equals(WorkflowEvent.Type.NODE_WAITING)) {
-                    NodeContainer nc = (NodeContainer)event.getOldValue();
-
-                    NodeProgressMonitor pm =
-                            (NodeProgressMonitor)event.getNewValue();
-
-                    ProgressMonitorJob job =
-                            new ProgressMonitorJob(nc.getCustomName() + " ("
-                                    + nc.getName() + ")", pm, m_manager, nc,
-                                    "Queued for execution...");
-                    // Reverted as not properly ordered yet. Improve in next
-                    // version
-                    // job.schedule();
-
-                    Object o = m_dummyNodeJobs.put(event.getID(), job);
-                    assert (o == null);
-
-                } else if (event.getType().equals(
-                        WorkflowEvent.Type.NODE_FINISHED)) {
-                    // TODO: Cleanup, Review, Beautify.
-                    ProgressMonitorJob j =
-                            m_dummyNodeJobs.remove(event.getID());
-                    if (j != null) {
-                        j.finish();
-                    }
-                }
             }
         });
 
@@ -1238,7 +1203,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             m_isDirty = true;
             m_manager.setDirty();
 
-            Display.getDefault().asyncExec(new Runnable() {
+            SyncExecQueueDispatcher.asyncExec(new Runnable() {
                 public void run() {
                     firePropertyChange(IEditorPart.PROP_DIRTY);
                 }
@@ -1304,18 +1269,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         }
                     });
 
-                } else if ((delta.getKind() & IResourceDelta.REMOVED) != 0
-                        && (delta.getFlags() & IResourceDelta.MOVED_TO) == 0) {
-                    // We can't save the workflow here, so unsaved changes are
-                    // definitly lost. Well, people deleting projects really
-                    // should know what they're doing ;-)
-                    Display.getDefault().asyncExec(new Runnable() {
-                        public void run() {
-                            getEditorSite().getPage().closeEditor(
-                                    WorkflowEditor.this, false);
-                        }
-                    });
-                }
+                } 
             }
 
             // we're only interested in deltas that are about "our" resource
@@ -1354,7 +1308,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         + " resource has been removed.");
 
                 // close the editor
-                Display.getDefault().asyncExec(new Runnable() {
+                Display.getDefault().syncExec(new Runnable() {
                     public void run() {
                         getEditorSite().getPage().closeEditor(
                                 WorkflowEditor.this, false);
@@ -1482,17 +1436,6 @@ public class WorkflowEditor extends GraphicalEditor implements
     void setLoadingCanceledMessage(final String message) {
         m_loadingCanceled = true;
         m_loadingCanceledMessage = message;
-    }
-
-    /**
-     * Set if the workflow loading process encountered an exception. Should only
-     * be invoked during workflow loading.
-     *
-     * @param exception the exception to set
-     * @see LoadWorkflowRunnable
-     */
-    void setWorkflowException(final WorkflowException exception) {
-        m_workflowException = exception;
     }
 
     /**

@@ -372,7 +372,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         final Coordinate aggrCoordinate = getAggregationCoordinate();
         final int baseLine =
             (int)(drawingHeight - aggrCoordinate.calculateMappedValue(
-                            new DoubleCell(0), drawingHeight, true));
+                            new DoubleCell(0), drawingHeight));
         final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
 
         final int newBinWidth = vizModel.getBinWidth();
@@ -385,7 +385,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         for (final BinDataModel bin : vizModel.getBins()) {
             final DataCell captionCell = bin.getXAxisCaptionCell();
             final double labelCoord = xCoordinates.calculateMappedValue(
-                    captionCell, drawingWidth, true);
+                    captionCell, drawingWidth);
             //subtract half of the bar width from the start position to place
             //the middle point of the bar on the mapped coordinate position
             final int xCoord = (int)(labelCoord - (newBinWidth / 2));
@@ -857,7 +857,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             throw new IllegalArgumentException("Y coordinates not defined");
         }
         final CoordinateMapping[] tickPos = yCoordinates
-                .getTickPositions(drawingHeight, true);
+                .getTickPositions(drawingHeight);
         final int[] gridLines = new int[tickPos.length];
         for (int i = 0, length = tickPos.length; i < length; i++) {
             gridLines[i] = (int)(drawingHeight - tickPos[i]

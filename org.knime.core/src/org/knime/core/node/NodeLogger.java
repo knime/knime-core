@@ -40,6 +40,7 @@ import org.apache.log4j.Appender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
+import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.WriterAppender;
 import org.apache.log4j.varia.LevelRangeFilter;
 import org.apache.log4j.varia.NullAppender;
@@ -134,8 +135,15 @@ public final class NodeLogger {
                 copyCurrentLog4j(log4j);
             }
 
-            if (System.getProperty("log4j.configuration") == null) {
+            final String file = System.getProperty("log4j.configuration");
+            if (file == null) {
                 DOMConfigurator.configure(log4j.toURI().toURL());
+            } else {
+                if (file.endsWith(".xml")) {
+                    DOMConfigurator.configure(file);
+                } else {
+                    PropertyConfigurator.configure(file);
+                }
             }
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -281,7 +289,7 @@ public final class NodeLogger {
         l
                 .info("# number of CPUs="
                         + Runtime.getRuntime().availableProcessors());
-        l.info("# assertions=" + (KNIMEConstants.ASSERTIONS_ENABLED 
+        l.info("# assertions=" + (KNIMEConstants.ASSERTIONS_ENABLED
                 ? "on" : "off"));
         l.info("#############################################################");
     }
@@ -581,6 +589,7 @@ public final class NodeLogger {
 
     /**
      * Returns the minimum logging retrieved from the underlying Log4J logger.
+     *
      * @return minimum logging level
      */
     public LEVEL getLevel() {
@@ -589,6 +598,7 @@ public final class NodeLogger {
 
     /**
      * Checks if debug logging level is enabled.
+     *
      * @return <code>true</code> if debug logging level is enabled, otherwise
      *         <code>false</code>
      */
@@ -598,6 +608,7 @@ public final class NodeLogger {
 
     /**
      * Checks if info logging level is enabled.
+     *
      * @return <code>true</code> if info logging level is enabled, otherwise
      *         <code>false</code>
      */
@@ -606,8 +617,9 @@ public final class NodeLogger {
     }
 
     /**
-     * Returns <code>true</code> if the underlying Log4J logger is enabled
-     * for the given <code>level</code>.
+     * Returns <code>true</code> if the underlying Log4J logger is enabled for
+     * the given <code>level</code>.
+     *
      * @param level to test logging enabled
      * @return <code>true</code> if logging is enabled, otherwise
      *         <code>false</code>

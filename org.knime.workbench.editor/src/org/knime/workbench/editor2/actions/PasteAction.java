@@ -34,6 +34,8 @@ import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.ConnectionUIInformation;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.editor2.ClipboardWorkflowManager;
@@ -41,8 +43,6 @@ import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
-import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
-import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 
 /**
  * Implements the clipboard paste action to paste nodes and connections from the
@@ -124,9 +124,9 @@ public class PasteAction extends AbstractClipboardAction {
         int[] moveDist = calculateShift(copiedNodes);
         for (NodeID id : copiedNodes) {
             newIDs.add(id);
-            ModellingNodeExtraInfo uiInfo;
+            NodeUIInformation uiInfo;
             NodeContainer nc = getManager().getNodeContainer(id);
-                uiInfo = (ModellingNodeExtraInfo)nc.getUIInformation();
+                uiInfo = (NodeUIInformation)nc.getUIInformation();
             uiInfo.changePosition(moveDist);
             nc.setUIInformation(uiInfo);
         }
@@ -136,8 +136,8 @@ public class PasteAction extends AbstractClipboardAction {
                     && newIDs.contains(conn.getSource())) {
                 // get bend points and move them
                 if (conn.getUIInfo() != null) {
-                    ModellingConnectionExtraInfo uiInfo 
-                        = (ModellingConnectionExtraInfo)conn.getUIInfo()
+                    ConnectionUIInformation uiInfo 
+                        = (ConnectionUIInformation)conn.getUIInfo()
                         .clone();
                         uiInfo.changePosition(new int[] {moveDist[0], 
                                 moveDist[1]});
@@ -186,7 +186,7 @@ public class PasteAction extends AbstractClipboardAction {
      *  to the mouse position
      *  
      * @return the offset to add to the current node position, which is done by 
-     *  the {@link ModellingNodeExtraInfo#changePosition(int[])}
+     *  the {@link NodeUIInformation#changePosition(int[])}
      */
     protected int[] calculateShift(final NodeID[] ids) {
         // simply return the offset 

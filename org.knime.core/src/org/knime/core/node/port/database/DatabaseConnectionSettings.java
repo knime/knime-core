@@ -138,8 +138,10 @@ public class DatabaseConnectionSettings {
         settings.addString("database", m_dbName);
         settings.addString("user", m_user);
         settings.addString("password", m_pass);
-        settings.addString("loaded_driver", 
-                DatabaseDriverLoader.getDriverFileForDriverClass(m_driver));
+        final File driverFile = 
+            DatabaseDriverLoader.getDriverFileForDriverClass(m_driver);
+        settings.addString("loaded_driver",
+                (driverFile == null ? null : driverFile.getAbsolutePath()));
         DRIVER_ORDER.add(m_driver);
         DRIVER_URLS.add(m_dbName);
     }
@@ -176,9 +178,6 @@ public class DatabaseConnectionSettings {
         String user = settings.getString("user");
         // password
         String password = settings.getString("password", "");
-        // loaded driver
-        String[] loadedDriver = settings.getStringArray("loaded_driver", 
-                new String[0]);
         // write settings or skip it
         if (write) {
             m_driver = driver;
@@ -195,12 +194,14 @@ public class DatabaseConnectionSettings {
             DRIVER_URLS.add(m_dbName);
             m_user = user;
             m_pass = password;
-            for (String fileName : loadedDriver) {
+            // loaded driver
+            String loadedDriver = settings.getString("loaded_driver", null);
+            if (loadedDriver != null) {
                 try {
-                    DatabaseDriverLoader.loadDriver(new File(fileName));
+                    DatabaseDriverLoader.loadDriver(new File(loadedDriver));
                 } catch (Throwable t) {
                     LOGGER.info("Could not load driver from file \"" 
-                            + fileName + "\".", t);
+                            + loadedDriver + "\".", t);
                 }
             }
             return changed;

@@ -19,9 +19,9 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Parameters table">The table whose first(!) 
-		  row will constitute  variables' values.</dataIn>
-		<dataOut index="0" name="Variables Output">Connection 
-		carrying on the variables.</dataOut>
+		<inPort index="0" name="Parameters table">The table whose first(!) 
+		  row will constitute  variables' values.</inPort>
+		<outPort index="0" name="Variables Output">Connection 
+		carrying on the variables.</outPort>
 	</ports>
 </knimeNode>

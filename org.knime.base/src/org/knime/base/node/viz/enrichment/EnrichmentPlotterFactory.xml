@@ -36,14 +36,14 @@
         </option>
     </fullDescription>
     <ports>
-        <dataIn index="0" name="Input table">Input data with predicted values and actual values</dataIn>
-        <dataOut index="0" name="Areas under curve">
+        <inPort index="0" name="Input table">Input data with predicted values and actual values</inPort>
+        <outPort index="0" name="Areas under curve">
             A one-column table with the area(s) under the enrichment curve(s)
-        </dataOut>
-        <dataOut index="1" name="Discovery rates">
+        </outPort>
+        <outPort index="1" name="Discovery rates">
             Table with the discovery rates (either hits or clusters) for the different curves at selected points (given
             as fraction of the complete dataset).
-        </dataOut>
+        </outPort>
     </ports>
     <views>
         <view index="0" name="Enrichment Plot">Enrichment plot</view>
