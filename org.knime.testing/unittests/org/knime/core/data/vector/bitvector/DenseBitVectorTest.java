@@ -20,54 +20,98 @@
  * History
  *   22.08.2008 (ohl): created
  */
-package org.knime.core.data.collection.bytevector;
+package org.knime.core.data.vector.bitvector;
 
 import junit.framework.TestCase;
-
-import org.knime.core.data.collection.bitvector.DenseBitVector;
 
 /**
  * Tests the {@link DenseBitVector} class.
  *
  * @author ohl, University of Konstanz
  */
-public class DenseByteVectorTest extends TestCase {
+public class DenseBitVectorTest extends TestCase {
 
     /**
-     * Tests the constructor that takes a byte array for initializing the
-     * counts.
+     * Tests the constructor that takes a long array for initializing the bits.
      */
-    public void testByteConstructor() {
-        DenseByteVector bv = new DenseByteVector(new byte[0]);
+    public void testLongConstructor() {
+        DenseBitVector bv = new DenseBitVector(new long[0], 0);
+        assertTrue(bv.isEmpty());
         assertTrue(bv.length() == 0);
+
+        bv = new DenseBitVector(new long[1], 64);
+        assertTrue(bv.isEmpty());
+        assertTrue(bv.length() == 64);
+        assertTrue(bv.getAllBits()[0] == 0x0L);
+
+        bv = new DenseBitVector(new long[]{0x00FF00FF00FF00FFL}, 32);
+        assertTrue(!bv.isEmpty());
+        assertTrue(bv.length() == 32);
+        assertTrue(bv.getAllBits()[0] == 0x0000000000FF00FFL);
+
+        bv = new DenseBitVector(new long[]{0xFF00FF00FF00FF00L}, 64);
+        assertTrue(!bv.isEmpty());
+        assertTrue(bv.length() == 64);
+        assertTrue(bv.getAllBits()[0] == 0xFF00FF00FF00FF00L);
+
+        bv =
+                new DenseBitVector(new long[]{0x00000000FFFFFFFFL,
+                        0xFFFFFFFF00000000L}, 30);
+        assertTrue(!bv.isEmpty());
+        assertTrue(bv.length() == 30);
+        assertTrue(bv.getAllBits()[0] == 0x3FFFFFFFL);
+
         try {
-            bv.get(0);
+            bv = new DenseBitVector(new long[0], 128);
             fail();
-        } catch (ArrayIndexOutOfBoundsException aioob) {
-            // exception expected
+        } catch (IllegalArgumentException iae) {
+            // this exception must fly
+        }
+        try {
+            bv = new DenseBitVector(new long[17], 64 * 17 + 1);
+            fail();
+        } catch (IllegalArgumentException iae) {
+            // this exception must fly
         }
 
-        byte[] init = new byte[20];
-        for (int b = 0; b < 20; b++) {
-            init[b] = (byte)(b * 20);
+    }
+
+    public void testHexConstructor() {
+        DenseBitVector bv = new DenseBitVector("1FE");
+        assertTrue(bv.getAllBits()[0] == 0x1FEL);
+        bv = new DenseBitVector("1FE0345efd027eabCef9d3");
+        assertTrue(bv.getAllBits()[0] == 0x5efd027eabCef9d3L);
+        assertTrue(bv.getAllBits()[1] == 0x1FE034L);
+    }
+
+    public void testInfocomHexNumber() {
+        String hex =
+                "35BF7308B4797C2D67D1F8E8FCD03B65E78B19"
+                        + "D2EE113EFAD239ACFCD952F3E000";
+        String bin =
+                "001101011011111101110011000010001011010001111001011111000010"
+                        + "11010110011111010001111110001110100011111100110100"
+                        + "00001110110110010111100111100010110001100111010010"
+                        + "11101110000100010011111011111010110100100011100110"
+                        + "10110011111100110110010101001011110011111000000000"
+                        + "0000";
+        assertTrue(hex.length() * 4 == bin.length());
+
+        DenseBitVector hexBV = new DenseBitVector(hex);
+        // make sure the vector has the expected length
+        assertTrue(hexBV.length() == hex.length() * 4);
+
+        // make sure each bit matches the corresponding bit in the bin vector
+        for (int i = 0; i < hexBV.length(); i++) {
+            char strBit = bin.charAt(bin.length() - 1 - i);
+            if (hexBV.get(i)) {
+                assertTrue(strBit == '1');
+            } else {
+                assertTrue(strBit == '0');
+            }
         }
-        bv = new DenseByteVector(init);
-        assertTrue(bv.length() == 20);
-        assertTrue(bv.get(0) == 0);
-        assertEquals(bv.toString(),
-                "{0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, "
-                        + "4, 24, 44, 64, 84, 104, 124}");
 
-        DenseByteVector bv2 = new DenseByteVector(bv.getAllCountsAsBytes());
-
-        assertEquals(bv, bv2);
-        assertEquals(bv2, bv);
-
-        byte[] counts = bv2.getAllCountsAsBytes();
-        assertTrue(init.length == counts.length);
-        for (int i = 0; i < counts.length; i++) {
-            assertTrue(init[i] == counts[i]);
-        }
+        assertEquals(hexBV.toBinaryString(), bin);
 
     }
 
@@ -75,15 +119,15 @@ public class DenseByteVectorTest extends TestCase {
      * Makes sure vectors of length zero work.
      */
     public void testLengthZero() {
-        DenseByteVector bvZ1 = new DenseByteVector(0);
-        DenseByteVector bvZ2 = new DenseByteVector(0);
-        DenseByteVector bv = new DenseByteVector(10);
+        DenseBitVector bvZ1 = new DenseBitVector(0);
+        DenseBitVector bvZ2 = new DenseBitVector(0);
+        DenseBitVector bv = new DenseBitVector(10);
 
-        bv.set(1, 3);
-        bv.set(7, 8);
-        bv.set(9, 66);
+        bv.set(1);
+        bv.set(7);
+        bv.set(9);
 
-        DenseByteVector result;
+        DenseBitVector result;
 
         // equals with zero length
         assertTrue(bvZ1.equals(bvZ2));
@@ -91,33 +135,57 @@ public class DenseByteVectorTest extends TestCase {
         assertFalse(bv.equals(bvZ1));
         assertFalse(bvZ2.equals(bv));
 
-        // ADD with zero length
-        result = bvZ1.add(bvZ2, true);
+        // AND with zero length
+        result = bvZ1.and(bvZ2);
         assertTrue(result.isEmpty());
         assertTrue(result.length() == 0);
-        assertTrue(result.nextCountIndex(0) == -1);
-        assertTrue(result.nextZeroIndex(0) == -1);
+        assertTrue(result.nextClearBit(0) == -1);
+        assertTrue(result.nextSetBit(0) == -1);
 
-        result = bvZ1.add(bvZ2, false);
+        result = bv.and(bvZ1);
+        assertTrue(result.length() == bv.length());
         assertTrue(result.isEmpty());
+
+        result = bvZ1.and(bv);
+        assertTrue(result.length() == bv.length());
+        assertTrue(result.isEmpty());
+
+        // OR with zero length
+        result = bvZ1.or(bvZ2);
         assertTrue(result.length() == 0);
-        assertTrue(result.nextCountIndex(0) == -1);
-        assertTrue(result.nextZeroIndex(0) == -1);
+        assertTrue(result.isEmpty());
+        assertTrue(result.nextClearBit(0) == -1);
+        assertTrue(result.nextSetBit(0) == -1);
 
-        result = bv.add(bvZ1, true);
-        assertTrue(!result.isEmpty());
+        result = bv.or(bvZ1);
         assertTrue(result.length() == bv.length());
-        assertTrue(result.sumOfAllCounts() == bv.sumOfAllCounts());
+        assertTrue(result.equals(bv));
 
-        result = bvZ1.add(bv, true);
-        assertTrue(!result.isEmpty());
+        result = bvZ1.or(bv);
         assertTrue(result.length() == bv.length());
-        assertTrue(result.sumOfAllCounts() == bv.sumOfAllCounts());
+        assertTrue(result.equals(bv));
+
+        // XOR with zero length
+        result = bvZ1.xor(bvZ2);
+        assertTrue(result.length() == 0);
+        assertTrue(result.isEmpty());
+        assertTrue(result.nextClearBit(0) == -1);
+        assertTrue(result.nextSetBit(0) == -1);
+
+        result = bv.xor(bvZ1);
+        assertTrue(result.length() == bv.length());
+        assertTrue(result.equals(bv));
+
+        result = bvZ1.xor(bv);
+        assertTrue(result.length() == bv.length());
+        assertTrue(result.equals(bv));
 
         // concatenate with zero length
         result = bvZ1.concatenate(bvZ2);
         assertTrue(result.length() == 0);
         assertTrue(result.isEmpty());
+        assertTrue(result.nextClearBit(0) == -1);
+        assertTrue(result.nextSetBit(0) == -1);
 
         result = bv.concatenate(bvZ1);
         assertTrue(result.length() == bv.length());
@@ -127,109 +195,231 @@ public class DenseByteVectorTest extends TestCase {
         assertTrue(result.length() == bv.length());
         assertTrue(result.equals(bv));
 
+        // invert zero length vector
+        result = bvZ1.invert();
+        assertTrue(result.length() == 0);
+
+        // intersect with zero length
+        assertFalse(bvZ2.intersects(bv));
+        assertFalse(bv.intersects(bvZ1));
+        assertFalse(bvZ1.intersects(bvZ2));
+
         // cardinality
         assertTrue(bvZ1.cardinality() == 0);
 
-        // sumOfAllCounts
-        assertTrue(bvZ1.sumOfAllCounts() == 0);
-
         // toString on zero length shouldn't fail.
         bvZ1.toString();
-        assertTrue(bvZ1.getAllCounts().length == 0);
-        assertTrue(bvZ1.getAllCountsAsBytes().length == 0);
+        bvZ1.dumpBits();
+        assertTrue(bvZ1.getAllBits().length == 0);
         bvZ1.hashCode();
     }
 
     /**
      * tests set, clear and get functionality.
      */
-    public void testSetFillClearGet() {
-        DenseByteVector bv0 = new DenseByteVector(0);
-        assertTrue(bv0.getAllCountsAsBytes().length == 0);
-        DenseByteVector bv129 = new DenseByteVector(129);
-        assertTrue(bv129.getAllCountsAsBytes().length == 129);
+    public void testSetClearGet() {
+        DenseBitVector bv0 = new DenseBitVector(0);
+        assertTrue(bv0.getAllBits().length == 0);
+        DenseBitVector bv10 = new DenseBitVector(10);
+        assertTrue(bv10.getAllBits().length == 1);
+        DenseBitVector bv64 = new DenseBitVector(64);
+        assertTrue(bv64.getAllBits().length == 1);
+        DenseBitVector bv65 = new DenseBitVector(65);
+        assertTrue(bv65.getAllBits().length == 2);
+        DenseBitVector bv129 = new DenseBitVector(129);
+        assertTrue(bv129.getAllBits().length == 3);
+        DenseBitVector bv4098 = new DenseBitVector(4098);
+        assertTrue(bv4098.getAllBits().length == 65);
 
-        bv129.set(3, 17);
-        bv129.set(5, 128);
-        bv129.set(7, 255);
-        bv129.set(100, 100);
-        bv129.set(128, 128);
+        bv10.set(3);
+        bv10.set(5);
+        bv10.set(7);
+        assertTrue(bv10.cardinality() == 3);
+        assertTrue(bv10.get(3));
+        assertTrue(bv10.get(5));
+        assertTrue(bv10.get(7));
+        // 0x 0000 0000 0000 00+(10101000)
+        assertTrue(bv10.getAllBits()[0] == 0xA8);
 
-        assertTrue(bv129.cardinality() == 5);
-        assertTrue(bv129.get(3) == 17);
-        assertTrue(bv129.get(5) == 128);
-        assertTrue(bv129.get(7) == 255);
-        assertTrue(bv129.get(100) == 100);
-        assertTrue(bv129.get(128) == 128);
-        assertTrue(bv129.sumOfAllCounts() == 628);
+        bv10.clear(3);
+        bv10.clear(5);
+        bv10.clear(7);
+        assertTrue(bv10.cardinality() == 0);
+        assertFalse(bv10.get(3));
+        assertFalse(bv10.get(5));
+        assertFalse(bv10.get(7));
+        assertTrue(bv10.isEmpty());
+        assertTrue(bv10.getAllBits()[0] == 0);
+        bv10.clear(4);
+        assertTrue(bv10.getAllBits()[0] == 0);
+        bv10.clear(5);
+        assertTrue(bv10.getAllBits()[0] == 0);
+        bv10.clear(6);
+        assertTrue(bv10.getAllBits()[0] == 0);
+        assertTrue(bv10.isEmpty());
 
-        bv129.clear(3);
-        bv129.clear(5);
-        bv129.clear(7);
-        bv129.clear(100);
+        bv10.set(3);
+        bv10.set(5);
+        bv10.set(7);
+        bv10.set(3, false);
+        bv10.set(5, false);
+        bv10.set(7, false);
+        assertTrue(bv10.isEmpty());
+        assertTrue(bv10.getAllBits()[0] == 0);
+
+        try {
+            bv10.set(-1);
+            fail();
+        } catch (ArrayIndexOutOfBoundsException aioob) {
+            // exception is required
+        }
+        try {
+            bv10.set(10);
+            fail();
+        } catch (ArrayIndexOutOfBoundsException aioob) {
+            // exception is required
+        }
+        try {
+            bv10.set(67);
+            fail();
+        } catch (ArrayIndexOutOfBoundsException aioob) {
+            // exception is required
+        }
+
+        try {
+            bv0.set(0);
+            fail();
+        } catch (ArrayIndexOutOfBoundsException aioob) {
+            // exception is required
+        }
+
+        try {
+            bv0.set(1);
+            fail();
+        } catch (ArrayIndexOutOfBoundsException aioob) {
+            // exception is required
+        }
+
+        bv64.set(63);
+        assertTrue(bv64.get(63));
+        assertTrue(bv64.getAllBits()[0] == 0x8000000000000000L);
+        bv64.clear(63);
+        assertFalse(bv64.get(63));
+        assertTrue(bv64.getAllBits()[0] == 0x0L);
+
+        bv64.set(0);
+        assertTrue(bv64.get(0));
+        bv64.set(1);
+        assertTrue(bv64.get(1));
+        bv64.set(61);
+        assertTrue(bv64.get(61));
+        bv64.set(62);
+        assertTrue(bv64.get(62));
+        bv64.set(63);
+        assertTrue(bv64.get(63));
+        assertTrue(bv64.getAllBits()[0] == 0xE000000000000003L);
+        assertTrue(bv64.cardinality() == 5);
+
+        // 65bit vector
+        bv65.set(63);
+        assertTrue(bv65.get(63));
+        assertTrue(bv65.getAllBits()[0] == 0x8000000000000000L);
+        assertTrue(bv65.getAllBits()[1] == 0x0L);
+        assertTrue(bv65.cardinality() == 1);
+        bv65.clear(63);
+        assertFalse(bv65.get(63));
+        assertTrue(bv65.getAllBits()[0] == 0x0L);
+        assertTrue(bv65.getAllBits()[1] == 0x0L);
+        assertTrue(bv65.cardinality() == 0);
+        bv65.set(64);
+        assertTrue(bv65.get(64));
+        assertTrue(bv65.getAllBits()[0] == 0x0L);
+        assertTrue(bv65.getAllBits()[1] == 0x1L);
+        assertTrue(bv65.cardinality() == 1);
+        bv65.clear(64);
+        assertFalse(bv65.get(64));
+        assertTrue(bv65.isEmpty());
+        assertTrue(bv65.getAllBits()[0] == 0x0L);
+        assertTrue(bv65.getAllBits()[1] == 0x0L);
+        assertTrue(bv65.cardinality() == 0);
+        bv65.set(0);
+        assertTrue(bv65.get(0));
+        bv65.set(1);
+        assertTrue(bv65.get(1));
+        bv65.set(61);
+        assertTrue(bv65.get(61));
+        bv65.set(62);
+        assertTrue(bv65.get(62));
+        bv65.set(63);
+        assertTrue(bv65.get(63));
+        bv65.set(64);
+        assertTrue(bv65.get(64));
+        assertTrue(bv65.getAllBits()[0] == 0xE000000000000003L);
+        assertTrue(bv65.getAllBits()[1] == 0x1L);
+        assertTrue(bv65.cardinality() == 6);
+
+        // 129bit vector
+        bv129.set(127);
+        assertTrue(bv129.get(127));
+        assertTrue(bv129.getAllBits()[0] == 0x0L);
+        assertTrue(bv129.getAllBits()[1] == 0x8000000000000000L);
+        assertTrue(bv129.getAllBits()[2] == 0x0L);
+        bv129.clear(127);
+        assertFalse(bv129.get(127));
+        assertTrue(bv129.isEmpty());
+        assertTrue(bv129.getAllBits()[0] == 0x0L);
+        assertTrue(bv129.getAllBits()[1] == 0x0L);
+        assertTrue(bv129.getAllBits()[2] == 0x0L);
+
+        bv129.set(128);
+        assertTrue(bv129.get(128));
+        assertTrue(bv129.getAllBits()[0] == 0x0L);
+        assertTrue(bv129.getAllBits()[1] == 0x0L);
+        assertTrue(bv129.getAllBits()[2] == 0x1L);
         bv129.clear(128);
-        assertTrue(bv129.cardinality() == 0);
-        assertTrue(bv129.get(3) == 0);
-        assertTrue(bv129.get(5) == 0);
-        assertTrue(bv129.get(7) == 0);
-        assertTrue(bv129.get(100) == 0);
-        assertTrue(bv129.get(128) == 0);
+        assertFalse(bv129.get(128));
         assertTrue(bv129.isEmpty());
-        bv129.clear(4);
-        assertTrue(bv129.isEmpty());
+        assertTrue(bv129.getAllBits()[0] == 0x0L);
+        assertTrue(bv129.getAllBits()[1] == 0x0L);
+        assertTrue(bv129.getAllBits()[2] == 0x0L);
         bv129.clear(128);
+        assertFalse(bv129.get(128));
         assertTrue(bv129.isEmpty());
-        bv129.set(127, 0);
-        assertTrue(bv129.isEmpty());
+        assertTrue(bv129.getAllBits()[0] == 0x0L);
+        assertTrue(bv129.getAllBits()[1] == 0x0L);
+        assertTrue(bv129.getAllBits()[2] == 0x0L);
+        bv129.set(0);
+        assertTrue(bv129.get(0));
+        bv129.set(1);
+        assertTrue(bv129.get(1));
+        bv129.set(63);
+        assertTrue(bv129.get(63));
+        bv129.set(64);
+        assertTrue(bv129.get(64));
+        bv129.set(65);
+        assertTrue(bv129.get(65));
+        bv129.set(66);
+        assertTrue(bv129.get(66));
+        bv129.set(126);
+        assertTrue(bv129.get(126));
+        bv129.set(127);
+        assertTrue(bv129.get(127));
+        bv129.set(128);
+        assertTrue(bv129.get(128));
+        assertTrue(bv129.getAllBits()[0] == 0x8000000000000003L);
+        assertTrue(bv129.getAllBits()[1] == 0xC000000000000007L);
+        assertTrue(bv129.getAllBits()[2] == 0x1L);
 
-        bv129.fill(0, 129, 255);
+        bv129.set(0, 129);
+        long[] bits = bv129.getAllBits();
+        assertTrue(bits[0] == 0xFFFFFFFFFFFFFFFFL);
+        assertTrue(bits[1] == 0xFFFFFFFFFFFFFFFFL);
         assertTrue(bv129.cardinality() == 129);
-        assertTrue(bv129.sumOfAllCounts() == 129 * 255);
-
-        bv129.fill(100, 110, 10);
+        assertTrue(bv129.get(3));
+        // make sure we got a copy
+        bits[0] = 0L;
         assertTrue(bv129.cardinality() == 129);
-        assertTrue(bv129.sumOfAllCounts() == 119 * 255 + 100);
-
-        bv129.fill(0, 10, 0);
-        assertTrue(bv129.cardinality() == 119);
-        assertTrue(bv129.sumOfAllCounts() == 109 * 255 + 100);
-
-        try {
-            bv129.set(-1, 0);
-            fail();
-        } catch (ArrayIndexOutOfBoundsException aioob) {
-            // exception is required
-        }
-        try {
-            bv129.set(129, 0);
-            fail();
-        } catch (ArrayIndexOutOfBoundsException aioob) {
-            // exception is required
-        }
-        try {
-            bv129.set(129, -1);
-            fail();
-        } catch (IllegalArgumentException iae) {
-            // exception is required
-        }
-        try {
-            bv129.set(129, 256);
-            fail();
-        } catch (IllegalArgumentException iae) {
-            // exception is required
-        }
-        try {
-            bv0.set(0, 0);
-            fail();
-        } catch (ArrayIndexOutOfBoundsException aioob) {
-            // exception is required
-        }
-        try {
-            bv0.set(1, 0);
-            fail();
-        } catch (ArrayIndexOutOfBoundsException aioob) {
-            // exception is required
-        }
+        assertTrue(bv129.get(3));
 
     }
 
@@ -358,7 +548,7 @@ public class DenseByteVectorTest extends TestCase {
     /**
      * Tests the nextSetBit and nextClearBit methods.
      */
-    public void nextSetClearBit() {
+    public void testNextSetClearBit() {
 
         DenseBitVector bv10 = new DenseBitVector(10);
 
@@ -387,23 +577,23 @@ public class DenseByteVectorTest extends TestCase {
         assertTrue(bv10.nextClearBit(8) == 9);
 
         DenseBitVector bv64 = new DenseBitVector(64);
-        assertTrue(bv10.nextClearBit(0) == 0);
-        assertTrue(bv10.nextClearBit(62) == 62);
-        assertTrue(bv10.nextClearBit(63) == 63);
-        assertTrue(bv10.nextClearBit(64) == -1);
-        assertTrue(bv10.nextSetBit(8) == -1);
-        assertTrue(bv10.nextSetBit(62) == -1);
-        assertTrue(bv10.nextSetBit(63) == -1);
-        assertTrue(bv10.nextSetBit(64) == -1);
+        assertTrue(bv64.nextClearBit(0) == 0);
+        assertTrue(bv64.nextClearBit(62) == 62);
+        assertTrue(bv64.nextClearBit(63) == 63);
+        assertTrue(bv64.nextClearBit(64) == -1);
+        assertTrue(bv64.nextSetBit(8) == -1);
+        assertTrue(bv64.nextSetBit(62) == -1);
+        assertTrue(bv64.nextSetBit(63) == -1);
+        assertTrue(bv64.nextSetBit(64) == -1);
 
         bv64.set(0, 64);
-        assertTrue(bv10.nextClearBit(0) == -1);
-        assertTrue(bv10.nextClearBit(62) == -1);
-        assertTrue(bv10.nextClearBit(63) == -1);
-        assertTrue(bv10.nextSetBit(8) == 8);
-        assertTrue(bv10.nextSetBit(62) == 62);
-        assertTrue(bv10.nextSetBit(63) == 63);
-        assertTrue(bv10.nextSetBit(64) == -1);
+        assertTrue(bv64.nextClearBit(0) == -1);
+        assertTrue(bv64.nextClearBit(62) == -1);
+        assertTrue(bv64.nextClearBit(63) == -1);
+        assertTrue(bv64.nextSetBit(8) == 8);
+        assertTrue(bv64.nextSetBit(62) == 62);
+        assertTrue(bv64.nextSetBit(63) == 63);
+        assertTrue(bv64.nextSetBit(64) == -1);
 
         DenseBitVector bv120 = new DenseBitVector(120);
         assertTrue(bv120.nextClearBit(0) == 0);
@@ -771,5 +961,40 @@ public class DenseByteVectorTest extends TestCase {
         bv.set(381966);
         assertEquals(bv.toString(), "{18, 700, 7645, 381966}");
 
+    }
+
+    public void testToBinaryString() {
+        DenseBitVector bv = new DenseBitVector("1F03");
+        assertEquals(bv.toBinaryString(), "0001111100000011");
+    }
+
+    public void testToHexString() {
+        DenseBitVector bv = new DenseBitVector("1F03");
+        assertEquals(bv.toHexString(), "1F03");
+
+        bv = new DenseBitVector("1F0329384abedf7cA7FC29FF0");
+        assertEquals(bv.toHexString(), "1F0329384ABEDF7CA7FC29FF0");
+
+        bv = new DenseBitVector("");
+        assertEquals(bv.toHexString(), "");
+
+        bv = new DenseBitVector(3);
+        bv.set(0);
+        bv.set(2);
+        assertEquals(bv.toHexString(), "5");
+
+        bv = new DenseBitVector(13L);
+        bv.set(8);
+        bv.set(3);
+        assertEquals(bv.toHexString(), "0108");
+
+        bv = new DenseBitVector("FFF");
+        assertEquals(bv.toHexString(), "FFF");
+
+        bv = new DenseBitVector("FFFF8888EEEEFFFF");
+        assertEquals(bv.toHexString(), "FFFF8888EEEEFFFF");
+
+        bv = new DenseBitVector("1FFFF8888EEEEFFFF");
+        assertEquals(bv.toHexString(), "1FFFF8888EEEEFFFF");
     }
 }

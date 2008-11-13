@@ -27,6 +27,16 @@
             category-path="/testing"
             factory-class="org.knime.testing.node.differModelContent.DiffModelContentFactory"
             id="org.knime.testing.node.differModelContent.DiffModelContentFactory"/>
+      <node
+            category-path="/testing"
+            factory-class="org.knime.testing.node.blocking.BlockingNodeFactory"
+            id="org.knime.testing.node.blocking.BlockingNodeFactory">
+      </node>
+      <node
+            category-path="/testing"
+            factory-class="org.knime.testing.node.failing.FailingNodeFactory"
+            id="org.knime.testing.node.failing.FailingNodeFactory">
+      </node>
    </extension>
    <extension
          point="org.knime.workbench.repository.categories">

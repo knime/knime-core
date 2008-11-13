@@ -20,9 +20,9 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Any input table">Any input table</dataIn>
-		<dataOut index="0" name="Original table">The unaltered original table</dataOut>
-        <dataOut index="1" name="Empty table">An empty table with the same spec as the input table</dataOut>
-        <dataOut index="2" name="Table with missing values">The original table with about 10% missing values</dataOut>
+		<inPort index="0" name="Any input table">Any input table</inPort>
+		<outPort index="0" name="Original table">The unaltered original table</outPort>
+        <outPort index="1" name="Empty table">An empty table with the same spec as the input table</outPort>
+        <outPort index="2" name="Table with missing values">The original table with about 10% missing values</outPort>
 	</ports>	
 </knimeNode>

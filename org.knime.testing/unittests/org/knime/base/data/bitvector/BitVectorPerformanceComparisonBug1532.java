@@ -29,8 +29,8 @@ import java.util.Random;
 
 import junit.framework.TestCase;
 
-import org.knime.core.data.collection.bitvector.DenseBitVectorCell;
-import org.knime.core.data.collection.bitvector.DenseBitVectorCellFactory;
+import org.knime.core.data.vector.bitvector.DenseBitVectorCell;
+import org.knime.core.data.vector.bitvector.DenseBitVectorCellFactory;
 
 /**
  * 

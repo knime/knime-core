@@ -18,7 +18,7 @@
 	</fullDescription>
 	
 	<ports>
-		<modelIn index="0" name="First model">The first model to compare.</modelIn>
-		<modelIn index="1" name="Second model">The second model to compare.</modelIn>
+		<inPort index="0" name="First model">The first model to compare.</inPort>
+		<inPort index="1" name="Second model">The second model to compare.</inPort>
 	</ports>	
 </knimeNode>
