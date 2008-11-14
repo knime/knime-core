@@ -1691,7 +1691,7 @@ public final class WorkflowManager extends NodeContainer {
                                 (SingleNodeContainer)nc);
                     } else {
                         assert nc instanceof WorkflowManager;
-                        int portIndex = sourceNodes.get(nc.getID());
+                        int portIndex = sourceNodes.get(nc);
                         ((WorkflowManager)nc).invokeResetOnPortSuccessors(
                                 portIndex);
                     }
@@ -2240,7 +2240,9 @@ public final class WorkflowManager extends NodeContainer {
                     NodeID succNode = cc.getDest();
                     if (cc.getType().isLeavingWorkflow()) {
                         assert succNode.equals(getID());
-                        getParent().configureWorkFlowPortSuccessors(
+                        assert cc.getType()
+                         .equals(ConnectionContainer.ConnectionType.WFMTHROUGH);
+                        getParent().configureNodeSuccessors(this.getID(),
                                 cc.getDestPort());
                     } else {
                         LOGGER.debug("Attempting to configure node "
@@ -2420,6 +2422,83 @@ public final class WorkflowManager extends NodeContainer {
             // ...but pretend we did configure it
             freshlyConfiguredNodes.add(nodeId);
         }
+        // Don't configure WFM itself but make sure the nodes connected
+        // to this WFM are configured when we are done here...
+        boolean wfmIsPartOfList = nodes.containsKey(this.getID());
+        if (wfmIsPartOfList) {
+            nodes.remove(this.getID());
+        }
+        // now iterate over the remaining nodes
+        for (NodeID currNode : nodes.keySet()) {
+            boolean needsConfiguration = currNode.equals(nodeId);
+            for (ConnectionContainer cc
+                             : m_workflow.getConnectionsByDest(currNode)) {
+                if (freshlyConfiguredNodes.contains(cc.getSource())) {
+                    needsConfiguration = true;
+                }
+            }
+            if (!needsConfiguration) {
+                continue;
+            }
+            final NodeContainer nc = getNodeContainer(currNode);
+            synchronized (m_workflowMutex) {
+                if (nc instanceof SingleNodeContainer) {
+                    if (configureSingleNodeContainer((SingleNodeContainer)nc)) {
+                        freshlyConfiguredNodes.add(nc.getID());
+                    }
+                } else {
+                    assert nc instanceof WorkflowManager;
+                    configureNodesConnectedToPortInWFM((WorkflowManager)nc, -1);
+                    freshlyConfiguredNodes.add(nc.getID());
+                }
+            }
+        }
+        // make sure internal status changes are properly reflected
+        checkForNodeStateChanges(true);
+        // And finally clean up: if the WFM was part of the list of nodes
+        // make sure we only configure nodes actually connected to ports
+        // which are connected to nodes which we did configure!
+        if (wfmIsPartOfList) {
+            for (int i = 0; i < getNrWorkflowOutgoingPorts(); i++) {
+                boolean portNeedsConfiguration = false;
+                for (ConnectionContainer cc : m_workflow.getConnectionsByDest(
+                        this.getID())) {
+                    assert cc.getType().isLeavingWorkflow();
+                    if ((cc.getDestPort() == i)
+                        && (freshlyConfiguredNodes.contains(cc.getSource()))) {
+                        portNeedsConfiguration = true;
+                    }
+                }
+                if (portNeedsConfiguration) {
+                    getParent().configureNodeSuccessors(this.getID(), i);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Configure successors of a specific port of a node.
+     *
+     * @param id of node to configure
+     * @param index of output port successors are connected to (-1 if
+     *   all are to be used).
+     */
+    private void configureNodeSuccessors(final NodeID nodeId,
+            final int portIndex) {
+        // FIXME: actually consider port index!!
+        
+        // create list of properly ordered nodes (each one appears only once!)
+        LinkedHashMap<NodeID, Set<Integer>> nodes
+             = m_workflow.getBreadthFirstListOfNodeAndSuccessors(nodeId, false);
+        // remember which ones we did configure to avoid useless configurations
+        // (this list does not contain nodes where configure() didn't change
+        // the specs/handlers/stacks.
+        HashSet<NodeID> freshlyConfiguredNodes = new HashSet<NodeID>();
+        // if not desired, don't configure origin
+        // don't configure origin...
+        nodes.remove(nodeId);
+        // ...but pretend we did configure it
+        freshlyConfiguredNodes.add(nodeId);
         // Don't configure WFM itself but make sure the nodes connected
         // to this WFM are configured when we are done here...
         boolean wfmIsPartOfList = nodes.containsKey(this.getID());
