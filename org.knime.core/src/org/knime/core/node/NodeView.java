@@ -324,7 +324,7 @@ public abstract class NodeView<T extends NodeModel> {
      *
      * @return menu bar.
      */
-    protected final JMenuBar getJMenuBar() {
+    public final JMenuBar getJMenuBar() {
         return m_frame.getJMenuBar();
     }
 
