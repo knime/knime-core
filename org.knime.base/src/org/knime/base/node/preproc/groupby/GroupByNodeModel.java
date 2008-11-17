@@ -65,6 +65,8 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
  */
 public class GroupByNodeModel extends NodeModel {
 
+    private static final String INTERNALS_FILE_NAME = "hilite_mapping.xml.gz";
+
     /**Configuration key of the selected group by columns.*/
     protected static final String CFG_GROUP_BY_COLUMNS = "grouByColumns";
 
@@ -174,7 +176,8 @@ public class GroupByNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws IOException {
         if (m_enableHilite.getBooleanValue()) {
             final NodeSettingsRO config = NodeSettings.loadFromXML(
-                    new FileInputStream(new File("hilite_mapping.xml.gz")));
+                    new FileInputStream(new File(nodeInternDir, 
+                            INTERNALS_FILE_NAME)));
             try {
                 m_hilite.setMapper(DefaultHiLiteMapper.load(config));
                 m_hilite.addToHiLiteHandler(getInHiLiteHandler(0));
@@ -198,7 +201,8 @@ public class GroupByNodeModel extends NodeModel {
                 mapper.save(config);
             }
             config.saveToXML(
-                    new FileOutputStream(new File("hilite_mapping.xml.gz")));
+                    new FileOutputStream(new File(nodeInternDir,
+                            INTERNALS_FILE_NAME)));
         }
     }
 
