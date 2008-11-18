@@ -507,7 +507,7 @@ public class DataContainer implements RowAppender {
         // do not swap the following two lines:
         // addRowKeyForDuplicateCheck relies on m_buffer.size()
         addRowKeyForDuplicateCheck(key);
-        m_buffer.addRow(row);
+        m_buffer.addRow(row, false);
     } // addRowToTable(DataRow)
     
     /**
@@ -774,7 +774,7 @@ public class DataContainer implements RowAppender {
                 e.setMessage("Writing row #" + rowCount + " (\"" 
                         + row.getKey() + "\")");
                 e.checkCanceled();
-                buf.addRow(row);
+                buf.addRow(row, false);
             }
             buf.close(table.getDataTableSpec());
             exec.setMessage("Closing zip file");
