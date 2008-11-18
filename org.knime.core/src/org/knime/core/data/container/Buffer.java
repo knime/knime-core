@@ -223,7 +223,7 @@ class Buffer implements KNIMEStreamConstants {
      * the iterator will read the blob address, treat it as unseen and then ask
      * the owning Buffer to restore the blob.
      */
-    private static final BlobLRUCache BLOB_LRU_CACHE = new BlobLRUCache();
+    private final BlobLRUCache m_blobLRUCache = new BlobLRUCache();
 
     private static boolean isUseCompressionForBlobs(
             final CellClassInfo cellClassInfo) {
@@ -1154,7 +1154,7 @@ class Buffer implements KNIMEStreamConstants {
             Buffer blobBuffer = cnTbl.getBuffer();
             return blobBuffer.readBlobDataCell(blobAddress, cl);
         }
-        SoftReference<BlobDataCell> softRef = BLOB_LRU_CACHE.get(blobAddress);
+        SoftReference<BlobDataCell> softRef = m_blobLRUCache.get(blobAddress);
         BlobDataCell result = softRef != null ? softRef.get() : null;
         if (result != null) {
             return result;
@@ -1166,7 +1166,7 @@ class Buffer implements KNIMEStreamConstants {
             result = new DataCellStreamReader(this).readBlobDataCell(
                     blobAddress, cl);
         }
-        BLOB_LRU_CACHE.put(
+        m_blobLRUCache.put(
                 blobAddress, new SoftReference<BlobDataCell>(result));
         return result;
     }
@@ -1495,6 +1495,9 @@ class Buffer implements KNIMEStreamConstants {
                 DeleteInBackgroundThread.delete(m_binFile);
             }
         }
+        if (m_blobLRUCache != null) {
+            m_blobLRUCache.clear();
+        }
         m_binFile = null;
         m_blobDir = null;
     }
@@ -1544,7 +1547,7 @@ class Buffer implements KNIMEStreamConstants {
         @Override
         protected synchronized boolean removeEldestEntry(
                 final Entry<BlobAddress, SoftReference<BlobDataCell>> eldest) {
-            return size() >= 500;
+            return size() >= 100;
         }
         
         /** {@inheritDoc} */
