@@ -101,7 +101,9 @@ public class PMMLNeuralNetworkPortObject extends PMMLPortObject {
         atts.addAttribute(null, null, "normalizationMethod", CDATA, "none");
         atts.addAttribute(null, null, "width", CDATA, "" + 0);
         atts.addAttribute(null, null, "numberOfLayers", CDATA, ""
-                + m_mlp.getNrLayers());
+                // in PMML the input layer is not counted as a layer
+                // in contrast to our MLP understanding
+                + (m_mlp.getNrLayers() - 1));
 
         handler.startElement(null, null, "NeuralNetwork", atts);
         PMMLPortObjectSpec.writeMiningSchema(getSpec(), handler);

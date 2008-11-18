@@ -44,13 +44,13 @@ public final class ConvenienceMethods {
         if (o1 == o2) {
             return true;
         }
-        boolean differ = false;
         if (o1 != null) {
-            differ = o1.equals(o2);
+            return o1.equals(o2);
         } else if (o2 != null) {
-            differ = o2.equals(o1);
+            return o2.equals(o1);
         }
-        return differ;
+        assert false : "Both objects are null, hence equal";
+        return true;
     }
 
 }

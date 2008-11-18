@@ -27,6 +27,7 @@ package org.knime.core.data.container;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -123,9 +124,10 @@ class NoKeyBuffer extends Buffer {
     
     /** {@inheritDoc} */
     @Override
+    @SuppressWarnings("unchecked")
     Buffer createLocalCloneForWriting() {
         return new NoKeyBuffer(0, getBufferID(), 
-                getGlobalRepository(), getLocalRepository());
+                getGlobalRepository(), Collections.EMPTY_MAP);
     }
     
 }

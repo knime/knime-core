@@ -202,6 +202,7 @@ public class PMMLNeuralNetworkHandler extends PMMLContentHandler {
             if (m_input) {
                 Perceptron p = new InputPerceptron();
                 p.setClassValue(fieldname);
+                m_inputmap.put(fieldname, m_counter);
                 m_curPerceptrons.add(p);
                 m_idPosMap.put(m_curPercpetronID, m_counter);
                 m_counter++;

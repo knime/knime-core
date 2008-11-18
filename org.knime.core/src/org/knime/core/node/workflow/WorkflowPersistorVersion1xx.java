@@ -763,14 +763,15 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         File workflowDir = workflowDirRef.getFile();
         // fileString is something like "File Reader(#1)/settings.xml", thus
         // it contains two levels of the hierarchy. We leave it here to the 
-        // java.util.File implementation to resolve these levels
+        // java.io.File implementation to resolve these levels
         File fullFile = new File(workflowDir, fileString);
         if (!fullFile.isFile() || !fullFile.canRead()) {
             throw new InvalidSettingsException("Unable to read settings "
                     + "file " + fullFile.getAbsolutePath());
         }
         Stack<String> children = new Stack<String>();
-        while (!fullFile.getAbsoluteFile().equals(workflowDir)) {
+        File workflowDirAbsolute = workflowDir.getAbsoluteFile();
+        while (!fullFile.getAbsoluteFile().equals(workflowDirAbsolute)) {
             children.push(fullFile.getName());
             fullFile = fullFile.getParentFile();
         }

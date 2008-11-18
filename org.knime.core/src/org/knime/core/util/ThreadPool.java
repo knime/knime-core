@@ -202,6 +202,7 @@ public class ThreadPool {
     private final Queue<Worker> m_availableWorkers;
 
     private final AtomicInteger m_maxThreads = new AtomicInteger();
+
     private final AtomicInteger m_invisibleThreads = new AtomicInteger();
 
     private final ThreadPool m_parent;
@@ -392,17 +393,24 @@ public class ThreadPool {
         }
 
         Worker thisWorker = (Worker)Thread.currentThread();
-        if (!m_runningWorkers.contains(thisWorker)) {
-            if (!thisWorker.m_startedFrom.m_runningWorkers.contains(thisWorker)) {
+
+        boolean b;
+        synchronized (m_runningWorkers) {
+            b = m_runningWorkers.contains(thisWorker);
+        }
+
+        if (!b) {
+            synchronized (thisWorker.m_startedFrom.m_runningWorkers) {
+                b = thisWorker.m_startedFrom.m_runningWorkers
+                                .contains(thisWorker);
+            }
+
+            if (!b) {
                 throw new IllegalThreadStateException("The current thread is "
                         + "not taken out of this thread pool");
             }
             return thisWorker.m_startedFrom.runInvisible(r);
         } else {
-            if (!m_runningWorkers.contains(thisWorker)) {
-                throw new IllegalThreadStateException("The current thread is "
-                        + "not taken out of this thread pool");
-            }
             m_invisibleThreads.incrementAndGet();
             checkQueue();
 

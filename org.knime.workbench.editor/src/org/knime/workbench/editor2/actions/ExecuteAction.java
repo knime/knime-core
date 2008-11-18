@@ -104,13 +104,11 @@ public class ExecuteAction extends AbstractNodeAction {
     @Override
     protected boolean calculateEnabled() {
         NodeContainerEditPart[] parts = getSelectedNodeParts();
-
         // enable if we have at least one executable node in our selection
+        WorkflowManager wm = getEditor().getWorkflowManager();
         for (int i = 0; i < parts.length; i++) {
             NodeContainer nc = parts[i].getNodeContainer();
-            // TODO: allow execution only if all selected nodes are configured?
-            if (nc.getState().equals(
-                    NodeContainer.State.CONFIGURED)) {
+            if (wm.canExecuteNode(nc.getID())) {
                 return true;
             }
         }

@@ -59,12 +59,12 @@ public class HiLiteHandler {
     /**
      * Constant for the menu entry 'HiLite Selected'.
      */
-    public static final String HILITE_SELECTED = "HiLite Selected";
+    public static final String HILITE_SELECTED = "HiLite selected";
     
     /**
      * Constant for the menu entry 'UnHiLite Selected'.
      */
-    public static final String UNHILITE_SELECTED = "UnHiLite Selected";
+    public static final String UNHILITE_SELECTED = "UnHiLite selected";
     
     /**
      * Constant for the menu entry 'Clear HiLite'.

@@ -71,20 +71,20 @@ public class EclipseClassCreator implements ClassCreator {
     public Class<?> createClass(final String className) {
         Class<?> clazz = null;
 
-        // first, try the core and editor
-        try {
-            Bundle p = KNIMECorePlugin.getDefault().getBundle();
-            clazz = p.loadClass(className);
-            return clazz;
-        } catch (Exception ex) {
-            try {
-                Bundle p = Platform.getBundle("org.knime.workbench.editor");
-                clazz = p.loadClass(className);
-                return clazz;
-            } catch (Exception e) {
-                // ignore
-            }
-        }
+//        // first, try the core and editor
+//        try {
+//            Bundle p = KNIMECorePlugin.getDefault().getBundle();
+//            clazz = p.loadClass(className);
+//            return clazz;
+//        } catch (Exception ex) {
+//            try {
+//                Bundle p = Platform.getBundle("org.knime.workbench.editor");
+//                clazz = p.loadClass(className);
+//                return clazz;
+//            } catch (Exception e) {
+//                // ignore
+//            }
+//        }
 
         /**
          * Look at all extensions, and try to load class from the plugin

@@ -52,6 +52,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -146,7 +147,7 @@ public class AggregationColumnPanel extends MouseAdapter {
             if (getAggregationColumnCount() == 0) {
                 //the table contains no rows
                 final JMenuItem item =
-                    new JMenuItem("None column(s) available");
+                    new JMenuItem("No column(s) available");
                 item.setEnabled(false);
                 menu.add(item);
                 return menu;
@@ -181,7 +182,7 @@ public class AggregationColumnPanel extends MouseAdapter {
 
             if (!rowsSelected()) {
                     final JMenuItem noneSelected =
-                        new JMenuItem("None column(s) selected");
+                        new JMenuItem("No column selected");
                     noneSelected.setEnabled(false);
                     aggrMenu.add(noneSelected);
             } else {
@@ -320,6 +321,15 @@ public class AggregationColumnPanel extends MouseAdapter {
     }
 
     private Component createAggrColTable() {
+        final Box box = new Box(BoxLayout.Y_AXIS);
+        box.add(Box.createVerticalGlue());
+        final Box labelBox = new Box(BoxLayout.X_AXIS);
+        labelBox.add(Box.createHorizontalGlue());
+        labelBox.add(new JLabel("To change multiple columns use "
+                + "right mouse click for context menu."));
+        labelBox.add(Box.createHorizontalGlue());
+        box.add(labelBox);
+        box.add(Box.createVerticalGlue());
         final JScrollPane pane = new JScrollPane(m_aggrColTable);
 //        final int width =
 //            (int)Math.ceil(
@@ -328,7 +338,9 @@ public class AggregationColumnPanel extends MouseAdapter {
 //            new Dimension(width , COMPONENT_HEIGHT);
 //        pane.setMinimumSize(dimension);
 //        pane.setPreferredSize(dimension);
-        return pane;
+        box.add(pane);
+        box.add(Box.createVerticalGlue());
+        return box;
     }
 
     /**

@@ -81,6 +81,9 @@ public class SetOperatorNodeModel extends NodeModel {
     private final SettingsModelBoolean m_sortInMemory;
 
     private final SettingsModelBoolean m_skipMissing;
+    
+    private static final String HILITE_MAPPING0 = "hilite_mapping0.xml.gz";
+    private static final String HILITE_MAPPING1 = "hilite_mapping1.xml.gz";
 
     private final HiLiteTranslator m_hilite0 = new HiLiteTranslator();
     private final HiLiteTranslator m_hilite1 = new HiLiteTranslator();
@@ -234,9 +237,11 @@ public class SetOperatorNodeModel extends NodeModel {
     throws IOException {
         if (m_enableHilite.getBooleanValue()) {
             final NodeSettingsRO config0 = NodeSettings.loadFromXML(
-                    new FileInputStream(new File("hilite_mapping0.xml.gz")));
+                    new FileInputStream(new File(
+                            nodeInternDir, HILITE_MAPPING0)));
             final NodeSettingsRO config1 = NodeSettings.loadFromXML(
-                    new FileInputStream(new File("hilite_mapping1.xml.gz")));
+                    new FileInputStream(
+                            new File(nodeInternDir, HILITE_MAPPING1)));
             try {
                 initializeHiliteHandler(DefaultHiLiteMapper.load(config0),
                             DefaultHiLiteMapper.load(config1));
@@ -269,8 +274,8 @@ public class SetOperatorNodeModel extends NodeModel {
             if (mapper0 != null) {
                 mapper0.save(config0);
             }
-            config0.saveToXML(
-                    new FileOutputStream(new File("hilite_mapping0.xml.gz")));
+            config0.saveToXML(new FileOutputStream(
+                            new File(nodeInternDir, HILITE_MAPPING0)));
 
             final NodeSettings config1 = new NodeSettings("hilite_mapping");
             final DefaultHiLiteMapper mapper1 =
@@ -278,8 +283,8 @@ public class SetOperatorNodeModel extends NodeModel {
             if (mapper1 != null) {
                 mapper1.save(config1);
             }
-            config1.saveToXML(
-                    new FileOutputStream(new File("hilite_mapping1.xml.gz")));
+            config1.saveToXML(new FileOutputStream(
+                            new File(nodeInternDir, HILITE_MAPPING1)));
         }
     }
 

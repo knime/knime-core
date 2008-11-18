@@ -27,6 +27,7 @@ package org.knime.workbench.editor2.actions;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -103,15 +104,14 @@ public class ExecuteAllAction extends AbstractNodeAction {
     protected boolean calculateEnabled() {
         NodeContainerEditPart[] parts = getAllNodeParts();
         // enable if we have at least one executable node in our selection
-        boolean atLeastOneNodeIsExecutable = false;
+        WorkflowManager wm = getEditor().getWorkflowManager();
         for (int i = 0; i < parts.length; i++) {
             NodeContainer nc = parts[i].getNodeContainer();
-            boolean executable = nc.getState().equals(
-                    NodeContainer.State.CONFIGURED);
-            atLeastOneNodeIsExecutable |= executable;
+            if (wm.canExecuteNode(nc.getID())) {
+                return true;
+            }
         }
-        return atLeastOneNodeIsExecutable;
-
+        return false;
     }
 
     /**
@@ -132,7 +132,6 @@ public class ExecuteAllAction extends AbstractNodeAction {
             // is not updated correctly.
             getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
         } catch (Exception e) {
-            LOGGER.error("Failed to complete execute all command: ", e);
             // ignore
         }
     }
