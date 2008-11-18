@@ -2818,6 +2818,7 @@ public final class WorkflowManager extends NodeContainer {
         }
         WorkflowPersistorVersion1xx persistor;
         if (WorkflowPersistorVersion200.canReadVersion(version)) {
+            // TODO only create new hash map if this is a project?
             persistor = new WorkflowPersistorVersion200(
                     new HashMap<Integer, ContainerTable>());
         } else if (WorkflowPersistorVersion1xx.canReadVersion(version)) {
