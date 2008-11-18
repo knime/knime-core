@@ -40,8 +40,8 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.StringValue;
 import org.knime.core.data.def.DefaultRowIterator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -154,7 +154,7 @@ public class DefaultDataArray implements DataArray {
         for (int c = 0; c < numOfColumns; c++) {
             m_ignoreCols[c] = false;
             if (tSpec.getColumnSpec(c).getType()
-                    .isCompatible(StringValue.class)) {
+                    .isCompatible(NominalValue.class)) {
                 m_possVals.set(c, new LinkedHashSet<DataCell>());
             }
         }
@@ -246,7 +246,7 @@ public class DefaultDataArray implements DataArray {
             DataColumnDomain origColDomain = origColSpec.getDomain();
             DataColumnDomainCreator domainCreator = new DataColumnDomainCreator(
                     origColDomain);
-            if (type.isCompatible(StringValue.class)
+            if (type.isCompatible(NominalValue.class)
                     && !origColDomain.hasValues()) {
                 domainCreator.setValues(m_possVals.get(i));
                 colChanged = true;
