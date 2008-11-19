@@ -118,7 +118,7 @@ public final class DatabaseReaderConnection {
                     ((PreparedStatement) m_stmt).execute();
                     m_spec = createTableSpec(
                             ((PreparedStatement) m_stmt).getMetaData());
-                } catch (SQLException e) {
+                } catch (Exception e) {
                     LOGGER.warn("PreparedStatment not support by database: ", e);
                     // otherwise use standard statement
                     m_stmt = m_conn.createConnection().createStatement();
