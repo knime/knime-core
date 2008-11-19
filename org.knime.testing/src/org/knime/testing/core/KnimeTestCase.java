@@ -80,20 +80,21 @@ public class KnimeTestCase extends TestCase {
 
     private WorkflowManager m_manager;
 
+    // if not null, the executed workflow si saved here.
+    private final File m_saveLoc;
+
     // stores error messages seen during the run and the configuration of the
     // test
     private TestingConfig m_testConfig;
 
-    // flag, set to true when a workflow is currently loaded (for file reader
-    // messages being ignored during loading)
-    private boolean m_workflowLoading = false;
-
     /**
      *
-     * @param workflowFile
+     * @param workflowFile the workflow dir
+     * @param saveLoc the dir to save the flow into after execution, or null.
      */
-    public KnimeTestCase(final File workflowFile) {
+    public KnimeTestCase(final File workflowFile, final File saveLoc) {
         m_knimeWorkFlow = workflowFile;
+        m_saveLoc = saveLoc;
         this.setName(workflowFile.getParent());
     }
 
@@ -148,12 +149,10 @@ public class KnimeTestCase extends TestCase {
 
             logger.debug("Loading workflow ----------------------------"
                     + "--------------");
-            m_workflowLoading = true;
 
             WorkflowLoadResult loadRes = WorkflowManager.loadProject(
                     m_knimeWorkFlow.getParentFile(),
                     new ExecutionMonitor());
-            m_workflowLoading = false;
 
             if (loadRes.getGUIMustReportError()) {
                 logger.error(loadRes.getErrors());
@@ -191,13 +190,6 @@ public class KnimeTestCase extends TestCase {
             wrapUp();
             fail();
         }
-    }
-
-    /**
-     * @return true, if the workflow is currently loaded.
-     */
-    boolean isCurrentlyLoading() {
-        return m_workflowLoading;
     }
 
     /**
@@ -301,6 +293,10 @@ public class KnimeTestCase extends TestCase {
      * occurred.
      */
     private void wrapUp() {
+
+        if (m_saveLoc != null) {
+            saveWorkflow();
+        }
         try {
             // disconnect the appender to not catch any message anymore
             m_testConfig.disconnect();
@@ -318,6 +314,35 @@ public class KnimeTestCase extends TestCase {
             logger.info("<End> Test='"
                     + m_knimeWorkFlow.getParentFile().getName()
                     + "' ----------------------------------------------------");
+        }
+    }
+
+    private void saveWorkflow() {
+        logger.info("Saving workflow ------------------------------------");
+        boolean doSave = true;
+        if (!m_saveLoc.exists()) {
+            if (!m_saveLoc.mkdirs()) {
+                logger.info("Unable to create dir :"
+                        + m_saveLoc + ". Not saving executed workflow.");
+                doSave = false;
+            }
+        } else if (!m_saveLoc.isDirectory()) {
+            logger.info("Can only save to a directory. This is none :"
+                    + m_saveLoc + ". Not saving executed workflow.");
+            doSave = false;
+        }
+        if (doSave) {
+            try {
+                m_manager.save(m_saveLoc, new ExecutionMonitor(), true);
+                logger.info("Saved workflow to " + m_saveLoc.getAbsolutePath());
+                logger.info("Done saving workflow ---------------------------");
+            } catch (Throwable t) {
+                logger.error("Caught throwable during workflow saving!");
+                logger.info(t.getMessage(), t);
+                logger.info("No success saving workflow ---------------------");
+            }
+        } else {
+            logger.info("Didn't save workflow -------------------------------");
         }
     }
 }

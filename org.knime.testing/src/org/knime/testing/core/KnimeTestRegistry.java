@@ -28,7 +28,9 @@ package org.knime.testing.core;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Locale;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -52,13 +54,25 @@ public class KnimeTestRegistry {
      */
     private final String m_pattern;
 
+    private final File m_testRootDir;
+
+    private final File m_saveRootDir;
+
     /**
      * Constructor. Isn't it?
      *
      * @param testNamePattern the pattern test names are matched against
      *            (regular expression). If null (or empty) all tests are run.
      */
-    public KnimeTestRegistry(final String testNamePattern) {
+    public KnimeTestRegistry(final String testNamePattern,
+            final File testRootDir, final File saveRoot) {
+        if (testRootDir == null) {
+            throw new NullPointerException("Root dir for tests can't be null");
+        }
+        if (!testRootDir.isDirectory() || !testRootDir.exists()) {
+            throw new IllegalArgumentException("Root dir for tests must"
+                    + " be an existing directory");
+        }
         m_registry = new ArrayList<KnimeTestCase>();
 
         if ((testNamePattern != null) && (testNamePattern.length() == 0)) {
@@ -66,15 +80,53 @@ public class KnimeTestRegistry {
         } else {
             m_pattern = testNamePattern;
         }
+
+        m_testRootDir = testRootDir;
+        String saveSubDir = "savedTestFlows_";
+        Calendar now = Calendar.getInstance();
+
+        saveSubDir +=
+            now.getDisplayName(Calendar.MONTH,
+                        Calendar.SHORT, Locale.US);
+        if (now.get(Calendar.DATE) < 10) {
+            saveSubDir += "0";
+        }
+        saveSubDir += now.get(Calendar.DATE);
+        saveSubDir += "_";
+        if (now.get(Calendar.HOUR_OF_DAY) < 10) {
+            saveSubDir += "0";
+        }
+        saveSubDir += now.get(Calendar.HOUR_OF_DAY);
+        saveSubDir += "_";
+        if (now.get(Calendar.MINUTE) < 10) {
+            saveSubDir += "0";
+        }
+        saveSubDir += now.get(Calendar.MINUTE);
+        saveSubDir += "_";
+        if (now.get(Calendar.SECOND) < 10) {
+            saveSubDir += "0";
+        }
+        saveSubDir += now.get(Calendar.SECOND);
+
+        if (saveRoot != null) {
+            // if specified is must be a existing dir
+            if (!saveRoot.exists() || !saveRoot.isDirectory()) {
+                throw new IllegalArgumentException("Location to save workflows"
+                        + " must be na existing directory");
+            }
+            m_saveRootDir = new File(saveRoot, saveSubDir);
+        } else {
+            m_saveRootDir = null;
+        }
     }
 
     /**
      * @param testRootDir the dir to start the search in
      * @return all registered test cases.
      */
-    public Test collectTestCases(final File testRootDir) {
+    public Test collectTestCases() {
 
-        searchDirectory(testRootDir);
+        searchDirectory(m_testRootDir);
 
         if ((m_pattern != null) && (m_registry.size() == 0)) {
             System.out.println("Found no matching tests. "
@@ -94,6 +146,7 @@ public class KnimeTestRegistry {
      * adds them to m_registry
      *
      * @param dir - the basedir for the search
+     * @param saveRoot - the baseDir executed flows will be saved to (or null).
      */
     private void searchDirectory(final File dir) {
 
@@ -107,7 +160,9 @@ public class KnimeTestRegistry {
         if (workflowFile.exists()) {
             String name = dir.getName();
             if (name.matches(m_pattern)) {
-                KnimeTestCase testCase = new KnimeTestCase(workflowFile);
+                File saveLoc = createSaveLocation(workflowFile);
+                KnimeTestCase testCase =
+                        new KnimeTestCase(workflowFile, saveLoc);
                 testCase.setName(name);
                 m_registry.add(testCase);
             } else {
@@ -128,6 +183,26 @@ public class KnimeTestRegistry {
             }
 
         }
+    }
+
+    private File createSaveLocation(final File workflowDir) {
+        if (m_saveRootDir == null) {
+            // null indicates "do not save"
+            return null;
+        }
+
+        File testName = workflowDir.getParentFile();
+        // path from root to current flow dir
+        String postfix =
+                testName.getAbsolutePath().substring(
+                        m_testRootDir.getAbsolutePath().length());
+        if (postfix.isEmpty()) {
+            // seems the test was in the testRoot dir
+            postfix = testName.getName();
+        }
+        File save = new File(m_saveRootDir, postfix);
+        return save;
+
     }
 
     private class DirectoryFilter implements FileFilter {

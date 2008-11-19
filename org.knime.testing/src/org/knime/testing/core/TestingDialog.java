@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   03.08.2007 (ohl): created
  */
@@ -50,7 +50,7 @@ import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.FilelistAccessory;
 
 /**
- * 
+ *
  * @author ohl, University of Konstanz
  */
 class TestingDialog extends JDialog {
@@ -78,12 +78,15 @@ class TestingDialog extends JDialog {
     private final JCheckBox m_anal =
             new JCheckBox("Analyze log file after run");
 
+    private final JCheckBox m_saveTests =
+        new JCheckBox("Save tests after execution in runtime workspace");
+
     private final JComboBox m_analout = new JComboBox();
 
     /**
      * Creates a modal dialog asking for user parameters. Set it visible to open
      * it. It returns after OK or Cancel was clicked.
-     * 
+     *
      * @param parent the parent frame this should be modal to.
      * @param pattern default value for test name pattern
      * @param rootDir starting dir for the dir selection
@@ -117,7 +120,7 @@ class TestingDialog extends JDialog {
      * This method initializes this.
      */
     private void initialize() {
-        this.setSize(520, 375);
+        this.setSize(520, 420);
         this.setTitle("KNIME Testing");
         this.setContentPane(getPanel());
     }
@@ -155,7 +158,7 @@ class TestingDialog extends JDialog {
 
         JButton browse = new JButton("Browse...");
         browse.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 String newDir = browse((String)m_rootDir.getSelectedItem());
                 if (newDir != null) {
                     m_rootDir.setSelectedItem(newDir);
@@ -280,6 +283,11 @@ class TestingDialog extends JDialog {
         labelBox.add(Box.createHorizontalGlue());
         analBox.add(labelBox);
 
+        Box saveBox = Box.createHorizontalBox();
+        saveBox.add(m_saveTests);
+        saveBox.add(Box.createHorizontalGlue());
+        analBox.add(saveBox);
+
         return analBox;
     }
 
@@ -364,7 +372,7 @@ class TestingDialog extends JDialog {
     /**
      * After the dialog returned from setVisible(true) this methods tells,
      * whether the dialog was canceled or ok'ed.
-     * 
+     *
      * @return true if the user pressed OK to close the dialog
      */
     boolean closedViaOK() {
@@ -374,17 +382,17 @@ class TestingDialog extends JDialog {
     /**
      * After the dialog returned from setVisible(true) this methods returns the
      * value entered as test name regular expression matching pattern.
-     * 
+     *
      * @return the new regular expression to match test names against.
      */
     String getTestRootDir() {
         return m_testRootDir;
     }
-    
+
     /**
      * After the dialog returned from setVisible(true) this methods returns the
      * value entered as test name regular expression matching pattern.
-     * 
+     *
      * @return the new regular expression to match test names against.
      */
     String getTestNamePattern() {
@@ -394,7 +402,7 @@ class TestingDialog extends JDialog {
     /**
      * After the dialog returned from setVisible(true) this methods returns the
      * user's choice whether to analyze the log file or not.
-     * 
+     *
      * @return true if the log file should be analyzed.
      */
     boolean getAnalyzeLogFile() {
@@ -404,16 +412,20 @@ class TestingDialog extends JDialog {
     /**
      * After the dialog returned from setVisible(true) this methods returns the
      * value entered as output dir for the log file analysis result dir.
-     * 
+     *
      * @return the new dir to store the analysis results in
      */
     String getAnalysisOutputDir() {
         return m_analOutdir;
     }
 
+    boolean getSaveTests() {
+        return m_saveTests.isSelected();
+    }
+
     /**
      * The main.
-     * 
+     *
      * @param args the args of main.
      */
     public static void main(final String[] args) {

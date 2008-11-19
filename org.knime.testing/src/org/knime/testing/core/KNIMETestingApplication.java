@@ -37,6 +37,7 @@ import junit.framework.Test;
 import junit.framework.TestFailure;
 import junit.framework.TestResult;
 
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
@@ -66,6 +67,10 @@ public class KNIMETestingApplication implements IApplication {
     // if this is not null, tests are running - and can be stopped in here.
     private TestResult m_results = null;
 
+    private boolean m_saveTests = false;
+
+    private File m_saveLocation = null;
+
     /**
      * {@inheritDoc}
      */
@@ -78,10 +83,10 @@ public class KNIMETestingApplication implements IApplication {
         // open!
         // Suddenly under windows this causes a headless exception (at least
         // if started without command line arguments)
-//        if (!System.getProperty("os.name").equals("Linux")
-//                && System.getProperty("java.awt.headless") == null) {
-//            System.setProperty("java.awt.headless", "true");
-//        }
+        // if (!System.getProperty("os.name").equals("Linux")
+        // && System.getProperty("java.awt.headless") == null) {
+        // System.setProperty("java.awt.headless", "true");
+        // }
 
         // make sure the logfile doesn't get split.
         System.setProperty(LogfileAppender.MAX_SIZE_ENV_VARIABLE, "-1");
@@ -110,6 +115,10 @@ public class KNIMETestingApplication implements IApplication {
                 // but what is an error code everybody understands?
                 return EXIT_OK;
             }
+        }
+
+        if (m_saveTests) {
+            m_saveLocation = getRuntimeWorkspace();
         }
 
         // Go!
@@ -144,6 +153,7 @@ public class KNIMETestingApplication implements IApplication {
         }
 
         m_testNamePattern = dlg.getTestNamePattern();
+        m_saveTests = dlg.getSaveTests();
         m_rootDir = dlg.getTestRootDir();
         m_analyzeLogFile = dlg.getAnalyzeLogFile();
         String outDir = dlg.getAnalysisOutputDir();
@@ -223,16 +233,17 @@ public class KNIMETestingApplication implements IApplication {
         // override current encryption key supplier
         KnimeEncryption.setEncryptionKeySupplier(new EncryptionKeySupplier() {
             /**
-             * @return <code>KNIME</code> always
-             * {@inheritDoc}
+             * @return <code>KNIME</code> always {@inheritDoc}
              */
-           public String getEncryptionKey() {
-               return "KNIME";
-           }
+            public String getEncryptionKey() {
+                return "KNIME";
+            }
         });
 
-        KnimeTestRegistry registry = new KnimeTestRegistry(testPattern);
-        Test tests = registry.collectTestCases(new File(m_rootDir));
+        KnimeTestRegistry registry =
+                new KnimeTestRegistry(testPattern, new File(m_rootDir),
+                        m_saveLocation);
+        Test tests = registry.collectTestCases();
 
         System.out.println("=============  Running...  ==================");
 
@@ -405,6 +416,13 @@ public class KNIMETestingApplication implements IApplication {
                 continue;
             }
 
+            // "-save" saves the testflows after execution
+            if ("-save".equals(stringArgs[i])) {
+                i++;
+                m_saveTests = true;
+                continue;
+            }
+
             // "-root" specifies the root dir of all testcases
             if ((stringArgs[i] != null) && stringArgs[i].equals("-root")) {
                 if (m_rootDir != null) {
@@ -433,6 +451,11 @@ public class KNIMETestingApplication implements IApplication {
         return true;
     }
 
+    private File getRuntimeWorkspace() {
+        return new File(ResourcesPlugin.getWorkspace().getRoot()
+                .getLocationURI());
+    }
+
     private void printUsage() {
         System.err.println("Valid arguments:");
 
@@ -440,7 +463,8 @@ public class KNIMETestingApplication implements IApplication {
                 + "only test matching <reg_exp> will be run.");
         System.err.println("                        If not specified a dialog "
                 + "opens, waiting for user input.");
-
+        System.err.println("    -save: saves the testflows after execution "
+                + "in the runtime workspace");
         System.err.println("    -analyze <dir_name>: optional, "
                 + "analyzes the log file after the run.");
         System.err.println("                         The result files will "
