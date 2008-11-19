@@ -232,9 +232,11 @@ public class DatabaseConnectionSettings {
         } finally {
             if (stmt != null) {
                 stmt.close();
+                stmt = null;
             }
             if (conn != null) {
                 conn.close();
+                conn = null;
             }
         }
     }

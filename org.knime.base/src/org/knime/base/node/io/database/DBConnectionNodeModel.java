@@ -75,21 +75,17 @@ final class DBConnectionNodeModel extends NodeModel {
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) 
             throws CanceledExecutionException, Exception {
-        try {
-            if (m_load == null) {
-                exec.setProgress("Opening database connection...");
-                DatabasePortObject dbObj = (DatabasePortObject) inData[0];
-                DatabaseQueryConnectionSettings conn = 
-                    new DatabaseQueryConnectionSettings(
-                        dbObj.getConnectionModel());
-                m_load = new DatabaseReaderConnection(conn);
-            }
-            m_lastSpec = m_load.getDataTableSpec();
-            exec.setProgress("Reading data from database...");
-            return new BufferedDataTable[]{m_load.createTable(exec)};
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
+        if (m_load == null) {
+            exec.setProgress("Opening database connection...");
+            DatabasePortObject dbObj = (DatabasePortObject) inData[0];
+            DatabaseQueryConnectionSettings conn = 
+                new DatabaseQueryConnectionSettings(
+                    dbObj.getConnectionModel());
+            m_load = new DatabaseReaderConnection(conn);
         }
+        m_lastSpec = m_load.getDataTableSpec();
+        exec.setProgress("Reading data from database...");
+        return new BufferedDataTable[]{m_load.createTable(exec)};
     }
 
     /**
