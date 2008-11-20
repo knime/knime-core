@@ -49,6 +49,7 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.tableview.TableContentModel;
 
 /**
  * Provides functionality for analyzing an ASCII data file to create default
@@ -61,8 +62,10 @@ public final class FileAnalyzer {
 
     /**
      * If the analysis is cut short, we look only at the first couple of lines.
+     * We look at as many lines as the preview table will read in as its first
+     * chunk.
      */
-    static final int NUMOFLINES = 1000;
+    static final int NUMOFLINES = TableContentModel.CHUNK_SIZE;
 
     // the part of the entire analysis each task takes. Must add up to 1.0.
     private static final double COMMENT_SUB = 0.1;
@@ -1000,7 +1003,7 @@ public final class FileAnalyzer {
         int linesRead = 0;
 
         try {
-            while (linesRead < NUMOFLINES) {
+            while (true) {
 
                 checkInterrupt(exec);
 
@@ -1030,11 +1033,13 @@ public final class FileAnalyzer {
                     settings.addBlockCommentPattern("/*", "*/", false, false);
                     break;
                 }
-
-            }
-
-            if (linesRead >= NUMOFLINES) {
-                settings.setAnalyzeUsedAllRows(false);
+                if (cutItShort(exec)) {
+                    if (linesRead >= NUMOFLINES) {
+                        settings.setAnalyzeUsedAllRows(false);
+                        break;
+                    }
+                    exec.setProgress(linesRead / (double)NUMOFLINES);
+                }
             }
         } finally {
             reader.close();
