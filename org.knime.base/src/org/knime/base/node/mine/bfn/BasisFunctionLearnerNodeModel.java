@@ -132,9 +132,19 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
     @Override
     protected void reset() {
         m_modelInfo = null;
-        m_translator.removeAllToHiliteHandlers();
         m_translator.setMapper(null);
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void setInHiLiteHandler(final int inIndex, 
+            final HiLiteHandler hiLiteHdl) {
+        m_translator.removeAllToHiliteHandlers();
+        m_translator.addToHiLiteHandler(hiLiteHdl);
+    }
+    
 
     /**
      * {@inheritDoc}
@@ -297,7 +307,6 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
 
         // set translator mapping
         m_translator.setMapper(table.getHiLiteMapper());
-        m_translator.addToHiLiteHandler(getInHiLiteHandler(0));
 
         ModelContent modelInfo = new ModelContent(MODEL_INFO);
         table.saveInfos(modelInfo);
@@ -443,10 +452,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         try {
             m_translator.setMapper(DefaultHiLiteMapper.load(mapSettings));
         } catch (InvalidSettingsException ise) {
-            m_translator.setMapper(null);
             throw new IOException(ise.getMessage());
-        } finally {
-            m_translator.addToHiLiteHandler(getInHiLiteHandler(0));
         }
     }
 

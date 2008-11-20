@@ -85,8 +85,8 @@ public class SetOperatorNodeModel extends NodeModel {
     private static final String HILITE_MAPPING0 = "hilite_mapping0.xml.gz";
     private static final String HILITE_MAPPING1 = "hilite_mapping1.xml.gz";
 
-    private final HiLiteTranslator m_hilite0 = new HiLiteTranslator();
-    private final HiLiteTranslator m_hilite1 = new HiLiteTranslator();
+    private final HiLiteTranslator m_trans0 = new HiLiteTranslator();
+    private final HiLiteTranslator m_trans1 = new HiLiteTranslator();
     private final HiLiteManager m_outHiLiteHandler = new HiLiteManager();
 
     /**Constructor for class SetOperatorNodeModel.
@@ -97,10 +97,25 @@ public class SetOperatorNodeModel extends NodeModel {
                 SetOperation.getDefault().getName());
         m_sortInMemory = new SettingsModelBoolean(CFG_SORT_IN_MEMORY, false);
         m_skipMissing = new SettingsModelBoolean(CFG_SKIP_MISSING, true);
-        m_outHiLiteHandler.addToHiLiteHandler(m_hilite0.getFromHiLiteHandler());
-        m_outHiLiteHandler.addToHiLiteHandler(m_hilite1.getFromHiLiteHandler());
+        m_outHiLiteHandler.addToHiLiteHandler(m_trans0.getFromHiLiteHandler());
+        m_outHiLiteHandler.addToHiLiteHandler(m_trans1.getFromHiLiteHandler());
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void setInHiLiteHandler(final int inIndex, 
+            final HiLiteHandler hiLiteHdl) {
+        if (inIndex == 0) {
+            m_trans0.removeAllToHiliteHandlers();
+            m_trans0.addToHiLiteHandler(hiLiteHdl);
+        } else if (inIndex == 1) {
+            m_trans1.removeAllToHiliteHandlers();
+            m_trans1.addToHiLiteHandler(hiLiteHdl);
+        }
+    }
+    
     /**
      * {@inheritDoc}
      */
@@ -221,8 +236,9 @@ public class SetOperatorNodeModel extends NodeModel {
                 m_skipMissing.getBooleanValue(),
                 m_sortInMemory.getBooleanValue());
         if (m_enableHilite.getBooleanValue()) {
-            initializeHiliteHandler(
-                    new DefaultHiLiteMapper(table.getHiliteMapping0()),
+            m_trans0.setMapper(
+                    new DefaultHiLiteMapper(table.getHiliteMapping0()));
+            m_trans1.setMapper(
                     new DefaultHiLiteMapper(table.getHiliteMapping1()));
         }
         return new BufferedDataTable[] {table.getBufferedTable()};
@@ -233,8 +249,7 @@ public class SetOperatorNodeModel extends NodeModel {
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec)
-    throws IOException {
+            final ExecutionMonitor exec) throws IOException {
         if (m_enableHilite.getBooleanValue()) {
             final NodeSettingsRO config0 = NodeSettings.loadFromXML(
                     new FileInputStream(new File(
@@ -243,21 +258,12 @@ public class SetOperatorNodeModel extends NodeModel {
                     new FileInputStream(
                             new File(nodeInternDir, HILITE_MAPPING1)));
             try {
-                initializeHiliteHandler(DefaultHiLiteMapper.load(config0),
-                            DefaultHiLiteMapper.load(config1));
+                m_trans0.setMapper(DefaultHiLiteMapper.load(config0));
+                m_trans1.setMapper(DefaultHiLiteMapper.load(config1));
             } catch (final InvalidSettingsException ex) {
-                throw new IOException(ex.getMessage());
+                throw new IOException(ex);
             }
         }
-    }
-
-    private void initializeHiliteHandler(
-            final DefaultHiLiteMapper defaultHiLiteMapper,
-            final DefaultHiLiteMapper defaultHiLiteMapper2) {
-        m_hilite0.setMapper(defaultHiLiteMapper);
-        m_hilite1.setMapper(defaultHiLiteMapper2);
-        m_hilite0.addToHiLiteHandler(getInHiLiteHandler(0));
-        m_hilite1.addToHiLiteHandler(getInHiLiteHandler(1));
     }
 
     /**
@@ -270,7 +276,7 @@ public class SetOperatorNodeModel extends NodeModel {
         if (m_enableHilite.getBooleanValue()) {
             final NodeSettings config0 = new NodeSettings("hilite_mapping");
             final DefaultHiLiteMapper mapper0 =
-                (DefaultHiLiteMapper) m_hilite0.getMapper();
+                (DefaultHiLiteMapper) m_trans0.getMapper();
             if (mapper0 != null) {
                 mapper0.save(config0);
             }
@@ -279,7 +285,7 @@ public class SetOperatorNodeModel extends NodeModel {
 
             final NodeSettings config1 = new NodeSettings("hilite_mapping");
             final DefaultHiLiteMapper mapper1 =
-                (DefaultHiLiteMapper) m_hilite1.getMapper();
+                (DefaultHiLiteMapper) m_trans1.getMapper();
             if (mapper1 != null) {
                 mapper1.save(config1);
             }
@@ -293,10 +299,8 @@ public class SetOperatorNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_hilite0.removeAllToHiliteHandlers();
-        m_hilite1.removeAllToHiliteHandlers();
-        m_hilite0.setMapper(null);
-        m_hilite1.setMapper(null);
+        m_trans0.setMapper(null);
+        m_trans1.setMapper(null);
     }
 }
 

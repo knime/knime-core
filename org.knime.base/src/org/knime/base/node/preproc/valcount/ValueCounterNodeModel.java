@@ -181,7 +181,6 @@ public class ValueCounterNodeModel extends NodeModel {
                 temp.put(newKey, entry.getValue());
             }
             m_translator.setMapper(new DefaultHiLiteMapper(temp));
-            m_translator.addToHiLiteHandler(getInHiLiteHandler(0));
         }
         return new BufferedDataTable[]{cont.getTable()};
     }
@@ -202,10 +201,7 @@ public class ValueCounterNodeModel extends NodeModel {
             try {
                 m_translator.setMapper(DefaultHiLiteMapper.load(s));
             } catch (InvalidSettingsException ex) {
-                m_translator.setMapper(null);
                 throw new IOException(ex);
-            } finally {
-                m_translator.addToHiLiteHandler(getInHiLiteHandler(0));
             }
         }
     }
@@ -224,7 +220,6 @@ public class ValueCounterNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_translator.removeAllToHiliteHandlers();
         m_translator.setMapper(null);
     }
 
@@ -262,6 +257,16 @@ public class ValueCounterNodeModel extends NodeModel {
             throws InvalidSettingsException {
         ValueCounterSettings s = new ValueCounterSettings();
         s.loadSettings(settings);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void setInHiLiteHandler(final int inIndex, 
+            final HiLiteHandler hiLiteHdl) {
+        m_translator.removeAllToHiliteHandlers();
+        m_translator.addToHiLiteHandler(hiLiteHdl);
     }
 
     /**

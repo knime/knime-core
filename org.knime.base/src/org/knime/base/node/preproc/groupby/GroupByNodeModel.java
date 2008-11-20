@@ -290,8 +290,17 @@ public class GroupByNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_hilite.removeAllToHiliteHandlers();
         m_hilite.setMapper(null);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void setInHiLiteHandler(final int inIndex, 
+            final HiLiteHandler hiLiteHdl) {
+        m_hilite.removeAllToHiliteHandlers();
+        m_hilite.addToHiLiteHandler(hiLiteHdl);
     }
 
     /**
@@ -299,7 +308,6 @@ public class GroupByNodeModel extends NodeModel {
      */
     @Override
     protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
-        assert outIndex == 0;
         return m_hilite.getFromHiLiteHandler();
     }
 
@@ -408,7 +416,6 @@ public class GroupByNodeModel extends NodeModel {
         if (m_enableHilite.getBooleanValue()) {
             m_hilite.setMapper(new DefaultHiLiteMapper(
                     resultTable.getHiliteMapping()));
-            m_hilite.addToHiLiteHandler(getInHiLiteHandler(0));
         }
         //check for skipped columns
         final String warningMsg = resultTable.getSkippedGroupsMessage(3, 3);
