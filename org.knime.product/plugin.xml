@@ -70,7 +70,7 @@
    </extension>
    -->
    <extension point="org.eclipse.ui.intro">
-      <intro class="org.eclipse.ui.intro.config.CustomizableIntroPart" icon="icons/bmp/knime16.bmp" id="org.knime.product.intro">
+      <intro class="org.eclipse.ui.intro.config.CustomizableIntroPart" icon="icons/gif/knime16.gif" id="org.knime.product.intro">
       </intro>
       <introProductBinding introId="org.knime.product.intro" productId="org.knime.product.KNIME_PRODUCT">
       </introProductBinding>

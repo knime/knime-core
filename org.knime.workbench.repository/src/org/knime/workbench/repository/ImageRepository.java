@@ -47,50 +47,9 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
  */
 public final class ImageRepository {
     private ImageRepository() {
-        // hidden, dude !
+        // hidden
     }
 
-    /** Image: editor. */
-    public static final String IMAGE_EDITOR = "icons/editor.gif";
-
-    /** Image: connection. */
-    public static final String IMAGE_PALETTE_CONNECTION = "icons/"
-            + "connection.gif";
-
-    /** Image: description. */
-    public static final String IMAGE_PALETTE_DESCRIPTION = "icons/"
-            + "description.gif";
-
-    /** Image: in port. */
-    public static final String IMAGE_PORT_IN = "icons/port_in.gif";
-
-    /** Image: out port. */
-    public static final String IMAGE_PORT_OUT = "icons/port_in.gif";
-
-    /** Image: reader. */
-    public static final String IMAGE_TYPE_READER = "icons/palette/reader.gif";
-
-    /** Image: filter. */
-    public static final String IMAGE_TYPE_FILTER = "icons/palette/filter.gif";
-
-    /** Image: learner. */
-    public static final String IMAGE_TYPE_LEARNER = "icons/palette/learner.gif";
-
-    /** Image: scorer. */
-    public static final String IMAGE_TYPE_SCORER = "icons/palette/scorer.gif";
-
-    /** Image: writer. */
-    public static final String IMAGE_TYPE_WRITER = "icons/palette/writer.gif";
-
-    /** Image: handler. */
-    public static final String IMAGE_TYPE_HANDLER = "icons/palette/handler.gif";
-
-    /** Image: viewer. */
-    public static final String IMAGE_TYPE_VIEWER = "icons/palette/viewer.gif";
-
-    /** Image: default for an algorithm. */
-    public static final String IMAGE_DEFAULT_ALGORITHM = "icons/alg/"
-            + "default.gif";
 
     // The internal registry
     private static ImageRegistry registry = KNIMERepositoryPlugin.getDefault()

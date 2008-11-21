@@ -34,6 +34,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -76,6 +77,10 @@ public class WorkflowExportPage extends WizardPage {
     private Button m_excludeData;
 
     private final ISelection m_selection;
+    
+    private static final ImageDescriptor ICON =
+        KNIMEUIPlugin.imageDescriptorFromPlugin(
+        KNIMEUIPlugin.PLUGIN_ID, "icons/knime_export55.png");
 
     /**
      * Constructor for NewWorkflowPage.
@@ -86,6 +91,7 @@ public class WorkflowExportPage extends WizardPage {
         super("wizardPage");
         setTitle("KNIME Workflow project");
         setDescription("This wizard exports a KNIME workflow project.");
+        setImageDescriptor(ICON);
         this.m_selection = selection;
     }
 

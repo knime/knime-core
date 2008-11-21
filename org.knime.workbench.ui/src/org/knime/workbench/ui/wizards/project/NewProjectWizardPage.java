@@ -27,6 +27,7 @@ package org.knime.workbench.ui.wizards.project;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -38,8 +39,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
-import com.swtdesigner.ResourceManager;
-
 /**
  * Page that is used as the "New Project" wizards' GUI.
  * 
@@ -49,6 +48,10 @@ import com.swtdesigner.ResourceManager;
 public class NewProjectWizardPage extends WizardPage {
     private static final String INITIAL_PROJECT_NAME = "KNIME_project";
 
+    private static final ImageDescriptor ICON = KNIMEUIPlugin
+        .imageDescriptorFromPlugin(
+            KNIMEUIPlugin.PLUGIN_ID, "icons/new_knime55.png"); 
+    
     private Text m_projectName;
     
     /**
@@ -59,8 +62,7 @@ public class NewProjectWizardPage extends WizardPage {
         super("wizardPage");
         setTitle("New KNIME Project Wizard");
         setDescription("Create a new KNIME workflow project.");
-        setImageDescriptor(ResourceManager.getPluginImageDescriptor(
-                KNIMEUIPlugin.getDefault(), "icons/logo32x32.png"));
+        setImageDescriptor(ICON);
     }
 
     /**

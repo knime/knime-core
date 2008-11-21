@@ -93,7 +93,8 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
 
         IPreferenceStore prefStore = getPreferenceStore();
         getImageRegistry().put("knime",
-                imageDescriptorFromPlugin(PLUGIN_ID, "/icons/knime.png"));
+                imageDescriptorFromPlugin(PLUGIN_ID, 
+                        "/icons/knime_default.png"));
         int freqHistorySize = prefStore.getInt(
                 PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE);
         int usedHistorySize = prefStore.getInt(
