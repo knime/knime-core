@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   16.11.2005 (gdf): created
  */
@@ -42,9 +42,9 @@ import org.knime.core.util.KnimeEncryption;
 
 /**
  * Provide a standard component for a dialog that allows to edit a text field.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
- * 
+ *
  */
 public final class DialogComponentPasswordField extends DialogComponent {
 
@@ -63,19 +63,19 @@ public final class DialogComponentPasswordField extends DialogComponent {
 
     /**
      * Constructor put label and JTextField into panel.
-     * 
+     *
      * @param label label for dialog in front of JTextField
      * @param stringModel the model that stores the value for this component.
      */
     public DialogComponentPasswordField(final SettingsModelString stringModel,
             final String label) {
-        this(stringModel, label, 
+        this(stringModel, label,
                 calcDefaultWidth(stringModel.getStringValue()));
     }
 
     /**
      * Constructor put label and JTextField into panel.
-     * 
+     *
      * @param label label for dialog in front of JTextField
      * @param stringModel the model that stores the value for this component.
      * @param compWidth the width of the component (in columns/characters)
@@ -118,6 +118,8 @@ public final class DialogComponentPasswordField extends DialogComponent {
         getComponentPanel().add(m_pwField);
         m_containsDefaultValue = true;
 
+        //call this method to be in sync with the settings model
+        updateComponent();
     }
 
     /**
@@ -145,9 +147,9 @@ public final class DialogComponentPasswordField extends DialogComponent {
      */
     @Override
     protected void updateComponent() {
-        
+
         clearError(m_pwField);
-        
+
         final String str = ((SettingsModelString)getModel()).getStringValue();
         m_pwField.setText(str);
         m_containsDefaultValue = true;
@@ -158,7 +160,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
 
     /**
      * Transfers the value from the component into the settings model.
-     * 
+     *
      * @throws InvalidSettingsException if there was a problem encrypting the
      *             password
      */
@@ -166,10 +168,10 @@ public final class DialogComponentPasswordField extends DialogComponent {
         // we transfer the value from the field into the model...
         if (!m_containsDefaultValue) {
             // ...only if user changed it
-            char[] pw = m_pwField.getPassword();
+            final char[] pw = m_pwField.getPassword();
             try {
                 ((SettingsModelString)getModel()).setStringValue(encrypt(pw));
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 showError(m_pwField);
                 throw new InvalidSettingsException(
                         "Could not encrypt password.");
@@ -207,7 +209,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
 
     /**
      * Sets the preferred size of the internal component.
-     * 
+     *
      * @param width The width.
      * @param height The height.
      */
@@ -217,7 +219,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
 
     /**
      * Encrypts password.
-     * 
+     *
      * @param password Char array.
      * @return The password encrypt.
      * @throws Exception If something goes wrong.
@@ -228,7 +230,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
 
     /**
      * Decrypts password.
-     * 
+     *
      * @param password The password to decrypt.
      * @return The decrypted password.
      * @throws Exception If something goes wrong.

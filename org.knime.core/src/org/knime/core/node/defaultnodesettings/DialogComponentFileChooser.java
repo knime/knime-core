@@ -69,7 +69,7 @@ public class DialogComponentFileChooser extends DialogComponent {
 
     private final JComboBox m_fileComboBox;
 
-    private StringHistory m_fileHistory;
+    private final StringHistory m_fileHistory;
 
     private final JButton m_browseButton;
 
@@ -160,7 +160,7 @@ public class DialogComponentFileChooser extends DialogComponent {
 
         getComponentPanel().setLayout(new FlowLayout());
 
-        JPanel p = new JPanel();
+        final JPanel p = new JPanel();
         m_fileHistory = StringHistory.getInstance(historyID);
         m_fileComboBox = new JComboBox();
         m_fileComboBox.setPreferredSize(new Dimension(300, m_fileComboBox
@@ -168,13 +168,14 @@ public class DialogComponentFileChooser extends DialogComponent {
         m_fileComboBox.setRenderer(new ConvenientComboBoxRenderer());
         m_fileComboBox.setEditable(true);
 
-        for (String fileName : m_fileHistory.getHistory()) {
+        for (final String fileName : m_fileHistory.getHistory()) {
             m_fileComboBox.addItem(fileName);
         }
 
         m_browseButton = new JButton("Browse...");
 
-        String title = directoryOnly ? "Selected Directory:" : "Selected File:";
+        final String title =
+            directoryOnly ? "Selected Directory:" : "Selected File:";
         m_border = BorderFactory.createTitledBorder(title);
         p.setBorder(m_border);
         p.add(m_fileComboBox);
@@ -184,7 +185,7 @@ public class DialogComponentFileChooser extends DialogComponent {
         if (validExtensions != null) {
             m_fileFilter =
                 new ArrayList<SimpleFileFilter>(validExtensions.length);
-            for (String extension : validExtensions) {
+            for (final String extension : validExtensions) {
                 if (extension.indexOf('|') > 0) {
                     m_fileFilter.add(new SimpleFileFilter(
                             extension.split("\\|")));
@@ -199,9 +200,9 @@ public class DialogComponentFileChooser extends DialogComponent {
         m_browseButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
                 // sets the path in the file text field.
-                String selectedFile =
+                final String selectedFile =
                     m_fileComboBox.getEditor().getItem().toString();
-                JFileChooser chooser = new JFileChooser(selectedFile);
+                final JFileChooser chooser = new JFileChooser(selectedFile);
                 chooser.setDialogType(dialogType);
                 if (directoryOnly) {
                     chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -212,14 +213,14 @@ public class DialogComponentFileChooser extends DialogComponent {
                         // disable "All Files" selection
                         chooser.setAcceptAllFileFilterUsed(false);
                         // set the file filter for the given extensions
-                        for (FileFilter filter : m_fileFilter) {
+                        for (final FileFilter filter : m_fileFilter) {
                             chooser.setFileFilter(filter);
                         }
                         //set the first filter as default filter
                         chooser.setFileFilter(m_fileFilter.get(0));
                     }
                 }
-                int returnVal =
+                final int returnVal =
                         chooser.showDialog(getComponentPanel().getParent(),
                                 null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -231,10 +232,10 @@ public class DialogComponentFileChooser extends DialogComponent {
                         //check if the user has added the extension
                         if (!directoryOnly && m_fileFilter != null) {
                             boolean extensionFound = false;
-                            for (SimpleFileFilter filter : m_fileFilter) {
+                            for (final SimpleFileFilter filter : m_fileFilter) {
                                 final String[] extensions =
                                     filter.getValidExtensions();
-                                for (String extension : extensions) {
+                                for (final String extension : extensions) {
                                     if (newFile.endsWith(extension)) {
                                         extensionFound = true;
                                         break;
@@ -264,7 +265,7 @@ public class DialogComponentFileChooser extends DialogComponent {
                                 }
                             }
                         }
-                    } catch (SecurityException se) {
+                    } catch (final SecurityException se) {
                         newFile = "<Error: " + se.getMessage() + ">";
                     }
                     // avoid adding the same string twice...
@@ -301,9 +302,10 @@ public class DialogComponentFileChooser extends DialogComponent {
                 filenameChanged();
             }
         });
-        Component editor = m_fileComboBox.getEditor().getEditorComponent();
+        final Component editor =
+            m_fileComboBox.getEditor().getEditorComponent();
         if (editor instanceof JTextComponent) {
-            Document d = ((JTextComponent)editor).getDocument();
+            final Document d = ((JTextComponent)editor).getDocument();
             d.addDocumentListener(new DocumentListener() {
                 public void changedUpdate(final DocumentEvent e) {
                     filenameChanged();
@@ -325,6 +327,9 @@ public class DialogComponentFileChooser extends DialogComponent {
                 updateComponent();
             }
         });
+
+        //call this method to be in sync with the settings model
+        updateComponent();
     }
 
     // called by all action/change listeners to transfer the new filename into
@@ -334,7 +339,7 @@ public class DialogComponentFileChooser extends DialogComponent {
         try {
             clearError(m_fileComboBox);
             updateModel(true); // don't color the combobox red.
-        } catch (InvalidSettingsException ise) {
+        } catch (final InvalidSettingsException ise) {
             // ignore it here.
         }
     }
@@ -350,12 +355,12 @@ public class DialogComponentFileChooser extends DialogComponent {
     private void updateModel(final boolean noColoring)
             throws InvalidSettingsException {
 
-        String file = m_fileComboBox.getEditor().getItem().toString();
+        final String file = m_fileComboBox.getEditor().getItem().toString();
         if ((file != null) && (file.trim().length() > 0)) {
 
             try {
                 ((SettingsModelString)getModel()).setStringValue(file);
-            } catch (RuntimeException e) {
+            } catch (final RuntimeException e) {
                 // if value was not accepted by setter method
                 if (!noColoring) {
                     showError(m_fileComboBox);
@@ -383,7 +388,7 @@ public class DialogComponentFileChooser extends DialogComponent {
             // don't flag an error in disabled components.
             return;
         }
-        String selection = box.getEditor().getItem().toString();
+        final String selection = box.getEditor().getItem().toString();
 
         if ((selection == null) || (selection.length() == 0)) {
             box.setBackground(Color.RED);
@@ -421,13 +426,13 @@ public class DialogComponentFileChooser extends DialogComponent {
         clearError(m_fileComboBox);
 
         // update the component only if model and component are out of sync
-        SettingsModelString model = (SettingsModelString)getModel();
-        String newValue = model.getStringValue();
+        final SettingsModelString model = (SettingsModelString)getModel();
+        final String newValue = model.getStringValue();
         boolean update;
         if (newValue == null) {
             update = (m_fileComboBox.getSelectedItem() != null);
         } else {
-            String file = m_fileComboBox.getEditor().getItem().toString();
+            final String file = m_fileComboBox.getEditor().getItem().toString();
             update = !newValue.equals(file);
         }
         if (update) {

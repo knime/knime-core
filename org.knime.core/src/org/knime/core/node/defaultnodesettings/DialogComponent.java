@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   21.09.2005 (mb): created
  *   2006-05-24 (tm): reviewed
@@ -50,10 +50,10 @@ import org.knime.core.node.port.PortObjectSpec;
  * Each component has a {@link SettingsModel} associated with it, which stores
  * the current value of the component and handles all value related operations,
  * like loading, saving, etc.
- * 
+ *
  * @see DefaultNodeSettingsPane
  * @see SettingsModel
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
 public abstract class DialogComponent {
@@ -75,7 +75,7 @@ public abstract class DialogComponent {
 
     /**
      * Abstract constructor expecting the model for this component.
-     * 
+     *
      * @param model the value model for this component
      */
     public DialogComponent(final SettingsModel model) {
@@ -128,7 +128,7 @@ public abstract class DialogComponent {
     /**
      * Read value(s) of this dialog component from the configuration object.
      * This method will be called by the dialog pane only.
-     * 
+     *
      * @param settings the <code>NodeSettings</code> to read from
      * @param specs the input specs
      * @throws NotConfigurableException If there is no chance for the dialog
@@ -147,8 +147,7 @@ public abstract class DialogComponent {
             m_model.dlgLoadSettingsFrom(settings, specs);
         }
 
-        // make sure the component displays the new value (listeners are not
-        // notified if the model's value didn't change (is not different)).
+        // Update the component in case only the specs have changed.
         updateComponent();
     }
 
@@ -165,7 +164,7 @@ public abstract class DialogComponent {
      * Write value(s) of this dialog component to the configuration object. This
      * method will be called by the dialog pane only. (Is not called if the
      * component is disabled.)
-     * 
+     *
      * @param settings the <code>NodeSettings</code> to read from
      * @throws InvalidSettingsException if the user has entered wrong values.
      */
@@ -174,7 +173,7 @@ public abstract class DialogComponent {
 
         try {
             validateSettingsBeforeSave();
-        } catch (InvalidSettingsException ise) {
+        } catch (final InvalidSettingsException ise) {
             if (m_model.isEnabled()) {
                 // forward the exception only if the component is enabled.
                 // it's okay for disabled components to hold invalid values.
@@ -194,7 +193,7 @@ public abstract class DialogComponent {
      * NodeSettings object. Can be used to commit values, to update the model
      * and must be used to validate the entered value. NOTE: it will be called
      * even if the model is disabled.
-     * 
+     *
      * @throws InvalidSettingsException if the entered values are invalid
      */
     protected abstract void validateSettingsBeforeSave()
@@ -206,7 +205,7 @@ public abstract class DialogComponent {
      * inappropriate incoming table specs. <br>
      * Note: This is called even if the component is disabled. Don't reject
      * specs that might be handled by other components
-     * 
+     *
      * @param specs the specs from the input ports.
      * @throws NotConfigurableException if the component can't be used due to
      *             inappropriate table specs. (Prevents the dialog from being
@@ -219,7 +218,7 @@ public abstract class DialogComponent {
      * Sets the enabled status of the component. Disabled components don't take
      * user input. Retrieving the value from a disabled model (SettingsModel)
      * could lead to unexpected results.
-     * 
+     *
      * @param enabled if <code>true</code> the contained components will be
      *            enabled
      * @see #setEnabledComponents(boolean)
@@ -238,7 +237,7 @@ public abstract class DialogComponent {
      * This method is called by the above (final) {@link #setEnabled(boolean)}
      * method. Derived classes should disable all the contained components in
      * here.
-     * 
+     *
      * @param enabled the new status of the component
      * @see #setEnabled(boolean)
      */
@@ -248,7 +247,7 @@ public abstract class DialogComponent {
      * Colors the component red, and registers a listener to the edit field that
      * sets the colors back to the default as soon as the user edits something
      * in the field.
-     * 
+     *
      * @param field the component to set the color in
      */
     protected void showError(final JTextField field) {
@@ -293,7 +292,7 @@ public abstract class DialogComponent {
     /**
      * Sets the foreground and background colors of the specified component back
      * to the normal default colors.
-     * 
+     *
      * @param field the textfield to clear the error for
      */
     protected void clearError(final JTextField field) {
@@ -303,7 +302,7 @@ public abstract class DialogComponent {
 
     /**
      * Implement this so it sets the tooltip on your component(s).
-     * 
+     *
      * @param text the tool tip text to set.
      * @see javax.swing.JComponent#setToolTipText(java.lang.String)
      */
@@ -316,7 +315,7 @@ public abstract class DialogComponent {
      * stuff). Do not call any of the methods of this model. No value will be
      * stored in this model, no value will be saved or loaded. You cannot change
      * the value of the component through this model.
-     * 
+     *
      * @author ohl, University of Konstanz
      */
     protected static final class EmptySettingsModel extends SettingsModel {

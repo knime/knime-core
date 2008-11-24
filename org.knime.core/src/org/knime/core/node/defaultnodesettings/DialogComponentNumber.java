@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   18.09.2005 (mb): created
  *   25.09.2006 (ohl): using SettingModel
@@ -46,7 +46,7 @@ import org.knime.core.node.port.PortObjectSpec;
  * load/store into config object. The type of the number entered is determined
  * by the {@link SettingsModel} passed to the constructor (currently supported
  * are double and int).
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
 public class DialogComponentNumber extends DialogComponent {
@@ -56,13 +56,13 @@ public class DialogComponentNumber extends DialogComponent {
 
     private static final int FIELD_MINWIDTH = 2;
 
-    private JSpinner m_spinner;
+    private final JSpinner m_spinner;
 
     private final JLabel m_label;
 
     /**
      * Constructor puts a label and spinner (10 characters wide) into a panel.
-     * 
+     *
      * @param numberModel the SettingsModel determining the number type (double
      *            or int)
      * @param label label for dialog in front of the spinner
@@ -75,7 +75,7 @@ public class DialogComponentNumber extends DialogComponent {
 
     /**
      * Constructor put label and spinner into panel.
-     * 
+     *
      * @param numberModel the SettingsModel determining the number type (double
      *            or int)
      * @param label label for dialog in front of the spinner
@@ -95,7 +95,8 @@ public class DialogComponentNumber extends DialogComponent {
 
         SpinnerNumberModel spinnerModel;
         if (numberModel instanceof SettingsModelDouble) {
-            SettingsModelDouble dblModel = (SettingsModelDouble)numberModel;
+            final SettingsModelDouble dblModel =
+                (SettingsModelDouble)numberModel;
             Double min = null;
             Double max = null;
             if (dblModel instanceof SettingsModelDoubleBounded) {
@@ -106,7 +107,8 @@ public class DialogComponentNumber extends DialogComponent {
                     new SpinnerNumberModel(dblModel.getDoubleValue(), min, max,
                             stepSize);
         } else if (numberModel instanceof SettingsModelInteger) {
-            SettingsModelInteger intModel = (SettingsModelInteger)numberModel;
+            final SettingsModelInteger intModel =
+                (SettingsModelInteger)numberModel;
             Integer min = null;
             Integer max = null;
             if (intModel instanceof SettingsModelIntegerBounded) {
@@ -125,7 +127,7 @@ public class DialogComponentNumber extends DialogComponent {
             m_spinner.setEditor(new JSpinner.NumberEditor(m_spinner,
                     "0.0################################################"));
         }
-        JSpinner.DefaultEditor editor =
+        final JSpinner.DefaultEditor editor =
                 (JSpinner.DefaultEditor)m_spinner.getEditor();
         editor.getTextField().setColumns(compWidth);
         editor.getTextField().setFocusLostBehavior(JFormattedTextField.COMMIT);
@@ -134,7 +136,7 @@ public class DialogComponentNumber extends DialogComponent {
             public void stateChanged(final ChangeEvent e) {
                 try {
                     updateModel();
-                } catch (InvalidSettingsException ise) {
+                } catch (final InvalidSettingsException ise) {
                     // ignore it here.
                 }
             }
@@ -151,13 +153,16 @@ public class DialogComponentNumber extends DialogComponent {
         });
 
         getComponentPanel().add(m_spinner);
+
+        //call this method to be in sync with the settings model
+        updateComponent();
     }
 
     /**
      * Tries to calculate a field width from the model specified. If the model
      * is a bounded int/double model, is uses the max value to determine the
      * width, if its not bounded, it uses the actual value.
-     * 
+     *
      * @param model number model to derive field width from
      * @return the width of the spinner, derived from the values in the model.
      */
@@ -194,36 +199,40 @@ public class DialogComponentNumber extends DialogComponent {
      */
     @Override
     protected void updateComponent() {
-        
-        JComponent editor = m_spinner.getEditor();
+
+        final JComponent editor = m_spinner.getEditor();
         if (editor instanceof DefaultEditor) {
             clearError(((DefaultEditor)editor).getTextField());
         }
-        
+
         // update the component only if it contains a different value than the
         // model
         try {
             m_spinner.commitEdit();
             if (getModel() instanceof SettingsModelDouble) {
-                SettingsModelDouble model = (SettingsModelDouble)getModel();
-                double val = ((Double)m_spinner.getValue()).doubleValue();
+                final SettingsModelDouble model =
+                    (SettingsModelDouble)getModel();
+                final double val = ((Double)m_spinner.getValue()).doubleValue();
                 if (val != model.getDoubleValue()) {
                     m_spinner.setValue(new Double(model.getDoubleValue()));
                 }
             } else {
-                SettingsModelInteger model = (SettingsModelInteger)getModel();
-                int val = ((Integer)m_spinner.getValue()).intValue();
+                final SettingsModelInteger model =
+                    (SettingsModelInteger)getModel();
+                final int val = ((Integer)m_spinner.getValue()).intValue();
                 if (val != model.getIntValue()) {
                     m_spinner.setValue(new Integer(model.getIntValue()));
                 }
             }
-        } catch (ParseException e) {
+        } catch (final ParseException e) {
             // spinner contains invalid value - update component!
             if (getModel() instanceof SettingsModelDouble) {
-                SettingsModelDouble model = (SettingsModelDouble)getModel();
+                final SettingsModelDouble model =
+                    (SettingsModelDouble)getModel();
                 m_spinner.setValue(new Double(model.getDoubleValue()));
             } else {
-                SettingsModelInteger model = (SettingsModelInteger)getModel();
+                final SettingsModelInteger model =
+                    (SettingsModelInteger)getModel();
                 m_spinner.setValue(new Integer(model.getIntValue()));
             }
         }
@@ -236,25 +245,27 @@ public class DialogComponentNumber extends DialogComponent {
      * Transfers the value from the spinner into the model. Colors the spinner
      * red, if the number is not accepted by the settings model. And throws an
      * exception then.
-     * 
+     *
      * @throws InvalidSettingsException if the number was not accepted by the
      *             model (reason could be an out of range, or just an invalid
      *             input).
-     * 
+     *
      */
     private void updateModel() throws InvalidSettingsException {
         try {
             m_spinner.commitEdit();
             if (getModel() instanceof SettingsModelDouble) {
-                SettingsModelDouble model = (SettingsModelDouble)getModel();
+                final SettingsModelDouble model =
+                    (SettingsModelDouble)getModel();
                 model.setDoubleValue(((Double)m_spinner.getValue())
                         .doubleValue());
             } else {
-                SettingsModelInteger model = (SettingsModelInteger)getModel();
+                final SettingsModelInteger model =
+                    (SettingsModelInteger)getModel();
                 model.setIntValue(((Integer)m_spinner.getValue()).intValue());
             }
-        } catch (ParseException e) {
-            JComponent editor = m_spinner.getEditor();
+        } catch (final ParseException e) {
+            final JComponent editor = m_spinner.getEditor();
             if (editor instanceof DefaultEditor) {
                 showError(((DefaultEditor)editor).getTextField());
             }
