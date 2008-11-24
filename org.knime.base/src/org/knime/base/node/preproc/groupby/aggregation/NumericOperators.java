@@ -73,7 +73,7 @@ public final class NumericOperators {
          */
         MinOperator(final DataColumnSpec origColSpec,
                 final int maxUniqueValues) {
-            super("Minimum", true, "Min(" + PLACE_HOLDER + ")", false, true,
+            super("Minimum", "Min", true, false, true,
                     maxUniqueValues);
             if (origColSpec == null) {
                 //this could only happen in the enumeration definition
@@ -155,7 +155,7 @@ public final class NumericOperators {
          */
         MaxOperator(final DataColumnSpec origColSpec,
                 final int maxUniqueValues) {
-            super("Maximum", true, "Max(" + PLACE_HOLDER + ")", false, true,
+            super("Maximum", "Max", true, false, true,
                     maxUniqueValues);
             if (origColSpec == null) {
                 //this could only happen in the enumeration definition
@@ -235,7 +235,7 @@ public final class NumericOperators {
          * @param maxUniqueValues the maximum number of unique values
          */
         MeanOperator(final int maxUniqueValues) {
-            super("Mean", true, "Mean(" + PLACE_HOLDER + ")", false, false,
+            super("Mean", true, false, false,
                     maxUniqueValues);
         }
 
@@ -306,7 +306,7 @@ public final class NumericOperators {
          * @param maxUniqueValues the maximum number of unique values
          */
         SumOperator(final int maxUniqueValues) {
-            super("Sum", true, "Sum(" + PLACE_HOLDER + ")", false, false,
+            super("Sum", true, false, false,
                     maxUniqueValues);
         }
 
@@ -379,8 +379,7 @@ public final class NumericOperators {
          * @param maxUniqueValues the maximum number of unique values
          */
         VarianceOperator(final int maxUniqueValues) {
-            super("Variance", true, "Variance(" + PLACE_HOLDER + ")",
-                    false, false, maxUniqueValues);
+            super("Variance", true, false, false, maxUniqueValues);
         }
 
         /**
@@ -392,10 +391,10 @@ public final class NumericOperators {
         }
 
         /**Constructor for class NumericOperators.VarianceOperator.
-         * @param label user readable label
+         * @param label user readable label which is also used for the
+         * column name
          * @param numerical <code>true</code> if the operator is only suitable
          * for numerical columns
-         * @param columnNamePattern the pattern for the result column name
          * @param usesLimit <code>true</code> if the method checks the number of
          * unique values limit.
          * @param keepColSpec <code>true</code> if the original column
@@ -403,10 +402,9 @@ public final class NumericOperators {
          * @param maxUniqueValues the maximum number of unique values
          */
         VarianceOperator(final String label, final boolean numerical,
-                final String columnNamePattern, final boolean usesLimit,
-                final boolean keepColSpec, final int maxUniqueValues) {
-            super(label, numerical, columnNamePattern, usesLimit, keepColSpec,
-                    maxUniqueValues);
+                final boolean usesLimit, final boolean keepColSpec,
+                final int maxUniqueValues) {
+            super(label, numerical, usesLimit, keepColSpec, maxUniqueValues);
         }
 
         /**
@@ -479,9 +477,7 @@ public final class NumericOperators {
          * @param maxUniqueValues the maximum number of unique values
          */
         StdDeviationOperator(final int maxUniqueValues) {
-            super("Standard deviation", true,
-                    "Standard deviation(" + PLACE_HOLDER + ")",
-                    false, false, maxUniqueValues);
+            super("Standard deviation", true, false, false, maxUniqueValues);
         }
 
         /**

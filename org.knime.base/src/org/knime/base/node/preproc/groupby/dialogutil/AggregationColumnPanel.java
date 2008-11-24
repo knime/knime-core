@@ -447,6 +447,7 @@ public class AggregationColumnPanel extends MouseAdapter {
      */
     private void updateSelection(final Collection<Integer> idxs) {
         if (idxs == null || idxs.isEmpty()) {
+            m_aggrColTable.clearSelection();
             return;
         }
         boolean first = true;

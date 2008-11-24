@@ -47,23 +47,18 @@ public abstract class AggregationOperator {
     private boolean m_skipped;
 
     private final String m_label;
+    private final String m_shortLabel;
     private final boolean m_numerical;
-    private final String m_columnNamePattern;
     private final boolean m_usesLimit;
     private final boolean m_keepColSpec;
 
     /**The String to use by concatenation operators.*/
     public static final String CONCATENATOR = ", ";
 
-    /**The column name place holder.*/
-    protected static final String PLACE_HOLDER = "{1}";
-
-
     /**Constructor for class AggregationOperator.
-     * @param label user readable label
+     * @param label user readable label which is also used for the column name
      * @param numerical <code>true</code> if the operator is only suitable
      * for numerical columns
-     * @param columnNamePattern the pattern for the result column name
      * @param usesLimit <code>true</code> if the method checks the number of
      * unique values limit.
      * @param keepColSpec <code>true</code> if the original column specification
@@ -71,11 +66,28 @@ public abstract class AggregationOperator {
      * @param maxUniqueValues the maximum number of unique values
      */
     public AggregationOperator(final String label, final boolean numerical,
-            final String columnNamePattern, final boolean usesLimit,
+            final boolean usesLimit, final boolean keepColSpec,
+            final int maxUniqueValues) {
+        this(label, label, numerical, usesLimit, keepColSpec, maxUniqueValues);
+    }
+
+    /**Constructor for class AggregationOperator.
+     * @param label user readable label
+     * @param shortLabel the short label used for the column name
+     * @param numerical <code>true</code> if the operator is only suitable
+     * for numerical columns
+     * @param usesLimit <code>true</code> if the method checks the number of
+     * unique values limit.
+     * @param keepColSpec <code>true</code> if the original column specification
+     * should be kept if possible
+     * @param maxUniqueValues the maximum number of unique values
+     */
+    public AggregationOperator(final String label, final String shortLabel,
+            final boolean numerical, final boolean usesLimit,
             final boolean keepColSpec, final int maxUniqueValues) {
         m_label = label;
+        m_shortLabel = shortLabel;
         m_numerical = numerical;
-        m_columnNamePattern = columnNamePattern;
         m_usesLimit = usesLimit;
         m_keepColSpec = keepColSpec;
         m_maxUniqueValues = maxUniqueValues;
@@ -187,21 +199,17 @@ public abstract class AggregationOperator {
     protected abstract void resetInternal();
 
     /**
-     * @param origColumnName the original column name
-     * @return the new name of the aggregation column
-     */
-    public String createColumnName(final String origColumnName) {
-        if (m_columnNamePattern == null || m_columnNamePattern.length() < 1) {
-            return origColumnName;
-        }
-        return m_columnNamePattern.replace(PLACE_HOLDER, origColumnName);
-    }
-
-    /**
      * @return the label
      */
     public String getLabel() {
         return m_label;
+    }
+
+    /**
+     * @return the short label which is used in the column name
+     */
+    public String getShortLabel() {
+        return m_shortLabel;
     }
 
 
