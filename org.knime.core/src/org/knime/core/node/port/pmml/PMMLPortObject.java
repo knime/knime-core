@@ -125,7 +125,8 @@ public abstract class PMMLPortObject implements PortObject {
      * @param spec the referring {@link PMMLPortObjectSpec}
      * @param type the type of the PMML model
      */
-    public PMMLPortObject(final PMMLPortObjectSpec spec, PMMLModelType type) {
+    public PMMLPortObject(final PMMLPortObjectSpec spec, 
+            final PMMLModelType type) {
         m_spec = spec;
         m_masterHandler = new PMMLMasterContentHandler();
         m_modelType = type;
