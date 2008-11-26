@@ -25,6 +25,7 @@ package org.knime.base.node.mine.svm;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -445,9 +446,12 @@ public class PMMLSVMPortObject extends PMMLPortObject {
         super.addPMMLContentHandler("SVM", hdl);
         super.loadFrom(spec, in, version);
         hdl = (PMMLSVMHandler)super.getPMMLContentHandler("SVM");
-        ArrayList<Svm> svmlist = hdl.getSVMs();
+        List<Svm> svmlist = hdl.getSVMs();
         m_svms = new Svm[svmlist.size()];
         m_svms = svmlist.toArray(m_svms);
+        List<String>targetList = hdl.getTargetValues();
+        m_targetValues = new String[targetList.size()];
+        m_targetValues = targetList.toArray(m_targetValues);
         m_kernel = hdl.getKernel();
     }
 

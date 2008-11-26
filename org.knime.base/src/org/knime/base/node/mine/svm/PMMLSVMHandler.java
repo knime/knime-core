@@ -23,6 +23,7 @@
 package org.knime.base.node.mine.svm;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 
 import org.knime.base.node.mine.svm.kernel.Kernel;
@@ -49,7 +50,7 @@ public class PMMLSVMHandler extends PMMLContentHandler {
 
     private Kernel m_kernel;
 
-    private ArrayList<String> m_datafields = new ArrayList<String>();
+    private List<String> m_datafields = new ArrayList<String>();
 
     private DoubleVector[] m_doubleVectors;
 
@@ -57,15 +58,15 @@ public class PMMLSVMHandler extends PMMLContentHandler {
 
     private String m_curSVMTargetCategory;
 
-    private ArrayList<String> m_curSVMVectors = new ArrayList<String>();
+    private List<String> m_curSVMVectors = new ArrayList<String>();
 
-    private ArrayList<Double> m_curSVMAlphas = new ArrayList<Double>();
+    private List<Double> m_curSVMAlphas = new ArrayList<Double>();
 
     private double m_curSVMThreshold;
 
-    private ArrayList<String> m_targetValues = new ArrayList<String>();
+    private List<String> m_targetValues = new ArrayList<String>();
 
-    private ArrayList<Svm> m_svms = new ArrayList<Svm>();
+    private List<Svm> m_svms = new ArrayList<Svm>();
 
     private int[] m_curIndices;
 
@@ -86,7 +87,7 @@ public class PMMLSVMHandler extends PMMLContentHandler {
     /**
      * @return the {@link Svm}s in the PMML file.
      */
-    public ArrayList<Svm> getSVMs() {
+    public List<Svm> getSVMs() {
         return m_svms;
     }
 
@@ -95,6 +96,14 @@ public class PMMLSVMHandler extends PMMLContentHandler {
      */
     public Kernel getKernel() {
         return m_kernel;
+    }
+    
+    /**
+     * 
+     * @return the target values
+     */
+    public List<String>getTargetValues() {
+        return m_targetValues;
     }
 
         /**
