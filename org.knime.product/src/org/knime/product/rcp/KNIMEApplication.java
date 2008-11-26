@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Map;
 import java.util.Properties;
 
 import org.eclipse.core.runtime.Platform;
@@ -502,12 +503,25 @@ public class KNIMEApplication implements IApplication {
             for (String s : XUL_BINS) {
                 File xulrunner = new File(dir, s);
                 if (xulrunner.canExecute()) {
-                    Process p =
-                            Runtime.getRuntime().exec(
-                                    new String[]{xulrunner.getAbsolutePath(),
-                                            "-v"});
+                    ProcessBuilder pb =
+                            new ProcessBuilder(xulrunner.getAbsolutePath(),
+                                    "-v");
+                    pb.redirectErrorStream(true);
+                    Map<String, String> env = pb.environment();
+                    String ldPath = env.get("LD_LIBRARY_PATH");
+                    String xulDir = xulrunner.getParentFile().getAbsolutePath();
+
+                    if (ldPath == null) {
+                        ldPath = xulDir;
+                    } else if (ldPath.indexOf(xulDir) < 0) {
+                        ldPath = ldPath + ":" + xulDir;
+                    }
+                    pb.environment().put("LD_LIBRARY_PATH", ldPath);
+
+                    Process p = pb.start();
+
                     byte[] buf = new byte[4096];
-                    int r = p.getErrorStream().read(buf);
+                    int r = p.getInputStream().read(buf);
                     if (r >= 0) {
                         String version = new String(buf, 0, r);
                         if (version.indexOf(" 1.9") >= 0) {
@@ -516,7 +530,7 @@ public class KNIMEApplication implements IApplication {
                             xul18Location = dir;
                         }
 
-                        while (p.getErrorStream().read(buf) >= 0) {
+                        while (p.getInputStream().read(buf) >= 0) {
                         }
                     }
                     p.waitFor();
@@ -541,17 +555,23 @@ public class KNIMEApplication implements IApplication {
                     knimeLOC = new File(path).getAbsolutePath();
                 }
             }
-            return MessageDialog.openQuestion(null, "Internal Web Browser",
-                "KNIME found an incompatible version of xulrunner "
-                    + "at '" + xul19Location.getAbsolutePath() + "'. "
-                    + "This might result in a crash if you continue "
-                    + "now due to a known Eclipse bug.\n"
-                    + "Please install a version of xulrunner < 1.9 and add '-D"
-                    + XUL + "=...' to knime.ini.\nDetails on this problem "
-                    + "can be found in the KNIME FAQs on knime.org and the "
-                    + "readme file in the KNIME directory (\""
-                    + knimeLOC + "\").\n"
-                    + "Do you want to continue loading KNIME?");
+            return MessageDialog
+                    .openQuestion(
+                            null,
+                            "Internal Web Browser",
+                            "KNIME found an incompatible version of xulrunner "
+                                    + "at '"
+                                    + xul19Location.getAbsolutePath()
+                                    + "'. "
+                                    + "This might result in a crash if you continue "
+                                    + "now due to a known Eclipse bug.\n"
+                                    + "Please install a version of xulrunner < 1.9 and add '-D"
+                                    + XUL
+                                    + "=...' to knime.ini.\nDetails on this problem "
+                                    + "can be found in the KNIME FAQs on knime.org and the "
+                                    + "readme file in the KNIME directory (\""
+                                    + knimeLOC + "\").\n"
+                                    + "Do you want to continue loading KNIME?");
         } else {
             System.out.println("No xulrunner found, Node descriptions and "
                     + "online help will possibly not work. If you have "
