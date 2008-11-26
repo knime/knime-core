@@ -19,8 +19,8 @@
 package org.knime.base.node.mine.svm;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -65,7 +65,7 @@ public class PMMLSVMModelsParser extends TestCase {
         assertEquals(kernel.getParameter(0), 1.0);
 
         // test resulting SVMs
-        ArrayList<Svm> svms = m_handler.getSVMs();
+        List<Svm> svms = m_handler.getSVMs();
         assertEquals(svms.size(), 3);
         Svm svm1 = svms.get(0);
         Svm svm2 = svms.get(1);
