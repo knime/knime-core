@@ -595,8 +595,13 @@ public abstract class NodeContainer {
         return getName() + " " + getID().toString();
     }
     
+    /** @return Node name with status information.  */
+    @Override
+    public String toString() {
+        return getNameWithID() + " (" + getState() + ")";
+    }
+    
     /**
-     * 
      * @return the display label for {@link NodeView}, {@link OutPortView} and
      * {@link NodeDialog}
      */

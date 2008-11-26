@@ -761,15 +761,6 @@ public final class SingleNodeContainer extends NodeContainer
         return m_node.getName();
     }
 
-    /**
-     * @return Node name with status information.
-     * @see java.lang.Object#toString()
-     */
-    @Override
-    public String toString() {
-        return m_node.getName() + "(" + getID() + ")" + ";status:" + getState();
-    }
-
     /** {@inheritDoc} */
     @Override
     public boolean hasDialog() {

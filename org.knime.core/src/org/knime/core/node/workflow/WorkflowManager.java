@@ -2608,9 +2608,7 @@ public final class WorkflowManager extends NodeContainer {
                     } else {
                         build.append(indentString);
                         build.append("  ");
-                        build.append(nc.getNameWithID());
-                        build.append(": ");
-                        build.append(nc.getState());
+                        build.append(nc.toString());
                         build.append("\n");
                     }
                 } else {    // skip remaining nodes with wrong prefix
@@ -2623,13 +2621,11 @@ public final class WorkflowManager extends NodeContainer {
         }
         return build.toString();
     }
-
-    /**
-     * {@inheritDoc}
-     */
+    
+    /** {@inheritDoc} */
     @Override
     public String toString() {
-        return printNodeSummary(getID(), 0);
+        return "(WFM) " + super.toString();
     }
 
     ////////////////////////
