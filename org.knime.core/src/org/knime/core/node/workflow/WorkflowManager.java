@@ -2364,7 +2364,17 @@ public final class WorkflowManager extends NodeContainer {
             case EXECUTED:
                 // should not happen but could if reset has worked on slightly
                 // different nodes than configure, for instance.
-                LOGGER.error("configure found EXECUTED node! Graph traversal?");
+                LOGGER.error("configure found EXECUTED node!");
+                break;
+            case EXECUTING:
+                // should not happen but could if reset has worked on slightly
+                // different nodes than configure, for instance.
+                LOGGER.error("configure found EXECUTING node!");
+                break;
+            case QUEUED:
+                // should not happen but could if reset has worked on slightly
+                // different nodes than configure, for instance.
+                LOGGER.error("configure found QUEUED node!");
                 break;
             default:
 
