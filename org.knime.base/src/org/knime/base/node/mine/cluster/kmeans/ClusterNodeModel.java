@@ -675,7 +675,13 @@ public class ClusterNodeModel extends NodeModel {
     }
     
     private PMMLPortObjectSpec createPMMLSpec(final DataTableSpec tableSpec) 
-        throws InvalidSettingsException {
+            throws InvalidSettingsException {
+        for (String colName : m_usedColumns.getIncludeList()) {
+            if (!(tableSpec.containsName(colName))) {
+                throw new InvalidSettingsException(
+                        "Input column spec does not match selected columns.");
+            }
+        }
         PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
                 tableSpec);
         Set<String>activeCols = new LinkedHashSet<String>();
