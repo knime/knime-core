@@ -2377,7 +2377,8 @@ public final class WorkflowManager extends NodeContainer {
                 LOGGER.error("configure found QUEUED node!");
                 break;
             default:
-
+                LOGGER.error("configure found weird state (" + snc.getState()
+                        + ")!");
             }
         }
 //        return configurationChanged;
