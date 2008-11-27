@@ -901,7 +901,8 @@ public final class WorkflowManager extends NodeContainer {
                 configureNodeAndSuccessors(id, true);
             } else {
                 throw new IllegalStateException(
-                        "Cannot load settings into running node.");
+                        "Cannot load settings into node; it is executing or "
+                        + "has executing successors");
             }
         }
     }
