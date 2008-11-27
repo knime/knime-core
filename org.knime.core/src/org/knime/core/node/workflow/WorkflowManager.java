@@ -2176,7 +2176,9 @@ public final class WorkflowManager extends NodeContainer {
         if ((!oldState.equals(newState))
                 && (getParent() != null) && propagateChanges) {
             // make sure parent WFM reflects state changes
-            getParent().checkForNodeStateChanges(propagateChanges);
+            synchronized (getParent().m_workflowMutex) {
+                getParent().checkForNodeStateChanges(propagateChanges);
+            }
         }
     }
 
