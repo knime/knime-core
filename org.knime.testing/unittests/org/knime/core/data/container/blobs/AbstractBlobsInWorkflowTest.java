@@ -29,10 +29,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.TestCase;
 
 import org.knime.base.node.util.cache.CacheNodeFactory;
-import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.def.DefaultRow;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -40,38 +36,26 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.util.FileUtil;
-import org.knime.testing.data.blob.LargeBlobCell;
 import org.knime.testing.node.differNode.DataTableDiffer;
 import org.knime.testing.node.differNode.TestEvaluationException;
 import org.knime.testing.node.runtime.RuntimeNodeFactory;
 import org.knime.testing.node.runtime.RuntimeNodeModel;
 
 /**
- * Creates a workflow of a node that creates a BDT with 20 large blob cells 
+ * Creates a workflow of a node that creates a BDT with large blob cells 
  * (each about 1MB) and then adds a sequence of Cache nodes. The chain is
  * ended by a tester node that compares the tables. The test case checks
- * wether the saved workflow is of the approximated size. 
+ * whether the saved workflow is of the approximated size. 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class AbstractBlobsInWorkflowTest extends TestCase {
+public abstract class AbstractBlobsInWorkflowTest extends TestCase {
 
-    private static final int ROW_COUNT = 200;
     private File m_wfmDir;
     private WorkflowManager m_flow;
 
-    private static final BufferedDataTable createBDT(
-            final ExecutionContext exec, final String prefix, final int rowCount) {
-        BufferedDataContainer c = exec.createDataContainer(
-                new DataTableSpec(new DataColumnSpecCreator(
-                        "Blobs", LargeBlobCell.TYPE).createSpec()));
-        LargeBlobCell cell = new LargeBlobCell("This is a big cell");
-        for (int i = 0; i < rowCount; i++) {
-            String s = prefix + "_" + i;
-            c.addRowToTable(new DefaultRow(s, cell));
-        }
-        c.close();
-        return c.getTable();
-    }
+    protected abstract BufferedDataTable createBDT(final ExecutionContext exec);
+    
+    protected abstract long getApproximateSize();
     
     private static final long calculateSize(final File dir) {
         long size = 0;
@@ -90,13 +74,12 @@ public class AbstractBlobsInWorkflowTest extends TestCase {
     protected void setUp() throws Exception {
         m_wfmDir = FileUtil.createTempDir(getClass().getSimpleName());
         WorkflowManager m = WorkflowManager.ROOT.createAndAddProject();
-        final String prefix = "testcase";
         RuntimeNodeModel createModel = new RuntimeNodeModel(0, 1) {
             /** {@inheritDoc} */
             @Override
             protected BufferedDataTable[] execute(BufferedDataTable[] inData,
                     ExecutionContext exec) throws Exception {
-                return new BufferedDataTable[]{createBDT(exec, prefix, ROW_COUNT)};
+                return new BufferedDataTable[]{createBDT(exec)};
             }
         };
         NodeID createID = m.createAndAddNode(new RuntimeNodeFactory(createModel));
@@ -119,8 +102,7 @@ public class AbstractBlobsInWorkflowTest extends TestCase {
             protected BufferedDataTable[] execute(BufferedDataTable[] inData,
                     ExecutionContext exec) throws Exception {
                 try {
-                    new DataTableDiffer().compare(inData[0], 
-                            createBDT(exec, prefix, ROW_COUNT));
+                    new DataTableDiffer().compare(inData[0], createBDT(exec));
                 } catch (TestEvaluationException tee) {
                     failure.set(tee);
                     throw tee;
@@ -132,8 +114,8 @@ public class AbstractBlobsInWorkflowTest extends TestCase {
         m.addConnection(cacheIDs[cacheIDs.length - 1], 0, checkID, 0);
         m_flow = m;
         m.executeAllAndWaitUntilDone();
-        assertTrue(m.getState().equals(State.EXECUTED));
         assertNull(failure.get());
+        assertTrue(m.getState().equals(State.EXECUTED));
     }
     
     /** {@inheritDoc} */
@@ -150,14 +132,15 @@ public class AbstractBlobsInWorkflowTest extends TestCase {
     public void testSize() throws Exception {
         m_flow.save(m_wfmDir, new ExecutionMonitor(), true);
         long size = calculateSize(m_wfmDir);
-        int sizeInMB = (int)(size / 1024 / 1024.0);
-        long roughlyExpectedSize = LargeBlobCell.SIZE_OF_CELL;
-        int roughlyExpectedSizeInMB = 
-            (int)(roughlyExpectedSize / 1024 / 1024.0);
+        double sizeInMB = size / 1024 / 1024.0;
+        long roughlyExpectedSize = getApproximateSize();
+        double roughlyExpectedSizeInMB = roughlyExpectedSize / 1024 / 1024.0;
         String error = "Size of workflow out of range, expected ~" 
             + roughlyExpectedSizeInMB + "MB, actual " + sizeInMB + "MB";
         assertTrue(error, size > 0.8 * roughlyExpectedSize);
         assertTrue(error, size < 1.2 * roughlyExpectedSize);
+        System.out.println("Test succeeds: expected size (in MB) is " + sizeInMB
+                + ", expected " + roughlyExpectedSizeInMB + " -- which is ok");
     }
 
 }

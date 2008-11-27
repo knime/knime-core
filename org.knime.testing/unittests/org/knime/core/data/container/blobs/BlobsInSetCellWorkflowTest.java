@@ -23,40 +23,62 @@
  */
 package org.knime.core.data.container.blobs;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.collection.CollectionCellFactory;
+import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.testing.data.blob.LargeBlobCell;
 
 /**
- * Creates new blobs, adds them to table and checks the workflow size then.
- * @author Bernd Wiswedel, University of Konstanz
+ * Creates table with set cell, whereby the set contains many blobs.
+ * @author wiswedel, University of Konstanz
  */
-public class BlobReferenceInWorkflowTest extends AbstractBlobsInWorkflowTest {
+public class BlobsInSetCellWorkflowTest extends AbstractBlobsInWorkflowTest {
 
-    private static final int BLOB_COUNT = 20;
-
+    private final int ROW_COUNT = 20;
+    private final int LIST_SIZE = 10;
+    
     /** {@inheritDoc} */
     @Override
-    public BufferedDataTable createBDT(final ExecutionContext exec) {
+    protected BufferedDataTable createBDT(final ExecutionContext exec) {
+        DataType t = ListCell.getCollectionType(
+                DataType.getType(DataCell.class));
         BufferedDataContainer c = exec.createDataContainer(
                 new DataTableSpec(new DataColumnSpecCreator(
-                        "Blobs", LargeBlobCell.TYPE).createSpec()));
-        for (int i = 0; i < BLOB_COUNT; i++) {
+                        "Sequence", t).createSpec()));
+        for (int i = 0; i < ROW_COUNT; i++) {
             String s = "someName_" + i;
-            c.addRowToTable(new DefaultRow(s, new LargeBlobCell(s)));
+            // every other a ordinary string cell
+            Collection<DataCell> cells = new ArrayList<DataCell>();
+            for (int j = 0; j < LIST_SIZE * 2; j++) {
+                String val = "Row_" + i + "; Cell index " + j;
+                if (j % 2 == 0) {
+                    cells.add(new LargeBlobCell(val));
+                } else {
+                    cells.add(new StringCell(val));
+                }
+            }
+            ListCell cell = CollectionCellFactory.createListCell(cells);
+            c.addRowToTable(new DefaultRow(s, cell));
         }
         c.close();
         return c.getTable();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected long getApproximateSize() {
-        return BLOB_COUNT * LargeBlobCell.SIZE_OF_CELL;
+        return LargeBlobCell.SIZE_OF_CELL * ROW_COUNT * LIST_SIZE;
     }
-    
+
 }
