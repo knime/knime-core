@@ -2365,17 +2365,18 @@ public final class WorkflowManager extends NodeContainer {
             case EXECUTED:
                 // should not happen but could if reset has worked on slightly
                 // different nodes than configure, for instance.
-                LOGGER.error("configure found EXECUTED node!");
+// FIXME: report errors again, once configure follows only ports, not nodes.
+//                LOGGER.error("configure found EXECUTED node!");
                 break;
             case EXECUTING:
                 // should not happen but could if reset has worked on slightly
                 // different nodes than configure, for instance.
-                LOGGER.error("configure found EXECUTING node!");
+//                LOGGER.error("configure found EXECUTING node!");
                 break;
             case QUEUED:
                 // should not happen but could if reset has worked on slightly
                 // different nodes than configure, for instance.
-                LOGGER.error("configure found QUEUED node!");
+//                LOGGER.error("configure found QUEUED node!");
                 break;
             default:
                 LOGGER.error("configure found weird state (" + snc.getState()
@@ -2383,7 +2384,7 @@ public final class WorkflowManager extends NodeContainer {
             }
         }
 //        return configurationChanged;
-        // we have a problem here - subsequent metanodes with through connections
+        // we have a problem here. Subsequent metanodes with through connections
         // need to be configured no matter what - they can change their state
         // because 3 nodes before in the pipeline the execute state changed...
         return configurationChanged == configurationChanged;
