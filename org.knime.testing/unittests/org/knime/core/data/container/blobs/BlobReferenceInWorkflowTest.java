@@ -21,7 +21,7 @@
  * History
  *   Nov 27, 2008 (wiswedel): created
  */
-package org.knime.core.data.container;
+package org.knime.core.data.container.blobs;
 
 import java.io.File;
 import java.util.concurrent.atomic.AtomicReference;
