@@ -49,6 +49,8 @@ public final class BlobWrapperDataCell extends DataCell {
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(BlobWrapperDataCell.class);
     
+    private static boolean issuedWarningOnEqualsInvocation = false;
+    
     private Buffer m_buffer;
     private BlobAddress m_blobAddress;
     private final CellClassInfo m_blobClass;
@@ -165,6 +167,14 @@ public final class BlobWrapperDataCell extends DataCell {
     /** {@inheritDoc} */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
+        if (!issuedWarningOnEqualsInvocation) {
+            issuedWarningOnEqualsInvocation = true;
+            LOGGER.coding("Unexpected invocation of equalsDataCell on "
+                    + "BlobWrapperCells -- this method is not to be called.");
+        }
+        if (dc instanceof BlobWrapperDataCell) {
+            return getCell().equals(((BlobWrapperDataCell)dc).getCell());
+        }
         return getCell().equals(dc);
     }
 
