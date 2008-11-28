@@ -361,7 +361,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
             msg.append("Distance function index out of range: " + distance);
         }
         // missing replacement method
-        int missing = settings.getInt(BasisFunctionLearnerTable.MISSING, -1);
+        int missing = settings.getInt(BasisFunctionLearnerTable.MISSING, 0);
         if (missing < 0 
                 || missing > BasisFunctionLearnerTable.MISSINGS.length) {
             msg.append("Missing replacement function index out of range: "
@@ -388,7 +388,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
                     TARGET_COLUMNS, null)};
         }
         // missing value replacement
-        m_missing = settings.getInt(BasisFunctionLearnerTable.MISSING);
+        m_missing = settings.getInt(BasisFunctionLearnerTable.MISSING, 0);
         // distance function
         m_distance = settings.getInt(DISTANCE);
         // shrink after commit
