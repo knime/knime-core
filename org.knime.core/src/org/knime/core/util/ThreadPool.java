@@ -38,6 +38,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.RunnableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.core.node.NodeLogger;
@@ -111,6 +113,46 @@ public class ThreadPool {
          */
         public void waitUntilStarted() throws InterruptedException {
             m_startWaiter.await();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public T get() throws InterruptedException, ExecutionException {
+            if (Thread.currentThread() instanceof Worker) {
+                Worker w = (Worker)Thread.currentThread();
+                w.m_startedFrom.m_invisibleThreads.incrementAndGet();
+                try {
+                    checkQueue();
+                    return super.get();
+                } finally {
+                    w.m_startedFrom.m_invisibleThreads.decrementAndGet();
+                }
+            } else {
+                return super.get();
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public T get(final long timeout, final TimeUnit unit)
+                throws InterruptedException, ExecutionException,
+                TimeoutException {
+            if (Thread.currentThread() instanceof Worker) {
+                Worker w = (Worker)Thread.currentThread();
+                w.m_startedFrom.m_invisibleThreads.incrementAndGet();
+                try {
+                    checkQueue();
+                    return super.get(timeout, unit);
+                } finally {
+                    w.m_startedFrom.m_invisibleThreads.decrementAndGet();
+                }
+            } else {
+                return super.get(timeout, unit);
+            }
         }
     }
 
@@ -217,6 +259,9 @@ public class ThreadPool {
      * @param maxThreads the maximum number of threads
      */
     public ThreadPool(final int maxThreads) {
+        if (maxThreads < 1) {
+            throw new IllegalArgumentException("Thread count must be > 0");
+        }
         m_maxThreads.set(maxThreads);
         m_parent = null;
         m_queuedFutures = new LinkedList<MyFuture<?>>();
@@ -230,6 +275,9 @@ public class ThreadPool {
      * @param parent the parent pool
      */
     protected ThreadPool(final int maxThreads, final ThreadPool parent) {
+        if (maxThreads < 1) {
+            throw new IllegalArgumentException("Thread count must be > 0");
+        }
         m_parent = parent;
         m_maxThreads.set(maxThreads);
         m_queuedFutures = m_parent.m_queuedFutures;
@@ -253,6 +301,15 @@ public class ThreadPool {
             }
         }
         return false;
+    }
+
+    /**
+     * Creates a sub pool that shares the threads with this (parent) pool.
+     *
+     * @return a thread pool
+     */
+    public ThreadPool createSubPool() {
+        return new ThreadPool(m_maxThreads.get(), this);
     }
 
     /**
@@ -329,7 +386,8 @@ public class ThreadPool {
     private Worker wakeupWorker(final RunnableFuture<?> task,
             final ThreadPool pool) {
         synchronized (m_runningWorkers) {
-            if (m_runningWorkers.size() - m_invisibleThreads.get() < m_maxThreads.get()) {
+            if (m_runningWorkers.size() - m_invisibleThreads.get() < m_maxThreads
+                    .get()) {
                 Worker w;
                 if (m_parent == null) {
                     w = m_availableWorkers.poll();
@@ -428,12 +486,15 @@ public class ThreadPool {
     /**
      * Sets the maximum number of threads in the pool. If the new value is
      * smaller than the old value running surplus threads will not be
-     * interrupted. If the new value is bigger than the old one, waiting
-     * jobs will be started immediately.
+     * interrupted. If the new value is bigger than the old one, waiting jobs
+     * will be started immediately.
      *
      * @param newValue the new maximum thread number
      */
     public void setMaxThreads(final int newValue) {
+        if (newValue < 1) {
+            throw new IllegalArgumentException("Thread count must be > 0");
+        }
         if (m_parent == null) {
             if (newValue < m_maxThreads.get()) {
                 for (int i = (m_maxThreads.get() - newValue); i >= 0; i--) {
