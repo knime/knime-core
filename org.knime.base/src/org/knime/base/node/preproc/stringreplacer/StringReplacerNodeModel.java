@@ -72,7 +72,7 @@ public class StringReplacerNodeModel extends NodeModel {
      * @return a column rearranger
      */
     private ColumnRearranger createRearranger(final DataTableSpec spec,
-            final Pattern p) {
+            final Pattern p) throws InvalidSettingsException {
         DataColumnSpec colSpec;
         if (m_settings.createNewColumn()) {
             colSpec =
@@ -105,6 +105,10 @@ public class StringReplacerNodeModel extends NodeModel {
 
         ColumnRearranger crea = new ColumnRearranger(spec);
         if (m_settings.createNewColumn()) {
+            if (spec.containsName(m_settings.newColumnName())) {
+                throw new InvalidSettingsException("Duplicate column name: " 
+                        + m_settings.newColumnName());
+            }
             crea.append(cf);
         } else {
             crea.replace(cf, m_settings.columnName());
