@@ -82,6 +82,13 @@ public class SettingsModelColumnName extends SettingsModelString {
                 m_useRowID);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String getConfigName() {
+        return m_configName;
+    }
 
     /**
      * @param columnName the selected column name
