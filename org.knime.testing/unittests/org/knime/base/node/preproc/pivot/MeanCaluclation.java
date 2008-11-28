@@ -25,6 +25,7 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.knime.base.data.statistics.StatisticsTable;
+import org.knime.base.node.preproc.groupby.ColumnNamePolicy;
 import org.knime.base.node.preproc.groupby.GroupByNodeFactory;
 import org.knime.base.node.preproc.groupby.GroupByTable;
 import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
@@ -254,7 +255,8 @@ public class MeanCaluclation extends TestCase {
                     AggregationMethod.MEAN),                     
         };
         GroupByTable groupTable = new GroupByTable(exec, bdt, colNames, 
-                columnAggregators, 10000, true, false, true);
+                columnAggregators, 10000, true, false, 
+                ColumnNamePolicy.COLUMN_NAME_AGGREGATION_METHOD);
         for (DataRow row : groupTable.getBufferedTable()) {
             assertEquals(reference[1], 
                     ((DoubleValue)row.getCell(1)).getDoubleValue());
@@ -382,7 +384,8 @@ public class MeanCaluclation extends TestCase {
                         AggregationMethod.MEAN),                     
             };
             GroupByTable groupTable = new GroupByTable(exec, bdt, colNames, 
-                    columnAggregators, 10000, true, false, true);
+                    columnAggregators, 10000, true, false, 
+                    ColumnNamePolicy.COLUMN_NAME_AGGREGATION_METHOD);
         for (DataRow row : groupTable.getBufferedTable()) {
             assertEquals(reference[1], 
                     ((DoubleValue)row.getCell(1)).getDoubleValue());
