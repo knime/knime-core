@@ -94,7 +94,7 @@ public class PivotNodeModel extends NodeModel {
     /**
      * Node returns a new hilite handler instance.
      */
-    private final HiLiteTranslator m_hilite = new HiLiteTranslator();
+    private final HiLiteTranslator m_translator = new HiLiteTranslator();
 
     /**
      * Creates a new pivot model with one in- and out-port.
@@ -271,8 +271,7 @@ public class PivotNodeModel extends NodeModel {
         }
         buf.close();
         if (m_hiliting.getBooleanValue()) {
-            m_hilite.setMapper(new DefaultHiLiteMapper(mapping));
-            m_hilite.addToHiLiteHandler(getInHiLiteHandler(0));
+            m_translator.setMapper(new DefaultHiLiteMapper(mapping));
         }
         return new BufferedDataTable[]{buf.getTable()};
     }
@@ -289,8 +288,7 @@ public class PivotNodeModel extends NodeModel {
                     new GZIPInputStream(new FileInputStream(
                     new File(nodeInternDir, "hilite_mapping.xml.gz"))));
             try {
-                m_hilite.setMapper(DefaultHiLiteMapper.load(config));
-                m_hilite.addToHiLiteHandler(getInHiLiteHandler(0));
+                m_translator.setMapper(DefaultHiLiteMapper.load(config));
             } catch (final InvalidSettingsException ex) {
                 throw new IOException(ex.getMessage());
             }
@@ -322,8 +320,7 @@ public class PivotNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_hilite.removeAllToHiliteHandlers();
-        m_hilite.setMapper(null);
+        m_translator.setMapper(null);
     }
 
     /**
@@ -335,7 +332,7 @@ public class PivotNodeModel extends NodeModel {
             throws IOException, CanceledExecutionException {
         if (m_hiliting.getBooleanValue()) {
             final NodeSettings config = new NodeSettings("hilite_mapping");
-            ((DefaultHiLiteMapper) m_hilite.getMapper()).save(config);
+            ((DefaultHiLiteMapper) m_translator.getMapper()).save(config);
             config.saveToXML(new GZIPOutputStream(new FileOutputStream(new File(
                     nodeInternDir, "hilite_mapping.xml.gz"))));
         }
@@ -374,9 +371,18 @@ public class PivotNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
+    protected void setInHiLiteHandler(final int inIndex, 
+            final HiLiteHandler hiLiteHdl) {
+        m_translator.removeAllToHiliteHandlers();
+        m_translator.addToHiLiteHandler(hiLiteHdl);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
-        assert outIndex == 0;
-        return m_hilite.getFromHiLiteHandler();
+        return m_translator.getFromHiLiteHandler();
     }
 
 }

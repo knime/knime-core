@@ -710,7 +710,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     public void selectedStateChanged(final EditPart editpart) {
-        LOGGER.debug(getNodeContainer().getNameWithID() + " "
-                + getNodeContainer().getState());
+        LOGGER.debug(getNodeContainer().toString());
     }
 }

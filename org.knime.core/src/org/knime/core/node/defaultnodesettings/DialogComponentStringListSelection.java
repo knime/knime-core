@@ -164,7 +164,7 @@ public final class DialogComponentStringListSelection extends DialogComponent {
      * this mode, there's no restriction on what can be selected. This is the
      * default.
      * </ul>
-     * 
+     *
      * @param stringModel the model that stores all selected strings.
      * @param label the optional label of the select box. Set to
      *            <code>null</code> for none label. Set an empty
@@ -175,7 +175,7 @@ public final class DialogComponentStringListSelection extends DialogComponent {
      *            are permissible
      * @param required if at least one item must be selected
      * @param visibleRowCount the number of visible rows
-     * 
+     *
      * @throws NullPointerException if one of the strings in the list is null
      * @throws IllegalArgumentException if the list is empty or null.
      */
@@ -240,6 +240,9 @@ public final class DialogComponentStringListSelection extends DialogComponent {
                 updateComponent();
             }
         });
+
+        //call this method to be in sync with the settings model
+        updateComponent();
     }
     /**
      * {@inheritDoc}
@@ -363,7 +366,8 @@ public final class DialogComponentStringListSelection extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void checkConfigurabilityBeforeLoad(final PortObjectSpec[] specs) {
+    protected void checkConfigurabilityBeforeLoad(
+            final PortObjectSpec[] specs) {
         // we are always good.
     }
 

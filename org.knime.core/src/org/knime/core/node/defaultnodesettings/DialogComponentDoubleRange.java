@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   17.01.2007 (mb): created
  */
@@ -45,9 +45,9 @@ import org.knime.core.node.port.PortObjectSpec;
  * labeled "min=" and "max=" which expect each a floating point number. The
  * component requires a SettingsModelDoubleRange with its constructor, that
  * holds the two values entered.
- * 
+ *
  * @see SettingsModelDoubleRange
- * 
+ *
  * @author berthold, University of Konstanz
  */
 public class DialogComponentDoubleRange extends DialogComponent {
@@ -64,13 +64,13 @@ public class DialogComponentDoubleRange extends DialogComponent {
 
     /**
      * Constructor assumes the range between 0 and 10.
-     * 
+     *
      * @param model stores the double numbers entered.
      * @param label the text showing next to the components.
      * @deprecated use {@link #DialogComponentDoubleRange(
      * SettingsModelDoubleRange, double, double, double, String)} or this
-     * {@link #DialogComponentDoubleRange(SettingsModelDoubleRange, 
-     * double, double, double, double, double, double, String)} constructor 
+     * {@link #DialogComponentDoubleRange(SettingsModelDoubleRange,
+     * double, double, double, double, double, double, String)} constructor
      * instead.
      */
     @Deprecated
@@ -79,7 +79,7 @@ public class DialogComponentDoubleRange extends DialogComponent {
         // old behavior
         this(model, 0.0, 10.0, 0.01, 0.0, 10.0, 0.1, label);
     }
-    
+
     /**
      * Creates two spinner to enter the lower and upper value of the range.
      * @param model stores the double numbers entered
@@ -89,16 +89,16 @@ public class DialogComponentDoubleRange extends DialogComponent {
      * @param label label for this component
      */
     public DialogComponentDoubleRange(final SettingsModelDoubleRange model,
-            final double lowerMin, final double upperMax, 
+            final double lowerMin, final double upperMax,
             final double stepSize, final String label) {
-        this(model, lowerMin, upperMax, stepSize, 
+        this(model, lowerMin, upperMax, stepSize,
                 lowerMin, upperMax, stepSize, label);
     }
-    
+
     /**
-     * Finegrain constructor to specify minimum and maximum values for the 
+     * Finegrain constructor to specify minimum and maximum values for the
      * lower and upper bound and different step sizes for each spinner.
-     * 
+     *
      * @param model stores the double numbers entered
      * @param lowerMin minimum value for the lower bound spinner
      * @param lowerMax maximum value for the lower bound spinner
@@ -109,24 +109,24 @@ public class DialogComponentDoubleRange extends DialogComponent {
      * @param label label for this component
      */
     public DialogComponentDoubleRange(final SettingsModelDoubleRange model,
-            final double lowerMin, final double lowerMax, 
+            final double lowerMin, final double lowerMax,
             final double lowerStepSize,
-            final double upperMin, final double upperMax, 
+            final double upperMin, final double upperMax,
             final double upperStepSize, final String label) {
         super(model);
-        
+
         model.prependChangeListener(new ChangeListener() {
            public void stateChanged(final ChangeEvent e) {
                updateComponent();
-           } 
+           }
         });
-        
-        JPanel myPanel = getComponentPanel();
+
+        final JPanel myPanel = getComponentPanel();
         m_label = new JLabel(label);
         m_labelMin = new JLabel("min=");
         m_labelMax = new JLabel("max=");
         m_spinnerMin =
-                new JSpinner(new SpinnerNumberModel(model.getMinRange(), 
+                new JSpinner(new SpinnerNumberModel(model.getMinRange(),
                         lowerMin, lowerMax, lowerStepSize));
         m_spinnerMin.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent arg0) {
@@ -138,7 +138,7 @@ public class DialogComponentDoubleRange extends DialogComponent {
         editor.getTextField().setColumns(new String("" + lowerMax).length());
         editor.getTextField().setFocusLostBehavior(JFormattedTextField.COMMIT);
         m_spinnerMax =
-                new JSpinner(new SpinnerNumberModel(model.getMaxRange(), 
+                new JSpinner(new SpinnerNumberModel(model.getMaxRange(),
                         upperMin, upperMax, upperStepSize));
         m_spinnerMax.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent arg0) {
@@ -152,7 +152,9 @@ public class DialogComponentDoubleRange extends DialogComponent {
         myPanel.add(m_labelMin);
         myPanel.add(m_spinnerMin);
         myPanel.add(m_labelMax);
-        myPanel.add(m_spinnerMax);        
+        myPanel.add(m_spinnerMax);
+        //call this method to be in sync with the settings model
+        updateComponent();
     }
 
     /**
@@ -181,46 +183,46 @@ public class DialogComponentDoubleRange extends DialogComponent {
         m_spinnerMin.setToolTipText(text);
         m_spinnerMax.setToolTipText(text);
     }
-    
-    
+
+
     /**
      * Transfers the value from the spinner into the model. Colors the spinner
      * red, if the number is not accepted by the settings model. And throws an
      * exception then.
-     * 
+     *
      */
     private void updateMinModel() {
         try {
             m_spinnerMin.commitEdit();
             if (getModel() instanceof SettingsModelDoubleRange) {
-                SettingsModelDoubleRange model 
+                final SettingsModelDoubleRange model
                     = (SettingsModelDoubleRange)getModel();
                 model.setMinRange(((Double)m_spinnerMin.getValue())
                         .doubleValue());
-            } 
-        } catch (ParseException e) {
-            JComponent editorMin = m_spinnerMin.getEditor();
+            }
+        } catch (final ParseException e) {
+            final JComponent editorMin = m_spinnerMin.getEditor();
             if (editorMin instanceof DefaultEditor) {
                 showError(((DefaultEditor)editorMin).getTextField());
             }
         }
     }
-    
+
     private void updateMaxModel() {
         try {
             m_spinnerMax.commitEdit();
             if (getModel() instanceof SettingsModelDoubleRange) {
-                SettingsModelDoubleRange model 
+                final SettingsModelDoubleRange model
                     = (SettingsModelDoubleRange)getModel();
                 model.setMaxRange(((Double)m_spinnerMax.getValue())
                         .doubleValue());
-            } 
-        } catch (ParseException e) {
-            JComponent editorMax = m_spinnerMax.getEditor();
+            }
+        } catch (final ParseException e) {
+            final JComponent editorMax = m_spinnerMax.getEditor();
             if (editorMax instanceof DefaultEditor) {
                 showError(((DefaultEditor)editorMax).getTextField());
             }
-        }        
+        }
     }
 
     /**
@@ -228,7 +230,7 @@ public class DialogComponentDoubleRange extends DialogComponent {
      */
     @Override
     protected void updateComponent() {
-        
+
         // clear any possible error indication
         JComponent editor = m_spinnerMin.getEditor();
         if (editor instanceof DefaultEditor) {
@@ -238,14 +240,15 @@ public class DialogComponentDoubleRange extends DialogComponent {
         if (editor instanceof DefaultEditor) {
             clearError(((DefaultEditor)editor).getTextField());
         }
-        
+
         // update the spinners
-        SettingsModelDoubleRange model = (SettingsModelDoubleRange)getModel();
-        double valMin = ((Double)m_spinnerMin.getValue()).doubleValue();
+        final SettingsModelDoubleRange model =
+            (SettingsModelDoubleRange)getModel();
+        final double valMin = ((Double)m_spinnerMin.getValue()).doubleValue();
         if (valMin != model.getMinRange()) {
             m_spinnerMin.setValue(new Double(model.getMinRange()));
         }
-        double valMax = ((Double)m_spinnerMax.getValue()).doubleValue();
+        final double valMax = ((Double)m_spinnerMax.getValue()).doubleValue();
         if (valMax != model.getMaxRange()) {
             m_spinnerMax.setValue(new Double(model.getMaxRange()));
         }
@@ -260,15 +263,16 @@ public class DialogComponentDoubleRange extends DialogComponent {
     @Override
     protected void validateSettingsBeforeSave()
             throws InvalidSettingsException {
-        SettingsModelDoubleRange model = (SettingsModelDoubleRange)getModel();
+        final SettingsModelDoubleRange model =
+            (SettingsModelDoubleRange)getModel();
         double newMin;
         double newMax;
         // try to commit Minimum
         try {
             m_spinnerMin.commitEdit();
             newMin = ((Double)m_spinnerMin.getValue()).doubleValue();
-        } catch (ParseException e) {
-            JComponent editor = m_spinnerMin.getEditor();
+        } catch (final ParseException e) {
+            final JComponent editor = m_spinnerMin.getEditor();
             if (editor instanceof DefaultEditor) {
                 showError(((DefaultEditor)editor).getTextField());
             }
@@ -280,8 +284,8 @@ public class DialogComponentDoubleRange extends DialogComponent {
         try {
             m_spinnerMax.commitEdit();
             newMax = ((Double)m_spinnerMax.getValue()).doubleValue();
-        } catch (ParseException e) {
-            JComponent editor = m_spinnerMax.getEditor();
+        } catch (final ParseException e) {
+            final JComponent editor = m_spinnerMax.getEditor();
             if (editor instanceof DefaultEditor) {
                 showError(((DefaultEditor)editor).getTextField());
             }
@@ -292,7 +296,7 @@ public class DialogComponentDoubleRange extends DialogComponent {
 
         try {
             new SettingsModelDoubleRange(model.getConfigName(), newMin, newMax);
-        } catch (IllegalArgumentException iae) {
+        } catch (final IllegalArgumentException iae) {
             JComponent editor = m_spinnerMax.getEditor();
             if (editor instanceof DefaultEditor) {
                 showError(((DefaultEditor)editor).getTextField());

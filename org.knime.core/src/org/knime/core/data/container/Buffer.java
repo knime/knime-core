@@ -610,10 +610,18 @@ class Buffer implements KNIMEStreamConstants {
         // assignable m_indicesOfBlobInColumns[col])
         boolean isToClone = false;
         if (isCopyOfExisting) {
-            isToClone = ad != null && ad.getBufferID() == getBufferID()
-                && (ad.getIndexOfBlobInColumn() == 0 // m_indice... is null 
-                    || ad.getIndexOfBlobInColumn()
-                        == m_indicesOfBlobInColumns[col]);
+            isToClone = ad != null && ad.getBufferID() == getBufferID();
+            // this if statement handles cases where a blob is added to the 
+            // buffer multiple times -- don't copy the duplicates
+            if (isToClone && m_indicesOfBlobInColumns == null) {
+                // first to assign
+                isToClone = ad.getIndexOfBlobInColumn() == 0;
+                assert isToClone 
+                    : "Clone of buffer does not return blobs in order";
+            } else if (isToClone && m_indicesOfBlobInColumns != null) {
+                isToClone = ad.getIndexOfBlobInColumn() 
+                        == m_indicesOfBlobInColumns[col];
+            }
         }
         // if either not previously assigned (ownerBuffer == null) or
         // we have to make a clone
@@ -1390,12 +1398,21 @@ class Buffer implements KNIMEStreamConstants {
                 exec.setProgress(count / (double)size(), "Writing row "
                         + count + " (\"" + row.getKey() + "\")");
                 exec.checkCanceled();
-                copy.addRow(row, true);
+                // make a deep copy of blobs if we have a version hop
+                copy.addRow(row, m_version < IVERSION);
                 count++;
             }
             shortCutsLookup = copy.closeFile(copy.m_outStream);
-            if (copy.m_blobDir != null) {
-                addBlobsToZip(ZIP_ENTRY_BLOBS, zipOut, copy.m_blobDir);
+            File blobDir = m_blobDir;
+            // use the copy's blob dir if we have a version hop 
+            // (otherwise its blob dir will be empty
+            if (m_version < IVERSION) {
+                blobDir = copy.m_blobDir;
+            } else {
+                assert copy.m_blobDir == null;
+            }
+            if (blobDir != null) {
+                addBlobsToZip(ZIP_ENTRY_BLOBS, zipOut, blobDir);
             }
             zipOut.setLevel(Deflater.DEFAULT_COMPRESSION);
             zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_META));

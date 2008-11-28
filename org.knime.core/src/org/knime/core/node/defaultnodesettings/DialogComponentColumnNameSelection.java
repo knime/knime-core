@@ -227,6 +227,8 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
                 setEnabledComponents(getModel().isEnabled());
             }
         });
+        //call this method to be in sync with the settings model
+        updateComponent();
     }
 
     /** Returns the {@link DataColumnSpec} of the currently selected item.
@@ -260,7 +262,11 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
             classCol = "** Unknown column **";
         }
         try {
-            m_chooser.update((DataTableSpec)getLastTableSpec(m_specIndex), classCol);
+            final DataTableSpec spec =
+                (DataTableSpec)getLastTableSpec(m_specIndex);
+            if (spec != null) {
+                m_chooser.update(spec, classCol);
+            }
             if (getModel() instanceof SettingsModelColumnName
                     && ((SettingsModelColumnName)getModel()).useRowID()) {
                 m_chooser.setRowIDSelected();
@@ -283,9 +289,9 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
             ((SettingsModelColumnName)getModel()).setSelection(
                     m_chooser.getSelectedColumn(), m_chooser.rowIDSelected());
         } else {
-	        ((SettingsModelString)getModel()).setStringValue(m_chooser
-                .getSelectedColumn());
-    	}
+            ((SettingsModelString)getModel()).setStringValue(
+                    m_chooser.getSelectedColumn());
+        }
     }
 
     /**
@@ -309,7 +315,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
         DataTableSpec spec;
         try {
             spec = (DataTableSpec)specs[m_specIndex];
-        } catch (ClassCastException cce) {
+        } catch (final ClassCastException cce) {
             throw new NotConfigurableException("Wrong type of PortObject for"
                     + " ColumnNameSelectio, expecting DataTableSpec!");
         }

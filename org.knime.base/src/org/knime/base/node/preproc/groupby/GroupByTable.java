@@ -76,7 +76,7 @@ public class GroupByTable {
 
     private final boolean m_enableHilite;
 
-    private final boolean m_keepColName;
+    private final ColumnNamePolicy m_colNamePolicy;
 
     private final Map<RowKey, Set<RowKey>> m_hiliteMapping;
 
@@ -99,8 +99,8 @@ public class GroupByTable {
      * the memory
      * @param enableHilite <code>true</code> if a row key map should be
      * maintained to enable hiliting
-     * @param keepColName <code>true</code> if the original column name should
-     * be kept
+     * @param colNamePolicy the {@link ColumnNamePolicy} for the
+     * aggregation columns
      * @throws CanceledExecutionException if the user has canceled the execution
      */
     public GroupByTable(final ExecutionContext exec,
@@ -108,7 +108,7 @@ public class GroupByTable {
             final List<String> groupByCols,
             final ColumnAggregator[] colAggregators, final int maxUniqueValues,
             final boolean sortInMemory, final boolean enableHilite,
-            final boolean keepColName)
+            final ColumnNamePolicy colNamePolicy)
     throws CanceledExecutionException {
         LOGGER.debug("Entering GroupByTable() of class GroupByTable.");
         if (dataTable == null) {
@@ -132,7 +132,7 @@ public class GroupByTable {
         m_groupCols = groupByCols;
         m_colAggregators = colAggregators;
         m_maxUniqueVals = maxUniqueValues;
-        m_keepColName = keepColName;
+        m_colNamePolicy = colNamePolicy;
         exec.setMessage("Sorting input table...");
         ExecutionContext subExec = exec.createSubExecutionContext(0.6);
         final SortedTable sortedTable =
@@ -171,7 +171,7 @@ public class GroupByTable {
                 + "of class GroupByTable.");
         final DataTableSpec origSpec = table.getDataTableSpec();
         final DataTableSpec resultSpec = createGroupByTableSpec(origSpec,
-                m_groupCols, m_colAggregators, m_keepColName);
+                m_groupCols, m_colAggregators, m_colNamePolicy);
         final BufferedDataContainer dc = exec.createDataContainer(resultSpec);
         //check for an empty table
         if (table.getRowCount() < 1) {
@@ -385,14 +385,14 @@ public class GroupByTable {
      * @param columnAggregators the aggregation columns with the
      * aggregation method to use in the order the columns should be appear
      * in the result table
-     * @param keepColName <code>true</code> if the original column names should
-     * be kept
+     * @param colNamePolicy the {@link ColumnNamePolicy} for the aggregation
+     * columns
      * @return the result {@link DataTableSpec}
      */
     public static final DataTableSpec createGroupByTableSpec(
             final DataTableSpec spec, final List<String> groupColNames,
             final ColumnAggregator[] columnAggregators,
-            final boolean keepColName) {
+            final ColumnNamePolicy colNamePolicy) {
         if (spec == null) {
             throw new NullPointerException("DataTableSpec must not be null");
         }
@@ -429,13 +429,8 @@ public class GroupByTable {
                         "No column spec found for name: "
                         + aggrCol.getColName());
             }
-            final String colName;
-            if (keepColName) {
-                colName = origSpec.getName();
-            } else {
-                colName =
-                    aggrCol.getMethod().createColumnName(origSpec.getName());
-            }
+            final String colName =
+                colNamePolicy.createColumName(origSpec, aggrCol.getMethod());
             //since a column could be used several times create a unique name
             final String uniqueName;
             if (colNameCount.containsKey(colName)) {

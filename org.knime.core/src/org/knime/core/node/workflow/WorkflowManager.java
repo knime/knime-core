@@ -901,7 +901,8 @@ public final class WorkflowManager extends NodeContainer {
                 configureNodeAndSuccessors(id, true);
             } else {
                 throw new IllegalStateException(
-                        "Cannot load settings into running node.");
+                        "Cannot load settings into node; it is executing or "
+                        + "has executing successors");
             }
         }
     }
@@ -2175,7 +2176,9 @@ public final class WorkflowManager extends NodeContainer {
         if ((!oldState.equals(newState))
                 && (getParent() != null) && propagateChanges) {
             // make sure parent WFM reflects state changes
-            getParent().checkForNodeStateChanges(propagateChanges);
+            synchronized (getParent().m_workflowMutex) {
+                getParent().checkForNodeStateChanges(propagateChanges);
+            }
         }
     }
 
@@ -2364,14 +2367,26 @@ public final class WorkflowManager extends NodeContainer {
             case EXECUTED:
                 // should not happen but could if reset has worked on slightly
                 // different nodes than configure, for instance.
-                LOGGER.error("configure found EXECUTED node! Graph traversal?");
+// FIXME: report errors again, once configure follows only ports, not nodes.
+//                LOGGER.error("configure found EXECUTED node!");
+                break;
+            case EXECUTING:
+                // should not happen but could if reset has worked on slightly
+                // different nodes than configure, for instance.
+//                LOGGER.error("configure found EXECUTING node!");
+                break;
+            case QUEUED:
+                // should not happen but could if reset has worked on slightly
+                // different nodes than configure, for instance.
+//                LOGGER.error("configure found QUEUED node!");
                 break;
             default:
-
+                LOGGER.error("configure found weird state (" + snc.getState()
+                        + ")!");
             }
         }
 //        return configurationChanged;
-        // we have a problem here - subsequent metanodes with through connections
+        // we have a problem here. Subsequent metanodes with through connections
         // need to be configured no matter what - they can change their state
         // because 3 nodes before in the pipeline the execute state changed...
         return configurationChanged == configurationChanged;
@@ -2597,9 +2612,7 @@ public final class WorkflowManager extends NodeContainer {
                     } else {
                         build.append(indentString);
                         build.append("  ");
-                        build.append(nc.getNameWithID());
-                        build.append(": ");
-                        build.append(nc.getState());
+                        build.append(nc.toString());
                         build.append("\n");
                     }
                 } else {    // skip remaining nodes with wrong prefix
@@ -2612,13 +2625,11 @@ public final class WorkflowManager extends NodeContainer {
         }
         return build.toString();
     }
-
-    /**
-     * {@inheritDoc}
-     */
+    
+    /** {@inheritDoc} */
     @Override
     public String toString() {
-        return printNodeSummary(getID(), 0);
+        return "(WFM) " + super.toString();
     }
 
     ////////////////////////

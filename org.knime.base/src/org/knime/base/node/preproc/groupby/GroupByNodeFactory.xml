@@ -13,9 +13,12 @@
     	    A row is created for each unique value group of the selected column(s). 
     	    The remaining rows are aggregated by the defined method.
             The output table therefore contains one row for each existing value 
-            combination of the selected columns. The values in the other 
-            (non-selected) columns in this row depend on the selected 
-            aggregation method.
+            combination of the selected group column(s).
+           </p>
+           <p>
+            To change the aggregation method of more than one column select all
+            columns to change, open the context menu with a right mouse click
+            and select the aggregation method to use.
            </p>
            <p>
             Available aggregation methods:
@@ -48,11 +51,6 @@
     			per group.</li>
     		</ul>
     		</p>
-    		<p>
-            To change the aggregation method of more than one column select all
-            columns to change, open the context menu with a right mouse click
-            and select the aggregation method to use.
-            </p>
             <p>
             If the 'Sort in memory' option is checked the complete table is 
             loaded into the memory to speed up the sorting process.
@@ -65,7 +63,7 @@
         <option name="Aggregation settings">
             Select one or more column(s) for aggregation from the available 
             columns list. Change the aggregation method in the Aggregation 
-            column of the column table. You can add the same column multiple
+            column of the table. You can add the same column multiple
             times. In order to change the aggregation method of more than one 
             column select all columns to change, open the context menu with a 
             right mouse click and select the aggregation method to use.
@@ -76,14 +74,18 @@
 	        values are skipped during the calculation and a missing value is set 
             in the corresponding column, and a warning is displayed.
         </option>
-        <option name="Sort in memory">
-			Performs necessary sorting in the memory. Speeds up the process
-			but consumes much more memory.
-        </option>
         <option name="Enable hiliting">
 			If enabled, the hiliting of a group row will hilite all rows of this
 			group in other views. Depending of the number of rows, enabling this 
 			feature might consume a lot of memory.
+        </option>
+        <option name="Sort in memory">
+            Performs necessary sorting in the memory. Speeds up the process
+            but consumes much more memory.
+        </option>
+        <option name="Column naming">
+            The name of the resulting aggregation column(s) depends on the 
+            selected naming schema. 
         </option>
     </fullDescription>
     <ports>

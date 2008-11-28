@@ -83,15 +83,13 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         FirstOperator(final int maxUniqueValues) {
-            super("First", false, "First(" + PLACE_HOLDER + ")", false, true,
-                    maxUniqueValues);
+            super("First", false, false, true, maxUniqueValues);
         }
 
         /**Constructor for class FirstOperator.
          * @param label user readable label
          * @param numerical <code>true</code> if the operator is only suitable
          * for numerical columns
-         * @param columnNamePattern the pattern for the result column name
          * @param usesLimit <code>true</code> if the method checks the number of
          * unique values limit.
          * @param keepColSpec <code>true</code> if the original column
@@ -99,10 +97,9 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         public FirstOperator(final String label, final boolean numerical,
-                final String columnNamePattern, final boolean usesLimit,
-                final boolean keepColSpec, final int maxUniqueValues) {
-            super(label, numerical, columnNamePattern,  usesLimit, keepColSpec,
-                    maxUniqueValues);
+                final boolean usesLimit, final boolean keepColSpec,
+                final int maxUniqueValues) {
+            super(label, numerical, usesLimit, keepColSpec, maxUniqueValues);
         }
 
         /**
@@ -164,8 +161,7 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         FirstValueOperator(final int maxUniqueValues) {
-            super("First value", false, "First value(" + PLACE_HOLDER + ")",
-                    false, true, maxUniqueValues);
+            super("First value", false, false, true, maxUniqueValues);
         }
 
         /**
@@ -202,15 +198,13 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         LastOperator(final int maxUniqueValues) {
-            super("Last", false, "Last(" + PLACE_HOLDER + ")", false,
-                    true, maxUniqueValues);
+            super("Last", false, false, true, maxUniqueValues);
         }
 
         /**Constructor for class LastOperator.
          * @param label user readable label
          * @param numerical <code>true</code> if the operator is only suitable
          * for numerical columns
-         * @param columnNamePattern the pattern for the result column name
          * @param usesLimit <code>true</code> if the method checks the number of
          * unique values limit.
          * @param keepColSpec <code>true</code> if the original column
@@ -218,10 +212,9 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         public LastOperator(final String label, final boolean numerical,
-                final String columnNamePattern, final boolean usesLimit,
-                final boolean keepColSpec, final int maxUniqueValues) {
-            super(label, numerical, columnNamePattern,  usesLimit, keepColSpec,
-                    maxUniqueValues);
+                final boolean usesLimit, final boolean keepColSpec,
+                final int maxUniqueValues) {
+            super(label, numerical,  usesLimit, keepColSpec, maxUniqueValues);
         }
 
         /**
@@ -280,8 +273,7 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         LastValueOperator(final int maxUniqueValues) {
-            super("Last value", false, "Last value(" + PLACE_HOLDER + ")",
-                    false, true, maxUniqueValues);
+            super("Last value", false, false, true, maxUniqueValues);
         }
 
         /**
@@ -318,8 +310,7 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         ModeOperator(final int maxUniqueValues) {
-            super("Mode", false, "Mode(" + PLACE_HOLDER + ")", true, true,
-                    maxUniqueValues);
+            super("Mode", false, true, true, maxUniqueValues);
             try {
                 m_valCounter =
                     new LinkedHashMap<DataCell, MutableInteger>(
@@ -415,8 +406,7 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         public ConcatenateOperator(final int maxUniqueValues) {
-            super("Concatenate", false, "Concatenate(" + PLACE_HOLDER + ")",
-                    false, false, maxUniqueValues);
+            super("Concatenate", false, false, false, maxUniqueValues);
         }
 
         /**
@@ -490,9 +480,7 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         public UniqueConcatenateOperator(final int maxUniqueValues) {
-            super("Unique concatenate", false,
-                    "Unique concatenate(" + PLACE_HOLDER + ")",
-                    true, false, maxUniqueValues);
+            super("Unique concatenate", false, true, false, maxUniqueValues);
             try {
                 m_vals = new HashSet<String>(maxUniqueValues);
             } catch (final OutOfMemoryError e) {
@@ -579,8 +567,7 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         public UniqueCountOperator(final int maxUniqueValues) {
-            super("Unique count", false, "Unique count(" + PLACE_HOLDER + ")",
-                    true, false, maxUniqueValues);
+            super("Unique count", false, true, false, maxUniqueValues);
             try {
                 m_vals = new HashSet<String>(maxUniqueValues);
             } catch (final OutOfMemoryError e) {
@@ -659,8 +646,7 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         CountOperator(final int maxUniqueValues) {
-            super("Count", false, "Count(" + PLACE_HOLDER + ")", false, false,
-                    maxUniqueValues);
+            super("Count", false, false, false, maxUniqueValues);
         }
 
         /**
@@ -719,8 +705,7 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         public ListCellOperator(final int maxUniqueValues) {
-            super("List", false, "List(" + PLACE_HOLDER + ")", false,
-                    false, maxUniqueValues);
+            super("List", false, false, false, maxUniqueValues);
             m_cells = new LinkedList<DataCell>();
         }
 
@@ -783,8 +768,7 @@ public final class Operators {
          * @param maxUniqueValues the maximum number of unique values
          */
         public SetCellOperator(final int maxUniqueValues) {
-            super("Set", false, "Set(" + PLACE_HOLDER + ")", true,
-                    false, maxUniqueValues);
+            super("Set", false, true, false, maxUniqueValues);
             try {
                 m_cells = new HashSet<DataCell>(maxUniqueValues);
             } catch (final OutOfMemoryError e) {

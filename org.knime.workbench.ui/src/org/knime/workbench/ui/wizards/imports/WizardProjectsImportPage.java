@@ -80,6 +80,7 @@ import org.eclipse.ui.internal.wizards.datatransfer.TarFile;
 import org.eclipse.ui.wizards.datatransfer.FileSystemStructureProvider;
 import org.eclipse.ui.wizards.datatransfer.IImportStructureProvider;
 import org.knime.core.node.NodeLogger;
+import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * The WizardProjectsImportPage is the page that allows the user to import
@@ -235,6 +236,10 @@ public class WizardProjectsImportPage extends WizardPage implements
     // The last selected path to mimize searches
     private String lastPath;
 
+    private static final ImageDescriptor ICON = 
+        KNIMEUIPlugin.imageDescriptorFromPlugin(KNIMEUIPlugin.PLUGIN_ID,
+                "icons/knime_import55.png");
+    
     /**
      * Creates a new project creation wizard page.
      * 
@@ -253,6 +258,7 @@ public class WizardProjectsImportPage extends WizardPage implements
         setPageComplete(false);
         setTitle(DataTransferMessages.WizardProjectsImportPage_ImportProjectsTitle);
         setDescription(DataTransferMessages.WizardProjectsImportPage_ImportProjectsDescription);
+        setImageDescriptor(ICON);
     }
 
     /**

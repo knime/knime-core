@@ -92,6 +92,9 @@ public class DialogComponentButtonGroup extends DialogComponent {
         final Box buttonBox =
             createButtonGroupBox(m_buttonGroup, label, vertical);
         getComponentPanel().add(buttonBox);
+
+        //call this method to be in sync with the settings model
+        updateComponent();
     }
 
     /**Constructor for class DialogComponentButtonGroup. The

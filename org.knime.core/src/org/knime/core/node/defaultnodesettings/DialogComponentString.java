@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   16.11.2005 (gdf): created
  */
@@ -40,9 +40,9 @@ import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * Provide a standard component for a dialog that allows to edit a text field.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
- * 
+ *
  */
 public final class DialogComponentString extends DialogComponent {
 
@@ -62,7 +62,7 @@ public final class DialogComponentString extends DialogComponent {
     /**
      * Constructor put label and JTextField into panel. It will accept empty
      * strings as legal input.
-     * 
+     *
      * @param stringModel the model that stores the value for this component.
      * @param label label for dialog in front of JTextField
      */
@@ -74,7 +74,7 @@ public final class DialogComponentString extends DialogComponent {
 
     /**
      * Constructor put label and JTextField into panel.
-     * 
+     *
      * @param stringModel the model that stores the value for this component.
      * @param label label for dialog in front of JTextField
      * @param disallowEmptyString if set true, the component request a non-empty
@@ -97,7 +97,7 @@ public final class DialogComponentString extends DialogComponent {
             public void removeUpdate(final DocumentEvent e) {
                 try {
                     updateModel();
-                } catch (InvalidSettingsException ise) {
+                } catch (final InvalidSettingsException ise) {
                     // Ignore it here.
                 }
             }
@@ -105,7 +105,7 @@ public final class DialogComponentString extends DialogComponent {
             public void insertUpdate(final DocumentEvent e) {
                 try {
                     updateModel();
-                } catch (InvalidSettingsException ise) {
+                } catch (final InvalidSettingsException ise) {
                     // Ignore it here.
                 }
             }
@@ -113,7 +113,7 @@ public final class DialogComponentString extends DialogComponent {
             public void changedUpdate(final DocumentEvent e) {
                 try {
                     updateModel();
-                } catch (InvalidSettingsException ise) {
+                } catch (final InvalidSettingsException ise) {
                     // Ignore it here.
                 }
             }
@@ -127,6 +127,9 @@ public final class DialogComponentString extends DialogComponent {
         });
 
         getComponentPanel().add(m_valueField);
+
+        //call this method to be in sync with the settings model
+        updateComponent();
     }
 
     /**
@@ -154,9 +157,9 @@ public final class DialogComponentString extends DialogComponent {
      */
     @Override
     protected void updateComponent() {
-        
+
         clearError(m_valueField);
-        
+
         // update component only if values are out of sync
         final String str = ((SettingsModelString)getModel()).getStringValue();
         if (!m_valueField.getText().equals(str)) {
@@ -168,7 +171,7 @@ public final class DialogComponentString extends DialogComponent {
 
     /**
      * Transfers the current value from the component into the model.
-     * 
+     *
      * @throws InvalidSettingsException if the string was not accepted.
      */
     private void updateModel() throws InvalidSettingsException {
@@ -212,7 +215,7 @@ public final class DialogComponentString extends DialogComponent {
 
     /**
      * Sets the preferred size of the internal component.
-     * 
+     *
      * @param width The width.
      * @param height The height.
      */

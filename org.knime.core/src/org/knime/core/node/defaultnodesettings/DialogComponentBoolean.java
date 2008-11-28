@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   21.09.2005 (mb): created
  *   2006-05-24 (tm): reviewed
@@ -41,7 +41,7 @@ import org.knime.core.node.port.PortObjectSpec;
  * Provides a standard component for a dialog that allows to edit a boolean
  * value. Provides a checkbox as well as functionality to load/store the value
  * into a config object.
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
 public final class DialogComponentBoolean extends DialogComponent {
@@ -49,7 +49,7 @@ public final class DialogComponentBoolean extends DialogComponent {
 
     /**
      * Constructor puts a checkbox with the specified label into the panel.
-     * 
+     *
      * @param booleanModel an already created settings model
      * @param label the label for checkbox.
      */
@@ -62,7 +62,8 @@ public final class DialogComponentBoolean extends DialogComponent {
         // update the model, if the user changes the component
         m_checkbox.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
-                SettingsModelBoolean model = (SettingsModelBoolean)getModel();
+                final SettingsModelBoolean model =
+                    (SettingsModelBoolean)getModel();
                 model.setBooleanValue(m_checkbox.isSelected());
             }
         });
@@ -75,7 +76,8 @@ public final class DialogComponentBoolean extends DialogComponent {
             }
         });
         getComponentPanel().add(m_checkbox);
-
+        //call this method to be in sync with the settings model
+        updateComponent();
     }
 
     /**
@@ -84,7 +86,7 @@ public final class DialogComponentBoolean extends DialogComponent {
     @Override
     protected void updateComponent() {
         // only update component if values are off
-        SettingsModelBoolean model = (SettingsModelBoolean)getModel();
+        final SettingsModelBoolean model = (SettingsModelBoolean)getModel();
         setEnabledComponents(model.isEnabled());
         if (model.getBooleanValue() != m_checkbox.isSelected()) {
             m_checkbox.setSelected(model.getBooleanValue());

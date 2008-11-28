@@ -26,14 +26,14 @@ package org.knime.base.node.io.database;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DatabaseLoopingNodeFactory extends NodeFactory {
+public class DatabaseLoopingNodeFactory 
+        extends NodeFactory<DatabaseLoopingNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -47,7 +47,7 @@ public class DatabaseLoopingNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public DatabaseLoopingNodeModel createNodeModel() {
         return new DatabaseLoopingNodeModel();
     }
 
@@ -55,8 +55,8 @@ public class DatabaseLoopingNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex, 
-            final NodeModel nodeModel) {
+    public NodeView<DatabaseLoopingNodeModel> createNodeView(final int vi, 
+            final DatabaseLoopingNodeModel nodeModel) {
         return null;
     }
 

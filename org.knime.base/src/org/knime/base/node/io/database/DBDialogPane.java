@@ -81,9 +81,6 @@ final class DBDialogPane extends JPanel {
     /** Default font used for all components within the database dialogs. */
     static final Font FONT = new Font("Monospaced", Font.PLAIN, 12);
     
-    /** Default user place holder, <code>&ltuser&gt</code>. */
-    static final String DFT_USER_TAG = "<user>";
-    
     /**
      * Creates new dialog.
      */
@@ -127,14 +124,6 @@ final class DBDialogPane extends JPanel {
         userPanel.setBorder(BorderFactory.createTitledBorder(" User name "));
         m_user.setPreferredSize(new Dimension(400, 20));
         m_user.setFont(FONT);
-        m_user.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusGained(final FocusEvent fe) {
-                if (m_user.getText().equals(DFT_USER_TAG)) {
-                    m_user.setText("");
-                }
-            } 
-        });
         userPanel.add(m_user);
         super.add(userPanel);
         JPanel passPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -194,7 +183,7 @@ final class DBDialogPane extends JPanel {
                 dbName == null ? "jdbc:odbc:<database_name>" : dbName);
         // user
         String user = settings.getString("user", null);
-        m_user.setText(user == null ? DFT_USER_TAG : user);
+        m_user.setText(user == null ? "" : user);
         // password
         String password = settings.getString("password", null);
         m_pass.setText(password == null ? "" : password);

@@ -62,7 +62,7 @@ class DBReaderDialogPane extends NodeDialogPane {
                 ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setBorder(BorderFactory
-                .createTitledBorder(" SQL statement "));
+                .createTitledBorder(" SQL Statement "));
         JPanel allPanel = new JPanel(new BorderLayout());
         allPanel.add(m_loginPane, BorderLayout.NORTH);
         allPanel.add(scrollPane, BorderLayout.CENTER);

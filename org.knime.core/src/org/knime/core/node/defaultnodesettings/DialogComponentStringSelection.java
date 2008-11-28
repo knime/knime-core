@@ -154,6 +154,9 @@ public final class DialogComponentStringSelection extends DialogComponent {
                 updateComponent();
             }
         });
+
+        //call this method to be in sync with the settings model
+        updateComponent();
     }
 
     /**

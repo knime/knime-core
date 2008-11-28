@@ -38,7 +38,6 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
@@ -68,14 +67,12 @@ final class DBWriterConnection {
      * @param sqlTypes A mapping from column name to SQL-type. 
      * @return error string or null, if non
      * @throws Exception if connection could not be established
-     * @throws CanceledExecutionException If canceled.
      */
     static final String writeData(final DatabaseConnectionSettings dbConn,
             final String table, final BufferedDataTable data, 
             final boolean appendData, final ExecutionMonitor exec, 
-            final Map<String, String> sqlTypes) 
-            throws Exception, CanceledExecutionException {
-        Connection conn = dbConn.createConnection();
+            final Map<String, String> sqlTypes) throws Exception {
+        final Connection conn = dbConn.createConnection();
         DataTableSpec spec = data.getDataTableSpec();
         // mapping from spec columns to database columns
         final int[] mapping;
@@ -197,11 +194,6 @@ final class DBWriterConnection {
         }
         wildcard.append(")");
         
-        // create table meta data with empty column information
-        PreparedStatement stmt = conn.prepareStatement("INSERT INTO " + table
-                + " VALUES " + wildcard.toString());
-        conn.setAutoCommit(false);
-        
         // problems writing more than 13 columns. the prepare statement 
         // ensures that we can set the columns directly row-by-row, the database
         // will handle the commit
@@ -209,69 +201,79 @@ final class DBWriterConnection {
         int cnt = 1;
         int errorCnt = 0;
         int allErrors = 0;
-        for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
-            exec.checkCanceled();
-            exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
-            DataRow row = it.next();
-            for (int i = 0; i < mapping.length; i++) {
-                int dbIdx = i + 1;
-                if (mapping[i] < 0) {
-                    stmt.setNull(dbIdx, Types.NULL);
-                    continue;
-                }
-                DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
-                DataCell cell = row.getCell(mapping[i]);
-                if (cspec.getType().isCompatible(IntValue.class)) {
-                    if (cell.isMissing()) {
-                        stmt.setNull(dbIdx, Types.INTEGER);
-                    } else {
-                        int integer = ((IntValue) cell).getIntValue();
-                        stmt.setInt(dbIdx, integer);
+
+        // create table meta data with empty column information
+        final PreparedStatement stmt = conn.prepareStatement("INSERT INTO " 
+                + table + " VALUES " + wildcard.toString());
+        try {
+            conn.setAutoCommit(false);
+            for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
+                exec.checkCanceled();
+                exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
+                DataRow row = it.next();
+                for (int i = 0; i < mapping.length; i++) {
+                    int dbIdx = i + 1;
+                    if (mapping[i] < 0) {
+                        stmt.setNull(dbIdx, Types.NULL);
+                        continue;
                     }
-                } else if (cspec.getType().isCompatible(DoubleValue.class)) {
-                    if (cell.isMissing()) {
-                        stmt.setNull(dbIdx, Types.NUMERIC);
-                    } else {
-                        double dbl = ((DoubleValue) cell).getDoubleValue();
-                        if (Double.isNaN(dbl)) {
+                    DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
+                    DataCell cell = row.getCell(mapping[i]);
+                    if (cspec.getType().isCompatible(IntValue.class)) {
+                        if (cell.isMissing()) {
+                            stmt.setNull(dbIdx, Types.INTEGER);
+                        } else {
+                            int integer = ((IntValue) cell).getIntValue();
+                            stmt.setInt(dbIdx, integer);
+                        }
+                    } else if (cspec.getType().isCompatible(
+                            DoubleValue.class)) {
+                        if (cell.isMissing()) {
                             stmt.setNull(dbIdx, Types.NUMERIC);
                         } else {
-                            stmt.setDouble(dbIdx, dbl);
+                            double dbl = ((DoubleValue) cell).getDoubleValue();
+                            if (Double.isNaN(dbl)) {
+                                stmt.setNull(dbIdx, Types.NUMERIC);
+                            } else {
+                                stmt.setDouble(dbIdx, dbl);
+                            }
+                        }
+                    } else {
+                        if (cell.isMissing()) {
+                            stmt.setNull(dbIdx, Types.VARCHAR);
+                        } else {
+                            stmt.setString(dbIdx, cell.toString());
                         }
                     }
-                } else {
-                    if (cell.isMissing()) {
-                        stmt.setNull(dbIdx, Types.VARCHAR);
-                    } else {
-                        stmt.setString(dbIdx, cell.toString());
+                }
+                try {
+                    stmt.execute();
+                } catch (Throwable t) {
+                    allErrors++;
+                    if (errorCnt > -1) {
+                        String errorMsg = "Error in row #" + cnt + ": " 
+                            + row.getKey() + ", " + t.getMessage();
+                        exec.setMessage(errorMsg);
+                        if (errorCnt++ < 10) {
+                            LOGGER.warn(errorMsg);
+                        } else {
+                            errorCnt = -1;
+                            LOGGER.warn(errorMsg + " - more errors...", t);
+                        }
                     }
                 }
             }
-            try {
-                stmt.execute();
-            } catch (Throwable t) {
-                allErrors++;
-                if (errorCnt > -1) {
-                    String errorMsg = "Error in row #" + cnt + ": " 
-                        + row.getKey() + ", " + t.getMessage();
-                    exec.setMessage(errorMsg);
-                    if (errorCnt++ < 10) {
-                        LOGGER.warn(errorMsg);
-                    } else {
-                        errorCnt = -1;
-                        LOGGER.warn(errorMsg + " - more errors...", t);
-                    }
-                }
+            conn.commit();
+            conn.setAutoCommit(true);
+            if (allErrors == 0) {
+                return null;
+            } else {
+                return "Errors \"" + allErrors + "\" writing " 
+                    + rowCount + " rows.";
             }
-        }
-        conn.commit();
-        conn.setAutoCommit(true);
-        stmt.close();
-        conn.close();
-        if (allErrors == 0) {
-            return null;
-        } else {
-            return "Error writing " + allErrors + " of " + rowCount + " rows.";
+        } finally {
+            stmt.close();
+            conn.close();
         }
     }
     

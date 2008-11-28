@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   12.01.2007 (thiel): created
  */
@@ -41,7 +41,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * 
+ *
  * @author Kilian Thiel, University of Konstanz
  */
 public class DialogComponentMultiLineString extends DialogComponent {
@@ -60,7 +60,7 @@ public class DialogComponentMultiLineString extends DialogComponent {
     /**
      * Constructor put label and JTextArea into panel. It will accept empty
      * strings as legal input.
-     * 
+     *
      * @param stringModel the model that stores the value for this component.
      * @param label label for dialog in front of JTextArea
      */
@@ -71,7 +71,7 @@ public class DialogComponentMultiLineString extends DialogComponent {
 
     /**
      * Constructor put label and JTextArea into panel.
-     * 
+     *
      * @param label label for dialog in front of JTextArea
      * @param stringModel the model that stores the value for this component.
      * @param disallowEmptyString if set true, the component request a non-empty
@@ -95,14 +95,14 @@ public class DialogComponentMultiLineString extends DialogComponent {
         m_valueField.setColumns(cols);
         m_valueField.setRows(rows);
 
-        JScrollPane jsp = new JScrollPane(m_valueField);
+        final JScrollPane jsp = new JScrollPane(m_valueField);
         getComponentPanel().add(jsp, BorderLayout.CENTER);
 
         m_valueField.getDocument().addDocumentListener(new DocumentListener() {
             public void removeUpdate(final DocumentEvent e) {
                 try {
                     updateModel();
-                } catch (InvalidSettingsException ise) {
+                } catch (final InvalidSettingsException ise) {
                     // Ignore it here.
                 }
             }
@@ -110,7 +110,7 @@ public class DialogComponentMultiLineString extends DialogComponent {
             public void insertUpdate(final DocumentEvent e) {
                 try {
                     updateModel();
-                } catch (InvalidSettingsException ise) {
+                } catch (final InvalidSettingsException ise) {
                     // Ignore it here.
                 }
             }
@@ -118,7 +118,7 @@ public class DialogComponentMultiLineString extends DialogComponent {
             public void changedUpdate(final DocumentEvent e) {
                 try {
                     updateModel();
-                } catch (InvalidSettingsException ise) {
+                } catch (final InvalidSettingsException ise) {
                     // Ignore it here.
                 }
             }
@@ -130,6 +130,9 @@ public class DialogComponentMultiLineString extends DialogComponent {
                 updateComponent();
             }
         });
+
+        //call this method to be in sync with the settings model
+        updateComponent();
     }
 
     /**
@@ -137,9 +140,9 @@ public class DialogComponentMultiLineString extends DialogComponent {
      */
     @Override
     protected void updateComponent() {
-        
+
         clearError(m_valueField);
-        
+
         // update component only if values are out of sync
         final String str = ((SettingsModelString)getModel()).getStringValue();
         if (!m_valueField.getText().equals(str)) {
@@ -151,7 +154,7 @@ public class DialogComponentMultiLineString extends DialogComponent {
 
     /**
      * Transfers the current value from the component into the model.
-     * 
+     *
      * @throws InvalidSettingsException if the string was not accepted.
      */
     private void updateModel() throws InvalidSettingsException {
@@ -168,7 +171,7 @@ public class DialogComponentMultiLineString extends DialogComponent {
     }
 
     private void showError(final JTextArea field) {
-        
+
         if (!getModel().isEnabled()) {
             // don't flag an error in disabled components.
             return;
@@ -208,7 +211,7 @@ public class DialogComponentMultiLineString extends DialogComponent {
     /**
      * Clears the error status of the specified component by reseting its color
      * to the normal default colors.
-     * 
+     *
      * @param field the component to set the colors back to normal for.
      */
     private void clearError(final JTextArea field) {
@@ -244,7 +247,7 @@ public class DialogComponentMultiLineString extends DialogComponent {
 
     /**
      * Sets the preferred size of the internal component.
-     * 
+     *
      * @param width The width.
      * @param height The height.
      */

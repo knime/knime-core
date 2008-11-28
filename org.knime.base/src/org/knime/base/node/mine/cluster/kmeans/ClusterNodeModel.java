@@ -154,12 +154,24 @@ public class ClusterNodeModel extends NodeModel {
                     BufferedDataTable.TYPE, 
                     PMMLClusterPortObject.TYPE});
     }
-
+    
     /**
-     * @return the internal hilite handler
+     * @return cluster centers' hilite handler
      */
-    public HiLiteHandler getHiLiteHandler() {
+    final HiLiteHandler getHiLiteHandler() {
         return m_translator.getFromHiLiteHandler();
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
+        if (outIndex == 1) {
+            return m_translator.getFromHiLiteHandler();
+        } else {
+            return super.getOutHiLiteHandler(outIndex);
+        }
     }
     
     /**
@@ -168,8 +180,10 @@ public class ClusterNodeModel extends NodeModel {
     @Override
     protected void setInHiLiteHandler(final int inIndex, 
             final HiLiteHandler hiLiteHdl) {
+        m_translator.removeAllToHiliteHandlers();
         m_translator.addToHiLiteHandler(hiLiteHdl);
     }
+    
 
     /**
      * Appends to the given node settings the model specific configuration, that
@@ -462,7 +476,6 @@ public class ClusterNodeModel extends NodeModel {
         }
         labeledInput.close();
         m_translator.setMapper(new DefaultHiLiteMapper(mapping));
-        m_translator.addToHiLiteHandler(getInHiLiteHandler(0));
         BufferedDataTable outData = exec.createBufferedDataTable(
                 labeledInput.getTable(), exec);
         return new PortObject[]{outData, getPMMLOutPortObject()};
@@ -560,7 +573,6 @@ public class ClusterNodeModel extends NodeModel {
     protected void reset() {
         // remove the clusters
         m_clusters = null;
-        m_translator.removeAllToHiliteHandlers();
         m_translator.setMapper(null);
     }
 
@@ -663,7 +675,13 @@ public class ClusterNodeModel extends NodeModel {
     }
     
     private PMMLPortObjectSpec createPMMLSpec(final DataTableSpec tableSpec) 
-        throws InvalidSettingsException {
+            throws InvalidSettingsException {
+        for (String colName : m_usedColumns.getIncludeList()) {
+            if (!(tableSpec.containsName(colName))) {
+                throw new InvalidSettingsException(
+                        "Input column spec does not match selected columns.");
+            }
+        }
         PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
                 tableSpec);
         Set<String>activeCols = new LinkedHashSet<String>();
@@ -689,19 +707,13 @@ public class ClusterNodeModel extends NodeModel {
             for (int i = 0; i < m_nrOfClusters.getIntValue(); i++) {
                 m_clusters[i] = settings.getDoubleArray(CFG_CLUSTER + i);
             }
-            try {
-                // loading the HiLite Mapper is a new (v1.2) feature
-                // ignore and set mapper to null if info is not available.
-                // (fixes bug #1016)
-                m_featureNames = settings.getStringArray(CFG_FEATURE_NAMES);
-                NodeSettingsRO mapSet = settings.getNodeSettings(
-                        CFG_HILITEMAPPING);
-                m_translator.setMapper(DefaultHiLiteMapper.load(mapSet));
-            } catch (InvalidSettingsException e) {
-                m_translator.setMapper(null);
-            } finally {
-                m_translator.addToHiLiteHandler(getInHiLiteHandler(0));
-            }
+            // loading the HiLite Mapper is a new (v1.2) feature
+            // ignore and set mapper to null if info is not available.
+            // (fixes bug #1016)
+            m_featureNames = settings.getStringArray(CFG_FEATURE_NAMES);
+            NodeSettingsRO mapSet = settings.getNodeSettings(
+                    CFG_HILITEMAPPING);
+            m_translator.setMapper(DefaultHiLiteMapper.load(mapSet));
         } catch (InvalidSettingsException e) {
             throw new IOException(e);
         }

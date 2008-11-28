@@ -270,7 +270,7 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
                     // Interval
                     AttributesImpl attr2 = new AttributesImpl();
                     attr2.addAttribute(null, null, "closure", CDATA, 
-                            "openOpen");
+                            "closedClosed");
                     attr2.addAttribute(null, null, "leftMargin", CDATA, 
                             "" + colSpec.getDomain().getLowerBound());
                     attr2.addAttribute(null, null, "rightMargin", CDATA, 
@@ -347,37 +347,6 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
         handler.endElement(null, null, MINING_SCHEMA);
     }
     
-    /*
-    public static PMMLPortObjectSpec loadFrom(final File specFile) 
-        throws IOException {
-        try {
-            SAXParserFactory fac = SAXParserFactory.newInstance();
-            SAXParser parser = fac.newSAXParser();
-            DataDictionaryContentHandler dataDictHdl =
-                    new DataDictionaryContentHandler();
-            MiningSchemaContentHandler miningSchemaHdl =
-                    new MiningSchemaContentHandler();
-            PMMLMasterContentHandler masterHandler =
-                    new PMMLMasterContentHandler();
-            masterHandler.addContentHandler(DataDictionaryContentHandler.ID,
-                    dataDictHdl);
-            masterHandler.addContentHandler(MiningSchemaContentHandler.ID,
-                    miningSchemaHdl);
-            parser.parse(specFile, masterHandler);
-            DataTableSpec dataTableSpec = dataDictHdl.getDataTableSpec();
-            PMMLPortObjectSpecCreator creator =
-                    new PMMLPortObjectSpecCreator(dataTableSpec);
-            creator.setIgnoredCols(miningSchemaHdl.getIgnoredFields());
-            creator.setLearningCols(miningSchemaHdl.getLearningFields());
-            creator.setTargetCols(miningSchemaHdl.getTargetFields());
-            return creator.createSpec();
-        } catch (SAXException saxe) {
-            throw new IOException(saxe);
-        } catch (ParserConfigurationException pce) {
-            throw new IOException(pce);
-        }
-    }
-    */
     
     private static final String DTS_KEY = "DataTableSpec";
     private static final String DTS_FILE = "DataTableSpec.xml";

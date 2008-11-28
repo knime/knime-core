@@ -77,13 +77,15 @@ class DBReaderNodeModel extends NodeModel {
             m_lastSpec = m_load.getDataTableSpec();
             exec.setProgress("Reading data from database...");
             return new BufferedDataTable[]{m_load.createTable(exec)};
+        } catch (CanceledExecutionException cee) {
+            throw cee;
         } catch (Exception e) {
             m_lastSpec = null;
             throw e;
         } catch (Throwable t) {
             m_lastSpec = null;
-            throw new RuntimeException(t);
-        }   
+            throw new Exception(t);
+        }
     }
 
     /**

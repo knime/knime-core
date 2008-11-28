@@ -31,17 +31,17 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 
-import org.knime.base.node.preproc.groupby.aggregation.AggregationMethod;
 import org.knime.base.node.preproc.groupby.aggregation.ColumnAggregator;
 import org.knime.base.node.preproc.groupby.dialogutil.AggregationColumnPanel;
 
@@ -86,8 +86,9 @@ public class GroupByNodeDialog extends NodeDialogPane {
     private final SettingsModelBoolean m_sortInMemory =
         new SettingsModelBoolean(GroupByNodeModel.CFG_SORT_IN_MEMORY, false);
 
-    private final SettingsModelBoolean m_keepColumnName =
-        new SettingsModelBoolean(GroupByNodeModel.CFG_KEEP_COLUMN_NAME, false);
+    private final SettingsModelString m_columnNamePolicy =
+        new SettingsModelString(GroupByNodeModel.CFG_COLUMN_NAME_POLICY,
+                ColumnNamePolicy.getDefault().getLabel());
 
     private final DialogComponentColumnFilter m_groupColPanel;
 
@@ -161,10 +162,10 @@ public class GroupByNodeDialog extends NodeDialogPane {
                 m_sortInMemory, "Sort in memory");
         box.add(sortInMemory.getComponentPanel());
         box.add(Box.createVerticalGlue());
-
-        final DialogComponent keepColName = new DialogComponentBoolean(
-                m_keepColumnName, "Keep original column name(s)");
-        box.add(keepColName.getComponentPanel());
+        final DialogComponentStringSelection colNamePolicy =
+            new DialogComponentStringSelection(m_columnNamePolicy, null,
+                    ColumnNamePolicy.getPolicyLabels());
+        box.add(colNamePolicy.getComponentPanel());
         box.add(Box.createVerticalGlue());
         return box;
     }
@@ -189,17 +190,21 @@ public class GroupByNodeDialog extends NodeDialogPane {
             m_maxUniqueValues.loadSettingsFrom(settings);
             m_enableHilite.loadSettingsFrom(settings);
             m_sortInMemory.loadSettingsFrom(settings);
-            m_keepColumnName.loadSettingsFrom(settings);
+            m_columnNamePolicy.loadSettingsFrom(settings);
         } catch (final InvalidSettingsException e) {
             throw new NotConfigurableException(e.getMessage());
         }
-        m_groupColPanel.loadSettingsFrom(settings, new DataTableSpec[] {spec});
+
         try {
+            //this option was introduced in Knime 2.0
             m_aggrColPanel.loadSettingsFrom(settings, spec);
         } catch (final InvalidSettingsException e) {
-            m_aggrColPanel.initialize(spec, getColumnMethods(spec,
-                    m_groupByCols.getIncludeList(), settings));
+            final List<ColumnAggregator> columnMethods =
+                GroupByNodeModel.compGetColumnMethods(spec,
+                        m_groupByCols.getIncludeList(), settings);
+            m_aggrColPanel.initialize(spec, columnMethods);
         }
+        m_groupColPanel.loadSettingsFrom(settings, new DataTableSpec[] {spec});
         groupByColsChanged();
     }
 
@@ -213,7 +218,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
         m_maxUniqueValues.saveSettingsTo(settings);
         m_enableHilite.saveSettingsTo(settings);
         m_sortInMemory.saveSettingsTo(settings);
-        m_keepColumnName.saveSettingsTo(settings);
+        m_columnNamePolicy.saveSettingsTo(settings);
         m_aggrColPanel.saveSettingsTo(settings);
     }
 
@@ -222,7 +227,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
      * @param component the component to add to the group
      * @return the {@link JPanel} of the group
      */
-    public static JPanel createGroup(final String title,
+    private static JPanel createGroup(final String title,
             final JComponent component) {
         final JPanel subPanel = new JPanel();
         subPanel.setLayout(new BoxLayout(subPanel, BoxLayout.Y_AXIS));
@@ -230,31 +235,5 @@ public class GroupByNodeDialog extends NodeDialogPane {
                 .createEtchedBorder(), title));
         subPanel.add(component);
         return subPanel;
-    }
-
-    /**
-     * Helper method to get the aggregation methods for the old node settings.
-     * @param spec the input {@link DataTableSpec}
-     * @param excludeCols the columns that should be excluded from the
-     * aggregation columns
-     * @param config the config object to read from
-     * @return the {@link ColumnAggregator}s
-     */
-    public static List<ColumnAggregator> getColumnMethods(
-            final DataTableSpec spec, final List<String> excludeCols,
-            final ConfigRO config) {
-        String numeric = null;
-        String nominal = null;
-        try {
-            numeric =
-                config.getString(GroupByNodeModel.OLD_CFG_NUMERIC_COL_METHOD);
-            nominal =
-                config.getString(GroupByNodeModel.OLD_CFG_NOMINAL_COL_METHOD);
-        } catch (final InvalidSettingsException e) {
-            numeric = AggregationMethod.getDefaultNumericMethod().getLabel();
-            nominal = AggregationMethod.getDefaultNominalMethod().getLabel();
-        }
-        return GroupByNodeModel.createColumnAggregators(spec, excludeCols,
-                numeric, nominal);
     }
 }

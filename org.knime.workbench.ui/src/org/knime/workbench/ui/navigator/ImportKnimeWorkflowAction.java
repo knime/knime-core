@@ -33,7 +33,7 @@ import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.knime.workbench.repository.ImageRepository;
+import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.wizards.imports.WorkflowImportWizard;
 
 /**
@@ -46,6 +46,10 @@ public class ImportKnimeWorkflowAction extends Action {
     private static final int SIZING_WIZARD_WIDTH = 470;
 
     private static final int SIZING_WIZARD_HEIGHT = 550;
+    
+    private static final ImageDescriptor ICON 
+        = KNIMEUIPlugin.imageDescriptorFromPlugin(
+                KNIMEUIPlugin.PLUGIN_ID, "icons/knime_import.png");
     
     /**
      * The id for this action.
@@ -94,7 +98,7 @@ public class ImportKnimeWorkflowAction extends Action {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/knimeImport.PNG");
+        return ICON;
     }
 
     /**

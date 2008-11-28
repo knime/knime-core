@@ -1337,14 +1337,13 @@ public final class Node implements NodeModelWarningListener {
      * @throws ArrayIndexOutOfBoundsException If the view index is out of range.
      */
     public NodeView<?> getView(final int viewIndex, final String title) {
-        NodeView<?> view;
         try {
-            view = m_factory.createNodeView(viewIndex, m_model);
+            return m_factory.createNodeView(viewIndex, m_model);
         } catch (Throwable e) {
-            m_logger.error("View instantiation failed", e);
-            throw new RuntimeException(e.getMessage(), e);
+            String errorMsg = "View instantiation failed: " + e.getMessage();
+            m_logger.error(errorMsg, e);
+            throw new RuntimeException(errorMsg, e);
         }
-        return view;
     }
 
     /**

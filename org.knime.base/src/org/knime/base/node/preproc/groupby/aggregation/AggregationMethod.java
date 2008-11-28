@@ -99,6 +99,13 @@ public enum AggregationMethod {
         return m_operator.getLabel();
     }
 
+    /**
+     * @return the short label which is used in the column name
+     */
+    public String getShortLabel() {
+        return m_operator.getShortLabel();
+    }
+
 
     /**
      * @return <code>true</code> if only numerical columns are accepted
@@ -115,14 +122,6 @@ public enum AggregationMethod {
     public AggregationOperator getOperator(final DataColumnSpec origColSpec,
             final int maxUniqueValues) {
         return m_operator.createInstance(origColSpec, maxUniqueValues);
-    }
-
-    /**
-     * @param origColumnName the original column name
-     * @return the new name of the aggregation column
-     */
-    public String createColumnName(final String origColumnName) {
-        return m_operator.createColumnName(origColumnName);
     }
 
     /**

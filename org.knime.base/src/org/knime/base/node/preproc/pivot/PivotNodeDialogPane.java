@@ -163,7 +163,7 @@ public class PivotNodeDialogPane extends DefaultNodeSettingsPane {
      * @return a settings model boolean to enable/disable hiliting
      */
     static final SettingsModelBoolean createSettingsEnableHiLite() {
-        return new SettingsModelBoolean("enable_hiliting", true);
+        return new SettingsModelBoolean("enable_hiliting", false);
     }
 
 }

@@ -28,6 +28,7 @@ package org.knime.core.data;
 import java.io.Serializable;
 
 import org.knime.core.data.collection.CollectionDataValue;
+import org.knime.core.data.container.BlobWrapperDataCell;
 
 /**
  * Abstract base class of all <code>DataCell</code>s, which acts as a container 
@@ -169,22 +170,32 @@ public abstract class DataCell implements DataValue, Serializable {
         if (this == o) {
             return true;
         }
-        // check for null pointer
-        if (o == null) {
+        // also handles null cases
+        if (!(o instanceof DataCell)) {
             return false;
         }
+        DataCell thisDelegate = this;
+        while (thisDelegate instanceof BlobWrapperDataCell) {
+            thisDelegate = ((BlobWrapperDataCell)thisDelegate).getCell();
+        }
+        
+        DataCell otherDelegate = (DataCell)o;
+        while (otherDelegate instanceof BlobWrapperDataCell) {
+            otherDelegate = ((BlobWrapperDataCell)otherDelegate).getCell();
+        }
+        
         // only cells of identical classes can possibly be equal
-        if (this.getClass() == o.getClass()) {
+        if (thisDelegate.getClass().equals(otherDelegate.getClass())) {
             // if both cells are missing they are equal
-            if (this.isMissing() && ((DataCell)o).isMissing()) {
+            if (thisDelegate.isMissing() && otherDelegate.isMissing()) {
                 return true;
             }
             // if only one of both cells is missing they can not be equal
-            if (this.isMissing() || ((DataCell)o).isMissing()) {
+            if (thisDelegate.isMissing() || otherDelegate.isMissing()) {
                 return false;
             }
             // now call the datacell class specific equals method
-            return equalsDataCell((DataCell)o);
+            return thisDelegate.equalsDataCell(otherDelegate);
         }
         // not of the same class
         return false;

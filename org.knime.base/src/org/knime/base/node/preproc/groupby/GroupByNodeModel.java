@@ -46,9 +46,11 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -65,25 +67,35 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
  */
 public class GroupByNodeModel extends NodeModel {
 
+    /**Old configuration key of the selected aggregation method for
+     * numerical columns. This key was used prior Knime 2.0.*/
+    private static final String OLD_CFG_NUMERIC_COL_METHOD =
+        "numericColumnMethod";
+    /**Old configuration key of the selected aggregation method for none
+     * numerical columns. This was used by the previous version prior 2.0.*/
+    private static final String OLD_CFG_NOMINAL_COL_METHOD =
+        "nominalColumnMethod";
+    /**Old configuration key for the move the group by columns to front
+     * option. This key was used prior Knime 2.0.*/
+    private static final String OLD_CFG_MOVE_GROUP_BY_COLS_2_FRONT =
+        "moveGroupByCols2Front";
+    /**Configuration key for the keep original column name option.
+     * This key was used prior Knime 2.0.*/
+    private static final String OLD_CFG_KEEP_COLUMN_NAME =
+        "keepColumnName";
+    /**This variable holds the label of the nominal method which was used
+     * prior Knime 2.0.*/
+    private String m_oldNominal = null;
+    /**This variable holds the label of the numerical method which was used
+     * prior Knime 2.0.*/
+    private String m_oldNumerical = null;
+
+
+
     private static final String INTERNALS_FILE_NAME = "hilite_mapping.xml.gz";
 
     /**Configuration key of the selected group by columns.*/
     protected static final String CFG_GROUP_BY_COLUMNS = "grouByColumns";
-
-    /**Old configuration key of the selected aggregation method for
-     * numerical columns. This was used by the previous version.*/
-    public static final String OLD_CFG_NUMERIC_COL_METHOD =
-        "numericColumnMethod";
-
-    /**Old configuration key for the move the group by columns to front
-     * option. This was used by the previous version.*/
-    protected static final String OLD_CFG_MOVE_GROUP_BY_COLS_2_FRONT =
-        "moveGroupByCols2Front";
-
-    /**Old configuration key of the selected aggregation method for
-     * none numerical columns. This was used by the previous version.*/
-    public static final String OLD_CFG_NOMINAL_COL_METHOD =
-        "nominalColumnMethod";
 
     /**Configuration key for the maximum none numerical values.*/
     protected static final String CFG_MAX_UNIQUE_VALUES =
@@ -95,22 +107,12 @@ public class GroupByNodeModel extends NodeModel {
     /**Configuration key for the sort in memory option.*/
     protected static final String CFG_SORT_IN_MEMORY = "sortInMemory";
 
-    /**Configuration key for the keep original column name option.*/
-    protected static final String CFG_KEEP_COLUMN_NAME =
-        "keepColumnName";
-
+    /**Configuration key for the aggregation column name policy.*/
+    protected static final String CFG_COLUMN_NAME_POLICY = "columnNamePolicy";
 
 
     private final SettingsModelFilterString m_groupByCols =
         new SettingsModelFilterString(CFG_GROUP_BY_COLUMNS);
-
-//    private final SettingsModelString m_numericColMethod =
-//        new SettingsModelString(CFG_NUMERIC_COL_METHOD,
-//                AggregationMethod.getDefaultNumericMethod().getLabel());
-//
-//    private final SettingsModelString m_nominalColMethod =
-//        new SettingsModelString(CFG_NOMINAL_COL_METHOD,
-//                AggregationMethod.getDefaultNominalMethod().getLabel());
 
     private final SettingsModelIntegerBounded m_maxUniqueValues =
         new SettingsModelIntegerBounded(CFG_MAX_UNIQUE_VALUES, 10000, 1,
@@ -122,21 +124,12 @@ public class GroupByNodeModel extends NodeModel {
     private final SettingsModelBoolean m_sortInMemory =
         new SettingsModelBoolean(CFG_SORT_IN_MEMORY, false);
 
-//    private final SettingsModelBoolean m_moveGroupCols2Front =
-//        new SettingsModelBoolean(CFG_MOVE_GROUP_BY_COLS_2_FRONT, false);
-
-    private final SettingsModelBoolean m_keepColumnName =
-        new SettingsModelBoolean(CFG_KEEP_COLUMN_NAME, false);
+    private final SettingsModelString m_columnNamePolicy =
+        new SettingsModelString(GroupByNodeModel.CFG_COLUMN_NAME_POLICY,
+                ColumnNamePolicy.getDefault().getLabel());
 
     private final List<ColumnAggregator> m_columnAggregators =
         new LinkedList<ColumnAggregator>();
-
-    /**This variable holds the label of the nominal method which was used
-     * in the previous implementation.*/
-    private String m_oldNominal = null;
-    /**This variable holds the label of the numerical method which was used
-     * in the previous implementation.*/
-    private String m_oldNumerical = null;
 
     /**
      * Node returns a new hilite handler instance.
@@ -149,23 +142,6 @@ public class GroupByNodeModel extends NodeModel {
     public GroupByNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE},
                 new PortType[]{BufferedDataTable.TYPE});
-//        m_nominalColMethod.addChangeListener(new ChangeListener() {
-//            public void stateChanged(final ChangeEvent e) {
-//                m_maxUniqueValues.setEnabled(
-//                        GroupByNodeDialogPane.enableUniqueValuesModel(
-//                                m_numericColMethod, m_nominalColMethod));
-//            }
-//        });
-//        m_numericColMethod.addChangeListener(new ChangeListener() {
-//            public void stateChanged(final ChangeEvent e) {
-//                m_maxUniqueValues.setEnabled(
-//                        GroupByNodeDialogPane.enableUniqueValuesModel(
-//                                m_numericColMethod, m_nominalColMethod));
-//            }
-//        });
-//        m_maxUniqueValues.setEnabled(
-//                GroupByNodeDialogPane.enableUniqueValuesModel(
-//                m_numericColMethod, m_nominalColMethod));
     }
 
     /**
@@ -176,7 +152,7 @@ public class GroupByNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws IOException {
         if (m_enableHilite.getBooleanValue()) {
             final NodeSettingsRO config = NodeSettings.loadFromXML(
-                    new FileInputStream(new File(nodeInternDir, 
+                    new FileInputStream(new File(nodeInternDir,
                             INTERNALS_FILE_NAME)));
             try {
                 m_hilite.setMapper(DefaultHiLiteMapper.load(config));
@@ -215,15 +191,16 @@ public class GroupByNodeModel extends NodeModel {
         m_maxUniqueValues.saveSettingsTo(settings);
         m_enableHilite.saveSettingsTo(settings);
         m_sortInMemory.saveSettingsTo(settings);
-        m_keepColumnName.saveSettingsTo(settings);
         if (m_columnAggregators.isEmpty()
                 && m_oldNominal != null && m_oldNumerical != null) {
+            //these settings were used prior Knime 2.0
             settings.addString(OLD_CFG_NUMERIC_COL_METHOD, m_oldNumerical);
             settings.addString(OLD_CFG_NOMINAL_COL_METHOD, m_oldNominal);
         } else {
             ColumnAggregator.saveColumnAggregators(settings,
                     m_columnAggregators);
         }
+        m_columnNamePolicy.saveSettingsTo(settings);
     }
 
     /**
@@ -239,12 +216,60 @@ public class GroupByNodeModel extends NodeModel {
         if (groupByCols == null || groupByCols.size() < 1) {
             throw new InvalidSettingsException("No grouping column included");
         }
-//        m_numericColMethod.validateSettings(settings);
-//        m_nominalColMethod.validateSettings(settings);
-//        m_moveGroupCols2Front.validateSettings(settings);
         m_maxUniqueValues.validateSettings(settings);
         m_enableHilite.validateSettings(settings);
         m_sortInMemory.validateSettings(settings);
+
+        //the option to use a column multiple times was introduced
+        //with Knime 2.0 as well as the naming policy
+        try {
+            final List<ColumnAggregator> aggregators =
+                ColumnAggregator.loadColumnAggregators(settings);
+            ColumnNamePolicy namePolicy;
+            try {
+                final String policyLabel =
+                    ((SettingsModelString)m_columnNamePolicy
+                    .createCloneWithValidatedValue(settings)).getStringValue();
+                namePolicy = ColumnNamePolicy.getPolicy4Label(policyLabel);
+            } catch (final InvalidSettingsException e) {
+                namePolicy = compGetColumnNamePolicy(settings);
+            }
+            if (ColumnNamePolicy.KEEP_ORIGINAL_NAME.equals(namePolicy)) {
+                //avoid using the same column multiple times
+                final Set<String>uniqueNames =
+                    new HashSet<String>(aggregators.size());
+                for (final ColumnAggregator aggregator : aggregators) {
+                    if (!uniqueNames.add(aggregator.getColSpec().getName())) {
+                        throw new IllegalArgumentException(
+                                "Duplicate column names: "
+                                +  aggregator.getColSpec().getName()
+                                + ". Not possible with "
+                                + "'Keep original name(s)' option");
+                    }
+                }
+            } else {
+                //avoid using the same column with the same method
+                //multiple times
+                final Set<String>uniqueAggregators =
+                    new HashSet<String>(aggregators.size());
+                for (final ColumnAggregator aggregator : aggregators) {
+                    final String uniqueName = aggregator.getColName()
+                    + "@" + aggregator.getMethod().getLabel();
+                    if (!uniqueAggregators.add(uniqueName)) {
+                        throw new IllegalArgumentException(
+                                "Duplicate settings: Column "
+                                +  aggregator.getColSpec().getName()
+                                + " with aggregation method "
+                                + aggregator.getMethod().getLabel());
+                    }
+                }
+            }
+        } catch (final InvalidSettingsException e) {
+            //these settings are prior Knime 2.0 and can't contain
+            //a column several times
+        } catch (final IllegalArgumentException e) {
+            throw new InvalidSettingsException(e.getMessage());
+        }
     }
 
     /**
@@ -253,36 +278,35 @@ public class GroupByNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-       final boolean move2Front =
-           settings.getBoolean(OLD_CFG_MOVE_GROUP_BY_COLS_2_FRONT, true);
-       if (!move2Front) {
-           setWarningMessage(
-                   "Setting ignored: Group columns will be moved to front");
-       }
-       m_groupByCols.loadSettingsFrom(settings);
-       m_columnAggregators.clear();
-       try {
-           m_columnAggregators.addAll(
-               ColumnAggregator.loadColumnAggregators(settings));
-           m_oldNumerical = null;
-           m_oldNominal = null;
-       } catch (final InvalidSettingsException e) {
-            // be compatible to previous version
-           m_oldNumerical = settings.getString(OLD_CFG_NUMERIC_COL_METHOD);
-           m_oldNominal = settings.getString(OLD_CFG_NOMINAL_COL_METHOD);
+        final boolean move2Front =
+                settings.getBoolean(OLD_CFG_MOVE_GROUP_BY_COLS_2_FRONT, true);
+        if (!move2Front) {
+            setWarningMessage(
+                    "Setting ignored: Group columns will be moved to front");
         }
-//       m_numericColMethod.loadSettingsFrom(settings);
-//       m_nominalColMethod.loadSettingsFrom(settings);
-//       m_moveGroupCols2Front.loadSettingsFrom(settings);
-       m_maxUniqueValues.loadSettingsFrom(settings);
-       m_enableHilite.loadSettingsFrom(settings);
-       m_sortInMemory.loadSettingsFrom(settings);
-       try {
-           m_keepColumnName.loadSettingsFrom(settings);
-       } catch (final InvalidSettingsException e) {
-           //be compatible to previous versions
-           m_keepColumnName.setBooleanValue(false);
-       }
+        m_groupByCols.loadSettingsFrom(settings);
+        m_columnAggregators.clear();
+        try {
+            //this option was introduced in Knime 2.0
+            m_columnAggregators.addAll(ColumnAggregator
+                    .loadColumnAggregators(settings));
+            m_oldNumerical = null;
+            m_oldNominal = null;
+        } catch (final InvalidSettingsException e) {
+            m_oldNumerical = settings.getString(OLD_CFG_NUMERIC_COL_METHOD);
+            m_oldNominal = settings.getString(OLD_CFG_NOMINAL_COL_METHOD);
+        }
+        try {
+            //this option was introduced in Knime 2.0
+            m_columnNamePolicy.loadSettingsFrom(settings);
+        } catch (final InvalidSettingsException e) {
+            final ColumnNamePolicy colNamePolicy =
+                    GroupByNodeModel.compGetColumnNamePolicy(settings);
+            m_columnNamePolicy.setStringValue(colNamePolicy.getLabel());
+        }
+        m_maxUniqueValues.loadSettingsFrom(settings);
+        m_enableHilite.loadSettingsFrom(settings);
+        m_sortInMemory.loadSettingsFrom(settings);
     }
 
     /**
@@ -290,8 +314,17 @@ public class GroupByNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_hilite.removeAllToHiliteHandlers();
         m_hilite.setMapper(null);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void setInHiLiteHandler(final int inIndex, 
+            final HiLiteHandler hiLiteHdl) {
+        m_hilite.removeAllToHiliteHandlers();
+        m_hilite.addToHiLiteHandler(hiLiteHdl);
     }
 
     /**
@@ -299,7 +332,6 @@ public class GroupByNodeModel extends NodeModel {
      */
     @Override
     protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
-        assert outIndex == 0;
         return m_hilite.getFromHiLiteHandler();
     }
 
@@ -320,9 +352,9 @@ public class GroupByNodeModel extends NodeModel {
         }
 
         final List<String> groupByCols = m_groupByCols.getIncludeList();
-        //be compatible to the previous version
-        checkColumnAggregators(groupByCols, origSpec);
-        //remove all invalid column aggregators
+        //be compatible to versions prior KNIME 2.0
+        compCheckColumnAggregators(groupByCols, origSpec);
+        //remove all invalid column aggregator
         final List<ColumnAggregator> invalidColAggrs =
             new LinkedList<ColumnAggregator>();
         for (final ColumnAggregator colAggr : m_columnAggregators) {
@@ -354,10 +386,11 @@ public class GroupByNodeModel extends NodeModel {
                 && groupByCols.size() == origSpec.getNumColumns()) {
             setWarningMessage("All columns selected as group by column");
         }
+        final ColumnNamePolicy colNamePolicy = ColumnNamePolicy.getPolicy4Label(
+                m_columnNamePolicy.getStringValue());
         final DataTableSpec spec = GroupByTable.createGroupByTableSpec(
-                origSpec, groupByCols,
-                m_columnAggregators.toArray(new ColumnAggregator[0]),
-                m_keepColumnName.getBooleanValue());
+                origSpec, groupByCols, m_columnAggregators.toArray(
+                        new ColumnAggregator[0]), colNamePolicy);
 
         return new DataTableSpec[] {spec};
     }
@@ -396,19 +429,17 @@ public class GroupByNodeModel extends NodeModel {
         final int maxUniqueVals = m_maxUniqueValues.getIntValue();
         final boolean sortInMemory = m_sortInMemory.getBooleanValue();
         final boolean enableHilite = m_enableHilite.getBooleanValue();
-//        final boolean move2Front = m_moveGroupCols2Front.getBooleanValue();
-        final boolean keepColName = m_keepColumnName.getBooleanValue();
-        //be compatible to the previous version
-        checkColumnAggregators(groupByCols, table.getDataTableSpec());
-
+        //be compatible to versions prior KNIME 2.0
+        compCheckColumnAggregators(groupByCols, table.getDataTableSpec());
+        final ColumnNamePolicy colNamePolicy = ColumnNamePolicy.getPolicy4Label(
+                m_columnNamePolicy.getStringValue());
         final GroupByTable resultTable = new GroupByTable(exec, table,
-                groupByCols,
-                m_columnAggregators.toArray(new ColumnAggregator[0]),
-                maxUniqueVals, sortInMemory, enableHilite, keepColName);
+                groupByCols, m_columnAggregators.toArray(
+                        new ColumnAggregator[0]), maxUniqueVals, sortInMemory,
+                        enableHilite, colNamePolicy);
         if (m_enableHilite.getBooleanValue()) {
             m_hilite.setMapper(new DefaultHiLiteMapper(
                     resultTable.getHiliteMapping()));
-            m_hilite.addToHiLiteHandler(getInHiLiteHandler(0));
         }
         //check for skipped columns
         final String warningMsg = resultTable.getSkippedGroupsMessage(3, 3);
@@ -418,33 +449,86 @@ public class GroupByNodeModel extends NodeModel {
         return new BufferedDataTable[]{resultTable.getBufferedTable()};
     }
 
+
+//**************************************************************************
+//  COMPATIBILITY METHODS
+//**************************************************************************
+
     /**
-     * This method is used for compatibility to old versions. In the old version
-     * the user had defined one method for all nominal and one for all numerical
-     * columns.
+     * Compatibility method used for compatibility to versions prior Knime 2.0.
+     * Helper method to get the {@link ColumnNamePolicy} for the old node
+     * settings.
+     * @param settings the settings to read the old column name policy from
+     * @return the {@link ColumnNamePolicy} equivalent to the old setting
+     */
+    protected static ColumnNamePolicy compGetColumnNamePolicy(
+            final NodeSettingsRO settings) {
+        try {
+            if (settings.getBoolean(OLD_CFG_KEEP_COLUMN_NAME)) {
+                return ColumnNamePolicy.KEEP_ORIGINAL_NAME;
+            }
+            return ColumnNamePolicy.AGGREGATION_METHOD_COLUMN_NAME;
+        } catch (final InvalidSettingsException ise) {
+            //this is an even older version with no keep column name option
+            return  ColumnNamePolicy.AGGREGATION_METHOD_COLUMN_NAME;
+        }
+    }
+
+    /**
+     * Compatibility method used for compatibility to versions prior Knime 2.0.
+     * Helper method to get the aggregation methods for the old node settings.
+     * @param spec the input {@link DataTableSpec}
+     * @param excludeCols the columns that should be excluded from the
+     * aggregation columns
+     * @param config the config object to read from
+     * @return the {@link ColumnAggregator}s
+     */
+    protected static List<ColumnAggregator> compGetColumnMethods(
+            final DataTableSpec spec, final List<String> excludeCols,
+            final ConfigRO config) {
+        String numeric = null;
+        String nominal = null;
+        try {
+            numeric =
+                config.getString(OLD_CFG_NUMERIC_COL_METHOD);
+            nominal =
+                config.getString(OLD_CFG_NOMINAL_COL_METHOD);
+        } catch (final InvalidSettingsException e) {
+            numeric = AggregationMethod.getDefaultNumericMethod().getLabel();
+            nominal = AggregationMethod.getDefaultNominalMethod().getLabel();
+        }
+        return compCreateColumnAggregators(spec, excludeCols,
+                numeric, nominal);
+    }
+
+    /**
+     * Compatibility method used for compatibility to versions prior Knime 2.0.
+     * In the old version the user had defined one method for all nominal
+     * and one for all numerical columns.
      *
      * @param groupByCols the names of the group by columns
      * @param spec the input {@link DataTableSpec}
      */
-    private void checkColumnAggregators(final List<String> groupByCols,
+    private void compCheckColumnAggregators(final List<String> groupByCols,
             final DataTableSpec spec) {
         if (m_columnAggregators.isEmpty() && m_oldNumerical != null
                 && m_oldNominal != null) {
-            m_columnAggregators.addAll(createColumnAggregators(spec,
+            m_columnAggregators.addAll(compCreateColumnAggregators(spec,
                     groupByCols, m_oldNumerical, m_oldNominal));
         }
     }
 
     /**
-     * Helper method to get the aggregation methods for the previous version
-     * with only one method for numerical and one for nominal columns.
+     * Compatibility method used for compatibility to versions prior Knime 2.0.
+     * Method to get the aggregation methods for the versions with only
+     * one method for numerical and one for nominal columns.
      * @param spec the {@link DataTableSpec}
      * @param excludeCols the name of all columns to be excluded
      * @param numeric the name of the numerical aggregation method
      * @param nominal the name of the nominal aggregation method
      * @return {@link Collection} of the {@link ColumnAggregator}s
      */
-    public static List<ColumnAggregator> createColumnAggregators(
+    private static List<ColumnAggregator> compCreateColumnAggregators(
             final DataTableSpec spec, final List<String> excludeCols,
             final String numeric, final String nominal) {
         final AggregationMethod numericMethod =

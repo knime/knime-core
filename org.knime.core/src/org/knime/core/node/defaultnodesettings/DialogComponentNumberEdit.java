@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   16.11.2005 (gdf): created
  *   2006-05-26 (tm): reviewed
@@ -45,9 +45,9 @@ import org.knime.core.node.port.PortObjectSpec;
  * ranges as well as functionality to load/store into config object. The kind of
  * number the component accepts depends on the {@link SettingsModel} passed to
  * the constructor (currently doubles or integers).
- * 
+ *
  * @author Giuseppe Di Fatta, University of Konstanz
- * 
+ *
  */
 public class DialogComponentNumberEdit extends DialogComponent {
 
@@ -64,7 +64,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
 
     /**
      * Constructor that puts label and JTextField into panel.
-     * 
+     *
      * @param numberModel the model handling the value
      * @param label text to be displayed in front of the edit box
      */
@@ -76,7 +76,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
 
     /**
      * Constructor that puts label and JTextField into panel.
-     * 
+     *
      * @param numberModel the model handling the value
      * @param label text to be displayed in front of the edit box
      * @param compWidth the width (in columns/characters) of the edit field.
@@ -88,7 +88,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
         m_label = new JLabel(label);
         getComponentPanel().add(m_label);
         m_valueField = new JTextField();
-        String defValue = numberModel.getNumberValueStr();
+        final String defValue = numberModel.getNumberValueStr();
         m_valueField.setText(defValue);
         m_valueField.setColumns(compWidth);
         getComponentPanel().add(m_valueField);
@@ -97,7 +97,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
             public void removeUpdate(final DocumentEvent e) {
                 try {
                     updateModel();
-                } catch (InvalidSettingsException ise) {
+                } catch (final InvalidSettingsException ise) {
                     // ignore it here.
                 }
             }
@@ -105,7 +105,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
             public void insertUpdate(final DocumentEvent e) {
                 try {
                     updateModel();
-                } catch (InvalidSettingsException ise) {
+                } catch (final InvalidSettingsException ise) {
                     // ignore it here.
                 }
             }
@@ -113,7 +113,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
             public void changedUpdate(final DocumentEvent e) {
                 try {
                     updateModel();
-                } catch (InvalidSettingsException ise) {
+                } catch (final InvalidSettingsException ise) {
                     // ignore it here.
                 }
             }
@@ -126,6 +126,8 @@ public class DialogComponentNumberEdit extends DialogComponent {
             }
         });
 
+        //call this method to be in sync with the settings model
+        updateComponent();
     }
 
     /**
@@ -150,12 +152,12 @@ public class DialogComponentNumberEdit extends DialogComponent {
      */
     @Override
     protected void updateComponent() {
-        
+
         clearError(m_valueField);
-        
+
         // update component only if its out of sync with model
-        SettingsModelNumber model = (SettingsModelNumber)getModel();
-        String compString = m_valueField.getText();
+        final SettingsModelNumber model = (SettingsModelNumber)getModel();
+        final String compString = m_valueField.getText();
         if (!model.getNumberValueStr().equals(compString)) {
             m_valueField.setText(model.getNumberValueStr());
         }
@@ -166,7 +168,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
     /**
      * Transfers the new value from the component into the model. Colors the
      * textfield red if the entered value is invalid and throws an exception.
-     * 
+     *
      * @throws InvalidSettingsException if the entered value is not acceptable.
      */
     private void updateModel() throws InvalidSettingsException {
@@ -174,7 +176,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
             // update the model
             ((SettingsModelNumber)getModel()).setNumberValueStr(m_valueField
                     .getText());
-        } catch (Exception e) {
+        } catch (final Exception e) {
             // an exception will fly if the entered value is not a double or
             // is out of bounds, or whatever the model has to tell us
             showError(m_valueField);
@@ -217,7 +219,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
 
     /**
      * Sets the preferred size of the internal component.
-     * 
+     *
      * @param width the width
      * @param height the height
      */

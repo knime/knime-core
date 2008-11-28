@@ -108,7 +108,8 @@ public class DialogComponentColumnFilter extends DialogComponent {
                 updateComponent();
             }
         });
-
+        //call this method to be in sync with the settings model
+        updateComponent();
     }
 
     /**
@@ -133,13 +134,13 @@ public class DialogComponentColumnFilter extends DialogComponent {
             // are different
             final PortObjectSpec currPOSpec = getLastTableSpec(m_inPortIndex);
             if (currPOSpec == null) {
-                update = (m_specInFilter != null);
+                update = false;
             } else {
                 if (!(currPOSpec instanceof DataTableSpec)) {
                     throw new RuntimeException("Wrong type of PortObject for"
                             + " ColumnFilterPanel, expecting DataTableSpec!");
                 }
-                DataTableSpec currSpec = (DataTableSpec)currPOSpec;
+                final DataTableSpec currSpec = (DataTableSpec)currPOSpec;
                 update = (!currSpec.equalStructure(m_specInFilter));
             }
         }

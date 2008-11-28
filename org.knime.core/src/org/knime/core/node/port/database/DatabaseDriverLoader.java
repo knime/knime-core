@@ -91,6 +91,7 @@ public final class DatabaseDriverLoader {
                 "jdbc:jtds:sybase:");
         DRIVER_TO_URL.put("com.sybase.jdbc3.jdbc.SybDriver", 
                 "jdbc:sybase:Tds:");
+        DRIVER_TO_URL.put("org.sqlite.JDBC", "jdbc:sqlite:");
     }
 
     /**
