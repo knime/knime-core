@@ -63,29 +63,42 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
  */
 public class RuleEngineNodeDialog extends NodeDialogPane {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            RuleEngineNodeDialog.class);
-    /** Default default label.*/
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(RuleEngineNodeDialog.class);
+
+    /** Default default label. */
     static final String DEFAULT_LABEL = "default";
-    /** Default name for the newly appened column. */
+
+    /** Default name for the newly appended column. */
     static final String NEW_COL_NAME = "prediction";
+
     private static final String RULE_LABEL = "Enter rule...";
+
     private static final String OUTCOME_LABEL = "Outcome...";
 
     private JTextField m_defaultLabelEditor;
+
     private JTextField m_newColumnName;
+
     private JTextField m_ruleEditor;
+
     private JTextField m_ruleLabelEditor;
+
     private JList m_variableList;
+
     private JList m_operatorList;
+
     private DefaultListModel m_variableModel;
+
     private DefaultListModel m_operatorModel;
+
     private DefaultListModel m_ruleModel;
+
     private JList m_rules;
+
     private JLabel m_error;
 
     private DataTableSpec m_spec;
-
 
     /**
      *
@@ -95,8 +108,9 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
     }
 
     private void initializeComponent() {
-        JSplitPane horizontalSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-                createTopPart(), createBottomPart());
+        JSplitPane horizontalSplit =
+                new JSplitPane(JSplitPane.VERTICAL_SPLIT, createTopPart(),
+                        createBottomPart());
         addTab("Biz Rule Editor: ", horizontalSplit);
     }
 
@@ -119,10 +133,11 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
                         existingText = "";
                     }
                     if (!m_variableList.isSelectionEmpty()) {
-                        String newText = ((DataColumnSpec)m_variableList
-                                .getSelectedValue()).getName();
-                        m_ruleEditor.setText(existingText
-                                + " $" + newText + "$");
+                        String newText =
+                                ((DataColumnSpec)m_variableList
+                                        .getSelectedValue()).getName();
+                        m_ruleEditor.setText(existingText + " $" + newText
+                                + "$");
                         m_ruleEditor.requestFocusInWindow();
                         m_variableList.clearSelection();
                     }
@@ -154,17 +169,16 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         Box editorBox = createEditorPart();
         Box listBox = Box.createHorizontalBox();
         JScrollPane variableScroller = new JScrollPane(m_variableList);
-        variableScroller.setBorder(BorderFactory.createTitledBorder(
-                "Variables"));
+        variableScroller.setBorder(BorderFactory
+                .createTitledBorder("Variables"));
         JScrollPane operatorScroller = new JScrollPane(m_operatorList);
-        operatorScroller.setBorder(BorderFactory.createTitledBorder(
-                "Operators"));
+        operatorScroller.setBorder(BorderFactory
+                .createTitledBorder("Operators"));
         listBox.add(variableScroller);
         listBox.add(operatorScroller);
 
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                listBox,
-                editorBox);
+        JSplitPane splitPane =
+                new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, listBox, editorBox);
         Dimension minimumSize = new Dimension(200, 50);
         listBox.setMinimumSize(minimumSize);
         editorBox.setMinimumSize(minimumSize);
@@ -176,20 +190,18 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
     }
 
     /*
-     * Editor part (from top to bottom, from left to right):
-     * default label (label, text field)
-     * new column name (label, text field)
-     * rule editor (rule text field, outcome text field, add button,
-     *      clear button)
-     * error text field
+     * Editor part (from top to bottom, from left to right): default label
+     * (label, text field) new column name (label, text field) rule editor (rule
+     * text field, outcome text field, add button, clear button) error text
+     * field
      */
     private Box createEditorPart() {
         /*
          * Default label box
          */
         m_defaultLabelEditor = new JTextField(10);
-        m_defaultLabelEditor.setMaximumSize(new Dimension(
-                Integer.MAX_VALUE, 20));
+        m_defaultLabelEditor
+                .setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
         m_defaultLabelEditor.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(final FocusEvent e) {
@@ -204,15 +216,13 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         defaultLabelBox.add(m_defaultLabelEditor);
         defaultLabelBox.add(Box.createHorizontalGlue());
         defaultLabelBox.add(Box.createHorizontalStrut(10));
-        defaultLabelBox.setMaximumSize(new Dimension(
-                Integer.MAX_VALUE, 30));
+        defaultLabelBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
 
         /*
          * New column name box
          */
         m_newColumnName = new JTextField(10);
-        m_newColumnName.setMaximumSize(new Dimension(
-                Integer.MAX_VALUE, 20));
+        m_newColumnName.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
         m_newColumnName.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(final FocusEvent e) {
@@ -228,18 +238,16 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         newColNameBox.add(m_newColumnName);
         newColNameBox.add(Box.createHorizontalGlue());
         newColNameBox.add(Box.createHorizontalStrut(10));
-        newColNameBox.setMaximumSize(new Dimension(
-                Integer.MAX_VALUE, 30));
+        newColNameBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
 
         /*
          * Rule Box
          */
         Box ruleBox = Box.createHorizontalBox();
         m_ruleEditor = new JTextField(RULE_LABEL, 50);
-        m_ruleEditor.setMaximumSize(new Dimension(
-                Integer.MAX_VALUE, 20));
+        m_ruleEditor.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
         m_ruleEditor.addFocusListener(new FocusAdapter() {
-           @Override
+            @Override
             public void focusGained(final FocusEvent e) {
                 if (m_ruleEditor.getText().equals(RULE_LABEL)) {
                     m_ruleEditor.setText("");
@@ -247,14 +255,13 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
             }
         });
         m_ruleLabelEditor = new JTextField(OUTCOME_LABEL, 10);
-        m_ruleLabelEditor.setMaximumSize(new Dimension(
-                Integer.MAX_VALUE, 20));
+        m_ruleLabelEditor.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
         m_ruleLabelEditor.addFocusListener(new FocusAdapter() {
-           @Override
+            @Override
             public void focusGained(final FocusEvent e) {
-               if (m_ruleLabelEditor.getText().equals(OUTCOME_LABEL)) {
-                   m_ruleLabelEditor.setText("");
-               }
+                if (m_ruleLabelEditor.getText().equals(OUTCOME_LABEL)) {
+                    m_ruleLabelEditor.setText("");
+                }
             }
         });
         /*
@@ -266,7 +273,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
             public void actionPerformed(final ActionEvent arg0) {
                 LOGGER.debug("adding: " + m_ruleEditor.getText() + "=>"
                         + m_ruleLabelEditor.getText());
-                    addRule();
+                addRule();
             }
         });
         /*
@@ -291,8 +298,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         ruleBox.add(clear);
         ruleBox.add(Box.createHorizontalStrut(10));
         ruleBox.add(Box.createHorizontalGlue());
-        ruleBox.setMaximumSize(new Dimension(
-                Integer.MAX_VALUE, 30));
+        ruleBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
 
         /*
          * Putting it all together
@@ -334,9 +340,8 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
     }
 
     /*
-     * Button part (from top to bottom):
-     * - move box: up btn, down btn)
-     * - edit box: edit button, remove button
+     * Button part (from top to bottom): - move box: up btn, down btn) - edit
+     * box: edit button, remove button
      */
     private Box createButtonPart() {
         /*
@@ -390,8 +395,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
                         && m_ruleEditor.getText().trim() != "") {
                     if (JOptionPane.showConfirmDialog(getPanel(),
                             "Override currently edited rule?", "Confirm...",
-                            JOptionPane.OK_CANCEL_OPTION)
-                            == JOptionPane.CANCEL_OPTION) {
+                            JOptionPane.OK_CANCEL_OPTION) == JOptionPane.CANCEL_OPTION) {
                         return;
                     }
                 }
@@ -413,8 +417,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
                 if (pos >= 0
                         && JOptionPane.showConfirmDialog(getPanel(),
                                 "Remove selected rule?", "Confirm...",
-                                JOptionPane.OK_CANCEL_OPTION)
-                                == JOptionPane.OK_OPTION) {
+                                JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
                     m_ruleModel.remove(pos);
                 }
             }
@@ -464,9 +467,8 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
              * Tries to create rule. If fails: set error message and caret to
              * referring position
              */
-            m_ruleModel.addElement(new Rule(antecedent + "=>"
-                    + "\"" + consequent + "\"",
-                    m_spec));
+            m_ruleModel.addElement(new Rule(antecedent + "=>" + "\""
+                    + consequent + "\"", m_spec));
             m_error.setText("");
             getPanel().repaint();
         } catch (ParseException e) {
@@ -481,7 +483,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
      * Variables are the available column names
      */
     private List<DataColumnSpec> getVariables() {
-        List<DataColumnSpec>variables = new ArrayList<DataColumnSpec>();
+        List<DataColumnSpec> variables = new ArrayList<DataColumnSpec>();
         if (m_spec != null) {
             for (DataColumnSpec colSpec : m_spec) {
                 variables.add(colSpec);
@@ -495,7 +497,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
      * AND, OR, NOT, etc.
      */
     private String[] getOperators() {
-        List<String>operators = new ArrayList<String>();
+        List<String> operators = new ArrayList<String>();
         for (Rule.Operators op : Rule.Operators.values()) {
             operators.add(op.toString());
         }
@@ -503,14 +505,13 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         return operators.toArray(array);
     }
 
-
     /**
      * {@inheritDoc}
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        if (specs == null || specs.length == 0 || specs[0] == null 
+        if (specs == null || specs.length == 0 || specs[0] == null
                 || specs[0].getNumColumns() == 0) {
             throw new NotConfigurableException("No columns available!");
         }
@@ -528,18 +529,17 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         m_defaultLabelEditor.setText(defaultLabel);
         String newColName = ruleSettings.getNewColName();
         m_newColumnName.setText(newColName);
-        try {
-            m_ruleModel.clear();
-            ruleSettings.loadSettingsForDialog(settings);
-            for (String rs : ruleSettings.rules()) {
+        m_ruleModel.clear();
+        ruleSettings.loadSettingsForDialog(settings);
+        for (String rs : ruleSettings.rules()) {
+            try {
                 Rule r = new Rule(rs, m_spec);
                 m_ruleModel.addElement(r);
+            } catch (ParseException e) {
+                LOGGER.warn("Rule '" + rs + "' removed, because of "
+                        + e.getMessage());
             }
-        } catch (ParseException e) {
-            throw new NotConfigurableException(
-                    "Error while loading settings: "  + e.getMessage());
         }
-
     }
 
     /**
@@ -557,5 +557,4 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         }
         ruleSettings.saveSettings(settings);
     }
-
 }
