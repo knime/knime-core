@@ -2368,21 +2368,24 @@ public final class WorkflowManager extends NodeContainer {
                 // should not happen but could if reset has worked on slightly
                 // different nodes than configure, for instance.
 // FIXME: report errors again, once configure follows only ports, not nodes.
-//                LOGGER.error("configure found EXECUTED node!");
+                LOGGER.debug("configure found EXECUTED node: " 
+                        + snc.getNameWithID());
                 break;
             case EXECUTING:
                 // should not happen but could if reset has worked on slightly
                 // different nodes than configure, for instance.
-//                LOGGER.error("configure found EXECUTING node!");
+                LOGGER.debug("configure found EXECUTING node: " 
+                        + snc.getNameWithID());
                 break;
             case QUEUED:
                 // should not happen but could if reset has worked on slightly
                 // different nodes than configure, for instance.
-//                LOGGER.error("configure found QUEUED node!");
+                LOGGER.debug("configure found QUEUED node: " 
+                        + snc.getNameWithID());
                 break;
             default:
                 LOGGER.error("configure found weird state (" + snc.getState()
-                        + ")!");
+                        + "): " + snc.getNameWithID());
             }
         }
 //        return configurationChanged;
