@@ -350,7 +350,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         } catch (InvalidSettingsException ise) {
             // try to read only one target ref. to KNIME 1.2.0 and before
             targetColumns = 
-                new String[]{settings.getString(TARGET_COLUMNS, null)};
+                new String[]{settings.getString("target_column", null)};
         }
         if (targetColumns == null || targetColumns.length == 0) {
             msg.append("Target columns not found in settings.\n");
@@ -385,7 +385,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         if (m_targetColumns == null) {
             // try to find single target column from version 1.2.0 and before
             m_targetColumns = new String[]{settings.getString(
-                    TARGET_COLUMNS, null)};
+                    "target_column", null)};
         }
         // missing value replacement
         m_missing = settings.getInt(BasisFunctionLearnerTable.MISSING, 0);
