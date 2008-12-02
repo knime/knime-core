@@ -83,7 +83,7 @@ public abstract class PortLocator implements Locator {
 
     /**
      *
-     * @return true if in port, fdalse if out port
+     * @return true if in port, false if out port
      */
     protected boolean isInPort() {
         return m_isInport;
