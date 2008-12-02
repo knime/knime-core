@@ -90,7 +90,7 @@ public final class RowKey {
      * @param rowKeys an array of <code>RowKey</code> elements which can be null
      * @return an array of String elements
      */
-    public static String[] toString(final RowKey... rowKeys) {
+    public static String[] toStrings(final RowKey... rowKeys) {
         if (rowKeys == null) {
             return null;
         }
@@ -107,7 +107,7 @@ public final class RowKey {
      * @param strs an array of <code>String</code> elements which can be null
      * @return an array of <code>RowKey</code> elements
      */
-    public static RowKey[] toString(final String... strs) {
+    public static RowKey[] toRowKeys(final String... strs) {
         if (strs == null) {
             return null;
         }

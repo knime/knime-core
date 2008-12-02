@@ -1555,7 +1555,7 @@ public abstract class Config extends AbstractConfigEntry
     public RowKey[] getRowKeyArray(final String key) 
             throws InvalidSettingsException {
         String[] strs = getStringArray(key);
-        return RowKey.toString(strs);
+        return RowKey.toRowKeys(strs);
     }
 
     /**
@@ -1567,10 +1567,10 @@ public abstract class Config extends AbstractConfigEntry
         if (def == null) {
             strs = getStringArray(key, (String[]) null);
         } else {
-            String[] defStrs = RowKey.toString(def); 
+            String[] defStrs = RowKey.toStrings(def); 
             strs = getStringArray(key, defStrs);
         }
-        return (strs == null ? null : RowKey.toString(strs));
+        return (strs == null ? null : RowKey.toRowKeys(strs));
     }
 
     /**
@@ -1581,7 +1581,7 @@ public abstract class Config extends AbstractConfigEntry
         if (rowKey == null) {
             addStringArray(key, (String[]) null);
         } else {
-           addStringArray(key, RowKey.toString(rowKey));
+           addStringArray(key, RowKey.toStrings(rowKey));
         }
     }
 
