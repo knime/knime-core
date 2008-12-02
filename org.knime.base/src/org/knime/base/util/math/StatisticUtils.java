@@ -96,34 +96,6 @@ public final class StatisticUtils {
         }
         return covMatrix;
     }
-    
-    public static double[][] covarianceOld(final double[][] v) {
-        int m = v.length;
-        int n = v[0].length;
-        double[][] x = new double[n][n];
-        int degrees = (m - 1);
-        double c;
-        double s1;
-        double s2;
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                c = 0;
-                s1 = 0;
-                s2 = 0;
-                for (int k = 0; k < m; k++) {
-                    s1 += v[k][i];
-                    s2 += v[k][j];
-                }
-                s1 = s1 / m;
-                s2 = s2 / m;
-                for (int k = 0; k < m; k++) {
-                    c += (v[k][i] - s1) * (v[k][j] - s2);
-                }
-                x[i][j] = c / degrees;
-            }
-        }
-        return x;
-    }
 
     /**
      * Calculates the standard deviation for each column of the given input
