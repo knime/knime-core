@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Predictor" icon="./rule_engine.png">
-	<name>Business Rules</name>
+	<name>Rule Engine</name>
 	<shortDescription>
 		 Applies user-defined business rules to the input table
 	</shortDescription>
@@ -14,6 +14,7 @@
 RULE := BEXPR '=&gt;' STRING
 BEXPR := '(' BEXPR ')' |
          'NOT' BEXPR |
+         'MISSING' COL |
          AEXPR (BINOP BEXPR)?
 AEXPR := COL OP COL |
          NUMBER OP COL |

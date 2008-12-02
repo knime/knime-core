@@ -25,7 +25,6 @@ package org.knime.base.node.rules;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
@@ -33,7 +32,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class RuleEngineNodeFactory extends NodeFactory {
+public class RuleEngineNodeFactory extends NodeFactory<RuleEngineNodeModel> {
     /**
      * {@inheritDoc}
      */
@@ -46,7 +45,7 @@ public class RuleEngineNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public RuleEngineNodeModel createNodeModel() {
         return new RuleEngineNodeModel();
     }
 
@@ -54,7 +53,8 @@ public class RuleEngineNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int index, final NodeModel model) {
+    public NodeView<RuleEngineNodeModel> createNodeView(final int index,
+            final RuleEngineNodeModel model) {
         return null;
     }
 

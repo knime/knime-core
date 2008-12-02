@@ -713,4 +713,27 @@ final class RuleNodeFactory {
             }
         };
     }
+
+    /**
+    * Creates a new MISSING node.
+    *
+    * @param col the column int the row to be checked
+    *
+    * @return a new MISSING node
+    */
+   public static RuleNode missing(final int col) {
+       return new RuleNode() {
+           public boolean evaluate(final DataRow row) {
+               return row.getCell(col).isMissing();
+           }
+
+           /**
+            * {@inheritDoc}
+            */
+           @Override
+           public String toString() {
+               return Operators.MISSING + " $" + col + "$";
+           }
+       };
+   }
 }
