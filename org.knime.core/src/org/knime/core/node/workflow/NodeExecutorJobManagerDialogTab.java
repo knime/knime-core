@@ -51,12 +51,12 @@ import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSetti
  */
 public class NodeExecutorJobManagerDialogTab extends JPanel {
 
-    private static NodeLogger LOGGER =
+    private static final NodeLogger LOGGER =
             NodeLogger.getLogger(NodeExecutorJobManagerDialogTab.class);
 
     private final JComboBox m_jobManagerSelect;
 
-    private final static NodeExecutionJobManagerPanel EMPTY_PANEL;
+    private static final NodeExecutionJobManagerPanel EMPTY_PANEL;
     static {
         EMPTY_PANEL = new NodeExecutionJobManagerPanel() {
             /**
@@ -90,6 +90,10 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
     // we keep previously shown panels in case the manager is re-selected
     private final HashMap<String, NodeExecutionJobManagerPanel> m_panels =
             new HashMap<String, NodeExecutionJobManagerPanel>();
+
+    // if a job manager panel is displayed for the first time we must give it
+    // the sport specs
+    private PortObjectSpec[] m_lastPortSpecs;
 
     /**
      * Creates a new selection tab for {@link NodeExecutionJobManager}s. To be
@@ -133,7 +137,8 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
         add(settingsBox, BorderLayout.CENTER);
 
         // set the panel of the first selection:
-        jobManagerSelectionChanged();
+// we have no input spec yet
+//        jobManagerSelectionChanged();
 
     }
 
@@ -159,6 +164,9 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
                 if (m_currentPanel != null) {
                     // store new panels in the map
                     m_panels.put(selJobMgr.getID(), m_currentPanel);
+                    // initialize it with empty settings and the last port specs
+                    m_currentPanel.loadSettings(
+                            new NodeSettings("empty"), m_lastPortSpecs);
                 } else {
                     m_currentPanel = EMPTY_PANEL;
                 }
@@ -194,6 +202,9 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
      */
     public void loadSettings(final SingleNodeContainerSettings settings,
             final PortObjectSpec[] inSpecs) {
+
+        // we must store the port specs in case job manager selection changes
+        m_lastPortSpecs = inSpecs;
 
         // select the job manager in the combo box
         NodeExecutionJobManager newMgr =

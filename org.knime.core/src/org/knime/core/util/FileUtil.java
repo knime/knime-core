@@ -57,8 +57,8 @@ public final class FileUtil {
 
     private static final List<File> TEMP_FILES;
 
-    private static final boolean IS_WINDOWS = System.getProperty("os.name")
-        .startsWith("Windows");
+    private static final boolean IS_WINDOWS =
+            System.getProperty("os.name").startsWith("Windows");
 
     static {
         TEMP_FILES = new ArrayList<File>();
@@ -86,6 +86,7 @@ public final class FileUtil {
 
     /** Don't let anybody instantiate this class. */
     private FileUtil() {
+        // don't instantiate
     }
 
     /**
@@ -168,8 +169,8 @@ public final class FileUtil {
      * @throws IOException If that fails for any reason.
      * @throws NullPointerException If any argument is <code>null</code>.
      */
-    public static void copy(final Reader source,
-            final Writer destination) throws IOException {
+    public static void copy(final Reader source, final Writer destination)
+            throws IOException {
         final int bufSize = 8192;
         char[] cache = new char[bufSize];
         int read;
@@ -393,8 +394,9 @@ public final class FileUtil {
                         : dir;
         File tempDir;
         do {
-            tempDir = new File(rootDir, prefix + System.currentTimeMillis()
-                        + TEMP_FILES.size());
+            tempDir =
+                    new File(rootDir, prefix + System.currentTimeMillis()
+                            + TEMP_FILES.size());
         } while (tempDir.exists());
         if (!tempDir.mkdirs()) {
             throw new IOException("Cannot create temporary directory '"
@@ -402,5 +404,49 @@ public final class FileUtil {
         }
         TEMP_FILES.add(tempDir);
         return tempDir;
+    }
+
+    /**
+     * Sets the permissions on a given file or directory. If a directory is
+     * specified it recursively sets the permissions on it and all contained
+     * files or directories.
+     *
+     * @param f a file or directory to change the permissions on (recursively).
+     * @param readable if the readable-bit should be set, or <code>null</code>
+     *            if its value shouldn't be changed
+     * @param writable if the writable-bit should be set, or <code>null</code>
+     *            if its value shouldn't be changed
+     * @param executable if the executable-bit should be set, or
+     *            <code>null</code> if its value shouldn't be changed
+     * @param ownerOnly If <code>true</code>, the read permission applies
+     *            only to the owner's read permission; otherwise, it applies to
+     *            everybody. If the underlying file system can not distinguish
+     *            the owner's read permission from that of others, then the
+     *            permission will apply to everybody, regardless of this value.
+     * @return <code>true</code> if and only if the operation succeeded. The
+     *         operation will fail if the user does not have permission to
+     *         change the access permissions of this abstract pathname.
+     */
+    public static boolean chmod(final File f, final Boolean readable,
+            final Boolean writable, final Boolean executable,
+            final boolean ownerOnly) {
+        boolean b = true;
+
+        if (readable != null) {
+            b &= f.setReadable(readable, ownerOnly);
+        }
+        if (writable != null) {
+            b &= f.setWritable(writable, ownerOnly);
+        }
+        if (executable != null) {
+            b &= f.setExecutable(executable, ownerOnly);
+        }
+        if (f.isDirectory()) {
+            for (File entry : f.listFiles()) {
+                b &= chmod(entry, readable, writable, executable, ownerOnly);
+            }
+        }
+
+        return b;
     }
 }
