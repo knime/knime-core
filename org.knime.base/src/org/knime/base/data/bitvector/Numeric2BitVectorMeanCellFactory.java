@@ -55,6 +55,7 @@ public class Numeric2BitVectorMeanCellFactory extends BitVectorCellFactory {
      * @param meanValues the mean values of the numeric columns
      * @param meanThreshold threshold above which the bits should be set
      *            (percentage of the mean)
+     * @param columns list of column indices used to create bit vector from
      */
     public Numeric2BitVectorMeanCellFactory(final DataColumnSpec bitColSpec,
             final double[] meanValues, final double meanThreshold, 

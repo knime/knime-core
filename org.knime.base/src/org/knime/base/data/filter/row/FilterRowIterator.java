@@ -29,8 +29,6 @@ import org.knime.core.data.RowIterator;
  * includes only {@link org.knime.core.data.DataRow}s which satify the
  * {@link FilterRowGenerator} criteria.
  * 
- * @see FilterRowIterator
- * 
  * @author Thomas Gabriel, University of Konstanz
  */
 class FilterRowIterator extends RowIterator {

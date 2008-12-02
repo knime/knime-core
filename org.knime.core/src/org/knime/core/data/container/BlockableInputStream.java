@@ -28,7 +28,7 @@ import java.io.InputStream;
  * Input Stream that wraps a given input stream and searches for terminated end
  * blocks. Such a block is typically a serialized
  * {@link org.knime.core.data.DataCell}. It will simulate an eof file if
- * it entcounters a block end. This class is intended to be used on streams
+ * it encounters a block end. This class is intended to be used on streams
  * written with the
  * {@link org.knime.core.data.container.BlockableOutputStream} class.
  * 

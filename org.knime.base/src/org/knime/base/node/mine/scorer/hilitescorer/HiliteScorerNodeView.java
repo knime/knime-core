@@ -376,6 +376,7 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
             setOpaque(true);
         }
 
+        /**{@inheritDoc} */
         @Override
         public Component getTableCellRendererComponent(final JTable table,
                 final Object value, final boolean isSelected,

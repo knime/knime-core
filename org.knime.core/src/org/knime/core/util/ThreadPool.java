@@ -89,6 +89,9 @@ public class ThreadPool implements JobExecutor {
             return ThreadPool.this;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void run() {
             m_startWaiter.countDown();
@@ -136,6 +139,9 @@ public class ThreadPool implements JobExecutor {
             setDaemon(true);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void run() {
             while (!isInterrupted()) {
@@ -145,7 +151,7 @@ public class ThreadPool implements JobExecutor {
                         try {
                             m_lock.wait(90 * 1000);
                             if (m_runnable == null) {
-                                // then the timeout has occured
+                                // then the timeout has occurred
                                 // and we end the thread
                                 m_stopped = true;
                                 return;

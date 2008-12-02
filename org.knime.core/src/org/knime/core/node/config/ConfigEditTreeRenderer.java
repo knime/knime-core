@@ -69,8 +69,7 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
     /** Called whenever a new value is to be renderer, updates underlying
      * component. 
      * @param tree The associated tree (get the scope object stack from.)
-     * @param value The value to be renderer, typically a 
-     * {@link ConfigEditTreeNode}.
+     * @param value to be renderer, typically a <code>ConfigEditTreeNode</code>
      */
     public void setValue(final JTree tree, final Object value) {
         if (value instanceof ConfigEditTreeNode) {

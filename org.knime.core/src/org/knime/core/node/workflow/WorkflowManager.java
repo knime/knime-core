@@ -953,7 +953,7 @@ public final class WorkflowManager extends NodeContainer {
      * (if they are not executed already). Also go back up to the
      * predecessors of this wfm if there are connections of interest.
      *
-     * @param int outPortIndex indicates which outport is affected
+     * @param outPortIndex indicates which outport is affected
      *   (-1 for all outports)
      * @return true if all nodes in chain were markable
      */

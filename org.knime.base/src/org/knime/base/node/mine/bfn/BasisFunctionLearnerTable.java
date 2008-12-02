@@ -524,8 +524,6 @@ public final class BasisFunctionLearnerTable implements DataTable {
      * Returns the overall number of Basisfunction in this model.
      * 
      * @return the number of basis functions
-     * 
-     * @see #getNumBasisFunctions(DataCell)
      */
     public int getNumBasisFunctions() {
         int n = 0;

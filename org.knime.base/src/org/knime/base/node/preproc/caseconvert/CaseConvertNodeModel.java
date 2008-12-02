@@ -236,6 +236,7 @@ public class CaseConvertNodeModel extends NodeModel {
             m_locale = Locale.getDefault();
         }
 
+        /** {@inheritDoc} */
         public DataCell[] getCells(final DataRow row) {
             DataCell[] newcells = new DataCell[m_colindices.length];
             for (int i = 0; i < newcells.length; i++) {

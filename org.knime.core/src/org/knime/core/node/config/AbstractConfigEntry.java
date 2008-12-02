@@ -30,8 +30,7 @@ import javax.swing.tree.TreeNode;
 
 /**
  * Abstract Config entry holding only a Config entry type. Deriving classes must
- * store the corresponding value and implement the {@link #toStringValue()}
- * method.
+ * store the corresponding value and implement.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -134,7 +133,6 @@ abstract class AbstractConfigEntry implements Serializable, TreeNode {
      * @param o The other object to check against.
      * @return true, if <code>isIdentical(AbstractConfigEntry)</code> returns 
      *         true.
-     * @see #isIdentical(AbstractConfigEntry)
      */
     @Override
     public boolean equals(final Object o) {
@@ -220,7 +218,6 @@ abstract class AbstractConfigEntry implements Serializable, TreeNode {
 
     /**
      * @return true, if not a leaf, always.
-     * @see #isLeaf() 
      * @see javax.swing.tree.TreeNode#getAllowsChildren()
      */
     public final boolean getAllowsChildren() {
