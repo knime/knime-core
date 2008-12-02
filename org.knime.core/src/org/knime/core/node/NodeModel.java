@@ -212,7 +212,7 @@ public abstract class NodeModel {
     final void registerView(final NodeView<?> view) {
         assert view != null;
         m_views.add(view);
-        m_logger.debug("Registering view at  model (total count "
+        m_logger.debug("Registering view at model (total count " 
                 + m_views.size() + ")");
     }
 
