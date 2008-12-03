@@ -42,7 +42,6 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 
-
 /**
  * A wrapper table that is able to compute statistics for each row The following
  * moments are available:
@@ -61,41 +60,34 @@ import org.knime.core.node.ExecutionMonitor;
  * @author Nicolas Cebron, University of Konstanz
  */
 public class StatisticsTable implements DataTable {
-    /*
-     * table to be wrapped
-     */
+    
+    /** Table to be wrapped. */
     private final DataTable m_table;
 
-    /*
-     * Used to 'cache' the mean values
-     */
+    /** Used to 'cache' the mean values. */
     private final double[] m_meanValues;
 
-    /*
-     * Used to 'cache' the variance values
-     */
+    /** Used to 'cache' the variance values. */
     private final double[] m_varianceValues;
-
-    /*
-     * Used to 'cache' the minimum values
-     */
+    
+    /** Used to cache the sum of each column. */
+    private final double[] m_sum;
+    
+    /** Used to cache the number of missing values per columns. */
+    private final int[] m_missingValueCnt;
+    
+    /** Used to 'cache' the minimum values. */
     private final DataCell[] m_minValues;
 
-    /*
-     * Used to 'cache' the maximum values
-     */
+    /** Used to 'cache' the maximum values. */
     private final DataCell[] m_maxValues;
 
-    /*
-     * Number of rows of the DataTable
-     */
+    /** Number of rows of the DataTable. */
     private int m_nrRows;
 
-    /*
-     * a table spec we've created with ranges added to all numerical columns
-     */
+    /** A table spec created with ranges added to all numerical columns. */
     private DataTableSpec m_tSpec;
-
+    
     /** To be used in derived classes that do additional calculations. Please
      * do call calculateAllMoments when done!
      * @param table To wrap.
@@ -106,17 +98,21 @@ public class StatisticsTable implements DataTable {
         // initialize cache arrays
         m_meanValues = new double[nrCols];
         m_varianceValues = new double[nrCols];
+        m_sum = new double[nrCols];
         m_minValues = new DataCell[nrCols];
         m_maxValues = new DataCell[nrCols];
+        m_missingValueCnt = new int[nrCols];
         for (int i = 0; i < nrCols; i++) {
+            m_missingValueCnt[i] = 0;
             m_meanValues[i] = Double.NaN;
+            m_sum[i] = Double.NaN;
             m_varianceValues[i] = Double.NaN;
             m_minValues[i] = null;
             m_maxValues[i] = null;
         }
     }
 
-        /**
+    /**
      * Create new wrapper table from an existing one. This constructor
      * calculates all values. It needs to traverse (twice) through the entire
      * specified table. User can cancel action if an execution monitor is
@@ -129,7 +125,7 @@ public class StatisticsTable implements DataTable {
      */
     public StatisticsTable(final DataTable table, final ExecutionMonitor exec)
             throws CanceledExecutionException {
-        this (table);
+        this(table);
         calculateAllMoments(exec);
     }
 
@@ -140,21 +136,20 @@ public class StatisticsTable implements DataTable {
      * @return a table spec with ranges set in column. If the spec of the
      *         underlying table had ranges set nothing will change.
      */
+    @Override
     public DataTableSpec getDataTableSpec() {
         if (m_tSpec == null) {
             throw new IllegalStateException(
                     "Table spec should have been determined in constructor.");
         }
         return m_tSpec;
-
     }
 
     /**
      * Returns the row iterator of the original data table.
-     * 
-     * 
-     * @see DataTable#iterator()
+     * {@inheritDoc} 
      */
+    @Override
     public RowIterator iterator() {
         return m_table.iterator();
     }
@@ -216,26 +211,22 @@ public class StatisticsTable implements DataTable {
         DataTableSpec origSpec = m_table.getDataTableSpec();
         int numOfCols = origSpec.getNumColumns();
 
-        // Initialize all temp-array
-        double[] sum = new double[numOfCols];
         // the number of non-missing cells in each column
         int[] validCount = new int[numOfCols];
         double[] sumsquare = new double[numOfCols];
-        DataValueComparator[] comp = new DataValueComparator[numOfCols];
+        final DataValueComparator[] comp = new DataValueComparator[numOfCols];
 
         for (int i = 0; i < numOfCols; i++) {
-            sum[i] = 0.0;
             sumsquare[i] = 0.0;
             validCount[i] = 0;
             comp[i] = origSpec.getColumnSpec(i).getType().getComparator();
             assert comp[i] != null;
         }
-
+                
         int nrRows = 0;
-        DataRow row;
         for (RowIterator rowIt = m_table.iterator(); 
             rowIt.hasNext(); nrRows++) {
-            row = rowIt.next();
+            DataRow row = rowIt.next();
             if (exec != null) {
                 double prog = Double.isNaN(rowCount) ? 0.0 : nrRows / rowCount;
                 exec.setProgress(prog, "Calculating statistics, processing row "
@@ -243,33 +234,37 @@ public class StatisticsTable implements DataTable {
                 exec.checkCanceled(); // throws exception if user canceled
             }
             for (int c = 0; c < numOfCols; c++) {
-                if (!(row.getCell(c).isMissing())) {
+                final DataCell cell = row.getCell(c);
+                if (!(cell.isMissing())) {
                     // keep the min and max for each column
                     if ((m_minValues[c] == null) 
-                            || (comp[c].compare(
-                                    row.getCell(c), m_minValues[c]) < 0)) {
-                        m_minValues[c] = row.getCell(c);
+                            || (comp[c].compare(cell, m_minValues[c]) < 0)) {
+                        m_minValues[c] = cell;
                     }
                     if ((m_maxValues[c] == null)
-                            || (comp[c].compare(
-                                    m_maxValues[c], row.getCell(c)) < 0)) {
-                        m_maxValues[c] = row.getCell(c);
+                            || (comp[c].compare(m_maxValues[c], cell) < 0)) {
+                        m_maxValues[c] = cell;
                     }
                     // for double columns we calc the sum (for the mean calc)
                     DataType type = origSpec.getColumnSpec(c).getType();
                     if (type.isCompatible(DoubleValue.class)) {
-                        double d = ((DoubleValue)row.getCell(c))
-                                .getDoubleValue();
-                        sum[c] += d;
+                        double d = ((DoubleValue) cell).getDoubleValue();
+                        if (Double.isNaN(m_sum[c])) {
+                            m_sum[c] = d;
+                        } else {
+                            m_sum[c] += d;
+                        }
                         sumsquare[c] += d * d;
                         validCount[c]++;
                     }
+                } else {
+                    m_missingValueCnt[c]++;
                 }
             }
             calculateMomentInSubClass(row);
         }
         m_nrRows = nrRows;
-
+        
         for (int j = 0; j < numOfCols; j++) {
             // in case we got an empty table or columns that contain only
             // missing values
@@ -280,9 +275,9 @@ public class StatisticsTable implements DataTable {
                 m_meanValues[j] = Double.NaN;
                 m_varianceValues[j] = Double.NaN;
             } else {
-                m_meanValues[j] = sum[j] / validCount[j];
+                m_meanValues[j] = m_sum[j] / validCount[j];
                 if (validCount[j] > 1) {
-                    m_varianceValues[j] = (sumsquare[j] - ((sum[j] * sum[j]) 
+                    m_varianceValues[j] = (sumsquare[j] - ((m_sum[j] * m_sum[j])
                             / validCount[j])) / (validCount[j] - 1);
                 } else {
                     m_varianceValues[j] = 0.0;
@@ -346,11 +341,6 @@ public class StatisticsTable implements DataTable {
      * @return mean value or {@link Double#NaN}
      */
     public double getMean(final int colIdx) {
-        if (!m_table.getDataTableSpec().getColumnSpec(colIdx).getType()
-                .isCompatible(DoubleValue.class)) {
-            throw new IllegalArgumentException("Can only calculate variance"
-                    + "of double columns (Col " + colIdx + " is not)");
-        }
         return m_meanValues[colIdx];
     }
 
@@ -366,10 +356,55 @@ public class StatisticsTable implements DataTable {
         System.arraycopy(m_meanValues, 0, result, 0, result.length);
         return result;
     }
+    
+    /**
+     * Returns the sum for the desired column. Throws an exception if the
+     * specified column is not compatible to DoubleValue. Returns
+     * {@link Double#NaN} if the specified column contains only missing cells or
+     * if the table is empty.
+     * 
+     * @param colIdx the column index for which the mean is calculated
+     * @return sum value or {@link Double#NaN}
+     */
+    public double getSum(final int colIdx) {
+        return m_sum[colIdx];
+    }
 
     /**
+     * Returns the sum values for all columns. Returns {@link Double#NaN} if the
+     * column type is not of type {@link DoubleValue}.
+     * 
+     * @return an array of sum values with an item for each column, which is
+     *         {@link Double#NaN} if the column type is not {@link DoubleValue}
+     */
+    public double[] getSum() {
+        double[] result = new double[m_sum.length];
+        System.arraycopy(m_sum, 0, result, 0, result.length);
+        return result;
+    }
+    
+    /**
+     * Returns an array of the number of missing values for each dimension.
+     * @return number missing values for each dimensions
+     */
+    public int[] getNumberMissingValues() {
+        int[] result = new int[m_missingValueCnt.length];
+        System.arraycopy(m_missingValueCnt, 0, result, 0, result.length);
+        return result;
+    }
+    
+    /**
+     * Returns the number of missing values for the given column index.
+     * @param colIdx column index to consider
+     * @return number of missing values in this columns
+     */
+    public int getNumberMissingValues(final int colIdx) {
+        return m_missingValueCnt[colIdx];
+    }
+    
+    /**
      * Returns the variance for the desired column. Throws an exception if the
-     * specified column is not comaptible to {@link DoubleValue}. Returns
+     * specified column is not compatible to {@link DoubleValue}. Returns
      * {@link Double#NaN} if the specified column contains only missing cells or
      * if the table is empty.
      * 
@@ -377,11 +412,6 @@ public class StatisticsTable implements DataTable {
      * @return variance or {@link Double#NaN}
      */
     public double getVariance(final int colIdx) {
-        if (!m_table.getDataTableSpec().getColumnSpec(colIdx).getType()
-                .isCompatible(DoubleValue.class)) {
-            throw new IllegalArgumentException("Can only calculate variance"
-                    + "of double columns (Col " + colIdx + " is not)");
-        }
         return m_varianceValues[colIdx];
     }
 
@@ -410,12 +440,6 @@ public class StatisticsTable implements DataTable {
      *         the table is empty
      */
     public double getStandardDeviation(final int colIdx) {
-        if (!m_table.getDataTableSpec().getColumnSpec(colIdx).getType()
-                .isCompatible(DoubleValue.class)) {
-            throw new IllegalArgumentException("Can only calculate standard"
-                    + "deviation of double columns (Col " 
-                    + colIdx + " is not)");
-        }
         return Math.sqrt(m_varianceValues[colIdx]);
     }
 
@@ -445,11 +469,6 @@ public class StatisticsTable implements DataTable {
      *         cells, or if the table is empty
      */
     public DataCell getMin(final int colIdx) {
-        if ((colIdx < 0) || (colIdx >= m_minValues.length)) {
-            throw new IllegalArgumentException("Column index (" + colIdx
-                    + ") out of bounds. (0 <= idx <= " + m_minValues.length
-                    + ")");
-        }
         return m_minValues[colIdx];
     }
 
@@ -492,11 +511,6 @@ public class StatisticsTable implements DataTable {
      *         cells, or if the table is empty
      */
     public DataCell getMax(final int colIdx) {
-        if ((colIdx < 0) || (colIdx >= m_maxValues.length)) {
-            throw new IllegalArgumentException("Column index (" + colIdx
-                    + ") out of bounds. (0 <= idx <= " + m_maxValues.length
-                    + ")");
-        }
         return m_maxValues[colIdx];
     }
 
