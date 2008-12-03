@@ -137,8 +137,7 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
         add(settingsBox, BorderLayout.CENTER);
 
         // set the panel of the first selection:
-// we have no input spec yet
-//        jobManagerSelectionChanged();
+        jobManagerSelectionChanged();
 
     }
 
@@ -165,8 +164,10 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
                     // store new panels in the map
                     m_panels.put(selJobMgr.getID(), m_currentPanel);
                     // initialize it with empty settings and the last port specs
-                    m_currentPanel.loadSettings(
-                            new NodeSettings("empty"), m_lastPortSpecs);
+                    if (m_lastPortSpecs != null) {
+                        m_currentPanel.loadSettings(
+                                new NodeSettings("empty"), m_lastPortSpecs);
+                    } // else the next load will infuse settings
                 } else {
                     m_currentPanel = EMPTY_PANEL;
                 }
