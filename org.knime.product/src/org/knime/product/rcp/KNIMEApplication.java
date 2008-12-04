@@ -504,8 +504,7 @@ public class KNIMEApplication implements IApplication {
                 File xulrunner = new File(dir, s);
                 if (xulrunner.canExecute()) {
                     ProcessBuilder pb =
-                            new ProcessBuilder(xulrunner.getAbsolutePath(),
-                                    "-v");
+                            new ProcessBuilder("bash", "-c", xulrunner.getAbsolutePath() + " -v");
                     pb.redirectErrorStream(true);
                     Map<String, String> env = pb.environment();
                     String ldPath = env.get("LD_LIBRARY_PATH");
@@ -555,6 +554,7 @@ public class KNIMEApplication implements IApplication {
                     knimeLOC = new File(path).getAbsolutePath();
                 }
             }
+            System.setProperty(XUL, xul19Location.getAbsolutePath());
             return MessageDialog
                     .openQuestion(
                             null,
