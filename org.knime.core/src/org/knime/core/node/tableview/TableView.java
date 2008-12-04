@@ -387,7 +387,6 @@ public class TableView extends JScrollPane {
      * 
      * @param showOnlyHilite <code>true</code> Filter and display only
      *        rows whose hilite status is set.
-     * @see TableContentModel#showHiLitedOnly(boolean)
      * @see TableContentModel#getTableContentFilter()
      * @deprecated Implementors should refer to 
      * <code>getContentModel().setTableContentFilter(TableContentFilter)</code>
@@ -402,7 +401,6 @@ public class TableView extends JScrollPane {
      * 
      * @return <code>true</code>: only hilited rows are shown, 
      *         <code>false</code>: all rows are shown.
-     * @see TableContentModel#showsHiLitedOnly() 
      * @see TableContentModel#getTableContentFilter() 
      * @deprecated Implementors should refer to 
      * <code>getContentModel().getTableContentFilter()</code>

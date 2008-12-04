@@ -71,7 +71,6 @@ import org.knime.core.node.property.hilite.KeyEvent;
  * complies nicely with the caching strategy.</p>
  * 
  * @see org.knime.core.data.DataTable
- * @see TableContentModel#setCacheSize(int)
  *   
  * @author Bernd Wiswedel, University of Konstanz
  */
@@ -121,8 +120,6 @@ public class TableContentModel extends AbstractTableModel
     
     /** 
      * Default size of the ring buffer (500).
-     * 
-     * @see #setCacheSize(int)
      */
     public static final int CACHE_SIZE = 500;
     
@@ -132,9 +129,6 @@ public class TableContentModel extends AbstractTableModel
      * iterator to get <code>CHUNK_SIZE</code> new rows which are added to the
      * cache. 
      * Suppose you have a table with more than 100 rows: Those are then accessed
-     * chunk-wise, i.e. 0-49, 50-99, and so on.
-     * 
-     * @see #setChunkSize(int)
      */
     public static final int CHUNK_SIZE = 50;
 
@@ -720,7 +714,6 @@ public class TableContentModel extends AbstractTableModel
      * Get the size of the cache.
      * 
      * @return number of rows that fit in cache
-     * @see #setCacheSize(int)
      * @see #CACHE_SIZE
      */
     public final int getCacheSize() {
@@ -752,7 +745,6 @@ public class TableContentModel extends AbstractTableModel
      * 
      * @return The current value of a chunk being read (default: 
      *         {@link #CHUNK_SIZE}.
-     * @see #setChunkSize(int)
      */
     public final int getChunkSize() {
         return m_chunkSize;

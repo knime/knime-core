@@ -367,7 +367,6 @@ public abstract class Config extends AbstractConfigEntry
      * 
      * @param key An identifier.
      * @return A new Config object.
-     * @see #getInstance(String)
      */
     public final Config addConfig(final String key) {
         final Config config = getInstance(key);

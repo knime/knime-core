@@ -257,7 +257,6 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
      * configuration object.
      *
      * @param settings the <code>NodeSettings</code> to write into
-     * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
      * @throws InvalidSettingsException if the user has entered wrong values
      */
     @Override
@@ -290,7 +289,6 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
      * settings object.
      *
      * @param settings the <code>NodeSettings</code> to write into
-     * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
      * @throws InvalidSettingsException if the user has entered wrong values
      */
     @SuppressWarnings("unused")
