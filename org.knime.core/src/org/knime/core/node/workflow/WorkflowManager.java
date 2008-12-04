@@ -2616,6 +2616,9 @@ public final class WorkflowManager extends NodeContainer {
                         build.append(indentString);
                         build.append("  ");
                         build.append(nc.toString());
+                        if (nc.isDirty()) {
+                            build.append("*");
+                        }
                         build.append("\n");
                     }
                 } else {    // skip remaining nodes with wrong prefix
@@ -2970,10 +2973,10 @@ public final class WorkflowManager extends NodeContainer {
         LoadResult loadResult = new LoadResult();
         // linked set because we need reverse order later on
         Collection<NodeID> failedNodes = new LinkedHashSet<NodeID>();
-        Set<NodeID> needConfigurationNodes = new HashSet<NodeID>();
         for (NodeID bfsID : m_workflow.createBreadthFirstSortedList(
                         persistorMap.keySet(), true).keySet()) {
             NodeContainer cont = getNodeContainer(bfsID);
+            boolean isFullyConnected = isFullyConnected(bfsID);
             boolean needsReset;
             switch (cont.getState()) {
             case IDLE:
@@ -2982,7 +2985,7 @@ public final class WorkflowManager extends NodeContainer {
                 break;
             default:
                 // we reset everything which is not fully connected
-                needsReset = !isFullyConnected(bfsID);
+                needsReset = !isFullyConnected;
             break;
             }
             NodeOutPort[] predPorts = assemblePredecessorOutPorts(bfsID);
@@ -3011,6 +3014,7 @@ public final class WorkflowManager extends NodeContainer {
                 inStack = new ScopeObjectStack(cont.getID());
             }
             NodeContainerPersistor containerPersistor = persistorMap.get(bfsID);
+            State loadState = containerPersistor.getMetaPersistor().getState();
             exec.setMessage(cont.getNameWithID());
             // two steps below: loadNodeContainer and loadContent
             ExecutionMonitor sub1 =
@@ -3045,7 +3049,11 @@ public final class WorkflowManager extends NodeContainer {
             boolean hasPredecessorFailed = false;
             for (ConnectionContainer cc 
                     : m_workflow.getConnectionsByDest(bfsID)) {
-                if (failedNodes.contains(cc.getSource())) {
+                NodeID s = cc.getSource();
+                if (s.equals(getID())) {
+                    continue; // don't consider WFM_IN connections
+                }
+                if (failedNodes.contains(s)) {
                     hasPredecessorFailed = true;
                 }
             }
@@ -3060,43 +3068,45 @@ public final class WorkflowManager extends NodeContainer {
                 needsReset = true;
                 subResult.addError("Predecessor ports have no data", true);
             }
+            if (needsReset && cont instanceof SingleNodeContainer
+                    && cont.isResetable()) {
+                // we don't care for successors because they are not loaded yet
+                invokeResetOnSingleNodeContainer((SingleNodeContainer)cont);
+                isExecuted = false;
+            }
             if (needsReset) {
                 failedNodes.add(bfsID);
             }
-            if (!hasPredecessorFailed && needsReset) {
-                needConfigurationNodes.add(bfsID);
+            if (!isExecuted && cont instanceof SingleNodeContainer) {
+                configureSingleNodeContainer((SingleNodeContainer)cont);
+            }
+            if (!cont.getState().equals(loadState) && !hasPredecessorFailed) {
+                String error = "State of node " + cont.getNameWithID() 
+                + " has changed from " + loadState + " to " + cont.getState();
+                subResult.addError(error);
             }
             if (subResult.hasErrors()) {
                 loadResult.addError("Errors reading node \""
                         + cont.getNameWithID() + "\":", subResult);
-            }
-        }
-        // switching to list interface here in order to reverse the ordering
-        failedNodes = new ArrayList<NodeID>(failedNodes);
-        Collections.reverse((List<NodeID>)failedNodes);
-        for (NodeID failed : failedNodes) {
-            NodeContainer nc = getNodeContainer(failed);
-            if (nc instanceof SingleNodeContainer) {
-                SingleNodeContainer snc = (SingleNodeContainer)nc;
-                if (snc.isResetable()) {
-                    invokeResetOnNode(nc.getID());
+                NodeMessage oldMessage = cont.getNodeMessage();
+                StringBuilder messageBuilder = 
+                    new StringBuilder(oldMessage.getMessage());
+                if (messageBuilder.length() != 0) {
+                    messageBuilder.append("\n");
                 }
-            } else {
-                assert nc instanceof WorkflowManager;
-                WorkflowManager wfm = (WorkflowManager)nc;
-                if (wfm.isResetable()) {
-                    wfm.resetAllNodesInWFM();
+                NodeMessage.Type type;
+                switch (oldMessage.getMessageType()) {
+                case RESET:
+                case WARNING:
+                    type = NodeMessage.Type.WARNING;
+                    break;
+                default:
+                    type = NodeMessage.Type.ERROR;
                 }
+                messageBuilder.append(subResult.peekErrors());
+                cont.setNodeMessage(
+                        new NodeMessage(type, messageBuilder.toString()));
             }
-            // make sure it's marked as dirty (meta nodes may not be resetable
-            // and hence don't get the dirty flag set)
-            nc.setDirty();
-        }
-        for (NodeID id : needConfigurationNodes) {
-            // don't push the configure outside the workflow manager here
-            // (i.e. last flag in method call is false).
-            // FIXME: Why? impossible now, argument was removed because its useless
-            configureNodeAndSuccessors(id, true);
         }
         if (!sweep(false)) {
             loadResult.addError("Some node states were invalid");

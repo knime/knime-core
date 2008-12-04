@@ -24,13 +24,16 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.port.PortType;
+import org.knime.core.util.Pair;
 
 /**
  * 
@@ -213,7 +216,8 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     
     public static class LoadResult {
         
-        private final StringBuilder m_errors = new StringBuilder();
+        private final List<Pair<String, LoadResult>> m_errors = 
+            new ArrayList<Pair<String, LoadResult>>();
         private boolean m_hasErrorDuringNonDataLoad = false;
         
         public void addError(final String error) {
@@ -222,47 +226,73 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         
         public void addError(final String error, 
                 final boolean isErrorDuringDataLoad) {
-            m_errors.append(error);
-            m_errors.append('\n');
+            m_errors.add(new Pair<String, LoadResult>(error, null));
             if (!isErrorDuringDataLoad) {
                 m_hasErrorDuringNonDataLoad = true;
             }
         }
         
         public void addError(final String parentName, final LoadResult loadResult) {
-            m_errors.append(parentName);
-            m_errors.append('\n');
-            StringTokenizer tokenizer = 
-                new StringTokenizer(loadResult.toString(), "\n");
-            while (tokenizer.hasMoreTokens()) {
-                m_errors.append("  ");
-                m_errors.append(tokenizer.nextToken());
-                m_errors.append('\n');
-            }
+            m_errors.add(new Pair<String, LoadResult>(parentName, loadResult));
             if (loadResult.hasErrorDuringNonDataLoad()) {
                 m_hasErrorDuringNonDataLoad = true;
             }
         }
         
         public void addError(final LoadResult loadResult) {
-            m_errors.append(loadResult.m_errors);
+            m_errors.addAll(loadResult.m_errors);
             if (loadResult.hasErrorDuringNonDataLoad()) {
                 m_hasErrorDuringNonDataLoad = true;
             }
         }
         
         public boolean hasErrors() {
-            return m_errors.length() != 0;
+            return !m_errors.isEmpty();
         }
         
         public String getErrors() {
-            return m_errors.toString();
+            StringBuilder b = new StringBuilder();
+            appendErrors(b, "");
+            return b.toString();
+        }
+        
+        private void appendErrors(final StringBuilder b, final String indent) {
+            boolean isFirst = true;
+            for (Pair<String, LoadResult> e : m_errors) {
+                if (isFirst) {
+                    isFirst = false;
+                } else {
+                    b.append("\n");
+                }
+                b.append(indent).append(e.getFirst());
+                if (e.getSecond() != null) {
+                    b.append("\n");
+                    e.getSecond().appendErrors(b, indent + "  ");
+                }
+            }
         }
         
         /** {@inheritDoc} */
         @Override
         public String toString() {
             return m_errors.toString();
+        }
+        
+        public String peekErrors() {
+            StringTokenizer t = new StringTokenizer(getErrors(), "\n");
+            StringBuilder result = new StringBuilder();
+            int i = 0;
+            while (t.hasMoreTokens() && i < 4) {
+                if (i > 0) {
+                    result.append("\n");
+                }
+                result.append(t.nextToken());
+                i++;
+            }
+            if (t.hasMoreTokens()) {
+                result.append("\n...");
+            }
+            return result.toString();
         }
         
         /**

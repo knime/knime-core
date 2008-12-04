@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.ReferencedFile;
@@ -135,10 +134,9 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             NodeSettingsWO singlePortSetting =
                     portSettings.addNodeSettings(portName);
             singlePortSetting.addInt("index", i);
-            PortObjectSpec spec = node.getOutputSpec(i);
             PortObject object = node.getOutputObject(i);
             String portDirName;
-            if (spec != null || object != null) {
+            if (object != null && saveData) {
                 portDirName = portName;
                 ReferencedFile portDirRef =
                         new ReferencedFile(nodeDirRef, portDirName);
@@ -229,34 +227,35 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             // executed and instructed to save data
             if (saveData && object != null) {
                 ((BufferedDataTable)object).save(portDir, exec);
-            } else if (spec != null) {
-                BufferedDataTable.saveSpec((DataTableSpec)spec, portDir);
             }
         } else {
             exec.setMessage("Saving specification");
-            if (spec != null) {
-                String specDirName = "spec";
-                String specFileName = "spec.zip";
-                String specPath = specDirName + "/" + specFileName;
-                File specDir = new File(portDir, specDirName);
-                specDir.mkdir();
-                if (!specDir.isDirectory() || !specDir.canWrite()) {
-                    throw new IOException("Can't create directory "
-                            + specDir.getAbsolutePath());
-                }
-                
-                File specFile = new File(specDir, specFileName);
-                PortObjectSpecZipOutputStream out = 
-                    PortUtil.getPortObjectSpecZipOutputStream(
-                            new BufferedOutputStream(
-                        new FileOutputStream(specFile)));
-                settings.addString("port_spec_location", specPath);
-                PortObjectSpecSerializer serializer =
-                        PortUtil.getPortObjectSpecSerializer(spec.getClass());
-                serializer.savePortObjectSpec(spec, out);
-                out.close();
-            }
             if (isSaveObject) {
+                assert spec != null 
+                : "Spec is null but port object is non-null (port " 
+                    + portIdx + " of node " + node.getName() + ")";
+                if (!(object instanceof BufferedDataTable)) {
+                    String specDirName = "spec";
+                    String specFileName = "spec.zip";
+                    String specPath = specDirName + "/" + specFileName;
+                    File specDir = new File(portDir, specDirName);
+                    specDir.mkdir();
+                    if (!specDir.isDirectory() || !specDir.canWrite()) {
+                        throw new IOException("Can't create directory "
+                                + specDir.getAbsolutePath());
+                    }
+                    
+                    File specFile = new File(specDir, specFileName);
+                    PortObjectSpecZipOutputStream out = 
+                        PortUtil.getPortObjectSpecZipOutputStream(
+                                new BufferedOutputStream(
+                                        new FileOutputStream(specFile)));
+                    settings.addString("port_spec_location", specPath);
+                    PortObjectSpecSerializer serializer =
+                        PortUtil.getPortObjectSpecSerializer(spec.getClass());
+                    serializer.savePortObjectSpec(spec, out);
+                    out.close();
+                }
                 String objectDirName = null;
                 objectDirName = "object";
                 File objectDir = new File(portDir, objectDirName);
