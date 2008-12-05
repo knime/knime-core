@@ -105,10 +105,10 @@ public class MissingValueHandlingNodeDialog extends NodeDialogPane {
         });
         m_colList.setCellRenderer(new DataColumnSpecListCellRenderer());
         JPanel tabPanel = new JPanel(new BorderLayout());
-        tabPanel.add(new JScrollPane(m_colList), BorderLayout.WEST);
+        tabPanel.add(new JScrollPane(m_colList), BorderLayout.CENTER);
         m_individualsPanel = new IndividualsPanel();
         JScrollPane scroller = new JScrollPane(m_individualsPanel);
-        tabPanel.add(scroller, BorderLayout.CENTER);
+        tabPanel.add(scroller, BorderLayout.EAST);
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         m_addButton = new JButton("Add");
         m_addButton.addActionListener(new ActionListener() {
