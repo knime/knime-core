@@ -872,6 +872,13 @@ public abstract class NodeModel {
     // Warning handling
     /////////////////////////
     
+    /** Method being called when node is restored. It does not notify listeners.
+     * @param warningMessage The message as written to the workflow file
+     */
+    final void restoreWarningMessage(final String warningMessage) {
+        m_warningMessage = warningMessage;
+    }
+    
     /**
      * Sets an optional warning message by the implementing node model.
      *

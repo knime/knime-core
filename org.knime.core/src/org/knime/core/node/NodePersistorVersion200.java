@@ -93,6 +93,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         saveCustomName(node, settings);
         node.saveSettingsTo(settings);
         saveHasContent(node, settings);
+        saveWarningMessage(node, settings);
         ReferencedFile nodeInternDirRef = getNodeInternDirectory(nodeDirRef);
         File nodeInternDir = nodeInternDirRef.getFile();
         if (nodeInternDir.exists()) {
@@ -299,6 +300,14 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         settings.addBoolean("hasContent", hasContent);
     }
 
+    protected void saveWarningMessage(
+            final Node node, final NodeSettingsWO settings) {
+        String warnMessage = node.getWarningMessageFromModel();
+        if (warnMessage != null) {
+            settings.addString(CFG_NODE_MESSAGE, warnMessage);
+        }
+    }
+
     protected void saveNodeInternDirectory(final Node node,
             final File nodeInternDir, final NodeSettingsWO settings,
             final ExecutionMonitor exec) throws CanceledExecutionException {
@@ -314,6 +323,13 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     protected boolean loadIsExecuted(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return false;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected String loadWarningMessage(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        return settings.getString(CFG_NODE_MESSAGE, null);
     }
 
     /** {@inheritDoc} */

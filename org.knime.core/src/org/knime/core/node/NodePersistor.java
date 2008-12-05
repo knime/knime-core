@@ -104,4 +104,5 @@ public interface NodePersistor {
     PortObject getPortObject(final int outportIndex);
     String getPortObjectSummary(final int outportIndex);
     BufferedDataTable[] getInternalHeldTables();
+    String getWarningMessage();
 }

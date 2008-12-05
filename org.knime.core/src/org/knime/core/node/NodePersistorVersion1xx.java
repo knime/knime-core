@@ -70,7 +70,9 @@ public class NodePersistorVersion1xx implements NodePersistor {
     private BufferedDataTable[] m_internalHeldTables;
 
     private boolean m_needsResetAfterLoad;
-
+    
+    private String m_warningMessage;
+    
     /** List of factories (only the simple class name), which were 
      * auto-executable in 1.3.x and need to be restored as configured only. */
     public static final List<String> OLD_AUTOEXECUTABLE_NODEFACTORIES =
@@ -107,7 +109,11 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return settings.getBoolean(CFG_ISEXECUTED);
     }
     
-
+    protected String loadWarningMessage(final NodeSettingsRO settings)
+    throws InvalidSettingsException {
+        return null;
+    }
+    
     protected boolean loadIsConfigured(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return settings.getBoolean(CFG_ISCONFIGURED);
@@ -376,6 +382,15 @@ public class NodePersistorVersion1xx implements NodePersistor {
         }
         
         try {
+            m_warningMessage = loadWarningMessage(settings);
+        } catch (InvalidSettingsException ise) {
+            String e = "Unable to load (old) warning message: " 
+                + ise.getMessage();
+            result.addError(e);
+            getLogger().warn(e, ise);
+        }
+        
+        try {
             m_isExecuted = loadIsExecuted(settings);
             if (m_isExecuted && OLD_AUTOEXECUTABLE_NODEFACTORIES.contains(
                     node.getFactory().getClass().getSimpleName())) {
@@ -482,6 +497,12 @@ public class NodePersistorVersion1xx implements NodePersistor {
     /** {@inheritDoc} */
     public NodeSettingsRO getSettings() {
         return m_modelSettings;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public String getWarningMessage() {
+        return m_warningMessage;
     }
 
     /** {@inheritDoc} */
