@@ -381,8 +381,6 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * DataTable[] as for the execute method.
      * 
      * @param exec The execution monitor to show the progress.
-     * @see org.knime.core.node.NodeModel#execute(BufferedDataTable[],
-     *      ExecutionContext)
      * @return - an BufferedDataTable[] as should be returned from the
      *         NodeModel's execute method.
      * @throws CanceledExecutionException If writing output tables has been

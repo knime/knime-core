@@ -123,8 +123,19 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
                 m_editor.markDirty();
             }
             
-            if (result.getGUIMustReportError()) {
-                assert result.hasErrors() : "No errors in workflow result";
+            boolean mustReportErrors;
+            if (result.hasWarningEntries()) {
+                mustReportErrors = true;
+            } else if (result.hasErrorDuringNonDataLoad()) {
+                mustReportErrors = true;
+            } else if (result.getGUIMustReportDataLoadErrors()
+                    && result.hasEntries()) {
+                mustReportErrors = true;
+            } else {
+                mustReportErrors = false;
+            }
+            if (mustReportErrors) {
+                assert result.hasEntries() : "No errors in workflow result";
                 LOGGER.error("Errors during load: " + result.getErrors());
                 Display.getDefault().asyncExec(new Runnable() {
  

@@ -350,7 +350,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         } catch (InvalidSettingsException ise) {
             // try to read only one target ref. to KNIME 1.2.0 and before
             targetColumns = 
-                new String[]{settings.getString(TARGET_COLUMNS, null)};
+                new String[]{settings.getString("target_column", null)};
         }
         if (targetColumns == null || targetColumns.length == 0) {
             msg.append("Target columns not found in settings.\n");
@@ -361,7 +361,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
             msg.append("Distance function index out of range: " + distance);
         }
         // missing replacement method
-        int missing = settings.getInt(BasisFunctionLearnerTable.MISSING, -1);
+        int missing = settings.getInt(BasisFunctionLearnerTable.MISSING, 0);
         if (missing < 0 
                 || missing > BasisFunctionLearnerTable.MISSINGS.length) {
             msg.append("Missing replacement function index out of range: "
@@ -385,10 +385,10 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         if (m_targetColumns == null) {
             // try to find single target column from version 1.2.0 and before
             m_targetColumns = new String[]{settings.getString(
-                    TARGET_COLUMNS, null)};
+                    "target_column", null)};
         }
         // missing value replacement
-        m_missing = settings.getInt(BasisFunctionLearnerTable.MISSING);
+        m_missing = settings.getInt(BasisFunctionLearnerTable.MISSING, 0);
         // distance function
         m_distance = settings.getInt(DISTANCE);
         // shrink after commit

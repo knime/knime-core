@@ -227,7 +227,8 @@ public class DecTreePredictorNodeModel extends NodeModel {
         for (String learnColName : treeSpec.getLearningFields()) {
             if (!inSpec.containsName(learnColName)) {
                 throw new InvalidSettingsException(
-                        "Learning column not found in input " 
+                        "Learning column \"" + learnColName 
+                        + "\" not found in input "
                         + "data to be predicted");
             }
         }

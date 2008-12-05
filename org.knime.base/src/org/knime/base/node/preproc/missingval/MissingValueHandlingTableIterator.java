@@ -214,7 +214,7 @@ class MissingValueHandlingTableIterator extends RowIterator {
         }
         
         /** Get reference to causing exception.
-         * @see java.lang.Throwable#getCause()
+         * {@inheritDoc}
          */ 
         @Override
         public CanceledExecutionException getCause() {

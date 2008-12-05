@@ -55,6 +55,7 @@ public class ROCView extends DefaultVisualizationNodeView {
             m_model = model;
         }
         
+        /** {@inheritDoc} */
         @Override
         public void updatePaintModel() {
             if (m_model == null) {
@@ -97,7 +98,7 @@ public class ROCView extends DefaultVisualizationNodeView {
     
     private static class ROCDrawingPane extends BasicDrawingPane {
         private String m_text = "";
-
+        /** {@inheritDoc} */
         @Override
         public void paintContent(final Graphics g) {
             super.paintContent(g);

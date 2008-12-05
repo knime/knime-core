@@ -37,7 +37,7 @@ import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 
 /**
- * Interface of a {@link BitVectorCell}, forces method to return
+ * Interface of a <code>BitVectorCell</code>, forces method to return
  * {@link java.util.BitSet}.
  *
  * @author Michael Berthold, University of Konstanz
@@ -45,6 +45,7 @@ import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
  *             {@link org.knime.core.data.vector.bitvector.BitVectorValue}
  *             in the core plug-in instead.
  */
+@Deprecated
 public interface BitVectorValue extends DataValue {
 
     /** Utility factory for bitvector value. */

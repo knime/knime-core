@@ -85,8 +85,7 @@ public abstract class SettingsModel {
      * settings object doesn't contain a (valid) value it will throw an
      * InvalidSettingsException.
      * 
-     * @param <T> the actual type returned is determined by the implementation
-     *            of the {@link #createClone()} method.
+     * @param <T> the actual type
      * @param settings the object to read the new model's value(s) from
      * @return a new settings model with the same constraints and configName but
      *         a value read from the specified settings object.

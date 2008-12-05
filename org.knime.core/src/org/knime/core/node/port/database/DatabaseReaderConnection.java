@@ -22,16 +22,24 @@
 package org.knime.core.node.port.database;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
+import java.math.BigDecimal;
+import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.Date;
+import java.sql.NClob;
 import java.sql.PreparedStatement;
+import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.sql.Types;
 
 import org.knime.core.data.DataCell;
@@ -231,16 +239,15 @@ public final class DatabaseReaderConnection {
             int type = meta.getColumnType(dbIdx);
             DataType newType;
             switch (type) {
+                // all types that can be interpreted as integer 
+                case Types.TINYINT:
+                case Types.SMALLINT:
                 case Types.INTEGER:
                 case Types.BIT:
-                case Types.BINARY:
                 case Types.BOOLEAN:
-                case Types.VARBINARY:
-                case Types.SMALLINT:
-                case Types.TINYINT:
-                case Types.BIGINT:
                     newType = IntCell.TYPE;
                     break;
+                // all types that can be interpreted as double 
                 case Types.FLOAT:
                 case Types.DOUBLE:
                 case Types.NUMERIC:
@@ -339,47 +346,41 @@ public final class DatabaseReaderConnection {
                     }
                 } else {
                     String s = null;
+                    int dbType = Types.NULL;
                     try {
-                        int dbType =
-                                m_result.getMetaData().getColumnType(i + 1);
-                        if (dbType == Types.CLOB) {
-                            Clob clob = m_result.getClob(i + 1);
-                            if (wasNull() || clob == null) {
-                                s = null;
-                            } else {
-                                Reader reader = clob.getCharacterStream();
-                                StringWriter writer = new StringWriter();
-                                FileUtil.copy(reader, writer);
-                                reader.close();
-                                writer.close();
-                                s = writer.toString();
-                            }
-                        } else if (dbType == Types.BLOB) {
-                            Blob blob = m_result.getBlob(i + 1);
-                            if (wasNull() || blob == null) {
-                                s = null;
-                            } else {
-                                InputStreamReader reader = 
-                                    // TODO: using default encoding 
-                                  new InputStreamReader(blob.getBinaryStream());
-                                StringWriter writer = new StringWriter();
-                                FileUtil.copy(reader, writer);
-                                reader.close();
-                                writer.close();
-                                s = writer.toString();
-                            }
-                        } else {
-                            Object o = m_result.getObject(i + 1);
-                            if (o == null || wasNull()) {
-                                s = null;
-                            } else {
-                                s = o.toString();
-                            }
+                        dbType = m_result.getMetaData().getColumnType(i + 1);
+                        switch (dbType) {
+                            case Types.CLOB: s = readClob(i); break;
+                            case Types.BLOB: s = readBlob(i); break;
+                            case Types.ARRAY: s = readArray(i); break;
+                            case Types.BIGINT: s = readBigDecimal(i); break;
+                            case Types.CHAR:
+                            case Types.VARCHAR:
+                            case Types.LONGVARCHAR: 
+                                s = readAsciiStream(i); break;
+                            case Types.DATE: s = readDate(i); break;
+                            case Types.TIME: s = readTime(i); break;
+                            case Types.TIMESTAMP: s = readTimestamp(i); break;
+                            case Types.BINARY:
+                            case Types.VARBINARY:
+                            case Types.LONGVARBINARY: 
+                                s = readBinaryStream(i); break;
+                            case Types.REF: s = readRef(i); break;
+                            case Types.NCHAR:
+                            case Types.NVARCHAR:
+                            case Types.LONGNVARCHAR: s = readNString(i); break;
+                            case Types.NCLOB: s = readNClob(i); break;
+                            default: s = readObject(i);
+                                
                         }
                     } catch (SQLException sqle) {
-                        handlerException("SQL Exception reading Object:", sqle);
+                        handlerException(
+                                "SQL Exception reading Object of type \"" 
+                                + dbType + "\": ", sqle);
                     } catch (IOException ioe) {
-                        handlerException("I/O Exception reading Object:", ioe);
+                        handlerException(
+                                "I/O Exception reading Object of type \"" 
+                                + dbType + "\": ", ioe);
                     }
                     if (s == null) {
                         cells[i] = DataType.getMissingCell();
@@ -394,29 +395,182 @@ public final class DatabaseReaderConnection {
                 rowId = m_result.getRow();
             } catch (SQLException sqle) {
                  handlerException(
-                         "SQL Exception while retrieving row id:", sqle);
+                         "SQL Exception while retrieving row id: ", sqle);
             }
             return new DefaultRow(RowKey.createRowKey(rowId), cells);
+        }
+        
+        private String readClob(final int i) 
+                throws IOException, SQLException {
+            Clob clob = m_result.getClob(i + 1);
+            if (wasNull() || clob == null) {
+                return null;
+            } else {
+                Reader reader = clob.getCharacterStream();
+                StringWriter writer = new StringWriter();
+                FileUtil.copy(reader, writer);
+                reader.close();
+                writer.close();
+                return writer.toString();
+            }
+        }
+        
+        private String readNClob(final int i)
+                throws IOException, SQLException {
+            NClob nclob = m_result.getNClob(i + 1);
+            if (wasNull() || nclob == null) {
+                return null;
+            } else {
+                Reader reader = nclob.getCharacterStream();
+                StringWriter writer = new StringWriter();
+                FileUtil.copy(reader, writer);
+                reader.close();
+                writer.close();
+                return writer.toString();
+            }
+        }
+        
+        private String readBlob(final int i) 
+                throws IOException, SQLException {
+           Blob blob = m_result.getBlob(i + 1);
+           if (wasNull() || blob == null) {
+               return null;
+           } else {
+               InputStreamReader reader = 
+                   // TODO: using default encoding 
+                   new InputStreamReader(blob.getBinaryStream());
+               StringWriter writer = new StringWriter();
+               FileUtil.copy(reader, writer);
+               reader.close();
+               writer.close();
+               return writer.toString();
+           }
+        }
+        
+        private String readAsciiStream(final int i)
+                throws IOException, SQLException {
+            InputStream is = m_result.getAsciiStream(i + 1);
+            if (wasNull() || is == null) {
+                return null;
+            } else {
+                InputStreamReader reader =
+                // TODO: using default encoding
+                        new InputStreamReader(is);
+                StringWriter writer = new StringWriter();
+                FileUtil.copy(reader, writer);
+                reader.close();
+                writer.close();
+                return writer.toString();
+            }
+        }
+        
+        private String readBinaryStream(final int i)
+                throws IOException, SQLException {
+            InputStream is = m_result.getBinaryStream(i + 1);
+            if (wasNull() || is == null) {
+                return null;
+            } else {
+                InputStreamReader reader =
+                // TODO: using default encoding
+                        new InputStreamReader(is);
+                StringWriter writer = new StringWriter();
+                FileUtil.copy(reader, writer);
+                reader.close();
+                writer.close();
+                return writer.toString();
+            }
+        }
+        
+        private String readNString(final int i) throws SQLException {
+            String str = m_result.getNString(i + 1);
+            if (wasNull() || str == null) {
+                return null;
+            } else {
+                return str;
+            }
+        }
+        
+        private String readBigDecimal(final int i) throws SQLException {
+            BigDecimal bd = m_result.getBigDecimal(i + 1);
+            if (wasNull() || bd == null) {
+                return null;
+            } else {
+                return bd.toPlainString();
+            }
+        }
+        
+        private String readDate(final int i) throws SQLException {
+            Date date = m_result.getDate(i + 1);
+            if (wasNull() || date == null) {
+                return null;
+            } else {
+                return date.toString();
+            }
+        }
+        
+        private String readTime(final int i) throws SQLException {
+            Time time = m_result.getTime(i + 1);
+            if (wasNull() || time == null) {
+                return null;
+            } else {
+                return time.toString();
+            }
+        }
+
+        private String readTimestamp(final int i) throws SQLException {
+            Timestamp timestamp = m_result.getTimestamp(i + 1);
+            if (wasNull() || timestamp == null) {
+                return null;
+            } else {
+                return timestamp.toString();
+            }
+        }
+        
+        private String readArray(final int i) throws SQLException {
+            Array array = m_result.getArray(i + 1);
+            if (wasNull() || array == null) {
+                return null;
+            } else {
+                return array.getArray().toString();
+            }
+        }
+        
+        private String readRef(final int i) throws SQLException {
+            Ref ref = m_result.getRef(i + 1);
+            if (wasNull() || ref == null) {
+                return null;
+            } else {
+                return ref.getObject().toString();
+            }
+        }
+        
+        private String readObject(final int i) throws SQLException {
+            Object o = m_result.getObject(i + 1);
+            if (o == null || wasNull()) {
+                return null;
+            } else {
+                return o.toString();
+            }
         }
 
         private boolean wasNull() {
             try {
                 return m_result.wasNull();
             } catch (SQLException sqle) {
-                handlerException("SQL Exception:", sqle);
+                handlerException("SQL Exception: ", sqle);
                 return true;
             }
         }
         
         private void handlerException(final String msg, final Exception e) {
             if (m_hasExceptionReported) {
-                LOGGER.debug(msg, e);
+                LOGGER.debug(msg + e.getMessage(), e);
             } else {
                 m_hasExceptionReported = true;
-                LOGGER.error(msg + " - all further errors are suppressed "
+                LOGGER.error(msg + e.getMessage() 
+                        + " - all further errors are suppressed "
                         + "and reported on debug level only", e);
             }
         }
-
     }
 }

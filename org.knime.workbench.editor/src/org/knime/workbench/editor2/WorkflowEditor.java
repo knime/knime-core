@@ -518,6 +518,9 @@ public class WorkflowEditor extends GraphicalEditor implements
 
             @Override
             public void widgetDisposed(final DisposeEvent e) {
+                if (m_parentEditor != null) {
+                    return; // we are subflow editor.
+                }
                 // bugfix 799: not possible to stop closing earlier if user 
                 // decides to NOT save it. Thus we have at least to try to 
                 // cancel all running nodes
@@ -526,7 +529,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         for (NodeContainer container 
                                     : m_manager.getNodeContainers()) {
                             m_manager.cancelExecution(container);
-    }
+                        }
                     }
                 } catch (Throwable t) {
                     // at least we have tried it

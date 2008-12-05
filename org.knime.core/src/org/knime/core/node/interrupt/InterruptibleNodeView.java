@@ -210,7 +210,7 @@ public abstract class InterruptibleNodeView extends NodeView implements
      * Forces the model to pause and then to finish. Since it makes no sense to
      * let the model run without watching at it.
      * 
-     * @see org.knime.core.node.NodeView#onClose()
+     * {@inheritDoc}
      */
     @Override
     public void onClose() {
@@ -232,8 +232,6 @@ public abstract class InterruptibleNodeView extends NodeView implements
      * @param toBeSet the panel to be set below the control panel, mind that
      *            all view components necessary for the underlying model have to
      *            be packed in one component
-     *            
-     * @see org.knime.core.node.NodeView#setComponent(java.awt.Component)
      */
     public void setEmbeddedComponent(final Component toBeSet) {
         JPanel packPanel = new JPanel();
@@ -264,7 +262,7 @@ public abstract class InterruptibleNodeView extends NodeView implements
      * whenever the underlying model triggers a refresh (that is every delay-th
      * iteration).
      * 
-     * @see org.knime.core.node.NodeView#modelChanged()
+     * {@inheritDoc}
      */
     @Override
     public abstract void modelChanged();

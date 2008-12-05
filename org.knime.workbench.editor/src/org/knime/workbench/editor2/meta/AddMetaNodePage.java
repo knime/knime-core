@@ -38,6 +38,7 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -113,24 +114,23 @@ public class AddMetaNodePage extends WizardPage {
             private int m_top;
             
             public void paintControl(final PaintEvent e) {
-                NodeLogger.getLogger(AddMetaNodePage.class).debug(
-                        "painting:" + e.width + " " + e.height 
-                        + " " + e.x + " " + e.y);
-                GC gc = e.gc;                
-                m_top = (e.height / 2) - (IMAGE_HEIGHT / 2) - (PORT_SIZE / 2);
-                drawInPorts(e);
-                drawOutPorts(e);
+                GC gc = e.gc;
+                Rectangle bounds = m_previewPanel.getBounds();
+                m_top = (bounds.height / 2) - (IMAGE_HEIGHT / 2) 
+                    - (PORT_SIZE / 2);
+                drawInPorts(gc);
+                drawOutPorts(gc);
                 gc.drawImage(ImageRepository.getImage(
-                "/icons/meta/meta_custom_preview.png"), 
-                    (e.width / 2) - (IMAGE_WIDTH / 2), 
-                    (e.height / 2) - (IMAGE_HEIGHT / 2));
+                    "/icons/meta/meta_custom_preview.png"), 
+                    (bounds.width / 2) - (IMAGE_WIDTH / 2), 
+                    (bounds.height / 2) - (IMAGE_HEIGHT / 2));
             }
             
-            private void drawInPorts(final PaintEvent e) {
-                GC gc = e.gc;
+            private void drawInPorts(final GC gc) {
+                Rectangle b = m_previewPanel.getBounds();
                 int offset = (PORT_BAR_HEIGHT + PORT_SIZE) 
-                / (m_inPortList.size() + 1);
-                int left = (e.width / 2) - (IMAGE_WIDTH / 2);
+                    / (m_inPortList.size() + 1);
+                int left = (b.width / 2) - (IMAGE_WIDTH / 2);
                 int i = 0;
                 for (Port inPort : m_inPortList) {
                     int y = m_top + (((i + 1) * offset) - (PORT_SIZE));
@@ -148,7 +148,8 @@ public class AddMetaNodePage extends WizardPage {
                                 PORT_SIZE, PORT_SIZE);
                     } else if (inPort.getType().equals(
                             DatabasePortObject.TYPE)) {
-                        gc.setBackground(ColorConstants.red);
+                        gc.setBackground(getShell().getDisplay().getSystemColor(
+                                SWT.COLOR_DARK_RED));
                         gc.fillRectangle(
                                 left - PORT_SIZE, 
                                 y,
@@ -158,9 +159,9 @@ public class AddMetaNodePage extends WizardPage {
                 }
             }
             
-            private void drawOutPorts(final PaintEvent e) {
-                int right = (e.width / 2) + (IMAGE_WIDTH / 2) + 2;
-                GC gc = e.gc;
+            private void drawOutPorts(final GC gc) {
+                Rectangle b = m_previewPanel.getBounds();
+                int right = (b.width / 2) + (IMAGE_WIDTH / 2) + 2;
                 int offset = (PORT_BAR_HEIGHT + PORT_SIZE) 
                     / (m_outPortList.size() + 1);
                 int i = 0;
@@ -177,17 +178,17 @@ public class AddMetaNodePage extends WizardPage {
                         gc.fillRectangle(right, y, PORT_SIZE, PORT_SIZE);
                     } else if (inPort.getType().equals(
                             DatabasePortObject.TYPE)) {
-                        gc.setBackground(ColorConstants.red);
+                        gc.setBackground(getShell().getDisplay().getSystemColor(
+                                SWT.COLOR_DARK_RED));
                         gc.fillRectangle(right, y, PORT_SIZE, PORT_SIZE);
                     }
                     i++;
                 }                
             }
-            
         });
         setControl(composite);
         populateFieldsFromTemplate();
-        m_previewPanel.layout();
+//        m_previewPanel.layout();
         m_previewPanel.redraw();
     }
 
@@ -199,8 +200,9 @@ public class AddMetaNodePage extends WizardPage {
         m_template = template;
     }
     
+    /** {@inheritDoc} */
     @Override
-    public void setVisible(boolean visible) {
+    public void setVisible(final boolean visible) {
         super.setVisible(visible);
         if (visible) {
             m_wasVisible = true;
@@ -460,7 +462,7 @@ public class AddMetaNodePage extends WizardPage {
         m_name.addModifyListener(new ModifyListener() {
 
             @Override
-            public void modifyText(ModifyEvent e) {
+            public void modifyText(final ModifyEvent e) {
                 m_nameCustomized = true;
             }
             

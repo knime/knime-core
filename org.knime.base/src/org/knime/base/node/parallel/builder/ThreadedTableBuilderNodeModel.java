@@ -115,6 +115,10 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
             };
         }
 
+        /**
+         * 
+         * {@inheritDoc}
+         */
         public Void call() throws Exception {
             final double max = m_data[0].getRowCount();
             final int chunkSize =

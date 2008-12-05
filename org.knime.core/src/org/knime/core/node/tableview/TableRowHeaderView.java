@@ -285,9 +285,7 @@ public final class TableRowHeaderView extends JTable {
     /** 
      * Changes look and feel here (by calling {@link JTable#updateUI()})
      * and also in the renderer.
-     * 
-     * @see javax.swing.JComponent#updateUI()
-     * @see DataCellHeaderRenderer#updateUI()
+     * {@inheritDoc}
      */
     @Override
     public void updateUI() {

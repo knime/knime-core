@@ -291,7 +291,6 @@ public class TableContentView extends JTable {
      * 
      * @param showOnlyHilite <code>true</code>: filter and display only
      *        rows whose hilite status is set
-     * @see TableContentModel#showHiLitedOnly(boolean)
      * @see TableContentModel#getTableContentFilter()
      * @deprecated Implementors should refer to 
      * <code>getContentModel().setTableContentFilter(TableContentFilter)</code>
@@ -306,7 +305,6 @@ public class TableContentView extends JTable {
      * 
      * @return <code>true</code> if only hilited rows are shown, 
      *         <code>false</code> if all rows are shown.
-     * @see TableContentModel#showsHiLitedOnly()
      * @see TableContentModel#getTableContentFilter() 
      * @deprecated Implementors should refer to 
      * <code>getContentModel().getTableContentFilter()</code>

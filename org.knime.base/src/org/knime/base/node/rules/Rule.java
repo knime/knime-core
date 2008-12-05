@@ -52,6 +52,7 @@ import org.knime.core.data.def.StringCell;
  * RULE := BEXPR '=&gt;' STRING
  * BEXPR := '(' BEXPR ')' |
  *          'NOT' BEXPR |
+ *          'MISSING' COL |
  *          AEXPR (BINOP BEXPR)?
  * AEXPR := COL OP COL |
  *          NUMBER OP COL |
@@ -102,6 +103,8 @@ public class Rule {
         XOR,
         /** Boolean NOT. */
         NOT,
+        /** Test for missing value. */
+        MISSING,
         /** Wildcard matching (* and ? as wildcards). */
         LIKE,
         /** Set matching. */
@@ -192,6 +195,17 @@ public class Rule {
             expect('O');
             expect('T');
             leftNode = parseBooleanExpression(spec);
+        } else if (s[p] == 'M') {
+            p++;
+            expect('I');
+            expect('S');
+            expect('S');
+            expect('I');
+            expect('N');
+            expect('G');
+            skipWS();
+            int col = parseColumn(spec);
+            return RuleNodeFactory.missing(col);
         } else {
             leftNode = parseArithmeticExpression(spec);
         }

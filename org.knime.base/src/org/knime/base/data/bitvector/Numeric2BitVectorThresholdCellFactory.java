@@ -53,6 +53,7 @@ public class Numeric2BitVectorThresholdCellFactory
      * @param bitColSpec {@link DataColumnSpec} of the column containing the
      * bitvectors
      * @param threshold the threshold above which the bit is set
+     * @param columns list of column indixes used to create bit vector from
      */
     public Numeric2BitVectorThresholdCellFactory(
             final DataColumnSpec bitColSpec,

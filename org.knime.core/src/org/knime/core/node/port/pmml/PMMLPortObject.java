@@ -91,7 +91,8 @@ public abstract class PMMLPortObject implements PortObject {
         VERSION_SCHEMA_MAP.put(PMML_V3_2, PMML_3_2);
     }
     
-    private TransformerHandler m_handler;
+    /** Ensures that the load method is called once at most. */
+    private boolean m_isLoaded; 
     
     private PMMLPortObjectSpec m_spec;
     private PMMLModelType m_modelType;
@@ -119,6 +120,7 @@ public abstract class PMMLPortObject implements PortObject {
      */
     public PMMLPortObject() {
         m_masterHandler = new PMMLMasterContentHandler();
+        m_isLoaded = false;
     }
     
     /**
@@ -130,6 +132,7 @@ public abstract class PMMLPortObject implements PortObject {
         m_spec = spec;
         m_masterHandler = new PMMLMasterContentHandler();
         m_modelType = type;
+        m_isLoaded = true;
     }
     
     /**
@@ -166,27 +169,29 @@ public abstract class PMMLPortObject implements PortObject {
         return m_modelType;
     }
     
-    private void init(final OutputStream out) 
-        throws TransformerConfigurationException, SAXException {
-        SAXTransformerFactory fac = (SAXTransformerFactory)TransformerFactory
-        .newInstance();
-        m_handler = fac.newTransformerHandler();
+    private TransformerHandler createTransformerHandlerForSave(
+            final OutputStream out)
+    throws TransformerConfigurationException, SAXException {
+        SAXTransformerFactory fac = 
+            (SAXTransformerFactory)TransformerFactory.newInstance();
+        TransformerHandler handler = fac.newTransformerHandler();
         
-        Transformer t = m_handler.getTransformer();
+        Transformer t = handler.getTransformer();
         t.setOutputProperty(OutputKeys.METHOD, "xml");
         t.setOutputProperty(OutputKeys.INDENT, "yes");
         
-        m_handler.setResult(new StreamResult(out));
+        handler.setResult(new StreamResult(out));
         
         // PMML root element, namespace declaration, etc.
-        m_handler.startDocument();
+        handler.startDocument();
         AttributesImpl attr = new AttributesImpl();
         attr.addAttribute(null, null, "version", CDATA, "3.1");
         attr.addAttribute(null, null, "xmlns", CDATA, 
             "http://www.dmg.org/PMML-3_1");
         attr.addAttribute(null, null, "xmlns:xsi", CDATA, 
             "http://www.w3.org/2001/XMLSchema-instance");
-        m_handler.startElement(null, null, "PMML", attr);
+        handler.startElement(null, null, "PMML", attr);
+        return handler;
     }
     
     
@@ -204,13 +209,13 @@ public abstract class PMMLPortObject implements PortObject {
      */
     public void save(final OutputStream out) 
         throws SAXException, IOException, TransformerConfigurationException {
-        init(out);
-        PMMLPortObjectSpec.writeHeader(m_handler);
+        TransformerHandler handler = createTransformerHandlerForSave(out);
+        PMMLPortObjectSpec.writeHeader(handler);
         PMMLPortObjectSpec.writeDataDictionary(getSpec().getDataTableSpec(),
-                m_handler);
-        writePMMLModel(m_handler);
-        m_handler.endElement(null, null, "PMML");
-        m_handler.endDocument();
+                handler);
+        writePMMLModel(handler);
+        handler.endElement(null, null, "PMML");
+        handler.endDocument();
         out.close();
     }
     
@@ -232,6 +237,11 @@ public abstract class PMMLPortObject implements PortObject {
     public void loadFrom(final PMMLPortObjectSpec spec, final InputStream in, 
             final String version) 
             throws SAXException, ParserConfigurationException, IOException {
+        if (m_isLoaded) {
+            throw new IOException(getClass().getSimpleName() 
+                    + " is not loadable or has already been loaded");
+        }
+        m_isLoaded = true;
         SAXParserFactory fac = SAXParserFactory.newInstance();
         
         SchemaFactory schemaFac = SchemaFactory.newInstance(

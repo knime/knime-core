@@ -153,7 +153,12 @@ final class MissingValuePanel extends JPanel {
             removePanel.add(requestRemoveButton);
         }
         setBorder(border);
-        JLabel label = new JLabel(name, icon, SwingConstants.LEFT);
+        String shortName = name;
+        if (name.length() > 15) {
+            shortName = name.substring(0, 14).concat("...");
+        }
+        JLabel label = new JLabel(shortName, icon, SwingConstants.LEFT);
+        label.setToolTipText(name);
         panel.add(label);
         panel.add(removePanel);
 

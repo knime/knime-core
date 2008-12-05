@@ -424,6 +424,7 @@ public final class Node implements NodeModelWarningListener {
                 m_outputs[i].hiliteHdl = m_model.getOutHiLiteHandler(i);
             }
         }
+        m_model.restoreWarningMessage(loader.getWarningMessage());
         ReferencedFile internDirRef = loader.getNodeInternDirectory();
         if (internDirRef != null) {
             internDirRef.lock();
@@ -919,6 +920,14 @@ public final class Node implements NodeModelWarningListener {
         } else {
             createResetMessageAndNotify();
         }
+    }
+    
+    /** Getter for the currently set node warning message in the corresponding
+     * NodeModel.
+     * @return The currently set warning message (may be null).
+     */
+    public String getWarningMessageFromModel() {
+        return m_model.getWarningMessage();
     }
 
     /**

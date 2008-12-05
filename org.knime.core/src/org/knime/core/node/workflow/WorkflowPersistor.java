@@ -24,7 +24,9 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -80,6 +82,9 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * @return the ui info or null if not set.
      */
     public UIInformation getOutPortsBarUIInfo();
+    
+    /** @return the shouldFailOnLoadDataError */
+    public boolean mustWarnOnDataLoadError();
     
     static class ConnectionContainerTemplate {
         private final int m_sourceSuffix;
@@ -213,8 +218,8 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     
     public static class LoadResult {
         
-        private final StringBuilder m_errors = new StringBuilder();
-        private boolean m_hasErrorDuringNonDataLoad = false;
+        private final List<LoadResultEntry> m_errors = 
+            new ArrayList<LoadResultEntry>();
         
         public void addError(final String error) {
             addError(error, false);
@@ -222,54 +227,142 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         
         public void addError(final String error, 
                 final boolean isErrorDuringDataLoad) {
-            m_errors.append(error);
-            m_errors.append('\n');
-            if (!isErrorDuringDataLoad) {
-                m_hasErrorDuringNonDataLoad = true;
-            }
+            LoadResultEntryType t = isErrorDuringDataLoad
+            ? LoadResultEntryType.DataLoadError : LoadResultEntryType.Error;
+            m_errors.add(new LoadResultEntry(t, error));
         }
         
-        public void addError(final String parentName, final LoadResult loadResult) {
-            m_errors.append(parentName);
-            m_errors.append('\n');
-            StringTokenizer tokenizer = 
-                new StringTokenizer(loadResult.toString(), "\n");
-            while (tokenizer.hasMoreTokens()) {
-                m_errors.append("  ");
-                m_errors.append(tokenizer.nextToken());
-                m_errors.append('\n');
-            }
-            if (loadResult.hasErrorDuringNonDataLoad()) {
-                m_hasErrorDuringNonDataLoad = true;
-            }
+        public void addWarning(final String warning) {
+            LoadResultEntryType t = LoadResultEntryType.Warning;
+            m_errors.add(new LoadResultEntry(t, warning));
+        }
+        
+        public void addError(
+                final String parentName, final LoadResult loadResult) {
+            m_errors.add(new LoadResultEntry(parentName, loadResult));
         }
         
         public void addError(final LoadResult loadResult) {
-            m_errors.append(loadResult.m_errors);
-            if (loadResult.hasErrorDuringNonDataLoad()) {
-                m_hasErrorDuringNonDataLoad = true;
-            }
+            m_errors.addAll(loadResult.m_errors);
         }
         
-        public boolean hasErrors() {
-            return m_errors.length() != 0;
+        public boolean hasEntries() {
+            return !m_errors.isEmpty();
         }
         
         public String getErrors() {
-            return m_errors.toString();
+            StringBuilder b = new StringBuilder();
+            appendErrors(b, "");
+            return b.toString();
+        }
+        
+        private void appendErrors(final StringBuilder b, final String indent) {
+            boolean isFirst = true;
+            for (LoadResultEntry e : m_errors) {
+                if (isFirst) {
+                    isFirst = false;
+                } else {
+                    b.append("\n");
+                }
+                b.append(indent).append(e.getMessage());
+                if (e.getSubLoadResult() != null) {
+                    b.append("\n");
+                    e.getSubLoadResult().appendErrors(b, indent + "  ");
+                }
+            }
         }
         
         /** {@inheritDoc} */
         @Override
         public String toString() {
-            return m_errors.toString();
+            return getErrors();
+        }
+        
+        public String peekErrors() {
+            StringTokenizer t = new StringTokenizer(getErrors(), "\n");
+            StringBuilder result = new StringBuilder();
+            int i = 0;
+            while (t.hasMoreTokens() && i < 4) {
+                if (i > 0) {
+                    result.append("\n");
+                }
+                result.append(t.nextToken());
+                i++;
+            }
+            if (t.hasMoreTokens()) {
+                result.append("\n...");
+            }
+            return result.toString();
+        }
+        
+        /**
+         * @return the hasErrorDuringNonDataLoad
+         */
+        public boolean hasWarningEntries() {
+            for (LoadResultEntry e : m_errors) {
+                boolean isWarning;
+                switch (e.getType()) {
+                case Aggregation:
+                    isWarning = e.getSubLoadResult().hasWarningEntries();
+                    break;
+                case Warning:
+                    isWarning = true;
+                    break;
+                default:
+                    isWarning = false;
+                }
+                if (isWarning) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * @return the hasErrorDuringNonDataLoad
+         */
+        public boolean hasErrors() {
+            for (LoadResultEntry e : m_errors) {
+                boolean isError;
+                switch (e.getType()) {
+                case Aggregation:
+                    isError = e.getSubLoadResult().hasErrorDuringNonDataLoad();
+                    break;
+                case Warning:
+                    isError = false;
+                    break;
+                default:
+                    isError = true;
+                }
+                if (isError) {
+                    return true;
+                }
+            }
+            return false;
         }
         
         /**
          * @return the hasErrorDuringNonDataLoad
          */
         public boolean hasErrorDuringNonDataLoad() {
-            return m_hasErrorDuringNonDataLoad;
+            for (LoadResultEntry e : m_errors) {
+                boolean isError;
+                switch (e.getType()) {
+                case Aggregation:
+                    isError = e.getSubLoadResult().hasErrorDuringNonDataLoad();
+                    break;
+                case DataLoadError:
+                case Warning:
+                    isError = false;
+                    break;
+                default:
+                    isError = true;
+                }
+                if (isError) {
+                    return true;
+                }
+            }
+            return false;
         }
         
     }
@@ -277,7 +370,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     public static final class WorkflowLoadResult extends LoadResult {
         
         private WorkflowManager m_workflowManager;
-        private boolean m_guiMustReportError = false;
+        private boolean m_guiMustReportDataLoadErrors = false;
         
         /**
          * @param workflowManager the workflowManager to set
@@ -294,20 +387,72 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         }
         
         /**
-         * @param guiMustReportError the guiMustReportError to set
+         * @param guiMustReportDataLoadErrors the guiMustReportError to set
          */
-        void setGUIMustReportError(final boolean guiMustReportError) {
-            m_guiMustReportError = guiMustReportError;
+        void setGUIMustReportDataLoadErrors(
+                final boolean guiMustReportDataLoadErrors) {
+            m_guiMustReportDataLoadErrors = guiMustReportDataLoadErrors;
         }
         
         /**
          * @return the guiMustReportError
          */
-        public boolean getGUIMustReportError() {
-            return m_guiMustReportError;
+        public boolean getGUIMustReportDataLoadErrors() {
+            return m_guiMustReportDataLoadErrors;
         }
-        
+    }
+
+    public enum LoadResultEntryType {
+        Warning,
+        Error,
+        DataLoadError,
+        Aggregation
     }
     
+    public static final class LoadResultEntry {
+        
+        private final LoadResultEntryType m_type;
+        private final String m_message;
+        private final LoadResult m_subLoadResult;
+        
+        public LoadResultEntry(
+                final String message, final LoadResult subResult) {
+            m_type = LoadResultEntryType.Aggregation;
+            m_message = message;
+            m_subLoadResult = subResult;
+        }
+
+        public LoadResultEntry(
+                final LoadResultEntryType type, final String message) {
+            switch (type) {
+            case Aggregation: assert false;
+            default:
+            }
+            m_type = type;
+            m_message = message;
+            m_subLoadResult = null;
+        }
+        
+        /**
+         * @return the type
+         */
+        LoadResultEntryType getType() {
+            return m_type;
+        }
+
+        /**
+         * @return the message
+         */
+        String getMessage() {
+            return m_message;
+        }
+
+        /**
+         * @return the subLoadResult
+         */
+        LoadResult getSubLoadResult() {
+            return m_subLoadResult;
+        }
+    }
     
 }

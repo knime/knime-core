@@ -363,6 +363,27 @@ public final class ColumnRearranger {
     }
     
     /** Changes the order of the columns according to the argument array. 
+     * The array must contain the column indices in the desired order.
+     * This method is the counterpart to the {@link #permute(String[])} method. 
+     * 
+     * @param colIndicesInOrder The new column ordering. It may contain fewer 
+     * names than actually present in this re-arrange object. However, it must 
+     * not contain unknown columns, nor should it contain duplicates or null
+     * elements.
+     * @throws NullPointerException If the argument is <code>null</code>
+     * @throws IllegalArgumentException If the array contains duplicates-
+     * @throws IndexOutOfBoundsException If the indices are invalid.
+     */
+    public void permute(final int[] colIndicesInOrder) {
+        String[] orderedNames = new String[colIndicesInOrder.length];
+        for (int i = 0; i < colIndicesInOrder.length; i++) {
+            orderedNames[i] = m_includes.get(
+                    colIndicesInOrder[i]).getColSpec().getName();
+        }
+        permute(orderedNames);
+    }
+    
+    /** Changes the order of the columns according to the argument array. 
      * The array must contain the column names in the desired order. 
      * If this rearrange object contains names that are not contained in the
      * argument array, those columns are moved to the end of the new ordering. 

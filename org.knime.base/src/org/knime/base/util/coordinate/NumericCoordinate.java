@@ -35,7 +35,6 @@ import org.knime.core.data.def.DoubleCell;
  * numeric values.
  *
  * @see org.knime.base.util.coordinate.DoubleCoordinate
- * @see org.knime.base.util.coordinate.IntegerCoordinate
  *
  * @author Tobias Koetter, University of Konstanz
  * @author Stephan Sellien, University of Konstanz

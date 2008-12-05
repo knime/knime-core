@@ -97,7 +97,7 @@ public abstract class NodeContainer {
 
     private NodeExecutionJobManager m_jobExecutor;
     
-    private NodeMessage m_nodeMessage;
+    private NodeMessage m_nodeMessage = NodeMessage.NONE;
 
     private boolean m_isDeletable;
 

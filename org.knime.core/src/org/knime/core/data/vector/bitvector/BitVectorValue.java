@@ -35,9 +35,7 @@ import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 
 /**
  * Implementing {@link DataCell}s store '0's and '1's at specific positions in
- * a vector.<br />
- * The default implementation uses the {@link BitVectorCellFactory} to create
- * new instances of {@link BitVectorDataCell}s.<br />
+ * a vector.
  *
  * @author ohl, University of Konstanz
  */

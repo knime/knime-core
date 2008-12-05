@@ -221,7 +221,6 @@ public abstract class DialogComponent {
      *
      * @param enabled if <code>true</code> the contained components will be
      *            enabled
-     * @see #setEnabledComponents(boolean)
      * @see java.awt.Component#setEnabled(boolean)
      * @deprecated rather use the component's {@link SettingsModel} to
      *             enable/disable the component.

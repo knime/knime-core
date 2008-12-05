@@ -189,4 +189,10 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         return new LoadResult();
     }
     
+    /** {@inheritDoc} */
+    @Override
+    public boolean mustWarnOnDataLoadError() {
+        return true;
+    }
+    
 }
