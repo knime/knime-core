@@ -84,7 +84,7 @@ public class WorkflowTestCase extends TestCase {
         if (m == null) {
             throw new Exception("Errors reading workflow: " 
                     + loadResult.getErrors());
-        } else if (loadResult.hasErrors()) {
+        } else if (loadResult.hasEntries()) {
             m_logger.info("Errors reading workflow (proceeding anyway): ");
             dumpLineBreakStringToLog(loadResult.getErrors());
         }

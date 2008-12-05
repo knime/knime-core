@@ -154,7 +154,18 @@ public class KnimeTestCase extends TestCase {
                     m_knimeWorkFlow.getParentFile(),
                     new ExecutionMonitor());
 
-            if (loadRes.getGUIMustReportError()) {
+            boolean mustReportErrors;
+            if (loadRes.hasErrorDuringNonDataLoad()) {
+                mustReportErrors = true;
+            } else if (loadRes.getGUIMustReportDataLoadErrors()
+                    && loadRes.hasErrors()) {
+                // these can only be data load errors but no
+                // warning messages (node XY switch from IDLE to CONFIGURED)
+                mustReportErrors = true;
+            } else {
+                mustReportErrors = false;
+            }
+            if (mustReportErrors) {
                 logger.error(loadRes.getErrors());
             }
             m_manager = loadRes.getWorkflowManager();
