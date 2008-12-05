@@ -130,8 +130,9 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return m_nodeContainerLoaderMap;
     }
     
-    /** @return the shouldFailOnLoadDataError */
-    boolean mustWarnOnDataLoadError() {
+    /** {@inheritDoc} */
+    @Override
+    public boolean mustWarnOnDataLoadError() {
         return m_mustWarnOnDataLoadError;
     }
     

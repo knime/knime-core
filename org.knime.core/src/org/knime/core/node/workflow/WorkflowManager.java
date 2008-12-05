@@ -2770,7 +2770,7 @@ public final class WorkflowManager extends NodeContainer {
             try {
                 postLoad(newLoaderMap, 
                         new HashMap<Integer, BufferedDataTable>(), 
-                        new ExecutionMonitor());
+                        true, new ExecutionMonitor());
             } catch (CanceledExecutionException e) {
                 LOGGER.fatal("Unexpected exception", e);
             }
@@ -2953,7 +2953,8 @@ public final class WorkflowManager extends NodeContainer {
 
         m_inPortsBarUIInfo = persistor.getInPortsBarUIInfo();
         m_outPortsBarUIInfo = persistor.getOutPortsBarUIInfo();
-        LoadResult postLoadResult = postLoad(persistorMap, tblRep, exec);
+        LoadResult postLoadResult = postLoad(persistorMap, 
+                tblRep, persistor.mustWarnOnDataLoadError(), exec);
         if (postLoadResult.hasErrors()) {
             loadResult.addError(postLoadResult);
         }
@@ -2967,8 +2968,8 @@ public final class WorkflowManager extends NodeContainer {
     
     private LoadResult postLoad(
             final Map<NodeID, NodeContainerPersistor> persistorMap, 
-            final Map<Integer, BufferedDataTable> tblRep,
-            final ExecutionMonitor exec) 
+            final Map<Integer, BufferedDataTable> tblRep, 
+            final boolean mustWarnOnDataLoadError, final ExecutionMonitor exec) 
         throws CanceledExecutionException {
         LoadResult loadResult = new LoadResult();
         // linked set because we need reverse order later on
@@ -3034,7 +3035,7 @@ public final class WorkflowManager extends NodeContainer {
                             + e.getClass().getSimpleName()
                             + "\" during node loading", e);
                 }
-                loadResult.addError("Errors reading node \""
+                loadResult.addError("Errors loading node \""
                         + cont.getNameWithID() + "\", skipping it: "
                         + e.getMessage());
                 needsReset = true;
@@ -3077,17 +3078,35 @@ public final class WorkflowManager extends NodeContainer {
             if (needsReset) {
                 failedNodes.add(bfsID);
             }
+            boolean wasWFMDirty = isDirty();
+            boolean wasSNCDirty = cont.isDirty();
             if (!isExecuted && cont instanceof SingleNodeContainer) {
                 configureSingleNodeContainer((SingleNodeContainer)cont);
             }
-            if (!cont.getState().equals(loadState) && !hasPredecessorFailed) {
+            boolean switchedFromIdleToConfigure = loadState.equals(State.IDLE)
+                && cont.getState().equals(State.CONFIGURED);
+            if (!cont.getState().equals(loadState) 
+                    && !hasPredecessorFailed && !switchedFromIdleToConfigure) {
                 String error = "State of node " + cont.getNameWithID() 
                 + " has changed from " + loadState + " to " + cont.getState();
-                subResult.addError(error);
+                subResult.addError(error, true);
+            }
+            if (switchedFromIdleToConfigure && !wasSNCDirty) {
+                assert cont.isDirty();
+                cont.unsetDirty();
+                if (!wasWFMDirty && isDirty()) {
+                    unsetDirty();
+                }
             }
             if (subResult.hasErrors()) {
-                loadResult.addError("Errors reading node \""
+                loadResult.addError("Errors loading node \""
                         + cont.getNameWithID() + "\":", subResult);
+            }
+            // set warning message on node if we have loading errors
+            // do this only if these are critical errors or data-load errors,
+            // which must be reported.
+            if (subResult.hasErrors() && (subResult.hasErrorDuringNonDataLoad()
+                    || mustWarnOnDataLoadError)) {
                 NodeMessage oldMessage = cont.getNodeMessage();
                 StringBuilder messageBuilder = 
                     new StringBuilder(oldMessage.getMessage());

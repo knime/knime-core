@@ -84,6 +84,9 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      */
     public UIInformation getOutPortsBarUIInfo();
     
+    /** @return the shouldFailOnLoadDataError */
+    public boolean mustWarnOnDataLoadError();
+    
     static class ConnectionContainerTemplate {
         private final int m_sourceSuffix;
         private final int m_sourcePort;
