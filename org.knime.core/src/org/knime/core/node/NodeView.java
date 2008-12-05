@@ -26,6 +26,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -33,12 +34,16 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
+import javax.swing.BorderFactory;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
@@ -56,8 +61,9 @@ import org.knime.core.node.util.ViewUtils;
  * @param <T> the implementation of the {@link NodeModel} this node view
  *          is based on
  */
-public abstract class NodeView<T extends NodeModel> {
-
+public abstract class NodeView<T extends NodeModel> 
+        implements NodeModelWarningListener {
+    
     /**
      * The node logger for this class; do not make static to make sure the right
      * class name is printed in messages.
@@ -130,6 +136,8 @@ public abstract class NodeView<T extends NodeModel> {
             closeView();
         }
     };
+    
+    private final JLabel m_warningLabel;
 
     /**
      * This class sends property events when the status changes.
@@ -216,8 +224,42 @@ public abstract class NodeView<T extends NodeModel> {
         // set a dummy component to get the default size
         setShowNODATALabel(true);
         setComponent(m_noDataComp);
-
+        
+        // add warning label
+        m_warningLabel = new JLabel("", WARNING_ICON, SwingConstants.LEFT);
+        m_warningLabel.setPreferredSize(new Dimension(INIT_COMP_WIDTH, 20));
+        m_warningLabel.setOpaque(true);
+        m_warningLabel.setBackground(Color.WHITE);
+        JPanel warningPanel = new JPanel(new GridLayout(1, 1));
+        warningPanel.setBorder(BorderFactory.createEmptyBorder(0, 2, 0, 0));
+        warningPanel.setBackground(Color.WHITE);
+        warningPanel.add(m_warningLabel);
+        cont.add(warningPanel, BorderLayout.NORTH);
     }
+    
+    private static final Icon WARNING_ICON = loadIcon(
+                NodeView.class, "/icon/warning.png");
+    
+    private static Icon loadIcon(
+            final Class<?> className, final String path) {
+        ImageIcon icon;
+        try {
+            ClassLoader loader = className.getClassLoader(); 
+            String packagePath = 
+                className.getPackage().getName().replace('.', '/');
+            String correctedPath = path;
+            if (!path.startsWith("/")) {
+                correctedPath = "/" + path;
+            }
+            icon = new ImageIcon(
+                    loader.getResource(packagePath + correctedPath));
+        } catch (Exception e) {
+            NodeLogger.getLogger(NodeView.class).debug(
+                    "Unable to load icon at path " + path, e);
+            icon = null;
+        }
+        return icon;
+    }  
 
     /**
      * Get reference to underlying <code>NodeModel</code>. Access this if
@@ -342,6 +384,8 @@ public abstract class NodeView<T extends NodeModel> {
         m_nodeModel.registerView(this);
         callModelChanged();
 
+        warningChanged(getNodeModel().getWarningMessage());
+        
         if (m_comp != null) {
             m_comp.invalidate();
             m_comp.repaint();
@@ -588,5 +632,18 @@ public abstract class NodeView<T extends NodeModel> {
         noData.setPreferredSize(new Dimension(INIT_COMP_WIDTH,
                 INIT_COMP_HEIGTH));
         return noData;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void warningChanged(final String warning) {
+        if (warning != null && warning.trim().length() > 0) {
+            m_warningLabel.setIcon(WARNING_ICON);
+            m_warningLabel.setText("<html><body><b>" + warning.trim() 
+                    + "</b></body></html>");
+        } else {
+            m_warningLabel.setIcon(null);
+            m_warningLabel.setText(null);
+        }
     }
 }

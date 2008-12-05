@@ -212,6 +212,7 @@ public abstract class NodeModel {
     final void registerView(final NodeView<?> view) {
         assert view != null;
         m_views.add(view);
+        m_warningListeners.add(view); 
         m_logger.debug("Registering view at model (total count " 
                 + m_views.size() + ")");
     }
@@ -223,6 +224,7 @@ public abstract class NodeModel {
      */
     final void unregisterView(final NodeView<?> view) {
         assert view != null;
+        m_warningListeners.remove(view);
         boolean success = m_views.remove(view);
         if (success) {
             m_logger.debug("Unregistering view from model ("
