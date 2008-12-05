@@ -67,10 +67,9 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
 
     private DecisionTree m_tree;
 
-
     /**
-     * @param tree
-     * @param spec
+     * @param tree underlying decision tree
+     * @param spec 
      */
     public PMMLDecisionTreePortObject(final DecisionTree tree,
             final PMMLPortObjectSpec spec) {
@@ -96,14 +95,13 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
         atts.addAttribute(null, null, "modelName", CDATA, "DecisionTree");
         atts.addAttribute(null, null, "functionName", CDATA, "classification");
         String splitCharacteristic;
-        if(treeIsMultisplit(m_tree.getRootNode())){
+        if (treeIsMultisplit(m_tree.getRootNode())) {
             splitCharacteristic = "multiSplit";
-        }
-        else{
+        } else {
             splitCharacteristic = "binarySplit";
         }
         atts.addAttribute(null, null, "splitCharacteristic", CDATA,
-            splitCharacteristic);
+                splitCharacteristic);
         handler.startElement(null, null, "TreeModel", atts);
 
         PMMLPortObjectSpec.writeMiningSchema(getSpec(), handler);
@@ -112,53 +110,51 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
         handler.endElement(null, null, "TreeModel");
     }
 
-/**
+    /**
      * @return
      */
     private boolean treeIsMultisplit(final DecisionTreeNode node) {
-        if(node instanceof DecisionTreeNodeSplitContinuous){
-            boolean leftSide = treeIsMultisplit((DecisionTreeNode)node.getChildAt(0));
-            boolean rightSide = treeIsMultisplit((DecisionTreeNode)node.getChildAt(1));
-            if(leftSide || rightSide){
+        if (node instanceof DecisionTreeNodeSplitContinuous) {
+            boolean leftSide =
+                    treeIsMultisplit((DecisionTreeNode)node.getChildAt(0));
+            boolean rightSide =
+                    treeIsMultisplit((DecisionTreeNode)node.getChildAt(1));
+            if (leftSide || rightSide) {
                 return true;
-            }
-            else{
+            } else {
                 return false;
             }
-        }
-        else if(node instanceof DecisionTreeNodeSplitNominalBinary){
+        } else if (node instanceof DecisionTreeNodeSplitNominalBinary) {
             return false;
-        }
-        else if(node instanceof DecisionTreeNodeSplitNominal){
+        } else if (node instanceof DecisionTreeNodeSplitNominal) {
             return true;
-        }
-        else{
+        } else {
             return false;
         }
     }
 
-//    /**
-//     * Writes the used columns as PMML mining schema.
-//     *
-//     * @param handler to write to
-//     * @param colSpecs specs of the used columns
-//     * @throws SAXException if something goes wrong
-//     */
-//    protected void addMiningSchema(final TransformerHandler handler,
-//            final DataColumnSpec... colSpecs) throws SAXException {
-//        // open mining schema
-//        handler.startElement(null, null, "MiningSchema", null);
-//        // for each column add it as a mining field
-//        for (DataColumnSpec colSpec : colSpecs) {
-//            // add mining field name
-//            AttributesImpl atts = new AttributesImpl();
-//            atts.addAttribute(null, null, "name", CDATA, colSpec.getName());
-//            handler.startElement(null, null, "MiningField", atts);
-//            handler.endElement(null, null, "MiningField");
-//        }
-//        // close mining schema
-//        handler.endElement(null, null, "MiningSchema");
-//    }
+    // /**
+    // * Writes the used columns as PMML mining schema.
+    // *
+    // * @param handler to write to
+    // * @param colSpecs specs of the used columns
+    // * @throws SAXException if something goes wrong
+    // */
+    // protected void addMiningSchema(final TransformerHandler handler,
+    // final DataColumnSpec... colSpecs) throws SAXException {
+    // // open mining schema
+    // handler.startElement(null, null, "MiningSchema", null);
+    // // for each column add it as a mining field
+    // for (DataColumnSpec colSpec : colSpecs) {
+    // // add mining field name
+    // AttributesImpl atts = new AttributesImpl();
+    // atts.addAttribute(null, null, "name", CDATA, colSpec.getName());
+    // handler.startElement(null, null, "MiningField", atts);
+    // handler.endElement(null, null, "MiningField");
+    // }
+    // // close mining schema
+    // handler.endElement(null, null, "MiningSchema");
+    // }
 
     /**
      * @param handler
@@ -220,12 +216,15 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
             } else if (splitNode.getIndex(node) == 1) {
                 indices = splitNode.getChildIndices1();
             }
-            String classSet = new String();
+            StringBuilder classSet = new StringBuilder();
             for (Integer i : indices) {
-                classSet += splitValues[i].toString() + " ";
+                if (classSet.length() > 0) {
+                    classSet.append(" ");
+                }
+                classSet.append(splitValues[i].toString());
             }
-            handler.characters(classSet.trim().toCharArray(), 0, classSet
-                    .trim().length());
+            handler.characters(classSet.toString().toCharArray(), 0,
+                    classSet.length());
             handler.endElement(null, null, "Array");
             handler.endElement(null, null, "SimpleSetPredicate");
 
@@ -304,6 +303,5 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
         return "PMML Decision Tree Port with " + m_tree.getNumberNodes()
                 + " nodes";
     }
-
 
 }
