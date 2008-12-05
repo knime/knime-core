@@ -63,11 +63,17 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
              * {@inheritDoc}
              */
             @Override
-            public void loadSettings(final NodeSettingsRO settings,
-                    final PortObjectSpec[] inSpecs) {
+            public void loadSettings(final NodeSettingsRO settings) {
                 // nothing to do here
             }
 
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void updateInputSpecs(final PortObjectSpec[] inSpecs) {
+                // we don't care
+            }
             /**
              * {@inheritDoc}
              */
@@ -147,7 +153,6 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
      */
     private void jobManagerSelectionChanged() {
         assert m_settingsPanel != null;
-
         // remove panel from previously selected manager
         m_settingsPanel.removeAll();
         m_currentPanel = null; // don't dispose it, we may reuse it
@@ -163,11 +168,8 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
                 if (m_currentPanel != null) {
                     // store new panels in the map
                     m_panels.put(selJobMgr.getID(), m_currentPanel);
-                    // initialize it with empty settings and the last port specs
-                    if (m_lastPortSpecs != null) {
-                        m_currentPanel.loadSettings(
-                                new NodeSettings("empty"), m_lastPortSpecs);
-                    } // else the next load will infuse settings
+                    // initialize it with empty settings
+                    m_currentPanel.loadSettings(new NodeSettings("empty"));
                 } else {
                     m_currentPanel = EMPTY_PANEL;
                 }
@@ -176,7 +178,10 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
             // no job manager selected - that is almost impossible
             m_currentPanel = EMPTY_PANEL;
         }
-
+        // update the inspecs on the new panel
+        if (m_lastPortSpecs != null) {
+            m_currentPanel.updateInputSpecs(m_lastPortSpecs);
+        }
         m_settingsPanel.add(m_currentPanel);
 
         if (getParent() != null) {
@@ -214,10 +219,10 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
 
         m_jobManagerSelect.setSelectedItem(newMgr);
         if (m_jobManagerSelect.getSelectedItem() == newMgr) {
-
             // if the job manager exists in the list apply the settings
-            m_currentPanel.loadSettings(settings.getJobManagerSettings(),
-                    inSpecs);
+
+            m_currentPanel.updateInputSpecs(inSpecs);
+            m_currentPanel.loadSettings(settings.getJobManagerSettings());
 
         } else {
             // seems we got a manager we currently don't have

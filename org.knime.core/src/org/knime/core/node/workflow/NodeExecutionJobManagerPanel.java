@@ -55,9 +55,13 @@ public abstract class NodeExecutionJobManagerPanel extends JComponent {
      *
      * @param settings the object holding new settings (as written by
      *            {@link #saveSettings(NodeSettingsWO)}
+     */
+    public abstract void loadSettings(final NodeSettingsRO settings);
+
+    /**
+     * Notifies the panel of the (or a new) port object spec at the input ports.
+     *
      * @param inSpecs the specs of the input port objects.
      */
-    public abstract void loadSettings(final NodeSettingsRO settings,
-            final PortObjectSpec[] inSpecs);
-
+    public abstract void updateInputSpecs(final PortObjectSpec[] inSpecs);
 }
