@@ -24,21 +24,22 @@ package org.knime.base.node.preproc.missingval;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
  * Factory to create all node classes for a node that handles missing values in
  * a table and replaces it by some meaningful values.
  * 
- * @author Bernd Wiswedl, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
-public class MissingValueHandlingNodeFactory extends NodeFactory {
+public class MissingValueHandlingNodeFactory
+        extends NodeFactory<MissingValueHandlingNodeModel> {
+    
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public MissingValueHandlingNodeModel createNodeModel() {
         return new MissingValueHandlingNodeModel();
     }
 
@@ -54,8 +55,8 @@ public class MissingValueHandlingNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public NodeView<MissingValueHandlingNodeModel> createNodeView(
+            final int viewIndex, final MissingValueHandlingNodeModel model) {
         throw new IndexOutOfBoundsException();
     }
 

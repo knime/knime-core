@@ -93,6 +93,8 @@ public class MissingValueHandlingNodeDialog extends NodeDialogPane {
            } 
         });
         m_colList.addMouseListener(new MouseAdapter() {
+            /** {@inheritDoc} */
+            @Override
             public void mouseClicked(final MouseEvent e) {
                 if (e.getClickCount() == 2) {
                     DataColumnSpec selected = 
