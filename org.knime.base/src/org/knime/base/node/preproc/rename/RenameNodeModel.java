@@ -133,7 +133,8 @@ public class RenameNodeModel extends NodeModel {
         // (for those columns it is not sufficient to just change the column
         // type, we do need to change the cells, too)
         ArrayList<Integer> toStringColumnsIndex = new ArrayList<Integer>();
-        ArrayList<DataColumnSpec> toStringColumns = new ArrayList<DataColumnSpec>();
+        ArrayList<DataColumnSpec> toStringColumns = 
+            new ArrayList<DataColumnSpec>();
         for (int i = 0; i < inSpec.getNumColumns(); i++) {
             DataType oldType = inSpec.getColumnSpec(i).getType();
             DataType newType = outSpec.getColumnSpec(i).getType();
@@ -146,12 +147,11 @@ public class RenameNodeModel extends NodeModel {
                 toStringColumns.add(outSpec.getColumnSpec(i));
             }
         }
-        final BufferedDataTable typeSafeTable;
+        // a data table wrapper that returns the "right" DTS (no iteration)
+        BufferedDataTable out = exec.createSpecReplacerTable(in, outSpec);
         // depending on whether we have to change some of the columns, we
         // create a ReplacedColumnsTable
-        if (toStringColumnsIndex.isEmpty()) {
-            typeSafeTable = in;
-        } else {
+        if (!toStringColumnsIndex.isEmpty()) {
             DataColumnSpec[] changedColumns = toStringColumns
                     .toArray(new DataColumnSpec[0]);
             int[] changedColumnsIndex = new int[toStringColumnsIndex.size()];
@@ -160,15 +160,10 @@ public class RenameNodeModel extends NodeModel {
             }
             ToStringCellsFactory cellsFactory = new ToStringCellsFactory(
                     changedColumns, changedColumnsIndex);
-            ColumnRearranger rearranger = new ColumnRearranger(inSpec);
+            ColumnRearranger rearranger = new ColumnRearranger(out.getSpec());
             rearranger.replace(cellsFactory, changedColumnsIndex);
-            typeSafeTable = exec.createColumnRearrangeTable(in, rearranger,
-                    exec);
+            out = exec.createColumnRearrangeTable(out, rearranger, exec);
         }
-        // a data table wrappper that returns the "right" DTS but the iterator
-        // from typeSafeTable
-        BufferedDataTable out = exec.createSpecReplacerTable(typeSafeTable,
-                outSpec);
         return new BufferedDataTable[]{out};
     }
 
