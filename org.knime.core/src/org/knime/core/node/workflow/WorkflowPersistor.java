@@ -33,7 +33,6 @@ import java.util.StringTokenizer;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.port.PortType;
-import org.knime.core.util.Pair;
 
 /**
  * 
@@ -219,9 +218,8 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     
     public static class LoadResult {
         
-        private final List<Pair<String, LoadResult>> m_errors = 
-            new ArrayList<Pair<String, LoadResult>>();
-        private boolean m_hasErrorDuringNonDataLoad = false;
+        private final List<LoadResultEntry> m_errors = 
+            new ArrayList<LoadResultEntry>();
         
         public void addError(final String error) {
             addError(error, false);
@@ -229,27 +227,26 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         
         public void addError(final String error, 
                 final boolean isErrorDuringDataLoad) {
-            m_errors.add(new Pair<String, LoadResult>(error, null));
-            if (!isErrorDuringDataLoad) {
-                m_hasErrorDuringNonDataLoad = true;
-            }
+            LoadResultEntryType t = isErrorDuringDataLoad
+            ? LoadResultEntryType.DataLoadError : LoadResultEntryType.Error;
+            m_errors.add(new LoadResultEntry(t, error));
         }
         
-        public void addError(final String parentName, final LoadResult loadResult) {
-            m_errors.add(new Pair<String, LoadResult>(parentName, loadResult));
-            if (loadResult.hasErrorDuringNonDataLoad()) {
-                m_hasErrorDuringNonDataLoad = true;
-            }
+        public void addWarning(final String warning) {
+            LoadResultEntryType t = LoadResultEntryType.Warning;
+            m_errors.add(new LoadResultEntry(t, warning));
+        }
+        
+        public void addError(
+                final String parentName, final LoadResult loadResult) {
+            m_errors.add(new LoadResultEntry(parentName, loadResult));
         }
         
         public void addError(final LoadResult loadResult) {
             m_errors.addAll(loadResult.m_errors);
-            if (loadResult.hasErrorDuringNonDataLoad()) {
-                m_hasErrorDuringNonDataLoad = true;
-            }
         }
         
-        public boolean hasErrors() {
+        public boolean hasEntries() {
             return !m_errors.isEmpty();
         }
         
@@ -261,16 +258,16 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         
         private void appendErrors(final StringBuilder b, final String indent) {
             boolean isFirst = true;
-            for (Pair<String, LoadResult> e : m_errors) {
+            for (LoadResultEntry e : m_errors) {
                 if (isFirst) {
                     isFirst = false;
                 } else {
                     b.append("\n");
                 }
-                b.append(indent).append(e.getFirst());
-                if (e.getSecond() != null) {
+                b.append(indent).append(e.getMessage());
+                if (e.getSubLoadResult() != null) {
                     b.append("\n");
-                    e.getSecond().appendErrors(b, indent + "  ");
+                    e.getSubLoadResult().appendErrors(b, indent + "  ");
                 }
             }
         }
@@ -278,7 +275,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         /** {@inheritDoc} */
         @Override
         public String toString() {
-            return m_errors.toString();
+            return getErrors();
         }
         
         public String peekErrors() {
@@ -301,8 +298,71 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         /**
          * @return the hasErrorDuringNonDataLoad
          */
+        public boolean hasWarningEntries() {
+            for (LoadResultEntry e : m_errors) {
+                boolean isWarning;
+                switch (e.getType()) {
+                case Aggregation:
+                    isWarning = e.getSubLoadResult().hasWarningEntries();
+                    break;
+                case Warning:
+                    isWarning = true;
+                    break;
+                default:
+                    isWarning = false;
+                }
+                if (isWarning) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * @return the hasErrorDuringNonDataLoad
+         */
+        public boolean hasErrors() {
+            for (LoadResultEntry e : m_errors) {
+                boolean isError;
+                switch (e.getType()) {
+                case Aggregation:
+                    isError = e.getSubLoadResult().hasErrorDuringNonDataLoad();
+                    break;
+                case Warning:
+                    isError = false;
+                    break;
+                default:
+                    isError = true;
+                }
+                if (isError) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        /**
+         * @return the hasErrorDuringNonDataLoad
+         */
         public boolean hasErrorDuringNonDataLoad() {
-            return m_hasErrorDuringNonDataLoad;
+            for (LoadResultEntry e : m_errors) {
+                boolean isError;
+                switch (e.getType()) {
+                case Aggregation:
+                    isError = e.getSubLoadResult().hasErrorDuringNonDataLoad();
+                    break;
+                case DataLoadError:
+                case Warning:
+                    isError = false;
+                    break;
+                default:
+                    isError = true;
+                }
+                if (isError) {
+                    return true;
+                }
+            }
+            return false;
         }
         
     }
@@ -310,7 +370,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     public static final class WorkflowLoadResult extends LoadResult {
         
         private WorkflowManager m_workflowManager;
-        private boolean m_guiMustReportError = false;
+        private boolean m_guiMustReportDataLoadErrors = false;
         
         /**
          * @param workflowManager the workflowManager to set
@@ -327,20 +387,72 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         }
         
         /**
-         * @param guiMustReportError the guiMustReportError to set
+         * @param guiMustReportDataLoadErrors the guiMustReportError to set
          */
-        void setGUIMustReportError(final boolean guiMustReportError) {
-            m_guiMustReportError = guiMustReportError;
+        void setGUIMustReportDataLoadErrors(
+                final boolean guiMustReportDataLoadErrors) {
+            m_guiMustReportDataLoadErrors = guiMustReportDataLoadErrors;
         }
         
         /**
          * @return the guiMustReportError
          */
-        public boolean getGUIMustReportError() {
-            return m_guiMustReportError;
+        public boolean getGUIMustReportDataLoadErrors() {
+            return m_guiMustReportDataLoadErrors;
         }
-        
+    }
+
+    public enum LoadResultEntryType {
+        Warning,
+        Error,
+        DataLoadError,
+        Aggregation
     }
     
+    public static final class LoadResultEntry {
+        
+        private final LoadResultEntryType m_type;
+        private final String m_message;
+        private final LoadResult m_subLoadResult;
+        
+        public LoadResultEntry(
+                final String message, final LoadResult subResult) {
+            m_type = LoadResultEntryType.Aggregation;
+            m_message = message;
+            m_subLoadResult = subResult;
+        }
+
+        public LoadResultEntry(
+                final LoadResultEntryType type, final String message) {
+            switch (type) {
+            case Aggregation: assert false;
+            default:
+            }
+            m_type = type;
+            m_message = message;
+            m_subLoadResult = null;
+        }
+        
+        /**
+         * @return the type
+         */
+        LoadResultEntryType getType() {
+            return m_type;
+        }
+
+        /**
+         * @return the message
+         */
+        String getMessage() {
+            return m_message;
+        }
+
+        /**
+         * @return the subLoadResult
+         */
+        LoadResult getSubLoadResult() {
+            return m_subLoadResult;
+        }
+    }
     
 }

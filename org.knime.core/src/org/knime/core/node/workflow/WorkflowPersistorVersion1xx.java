@@ -264,7 +264,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         }
         LoadResult metaLoadResult = m_metaPersistor.load(
                 subWFSettings, metaFlowParentSettings);
-        if (metaLoadResult.hasErrors()) {
+        if (metaLoadResult.hasEntries()) {
             loadResult.addError(metaLoadResult);
             setNeedsResetAfterLoad();
         }
@@ -368,7 +368,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     new WorkflowPortTemplate(i, FALLBACK_PORTTYPE);
             }
         }
-        if (loadResult.hasErrors()) {
+        if (loadResult.hasEntries()) {
             setDirtyAfterLoad();
         }
         return loadResult;
@@ -485,7 +485,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             try {
                 LoadResult childResult =
                     persistor.preLoadNodeContainer(nodeFile, nodeSetting);
-                if (childResult.hasErrors()) {
+                if (childResult.hasEntries()) {
                     loadResult.addError("Errors during loading "
                             + (isMeta ? "meta " : "") + "node "
                             + "with ID suffix " + nodeIDSuffix, childResult);
@@ -640,7 +640,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         }
         m_outPortsBarUIInfo = outPortsBarUIInfo;
         exec.setProgress(1.0);
-        if (loadResult.hasErrors()) {
+        if (loadResult.hasEntries()) {
             setDirtyAfterLoad();
         }
         return loadResult;

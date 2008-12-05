@@ -2882,7 +2882,7 @@ public final class WorkflowManager extends NodeContainer {
             // if all errors during the load process are related to data loading
             // it might be that the flow is ex/imported without data;
             // check for it and silently overwrite the workflow
-            if (result.hasErrors() && (!result.hasErrorDuringNonDataLoad()
+            if (result.hasEntries() && (!result.hasErrorDuringNonDataLoad()
                     && !persistor.mustWarnOnDataLoadError())) {
                 LOGGER.debug("Workflow was apparently ex/imported without "
                         + "data, silently fixing states and writing changes");
@@ -2899,13 +2899,14 @@ public final class WorkflowManager extends NodeContainer {
         exec.setProgress(1.0);
         result.setWorkflowManager(manager);
         String message;
-        if (result.hasErrors() && (result.hasErrorDuringNonDataLoad()
+        result.setGUIMustReportDataLoadErrors(
+                persistor.mustWarnOnDataLoadError());
+        if (result.hasEntries() && (result.hasErrorDuringNonDataLoad()
                 || persistor.mustWarnOnDataLoadError())) {
             message = "Loaded workflow from \"" + directory.getAbsolutePath()
                 + "\" with errors";
             LOGGER.debug(result.getErrors());
-            result.setGUIMustReportError(true);
-        } else if (result.hasErrors() && !result.hasErrorDuringNonDataLoad()) {
+        } else if (result.hasEntries() && !result.hasErrorDuringNonDataLoad()) {
             message = "Loaded workflow from \"" + directory.getAbsolutePath()
                 + "\" with errors during data load. ";
             if (fixDataLoadProblems) {
@@ -2955,7 +2956,7 @@ public final class WorkflowManager extends NodeContainer {
         m_outPortsBarUIInfo = persistor.getOutPortsBarUIInfo();
         LoadResult postLoadResult = postLoad(persistorMap, 
                 tblRep, persistor.mustWarnOnDataLoadError(), exec);
-        if (postLoadResult.hasErrors()) {
+        if (postLoadResult.hasEntries()) {
             loadResult.addError(postLoadResult);
         }
         // set dirty if this wm should be reset (for instance when the state
@@ -3078,34 +3079,30 @@ public final class WorkflowManager extends NodeContainer {
             if (needsReset) {
                 failedNodes.add(bfsID);
             }
-            boolean wasWFMDirty = isDirty();
-            boolean wasSNCDirty = cont.isDirty();
             if (!isExecuted && cont instanceof SingleNodeContainer) {
                 configureSingleNodeContainer((SingleNodeContainer)cont);
             }
-            boolean switchedFromIdleToConfigure = loadState.equals(State.IDLE)
-                && cont.getState().equals(State.CONFIGURED);
-            if (!cont.getState().equals(loadState) 
-                    && !hasPredecessorFailed && !switchedFromIdleToConfigure) {
-                String error = "State of node " + cont.getNameWithID() 
+            if (!cont.getState().equals(loadState) && !hasPredecessorFailed) {
+                String warning = "State of node " + cont.getNameWithID() 
                 + " has changed from " + loadState + " to " + cont.getState();
-                subResult.addError(error, true);
-            }
-            if (switchedFromIdleToConfigure && !wasSNCDirty) {
-                assert cont.isDirty();
-                cont.unsetDirty();
-                if (!wasWFMDirty && isDirty()) {
-                    unsetDirty();
+                if (subResult.hasEntries() 
+                        && !subResult.hasErrorDuringNonDataLoad()) {
+                    // node was loaded with data load errors only ... then
+                    // this state change is a predictable error (caused
+                    // by the data loss)
+                    subResult.addError(warning, true);
+                } else {
+                    subResult.addWarning(warning);
                 }
             }
-            if (subResult.hasErrors()) {
+            if (subResult.hasEntries()) {
                 loadResult.addError("Errors loading node \""
                         + cont.getNameWithID() + "\":", subResult);
             }
             // set warning message on node if we have loading errors
             // do this only if these are critical errors or data-load errors,
             // which must be reported.
-            if (subResult.hasErrors() && (subResult.hasErrorDuringNonDataLoad()
+            if (subResult.hasEntries() && (subResult.hasErrorDuringNonDataLoad()
                     || mustWarnOnDataLoadError)) {
                 NodeMessage oldMessage = cont.getNodeMessage();
                 StringBuilder messageBuilder = 

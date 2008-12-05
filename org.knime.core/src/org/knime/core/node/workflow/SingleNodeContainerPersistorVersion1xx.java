@@ -179,7 +179,7 @@ public class SingleNodeContainerPersistorVersion1xx
         result.addError(metaResult);
         m_nodeSettings = settings;
         m_nodeDir = settingsFileRef.getParent();
-        if (result.hasErrors() || m_metaPersistor.isDirtyAfterLoad()) {
+        if (result.hasEntries() || m_metaPersistor.isDirtyAfterLoad()) {
             setDirtyAfterLoad();
         }
         return result;
@@ -235,7 +235,7 @@ public class SingleNodeContainerPersistorVersion1xx
             setNeedsResetAfterLoad();
         }
         exec.setProgress(1.0);
-        if (result.hasErrors()) {
+        if (result.hasEntries()) {
             setDirtyAfterLoad();
         }
         return result;
