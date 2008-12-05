@@ -58,8 +58,8 @@ public class DecTreePredictorNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public NodeView<DecTreePredictorNodeModel> createNodeView(final int viewIndex,
-            final DecTreePredictorNodeModel nodeModel) {
+    public NodeView<DecTreePredictorNodeModel> createNodeView(
+            final int viewIndex, final DecTreePredictorNodeModel nodeModel) {
         return new DecTreePredictorNodeView(nodeModel);
     }
 

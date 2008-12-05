@@ -98,7 +98,8 @@ public class DecTreePredictorNodeView
             // preferred size should be used instead)
             m_jTree.setRowHeight(0);
             // retrieve HiLiteHandler from Input port
-            m_hiLiteHdl = model.getInHiLiteHandler(DecTreePredictorNodeModel.INDATAPORT);
+            m_hiLiteHdl = model.getInHiLiteHandler(
+                    DecTreePredictorNodeModel.INDATAPORT);
             // and adjust menu entries for HiLite-ing
             m_hiLiteMenu.setEnabled(m_hiLiteHdl != null);
         } else {
