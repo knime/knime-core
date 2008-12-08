@@ -70,13 +70,44 @@ public interface NodeExecutionJobManager {
      */
     public String toString();
 
+    /**
+     * Returns true, if a executing job continues running even after closing the
+     * workflow - and if this manager can reconnect to this job after re-opening
+     * the workflow again.
+     *
+     * @param job to check for dis/reconnect ability
+     * @return true, if a executing job continues running even after closing the
+     *         workflow - and if this manager can reconnect to this job after
+     *         re-opening the workflow again.
+     */
     public boolean canDisconnect(final NodeExecutionJob job);
 
+    /**
+     * Saves all the information necessary to reconnect to the specified job
+     * after it is disconnected.
+     *
+     * @param job the job that is disconnected and must be restored later.
+     * @param settings stores the information in here
+     * @see #loadFromReconnectSettings(NodeSettingsRO, PortObject[])
+     */
     public void saveReconnectSettings(final NodeExecutionJob job,
             final NodeSettingsWO settings);
 
+    /**
+     * Read the information previously stored in the settings object and restore
+     * an executing job.
+     *
+     * @param settings reconnect information stored during
+     *            {@link #saveReconnectSettings(NodeExecutionJob, NodeSettingsWO)}
+     * @param inports port objects that were provided at execution start time.
+     * @return a new job restored and representing the running job
+     * @throws InvalidSettingsException if the information in the settings
+     *             object is invalid
+     * @throws NodeExecutionJobReconnectException if reconnect failed.
+     * @see #saveReconnectSettings(NodeExecutionJob, NodeSettingsWO)
+     */
     public NodeExecutionJob loadFromReconnectSettings(
-            final NodeSettingsRO settings) throws InvalidSettingsException,
-            NodeExecutionJobReconnectException;
+            final NodeSettingsRO settings, final PortObject[] inports)
+            throws InvalidSettingsException, NodeExecutionJobReconnectException;
 
 }

@@ -105,8 +105,8 @@ public class ThreadNodeExecutionJobManager implements NodeExecutionJobManager {
      * {@inheritDoc}
      */
     public NodeExecutionJob loadFromReconnectSettings(
-            final NodeSettingsRO settings) throws InvalidSettingsException,
-            NodeExecutionJobReconnectException {
+            final NodeSettingsRO settings, final PortObject[] inports)
+            throws InvalidSettingsException, NodeExecutionJobReconnectException {
         throw new NodeExecutionJobReconnectException(
                 "Threaded jobs can't be reconnected");
     }
