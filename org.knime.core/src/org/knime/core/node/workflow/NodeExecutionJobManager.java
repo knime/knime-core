@@ -25,6 +25,9 @@
 package org.knime.core.node.workflow;
 
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 
 /**
@@ -34,10 +37,9 @@ import org.knime.core.node.port.PortObject;
  * @author M. Berthold & B. Wiswedel, University of Konstanz
  */
 public interface NodeExecutionJobManager {
-    
-    public NodeExecutionJob submitJob(final SingleNodeContainer snc, 
+
+    public NodeExecutionJob submitJob(final SingleNodeContainer snc,
             final PortObject[] data, final ExecutionContext exec);
-    
 
     /**
      * Creates a new instance of a panel that holds components to display the
@@ -67,5 +69,14 @@ public interface NodeExecutionJobManager {
      * @return a user readable label for this job manager
      */
     public String toString();
+
+    public boolean canDisconnect(final NodeExecutionJob job);
+
+    public void saveReconnectSettings(final NodeExecutionJob job,
+            final NodeSettingsWO settings);
+
+    public NodeExecutionJob loadFromReconnectSettings(
+            final NodeSettingsRO settings) throws InvalidSettingsException,
+            NodeExecutionJobReconnectException;
 
 }

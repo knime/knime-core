@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Oct 10, 2008 (wiswedel): created
  */
@@ -26,36 +26,40 @@ package org.knime.core.node.exec;
 import java.util.concurrent.Future;
 
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.NodeExecutionJob;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeExecutionJobManagerPanel;
+import org.knime.core.node.workflow.NodeExecutionJobReconnectException;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.util.ThreadPool;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 public class ThreadNodeExecutionJobManager implements NodeExecutionJobManager {
-    
+
     public static final ThreadNodeExecutionJobManager INSTANCE =
-        new ThreadNodeExecutionJobManager();
-    
+            new ThreadNodeExecutionJobManager();
+
     private final ThreadPool m_pool;
-    
+
     public ThreadNodeExecutionJobManager() {
         this(KNIMEConstants.GLOBAL_THREAD_POOL);
     }
-    
+
     public ThreadNodeExecutionJobManager(final ThreadPool pool) {
         if (pool == null) {
             throw new NullPointerException("arg must not be null");
         }
         m_pool = pool;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public NodeExecutionJob submitJob(final SingleNodeContainer snc,
@@ -87,6 +91,32 @@ public class ThreadNodeExecutionJobManager implements NodeExecutionJobManager {
     @Override
     public String toString() {
         return "Threaded Job Manager";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean canDisconnect(final NodeExecutionJob job) {
+        // threaded jobs can disconnect - but not reconnect...
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public NodeExecutionJob loadFromReconnectSettings(
+            final NodeSettingsRO settings) throws InvalidSettingsException,
+            NodeExecutionJobReconnectException {
+        throw new NodeExecutionJobReconnectException(
+                "Threaded jobs can't be reconnected");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void saveReconnectSettings(final NodeExecutionJob job,
+            final NodeSettingsWO settings) {
+        assert false : "Don't save threaded job info! Can't reconnect.";
     }
 
 }
