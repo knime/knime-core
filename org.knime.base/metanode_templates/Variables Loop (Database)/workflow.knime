@@ -11,12 +11,12 @@
 <entry key="node_settings_file" type="xstring" value="Loop End (#2)/settings.xml"/>
 <entry key="node_is_meta" type="xboolean" value="false"/>
 <entry key="isDeletable" type="xboolean" value="false"/>
-<entry key="ui_classname" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
 <config key="ui_settings">
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="685"/>
-<entry key="1" type="xint" value="198"/>
+<entry key="0" type="xint" value="815"/>
+<entry key="1" type="xint" value="290"/>
 <entry key="2" type="xint" value="80"/>
 <entry key="3" type="xint" value="110"/>
 </config>
@@ -27,12 +27,12 @@
 <entry key="node_settings_file" type="xstring" value="Row To Variable Loop Start (#3)/settings.xml"/>
 <entry key="node_is_meta" type="xboolean" value="false"/>
 <entry key="isDeletable" type="xboolean" value="false"/>
-<entry key="ui_classname" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
 <config key="ui_settings">
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="89"/>
-<entry key="1" type="xint" value="344"/>
+<entry key="0" type="xint" value="103"/>
+<entry key="1" type="xint" value="383"/>
 <entry key="2" type="xint" value="115"/>
 <entry key="3" type="xint" value="140"/>
 </config>
@@ -43,12 +43,12 @@
 <entry key="node_settings_file" type="xstring" value="Inject Variables _Database_ (#4)/settings.xml"/>
 <entry key="node_is_meta" type="xboolean" value="false"/>
 <entry key="isDeletable" type="xboolean" value="false"/>
-<entry key="ui_classname" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
 <config key="ui_settings">
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="201"/>
-<entry key="1" type="xint" value="182"/>
+<entry key="0" type="xint" value="227"/>
+<entry key="1" type="xint" value="181"/>
 <entry key="2" type="xint" value="109"/>
 <entry key="3" type="xint" value="140"/>
 </config>
@@ -75,7 +75,6 @@
 <entry key="destID" type="xint" value="-1"/>
 <entry key="sourcePort" type="xint" value="0"/>
 <entry key="destPort" type="xint" value="0"/>
-<entry key="isDeletable" type="xboolean" value="false"/>
 <entry key="isDeletable" type="xboolean" value="false"/>
 </config>
 <config key="connection_3">
@@ -110,7 +109,7 @@
 <config key="port_enum">
 <config key="outport_0">
 <entry key="index" type="xint" value="0"/>
-<entry key="name" type="xstring" value="Outport 0"/>
+<entry key="name" type="xstring" value="Connected to: Collected results"/>
 <config key="type">
 <entry key="object_class" type="xstring" value="org.knime.core.node.BufferedDataTable"/>
 </config>
