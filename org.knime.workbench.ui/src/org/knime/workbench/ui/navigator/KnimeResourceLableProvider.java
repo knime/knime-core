@@ -198,7 +198,7 @@ public class KnimeResourceLableProvider extends LabelProvider implements
      * {@inheritDoc}
      */
     @Override
-    public final Image getImage(final Object element) {
+    public Image getImage(final Object element) {
         Image img = PROJECT;
         NodeContainer projectNode = null;
         if (element instanceof IFolder) {
@@ -243,7 +243,7 @@ public class KnimeResourceLableProvider extends LabelProvider implements
      * {@inheritDoc}
      */
     @Override
-    public final String getText(final Object element) {
+    public String getText(final Object element) {
         if (element instanceof NodeContainer) {
             return ((NodeContainer)element).getName()
                 + " (#" + ((NodeContainer)element).getID().getIndex() + ")";
