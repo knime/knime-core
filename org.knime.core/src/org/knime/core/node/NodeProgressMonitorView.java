@@ -123,8 +123,8 @@ public class NodeProgressMonitorView extends JDialog implements
 
     /**
      * Interface method that's called by the underlying model.
-     *
-     * @see NodeProgressListener#progressChanged(NodeProgress)
+     * @param pe node progress object
+     * @see NodeProgressListener#progressChanged(NodeProgressEvent)
      */
     public void progressChanged(final NodeProgress pe) {
         if (pe.hasProgress()) {
