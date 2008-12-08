@@ -26,7 +26,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.GridLayout;
+import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -43,7 +43,6 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
@@ -227,14 +226,12 @@ public abstract class NodeView<T extends NodeModel>
         
         // add warning label
         m_warningLabel = new JLabel("", WARNING_ICON, SwingConstants.LEFT);
-        m_warningLabel.setPreferredSize(new Dimension(INIT_COMP_WIDTH, 20));
-        m_warningLabel.setOpaque(true);
+        Font font = m_warningLabel.getFont().deriveFont(Font.BOLD);
+        m_warningLabel.setFont(font);
+        m_warningLabel.setBorder(BorderFactory.createEmptyBorder(0, 2, 0, 0));
         m_warningLabel.setBackground(Color.WHITE);
-        JPanel warningPanel = new JPanel(new GridLayout(1, 1));
-        warningPanel.setBorder(BorderFactory.createEmptyBorder(0, 2, 0, 0));
-        warningPanel.setBackground(Color.WHITE);
-        warningPanel.add(m_warningLabel);
-        cont.add(warningPanel, BorderLayout.NORTH);
+        m_warningLabel.setOpaque(true);
+        cont.add(m_warningLabel, BorderLayout.NORTH);
     }
     
     private static final Icon WARNING_ICON = loadIcon(
@@ -639,11 +636,15 @@ public abstract class NodeView<T extends NodeModel>
     public void warningChanged(final String warning) {
         if (warning != null && warning.trim().length() > 0) {
             m_warningLabel.setIcon(WARNING_ICON);
-            m_warningLabel.setText("<html><body><b>" + warning.trim() 
-                    + "</b></body></html>");
+            m_warningLabel.setText(warning.trim());
+            m_warningLabel.setToolTipText(warning.trim());
+            m_warningLabel.setPreferredSize(
+                    new Dimension(m_frame.getContentPane().getWidth(), 20));
         } else {
             m_warningLabel.setIcon(null);
             m_warningLabel.setText(null);
+            m_warningLabel.setToolTipText(null);
+            m_warningLabel.setPreferredSize(new Dimension(0, 0));
         }
     }
 }
