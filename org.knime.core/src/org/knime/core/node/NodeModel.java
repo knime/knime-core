@@ -1053,7 +1053,7 @@ public abstract class NodeModel {
         return m_loopEndNode;
     }
     
-    public void setLoopEndNode(final NodeModel end) {
+    void setLoopEndNode(final NodeModel end) {
         m_loopEndNode = end;
     }
 
@@ -1063,7 +1063,7 @@ public abstract class NodeModel {
         return m_loopStartNode;
     }
     
-    public void setLoopStartNode(final LoopStartNode start) {
+    void setLoopStartNode(final LoopStartNode start) {
         m_loopStartNode = start;
     }
 
