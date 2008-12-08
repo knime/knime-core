@@ -375,13 +375,13 @@ public abstract class NodeModel {
      * @see #execute(PortObject[],ExecutionContext)
      */
     protected final PortObject[] executeModel(final PortObject[] data, 
-            final ExecutionContext exec) 
-        throws Exception {
+            final ExecutionContext exec) throws Exception {
         assert (data != null && data.length == getNrInPorts());
         assert (exec != null);
-        m_warningMessage = null;
         // TODO: check ingoing types! (in Node!)
-
+        
+        setWarningMessage(null);
+ 
         // temporary storage for result of derived model.
         // EXECUTE DERIVED MODEL
         PortObject[] outData = execute(data, exec);
@@ -565,8 +565,8 @@ public abstract class NodeModel {
      */
     final void resetModel() {
         try {
+            setWarningMessage(null);
             // reset in derived model
-            m_warningMessage = null;
             reset();
         } catch (Throwable t) {
             String name = t.getClass().getSimpleName();
@@ -771,8 +771,9 @@ public abstract class NodeModel {
      */
     final PortObjectSpec[] configureModel(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        m_warningMessage = null;
         assert inSpecs.length == getNrInPorts();
+        
+        setWarningMessage(null);
 
         PortObjectSpec[] copyInSpecs = new PortObjectSpec[getNrInPorts()];
         PortObjectSpec[] newOutSpecs;
