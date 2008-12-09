@@ -47,6 +47,10 @@ interface NodeContainerMetaPersistor {
 
     String getCustomDescription();
 
+    NodeExecutionJobManager getExecutionJobManager();
+    
+    NodeSettingsRO getExecutionJobSettings();
+
     State getState();
 
     UIInformation getUIInfo();

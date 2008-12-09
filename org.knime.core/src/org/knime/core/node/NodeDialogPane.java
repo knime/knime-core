@@ -54,7 +54,6 @@ import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicComboPopup;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.Node.SettingsLoaderAndWriter;
 import org.knime.core.node.config.ConfigEditJTree;
 import org.knime.core.node.config.ConfigEditTreeModel;
@@ -63,7 +62,8 @@ import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeExecutorJobManagerDialogTab;
 import org.knime.core.node.workflow.ScopeObjectStack;
 import org.knime.core.node.workflow.ScopeVariable;
-import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
+import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.util.MutableInteger;
 
@@ -248,14 +248,18 @@ public abstract class NodeDialogPane {
 
         // output memory policy and job manager (stored in NodeContainer)
         if (m_memPolicyTab != null || m_jobMgrTab != null) {
+            NodeContainerSettings ncSettings;
             SingleNodeContainerSettings sncSettings;
             try {
-                sncSettings =
-                    new SingleNodeContainer.SingleNodeContainerSettings(
-                            settings);
+                ncSettings = new NodeContainerSettings();
+                ncSettings.load(settings);
             } catch (InvalidSettingsException ise) {
-                sncSettings =
-                    new SingleNodeContainer.SingleNodeContainerSettings();
+                ncSettings = new NodeContainerSettings();
+            }
+            try {
+                sncSettings = new SingleNodeContainerSettings(settings);
+            } catch (InvalidSettingsException ise) {
+                sncSettings = new SingleNodeContainerSettings();
             }
             if (m_memPolicyTab != null) {
                 MemoryPolicy memoryPolicy = sncSettings.getMemoryPolicy();
@@ -265,7 +269,7 @@ public abstract class NodeDialogPane {
                 m_memPolicyTab.setStatus(memoryPolicy);
             }
             if (m_jobMgrTab != null) {
-                m_jobMgrTab.loadSettings(sncSettings, specs);
+                m_jobMgrTab.loadSettings(ncSettings, specs);
             }
         }
     }
@@ -298,13 +302,15 @@ public abstract class NodeDialogPane {
         l.setVariablesSettings(variables);
         l.save(settings);
         SingleNodeContainerSettings s = new SingleNodeContainerSettings();
+        NodeContainerSettings ncSet = new NodeContainerSettings();
 
         if (m_memPolicyTab != null) {
             s.setMemoryPolicy(m_memPolicyTab.getStatus());
         }
         if (m_jobMgrTab != null) {
-            m_jobMgrTab.saveSettings(s);
+            m_jobMgrTab.saveSettings(ncSet);
         }
+        ncSet.save(settings);
         s.save(settings);
     }
 

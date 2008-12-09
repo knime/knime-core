@@ -46,6 +46,10 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
 
     private int m_nodeIDSuffix;
 
+    private NodeExecutionJobManager m_jobManager;
+    
+    private NodeSettingsRO m_executionJobSettings;
+    
     private UIInformation m_uiInfo;
 
     private State m_state = State.IDLE;
@@ -96,6 +100,18 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     /** {@inheritDoc} */
     public void setNodeIDSuffix(final int nodeIDSuffix) {
         m_nodeIDSuffix = nodeIDSuffix;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public NodeExecutionJobManager getExecutionJobManager() {
+        return m_jobManager;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public NodeSettingsRO getExecutionJobSettings() {
+        return m_executionJobSettings;
     }
     
     /** {@inheritDoc} */
@@ -156,7 +172,35 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             m_customDescription = null;
         }
         try {
+            m_jobManager = loadNodeExecutionJobManager(settings);
+        } catch (InvalidSettingsException e) {
+            String error = "Can't restore node execution job manager: " 
+                + e.getMessage();
+            loadResult.addError(error);
+            getLogger().debug(error, e);
+            setDirtyAfterLoad();
+        }
+        boolean hasJobManagerLoadFailed = m_jobManager != null;
+        try {
+            if (!hasJobManagerLoadFailed) {
+                m_executionJobSettings = 
+                    loadNodeExecutionJobSettings(settings);
+            }
+        } catch (InvalidSettingsException e) {
+            String error = "Can't restore node execution job manager: " 
+                + e.getMessage();
+            loadResult.addError(error);
+            getLogger().debug(error, e);
+            setDirtyAfterLoad();
+            hasJobManagerLoadFailed = true;
+        }
+        try {
             m_state = loadState(settings, parentSettings);
+            if (State.EXECUTING.equals(m_state) 
+                    && m_executionJobSettings == null) {
+                throw new InvalidSettingsException("State loaded as EXECUTING "
+                        + "but no execution job settings available");
+            }
         } catch (InvalidSettingsException e) {
             String error = "Can't restore node's state, fallback to " 
                 + State.IDLE + ": " + e.getMessage();
@@ -206,6 +250,28 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
         return parentSettings.getString(KEY_CUSTOM_DESCRIPTION);
     }
 
+    /** Load the execution manager responsible for this node. This methods
+     * is overwritten in the persistor reading the 2.0+ workflows. 
+     * @param settings To load from.
+     * @return null (only this implementation).
+     * @throws InvalidSettingsException If that fails.
+     */
+    protected NodeExecutionJobManager loadNodeExecutionJobManager(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        return null;
+    }
+    
+    /** Load the settings representing the pending execution of this node. 
+     * Returns null if this node was not saved as being executing.
+     * @param settings To load from.
+     * @return The execution job.
+     * @throws InvalidSettingsException If that fails.
+     */
+    protected NodeSettingsRO loadNodeExecutionJobSettings(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        return null;
+    }
+    
     /**
      * Load the state of the node.
      * @param settings The settings associated with the node (used in 2.0+)

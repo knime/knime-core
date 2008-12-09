@@ -1380,7 +1380,8 @@ public final class Node implements NodeModelWarningListener {
             // the framework creates a dialog for memory policy settings
             return true;
         }
-        if (NodeExecutionJobManagerPool.getNumberOfJobManagers() > 1) {
+        // if there is only one, it will be the thread pool executor.
+        if (NodeExecutionJobManagerPool.getNumberOfJobManagersFactories() > 1) {
             // framework creates a dialog for job manager selection
             return true;
         }
@@ -1489,7 +1490,8 @@ public final class Node implements NodeModelWarningListener {
                 if (getNrOutPorts() > 0) {
                     m_dialogPane.addMiscTab();
                 }
-                if (NodeExecutionJobManagerPool.getNumberOfJobManagers() > 1) {
+                if (NodeExecutionJobManagerPool
+                        .getNumberOfJobManagersFactories() > 1) {
                     m_dialogPane.addJobMgrTab();
                 }
 
@@ -1514,15 +1516,6 @@ public final class Node implements NodeModelWarningListener {
         }
         NodeSettingsRO nodeSettings = getSettingsFromNode();
         return nodeSettings.equals(dialogSettings);
-    }
-
-    public void loadSettingsFromDialog() throws InvalidSettingsException {
-        if (m_dialogPane == null) {
-            assert false : "No dialog available or not created yet";
-            return;
-        }
-        NodeSettingsRO dialogSettings = getSettingsFromDialog();
-        loadSettingsFrom(dialogSettings);
     }
 
     private NodeSettingsRO getSettingsFromNode() {

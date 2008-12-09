@@ -48,11 +48,9 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.NodeFactory.NodeType;
-import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
-import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.w3c.dom.Element;
 
@@ -70,12 +68,6 @@ public final class SingleNodeContainer extends NodeContainer
 
     /** underlying node. */
     private final Node m_node;
-
-    /**
-     * remember ID of the job when this node is submitted to a
-     * NodeExecutionJobManager.
-     */
-    private NodeExecutionJob m_executionJob;
 
     /** progress monitor. */
     private final NodeProgressMonitor m_progressMonitor =
@@ -281,14 +273,17 @@ public final class SingleNodeContainer extends NodeContainer
      * @param je the new NodeExecutionJobManager.
      */
     @Override
-    public void setJobExecutor(final NodeExecutionJobManager je) {
-        if (getState().equals(State.EXECUTING)
-                || getState().equals(State.QUEUED)) {
-            throw new IllegalStateException("Illegal state " + getState()
-                    + " in setJobExecutor - can not change a running node.");
-
+    public void setJobManager(final NodeExecutionJobManager je) {
+        synchronized (m_nodeMutex) {
+            if (getState().equals(State.EXECUTING)
+                    || getState().equals(State.QUEUED)) {
+                throw new IllegalStateException("Illegal state " + getState()
+                        + " in setJobExecutor - " 
+                        + "can not change a running node.");
+                
+            }
+            super.setJobManager(je);
         }
-        super.setJobExecutor(je);
     }
 
     private ExecutionContext createExecutionContext() {
@@ -486,11 +481,12 @@ public final class SingleNodeContainer extends NodeContainer
             switch (getState()) {
             case MARKEDFOREXEC:
                 setState(State.QUEUED);
-                NodeExecutionJobManager jobManager = findJobExecutor();
+                NodeExecutionJobManager jobManager = findJobManager();
                 try {
                     ExecutionContext execCon = createExecutionContext();
-                    m_executionJob = findJobExecutor().submitJob(
-                            this, inData, execCon);
+                    NodeExecutionJob job = 
+                        jobManager.submitJob(this, inData, execCon);
+                    setExecutionJob(job);
                 } catch (Throwable t) {
                     String error = "Failed to submit job to job executor \"" 
                         + jobManager + "\": " + t.getMessage();
@@ -533,13 +529,19 @@ public final class SingleNodeContainer extends NodeContainer
                 // it will not hand off to node implementation (otherwise it
                 // would be executing)
                 m_progressMonitor.setExecuteCanceled();
-                m_executionJob.cancel();
+                NodeExecutionJob job = getExecutionJob();
+                assert job != null : "node is queued but no job represents "
+                    + "the execution task (is null)";
+                job.cancel();
                 setState(State.CONFIGURED);
                 break;
             case EXECUTING:
                 // future is running in thread pool, use ordinary cancel policy
                 m_progressMonitor.setExecuteCanceled();
-                m_executionJob.cancel();
+                job = getExecutionJob();
+                assert job != null : "node is queued but no job represents "
+                    + "the execution task (is null)";
+                job.cancel();
                 break;
             case EXECUTED:
                 // Too late - do nothing.
@@ -604,7 +606,7 @@ public final class SingleNodeContainer extends NodeContainer
                 // TODO do better - also handle catastrophes
                 setState(State.CONFIGURED);
             }
-            m_executionJob = null;
+            setExecutionJob(null);
         }
     }
     
@@ -751,6 +753,7 @@ public final class SingleNodeContainer extends NodeContainer
     void loadSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         synchronized (m_nodeMutex) {
+            super.loadSettings(settings);
             m_node.loadSettingsFrom(settings);
             loadSNCSettings(settings);
             setDirty();
@@ -797,6 +800,7 @@ public final class SingleNodeContainer extends NodeContainer
     /** {@inheritDoc} */
     @Override
     void saveSettings(final NodeSettingsWO settings) {
+        super.saveSettings(settings);
         m_node.saveSettingsTo(settings);
         saveSNCSettings(settings);
     }
@@ -823,30 +827,21 @@ public final class SingleNodeContainer extends NodeContainer
         throws InvalidSettingsException {
         synchronized (m_nodeMutex) {
             m_settings = new SingleNodeContainerSettings(settings);
-            String id = m_settings.getJobManagerID();
-            setJobExecutor(NodeExecutionJobManagerPool.getJobManager(id));
         }
     }
     
     /** {@inheritDoc} */
     @Override
     boolean areSettingsValid(final NodeSettingsRO settings) {
+        if (!super.areSettingsValid(settings)) {
+            return false;
+        }
         try {
             new SingleNodeContainerSettings(settings);
         } catch (InvalidSettingsException ise) {
             return false;
         }
         return m_node.areSettingsValid(settings);
-    }
-
-    /**
-     * Returns the settings for the job manager. This could be an empty settings
-     * object (generated by this class) - it won't be null.
-     *
-     * @return the settings for the currently set job manager
-     */
-    public NodeSettingsRO getJobManagerSettings() {
-        return m_settings.getJobManagerSettings();
     }
 
     ////////////////////////////////////
@@ -935,14 +930,6 @@ public final class SingleNodeContainer extends NodeContainer
 
     /** {@inheritDoc} */
     @Override
-    void loadSettingsFromDialog() throws InvalidSettingsException {
-        synchronized (m_nodeMutex) {
-            m_node.loadSettingsFromDialog();
-        }
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public NodeType getType() {
         return m_node.getType();
     }
@@ -997,18 +984,6 @@ public final class SingleNodeContainer extends NodeContainer
      */
     public static class SingleNodeContainerSettings {
 
-        private static final String CFG_JOB_MANAGER_ID = "JobManagerID";
-
-        private static final String CFG_JOB_MANAGER_SETTINGS =
-                "JobManagerSettings";
-
-        // the threaded job manager is the default
-        private String m_jobManagerID =
-            ThreadNodeExecutionJobManager.INSTANCE.getID();
-
-        // the default manager has no settings
-        private NodeSettingsRO m_jobManagerSettings = new NodeSettings("empty");
-
         private MemoryPolicy m_memoryPolicy = MemoryPolicy.CacheSmallInMemory;
         /**
          * Creates a settings object with default values.
@@ -1028,19 +1003,8 @@ public final class SingleNodeContainer extends NodeContainer
          */
         public SingleNodeContainerSettings(final NodeSettingsRO settings)
                 throws InvalidSettingsException {
-
             NodeSettingsRO sncSettings =
                     settings.getNodeSettings(Node.CFG_MISC_SETTINGS);
-
-            // since job manager settings exists only since 2.0, we stay with
-            // the default if there are no node container settings.
-            if (sncSettings.containsKey(CFG_JOB_MANAGER_ID)) {
-                m_jobManagerID = sncSettings.getString(CFG_JOB_MANAGER_ID);
-            }
-            if (sncSettings.containsKey(CFG_JOB_MANAGER_SETTINGS)) {
-                m_jobManagerSettings =
-                        sncSettings.getNodeSettings(CFG_JOB_MANAGER_SETTINGS);
-            }
             if (sncSettings.containsKey(CFG_MEMORY_POLICY)) {
                 String memPolStr = sncSettings.getString(CFG_MEMORY_POLICY);
                 try {
@@ -1061,54 +1025,7 @@ public final class SingleNodeContainer extends NodeContainer
         public void save(final NodeSettingsWO settings) {
             NodeSettingsWO sncSettings =
                     settings.addNodeSettings(Node.CFG_MISC_SETTINGS);
-            sncSettings.addString(CFG_JOB_MANAGER_ID, m_jobManagerID);
-
-            NodeSettingsWO foo =
-                sncSettings.addNodeSettings(CFG_JOB_MANAGER_SETTINGS);
-            m_jobManagerSettings.copyTo(foo);
-
             sncSettings.addString(CFG_MEMORY_POLICY, m_memoryPolicy.name());
-        }
-
-        /**
-         * Returns the ID of the job manager.
-         *
-         * @return the ID of the job manager
-         */
-        public String getJobManagerID() {
-            return m_jobManagerID;
-        }
-
-        /**
-         * Returns the settings for the job manager. This could be an empty
-         * settings object (generated by this class) - it won't be null.
-         *
-         * @return the settings for the job manager
-         */
-        public NodeSettingsRO getJobManagerSettings() {
-            return m_jobManagerSettings;
-        }
-
-        /**
-         * Stores a new selected job manager with its settings.
-         *
-         * @param id the id of the new job manager
-         * @param jobManagerSettings the settings for the specified job manager.
-         *            Could be null, if the manager doesn't need any settings.
-         *
-         */
-        public void setJobManager(final String id,
-                final NodeSettingsRO jobManagerSettings) {
-            if (id == null || id.isEmpty()) {
-                throw new IllegalArgumentException("Job manager ID can't "
-                        + "be null or empty");
-            }
-            NodeSettingsRO settings = jobManagerSettings;
-            if (settings == null) {
-                settings = new NodeSettings(id);
-            }
-            m_jobManagerID = id;
-            m_jobManagerSettings = settings;
         }
 
         /**

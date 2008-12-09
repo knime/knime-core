@@ -2026,12 +2026,6 @@ public final class WorkflowManager extends NodeContainer {
         return true; // be positive
     }
 
-    /** {@inheritDoc} */
-    @Override
-    void loadSettingsFromDialog() throws InvalidSettingsException {
-        assert false : "No dialog available for workflow";
-    }
-
     /////////////////////////////////
     // Private helper functions
     /////////////////////////////////
@@ -3443,17 +3437,19 @@ public final class WorkflowManager extends NodeContainer {
     @Override
     void loadSettings(final NodeSettingsRO settings)
         throws InvalidSettingsException {
+        super.loadSettings(settings);
     }
 
     /** {@inheritDoc} */
     @Override
     void saveSettings(final NodeSettingsWO settings) {
+        super.saveSettings(settings);
     }
 
     /** {@inheritDoc} */
     @Override
     boolean areSettingsValid(final NodeSettingsRO settings) {
-        return true;
+        return super.areSettingsValid(settings);
     }
 
     /** {@inheritDoc} */

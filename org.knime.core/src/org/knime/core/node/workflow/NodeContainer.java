@@ -48,8 +48,8 @@ import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
@@ -95,8 +95,11 @@ public abstract class NodeContainer {
 
     private final WorkflowManager m_parent;
 
-    private NodeExecutionJobManager m_jobExecutor;
+    private NodeExecutionJobManager m_jobManager;
     
+    /** The job representing the pending task of executing the node. */
+    private NodeExecutionJob m_executionJob;
+
     private NodeMessage m_nodeMessage = NodeMessage.NONE;
 
     private boolean m_isDeletable;
@@ -121,19 +124,20 @@ public abstract class NodeContainer {
      * states. This semaphore will be used by a node alone to synchronize
      * internal changes of status etc.
      */
-    final protected Object m_nodeMutex = new Object();
+    protected final Object m_nodeMutex = new Object();
 
     /*--------- listener administration------------*/
 
 
-    private final CopyOnWriteArraySet<NodeStateChangeListener> m_stateChangeListeners =
+    private final CopyOnWriteArraySet<NodeStateChangeListener> 
+        m_stateChangeListeners = 
             new CopyOnWriteArraySet<NodeStateChangeListener>();
 
     private final CopyOnWriteArraySet<NodeMessageListener> m_messageListeners =
         new CopyOnWriteArraySet<NodeMessageListener>();
 
-    private final CopyOnWriteArraySet<NodeProgressListener> m_progressListeners =
-        new CopyOnWriteArraySet<NodeProgressListener>();
+    private final CopyOnWriteArraySet<NodeProgressListener> 
+        m_progressListeners = new CopyOnWriteArraySet<NodeProgressListener>();
 
     private final CopyOnWriteArraySet<NodeUIInformationListener> m_uiListeners =
         new CopyOnWriteArraySet<NodeUIInformationListener>();
@@ -151,7 +155,9 @@ public abstract class NodeContainer {
         m_parent = parent;
         if (m_parent == null) {
             // make sure at least the top node knows how to execute stuff
-            m_jobExecutor = ThreadNodeExecutionJobManager.INSTANCE;
+            m_jobManager =
+                    NodeExecutionJobManagerPool.getDefaultJobManagerFactory()
+                            .getInstance();
         }
         m_id = id;
         m_state = State.IDLE;
@@ -164,6 +170,7 @@ public abstract class NodeContainer {
         assert persistor.getState() != null : "State of node \"" + id
         + "\" in \"" + persistor.getClass().getSimpleName() + "\" is null";
         m_state = persistor.getState();
+        m_jobManager = persistor.getExecutionJobManager();
         m_customDescription = persistor.getCustomDescription();
         m_customName = persistor.getCustomName();
         m_uiInformation = persistor.getUIInfo();
@@ -184,22 +191,47 @@ public abstract class NodeContainer {
      *
      * @param je the new NodeExecutionJobManager.
      */
-    public void setJobExecutor(final NodeExecutionJobManager je) {
+    public void setJobManager(final NodeExecutionJobManager je) {
         if (je == null) {
-            throw new NullPointerException("NodeExecutionJobManager must not be null.");
+            throw new NullPointerException(
+                    "NodeExecutionJobManager must not be null.");
         }
-        m_jobExecutor = je;
+        m_jobManager = je;
     }
 
     /**
-     * @return NodeExecutionJobManager responsible for this node and all its children.
+     * @return The job manager associated with this node or null if this
+     * node will use the job manager of the parent (or the parent of ...)
+     * @see #findJobManager()
      */
-    protected final NodeExecutionJobManager findJobExecutor() {
-        if (m_jobExecutor == null) {
-            assert m_parent != null;
-            return ((NodeContainer)m_parent).findJobExecutor();
+    protected final NodeExecutionJobManager getJobManager() {
+        return m_jobManager;
+    }
+    
+    /**
+     * @return NodeExecutionJobManager 
+     * responsible for this node and all its children.
+     */
+    protected final NodeExecutionJobManager findJobManager() {
+        if (m_jobManager == null) {
+            assert m_parent != null : "Root has no associated job manager";
+            return m_parent.findJobManager();
         }
-        return m_jobExecutor;
+        return m_jobManager;
+    }
+    
+    /**
+     * @param executionJob the executionJob to set
+     */
+    void setExecutionJob(final NodeExecutionJob executionJob) {
+        m_executionJob = executionJob;
+    }
+    
+    /**
+     * @return the executionJob
+     */
+    NodeExecutionJob getExecutionJob() {
+        return m_executionJob;
     }
 
     /////////////////////////////////////////////////
@@ -546,15 +578,27 @@ public abstract class NodeContainer {
 
     public abstract boolean areDialogAndNodeSettingsEqual();
 
-    abstract void loadSettingsFromDialog() throws InvalidSettingsException;
+    void loadSettings(final NodeSettingsRO settings)
+        throws InvalidSettingsException {
+        NodeContainerSettings ncSet = new NodeContainerSettings();
+        ncSet.load(settings);
+        m_jobManager = ncSet.getJobManager();
+    }
+    
+    void saveSettings(final NodeSettingsWO settings) {
+        NodeContainerSettings ncSet = new NodeContainerSettings();
+        ncSet.setJobManager(m_jobManager);
+        ncSet.save(settings);
+    }
 
-    abstract void loadSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException;
-
-    abstract void saveSettings(final NodeSettingsWO settings);
-
-
-    abstract boolean areSettingsValid(final NodeSettingsRO settings);
+    boolean areSettingsValid(final NodeSettingsRO settings) {
+        try {
+            new NodeContainerSettings().load(settings);
+        } catch (InvalidSettingsException ise) {
+            return false;
+        }
+        return true;
+    }
 
 
     /* ------------- ports --------------- */
@@ -720,6 +764,45 @@ public abstract class NodeContainer {
             final Map<Integer, BufferedDataTable> tblRep,
             final ScopeObjectStack inStack, final ExecutionMonitor exec)
             throws CanceledExecutionException;
-
+    
+    /** Helper class that defines load/save routines for general NodeContainer
+     * properties. This is currently only the job manager. */
+    public static final class NodeContainerSettings {
+        
+        private NodeExecutionJobManager m_jobManager;
+        
+        /** @param jobManager the jobManager to set */
+        public void setJobManager(final NodeExecutionJobManager jobManager) {
+            m_jobManager = jobManager;
+        }
+        
+        /** @return the jobManager */
+        public NodeExecutionJobManager getJobManager() {
+            return m_jobManager;
+        }
+        
+        /** Save all properties (currently only job manager) to argument.
+         * @param settings To save to.
+         */
+        public void save(final NodeSettingsWO settings) {
+            if (m_jobManager != null) {
+                NodeExecutionJobManagerPool.saveJobManager(
+                        m_jobManager, settings.addNodeSettings("job.manager"));
+            }
+        }
+        
+        /** Restores all settings (currently only job manager) from argument.
+         * @param settings To load from.
+         * @throws InvalidSettingsException If that's not possible.
+         */
+        public void load(final NodeSettingsRO settings) 
+        throws InvalidSettingsException {
+            if (settings.containsKey("job.manager")) {
+                NodeSettingsRO s = settings.getNodeSettings("job.manager");
+                m_jobManager = NodeExecutionJobManagerPool.load(s);
+            }
+        }
+        
+    }
 
 }

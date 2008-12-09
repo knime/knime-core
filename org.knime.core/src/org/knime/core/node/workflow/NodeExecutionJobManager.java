@@ -63,14 +63,6 @@ public interface NodeExecutionJobManager {
     String getID();
 
     /**
-     * Returns a user readable - but still most likely unique - label. This is
-     * displayed in dialogs and user messages.
-     *
-     * @return a user readable label for this job manager
-     */
-    public String toString();
-
-    /**
      * Returns true, if a executing job continues running even after closing the
      * workflow - and if this manager can reconnect to this job after re-opening
      * the workflow again.
@@ -98,7 +90,7 @@ public interface NodeExecutionJobManager {
      * an executing job.
      *
      * @param settings reconnect information stored during
-     *            {@link #saveReconnectSettings(NodeExecutionJob, NodeSettingsWO)}
+     *        {@link #saveReconnectSettings(NodeExecutionJob, NodeSettingsWO)}
      * @param inports port objects that were provided at execution start time.
      * @return a new job restored and representing the running job
      * @throws InvalidSettingsException if the information in the settings
@@ -109,5 +101,21 @@ public interface NodeExecutionJobManager {
     public NodeExecutionJob loadFromReconnectSettings(
             final NodeSettingsRO settings, final PortObject[] inports)
             throws InvalidSettingsException, NodeExecutionJobReconnectException;
-
+    
+    
+    /** Saves parameters that customize this instance. It does not save
+     * the general job manager ID (that happens elsewhere). Job managers that
+     * are represented by a singleton, leave this method empty.
+     * @param settings to save to.
+     */
+    public void save(final NodeSettingsWO settings);
+    
+    /** Restores the properties of the specific job manager. This is the reverse
+     * operation to {@link #save(NodeSettingsWO)}.
+     * @param settings To load from.
+     * @throws InvalidSettingsException If that fails.
+     */
+    public void load(final NodeSettingsRO settings) 
+    throws InvalidSettingsException;
+    
 }

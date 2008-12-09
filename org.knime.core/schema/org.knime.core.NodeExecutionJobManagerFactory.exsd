@@ -3,10 +3,10 @@
 <schema targetNamespace="org.knime.core">
 <annotation>
       <appInfo>
-         <meta.schema plugin="org.knime.core" id="org.knime.core.NodeExecutionJobManager" name="NodeExecutionJobManager"/>
+         <meta.schema plugin="org.knime.core" id="org.knime.core.node.workflow.NodeExecutionJobManagerFactory" name="NodeExecutionJobManagerFactory"/>
       </appInfo>
       <documentation>
-         Job manager register here to execute nodes in there own special manner.
+         Register factory to create NodeExecutionJobManager objects for special execution of nodes.
       </documentation>
    </annotation>
 
@@ -14,21 +14,21 @@
       <complexType>
          <sequence minOccurs="1" maxOccurs="unbounded">
             <choice minOccurs="1" maxOccurs="unbounded">
-               <element ref="NodeExecutionJobManager"/>
+               <element ref="NodeExecutionJobManagerFactory"/>
             </choice>
          </sequence>
       </complexType>
    </element>
 
-   <element name="NodeExecutionJobManager">
+   <element name="NodeExecutionJobManagerFactory">
       <complexType>
-         <attribute name="JobManager" type="string" use="required">
+         <attribute name="JobManagerFactory" type="string" use="required">
             <annotation>
                <documentation>
-                  Specify an implementation of the org.knime.core.node.workflow.NodeExecutionJobManager interface.
+                  Specify an implementation of the org.knime.core.node.workflow.NodeExecutionJobManagerFactory interface.
                </documentation>
                <appInfo>
-                  <meta.attribute kind="java" basedOn=":org.knime.core.node.workflow.NodeExecutionJobManager"/>
+                  <meta.attribute kind="java" basedOn=":org.knime.core.node.workflow.NodeExecutionJobManagerFactory"/>
                </appInfo>
             </annotation>
          </attribute>
