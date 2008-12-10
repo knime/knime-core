@@ -102,6 +102,10 @@ public interface NodeExecutionJobManager {
             final NodeSettingsRO settings, final PortObject[] inports,
             final SingleNodeContainer snc, final ExecutionContext exec)
     throws InvalidSettingsException, NodeExecutionJobReconnectException;
+    
+    /** Disconnects the running job.
+     * @param job The job to cancel. */
+    public void disconnect(final NodeExecutionJob job);
 
     /** Saves parameters that customize this instance. It does not save
      * the general job manager ID (that happens elsewhere). Job managers that

@@ -109,6 +109,13 @@ public class ThreadNodeExecutionJobManager implements NodeExecutionJobManager {
         throw new NodeExecutionJobReconnectException(
                 "Threaded jobs can't be reconnected");
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void disconnect(final NodeExecutionJob job) {
+        throw new IllegalStateException(
+                "Can't disconnect from thread pool execution.");
+    }
 
     /**
      * {@inheritDoc}
