@@ -281,7 +281,7 @@ public final class DatabaseReaderConnection {
         
         private boolean m_hasExceptionReported = false;
         
-        private int m_rowCounter = 1;
+        private int m_rowCounter = 0;
 
         /**
          * Creates new iterator.
@@ -389,7 +389,6 @@ public final class DatabaseReaderConnection {
                     }
                 }
             }
-            m_rowCounter++;
             int rowId = m_rowCounter;
             try {
                 rowId = m_result.getRow();
@@ -397,6 +396,7 @@ public final class DatabaseReaderConnection {
                  handlerException(
                          "SQL Exception while retrieving row id: ", sqle);
             }
+            m_rowCounter++;
             return new DefaultRow(RowKey.createRowKey(rowId), cells);
         }
         
