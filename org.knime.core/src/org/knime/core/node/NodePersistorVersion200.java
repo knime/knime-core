@@ -221,7 +221,9 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         if (saveData && object != null) {
             settings.addString("port_object_summary", summary);
         }
-        if (node.getOutputType(portIdx).equals(BufferedDataTable.TYPE)) {
+        boolean isBDT = object instanceof BufferedDataTable
+            || node.getOutputType(portIdx).equals(BufferedDataTable.TYPE);
+        if (isBDT) {
             assert object == null || object instanceof BufferedDataTable 
                 : "Expected BufferedDataTable, got " 
                     + object.getClass().getSimpleName();
@@ -447,7 +449,13 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         PortType designatedType = node.getOutputType(portIdx);
         PortObjectSpec spec = null;
         PortObject object = null;
-        if (node.getOutputType(portIdx).equals(BufferedDataTable.TYPE)) {
+        boolean isBDT =
+                (BufferedDataTable.TYPE.getPortObjectClass().getName().equals(
+                        objectClass) && BufferedDataTable.TYPE
+                        .getPortObjectSpecClass().getName().equals(specClass))
+                        || node.getOutputType(portIdx).equals(
+                                BufferedDataTable.TYPE);
+        if (isBDT) {
             if (specClass != null
                     && !specClass.equals(BufferedDataTable.TYPE
                             .getPortObjectSpecClass().getName())) {
