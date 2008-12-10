@@ -27,6 +27,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -98,23 +99,26 @@ final class DBWriterConnection {
                     new LinkedHashMap<String, Integer>();
                 for (int i = 0; i < spec.getNumColumns(); i++) {
                     String colName = replaceColumnName(
-                            spec.getColumnSpec(i).getName());
+                            spec.getColumnSpec(i).getName()).toLowerCase();
                     columnNames.put(colName, i);
-                }       
-                if (spec.getNumColumns() > rsmd.getColumnCount()) {
-                    for (int i = 0; i < rsmd.getColumnCount(); i++) {
-                        String colName = rsmd.getColumnName(i + 1);
-                        if (columnNames.containsKey(colName)) {
-                            columnNames.remove(colName);
-                        }
+                }
+                // sanity check to lock if all input column are present in db
+                ArrayList<String> columnNotInSpec = new ArrayList<String>(
+                        columnNames.keySet());
+                for (int i = 0; i < rsmd.getColumnCount(); i++) {
+                    String colName = rsmd.getColumnName(i + 1).toLowerCase();
+                    if (columnNames.containsKey(colName)) {
+                        columnNotInSpec.remove(colName);
                     }
+                }
+                if (columnNotInSpec.size() > 0) {
                     throw new RuntimeException("No. of columns in input table"
                             + " > in database; not existing columns: " 
-                            + columnNames.keySet().toString());
+                            + columnNotInSpec.toString());
                 }
                 mapping = new int[rsmd.getColumnCount()];
                 for (int i = 0; i < mapping.length; i++) {
-                    String name = rsmd.getColumnName(i + 1);
+                    String name = rsmd.getColumnName(i + 1).toLowerCase();
                     if (!columnNames.containsKey(name)) {
                         mapping[i] = -1;
                         continue;
