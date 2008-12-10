@@ -298,12 +298,10 @@ public abstract class NodeView<T extends NodeModel>
      */
     final void callModelChanged() {
         synchronized (m_nodeModel) {
-
-            setComponent(m_comp);
-
             try {
                 // CALL abstract model changed
                 modelChanged();
+                setComponent(m_comp);
             } catch (NullPointerException npe) {
                 m_logger.coding("NodeView.modelChanged() causes "
                        + "NullPointerException during notification of a "
@@ -434,6 +432,8 @@ public abstract class NodeView<T extends NodeModel>
         callOpenView();
         // show frame, make sure to do this in EDT (GUI related task)
         Runnable runner = new Runnable() {
+            /** {@inheritDoc} */
+            @Override
             public void run() {
                 m_frame.setVisible(true);
                 m_frame.toFront();
@@ -553,9 +553,8 @@ public abstract class NodeView<T extends NodeModel>
      */
     protected final void setComponent(final Component comp) {
         Runnable runner = new Runnable() {
-            /**
-             * {@inheritDoc}
-             */
+            /** {@inheritDoc} */
+            @Override
             public void run() {
              // pack frame only when setting the component for the first time
                 boolean pack = false;
@@ -564,6 +563,7 @@ public abstract class NodeView<T extends NodeModel>
                 } else {
                     setComponentIntern(comp);
                     if (!m_componentSet) {
+                        m_logger.info(comp.getSize());
                         pack = true;
                     }
                     m_componentSet = true;
@@ -603,6 +603,8 @@ public abstract class NodeView<T extends NodeModel>
      */
     private void relayoutFrame(final boolean doPack) {
         final Runnable run = new Runnable() {
+            /** {@inheritDoc} */
+            @Override
             public void run() {
                 if (doPack) {
                     m_frame.pack();
