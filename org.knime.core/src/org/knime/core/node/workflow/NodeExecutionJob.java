@@ -35,7 +35,7 @@ public abstract class NodeExecutionJob implements Runnable {
     private final PortObject[] m_data;
     private final ExecutionContext m_execContext;
 
-    public NodeExecutionJob(final SingleNodeContainer snc, 
+    public NodeExecutionJob(final SingleNodeContainer snc,
             final PortObject[] data, final ExecutionContext ec) {
         if (snc == null || data == null || ec == null) {
             throw new NullPointerException("Args must not be null.");
@@ -51,15 +51,18 @@ public abstract class NodeExecutionJob implements Runnable {
     @Override
     public void run() {
         boolean success = true;
-        try {
-            m_snc.performBeforeExecuteNode();
-        } catch (IllegalContextStackObjectException e) {
-            success = false;
+        if (!isReConnecting()) {
+            try {
+                m_snc.performBeforeExecuteNode();
+            } catch (IllegalContextStackObjectException e) {
+                success = false;
+            }
         }
         success = success && mainExecute();
         m_snc.performAfterExecuteNode(success);
     }
-    
+
+    public abstract boolean isReConnecting();
     public abstract boolean mainExecute();
     public abstract boolean cancel();
 
