@@ -69,11 +69,19 @@ class ColorManager2NodeModel extends NodeModel {
     /** Logger for this package. */
     static final NodeLogger LOGGER = NodeLogger.getLogger("Color Manager");
 
+    /** The selected column. */
+    private String m_column;
+    /** true if color ranges, false for discrete colors. */
+    private boolean m_isNominal;
     /** Stores the mapping from string column value to color. */
     private final Map<DataCell, ColorAttr> m_map;
 
     /** The selected column. */
-    private String m_column;
+    private String m_columnGuess;
+    /** true if color ranges, false for discrete colors. */
+    private boolean m_isNominalGuess;
+    /** Stores the mapping from string column value to color. */
+    private final Map<DataCell, ColorAttr> m_mapGuess;
 
     /** Keeps port number for the single input port. */
     static final int INPORT = 0;
@@ -96,8 +104,6 @@ class ColorManager2NodeModel extends NodeModel {
     /** Type of color setting. */
     static final String IS_NOMINAL = "is_nominal";
 
-    /** true if color ranges, false for discrete colors. */
-    private boolean m_isNominal;
 
     /** Key for minimum color value. */
     private static final DataCell MIN_VALUE = new StringCell("min_value");
@@ -114,6 +120,7 @@ class ColorManager2NodeModel extends NodeModel {
         super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{
                 BufferedDataTable.TYPE, ColorHandlerPortObject.TYPE});
         m_map = new LinkedHashMap<DataCell, ColorAttr>();
+        m_mapGuess = new LinkedHashMap<DataCell, ColorAttr>();
     }
 
     /**
@@ -135,14 +142,19 @@ class ColorManager2NodeModel extends NodeModel {
         // if no column has been selected, guess first nominal column
         if (m_column == null) {
             // find first nominal column with possible values
-            String column = DataTableSpec.guessNominalClassColumn(inSpec, true);
+            String column = 
+                DataTableSpec.guessNominalClassColumn(inSpec, false);
+            m_columnGuess = column;
+            m_isNominalGuess = true;
             super.setWarningMessage(
                     "Selected column \"" + column
                     + "\" with default nominal color mapping.");
             Set<DataCell> set = 
                 inSpec.getColumnSpec(column).getDomain().getValues();
-            colorHandler = createNominalColorHandler(
+            m_mapGuess.clear();
+            m_mapGuess.putAll(
                     ColorManager2DialogNominal.createColorMapping(set));
+            colorHandler = createNominalColorHandler(m_mapGuess);
             DataTableSpec newSpec = getOutSpec(inSpec, column, colorHandler);
             BufferedDataTable changedSpecTable = 
                 exec.createSpecReplacerTable(in, newSpec);
@@ -227,17 +239,19 @@ class ColorManager2NodeModel extends NodeModel {
         // check null column
         if (m_column == null) {
             // find first nominal column with possible values
-            String column = DataTableSpec.guessNominalClassColumn(spec, true);
+            String column = DataTableSpec.guessNominalClassColumn(spec, false);
             if (column == null) {
-                throw new InvalidSettingsException("No column selected.");
+                throw new InvalidSettingsException(
+                    "No column selected and no categorical column available.");
             }
-            m_column = column;
-            m_isNominal = true;
+            m_columnGuess = column;
+            m_isNominalGuess = true;
             Set<DataCell> set = spec.getColumnSpec(column).
                     getDomain().getValues();
-            m_map.clear();
-            m_map.putAll(ColorManager2DialogNominal.createColorMapping(set));
-            ColorHandler colorHandler = createNominalColorHandler(m_map);
+            m_mapGuess.clear();
+            m_mapGuess.putAll(
+                    ColorManager2DialogNominal.createColorMapping(set));
+            ColorHandler colorHandler = createNominalColorHandler(m_mapGuess);
             DataTableSpec dataSpec = getOutSpec(spec, column, colorHandler);
             DataTableSpec modelSpec = 
                 new DataTableSpec(dataSpec.getColumnSpec(column));
@@ -264,8 +278,8 @@ class ColorManager2NodeModel extends NodeModel {
             }
             // check if the mapping values and the possible values match
             if (!m_map.keySet().containsAll(list)) {
-                throw new InvalidSettingsException("Mapping does not match "
-                        + "possible values in spec.");
+                throw new InvalidSettingsException(
+                       "Color mapping does not match possible values.");
             }
         } else { // range
             // check if double column is selected
@@ -349,8 +363,8 @@ class ColorManager2NodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        settings.addString(SELECTED_COLUMN, m_column);
         if (m_column != null) {
+            settings.addString(SELECTED_COLUMN, m_column);
             settings.addBoolean(IS_NOMINAL, m_isNominal);
             // nominal
             if (m_isNominal) {
@@ -368,6 +382,22 @@ class ColorManager2NodeModel extends NodeModel {
                         .getRGB());
                 settings.addInt(MAX_COLOR, m_map.get(MAX_VALUE).getColor()
                         .getRGB());
+            }
+        } else {
+            if (m_columnGuess != null) {
+                assert (m_isNominalGuess);
+                settings.addString(SELECTED_COLUMN, m_columnGuess);
+                settings.addBoolean(IS_NOMINAL, m_isNominalGuess);
+                DataCell[] values = new DataCell[m_mapGuess.size()];
+                int id = -1;
+                for (DataCell c : m_mapGuess.keySet()) {
+                    settings.addInt(c.toString(), m_mapGuess.get(c).getColor()
+                            .getRGB());
+                    values[++id] = c;
+                }
+                settings.addDataCellArray(VALUES, values);
+            } else {
+                settings.addString(SELECTED_COLUMN, m_column);
             }
         }
     }
