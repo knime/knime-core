@@ -691,30 +691,35 @@ public final class WorkflowManager extends NodeContainer {
         if (!cc.isDeletable()) {
             return false;
         }
+        NodeID destID = cc.getDest();
+        NodeID sourceID = cc.getSource();
         // make sure both nodes (well, their connection lists) exist
-        if (m_workflow.getConnectionsByDest(cc.getDest()) == null) {
+        if (m_workflow.getConnectionsByDest(destID) == null) {
             return false;
         }
-        if (m_workflow.getConnectionsBySource(cc.getSource()) == null) {
+        if (m_workflow.getConnectionsBySource(sourceID) == null) {
             return false;
         }
         // make sure connection between those two nodes exists
-        if (!m_workflow.getConnectionsByDest(cc.getDest()).contains(cc)) {
+        if (!m_workflow.getConnectionsByDest(destID).contains(cc)) {
             return false;
         }
-        if (!m_workflow.getConnectionsBySource(cc.getSource()).contains(cc)) {
+        if (!m_workflow.getConnectionsBySource(sourceID).contains(cc)) {
             return false;
         }
-        // retrieve state of destination NodeContainer (could be WFM)
-        NodeContainer.State destState = cc.getDest().equals(this.getID())
-            ? this.getState()
-            : m_workflow.getNode(cc.getDest()).getState();
-        // make sure destination is "in use"...
-        if (!(destState.equals(NodeContainer.State.IDLE)
-              || destState.equals(NodeContainer.State.CONFIGURED)
-              || destState.equals(NodeContainer.State.EXECUTED))) {
-              return false;
-          }
+        if (destID.equals(getID())) { // wfm out connection
+            // note it is ok if the WFM itself is executing... 
+            if (getParent().hasSuccessorInProgress(getID())) {
+                return false;
+            }
+        } else {
+            if (hasSuccessorInProgress(destID)) {
+                return false;
+            }
+            if (m_workflow.getNode(destID).getState().executionInProgress()) {
+                return false;
+            }
+        }
         return true;
     }
 
