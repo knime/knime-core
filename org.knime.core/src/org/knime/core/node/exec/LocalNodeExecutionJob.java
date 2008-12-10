@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Oct 17, 2008 (wiswedel): created
  */
@@ -31,14 +31,14 @@ import org.knime.core.node.workflow.NodeExecutionJob;
 import org.knime.core.node.workflow.SingleNodeContainer;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 public class LocalNodeExecutionJob extends NodeExecutionJob {
-    
+
     private Future<?> m_future;
-    
-    public LocalNodeExecutionJob(final SingleNodeContainer snc, 
+
+    public LocalNodeExecutionJob(final SingleNodeContainer snc,
             final PortObject[] data, final ExecutionContext ec) {
         super(snc, data, ec);
     }
@@ -53,7 +53,7 @@ public class LocalNodeExecutionJob extends NodeExecutionJob {
         }
         return m_future.cancel(true);
     }
-    
+
     /**
      * Set the future that represents the pending execution.
      * @param future the future to set
@@ -67,6 +67,14 @@ public class LocalNodeExecutionJob extends NodeExecutionJob {
     public boolean mainExecute() {
         return getSingleNodeContainer().performExecuteNode(
                 getPortObjects(), getExecutionContext());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isReConnecting() {
+        return false;
     }
 
 }
