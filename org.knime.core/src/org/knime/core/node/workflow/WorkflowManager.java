@@ -1995,6 +1995,36 @@ public final class WorkflowManager extends NodeContainer {
             executedNodes.add(thisID);
         }
     }
+    
+    boolean continueExecutionOnLoad(final NodeContainer nc, 
+            final NodeContainerPersistor persistor) 
+        throws InvalidSettingsException,  NodeExecutionJobReconnectException {
+        NodeContainerMetaPersistor metaPers = persistor.getMetaPersistor();
+        NodeSettingsRO execJobSettings = metaPers.getExecutionJobSettings();
+        NodeOutPort[] ports = assemblePredecessorOutPorts(nc.getID());
+        PortObject[] inData = new PortObject[ports.length];
+        boolean allDataAvailable = true;
+        for (int i = 0; i < ports.length; i++) {
+            if (ports[i] != null) {
+                inData[i] = ports[i].getPortObject();
+            }
+            allDataAvailable &= inData[i] != null;
+        }
+        if (allDataAvailable) {
+            if (nc.getState().equals(State.CONFIGURED)) {
+                assert nc instanceof SingleNodeContainer;
+                SingleNodeContainer snc = (SingleNodeContainer)nc;
+                snc.continueExecutionOnLoad(inData, execJobSettings);
+                return true;
+            } else {
+                // TODO handle continued execution of WFM
+                disableNodeForExecution(nc.getID());
+                checkForNodeStateChanges(true);
+                return false;
+            }
+        }
+        return false;
+    }
 
     /////////////////////////////////////////////////////////
     // WFM as NodeContainer: Dialog related implementations
@@ -2987,6 +3017,7 @@ public final class WorkflowManager extends NodeContainer {
             NodeOutPort[] predPorts = assemblePredecessorOutPorts(bfsID);
             final int predCount = predPorts.length;
             PortObject[] portObjects = new PortObject[predCount];
+            boolean inPortsContainNull = false;
             ScopeObjectStack[] predStacks = new ScopeObjectStack[predCount];
             for (int i = 0; i < predCount; i++) {
                 NodeOutPort p = predPorts[i];
@@ -2997,6 +3028,7 @@ public final class WorkflowManager extends NodeContainer {
                 if (p != null) {
                     predStacks[i] = p.getScopeContextStackContainer();
                     portObjects[i] = p.getPortObject();
+                    inPortsContainNull &= portObjects[i] == null;
                 }
             }
             ScopeObjectStack inStack;
@@ -3009,8 +3041,8 @@ public final class WorkflowManager extends NodeContainer {
                 needsReset = true;
                 inStack = new ScopeObjectStack(cont.getID());
             }
-            NodeContainerPersistor containerPersistor = persistorMap.get(bfsID);
-            State loadState = containerPersistor.getMetaPersistor().getState();
+            NodeContainerPersistor persistor = persistorMap.get(bfsID);
+            State loadState = persistor.getMetaPersistor().getState();
             exec.setMessage(cont.getNameWithID());
             // two steps below: loadNodeContainer and loadContent
             ExecutionMonitor sub1 =
@@ -3020,7 +3052,7 @@ public final class WorkflowManager extends NodeContainer {
             LoadResult subResult = new LoadResult();
             try {
                 subResult.addError(
-                        containerPersistor.loadNodeContainer(tblRep, sub1));
+                        persistor.loadNodeContainer(tblRep, sub1));
             } catch (CanceledExecutionException e) {
                 throw e;
             } catch (Exception e) {
@@ -3037,9 +3069,9 @@ public final class WorkflowManager extends NodeContainer {
             }
             sub1.setProgress(1.0);
             subResult.addError(cont.loadContent(
-                    containerPersistor, tblRep, inStack, sub2));
+                    persistor, tblRep, inStack, sub2));
             sub2.setProgress(1.0);
-            if (containerPersistor.isDirtyAfterLoad()) {
+            if (persistor.isDirtyAfterLoad()) {
                 cont.setDirty();
             }
             boolean hasPredecessorFailed = false;
@@ -3053,14 +3085,16 @@ public final class WorkflowManager extends NodeContainer {
                     hasPredecessorFailed = true;
                 }
             }
-            needsReset |= containerPersistor.needsResetAfterLoad();
+            needsReset |= persistor.needsResetAfterLoad();
             needsReset |= hasPredecessorFailed;
             boolean isExecuted = cont.getState().equals(State.EXECUTED);
+            boolean isExecuting = persistor.getMetaPersistor()
+                .getExecutionJobSettings() != null;
+            
             // if node is executed and some input data is missing we need
             // to reset that node as there is obviously a conflict (e.g.
             // predecessors has been loaded as IDLE
-            if (!needsReset && isExecuted 
-                    && Arrays.asList(portObjects).contains(null)) {
+            if (!needsReset && isExecuted && inPortsContainNull) {
                 needsReset = true;
                 subResult.addError("Predecessor ports have no data", true);
             }
@@ -3087,6 +3121,40 @@ public final class WorkflowManager extends NodeContainer {
                     subResult.addError(warning, true);
                 } else {
                     subResult.addWarning(warning);
+                }
+            }
+            // saved in executing state (e.g. grid job), request to reconnect
+            if (isExecuting) {
+                if (needsReset) {
+                    subResult.addError("Can't continue execution "
+                            + "due to load errors");
+                }
+                if (inPortsContainNull) {
+                    subResult.addError(
+                            "Can't continue execution; no data in inport");
+                }
+                if (!cont.getState().equals(State.CONFIGURED)) {
+                    subResult.addError(
+                    "Can't continue execution; node is not configured");
+                }
+                try {
+                    if (!continueExecutionOnLoad(cont, persistor)) {
+                        subResult.addError(
+                                "Can't continue execution; unknown reason");
+                    }
+                } catch (Exception exc) {
+                    StringBuilder error = new StringBuilder(
+                            "Can't continue execution");
+                    if (exc instanceof NodeExecutionJobReconnectException
+                            || exc instanceof InvalidSettingsException) {
+                        error.append(": ").append(exc.getMessage());
+                    } else {
+                        error.append(" due to ");
+                        error.append(exc.getClass().getSimpleName());
+                        error.append(": ").append(exc.getMessage());
+                    }
+                    LOGGER.error(error, exc);
+                    subResult.addError(error.toString());
                 }
             }
             if (subResult.hasEntries()) {

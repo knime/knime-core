@@ -99,23 +99,23 @@ public interface NodeExecutionJobManager {
      * @see #saveReconnectSettings(NodeExecutionJob, NodeSettingsWO)
      */
     public NodeExecutionJob loadFromReconnectSettings(
-            final NodeSettingsRO settings, final PortObject[] inports)
-            throws InvalidSettingsException, NodeExecutionJobReconnectException;
-    
-    
+            final NodeSettingsRO settings, final PortObject[] inports,
+            final SingleNodeContainer snc, final ExecutionContext exec)
+    throws InvalidSettingsException, NodeExecutionJobReconnectException;
+
     /** Saves parameters that customize this instance. It does not save
      * the general job manager ID (that happens elsewhere). Job managers that
      * are represented by a singleton, leave this method empty.
      * @param settings to save to.
      */
     public void save(final NodeSettingsWO settings);
-    
+
     /** Restores the properties of the specific job manager. This is the reverse
      * operation to {@link #save(NodeSettingsWO)}.
      * @param settings To load from.
      * @throws InvalidSettingsException If that fails.
      */
-    public void load(final NodeSettingsRO settings) 
+    public void load(final NodeSettingsRO settings)
     throws InvalidSettingsException;
-    
+
 }

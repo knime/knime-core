@@ -101,12 +101,11 @@ public class ThreadNodeExecutionJobManager implements NodeExecutionJobManager {
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public NodeExecutionJob loadFromReconnectSettings(
-            final NodeSettingsRO settings, final PortObject[] inports)
-            throws NodeExecutionJobReconnectException {
+    /** {@inheritDoc} */
+    @Override
+    public NodeExecutionJob loadFromReconnectSettings(final NodeSettingsRO settings,
+            final PortObject[] inports, final SingleNodeContainer snc, final ExecutionContext exec)
+            throws InvalidSettingsException, NodeExecutionJobReconnectException {
         throw new NodeExecutionJobReconnectException(
                 "Threaded jobs can't be reconnected");
     }
@@ -118,16 +117,16 @@ public class ThreadNodeExecutionJobManager implements NodeExecutionJobManager {
             final NodeSettingsWO settings) {
         assert false : "Don't save threaded job info! Can't reconnect.";
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void save(final NodeSettingsWO settings) {
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    public void load(final NodeSettingsRO settings) 
+    public void load(final NodeSettingsRO settings)
     throws InvalidSettingsException {
     }
-    
+
 }

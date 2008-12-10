@@ -136,7 +136,7 @@ public final class SingleNodeContainer extends NodeContainer
         setPortNames();
         m_node.addMessageListener(new UnderlyingNodeMessageListener());
     }
-    
+
     private void setPortNames() {
         for (int i = 0; i < getNrOutPorts(); i++) {
             getOutPort(i).setPortName(m_node.getFactory().getOutportName(i));
@@ -278,9 +278,9 @@ public final class SingleNodeContainer extends NodeContainer
             if (getState().equals(State.EXECUTING)
                     || getState().equals(State.QUEUED)) {
                 throw new IllegalStateException("Illegal state " + getState()
-                        + " in setJobExecutor - " 
+                        + " in setJobExecutor - "
                         + "can not change a running node.");
-                
+
             }
             super.setJobManager(je);
         }
@@ -468,7 +468,7 @@ public final class SingleNodeContainer extends NodeContainer
             }
         }
     }
-    
+
     /**
      * Change state of marked (for execution) node to queued once it has been
      * assigned to a NodeExecutionJobManager.
@@ -484,11 +484,11 @@ public final class SingleNodeContainer extends NodeContainer
                 NodeExecutionJobManager jobManager = findJobManager();
                 try {
                     ExecutionContext execCon = createExecutionContext();
-                    NodeExecutionJob job = 
+                    NodeExecutionJob job =
                         jobManager.submitJob(this, inData, execCon);
                     setExecutionJob(job);
                 } catch (Throwable t) {
-                    String error = "Failed to submit job to job executor \"" 
+                    String error = "Failed to submit job to job executor \""
                         + jobManager + "\": " + t.getMessage();
                     setNodeMessage(new NodeMessage(
                             NodeMessage.Type.ERROR, error));
@@ -496,14 +496,48 @@ public final class SingleNodeContainer extends NodeContainer
                     try {
                         performBeforeExecuteNode();
                     } catch (IllegalContextStackObjectException e) {
-                        // have something more serious to deal with
+                        // ignore, we have something more serious to deal with
                     }
                     performAfterExecuteNode(false);
                 }
                 return;
             default:
                 throw new IllegalStateException("Illegal state " + getState()
-                        + " encountered in queueNode(). Node "
+                        + " encountered in queue(). Node "
+                        + getNameWithID());
+            }
+        }
+    }
+
+    /**
+     */
+    void continueExecutionOnLoad(final PortObject[] inData,
+            final NodeSettingsRO settings)
+        throws InvalidSettingsException, NodeExecutionJobReconnectException {
+        synchronized (m_nodeMutex) {
+            switch (getState()) {
+            case CONFIGURED:
+                NodeExecutionJobManager jobManager = findJobManager();
+                ExecutionContext execCon = createExecutionContext();
+                try {
+                    NodeExecutionJob job =
+                        jobManager.loadFromReconnectSettings(
+                                settings, inData, this, execCon);
+                    setExecutionJob(job);
+                    setState(State.EXECUTING, false);
+                } catch (NodeExecutionJobReconnectException t) {
+                    throw t;
+                } catch (InvalidSettingsException t) {
+                    throw t;
+                } catch (Throwable t) {
+                    throw new InvalidSettingsException(
+                            "Failed to continue job on job manager \""
+                            + jobManager + "\": " + t.getMessage(), t);
+                }
+                return;
+            default:
+                throw new IllegalStateException("Illegal state " + getState()
+                        + " encountered in continueExecutionOnLoad(). Node "
                         + getNameWithID());
             }
         }
@@ -609,7 +643,7 @@ public final class SingleNodeContainer extends NodeContainer
             setExecutionJob(null);
         }
     }
-    
+
     /**
      * Invoked by the job executor immediately before the execution is
      * triggered. It invokes doBeforeExecution on the parent.
@@ -629,7 +663,7 @@ public final class SingleNodeContainer extends NodeContainer
             throw e;
         }
     }
-    
+
     /**
      * Execute underlying Node asynchronously. Make sure to give Workflow-
      * Manager a chance to call pre- and postExecuteNode() appropriately and
@@ -637,7 +671,7 @@ public final class SingleNodeContainer extends NodeContainer
      *
      * @param inObjects input data
      * @param ec The execution context for progress, e.g.
-     * @return whether execution was successful. 
+     * @return whether execution was successful.
      * @throws IllegalStateException in case of illegal entry state.
      */
     public boolean performExecuteNode(final PortObject[] inObjects,
@@ -675,7 +709,7 @@ public final class SingleNodeContainer extends NodeContainer
         }
         return success;
     }
-    
+
     /**
      * Called immediately after the execution took place in the job executor. It
      * will trigger an doAfterExecution on the parent wfm.
@@ -686,10 +720,10 @@ public final class SingleNodeContainer extends NodeContainer
         // clean up stuff and especially change states synchronized again
         getParent().doAfterExecution(SingleNodeContainer.this, success);
     }
-    
+
     /** Hook to insert new port objects into this node. This method is used,
      * for instance in grid execution in order to load the results into the
-     * node instance. 
+     * node instance.
      * @param outData The new output data.
      * @return If that's successful (false if for instance, elements are null
      * or incompatible)
@@ -697,14 +731,14 @@ public final class SingleNodeContainer extends NodeContainer
     public boolean loadExecutionResult(final PortObject[] outData) {
         return m_node.loadExecutionResult(outData, false);
     }
-    
+
     /** Set a node message on this node. This method should be used when
      * the node is executed remotely, i.e. the local Node instance is not
      * used for the calculation but should represent a calculation result.
      * @param message A message that should be shown at the node. Must not be
      * null (use a reset message instead).
-     * @throws NullPointerException If the argument is null 
-     */ 
+     * @throws NullPointerException If the argument is null
+     */
     public void loadNodeMessage(final NodeMessage message) {
         m_node.loadNodeMessage(message);
     }
@@ -804,7 +838,7 @@ public final class SingleNodeContainer extends NodeContainer
         m_node.saveSettingsTo(settings);
         saveSNCSettings(settings);
     }
-    
+
     /**
      * Saves the SingleNodeContainer settings such as the job executor to the
      * argument node settings object.
@@ -815,7 +849,7 @@ public final class SingleNodeContainer extends NodeContainer
     void saveSNCSettings(final NodeSettingsWO settings) {
         m_settings.save(settings);
     }
-    
+
     /**
      * Loads the SingleNodeContainer settings from the argument. This is the
      * reverse operation to {@link #saveSNCSettings(NodeSettingsWO)}.
@@ -823,13 +857,13 @@ public final class SingleNodeContainer extends NodeContainer
      * @param settings To load from.
      * @throws InvalidSettingsException If settings are invalid.
      */
-    void loadSNCSettings(final NodeSettingsRO settings) 
+    void loadSNCSettings(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         synchronized (m_nodeMutex) {
             m_settings = new SingleNodeContainerSettings(settings);
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     boolean areSettingsValid(final NodeSettingsRO settings) {
@@ -964,7 +998,7 @@ public final class SingleNodeContainer extends NodeContainer
         m_node.ensureOutputDataIsRead();
         super.setDirty();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected NodeContainerPersistor getCopyPersistor(
@@ -1049,10 +1083,10 @@ public final class SingleNodeContainer extends NodeContainer
     }
 
     /** The message listener that is added the Node and listens for messages
-     * that are set by failing execute methods are by the user 
+     * that are set by failing execute methods are by the user
      * (setWarningMessage()).
      */
-    private final class UnderlyingNodeMessageListener 
+    private final class UnderlyingNodeMessageListener
         implements NodeMessageListener {
         /** {@inheritDoc} */
         @Override
