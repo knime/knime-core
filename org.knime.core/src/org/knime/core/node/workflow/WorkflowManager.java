@@ -1903,7 +1903,6 @@ public final class WorkflowManager extends NodeContainer {
      * @param nc node to be canceled
      */
     public void cancelExecution(final NodeContainer nc) {
-        assert nc != null;
         disableNodeForExecution(nc.getID());
         synchronized (m_workflowMutex) {
             if (nc.getState().executionInProgress()) {
@@ -1916,7 +1915,33 @@ public final class WorkflowManager extends NodeContainer {
             }
         }
     }
-
+    
+    /**
+     * Cancel execution of the given NodeContainer.
+     *
+     * @param nc node to be canceled
+     */
+    public void cancelOrDisconnectExecution(final NodeContainer nc) {
+        disableNodeForExecution(nc.getID());
+        synchronized (m_workflowMutex) {
+            if (nc.getState().executionInProgress()) {
+                if (nc instanceof SingleNodeContainer) {
+                    ((SingleNodeContainer)nc).cancelOrDisconnectExecution();
+                } else {
+                    ((WorkflowManager)nc).cancelExecutionOfAllChildren();
+                }
+            }
+        }
+    }
+    
+    /** Cancels or disconnects all EXECUTING nodes.
+     * TODO this need to be revised. */
+    void cancelOrDisconnectExecutionOfAllChildren() {
+        for (NodeContainer nc : m_workflow.getNodeValues()) {
+            cancelOrDisconnectExecution(nc);
+        }
+    }
+    
    /**
     * Convenience method: execute all and wait for execution to be done.
     *

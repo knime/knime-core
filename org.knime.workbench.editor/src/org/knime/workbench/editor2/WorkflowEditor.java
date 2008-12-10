@@ -528,7 +528,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                     if (m_manager.getState().executionInProgress()) {
                         for (NodeContainer container 
                                     : m_manager.getNodeContainers()) {
-                            m_manager.cancelExecution(container);
+                            // TODO this need to be revised
+                            m_manager.cancelOrDisconnectExecution(container);
                         }
                     }
                 } catch (Throwable t) {
