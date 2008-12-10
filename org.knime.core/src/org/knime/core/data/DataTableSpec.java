@@ -908,7 +908,8 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
             // NominalValue type check
             if (cspec.getType().isCompatible(NominalValue.class)) {
                 // has value check
-                if (withValues && cspec.getDomain().hasValues()) {
+                if (!withValues 
+                        || (withValues && cspec.getDomain().hasValues())) {
                     String colName = cspec.getName();
                     for (int j = 0; j < CLASS_COLUMN_NAMES.length; j++) {
                         if (colName.toLowerCase().contains(
@@ -916,11 +917,12 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
                             // add only first appearance 
                             if (!map.containsKey(j)) {
                                 map.put(j, colName);
-                                continue;
+                                break;
                             }
                         }
                     }
-                    // add only first appearance 
+                    // add first nominal values to the end of the map: ensures
+                    // that at least one nominal column is in the map
                     if (!map.containsKey(Integer.MAX_VALUE)) {
                         map.put(Integer.MAX_VALUE, colName);
                     }
