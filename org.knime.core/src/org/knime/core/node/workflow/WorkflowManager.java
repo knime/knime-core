@@ -3160,7 +3160,8 @@ public final class WorkflowManager extends NodeContainer {
                 }
                 if (!cont.getState().equals(State.CONFIGURED)) {
                     subResult.addError(
-                    "Can't continue execution; node is not configured");
+                    "Can't continue execution; node is not configured but "
+                            + cont.getState());
                 }
                 try {
                     if (!continueExecutionOnLoad(cont, persistor)) {

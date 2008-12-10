@@ -190,9 +190,8 @@ class NodeContainerMetaPersistorVersion200 extends
             break;
         case EXECUTING:
             if (nc.findJobManager().canDisconnect(nc.getExecutionJob())) {
-                state = State.EXECUTING.toString();
+                // state will also be CONFIGURED only ... we set executing later
                 mustAlsoSaveExecutorSettings = true;
-                break;
             }
         default:
             state = State.CONFIGURED.toString();

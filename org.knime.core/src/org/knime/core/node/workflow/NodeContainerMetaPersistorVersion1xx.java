@@ -180,7 +180,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             getLogger().debug(error, e);
             setDirtyAfterLoad();
         }
-        boolean hasJobManagerLoadFailed = m_jobManager != null;
+        boolean hasJobManagerLoadFailed = m_jobManager == null;
         try {
             if (!hasJobManagerLoadFailed) {
                 m_executionJobSettings = 
