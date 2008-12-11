@@ -43,28 +43,27 @@ public class AssociationRule {
     
     private final FrequentItemSet m_consequent;
 
-    /*
-     * Creates an association rule with the list of ids of the antecedent and an
-     * id as the consequent of this rule.
-     * 
-     * @param consequent the consequent of the rule
-     * @param antecendent the antecedent of the rule
-     * @param confidence the confidence of the rule
-     * @param support the support of the rule
-     *
-    public AssociationRule(final Integer consequent,
-            final List<Integer> antecendent, final double confidence,
-            final double support) {
-        m_consequent = consequent;
-        m_antecedent = antecendent;
-        m_confidence = confidence;
-        m_support = support;
-    }
-    */
+//    public AssociationRule(final Integer consequent,
+//            final List<Integer> antecendent, final double confidence,
+//            final double support) {
+//        m_consequent = consequent;
+//        m_antecedent = antecendent;
+//        m_confidence = confidence;
+//        m_support = support;
+//    }
 
     // TODO: rewrite to have a FrequentItem antecedent
     // and a FrequentItemSet as consequent
     
+    /**
+     * Creates an association rule with the list of ids of the antecedent and an
+     * id as the consequent of this rule.
+     * 
+     * @param consequent the consequent of the rule
+     * @param antecedent the antecedent of the rule
+     * @param confidence the confidence of the rule
+     * @param support the support of the rule
+     */
     public AssociationRule(final FrequentItemSet antecedent, 
             final FrequentItemSet consequent, final double support,
             final double confidence) {

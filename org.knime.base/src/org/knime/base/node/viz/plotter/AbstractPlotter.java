@@ -858,10 +858,9 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
 
     /**
      * Delegates to the hilite handler.
-     *
      * @param ids the ids to be unhilited.
      * @see org.knime.core.node.property.hilite.HiLiteHandler
-     *      #fireUnHiLiteEvent(org.knime.core.data.DataCell[])
+     *      #fireUnHiLiteEvent(RowKey...)
      */
     public void delegateUnHiLite(final RowKey... ids) {
         if (m_hiliteHandler != null) {

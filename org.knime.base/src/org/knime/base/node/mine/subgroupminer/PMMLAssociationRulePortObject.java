@@ -52,17 +52,27 @@ public class PMMLAssociationRulePortObject extends PMMLPortObject {
     private Set<AssociationRule> m_associationRules;
     private List<String>m_nameMapping;
     
+    /** PortType for association rules. */
     public static final PortType TYPE 
         = new PortType(PMMLAssociationRulePortObject.class);
     
     /**
-     * 
+     * Creates a new PMML association rule port object.
      */
     public PMMLAssociationRulePortObject() {
         m_itemsets = new LinkedHashSet<FrequentItemSet>();
         m_associationRules = new LinkedHashSet<AssociationRule>();
     }
     
+    /**
+     * Creates a new PMML association rule port object.
+     * @param spec PMML spec
+     * @param minSupport minimum support
+     * @param minConfidence minimum confidence
+     * @param nrOfTransactions number of transactions
+     * @param nrOfItems number of items
+     * @param itemsets collection of frequent item sets
+     */
     public PMMLAssociationRulePortObject(
             final PMMLPortObjectSpec spec,
             final double minSupport,
@@ -78,6 +88,15 @@ public class PMMLAssociationRulePortObject extends PMMLPortObject {
         m_associationRules = new LinkedHashSet<AssociationRule>();
     }
     
+    /**
+     * Creates a new PMML association rule port object.
+     * @param spec PMML spec
+     * @param rules collection of association rules
+     * @param minSupport minimum support
+     * @param minConfidence minimum confidence
+     * @param nrOfTransactions number of transactions
+     * @param nrOfItems number of items
+     */
     public PMMLAssociationRulePortObject(
             final PMMLPortObjectSpec spec,
             final Collection<AssociationRule> rules,
@@ -99,6 +118,10 @@ public class PMMLAssociationRulePortObject extends PMMLPortObject {
         }
     }
     
+    /**
+     * Sets a new name mapping.
+     * @param nameMapping list of names
+     */
     public void setNameMapping(final List<String>nameMapping) {
         m_nameMapping = nameMapping;
     }

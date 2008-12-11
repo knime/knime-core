@@ -25,7 +25,6 @@
 
 package org.knime.base.node.viz.pie.node;
 
-import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 
@@ -36,9 +35,7 @@ import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.pie.datamodel.PieVizModel;
 import org.knime.base.node.viz.pie.util.PieColumnFilter;
 import org.knime.base.node.viz.pie.util.TooManySectionsException;
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.BufferedDataTable;
@@ -306,8 +303,8 @@ extends NodeModel {
     }
 
     /**
-     * Called prior the {@link #addDataRow(DataRow, Color, DataCell, DataCell)}
-     * method to allow the implementing class the specific model creation.
+     * Called prior <code>#addDataRow(...)</code> method to allow the 
+     * implementing class the specific model creation.
      * @param exec the {@link ExecutionMonitor}
      * @param pieColSpec the {@link DataColumnSpec} of the selected pie column
      * @param aggrColSpec the {@link DataColumnSpec} of the selected

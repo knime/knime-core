@@ -29,14 +29,13 @@ import java.util.Comparator;
 
 import org.knime.base.node.viz.aggregation.AggregationValModel;
 
-
 /**
  *
  * @author Tobias Koetter, University of Konstanz
  */
 @SuppressWarnings("unchecked")
-public class AggrValModelComparator implements Comparator
-<AggregationValModel> {
+public class AggrValModelComparator 
+       implements Comparator<AggregationValModel> {
 
     private boolean m_sortNumerical = true;
 
@@ -44,8 +43,9 @@ public class AggrValModelComparator implements Comparator
 
     private int m_upper = 1;
 
-
-    /**Constructor for class AggrValModelComparator.
+    /**
+     * Constructor for class AggrValModelComparator.
+     * @param sortNumerical if numeric sorting enabled
      * @param ascending <code>true</code> if the sections should be sorted in
      * ascending order
      */

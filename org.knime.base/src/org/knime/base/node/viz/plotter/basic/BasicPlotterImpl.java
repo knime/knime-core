@@ -37,9 +37,11 @@ import org.knime.core.node.property.hilite.KeyEvent;
  * @author Fabian Dill, University of Konstanz
  */
 public class BasicPlotterImpl extends BasicPlotter {
+    
     /**
-     * 
+     * Create a new basis plotter implementation.
      * @param pane the drawing pane
+     * @param props plotter properties
      */
     public BasicPlotterImpl(final BasicDrawingPane pane, 
             final AbstractPlotterProperties props) {

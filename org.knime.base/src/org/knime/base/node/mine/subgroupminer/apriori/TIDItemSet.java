@@ -67,7 +67,7 @@ public final class TIDItemSet {
     /**
      * Creates an empty TIDItemSet with no items but, since it is an empty set,
      * present in all transactions.
-     * 
+     * @param id the current item set ID
      * @param length the number of transactions
      * @return an empty TIDItemSet with no items but present in all transactions
      */
@@ -80,6 +80,9 @@ public final class TIDItemSet {
         return empty;
     }
     
+    /**
+     * @return item set ID as string
+     */
     public String getId() {
         return m_id;
     }

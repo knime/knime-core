@@ -414,8 +414,8 @@ public class TableNodeView extends NodeView {
         private final TableContentFilter m_filter;
 
         /**
-         * Creates new instance given a hilight handler.
-         * 
+         * Creates new instance given a hilite handler.
+         * @param filter table content filter
          * @param handler the handler to get the hilite info from
          */
         public RowHiliteFilter(final TableContentFilter filter, 
