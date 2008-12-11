@@ -56,7 +56,9 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
     private String m_algorithmName;
 
     /**
+     * Creates a new PMML content handler for regression models.
      *
+     * @param spec the spec for the regression model
      */
     public PMMLRegressionContentHandler(final PMMLPortObjectSpec spec) {
         if (spec == null) {
@@ -65,12 +67,24 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         m_spec = spec;
     }
 
+    /**
+     * Creates a new PMML content handler for regression models based on an
+     * existing port object.
+     *
+     * @param po a PMML regression port object
+     */
     public PMMLRegressionContentHandler(final PMMLRegressionPortObject po) {
         m_modelName = po.getModelName();
         m_regressionTable = po.getRegressionTable();
         m_spec = po.getSpec();
     }
 
+    /**
+     * Checks if the internal regression has been set and if all predictors
+     * are assigned. If not an {@link IllegalStateException} is thrown.
+     *
+     * @throws IllegalStateException if required information is missing
+     */
     public void checkValidity() {
         if (m_regressionTable == null) {
             throw new IllegalStateException("No regression table set");
@@ -83,7 +97,9 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
     }
 
     /**
-     * @return the modelName
+     * Returns the model's name.
+     *
+     * @return the model's name
      */
     public final String getModelName() {
         return m_modelName;
@@ -114,6 +130,11 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         return "Response";
     }
 
+    /**
+     * Checks if the given target field name exists in this model.
+     *
+     * @param targetFieldName a target field name
+     */
     public void checkTargetField(final String targetFieldName) {
         if (!getTargetField().equals(targetFieldName)) {
             LOGGER.warn("Non matching target field name or no target "
@@ -157,6 +178,12 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         m_algorithmName = algorithmName;
     }
 
+    /**
+     * Writes the PMML regression model to the given handler.
+     *
+     * @param h a transform handler
+     * @throws SAXException if anything goes wrong while serializing the model
+     */
     public void writePMMLRegressionModel(final TransformerHandler h)
         throws SAXException {
         AttributesImpl a = new AttributesImpl();
@@ -275,9 +302,6 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
 
         private final Stack<PMMLContentHandler> m_contentHandlerStack;
 
-        /**
-         *
-         */
         public PMMLMiningSchemaHandler(
                 final Stack<PMMLContentHandler> contentHandlerStack) {
             m_contentHandlerStack = contentHandlerStack;
@@ -319,9 +343,6 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         private final double m_intercept;
         private final ArrayList<NumericPredictor> m_numPredictorList;
 
-        /**
-         *
-         */
         public PMMLRegressionTableHandler(
                 final PMMLRegressionContentHandler parent,
                 final Stack<PMMLContentHandler> contentHandlerStack,
@@ -405,9 +426,6 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         private final Stack<PMMLContentHandler> m_contentHandlerStack;
         private final NumericPredictor m_numPredictor;
 
-        /**
-         *
-         */
         public PMMLNumericPredictorContentHandler(
                 final PMMLRegressionTableHandler parent,
                 final Stack<PMMLContentHandler> contentHandlerStack,
@@ -490,5 +508,4 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         }
         return value;
     }
-
 }

@@ -40,11 +40,13 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.xml.sax.SAXException;
 
 /**
+ * This class wraps a PMML regression model that can then be transferred from
+ * one node to the other.
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class PMMLRegressionPortObject extends PMMLPortObject {
-
+    /** The port object's type. */
     public static final PortType TYPE =
             new PortType(PMMLRegressionPortObject.class);
 
@@ -57,7 +59,11 @@ public final class PMMLRegressionPortObject extends PMMLPortObject {
     private String m_modelName;
 
     /**
+     * Creates a new PMML port object for polynomial regression.
      *
+     * @param spec the objects spec
+     * @param p the content handler that receives SAX parsing events upon
+     * reading a PMML model
      */
     public PMMLRegressionPortObject(final PMMLPortObjectSpec spec,
             final PMMLRegressionContentHandler p) {
@@ -150,6 +156,12 @@ public final class PMMLRegressionPortObject extends PMMLPortObject {
         return m_modelName;
     }
 
+    /**
+     * This class represents a single numeric predictor with its name (usually
+     * the column name it is responsible for), the exponent and the coefficient.
+     *
+     * @author Bernd Wiswedel, University of Konstanz
+     */
     public static final class NumericPredictor {
         private final String m_name;
 
@@ -157,6 +169,13 @@ public final class PMMLRegressionPortObject extends PMMLPortObject {
 
         private final double m_coefficient;
 
+        /**
+         * Creates a new numeric predictor.
+         *
+         * @param name the predictor's name (usually the column name)
+         * @param exponent the exponent
+         * @param coefficient the coefficient
+         */
         public NumericPredictor(final String name, final int exponent,
                 final double coefficient) {
             m_name = name;
@@ -188,13 +207,22 @@ public final class PMMLRegressionPortObject extends PMMLPortObject {
         }
     }
 
+    /**
+     * This table wraps a polynomial regression formula for use inside a PMML
+     * model.
+     *
+     * @author Bernd Wiswedel, University of Konstanz
+     */
     public static final class RegressionTable {
         private final double m_intercept;
 
         private final List<NumericPredictor> m_variables;
 
         /**
+         * Creates a new regression table.
          *
+         * @param intercept the constant intercept of the regression formula
+         * @param variables the regression variables
          */
         public RegressionTable(final double intercept,
                 final NumericPredictor[] variables) {
