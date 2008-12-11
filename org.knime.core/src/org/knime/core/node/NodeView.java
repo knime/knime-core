@@ -563,7 +563,6 @@ public abstract class NodeView<T extends NodeModel>
                 } else {
                     setComponentIntern(comp);
                     if (!m_componentSet) {
-                        m_logger.info(comp.getSize());
                         pack = true;
                     }
                     m_componentSet = true;
