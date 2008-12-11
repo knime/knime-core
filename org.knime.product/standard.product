@@ -4,7 +4,7 @@
 <product name="KNIME" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" useFeatures="true">
 
    <aboutInfo>
-      <image path="/org.knime.product/icons/knime64.gif"/>
+      <image path="/org.knime.product/icons/gif/knime64.gif"/>
       <text>
          Welcome to KNIME v2.0.0.0017855
 the Konstanz Information Miner
@@ -25,10 +25,10 @@ Uses: Java, GEF, Log4J
 
    <launcherArgs>
       <programArgs>-clean</programArgs>
-      <vmArgs>-Xmx256m -XX:MaxPermSize=128m -server</vmArgs>
+      <vmArgs>-Xmx512m -XX:MaxPermSize=128m -server</vmArgs>
    </launcherArgs>
 
-   <windowImages i16="/org.knime.product/icons/knime.gif" i32="/org.knime.product/icons/knime32.gif" i64="/org.knime.product/icons/knime64.gif"/>
+   <windowImages i16="/org.knime.product/icons/gif/knime16.gif" i32="/org.knime.product/icons/gif/knime32.gif" i48="/org.knime.product/icons/gif/knime48.gif" i64="/org.knime.product/icons/gif/knime64.gif" i128="/org.knime.product/icons/gif/knime128.gif"/>
 
    <splash
       location="org.knime.product" />
