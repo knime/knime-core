@@ -400,9 +400,11 @@ public class AddMetaNodePage extends WizardPage {
                 Port port = dialog.open();
                 if (port != null) {
                     if (in) {
+                        port.setName("in_" + m_inPortList.size());
                         m_inPorts.add(port.toString());
                         m_inPortList.add(port);
                     } else {
+                        port.setName("out_" + m_outPortList.size());
                         m_outPorts.add(port.toString());
                         m_outPortList.add(port);
                     }
@@ -430,12 +432,13 @@ public class AddMetaNodePage extends WizardPage {
                 if (in) {
                     remove(true, m_inPorts.getItem(
                             m_inPorts.getSelectionIndex()));
-                    m_inPorts.remove(m_inPorts.getSelectionIndex());
+//                    m_inPorts.remove(m_inPorts.getSelectionIndex());
                 } else {
                     remove(false, m_outPorts.getItem(
                             m_outPorts.getSelectionIndex()));
-                    m_outPorts.remove(m_outPorts.getSelectionIndex());
+//                    m_outPorts.remove(m_outPorts.getSelectionIndex());
                 }
+                m_previewPanel.redraw();
                 updateStatus();
             }
 
@@ -487,6 +490,13 @@ public class AddMetaNodePage extends WizardPage {
                     break;
                 }
             }
+            String[] names = new String[m_inPortList.size()];
+            for (int i = 0; i < m_inPortList.size(); i++) {
+                Port p = m_inPortList.get(i);
+                p.setName("in_" + i);
+                names[i] = p.toString();
+            }
+            m_inPorts.setItems(names);
         } else {
             for (Port p : m_outPortList) {
                 if (p.toString().equals(port)) {
@@ -494,6 +504,13 @@ public class AddMetaNodePage extends WizardPage {
                     break;
                 }
             }
+            String[] names = new String[m_outPortList.size()];
+            for (int i = 0; i < m_outPortList.size(); i++) {
+                Port p = m_outPortList.get(i);
+                p.setName("out_" + i);
+                names[i] = p.toString();
+            }
+            m_outPorts.setItems(names);
         }
     }
 
