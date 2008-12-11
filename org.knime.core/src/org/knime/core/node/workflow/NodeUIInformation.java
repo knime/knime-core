@@ -71,13 +71,16 @@ public class NodeUIInformation implements UIInformation {
     /**
      * {@inheritDoc}
      */
-    public void load(final NodeSettingsRO conf) 
+    public void load(final NodeSettingsRO conf)
         throws InvalidSettingsException {
         m_bounds = conf.getIntArray(KEY_BOUNDS);
     }
 
     /**
-     * {@inheritDoc}
+     * Returns if the loaded UI information is complete.
+     *
+     * @return <code>true</code> if it is filled properly, <code>false</code>
+     * otherwise
      */
     public boolean isFilledProperly() {
         if (m_bounds == null) {
@@ -89,7 +92,7 @@ public class NodeUIInformation implements UIInformation {
     /**
      * Sets the location. *
      *
-     * @param x x-ccordinate
+     * @param x x-coordinate
      * @param y y-coordinate
      * @param w width
      * @param h height
@@ -139,13 +142,16 @@ public class NodeUIInformation implements UIInformation {
         newObject.m_bounds = this.m_bounds.clone();
         return newObject;
     }
-    
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         if (m_bounds == null) {
             return "not set";
         }
-        return "x " + m_bounds[0] + " y " + m_bounds[1] 
-                    + " width " + m_bounds[2] + " height "  + m_bounds[3]; 
+        return "x " + m_bounds[0] + " y " + m_bounds[1]
+                    + " width " + m_bounds[2] + " height "  + m_bounds[3];
     }
 }
