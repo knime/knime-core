@@ -53,7 +53,7 @@ import org.knime.core.node.ExecutionMonitor;
  * Like the {@link MDSManager} for each row of the input data a lower 
  * dimensional representation is computed. The difference is that the points
  * of the input data are not adjusted to themselves but to a set of fixed
- * data points and their corresponding lower diensional representation.
+ * data points and their corresponding lower dimensional representation.
  * The rearrangement is an iterative process running as
  * many epochs as specified. The learn rate, specifying the step size is 
  * reduced after each epoch, so that the process converges at the end.
@@ -77,36 +77,89 @@ public class MDSProjectionManager {
      */
     public static final int MAX_SEED = Integer.MAX_VALUE;
 
-    protected double m_minDistThreshold = MDSManager.DEF_MINDIST_THRESHOLD; 
+    /**
+     * Threshold of minimum distance.
+     */
+    protected double m_minDistThreshold = MDSManager.DEF_MINDIST_THRESHOLD;
     
-    protected Set<DataPoint> m_unmodifiablePoints = new HashSet<DataPoint>();    
+    /**
+     * The set of unmodifyable data points.
+     */
+    protected Set<DataPoint> m_unmodifiablePoints = new HashSet<DataPoint>();
     
+    /**
+     * The dimension of the target space.
+     */
     protected int m_dimension;
 
+    /**
+     * The distance manager to use.
+     */
     protected DistanceManager m_distMan;
 
+    /**
+     * The Euclidean distance manager used in the target space.
+     */
     protected DistanceManager m_euclideanDistMan;
 
+    /**
+     * The input data table.
+     */
     protected DataTable m_inData;
 
+    /**
+     * A hashtable holding keys of input rows and related points of the target 
+     * space.
+     */
     protected Hashtable<RowKey, DataPoint> m_points;
 
+    /**
+     * The input data table storing the fixed data points.
+     */
     protected DataTable m_fixedDataPoints;
     
+    /**
+     * A hashtable holding row keys of fixed points and related points of
+     * the target space. 
+     */
     protected Hashtable<RowKey, DataPoint> m_fixedPoints;
 
+    /**
+     * The learning rate.
+     */
     protected double m_learningrate;
 
+    /**
+     * The initial learning rate.
+     */
     protected double m_initialLearningrate;
 
+    /**
+     * The number of epochs to train.
+     */
     protected double m_epochs;
 
+    /**
+     * The final learning rate.
+     */
     protected double m_finalLearningRate = 0.001;
 
+    /**
+     * Flag, indicating if data points in target space have been initialized
+     * (if <code>true</code>) or not (if <code>false</code>).
+     */
     protected boolean m_isInit = false;
 
+    /**
+     * The execution context to show progress information an enable cancel.
+     */
     protected ExecutionContext m_exec;
     
+    /**
+     * Flag, indicating if data points have to be projected only according to
+     * the fixed points (if <code>true</code>) or adjusted according to the
+     * other (not fixed) points as well (if <code>false</code>).
+     */
     protected boolean m_projectOnly = true;
 
     /**
@@ -181,6 +234,17 @@ public class MDSProjectionManager {
         m_points = new Hashtable<RowKey, DataPoint>();
     }
     
+    /**
+     * Initializes for each of the fixed data points a point in the 
+     * target space. Which of the columns of the data table containing the 
+     * fixed points have to be considered (according to the non fixed points)
+     * is specified by the given array of indices.
+     *  
+     * 
+     * @param fixedDataMdsIndices The indices specifying the columns of
+     * the data table containing the fixed data points, to consider. 
+     * @throws CanceledExecutionException If the process is canceled.
+     */
     protected void preprocFixedDataPoints(final int[] fixedDataMdsIndices) 
     throws CanceledExecutionException {
         m_exec.setMessage("Preprocessing fixed data points");
@@ -233,7 +297,7 @@ public class MDSProjectionManager {
 
     /**
      * Does the training by adjusting the lower dimensional data points 
-     * accordant to their distances and the distances of the original data.
+     * according to their distances and the distances of the original data.
      * 
      * @param epochs The number of epochs to train.
      * @param learningrate The learn rate, specifying the step size of 
@@ -261,6 +325,16 @@ public class MDSProjectionManager {
         }
     }
 
+    /**
+     * Computing one epoch if the iterative mds. In one epoch all points are
+     * adjusted according to all fixed points and if <code>projectOnly</code>
+     * is set <code>false</code> to all other points too.
+     * 
+     * @param epoch The current epoch.
+     * @param exec The execution monitor to show the progress and enable 
+     * canceling.
+     * @throws CanceledExecutionException If the process was canceled.
+     */
     protected void doEpoch(final int epoch, final ExecutionMonitor exec)
             throws CanceledExecutionException {
         // through all data points
@@ -293,6 +367,15 @@ public class MDSProjectionManager {
         adjustLearningRate(epoch);
     }
         
+    /**
+     * Adjusts the low dimensional mapping of the first data point according 
+     * to the second data point and its mapping.  
+     * 
+     * @param p1 The mapping of the first data point in the target space.
+     * @param p2 The mapping of the second data point in the target space.
+     * @param r1 The first data point in the original space.
+     * @param r2 The second data point in the original space. 
+     */
     protected void adjustDataPoint(final DataPoint p1, final DataPoint p2,
             final DataRow r1, final DataRow r2) {
         if (!p1.equals(p2) && !m_unmodifiablePoints.contains(p1)) {
