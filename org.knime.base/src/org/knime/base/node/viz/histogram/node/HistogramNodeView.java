@@ -69,7 +69,6 @@ public class HistogramNodeView extends NodeView<HistogramNodeModel> {
         final AbstractHistogramVizModel vizModel =
             model.getHistogramVizModel();
         if (vizModel == null) {
-            setComponent(null);
             return;
         }
         if (m_plotter == null) {
@@ -77,7 +76,6 @@ public class HistogramNodeView extends NodeView<HistogramNodeModel> {
                 new InteractiveHistogramProperties(tableSpec, vizModel);
             m_plotter = new InteractiveHistogramPlotter(props,
                     model.getInHiLiteHandler(0));
-//            m_plotter.setHistogramDataModel(histogramModel);
             // add the hilite menu to the menu bar of the node view
             getJMenuBar().add(m_plotter.getHiLiteMenu());
             setComponent(m_plotter);

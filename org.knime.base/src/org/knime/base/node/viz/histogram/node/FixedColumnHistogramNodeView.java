@@ -72,7 +72,6 @@ public class FixedColumnHistogramNodeView
         final AbstractHistogramVizModel vizModel =
             model.getHistogramVizModel();
         if (vizModel == null) {
-            setComponent(null);
             return;
         }
         if (m_plotter == null) {
@@ -80,9 +79,7 @@ public class FixedColumnHistogramNodeView
                 new FixedHistogramProperties(tableSpec, vizModel);
             m_plotter = new FixedHistogramPlotter(props,
                     model.getInHiLiteHandler(0));
-            //hiliting is not supported in the fixed column histogram
-            // add the hilite menu to the menu bar of the node view
-//            getJMenuBar().add(m_plotter.getHiLiteMenu());
+            // hiliting is not supported in the fixed column histogram
             setComponent(m_plotter);
         }
         m_plotter.setHiLiteHandler(model.getInHiLiteHandler(0));
