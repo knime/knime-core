@@ -41,7 +41,7 @@ import org.knime.core.node.Node.MemoryPolicy;
  * NodeModel's {@link NodeModel#execute(BufferedDataTable[], ExecutionContext) 
  * execute} method.
  * 
- * <p>Use a <code>BufferedDataContainer</code> when new data is aquired during
+ * <p>Use a <code>BufferedDataContainer</code> when new data is acquired during
  * the execution or if it does not pay off to reference a node's input data 
  * (it does pay off when you only append a column to the input data, for 
  * instance). Please see the {@link ExecutionContext} for more details on how 
@@ -98,6 +98,8 @@ public class BufferedDataContainer extends DataContainer {
      * @param node The owner of the outcome table.
      * @param maxCellsInMemory Number of cells to be kept in memory, if negative
      * use user settings (according to node)
+     * @param forceCopyOfBlobs The property whether to copy any blob cell 
+     * being added, see {@link DataContainer#setForceCopyOfBlobs(boolean)}.
      * @param globalTableRepository 
      *        The global (WFM) table repository for blob (de)serialization.
      * @param localTableRepository 
@@ -105,7 +107,8 @@ public class BufferedDataContainer extends DataContainer {
      * @see DataContainer#DataContainer(DataTableSpec, boolean)
      */
     BufferedDataContainer(final DataTableSpec spec, final boolean initDomain, 
-            final Node node, final int maxCellsInMemory,
+            final Node node, final int maxCellsInMemory, 
+            final boolean forceCopyOfBlobs, 
             final Map<Integer, ContainerTable> globalTableRepository,
             final Map<Integer, ContainerTable> localTableRepository) {
         super(spec, initDomain, maxCellsInMemory < 0 
@@ -113,6 +116,7 @@ public class BufferedDataContainer extends DataContainer {
         m_node = node;
         m_globalTableRepository = globalTableRepository;
         m_localTableRepository = localTableRepository;
+        super.setForceCopyOfBlobs(forceCopyOfBlobs);
     }
     
     /** Check the node if its outport memory policy says we should keep 

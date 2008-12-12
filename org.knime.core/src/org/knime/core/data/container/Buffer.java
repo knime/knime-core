@@ -346,6 +346,20 @@ class Buffer implements KNIMEStreamConstants {
      */
     private int m_version = IVERSION;
     
+    /** Map of blob addresses that were copied into this buffer. It maps the 
+     * original id to the new id (having m_bufferID as owner). 
+     * Copying is necessary if 
+     * - we copy from or to a buffer with id "-1" or
+     * - this buffer is instructed to copy all blobs 
+     *   (important for loop end nodes).
+     * If we didn't use such a map, we wouldn't notice if any one blob gets
+     * copied into this buffer multiple times ... we would copy each time it is
+     * added, which is bad.
+     * This member is null if this buffer is not in write-mode or it does not
+     * need to copy blobs.
+     */
+    private HashMap<BlobAddress, BlobAddress> m_copiedBlobsMap;
+    
     /**
      * Creates new buffer for <strong>writing</strong>. It has assigned a
      * given spec, and a max row count that may resize in memory.
@@ -462,12 +476,18 @@ class Buffer implements KNIMEStreamConstants {
      * done in the caller class <code>DataContainer</code>.
      * @param r The row to be added.
      * @param isCopyOfExisting Whether to copy blobs (this is only true when
-     *        and existing buffer gets copied (version hop)) 
+     *        and existing buffer gets copied (version hop))
+     * @param forceCopyOfBlobs If true any blob that is not owned by this 
+     * buffer, will be copied and this buffer will take ownership. This option
+     * is true for loop end nodes, which need to aggregate the data generated
+     * in the loop body 
      */
     @SuppressWarnings("unchecked")
-    void addRow(final DataRow r, final boolean isCopyOfExisting) {
+    void addRow(final DataRow r, final boolean isCopyOfExisting, 
+            final boolean forceCopyOfBlobs) {
         try {
-            BlobSupportDataRow row = saveBlobs(r, isCopyOfExisting);
+            BlobSupportDataRow row = 
+                saveBlobs(r, isCopyOfExisting, forceCopyOfBlobs);
             m_list.add(row);
             incrementSize();
             // if threshold exceeded, write all rows to disk
@@ -508,7 +528,8 @@ class Buffer implements KNIMEStreamConstants {
     } // addRow(DataRow)
 
     private BlobSupportDataRow saveBlobs(final DataRow row,
-            final boolean isCopyOfExisting) throws IOException {
+            final boolean isCopyOfExisting, final boolean forceCopyOfBlobs)
+    throws IOException {
         final int cellCount = row.getNumCells();
         DataCell[] cellCopies = null;
         if (!(row instanceof BlobSupportDataRow)) {
@@ -523,7 +544,8 @@ class Buffer implements KNIMEStreamConstants {
                 ? ((BlobSupportDataRow)row).getRawCell(col)
                     : cellCopies[col];
             DataCell processedCell = handleIncomingBlob(
-                    cell, col, row.getNumCells(), isCopyOfExisting);
+                    cell, col, row.getNumCells(), 
+                    isCopyOfExisting, forceCopyOfBlobs);
             if (processedCell != cell) {
                 if (cellCopies == null) {
                     cellCopies = new DataCell[cellCount];
@@ -538,9 +560,9 @@ class Buffer implements KNIMEStreamConstants {
                 : new BlobSupportDataRow(row.getKey(), cellCopies);
     }
     
-    private DataCell handleIncomingBlob(final DataCell cell, 
-            final int col, final int totalColCount,
-            final boolean isCopyOfExisting) throws IOException {
+    private DataCell handleIncomingBlob(final DataCell cell,  final int col, 
+            final int totalColCount, final boolean copyForVersionHop, 
+            final boolean forceCopyOfBlobsArg) throws IOException {
         // whether the content of the argument row needs to be copied
         // into a new BlobSupportDataRow (will do that when either this 
         // flag is true or cellCopies != null)
@@ -573,17 +595,19 @@ class Buffer implements KNIMEStreamConstants {
                             ? ((BlobSupportDataCellIterator)
                                     it).nextWithBlobSupport() : it.next();
                     // we disregard the return value here
-                    handleIncomingBlob(
-                            n, col, totalColCount, isCopyOfExisting);
+                    handleIncomingBlob(n, col, totalColCount, 
+                            copyForVersionHop, forceCopyOfBlobsArg);
                 }
             }
             return cell;
         } else {
             return cell; // ordinary cell (e.g. double cell)
         }
-        // (if ownerBuffer is null, m_containsBlobs must be true)
-        final Buffer ownerBuffer;
+        boolean forceCopyOfBlobs = forceCopyOfBlobsArg;
+        Buffer ownerBuffer;
         if (ad != null) {
+            // either copying from or to an isolated buffer (or both)
+            forceCopyOfBlobs |= ad.getBufferID() == -1 || getBufferID() == -1;
             // has blob been added to this buffer in a preceding row?
             // (and this is not an ordinary buffer (but a BufferedDataCont.)
             if (ad.getBufferID() == getBufferID() && getBufferID() != -1) {
@@ -608,24 +632,51 @@ class Buffer implements KNIMEStreamConstants {
         // if we have to make a clone of the blob cell (true if 
         // isCopyOfExisting is true and the blob address corresponds to the next
         // assignable m_indicesOfBlobInColumns[col])
-        boolean isToClone = false;
-        if (isCopyOfExisting) {
-            isToClone = ad != null && ad.getBufferID() == getBufferID();
+        boolean isToCloneForVersionHop = false;
+        if (copyForVersionHop) {
+            isToCloneForVersionHop = ad != null 
+            && ad.getBufferID() == getBufferID();
             // this if statement handles cases where a blob is added to the 
             // buffer multiple times -- don't copy the duplicates
-            if (isToClone && m_indicesOfBlobInColumns == null) {
+            if (isToCloneForVersionHop && m_indicesOfBlobInColumns == null) {
                 // first to assign
-                isToClone = ad.getIndexOfBlobInColumn() == 0;
-                assert isToClone 
+                isToCloneForVersionHop = ad.getIndexOfBlobInColumn() == 0;
+                assert isToCloneForVersionHop 
                     : "Clone of buffer does not return blobs in order";
-            } else if (isToClone && m_indicesOfBlobInColumns != null) {
-                isToClone = ad.getIndexOfBlobInColumn() 
+            } else if (isToCloneForVersionHop 
+                    && m_indicesOfBlobInColumns != null) {
+                isToCloneForVersionHop = ad.getIndexOfBlobInColumn() 
                         == m_indicesOfBlobInColumns[col];
             }
         }
+        
+        // if we have to clone the blob because the forceCopyOfBlobs flag is
+        // on (e.g. because the owning node is a loop end node)
+        boolean isToCloneDueToForceCopyOfBlobs = false;
+        // don't overwrite the deep-clone
+        if (forceCopyOfBlobs && !isToCloneForVersionHop) {
+            if (m_copiedBlobsMap == null) {
+                m_copiedBlobsMap = new HashMap<BlobAddress, BlobAddress>();
+            }
+            // if not previously copied into this buffer
+            if (ad != null) {
+                BlobAddress previousCopyAddress = m_copiedBlobsMap.get(ad);
+                if (previousCopyAddress == null) {
+                    isToCloneDueToForceCopyOfBlobs = true;
+                    if (isWrapperCell && ownerBuffer == null) {
+                        ownerBuffer = ((BlobWrapperDataCell)cell).getBuffer();
+                    }
+                } else {
+                    return new BlobWrapperDataCell(
+                            this, previousCopyAddress, cl);
+                }
+            }
+        }
+        
         // if either not previously assigned (ownerBuffer == null) or
         // we have to make a clone
-        if (ownerBuffer == null || isToClone) {
+        if (ownerBuffer == null || isToCloneForVersionHop 
+                || isToCloneDueToForceCopyOfBlobs) {
             // need to set ownership if this blob was not assigned yet
             // or has been assigned to an unlinked (i.e. local) buffer
             boolean isCompress = ad != null ? ad.isUseCompression()
@@ -645,15 +696,21 @@ class Buffer implements KNIMEStreamConstants {
             if (m_indicesOfBlobInColumns == null) {
                 m_indicesOfBlobInColumns = new int[totalColCount];
             }
-            ContainerTable b = m_localRepository.get(ad.getBufferID());
-            if (b != null && !isToClone) {
+            Buffer b;
+            if (isToCloneDueToForceCopyOfBlobs) {
+                b = ownerBuffer;
+                m_copiedBlobsMap.put(ad, rewrite);
+            } else {
+                ContainerTable tbl = m_localRepository.get(ad.getBufferID());
+                b = tbl == null ? null : tbl.getBuffer();
+            }
+            if (b != null && !isToCloneForVersionHop) {
                 int indexBlobInCol = m_indicesOfBlobInColumns[col]++;
                 rewrite.setIndexOfBlobInColumn(indexBlobInCol);
-                File source = b.getBuffer().getBlobFile(
-                        ad.getIndexOfBlobInColumn(),
+                File source = b.getBlobFile(ad.getIndexOfBlobInColumn(),
                         ad.getColumn(), false, ad.isUseCompression());
-                File dest = getBlobFile(
-                        indexBlobInCol, col, true, ad.isUseCompression());
+                File dest = getBlobFile(indexBlobInCol, col, true, 
+                        ad.isUseCompression());
                 FileUtil.copy(source, dest);
             } else {
                 BlobDataCell bc;
@@ -674,6 +731,7 @@ class Buffer implements KNIMEStreamConstants {
                 }
             }
             wc = new BlobWrapperDataCell(this, rewrite, cl);
+            m_containsBlobs = true;
         } else {
             // blob has been saved in one of the predecessor nodes
             if (isWrapperCell) {
@@ -682,7 +740,6 @@ class Buffer implements KNIMEStreamConstants {
                 wc = new BlobWrapperDataCell(ownerBuffer, ad, cl);
             }
         }
-        m_containsBlobs |= ownerBuffer != null;
         return wc;
     }
 
@@ -1399,7 +1456,7 @@ class Buffer implements KNIMEStreamConstants {
                         + count + " (\"" + row.getKey() + "\")");
                 exec.checkCanceled();
                 // make a deep copy of blobs if we have a version hop
-                copy.addRow(row, m_version < IVERSION);
+                copy.addRow(row, m_version < IVERSION, false);
                 count++;
             }
             shortCutsLookup = copy.closeFile(copy.m_outStream);
