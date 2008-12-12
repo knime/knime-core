@@ -45,11 +45,12 @@ import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * Interface for factories summarizing {@link NodeModel}, {@link NodeView},
- * and {@link NodeDialogPane} for a specific {@link Node} implementation.
+ * Interface for <code>NodeFactory</code>s summarizing {@link NodeModel}, 
+ * {@link NodeView}, and {@link NodeDialogPane} for a specific <code>Node</code>
+ * implementation.
  *
  * @author Michael Berthold, University of Konstanz
- * @param <T> the concrete type of the node's model
+ * @param <T> the concrete type of the {@link NodeModel}
  */
 public abstract class NodeFactory<T extends NodeModel> {
     private static final List<String> LOADED_NODE_FACTORIES =
@@ -96,7 +97,11 @@ public abstract class NodeFactory<T extends NodeModel> {
         private final String m_description;
 
         private final String m_name;
-
+        /**
+         * A port description container holding port description and name.
+         * @param description of the port
+         * @param name and its name
+         */
         PortDescription(final String description, final String name) {
             m_description = description;
             m_name = name;
