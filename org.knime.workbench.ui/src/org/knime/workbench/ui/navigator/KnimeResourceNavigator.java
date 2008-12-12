@@ -162,7 +162,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                             getTreeViewer().update(rsrc, null);
                         }
                     } else {
-                        LOGGER.debug("didn't found project name - do refresh");
+                        LOGGER.debug("didn't find project name - do refresh");
                         getTreeViewer().refresh();
                     }
                 } catch (IllegalArgumentException iae) {
