@@ -66,6 +66,7 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteListener;
 import org.knime.core.node.property.hilite.KeyEvent;
+import org.knime.core.node.util.ViewUtils;
 
 /**
  * Provides functionality for zooming, moving and selection and is designed to
@@ -372,18 +373,23 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     /**
      * Fits to screen, that is it resizes the drawing pane to fit into the
      * plotters dimension.
-     *
      */
     public final void fitToScreen() {
-        m_width = m_scroller.getViewport().getWidth();
-        m_height = m_scroller.getViewport().getHeight();
-        Dimension newDim = new Dimension(m_width, m_height);
-        m_drawingPane.setPreferredSize(newDim);
-        // updatePaintModel();
-        updateAxisLength();
-        updateSize();
-        m_scroller.getViewport().revalidate();
-        m_drawingPane.repaint();
+        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+            /** {@inheritDoc} */
+            @Override
+            public void run() {
+                m_width = m_scroller.getViewport().getWidth();
+                m_height = m_scroller.getViewport().getHeight();
+                Dimension newDim = new Dimension(m_width, m_height);
+                m_drawingPane.setPreferredSize(newDim);
+                // updatePaintModel();
+                updateAxisLength();
+                updateSize();
+                m_scroller.getViewport().revalidate();
+                m_drawingPane.repaint();
+            }
+        });
     }
 
     /* ---------- relevant mouse methods ----------- */
@@ -438,18 +444,18 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     }
 
     /**
-     * Sets the size of the axes to the dimension of the drawin pane.
+     * Sets the size of the axes to the dimension of the drawing pane.
      *
      */
     public void updateAxisLength() {
         if (m_xAxis != null) {
-            m_xAxis
-                    .setPreferredLength(getDrawingPane().getPreferredSize().width);
+            m_xAxis.setPreferredLength(
+                    getDrawingPane().getPreferredSize().width);
             m_xAxis.repaint();
         }
         if (m_yAxis != null) {
-            m_yAxis
-                    .setPreferredLength(getDrawingPane().getPreferredSize().height);
+            m_yAxis.setPreferredLength(
+                    getDrawingPane().getPreferredSize().height);
             m_yAxis.repaint();
         }
         m_scroller.revalidate();

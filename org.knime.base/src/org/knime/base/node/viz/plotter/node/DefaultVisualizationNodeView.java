@@ -31,7 +31,6 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.JMenu;
 import javax.swing.JTabbedPane;
-import javax.swing.SwingUtilities;
 
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.DataProvider;
@@ -216,14 +215,9 @@ public class DefaultVisualizationNodeView extends NodeView {
      */
     @Override
     protected void onOpen() {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                for (AbstractPlotter plotter : m_plotters) {
-                    plotter.fitToScreen();
-                }
-            }
-        });
+        for (AbstractPlotter plotter : m_plotters) {
+            plotter.fitToScreen();
+        }
     }
 
 }
