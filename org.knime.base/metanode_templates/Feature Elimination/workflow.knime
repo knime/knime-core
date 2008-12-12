@@ -3,7 +3,7 @@
 <entry key="version" type="xstring" value="2.0.0"/>
 <entry key="name" type="xstring" value="Feature Elimination"/>
 <entry key="customName" type="xstring" isnull="true" value=""/>
-<entry key="customDescription" type="xstring" value="Backward Feature Elimination"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
 <entry key="state" type="xstring" value="IDLE"/>
 <config key="nodes">
 <config key="node_1">

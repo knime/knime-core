@@ -3,7 +3,7 @@
 <entry key="version" type="xstring" value="2.0.0"/>
 <entry key="name" type="xstring" value="Loop x-times"/>
 <entry key="customName" type="xstring" isnull="true" value=""/>
-<entry key="customDescription" type="xstring" value="Executes the contained workflow multiple times. Aggregation method and termination criteration must be set using the loop start and end node contained in the workflow."/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
 <entry key="state" type="xstring" value="IDLE"/>
 <config key="nodes">
 <config key="node_1">

@@ -3,7 +3,7 @@
 <entry key="version" type="xstring" value="2.0.0"/>
 <entry key="name" type="xstring" value="Iterate List of Files"/>
 <entry key="customName" type="xstring" isnull="true" value=""/>
-<entry key="customDescription" type="xstring" value="Iteratively executes the contained flow on a list of files. The list of files needs to be defined by the input table, whereby each row represents one individual file location."/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
 <entry key="state" type="xstring" value="IDLE"/>
 <config key="nodes">
 <config key="node_1">
