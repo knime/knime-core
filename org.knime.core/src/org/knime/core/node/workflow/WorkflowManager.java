@@ -1035,8 +1035,12 @@ public final class WorkflowManager extends NodeContainer {
                 return;
             case MARKEDFOREXEC:
             case UNCONFIGURED_MARKEDFOREXEC:
-                assert nc instanceof SingleNodeContainer;
-                ((SingleNodeContainer)nc).markForExecution(false);
+                if (nc instanceof SingleNodeContainer) {
+                    ((SingleNodeContainer)nc).markForExecution(false);
+                } else {
+                    assert nc instanceof WorkflowManager;
+                    ((WorkflowManager)nc).disableNodeForExecution(id);
+                }
             default:
                 // ignore all other states (but touch successors)
             }
@@ -1287,17 +1291,18 @@ public final class WorkflowManager extends NodeContainer {
         if (nc instanceof WorkflowManager) {
             return false;
         }
+        SingleNodeContainer snc = (SingleNodeContainer)nc;
         assert Thread.holdsLock(m_workflowMutex);
-        switch (nc.getState()) {
+        switch (snc.getState()) {
             case UNCONFIGURED_MARKEDFOREXEC:
             case MARKEDFOREXEC:
                 break;
             default:
-                assert false : "Queuing of " + nc.getNameWithID()
-                    + "not possible, node is " + nc.getState();
+                assert false : "Queuing of " + snc.getNameWithID()
+                    + "not possible, node is " + snc.getState();
                 return false;
         }
-        NodeOutPort[] ports = assemblePredecessorOutPorts(nc.getID());
+        NodeOutPort[] ports = assemblePredecessorOutPorts(snc.getID());
         PortObject[] inData = new PortObject[ports.length];
         boolean allDataAvailable = true;
         for (int i = 0; i < ports.length; i++) {
@@ -1307,13 +1312,12 @@ public final class WorkflowManager extends NodeContainer {
             allDataAvailable &= inData[i] != null;
         }
         if (allDataAvailable) {
-            if (nc.getState().equals(State.MARKEDFOREXEC)) {
-                assert nc instanceof SingleNodeContainer;
-                SingleNodeContainer snc = (SingleNodeContainer)nc;
+            if (snc.getState().equals(State.MARKEDFOREXEC)) {
                 snc.queue(inData);
                 return true;
             } else {
-                disableNodeForExecution(nc.getID());
+                assert State.UNCONFIGURED_MARKEDFOREXEC.equals(snc.getState());
+                disableNodeForExecution(snc.getID());
                 checkForNodeStateChanges(true);
                 return false;
             }
