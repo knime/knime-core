@@ -88,7 +88,7 @@ public class Port {
         } else if (KNIMEEditorPlugin.PMML_PORT_TYPE.isSuperTypeOf(m_type)) {
             return m_name + " (PMML)";
         } else if (m_type.equals(DatabasePortObject.TYPE)) {
-            return m_name + " (Data_base)";
+            return m_name + " (Database)";
         } else {
             return m_name + " (unknown)";
         }

@@ -59,7 +59,7 @@ public class MetaPortDialog extends Dialog {
         /** Model port. */
         PMML,
         /** Database port. */
-        Data_base;
+        Database;
         
         private static String[] names;
         
@@ -67,13 +67,13 @@ public class MetaPortDialog extends Dialog {
             names = new String[3];
             names[0] = Data.name();
             names[1] = PMML.name();
-            names[2] = Data_base.name();
+            names[2] = Database.name();
         }
         
         
         /**
          * 
-         * @return the enunm fields as a string array
+         * @return the enum fields as a string array
          */
         public static String[] getNames() {
             return names;
@@ -184,7 +184,7 @@ public class MetaPortDialog extends Dialog {
                         PortTypes.PMML)) {
                     m_port = new Port(KNIMEEditorPlugin.PMML_PORT_TYPE);
                 } else if (PortTypes.valueOf(selected).equals(
-                        PortTypes.Data_base)) {
+                        PortTypes.Database)) {
                     m_port = new Port(DatabasePortObject.TYPE);
                 }
                 m_shell.dispose();
