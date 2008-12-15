@@ -88,10 +88,15 @@ public class KNIMEApplication implements IApplication {
                     Platform.endSplash();
                     return EXIT_OK;
                 }
+                boolean xulOk = true;
                 try {
-                    checkXULRunner();
+                    xulOk = checkXULRunner();
                 } catch (Throwable e) {
                     e.printStackTrace();
+                }
+                if (!xulOk) {
+                    Platform.endSplash();
+                    return EXIT_OK;
                 }
             } finally {
                 shell.dispose();
@@ -461,37 +466,9 @@ public class KNIMEApplication implements IApplication {
             return true;
         }
 
-        if (System.getenv("MOZILLA_FIVE_HOME") != null) {
-            String knimeLOC = "<unknown>";
-            Location instanceLoc = Platform.getInstallLocation();
-            if (instanceLoc != null && instanceLoc.isSet()) {
-                URL url = instanceLoc.getURL();
-                String path = url != null ? url.getPath() : null;
-                if (path != null) {
-                    knimeLOC = new File(path).getAbsolutePath();
-                }
-            }
-
-            return MessageDialog.openQuestion(
-                    null,
-                    "Internal Web Browser",
-                    "The usage of the MOZILLA_FIVE_HOME environment variable "
-                    + "is deprecated and can lead to KNIME crashes if "
-                    + "Firefox >= 3 is installed. Please unset the variable "
-                    + "and either rely on the auto-detection or set the "
-                    + "xulrunner directory via the Java property '" + XUL
-                    + "' in " + knimeLOC + "/knime.ini.\n"
-                    + "Do you want to continue loading KNIME?");
-        }
-
-
         if (System.getProperty(XUL) != null) {
             return true;
         }
-
-
-
-
 
         File libDir;
         if ("amd64".equals(System.getProperty("os.arch"))) {
@@ -569,6 +546,12 @@ public class KNIMEApplication implements IApplication {
             System.setProperty(XUL, xul18Location.getAbsolutePath());
             System.out.println("Using xulrunner at '"
                     + xul18Location.getAbsolutePath()
+                    + "' as internal web browser. If you want to change this,"
+                    + " add '-D" + XUL + "=...' to knime.ini");
+        } else if (System.getenv("MOZILLA_FIVE_HOME") != null) {
+            System.setProperty(XUL, System.getenv("MOZILLA_FIVE_HOME"));
+            System.out.println("Using xulrunner at '"
+                    + System.getenv("MOZILLA_FIVE_HOME")
                     + "' as internal web browser. If you want to change this,"
                     + " add '-D" + XUL + "=...' to knime.ini");
         } else {
