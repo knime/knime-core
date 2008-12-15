@@ -43,7 +43,7 @@
       <category
             icon="icons/testing.png"
             level-id="testing"
-            name="testing"
+            name="Testing"
             path="/"/>
    </extension>
    <extension
