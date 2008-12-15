@@ -6,4 +6,5 @@
 <entry key="customName" type="xstring" isnull="true" value=""/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
 <entry key="state" type="xstring" value="IDLE"/>
+<entry key="isDeletable" type="xboolean" value="false"/>
 </config>
