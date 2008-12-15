@@ -99,9 +99,7 @@ public class KNIMEApplication implements IApplication {
                     return EXIT_OK;
                 }
             } finally {
-                if (shell != null) {
-                    shell.dispose();
-                }
+                shell.dispose();
             }
 
             // create the workbench with this advisor and run it until it exits
@@ -467,6 +465,7 @@ public class KNIMEApplication implements IApplication {
         if (!"linux".equalsIgnoreCase(System.getProperty("os.name"))) {
             return true;
         }
+
         if (System.getProperty(XUL) != null) {
             return true;
         }
@@ -486,8 +485,8 @@ public class KNIMEApplication implements IApplication {
                 return pathname.isDirectory()
                         && (pathname.getName().startsWith("xulrunner")
                                 || pathname.getName().startsWith("firefox")
-                                || pathname.getName().startsWith("seamonkey") || pathname
-                                .getName().startsWith("mozilla"));
+                                || pathname.getName().startsWith("seamonkey")
+                                || pathname.getName().startsWith("mozilla"));
             }
         });
 
@@ -537,48 +536,32 @@ public class KNIMEApplication implements IApplication {
             }
         }
 
-        if (xul18Location != null) {
+        if (xul19Location != null) {
+            System.setProperty(XUL, xul19Location.getAbsolutePath());
+            System.out.println("Using xulrunner at '"
+                    + xul19Location.getAbsolutePath()
+                    + "' as internal web browser. If you want to change this,"
+                    + " add '-D" + XUL + "=...' to knime.ini");
+        } else if (xul18Location != null) {
+            System.setProperty(XUL, xul18Location.getAbsolutePath());
             System.out.println("Using xulrunner at '"
                     + xul18Location.getAbsolutePath()
                     + "' as internal web browser. If you want to change this,"
-                    + " add '-D" + XUL + "=...' to " + " knime.ini");
-            System.setProperty(XUL, xul18Location.getAbsolutePath());
-            return true;
-        } else if (xul19Location != null) {
-            String knimeLOC = "<unknown>";
-            Location instanceLoc = Platform.getInstallLocation();
-            if (instanceLoc != null && instanceLoc.isSet()) {
-                URL url = instanceLoc.getURL();
-                String path = url != null ? url.getPath() : null;
-                if (path != null) {
-                    knimeLOC = new File(path).getAbsolutePath();
-                }
-            }
-            System.setProperty(XUL, xul19Location.getAbsolutePath());
-            return MessageDialog
-                    .openQuestion(
-                            null,
-                            "Internal Web Browser",
-                            "KNIME found an incompatible version of xulrunner "
-                                    + "at '"
-                                    + xul19Location.getAbsolutePath()
-                                    + "'. "
-                                    + "This might result in a crash if you continue "
-                                    + "now due to a known Eclipse bug.\n"
-                                    + "Please install a version of xulrunner < 1.9 and add '-D"
-                                    + XUL
-                                    + "=...' to knime.ini.\nDetails on this problem "
-                                    + "can be found in the KNIME FAQs on knime.org and the "
-                                    + "readme file in the KNIME directory (\""
-                                    + knimeLOC + "\").\n"
-                                    + "Do you want to continue loading KNIME?");
+                    + " add '-D" + XUL + "=...' to knime.ini");
+        } else if (System.getenv("MOZILLA_FIVE_HOME") != null) {
+            System.setProperty(XUL, System.getenv("MOZILLA_FIVE_HOME"));
+            System.out.println("Using xulrunner at '"
+                    + System.getenv("MOZILLA_FIVE_HOME")
+                    + "' as internal web browser. If you want to change this,"
+                    + " add '-D" + XUL + "=...' to knime.ini");
         } else {
             System.out.println("No xulrunner found, Node descriptions and "
                     + "online help will possibly not work. If you have "
                     + "xulrunner installed at an unusual location, add '-D"
                     + XUL + "=...' to knime.ini.");
-            return true;
         }
+
+        return true;
     }
 
     /*

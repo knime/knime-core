@@ -170,6 +170,10 @@ public final class SerializerMethodLoader {
         return b;
     }
     
+    /**
+     * Creates new static serializer object.
+     * @param <T> the type of serializer
+     */
     public static interface Serializer<T> {
     }
 

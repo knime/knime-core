@@ -45,13 +45,36 @@ import org.knime.core.node.workflow.ScopeVariable;
 
 
 /**
- * Class implements the general model of a node which gives access to the
- * <code>DataTable</code>,<code>HiLiteHandler</code>, and
- * <code>DataTableSpec</code> of all outputs.
+ * Abstract class defining a node's configuration and execution (among others).
+ * More specifically, it defines:
+ * <ul>
+ * <li>Input and output ports (count and types)</li>
+ * <li>Settings handling (validation and storage)</li>
+ * <li>Configuration (e.g. after new settings are applied or a node 
+ * is (re)connected</li>
+ * <li>Execution</li>
+ * <li>Reset</li>
+ * <li>Storage of &quot;internals&quot; (e.g. hilite translation and/or 
+ * information that is shown in node view) 
+ * </ul> 
+ * Derived classes must overwrite one of two execute methods and 
+ * one of two configure methods (depending on their port types):
+ * <ol>
+ * <li>The {@link #execute(PortObject[], ExecutionContext)} and 
+ * {@link #configure(PortObjectSpec[])} methods for general
+ * port definitions (rarely used) or 
+ * <li>the {@link #execute(BufferedDataTable[], ExecutionContext)} and
+ * {@link #configure(DataTableSpec[])} methods for standard data ports 
+ * (on both in- and outports).
+ * </ol>
+ * None of these methods is declared abstract, though one pair of 
+ * execute/configure must be overridden (if none is overwritten a runtime 
+ * exception will be thrown upon the node's configuration or execution, resp.).
+ * 
  * <p>
- * The <code>NodeModel</code> should contain the node's "model", i.e., what
- * ever is stored, contained, done in this node - it's the "meat" of this node.
- *
+ * For a detailed description of this class refer to KNIME's extension guide
+ * and the various node implementations.
+ * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class NodeModel {
@@ -375,13 +398,13 @@ public abstract class NodeModel {
      * @see #execute(PortObject[],ExecutionContext)
      */
     protected final PortObject[] executeModel(final PortObject[] data, 
-            final ExecutionContext exec) 
-        throws Exception {
+            final ExecutionContext exec) throws Exception {
         assert (data != null && data.length == getNrInPorts());
         assert (exec != null);
-        m_warningMessage = null;
         // TODO: check ingoing types! (in Node!)
-
+        
+        setWarningMessage(null);
+ 
         // temporary storage for result of derived model.
         // EXECUTE DERIVED MODEL
         PortObject[] outData = execute(data, exec);
@@ -493,6 +516,49 @@ public abstract class NodeModel {
     }
 
     /**
+     * Execute method for general port types. The argument objects represent the
+     * input objects and are guaranteed to be subclasses of the
+     * {@link PortObject PortObject classes} that are defined through the
+     * {@link PortType PortTypes} given in the
+     * {@link NodeModel#NodeModel(PortType[], PortType[]) constructor}.
+     * Similarly, the returned output objects need to comply with their port
+     * types object class (otherwise an error is reported by the framework).
+     * 
+     * <p>
+     * For a general description of the execute method refer to the description
+     * of the specialized
+     * {@link #execute(BufferedDataTable[], ExecutionContext)} methods as it
+     * addresses more use cases.
+     * 
+     * @param inObjects The input objects.
+     * @param exec For {@link BufferedDataTable} creation and progress.
+     * @return The output objects.
+     * @throws Exception If the node execution fails for any reason.
+     */
+    protected PortObject[] execute(final PortObject[] inObjects,
+            final ExecutionContext exec) throws Exception {
+        // default implementation: the standard version needs to hold: all
+        // ports are data ports!
+        
+        // (1) case PortObjects to BufferedDataTable
+        BufferedDataTable[] inTables = new BufferedDataTable[inObjects.length];
+        for (int i = 0; i < inObjects.length; i++) {
+            try {
+                inTables[i] = (BufferedDataTable)inObjects[i];
+            } catch (ClassCastException cce) {
+                throw new IOException("Input Port " + i
+                        + " does not hold data table specs. "
+                        + "Likely reason: wrong version"
+                        + " of NodeModel.execute() overwritten!");
+            }
+        }
+        // (2) call old-fashioned, data-only execute
+        BufferedDataTable[] outData = execute(inTables, exec);
+        // (3) return new POs (upcast from BDT automatic)
+        return outData;
+    }
+    
+    /**
      * This function is invoked by the <code>Node#executeNode()</code> method
      * of the node (through the
      * <code>#executeModel(BufferedDataTable[],ExecutionMonitor)</code>
@@ -528,29 +594,6 @@ public abstract class NodeModel {
      *             throw an <code>CanceledExcecutionException</code> and abort
      *             the execution.
      */
-    protected PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec) throws Exception {
-        // default implementation: the standard version needs to hold: all
-        // ports are data ports!
-        
-        // (1) case PortObjects to BufferedDataTable
-        BufferedDataTable[] inTables = new BufferedDataTable[inData.length];
-        for (int i = 0; i < inData.length; i++) {
-            try {
-                inTables[i] = (BufferedDataTable)inData[i];
-            } catch (ClassCastException cce) {
-                throw new IOException("Input Port " + i
-                        + " does not hold data table specs. "
-                        + "Likely reason: wrong version"
-                        + " of NodeModel.execute() overwritten!");
-            }
-        }
-        // (2) call old-fashioned, data-only execute
-        BufferedDataTable[] outData = execute(inTables, exec);
-        // (3) return new POs (upcast from BDT automatic)
-        return outData;
-    }
-    
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec)
         throws Exception {
@@ -565,8 +608,8 @@ public abstract class NodeModel {
      */
     final void resetModel() {
         try {
+            setWarningMessage(null);
             // reset in derived model
-            m_warningMessage = null;
             reset();
         } catch (Throwable t) {
             String name = t.getClass().getSimpleName();
@@ -771,8 +814,9 @@ public abstract class NodeModel {
      */
     final PortObjectSpec[] configureModel(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        m_warningMessage = null;
         assert inSpecs.length == getNrInPorts();
+        
+        setWarningMessage(null);
 
         PortObjectSpec[] copyInSpecs = new PortObjectSpec[getNrInPorts()];
         PortObjectSpec[] newOutSpecs;
@@ -802,33 +846,23 @@ public abstract class NodeModel {
     }
 
     /**
-     * This function is called whenever the derived model should re-configure
-     * its output DataTableSpecs. Based on the given input data table spec(s)
-     * and the current model's settings, the derived model has to calculate the
-     * output data table spec and return them.
+     * Configure method for general port types. The argument specs represent the
+     * input object specs and are guaranteed to be subclasses of the
+     * {@link PortObjectSpec PortObjectSpecs} that are defined through the
+     * {@link PortType PortTypes} given in the
+     * {@link NodeModel#NodeModel(PortType[], PortType[]) constructor}.
+     * Similarly, the returned output specs need to comply with their port types
+     * spec class (otherwise an error is reported by the framework). They may
+     * also be null.
+     * 
      * <p>
-     * The passed DataTableSpec elements are never <code>null</code> but can
-     * be empty. The model may return <code>null</code> data table spec(s) for
-     * the outputs. But still, the model may be in an executable state. Note,
-     * after the model has been executed this function will not be called
-     * anymore, as the output DataTableSpecs are then being pulled from the
-     * output DataTables. A derived <code>NodeModel</code> that doesn't want
-     * to provide any DataTableSpecs at its outputs before execution can return
-     * an array containing just <code>null</code> elements.
-     *
-     * @param inSpecs An array of DataTableSpecs (as many as this model has
-     *            inputs). Do NOT modify the contents of this array. None of the
-     *            DataTableSpecs in the array can be <code>null</code> but
-     *            empty. If the predecessor node is not yet connected, or
-     *            doesn't provide a DataTableSpecs at its output port.
-     * @return An array of DataTableSpecs (as many as this model has outputs)
-     *         They will be propagated to connected successor nodes.
-     *         <code>null</code> DataTableSpec elements are changed to empty
-     *         once.
-     *
-     * @throws InvalidSettingsException if the <code>#configure()</code>
-     *             failed, that is, the settings are inconsistent with given
-     *             DataTableSpec elements.
+     * For a general description of the configure method refer to the
+     * description of the specialized {@link #configure(DataTableSpec[])}
+     * methods as it addresses more use cases.
+     * 
+     * @param inSpecs The input object specs.
+     * @return The output objects specs or null.
+     * @throws InvalidSettingsException If this node can't be configured.
      */
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
     throws InvalidSettingsException {
@@ -853,16 +887,40 @@ public abstract class NodeModel {
         return outDataSpecs;
     }
     
-    /** 
-     * Simple implementation processing only BufferedDataTables.
+    /**
+     * This function is called whenever the derived model should re-configure
+     * its output DataTableSpecs. Based on the given input data table spec(s)
+     * and the current model's settings, the derived model has to calculate the
+     * output data table spec and return them.
+     * <p>
+     * The passed DataTableSpec elements are never <code>null</code> but can
+     * be empty. The model may return <code>null</code> data table spec(s) for
+     * the outputs. But still, the model may be in an executable state. Note,
+     * after the model has been executed this function will not be called
+     * anymore, as the output DataTableSpecs are then being pulled from the
+     * output DataTables. A derived <code>NodeModel</code> that cannot provide 
+     * any DataTableSpecs at its outputs before execution (because the table 
+     * structure is unknown at this point) can return an array 
+     * containing just <code>null</code> elements.
      * 
-     * @param inSpecs the specs of the input tables
-     * @return the specs of the outgoing tables. The array's length must
-     *         match the number of output ports. If no specs can be created
-     *         it may return <code>null</code> or an array with
-     *         <code>null</code> entries.
-     * @throws InvalidSettingsException if the settings and the input specs
-     *         do not match in some way
+     * <p>
+     * Implementation note: This method is called from the 
+     * {@link #configure(PortObjectSpec[])} method unless that method is 
+     * overwritten.
+     *
+     * @param inSpecs An array of DataTableSpecs (as many as this model has
+     *            inputs). Do NOT modify the contents of this array. None of the
+     *            DataTableSpecs in the array can be <code>null</code> but
+     *            empty. If the predecessor node is not yet connected, or
+     *            doesn't provide a DataTableSpecs at its output port.
+     * @return An array of DataTableSpecs (as many as this model has outputs)
+     *         They will be propagated to connected successor nodes.
+     *         <code>null</code> DataTableSpec elements are changed to empty
+     *         once.
+     *
+     * @throws InvalidSettingsException if the <code>#configure()</code>
+     *             failed, that is, the settings are inconsistent with given
+     *             DataTableSpec elements.
      */
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
     throws InvalidSettingsException {
@@ -1052,7 +1110,7 @@ public abstract class NodeModel {
         return m_loopEndNode;
     }
     
-    public void setLoopEndNode(final NodeModel end) {
+    void setLoopEndNode(final NodeModel end) {
         m_loopEndNode = end;
     }
 
@@ -1062,7 +1120,7 @@ public abstract class NodeModel {
         return m_loopStartNode;
     }
     
-    public void setLoopStartNode(final LoopStartNode start) {
+    void setLoopStartNode(final LoopStartNode start) {
         m_loopStartNode = start;
     }
 

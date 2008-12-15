@@ -27,6 +27,7 @@ package org.knime.workbench.editor2;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.StringTokenizer;
 
 import javax.swing.UIManager;
 
@@ -136,7 +137,8 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
             }
             if (mustReportErrors) {
                 assert result.hasEntries() : "No errors in workflow result";
-                LOGGER.error("Errors during load: " + result.getErrors());
+                logErrorPreseveLineBreaks(
+                        "Errors during load: " + result.getErrors());
                 Display.getDefault().asyncExec(new Runnable() {
  
                     public void run() {
@@ -205,6 +207,18 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
             // editor!!! Otherwise the memory can not be freed later
             m_editor = null;
             m_workflowFile = null;
+        }
+    }
+    
+    /** Logs the argument error to LOGGER, preserving line breaks.
+     * This method will hopefully go into the NodeLogger facilities (and hence
+     * be public API).
+     * @param error The error string to log.
+     */
+    private static final void logErrorPreseveLineBreaks(final String error) {
+        StringTokenizer t = new StringTokenizer(error, "\n");
+        while (t.hasMoreTokens()) {
+            LOGGER.error(t.nextToken());
         }
     }
 }

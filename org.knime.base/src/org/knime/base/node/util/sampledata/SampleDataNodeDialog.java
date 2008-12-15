@@ -59,6 +59,9 @@ public class SampleDataNodeDialog extends NodeDialogPane {
 
     private final JFormattedTextField m_seedField;
 
+    /**
+     * Create a new sample data dialog.
+     */
     public SampleDataNodeDialog() {
         super();
         m_clusterCountField = new JTextField(8);

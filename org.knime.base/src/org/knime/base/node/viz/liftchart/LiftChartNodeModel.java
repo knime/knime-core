@@ -334,10 +334,7 @@ public class LiftChartNodeModel extends NodeModel implements DataProvider {
      */
     @Override
     protected void reset() {
-        // do nothing
-        m_responseColumn.setStringValue(null);
-        m_probabilityColumn.setStringValue(null);
-        m_responseLabel.setStringValue(null);
+
     }
 
     /**

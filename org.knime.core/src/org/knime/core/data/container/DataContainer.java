@@ -145,6 +145,10 @@ public class DataContainer implements RowAppender {
     
     /** Local repository map, created lazily. */
     private Map<Integer, ContainerTable> m_localMap;
+
+    /** Whether to force a copy of any added blob. 
+     * See {@link #setForceCopyOfBlobs(boolean)} for details. */
+    private boolean m_forceCopyOfBlobs;
     
     /**
      * Opens the container so that rows can be added by
@@ -296,6 +300,32 @@ public class DataContainer implements RowAppender {
         m_bufferCreator = bufferCreator;
     }
     
+    /**
+     * If true any blob that is not owned by this container, will be copied and
+     * this container will take ownership. This option is true for loop end
+     * nodes, which need to aggregate the data generated in the loop body.
+     * @param forceCopyOfBlobs this above described property
+     * @throws IllegalStateException If this buffer has already added rows, 
+     * i.e. this method must be called right after construction.
+     */
+    protected final void setForceCopyOfBlobs(final boolean forceCopyOfBlobs) {
+        if (size() > 0) {
+            throw new IllegalStateException("Container already has rows; " 
+                    + "invocation of this method is only permitted immediately "
+                    + "after constructor call.");
+        }
+        m_forceCopyOfBlobs = forceCopyOfBlobs;
+    }
+    
+    /**
+     * Get the property, which has possibly been set by 
+     * {@link #setForceCopyOfBlobs(boolean)}.
+     * @return this property.
+     */
+    protected final boolean isForceCopyOfBlobs() {
+        return m_forceCopyOfBlobs;
+    }
+    
     /** Define a new threshold for number of possible values to memorize.
      * It makes sense to call this method before any rows are added.
      * @param maxPossibleValues The new number.
@@ -385,10 +415,8 @@ public class DataContainer implements RowAppender {
     }
     
     /** Get the number of rows that have been added so far.
-     * (How often has <code>addRowToTable</code> been called since the last
-     * <code>openTable</code> request)
-     * @return The number of rows in the container (independent of closed or
-     *         not closed).
+     * (How often has <code>addRowToTable</code> been called.)
+     * @return The number of rows in the container.
      * @throws IllegalStateException If container is not open.
      */
     public int size() {
@@ -507,7 +535,7 @@ public class DataContainer implements RowAppender {
         // do not swap the following two lines:
         // addRowKeyForDuplicateCheck relies on m_buffer.size()
         addRowKeyForDuplicateCheck(key);
-        m_buffer.addRow(row, false);
+        m_buffer.addRow(row, false, m_forceCopyOfBlobs);
     } // addRowToTable(DataRow)
     
     /**
@@ -774,7 +802,7 @@ public class DataContainer implements RowAppender {
                 e.setMessage("Writing row #" + rowCount + " (\"" 
                         + row.getKey() + "\")");
                 e.checkCanceled();
-                buf.addRow(row, false);
+                buf.addRow(row, false, false);
             }
             buf.close(table.getDataTableSpec());
             exec.setMessage("Closing zip file");

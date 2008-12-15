@@ -59,9 +59,14 @@ import org.knime.core.node.NodeModel;
  * If the class does not have such a static method (or it has the wrong
  * signature), an exception will be thrown at runtime.
  * 
+ * <p>
+ * <b>Note:</b> The API of this class is not finalized and may slightly change 
+ * in future versions. 
+
  * @see org.knime.core.data.DataTableSpec
  * @see PortObject
  * @see PortType
+ * @since 2.0
  * @author M. Berthold & B. Wiswedel, University of Konstanz
  */
 public interface PortObjectSpec {

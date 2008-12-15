@@ -26,6 +26,7 @@ package org.knime.base.node.viz.property.color;
 
 import java.awt.Color;
 import java.awt.GridLayout;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -148,6 +149,9 @@ final class ColorManager2DialogNominal extends JPanel {
      */
     static final Map<DataCell, ColorAttr> createColorMapping(
             final Set<DataCell> set) {
+        if (set == null) {
+            return Collections.EMPTY_MAP;
+        }
         Map<DataCell, ColorAttr> map = new LinkedHashMap<DataCell, ColorAttr>();
         int idx = 0;
         for (DataCell cell : set) {

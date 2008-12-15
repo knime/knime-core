@@ -24,7 +24,6 @@
 package org.knime.base.node.viz.liftchart;
 
 import javax.swing.JTabbedPane;
-import javax.swing.SwingUtilities;
 
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
@@ -110,13 +109,8 @@ public class LiftChartNodeView extends NodeView<LiftChartNodeModel> {
      */
     @Override
     protected void onOpen() {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                m_liftChart.fitToScreen();
-                m_gainChart.fitToScreen();
-            }
-        });
+        m_liftChart.fitToScreen();
+        m_gainChart.fitToScreen();
     }
     
     /**

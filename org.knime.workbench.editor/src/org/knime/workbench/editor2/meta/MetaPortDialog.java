@@ -42,7 +42,6 @@ import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -56,24 +55,25 @@ public class MetaPortDialog extends Dialog {
 
     private enum PortTypes {
         /** Data port. */
-        DataPort,
+        Data,
         /** Model port. */
-        PMMLPort,
+        PMML,
         /** Database port. */
-        DatabasePort;
+        Database;
         
         private static String[] names;
         
         static {
             names = new String[3];
-            names[0] = DataPort.name();
-            names[1] = PMMLPort.name();
-            names[2] = DatabasePort.name();
+            names[0] = Data.name();
+            names[1] = PMML.name();
+            names[2] = Database.name();
         }
+        
         
         /**
          * 
-         * @return the enunm fields as a string array
+         * @return the enum fields as a string array
          */
         public static String[] getNames() {
             return names;
@@ -82,7 +82,6 @@ public class MetaPortDialog extends Dialog {
 
     private Shell m_shell;
     private Label m_error;
-    private Text m_name;
     private Combo m_type;
 
     private static final int WIDTH = 200;
@@ -137,16 +136,16 @@ public class MetaPortDialog extends Dialog {
         gridData.horizontalSpan = 2;
         m_error.setLayoutData(gridData);
 
-        Label label1 = new Label(composite, SWT.NONE);
-        label1.setText("Port Name: ");
-        m_name = new Text(composite, SWT.BORDER | SWT.SHADOW_IN);
-        m_name.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusGained(final FocusEvent e) {
-                resetError();
-            }
-
-        });
+//        Label label1 = new Label(composite, SWT.NONE);
+//        label1.setText("Port Name: ");
+//        m_name = new Text(composite, SWT.BORDER | SWT.SHADOW_IN);
+//        m_name.addFocusListener(new FocusAdapter() {
+//            @Override
+//            public void focusGained(final FocusEvent e) {
+//                resetError();
+//            }
+//
+//        });
 
         Label label2 = new Label(composite, SWT.NONE);
         label2.setText("Port Type:");
@@ -172,23 +171,21 @@ public class MetaPortDialog extends Dialog {
                     setError("Please select port type");
                     return;
                 }
-                if (m_name.getText() == null
-                        || m_name.getText().trim().isEmpty()) {
-                    setError("Please enter port name");
-                    return;
-                }
+//                if (m_name.getText() == null
+//                        || m_name.getText().trim().isEmpty()) {
+//                    setError("Please enter port name");
+//                    return;
+//                }
                 resetError();
                 String selected = m_type.getItem(m_type.getSelectionIndex());
-                if (PortTypes.valueOf(selected).equals(PortTypes.DataPort)) {
-                    m_port = new Port(BufferedDataTable.TYPE, m_name.getText());
+                if (PortTypes.valueOf(selected).equals(PortTypes.Data)) {
+                    m_port = new Port(BufferedDataTable.TYPE);
                 } else if (PortTypes.valueOf(selected).equals(
-                        PortTypes.PMMLPort)) {
-                    m_port = new Port(KNIMEEditorPlugin.PMML_PORT_TYPE, 
-                            m_name.getText());
+                        PortTypes.PMML)) {
+                    m_port = new Port(KNIMEEditorPlugin.PMML_PORT_TYPE);
                 } else if (PortTypes.valueOf(selected).equals(
-                        PortTypes.DatabasePort)) {
-                    m_port = new Port(DatabasePortObject.TYPE, 
-                            m_name.getText());
+                        PortTypes.Database)) {
+                    m_port = new Port(DatabasePortObject.TYPE);
                 }
                 m_shell.dispose();
             }

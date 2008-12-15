@@ -55,11 +55,11 @@ public class PMMLClusterPortObject extends PMMLPortObject {
     /**
      * Constants indicating whether the squared euclidean or the euclidean 
      * comparison measure should be used.
-     * 
-     * @author Fabian Dill, University of Konstanz
      */
     public enum ComparisonMeasure {
+        /** Squared Euclidean distance. */
         squaredEuclidean,
+        /** Euclidean distance. */
         euclidean
     }
     

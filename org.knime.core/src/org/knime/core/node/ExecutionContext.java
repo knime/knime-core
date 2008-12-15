@@ -35,6 +35,7 @@ import org.knime.core.data.container.JoinedTable;
 import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
 import org.knime.core.data.container.WrappedTable;
+import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 
 /**
@@ -255,9 +256,10 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public BufferedDataContainer createDataContainer(final DataTableSpec spec,
             final boolean initDomain, final int maxCellsInMemory) {
+        boolean forceCopyOfBlobs = LoopRole.END.equals(m_node.getLoopRole());
         return new BufferedDataContainer(spec, initDomain, m_node,
-                m_memoryPolicy, maxCellsInMemory, m_globalTableRepository,
-                m_localTableRepository);
+                m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory, 
+                m_globalTableRepository, m_localTableRepository);
     }
 
     /**

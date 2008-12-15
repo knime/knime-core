@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
-<config key="workflow.knime">
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="workflow.knime">
 <entry key="version" type="xstring" value="2.0.0"/>
 <entry key="name" type="xstring" value="Cross Validation"/>
 <entry key="customName" type="xstring" isnull="true" value=""/>
@@ -12,12 +11,12 @@
 <entry key="node_settings_file" type="xstring" value="X_Aggregator (#1)/settings.xml"/>
 <entry key="node_is_meta" type="xboolean" value="false"/>
 <entry key="isDeletable" type="xboolean" value="false"/>
-<entry key="ui_classname" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
 <config key="ui_settings">
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="551"/>
-<entry key="1" type="xint" value="183"/>
+<entry key="0" type="xint" value="439"/>
+<entry key="1" type="xint" value="142"/>
 <entry key="2" type="xint" value="84"/>
 <entry key="3" type="xint" value="110"/>
 </config>
@@ -28,12 +27,12 @@
 <entry key="node_settings_file" type="xstring" value="X_Partitioner (#2)/settings.xml"/>
 <entry key="node_is_meta" type="xboolean" value="false"/>
 <entry key="isDeletable" type="xboolean" value="false"/>
-<entry key="ui_classname" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
 <config key="ui_settings">
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="100"/>
-<entry key="1" type="xint" value="183"/>
+<entry key="0" type="xint" value="105"/>
+<entry key="1" type="xint" value="146"/>
 <entry key="2" type="xint" value="80"/>
 <entry key="3" type="xint" value="110"/>
 </config>
@@ -64,7 +63,16 @@
 </config>
 </config>
 <config key="meta_in_ports">
-<entry key="ui_classname" type="xstring" isnull="true" value=""/>
+<entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
+<config key="ui_settings">
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="10"/>
+<entry key="1" type="xint" value="10"/>
+<entry key="2" type="xint" value="51"/>
+<entry key="3" type="xint" value="349"/>
+</config>
+</config>
 <config key="port_enum">
 <config key="inport_0">
 <entry key="index" type="xint" value="0"/>
@@ -76,18 +84,27 @@
 </config>
 </config>
 <config key="meta_out_ports">
-<entry key="ui_classname" type="xstring" isnull="true" value=""/>
+<entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
+<config key="ui_settings">
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="584"/>
+<entry key="1" type="xint" value="5"/>
+<entry key="2" type="xint" value="46"/>
+<entry key="3" type="xint" value="349"/>
+</config>
+</config>
 <config key="port_enum">
 <config key="outport_0">
 <entry key="index" type="xint" value="0"/>
-<entry key="name" type="xstring" value="Outport 0"/>
+<entry key="name" type="xstring" value="Connected to: Prediction table"/>
 <config key="type">
 <entry key="object_class" type="xstring" value="org.knime.core.node.BufferedDataTable"/>
 </config>
 </config>
 <config key="outport_1">
 <entry key="index" type="xint" value="1"/>
-<entry key="name" type="xstring" value="Outport 1"/>
+<entry key="name" type="xstring" value="Connected to: Error rates"/>
 <config key="type">
 <entry key="object_class" type="xstring" value="org.knime.core.node.BufferedDataTable"/>
 </config>

@@ -37,25 +37,36 @@ import org.knime.workbench.KNIMEEditorPlugin;
 public class Port {
 
     private final PortType m_type;
-    private final String m_name;
+    private String m_name;
 
 
     /**
      *
      * @param type the port type
-     * @param name the port name
      */
-    public Port(final PortType type, final String name) {
+    public Port(final PortType type) {
         m_type = type;
-        m_name = name;
     }
 
+    public Port(final PortType type, final String name) {
+        this(type);
+        m_name = name;
+    }
+    
     /**
      *
      * @return port type
      */
     public PortType getType() {
         return m_type;
+    }
+    
+    /**
+     * 
+     * @param name new name of the port
+     */
+    public void setName(final String name) {
+        m_name = name;
     }
 
     /**

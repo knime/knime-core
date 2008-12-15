@@ -56,6 +56,9 @@ public class SplitNodeModel extends NodeModel {
 
     private String[] m_bottom;
 
+    /**
+     * Split node model with one data in-port and two data out-ports.
+     */
     public SplitNodeModel() {
         super(1, 2);
     }

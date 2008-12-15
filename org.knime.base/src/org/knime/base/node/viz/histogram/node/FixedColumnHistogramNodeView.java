@@ -24,14 +24,11 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.NodeView;
-
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.impl.fixed.FixedHistogramPlotter;
 import org.knime.base.node.viz.histogram.impl.fixed.FixedHistogramProperties;
-
-import javax.swing.SwingUtilities;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.NodeView;
 
 /**
  * The node view which contains the histogram plotter panel.
@@ -72,7 +69,6 @@ public class FixedColumnHistogramNodeView
         final AbstractHistogramVizModel vizModel =
             model.getHistogramVizModel();
         if (vizModel == null) {
-            setComponent(null);
             return;
         }
         if (m_plotter == null) {
@@ -80,9 +76,7 @@ public class FixedColumnHistogramNodeView
                 new FixedHistogramProperties(tableSpec, vizModel);
             m_plotter = new FixedHistogramPlotter(props,
                     model.getInHiLiteHandler(0));
-            //hiliting is not supported in the fixed column histogram
-            // add the hilite menu to the menu bar of the node view
-//            getJMenuBar().add(m_plotter.getHiLiteMenu());
+            // hiliting is not supported in the fixed column histogram
             setComponent(m_plotter);
         }
         m_plotter.setHiLiteHandler(model.getInHiLiteHandler(0));
@@ -91,14 +85,9 @@ public class FixedColumnHistogramNodeView
         if (getComponent() == null) {
             setComponent(m_plotter);
         }
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                if (m_plotter != null) {
-                    m_plotter.fitToScreen();
-                }
-            }
-        });
+        if (m_plotter != null) {
+            m_plotter.fitToScreen();
+        }
     }
 
     /**

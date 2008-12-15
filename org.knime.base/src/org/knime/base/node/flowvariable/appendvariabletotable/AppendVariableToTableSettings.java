@@ -101,6 +101,11 @@ final class AppendVariableToTableSettings {
         }
     }
     
+    /**
+     * Load settings.
+     * @param settings to load
+     * @param scopeVariableMap map of keys to scope variables
+     */
     public void loadSettingsFrom(final NodeSettingsRO settings, 
             final Map<String, ScopeVariable> scopeVariableMap) {
         m_variablesOfInterest.clear();

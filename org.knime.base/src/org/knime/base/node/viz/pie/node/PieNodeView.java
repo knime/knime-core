@@ -70,7 +70,6 @@ D extends PieVizModel, T extends PieNodeModel<D>> extends NodeView<T> {
         }
         final D vizModel = model.getVizModel();
         if (vizModel == null) {
-            setComponent(null);
             return;
         }
         if (m_plotter == null) {

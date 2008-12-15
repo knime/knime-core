@@ -95,14 +95,19 @@ public class LinearNorm {
         return m_fieldName;
     }
     
+    /**
+     * Unnormalizes the given values.
+     * @param value
+     * @return unnormalized value
+     */
     public double unnormalize(final double value) {
         for (int i = 0; i < m_intervals.size() - 1; i++) {
             Interval lower = m_intervals.get(i);
             Interval upper = m_intervals.get(i + 1);
             if (lower.m_norm <= value && value <= upper.m_norm) {
                 double y = lower.m_original + ((value - lower.m_norm)
-                        *((upper.m_original - lower.m_original)
-                                /(upper.m_norm - lower.m_norm)));
+                        * ((upper.m_original - lower.m_original)
+                                / (upper.m_norm - lower.m_norm)));
                 return y;
                 /*
                 return value * (upper.m_original - lower.m_original

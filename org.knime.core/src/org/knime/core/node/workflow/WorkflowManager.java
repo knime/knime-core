@@ -691,30 +691,35 @@ public final class WorkflowManager extends NodeContainer {
         if (!cc.isDeletable()) {
             return false;
         }
+        NodeID destID = cc.getDest();
+        NodeID sourceID = cc.getSource();
         // make sure both nodes (well, their connection lists) exist
-        if (m_workflow.getConnectionsByDest(cc.getDest()) == null) {
+        if (m_workflow.getConnectionsByDest(destID) == null) {
             return false;
         }
-        if (m_workflow.getConnectionsBySource(cc.getSource()) == null) {
+        if (m_workflow.getConnectionsBySource(sourceID) == null) {
             return false;
         }
         // make sure connection between those two nodes exists
-        if (!m_workflow.getConnectionsByDest(cc.getDest()).contains(cc)) {
+        if (!m_workflow.getConnectionsByDest(destID).contains(cc)) {
             return false;
         }
-        if (!m_workflow.getConnectionsBySource(cc.getSource()).contains(cc)) {
+        if (!m_workflow.getConnectionsBySource(sourceID).contains(cc)) {
             return false;
         }
-        // retrieve state of destination NodeContainer (could be WFM)
-        NodeContainer.State destState = cc.getDest().equals(this.getID())
-            ? this.getState()
-            : m_workflow.getNode(cc.getDest()).getState();
-        // make sure destination is "in use"...
-        if (!(destState.equals(NodeContainer.State.IDLE)
-              || destState.equals(NodeContainer.State.CONFIGURED)
-              || destState.equals(NodeContainer.State.EXECUTED))) {
-              return false;
-          }
+        if (destID.equals(getID())) { // wfm out connection
+            // note it is ok if the WFM itself is executing... 
+            if (getParent().hasSuccessorInProgress(getID())) {
+                return false;
+            }
+        } else {
+            if (hasSuccessorInProgress(destID)) {
+                return false;
+            }
+            if (m_workflow.getNode(destID).getState().executionInProgress()) {
+                return false;
+            }
+        }
         return true;
     }
 
@@ -1030,8 +1035,12 @@ public final class WorkflowManager extends NodeContainer {
                 return;
             case MARKEDFOREXEC:
             case UNCONFIGURED_MARKEDFOREXEC:
-                assert nc instanceof SingleNodeContainer;
-                ((SingleNodeContainer)nc).markForExecution(false);
+                if (nc instanceof SingleNodeContainer) {
+                    ((SingleNodeContainer)nc).markForExecution(false);
+                } else {
+                    assert nc instanceof WorkflowManager;
+                    ((WorkflowManager)nc).disableNodeForExecution(id);
+                }
             default:
                 // ignore all other states (but touch successors)
             }
@@ -1282,17 +1291,18 @@ public final class WorkflowManager extends NodeContainer {
         if (nc instanceof WorkflowManager) {
             return false;
         }
+        SingleNodeContainer snc = (SingleNodeContainer)nc;
         assert Thread.holdsLock(m_workflowMutex);
-        switch (nc.getState()) {
+        switch (snc.getState()) {
             case UNCONFIGURED_MARKEDFOREXEC:
             case MARKEDFOREXEC:
                 break;
             default:
-                assert false : "Queuing of " + nc.getNameWithID()
-                    + "not possible, node is " + nc.getState();
+                assert false : "Queuing of " + snc.getNameWithID()
+                    + "not possible, node is " + snc.getState();
                 return false;
         }
-        NodeOutPort[] ports = assemblePredecessorOutPorts(nc.getID());
+        NodeOutPort[] ports = assemblePredecessorOutPorts(snc.getID());
         PortObject[] inData = new PortObject[ports.length];
         boolean allDataAvailable = true;
         for (int i = 0; i < ports.length; i++) {
@@ -1302,13 +1312,12 @@ public final class WorkflowManager extends NodeContainer {
             allDataAvailable &= inData[i] != null;
         }
         if (allDataAvailable) {
-            if (nc.getState().equals(State.MARKEDFOREXEC)) {
-                assert nc instanceof SingleNodeContainer;
-                SingleNodeContainer snc = (SingleNodeContainer)nc;
+            if (snc.getState().equals(State.MARKEDFOREXEC)) {
                 snc.queue(inData);
                 return true;
             } else {
-                disableNodeForExecution(nc.getID());
+                assert State.UNCONFIGURED_MARKEDFOREXEC.equals(snc.getState());
+                disableNodeForExecution(snc.getID());
                 checkForNodeStateChanges(true);
                 return false;
             }

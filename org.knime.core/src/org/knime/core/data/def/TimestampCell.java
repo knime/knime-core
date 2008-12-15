@@ -18,24 +18,26 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
- * History
- *   12.01.2007 (mb): created
+ *
  */
 package org.knime.core.data.def;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellDataInput;
+import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.TimestampValue;
 
 /**
  * Implementation of a <code>DataCell</code> holding day/time
- * information.
+ * information as {@link Date}.
  * 
  * @author M. Berthold, University of Konstanz
  */
@@ -56,15 +58,12 @@ public class TimestampCell extends DataCell implements TimestampValue {
         return TimestampValue.class;
     }
     
-    /*
-     * local members holding date/time information
-     */
-    private Date m_date;
-    private boolean m_intraDay = false;
-    private String m_dateString = null;
+    /** Internal representation as {@link java.lang.Date}. */
+    private final Date m_date;
+
     
     /**
-     * Creates a new Timestamp Cell based on the given value.
+     * Creates a new <code>TimestampCell</code> based on the given value.
      *
      * @param d date to be stored.
      */
@@ -72,9 +71,10 @@ public class TimestampCell extends DataCell implements TimestampValue {
         m_date = d;
     }
 
-    /** Parse string and create new date object. Use predefined format
-     * 
-     * @param s the input string
+    /** 
+     * Parse string and create new date object. Use predefined format as
+     * defined as <code>yyyy-MM-dd;HH:mm:ss.S</code>.
+     * @param s the input string date
      * @throws ParseException if parsing failed
      */
     public TimestampCell(final String s) throws ParseException {
@@ -91,52 +91,62 @@ public class TimestampCell extends DataCell implements TimestampValue {
      * @throws ParseException if parsing failed
      */
     public TimestampCell(final String s, final SimpleDateFormat df)
-    throws ParseException {
-        m_date = new Date();
-        // parse string
-        m_date = df.parse(s);
+            throws ParseException {
+        this(df.parse(s));
     }
     
-
-    /** Getter methods for internals.
-     * 
-     * @return date.
-     */
+    /** {@inheritDoc} */
+    @Override
     public Date getDate() {
         return m_date;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public String toString() {
-        if (m_dateString == null ) {
-          SimpleDateFormat formatter;
-          if (m_intraDay) {
-              formatter = new SimpleDateFormat("hh:mm:ss");          
-            } else {
-                formatter = new SimpleDateFormat("yyyy.MMM.dd");
-            }
-            m_dateString = formatter.format(m_date);
-        }
-        return m_dateString;
+        return m_date.toString();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
         return m_date.equals(((TimestampValue)dc).getDate());
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public int hashCode() {
         return m_date.hashCode();
+    }
+    
+    private static final TimestampCellSerializer SERIALIZER = 
+        new TimestampCellSerializer();
+    
+    /** Returns the factory to read/write DataCells of this class from/to
+     * a DataInput/DataOutput. This method is called via reflection.
+     * @return A serializer for reading/writing cells of this kind.
+     * @see DataCell
+     */
+    public static final TimestampCellSerializer getCellSerializer() {
+        return SERIALIZER;
+    }
+    
+    /** Factory for (de-)serializing a TimestampCell. */
+    private static class TimestampCellSerializer 
+            implements DataCellSerializer<TimestampCell> {
+        /** {@inheritDoc} */
+        @Override
+        public void serialize(final TimestampCell cell, 
+                final DataCellDataOutput output) throws IOException {
+            output.writeLong(cell.getDate().getTime());
+
+        }
+        /** {@inheritDoc} */
+        @Override
+        public TimestampCell deserialize(
+                final DataCellDataInput input) throws IOException {
+            return new TimestampCell(new Date(input.readLong()));
+        }
     }
 
 }

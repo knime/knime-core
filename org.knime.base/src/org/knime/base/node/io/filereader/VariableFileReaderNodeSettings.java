@@ -69,6 +69,11 @@ class VariableFileReaderNodeSettings extends FileReaderNodeSettings {
         m_variableName = clonee.m_variableName;
     }
 
+    /**
+     * Create new settings object for the variable file reader based on the 
+     * given settings object. 
+     * @param clonee clone this settings object
+     */
     public VariableFileReaderNodeSettings(final FileReaderNodeSettings clonee) {
         super(clonee);
         m_variableName = "";

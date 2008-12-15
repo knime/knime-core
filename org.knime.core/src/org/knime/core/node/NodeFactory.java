@@ -45,11 +45,12 @@ import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * Interface for factories summarizing {@link NodeModel}, {@link NodeView},
- * and {@link NodeDialogPane} for a specific {@link Node} implementation.
+ * Interface for <code>NodeFactory</code>s summarizing {@link NodeModel}, 
+ * {@link NodeView}, and {@link NodeDialogPane} for a specific <code>Node</code>
+ * implementation.
  *
  * @author Michael Berthold, University of Konstanz
- * @param <T> the concrete type of the node's model
+ * @param <T> the concrete type of the {@link NodeModel}
  */
 public abstract class NodeFactory<T extends NodeModel> {
     private static final List<String> LOADED_NODE_FACTORIES =
@@ -60,8 +61,6 @@ public abstract class NodeFactory<T extends NodeModel> {
 
     /**
      * Enum for all node types.
-     *
-     * @author Thorsten Meinl, University of Konstanz
      */
     public static enum NodeType {
         /** A data producing node. */
@@ -88,17 +87,21 @@ public abstract class NodeFactory<T extends NodeModel> {
         Unknown
     }
 
-    // The logger for static methods
+    /** The logger for static methods. */
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(NodeFactory.class);
 
     private final String m_nodeName;
 
     private static class PortDescription {
-        final String m_description;
+        private final String m_description;
 
-        final String m_name;
-
+        private final String m_name;
+        /**
+         * A port description container holding port description and name.
+         * @param description of the port
+         * @param name and its name
+         */
         PortDescription(final String description, final String name) {
             m_description = description;
             m_name = name;
@@ -614,9 +617,9 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
-     * Returns the number of possible views.
+     * Returns the number of possible views or 0 if no view is available.
      *
-     * @return The number of views available for this node.
+     * @return number of views available for this node
      * @see #createNodeView(int,NodeModel)
      */
     protected abstract int getNrNodeViews();
@@ -641,28 +644,32 @@ public abstract class NodeFactory<T extends NodeModel> {
      * Creates and returns a new node view for the given index.
      *
      * @param viewIndex The index for the view to create.
-     * @param nodeModel The underlying model.
-     * @return A new node view for the given index.
-     * @throws IndexOutOfBoundsException If the <code>viewIndex</code> is out
-     *             of range.
-     *
+     * @param nodeModel the underlying model
+     * @return a new node view for the given index
+     * @throws IndexOutOfBoundsException If the <code>viewIndex</code> is 
+     *         smaller 0 or greater or equal to the values returned by
+     *         {@link #getNrNodeViews()}
      * @see #getNrNodeViews()
      */
     public abstract NodeView<T> createNodeView(final int viewIndex,
             final T nodeModel);
 
     /**
-     * Returns <code>true</code> if the <code>Node</code> provided a dialog.
+     * Returns <code>true</code> if this node provides a dialog to adjust
+     * node specific settings.
      *
      * @return <code>true</code> if a <code>NodeDialogPane</code> is
-     *         available.
+     *         available
+     * @see #createNodeDialogPane()
      */
     protected abstract boolean hasDialog();
 
     /**
-     * Creates and returns a new node dialog pane.
+     * Creates and returns a new node dialog pane, if {@link #hasDialog()}
+     * returns <code>true</code>.
      *
-     * @return The new node dialog pane.
+     * @return node dialog pane
+     * @see #hasDialog()
      */
     protected abstract NodeDialogPane createNodeDialogPane();
 

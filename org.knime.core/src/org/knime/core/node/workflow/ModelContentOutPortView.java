@@ -43,8 +43,8 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
-import org.knime.core.node.NodeView;
 import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.NodeView;
 
 /**
  * A port view showing the port's <code>ModelContent</code> as
@@ -62,8 +62,8 @@ public final class ModelContentOutPortView extends JComponent {
         = new DefaultMutableTreeNode("<No Model>", false);
 
     private final JPopupMenu m_treePopup = new JPopupMenu();
-    
-    private final ModelContentRO m_portObject; 
+
+    private final ModelContentRO m_portObject;
 
     /**
      * A view showing the data model stored in the specified ModelContent
@@ -165,7 +165,7 @@ public final class ModelContentOutPortView extends JComponent {
     }
 
     /**
-     * {@inheritDoc}
+     * Removes all nodes from the tree and sets the model to <code>null</code>.
      */
     public void dispose() {
         m_tree.removeAll();

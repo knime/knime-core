@@ -36,8 +36,6 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
@@ -107,7 +105,14 @@ public final class LinearRegressionContent {
         m_spec = spec;
     }
 
-    public PMMLRegressionPortObject createPortObject() 
+    /**
+     * Creates a new PMML regression port object from this linear regression
+     * model.
+     *
+     * @return a port object
+     * @throws InvalidSettingsException if the settings are invalid
+     */
+    public PMMLRegressionPortObject createPortObject()
         throws InvalidSettingsException {
         PMMLPortObjectSpec spec = createPortObjectSpec(m_spec);
         PMMLRegressionContentHandler c = new PMMLRegressionContentHandler(spec);
@@ -196,6 +201,12 @@ public final class LinearRegressionContent {
         return m_spec;
     }
 
+    /**
+     * Predicts the target value for the given row.
+     *
+     * @param row a data row to predict
+     * @return the predicted value in a data cell
+     */
     public DataCell predict(final DataRow row) {
         double sum = m_offset;
         for (int i = 0; i < row.getNumCells(); i++) {
@@ -209,15 +220,26 @@ public final class LinearRegressionContent {
         return new DoubleCell(sum);
     }
 
-    public void save(final ModelContentWO par, final ExecutionMonitor exec)
-            throws CanceledExecutionException {
+    /**
+     * Saves the regression model into the model content object.
+     *
+     * @param par a model content object where the settings are saved to
+     */
+    public void save(final ModelContentWO par) {
         par.addDouble(CFG_OFFSET, m_offset);
         par.addDoubleArray(CFG_MULTIPLIER, m_multipliers);
         par.addDoubleArray(CFG_MEANS, m_means);
     }
 
-    protected void load(final ModelContentRO par, final PortObjectSpec spec,
-            final ExecutionMonitor exec) throws InvalidSettingsException {
+    /**
+     * Loads a linear regression model from the given model content object.
+     *
+     * @param par a model content object
+     * @param spec the port object spec
+     * @throws InvalidSettingsException if the model to load in invalid
+     */
+    protected void load(final ModelContentRO par, final PortObjectSpec spec)
+        throws InvalidSettingsException {
         m_offset = par.getDouble(CFG_OFFSET);
         m_multipliers = par.getDoubleArray(CFG_MULTIPLIER);
         m_means = par.getDoubleArray(CFG_MEANS);
@@ -234,11 +256,20 @@ public final class LinearRegressionContent {
         }
     }
 
+    /**
+     * Creates a new linear regression model that is read from the given model
+     * content object.
+     *
+     * @param par a model content object
+     * @param spec the spec for the model
+     * @return a linear regression model
+     * @throws InvalidSettingsException if the model to load in invalid
+     */
     public static LinearRegressionContent instantiateAndLoad(
-            final ModelContentRO par, final PortObjectSpec spec,
-            final ExecutionMonitor exec) throws InvalidSettingsException {
+            final ModelContentRO par, final PortObjectSpec spec)
+        throws InvalidSettingsException {
         LinearRegressionContent result = new LinearRegressionContent();
-        result.load(par, spec, exec);
+        result.load(par, spec);
         return result;
     }
 }

@@ -259,6 +259,11 @@ public class RenameNodeModel extends NodeModel {
 
         private final int[] m_columns;
 
+        /**
+         * Create a new factory.
+         * @param returnSpecs the new, replacement spec
+         * @param columns column indices to replace
+         */
         public ToStringCellsFactory(final DataColumnSpec[] returnSpecs,
                 final int[] columns) {
             m_returnSpecs = returnSpecs;

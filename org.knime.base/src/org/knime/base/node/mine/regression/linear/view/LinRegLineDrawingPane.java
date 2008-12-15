@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 6, 2006 (wiswedel): created
  */
@@ -35,7 +35,7 @@ import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
 
 /**
  * DrawingPane that also draws the regression line.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  * @author Fabian Dill, University of Konstanz
  */
@@ -50,11 +50,10 @@ public class LinRegLineDrawingPane extends ScatterPlotterDrawingPane {
 
 
     /**
-     * 
-     * @param g
+     * {@inheritDoc}
      */
     @Override
-    public void paintContent(Graphics g) {
+    public void paintContent(final Graphics g) {
         g.setColor(Color.BLACK);
         // bug fix#481, minimum thickness 1
         final int hDotSize = Math.max(1, getDotSize() / 3);
@@ -65,7 +64,7 @@ public class LinRegLineDrawingPane extends ScatterPlotterDrawingPane {
 
     /**
      * Set first point of regression line.
-     * 
+     *
      * @param x1 x-coordinate of first point
      * @param y1 y-coordinate of first point
      */
@@ -76,7 +75,7 @@ public class LinRegLineDrawingPane extends ScatterPlotterDrawingPane {
 
     /**
      * Set last point of regression line.
-     * 
+     *
      * @param x2 x-coordinate of last point
      * @param y2 y-coordinate of last point
      */

@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 22, 2006 (wiswedel): created
  */
@@ -55,12 +55,12 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
@@ -70,7 +70,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 /**
  * NodeModel to the linear regression learner node. It performs the calculation.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class LinRegLearnerNodeModel extends NodeModel implements
@@ -125,7 +125,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
 
     /** Inits a new node model, it will have 1 data input and 1 model output. */
     public LinRegLearnerNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE}, 
+        super(new PortType[]{BufferedDataTable.TYPE},
                 new PortType[]{PMMLRegressionPortObject.TYPE});
     }
 
@@ -150,7 +150,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // we check for null in the line below, improved error message
-        String[] includes = 
+        String[] includes =
             settings.getStringArray(CFG_VARIATES, (String[])null);
         if (includes == null || includes.length == 0) {
             throw new InvalidSettingsException(
@@ -237,7 +237,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
             DataRow row = it.next();
             myProgress++;
             exec.setProgress(myProgress / totalProgress, "Calculating matrix "
-                    + (rowCount + 1) + " (\"" 
+                    + (rowCount + 1) + " (\""
                     + row.getKey().getString() + "\")");
             exec.checkCanceled();
             DataCell targetValue = row.getCell(target);
@@ -345,7 +345,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     /**
      * Checks if the array contains {@link Double#NaN} and throws an
      * {@link ArithmeticException} if it does.
-     * 
+     *
      * @param d the array to check
      */
     private static void checkForNaN(final double[][] d) {
@@ -371,7 +371,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
      * remaining values are filled with the (double) values from row according
      * to the order defined by colIndizes. This method is used in the execute
      * method.
-     * 
+     *
      * @param row the row to read from
      * @param buffer to read into, one more element than colIndizes
      * @param colIndizes the column indizes to use
@@ -430,13 +430,13 @@ public class LinRegLearnerNodeModel extends NodeModel implements
         DataTableSpec in = (DataTableSpec)inSpecs[0];
         return new PortObjectSpec[]{getOutputSpec(in)};
     }
-    
+
     private PMMLPortObjectSpec getOutputSpec(final DataTableSpec in)
         throws InvalidSettingsException {
         return LinearRegressionContent.createPortObjectSpec(
                 getLearningSpec(in));
     }
-    
+
     private DataTableSpec getLearningSpec(final DataTableSpec in)
     throws InvalidSettingsException {
         if (m_includes == null) {
@@ -479,7 +479,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     /**
      * Returns <code>true</code> if model is avaiable, i.e. node has been
      * executed.
-     * 
+     *
      * @return if model has been executed
      */
     protected boolean isDataAvailable() {
@@ -488,7 +488,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
 
     /**
      * Get all parameters to the currently learned model.
-     * 
+     *
      * @return a reference to the current values
      * @see LinRegDataProvider#getParams()
      */
@@ -502,8 +502,8 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     public DataArray getRowContainer() {
         return m_rowContainer;
     }
-    
-    
+
+
     /**
      * {@inheritDoc}
      */
@@ -545,7 +545,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     private static final String CFG_ERROR = "error";
 
     private static final String CFG_PARAMS = "params";
-    
+
     private static final String CFG_SPEC = "spec";
 
     /**
@@ -566,7 +566,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
             DataTableSpec outSpec = DataTableSpec.load(specContent);
             ModelContentRO parContent = c.getModelContent(CFG_PARAMS);
             m_params = LinearRegressionContent.instantiateAndLoad(
-                    parContent, outSpec, new ExecutionMonitor());
+                    parContent, outSpec);
         } catch (InvalidSettingsException ise) {
             IOException ioe = new IOException("Unable to restore state: "
                     + ise.getMessage());
@@ -593,7 +593,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
         ModelContentWO specContent = content.addModelContent(CFG_SPEC);
         m_params.getSpec().save(specContent);
         ModelContentWO parContent = content.addModelContent(CFG_PARAMS);
-        m_params.save(parContent, new ExecutionMonitor());
+        m_params.save(parContent);
         File outFile = new File(internDir, FILE_SAVE);
         content.saveToXML(new BufferedOutputStream(new GZIPOutputStream(
                 new FileOutputStream(outFile))));

@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 13, 2008 (wiswedel): created
  */
@@ -51,11 +51,11 @@ import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200;
 import org.knime.core.util.FileUtil;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 public class NodePersistorVersion200 extends NodePersistorVersion1xx {
-    
+
     /** Prefix of associated port folders.
      * (Also used in export wizard, public declaration here.) */
     public static final String PORT_FOLDER_PREFIX = "port_";
@@ -63,9 +63,9 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     /** Prefix of associated port folders.
      * (Also used in export wizard, public declaration here.) */
     public static final String INTERNAL_TABLE_FOLDER_PREFIX = "internalTables";
-    
-    /** Invokes super constructor. 
-     * @param modelSettingsFailPolicy Forwared.*/
+
+    /** Invokes super constructor.
+     * @param sncPersistor Forwared.*/
     public NodePersistorVersion200(
             final SingleNodeContainerPersistorVersion200 sncPersistor) {
         super(sncPersistor);
@@ -74,7 +74,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     /**
      * Saves the node, node settings, and all internal structures, spec, data,
      * and models, to the given node directory (located at the node file).
-     * 
+     *
      * @param nodeFile To write node settings to.
      * @param execMon Used to report progress during saving.
      * @throws IOException If the node file can't be found or read.
@@ -176,7 +176,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         NodeSettingsWO portSettings = subSettings.addNodeSettings("content");
         FileUtil.deleteRecursively(subDirFile.getFile());
         subDirFile.getFile().mkdirs();
-        
+
         exec.setMessage("Saving internally held data");
         for (int i = 0; i < internalTblsCount; i++) {
             BufferedDataTable t = internalTbls[i];
@@ -224,8 +224,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         boolean isBDT = object instanceof BufferedDataTable
             || node.getOutputType(portIdx).equals(BufferedDataTable.TYPE);
         if (isBDT) {
-            assert object == null || object instanceof BufferedDataTable 
-                : "Expected BufferedDataTable, got " 
+            assert object == null || object instanceof BufferedDataTable
+                : "Expected BufferedDataTable, got "
                     + object.getClass().getSimpleName();
             // executed and instructed to save data
             if (saveData && object != null) {
@@ -234,8 +234,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         } else {
             exec.setMessage("Saving specification");
             if (isSaveObject) {
-                assert spec != null 
-                : "Spec is null but port object is non-null (port " 
+                assert spec != null
+                : "Spec is null but port object is non-null (port "
                     + portIdx + " of node " + node.getName() + ")";
                 if (!(object instanceof BufferedDataTable)) {
                     String specDirName = "spec";
@@ -247,9 +247,9 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                         throw new IOException("Can't create directory "
                                 + specDir.getAbsolutePath());
                     }
-                    
+
                     File specFile = new File(specDir, specFileName);
-                    PortObjectSpecZipOutputStream out = 
+                    PortObjectSpecZipOutputStream out =
                         PortUtil.getPortObjectSpecZipOutputStream(
                                 new BufferedOutputStream(
                                         new FileOutputStream(specFile)));
@@ -277,7 +277,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     String objectFileName = "portobject.zip";
                     objectPath = objectDirName + "/" + objectFileName;
                     File file = new File(objectDir, objectFileName);
-                    PortObjectZipOutputStream out = 
+                    PortObjectZipOutputStream out =
                         PortUtil.getPortObjectZipOutputStream(
                                 new BufferedOutputStream(
                                         new FileOutputStream(file)));
@@ -319,14 +319,14 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     protected void saveCustomName(final Node node, final NodeSettingsWO settings) {
         settings.addString(CFG_NAME, node.getName());
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected boolean loadIsExecuted(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return false;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected String loadWarningMessage(final NodeSettingsRO settings)
@@ -337,7 +337,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     /** {@inheritDoc} */
     @Override
     public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy() {
-        LoadNodeModelSettingsFailPolicy result = 
+        LoadNodeModelSettingsFailPolicy result =
             getSingleNodeContainerPersistor().getModelSettingsFailPolicy();
         assert result != null : "fail policy is null";
         return result;
@@ -345,7 +345,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
     /** {@inheritDoc} */
     @Override
-    protected boolean loadHasContent(NodeSettingsRO settings)
+    protected boolean loadHasContent(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return settings.getBoolean("hasContent");
     }
@@ -359,17 +359,17 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
     /** {@inheritDoc} */
     @Override
-    protected void loadInternalHeldTables(final Node node, ExecutionMonitor execMon,
-            NodeSettingsRO settings,
-            Map<Integer, BufferedDataTable> loadTblRep,
-            HashMap<Integer, ContainerTable> tblRep) throws IOException,
+    protected void loadInternalHeldTables(final Node node, final ExecutionMonitor execMon,
+            final NodeSettingsRO settings,
+            final Map<Integer, BufferedDataTable> loadTblRep,
+            final HashMap<Integer, ContainerTable> tblRep) throws IOException,
             InvalidSettingsException, CanceledExecutionException {
         if (!settings.containsKey("internalTables")) {
             return;
         }
         NodeSettingsRO subSettings = settings.getNodeSettings("internalTables");
         String subDirName = subSettings.getString("location");
-        ReferencedFile subDirFile = 
+        ReferencedFile subDirFile =
             new ReferencedFile(getNodeDirectory(), subDirName);
         NodeSettingsRO portSettings = subSettings.getNodeSettings("content");
         Set<String> keySet = portSettings.keySet();
@@ -504,7 +504,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     throw new IOException("Can't read spec file "
                             + specFile.getAbsolutePath());
                 }
-                PortObjectSpecZipInputStream in = 
+                PortObjectSpecZipInputStream in =
                     PortUtil.getPortObjectSpecZipInputStream(
                             new BufferedInputStream(
                                     new FileInputStream(specFile)));
@@ -554,7 +554,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                                 + objectFile.getAbsolutePath());
                     }
                     // buffering both disc I/O and the gzip stream pays off
-                    PortObjectZipInputStream in = 
+                    PortObjectZipInputStream in =
                         PortUtil.getPortObjectZipInputStream(
                                 new BufferedInputStream(
                                         new FileInputStream(objectFile)));
