@@ -456,13 +456,42 @@ public class KNIMEApplication implements IApplication {
      * https://bugs.eclipse.org/bugs/show_bug.cgi?id=236724#c22 (eclipse 3.3.2
      * crashes on linux with firefox 3.0 installed).
      */
-    private void checkXULRunner() throws Exception {
+    private boolean checkXULRunner() throws Exception {
         if (!"linux".equalsIgnoreCase(System.getProperty("os.name"))) {
-            return;
+            return true;
         }
+
+        if (System.getenv("MOZILLA_FIVE_HOME") != null) {
+            String knimeLOC = "<unknown>";
+            Location instanceLoc = Platform.getInstallLocation();
+            if (instanceLoc != null && instanceLoc.isSet()) {
+                URL url = instanceLoc.getURL();
+                String path = url != null ? url.getPath() : null;
+                if (path != null) {
+                    knimeLOC = new File(path).getAbsolutePath();
+                }
+            }
+
+            return MessageDialog.openQuestion(
+                    null,
+                    "Internal Web Browser",
+                    "The usage of the MOZILLA_FIVE_HOME environment variable "
+                    + "is deprecated and can lead to KNIME crashes if "
+                    + "Firefox >= 3 is installed. Please unset the variable "
+                    + "and either rely on the auto-detection or set the "
+                    + "xulrunner directory via the Java property '" + XUL
+                    + "' in " + knimeLOC + "/knime.ini.\n"
+                    + "Do you want to continue loading KNIME?");
+        }
+
+
         if (System.getProperty(XUL) != null) {
-            return;
+            return true;
         }
+
+
+
+
 
         File libDir;
         if ("amd64".equals(System.getProperty("os.arch"))) {
@@ -479,8 +508,8 @@ public class KNIMEApplication implements IApplication {
                 return pathname.isDirectory()
                         && (pathname.getName().startsWith("xulrunner")
                                 || pathname.getName().startsWith("firefox")
-                                || pathname.getName().startsWith("seamonkey") || pathname
-                                .getName().startsWith("mozilla"));
+                                || pathname.getName().startsWith("seamonkey")
+                                || pathname.getName().startsWith("mozilla"));
             }
         });
 
@@ -530,14 +559,6 @@ public class KNIMEApplication implements IApplication {
             }
         }
 
-        if (System.getenv("MOZILLA_FIVE_HOME") != null) {
-            System.err.println("!!! Usage of MOZILLA_FIVE_HOME is deprecated "
-                    + "and can lead to KNIME crashes! Please unset this "
-                    + "variable and add '-D" + XUL + "=...' to knime.ini "
-                    + "instead if you are not pleased with the automatic "
-                    + "xulrunner detection !!!");
-        }
-
         if (xul19Location != null) {
             System.setProperty(XUL, xul19Location.getAbsolutePath());
             System.out.println("Using xulrunner at '"
@@ -550,18 +571,14 @@ public class KNIMEApplication implements IApplication {
                     + xul18Location.getAbsolutePath()
                     + "' as internal web browser. If you want to change this,"
                     + " add '-D" + XUL + "=...' to knime.ini");
-        } else if (System.getenv("MOZILLA_FIVE_HOME") != null) {
-            System.setProperty(XUL, System.getenv("MOZILLA_FIVE_HOME"));
-            System.out.println("Using xulrunner at '"
-                    + System.getenv("MOZILLA_FIVE_HOME")
-                    + "' from the MOZILLA_FIVE_HOME environment variable as "
-                    + "internal web browser.");
         } else {
             System.out.println("No xulrunner found, Node descriptions and "
                     + "online help will possibly not work. If you have "
                     + "xulrunner installed at an unusual location, add '-D"
                     + XUL + "=...' to knime.ini.");
         }
+
+        return true;
     }
 
     /*
