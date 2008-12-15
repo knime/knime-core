@@ -32,8 +32,20 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-/** Holds type information about node port types.
+/**
+ * Holds type information about node port types.
+ * <p>
+ * The documentation of this class is mostly missing and will be fixed in future
+ * versions. For example implementations refer to one of the core
+ * implementations in KNIME core.
  * 
+ * <p>
+ * Please also note that the general API for PortTypes (which is new in KNIME
+ * 2.0) is not finalized and may (slightly) change in future versions as well
+ * (meaning also that methods may be added to either this class or
+ * {@link PortObject} or {@link PortObjectSpec}).
+ * 
+ * @since 2.0
  * @author M. Berthold & B. Wiswedel, University of Konstanz
  */
 public final class PortType {

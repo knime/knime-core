@@ -58,11 +58,17 @@ import org.knime.core.node.ModelContent;
  * this method (or their implementations throw an exception as the method is
  * not called by the framework). However, if you do not extend either of these
  * two classes, you do need to implement the method mentioned above.  
+ * 
+ * <p>
+ * <b>Note:</b> The API of this class is not finalized and may slightly change 
+ * in future versions. 
+ * 
  * @see org.knime.core.node.BufferedDataTable
  * @see PortObjectSpec
  * @see PortType
  * @see AbstractPortObject
  * @see AbstractSimplePortObject
+ * @since 2.0
  * @author Bernd Wiswedel & Michael Berthold, University of Konstanz
  */
 public interface PortObject {
