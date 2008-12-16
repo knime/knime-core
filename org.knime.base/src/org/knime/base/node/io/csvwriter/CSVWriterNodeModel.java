@@ -385,6 +385,10 @@ public class CSVWriterNodeModel extends NodeModel {
             }
         } else {
             File parentDir = file.getParentFile();
+            if (parentDir == null) {
+                throw new InvalidSettingsException("Can't determine parent "
+                        + "directory of file \"" + file + "\"");
+            }
             if (!parentDir.exists()) {
                 warnMsg +=
                         "Directory of specified output file doesn't exist"
