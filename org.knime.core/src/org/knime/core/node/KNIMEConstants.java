@@ -55,7 +55,7 @@ public final class KNIMEConstants {
         + BUILD;
 
     /** The build date, is set automatically by the build scripts. */
-    public static final String BUILD_DATE = "June 20, 2008";
+    public static final String BUILD_DATE = "December 17, 2008";
     
     /** Name of the environment variable that is used to identify whether
      * we are in expert mode or not (e.g. whether to show loop nodes or not).
