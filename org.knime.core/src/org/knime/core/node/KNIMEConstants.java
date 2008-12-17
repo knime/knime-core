@@ -46,7 +46,7 @@ public final class KNIMEConstants {
     /** KNIME's revision number. */
     public static final int REV = 0;
     /** KNIME's build id. */
-    public static final String BUILD = ".0017855";
+    public static final String BUILD = ".0019487";
     
     // IMPORTANT: Remember to also update the NodeLogger welcome screen with
     // the current version and the prerequisites
