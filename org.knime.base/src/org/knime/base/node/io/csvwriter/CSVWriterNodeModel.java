@@ -230,6 +230,10 @@ public class CSVWriterNodeModel extends NodeModel {
 
         tableWriter.close();
 
+        if (tableWriter.hasWarningMessage()) {
+            setWarningMessage(tableWriter.getLastWarningMessage());
+        }
+
         // execution successful return empty array
         return new BufferedDataTable[0];
     }
@@ -420,6 +424,13 @@ public class CSVWriterNodeModel extends NodeModel {
                 throw new InvalidSettingsException(
                         "Input table must only contain "
                                 + "String, Int, or Doubles");
+            }
+        }
+        if (inSpec.containsCompatibleType(DoubleValue.class)) {
+            if (m_settings.getColSeparator().indexOf(
+                    m_settings.getDecimalSeparator()) >= 0) {
+                warnMsg += "The data separator contains (or is equal to) the "
+                    + "decimal separator\nWritten data will be hard to read!";
             }
         }
 

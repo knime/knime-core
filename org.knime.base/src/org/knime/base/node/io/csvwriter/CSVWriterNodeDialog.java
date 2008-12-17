@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.io.csvwriter;
 
@@ -41,7 +41,7 @@ import org.knime.core.node.NotConfigurableException;
 
 /**
  * Dialog to choose a file for csv output.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class CSVWriterNodeDialog extends NodeDialogPane {
@@ -62,11 +62,13 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
     private final JCheckBox m_appendChecker;
 
     private final QuotePanel m_quotePanel;
-    
+
     private final AdvancedPanel m_advancedPanel;
-    
+
     private final CommentPanel m_commentPanel;
-    
+
+    private final DecimalSeparatorPanel m_decSeparatorPanel;
+
 
     /**
      * Creates a new CSV writer dialog.
@@ -133,19 +135,20 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         panel.add(Box.createVerticalStrut(5));
         panel.add(optionsPanel);
         panel.add(Box.createVerticalGlue());
-        
+
         addTab("Settings", panel);
-        
+
         m_advancedPanel = new AdvancedPanel();
         addTab("Advanced", m_advancedPanel);
 
         m_quotePanel = new QuotePanel();
         addTab("Quotes", m_quotePanel);
-        
+
         m_commentPanel = new CommentPanel();
         addTab("Comment Header", m_commentPanel);
-        
-        
+
+        m_decSeparatorPanel = new DecimalSeparatorPanel();
+        addTab("Decimal Separator", m_decSeparatorPanel);
     }
 
     /** Checks whether or not the "on file exists" check should be enabled. */
@@ -177,10 +180,11 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         m_rowHeaderChecker.setSelected(newValues.writeRowID());
         m_appendChecker.setSelected(newValues.appendToFile());
         checkCheckerState();
-        
+
         m_quotePanel.loadValuesIntoPanel(newValues);
         m_advancedPanel.loadValuesIntoPanel(newValues);
         m_commentPanel.loadValuesIntoPanel(newValues);
+        m_decSeparatorPanel.loadValuesIntoPanel(newValues);
     }
 
     /**
@@ -208,7 +212,8 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         m_quotePanel.saveValuesFromPanelInto(values);
         m_advancedPanel.saveValuesFromPanelInto(values);
         m_commentPanel.saveValuesFromPanelInto(values);
-        
+        m_decSeparatorPanel.saveValuesFromPanelInto(values);
+
         values.saveSettingsTo(settings);
     }
 }
