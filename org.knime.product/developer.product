@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde version="3.1"?>
 
-<product name="Eclipse platform" id="org.eclipse.sdk.ide" application="org.eclipse.ui.ide.workbench" useFeatures="true">
+<product application="org.eclipse.ui.ide.workbench" id="org.eclipse.sdk.ide" name="Eclipse platform" useFeatures="true">
 
 
    <configIni use="default"/>
@@ -16,11 +16,7 @@ org.eclipse.platform</programArgs>
 
    <windowImages/>
 
-   <splash
-      location="org.eclipse.platform"
-      startupProgressRect="5,275,445,15"
-      startupMessageRect="7,252,445,20"
-      startupForegroundColor="000000" />
+   <splash location="org.eclipse.platform" startupForegroundColor="000000" startupMessageRect="7,252,445,20" startupProgressRect="5,275,445,15"/>
    <launcher name="eclipse">
       <solaris/>
       <win useIco="false">
@@ -42,9 +38,9 @@ org.eclipse.platform</programArgs>
       <feature id="org.eclipse.jdt" version="0.0.0"/>
       <feature id="org.eclipse.pde" version="0.0.0"/>
       <feature id="org.eclipse.sdk" version="0.0.0"/>
-      <feature id="org.knime.features.base" version="2.0.0.0017855"/>
-      <feature id="org.knime.features.wizard" version="2.0.0.0017855"/>
-      <feature id="org.knime.features.product" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.base" version="2.0.0.0019487"/>
+      <feature id="org.knime.features.wizard" version="2.0.0.0019487"/>
+      <feature id="org.knime.features.product" version="2.0.0.0019487"/>
    </features>
 
 </product>
