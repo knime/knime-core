@@ -16,8 +16,8 @@ How to get additional features:
   different license and therefore are not included in this archive. Please
   see http://www.knime.org for any available extension. For
   example an R integration feature (http://www.r-project.org) and a 
-  chemistry feature (using the chemistry development kit, CDK, http://cdk.sf.net/) 
-  are available.
+  chemistry feature (using the chemistry development kit, CDK, 
+  http://cdk.sf.net/) are available.
 
   A convenient way to download new KNIME features is via the KNIME 
   update site. In your current KNIME installation select 
@@ -31,9 +31,8 @@ How to get additional features:
   extension is only available in the KNIME Development category.)
   If you select a feature and receive an error about a configuration problem, 
   click the "Select Required" button. This automatically selects all required 
-  features.
-  You need to restart KNIME after installing new extensions in order to get
-  them activated.
+  features. You need to restart KNIME after installing new extensions in order 
+  to get them activated.
 
   Another way to install new features is to download the extension in an archive
   file from our website (www.knime.org). Unpack the file into your KNIME 
