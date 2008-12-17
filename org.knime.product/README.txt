@@ -15,11 +15,11 @@ How to get additional features:
   KNIME allows for an easy integration of new features. These often 
   come under a different license and therefore are not included in 
   this archive. For example an R integration feature 
-  (http://www.r-project.org) and a  chemistry feature (using the chemistry
+  (http://www.r-project.org) and a chemistry feature (using the chemistry
   development kit, CDK, http://cdk.sf.net/) are available. These features
-  are installed via the KNIME update site. In your current KNIME installation
-  select "File", "Update KNIME...". The Update Wizard opens; select the 
-  features you want to install now.
+  are installed via the KNIME update site. In KNIME select 
+  "File", "Update KNIME...". 
+  The Update Wizard opens; select the features you want to install now.
   If you select a feature and receive an error about a configuration problem, 
   click the "Select Required" button. This automatically selects all required 
   features. You need to restart KNIME after installing new extensions in order 
