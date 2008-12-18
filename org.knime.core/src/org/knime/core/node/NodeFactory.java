@@ -45,7 +45,7 @@ import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * Interface for <code>NodeFactory</code>s summarizing {@link NodeModel}, 
+ * Interface for <code>NodeFactory</code>s summarizing {@link NodeModel},
  * {@link NodeView}, and {@link NodeDialogPane} for a specific <code>Node</code>
  * implementation.
  *
@@ -318,7 +318,7 @@ public abstract class NodeFactory<T extends NodeModel> {
 
             Matcher m = ICON_PATH_PATTERN.matcher(imagePath);
             while (m.find()) {
-                imagePath = imagePath.replaceAll("[^./]+/../", "");
+                imagePath = imagePath.replaceAll("[^./]+/\\.\\./", "");
                 m = ICON_PATH_PATTERN.matcher(imagePath);
             }
         }
@@ -646,7 +646,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @param viewIndex The index for the view to create.
      * @param nodeModel the underlying model
      * @return a new node view for the given index
-     * @throws IndexOutOfBoundsException If the <code>viewIndex</code> is 
+     * @throws IndexOutOfBoundsException If the <code>viewIndex</code> is
      *         smaller 0 or greater or equal to the values returned by
      *         {@link #getNrNodeViews()}
      * @see #getNrNodeViews()
