@@ -62,9 +62,6 @@ public class ClusterAssignerNodeModel extends NodeModel {
    
    private static final int PMML_PORT = 0;
    private static final int DATA_PORT = 1;
-   
-   private static final DataColumnSpec NEWCOLSPEC =
-       new DataColumnSpecCreator("Cluster", StringCell.TYPE).createSpec();
 
     /**
      * 
@@ -85,10 +82,17 @@ public class ClusterAssignerNodeModel extends NodeModel {
         DataTableSpec dataSpec = (DataTableSpec) inSpecs[DATA_PORT];
         ColumnRearranger colre = new ColumnRearranger(dataSpec);
         colre.append(new ClusterAssignFactory(
-                null, null, NEWCOLSPEC, 
+                null, null, createNewOutSpec(dataSpec), 
                 findLearnedColumnIndices(dataSpec, spec.getLearningCols())));
         DataTableSpec out = colre.createSpec();
         return new DataTableSpec[]{out};
+    }
+    
+    private DataColumnSpec createNewOutSpec(final DataTableSpec inSpec) {
+        String newColName = DataTableSpec.getUniqueColumnName(inSpec, 
+                "Cluster"); 
+        return new DataColumnSpecCreator(newColName, StringCell.TYPE)
+            .createSpec();
     }
 
     /**
@@ -110,7 +114,7 @@ public class ClusterAssignerNodeModel extends NodeModel {
         BufferedDataTable data = (BufferedDataTable)inData[DATA_PORT];
         ColumnRearranger colre = new ColumnRearranger(data.getSpec());
         colre.append(new ClusterAssignFactory(
-                measure, prototypes, NEWCOLSPEC, 
+                measure, prototypes, createNewOutSpec(data.getDataTableSpec()), 
                 findLearnedColumnIndices(data.getSpec(), 
                         model.getSpec().getLearningCols())));
         BufferedDataTable bdt =
