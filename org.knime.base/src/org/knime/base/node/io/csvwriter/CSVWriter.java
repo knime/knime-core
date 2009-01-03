@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Dec 17, 2005 (wiswedel): created
  *   Mar  7, 2007 (ohl): extended with more options
@@ -41,27 +41,30 @@ import org.knime.core.node.ExecutionMonitor;
 
 /**
  * Class to write a {@link org.knime.core.data.DataTable} to an output stream.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class CSVWriter extends BufferedWriter {
 
     private final FileWriterSettings m_settings;
 
+    private String m_lastWarning;
+
     /**
      * Creates a new writer with default settings.
-     * 
+     *
      * @param writer the writer to write the table to.
      */
     public CSVWriter(final Writer writer) {
         this(writer, new FileWriterSettings());
+        m_lastWarning = null;
     }
 
     /**
      * Creates new instance which writes tables to the given writer class. An
      * immediate write operation, will write the table headers (both column and
      * row headers) and will write missing values as "" (empty string).
-     * 
+     *
      * @param writer to write to
      * @param settings the object holding all settings, influencing how data
      *            tables are written to file.
@@ -73,6 +76,7 @@ public class CSVWriter extends BufferedWriter {
                     "The CSVWriter doesn't accept null settings.");
         }
 
+        m_lastWarning = null;
         m_settings = settings;
 
         // change all null strings to empty strings
@@ -106,7 +110,7 @@ public class CSVWriter extends BufferedWriter {
 
     /**
      * Writes <code>table</code> with current settings.
-     * 
+     *
      * @param table the table to write to the file
      * @param exec an execution monitor where to check for canceled status and
      *            report progress to. (In case of cancellation, the file will be
@@ -122,6 +126,7 @@ public class CSVWriter extends BufferedWriter {
         DataTableSpec inSpec = table.getDataTableSpec();
         final int colCount = inSpec.getNumColumns();
         boolean first; // if first entry in the row (skip separator then)
+        m_lastWarning = null; // reset any previous warning
 
         // write column names
         if (m_settings.writeColumnHeader()) {
@@ -189,23 +194,69 @@ public class CSVWriter extends BufferedWriter {
                 } else {
                     boolean isNumerical = false;
                     DataType type = inSpec.getColumnSpec(c).getType();
+                    String strVal = colValue.toString();
+
                     if (type.isCompatible(DoubleValue.class)) {
                         isNumerical = true;
                     }
-
-                    write(quoteString(colValue.toString(), isNumerical));
+                    if (isNumerical
+                            && (m_settings.getDecimalSeparator() != '.')) {
+                        // use the new separator only if it is not already
+                        // contained in the value.
+                        if (strVal.indexOf(m_settings.getDecimalSeparator())
+                                < 0) {
+                            strVal =
+                                    replaceDecimalSeparator(strVal, m_settings
+                                            .getDecimalSeparator());
+                        } else {
+                            if (m_lastWarning == null) {
+                                m_lastWarning = "Specified decimal separator ('"
+                                    + m_settings.getDecimalSeparator() + "') is"
+                                    + " contained in the numerical value. "
+                                    + "Not replacing decimal separator (e.g. "
+                                    + "in row #" + i + " column #" + c + ").";
+                            }
+                        }
+                    }
+                    write(quoteString(strVal, isNumerical));
 
                 }
             }
             newLine();
             i++;
         }
+
+    }
+
+    /**
+     * If the specified string contains exactly one dot it is replaced by the
+     * specified character.
+     *
+     * @param val the string to replace the standard decimal separator ('.') in
+     * @param newSeparator the new separator
+     * @return a string with the dot replaced by the new separator. Could be the
+     *         passed argument itself.
+     */
+    private String replaceDecimalSeparator(final String val,
+            final char newSeparator) {
+
+        int dotIdx = val.indexOf('.');
+
+        // not a floating point number
+        if (dotIdx < 0) {
+            return val;
+        }
+        if (val.indexOf('.', dotIdx + 1) >= 0) {
+            // more than one dot in val: not a floating point
+            return val;
+        }
+        return val.replace('.', newSeparator);
     }
 
     /**
      * Returns a string that can be written out to the file that is treated
      * (with respect to quotes) according to the current settings.
-     * 
+     *
      * @param data the string to quote/replaceQuotes/notQuote/etc.
      * @param isNumerical set true, if the data comes from a numerical data cell
      * @return the string correctly quoted according to the current settings.
@@ -213,8 +264,7 @@ public class CSVWriter extends BufferedWriter {
     protected String quoteString(final String data, final boolean isNumerical) {
 
         String result = data;
-        
-        
+
         switch (m_settings.getQuoteMode()) {
         case ALWAYS:
             if (m_settings.replaceSeparatorInStrings() && !isNumerical) {
@@ -259,14 +309,13 @@ public class CSVWriter extends BufferedWriter {
             break;
         }
 
-        
         return result;
     }
 
     /**
      * Replaces the quote end pattern contained in the string and puts quotes
      * around the string.
-     * 
+     *
      * @param data the string to examine and change
      * @return the input string with quotes around it and either replaced or
      *         escaped quote end patterns in the string.
@@ -310,7 +359,7 @@ public class CSVWriter extends BufferedWriter {
     /**
      * Derives a string from the input string that has all appearances of the
      * separator replaced with the specified replacer string.
-     * 
+     *
      * @param data the string to examine and to replace the separator in.
      * @return the input string with all appearances of the separator replaced.
      */
@@ -334,7 +383,7 @@ public class CSVWriter extends BufferedWriter {
             }
 
             changed = true;
-            
+
             // copy the part up to the separator
             result.append(data.substring(examined, sepIdx));
 
@@ -350,7 +399,24 @@ public class CSVWriter extends BufferedWriter {
         } else {
             return data;
         }
-        
 
+    }
+
+    /**
+     * @return true if a warning message is available
+     */
+    public boolean hasWarningMessage() {
+        return m_lastWarning != null;
+    }
+
+    /**
+     * Returns a warning message from the last write action. Or null, if there
+     * is no warning set.
+     *
+     * @return a warning message from the last write action. Or null, if there
+     * is no warning set.
+     */
+    public String getLastWarningMessage() {
+        return m_lastWarning;
     }
 }

@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 6, 2007 (ohl): created
  */
@@ -32,7 +32,7 @@ import org.knime.core.node.NodeSettingsWO;
  * Holds all settings used by the file writer. Writes them to and reads them
  * from the node settings objects and checks the values. This object is used in
  * the NodeModel to pass settings to the file writer.
- * 
+ *
  * @author ohl, University of Konstanz
  */
 public class FileWriterSettings {
@@ -60,7 +60,7 @@ public class FileWriterSettings {
     private static final String CFGKEY_QUOTE_MODE = "quoteMode";
 
     private static final String CFGKEY_SEPARATOR_REPL = "sepReplacePattern";
-    
+
     private static final String CFGKEY_REPL_SEP_IN_STR = "ReplSepInStrings";
 
     private static final String CFGKEY_COLHEADER = "writeColHeader";
@@ -68,6 +68,8 @@ public class FileWriterSettings {
     private static final String CFGKEY_ROWHEADER = "writeRowHeader";
 
     private static final String CFGKEY_MISSING = "missing";
+
+    private static final String CFGKEY_DEC_SEPARATOR = "decimalSeparator";
 
     private String m_colSeparator;
 
@@ -86,9 +88,11 @@ public class FileWriterSettings {
     private boolean m_writeColumnHeader;
 
     private boolean m_writeRowID;
-    
+
     // replace colSep even in quoted strings.
     private boolean m_replaceSepInString;
+
+    private char m_decimalSeparator;
 
     /**
      * Creates a settings object with default settings (backward compatible to
@@ -107,11 +111,13 @@ public class FileWriterSettings {
         m_replaceSepInString = false;
         m_writeColumnHeader = false;
         m_writeRowID = false;
+
+        m_decimalSeparator = '.';
     }
 
     /**
      * Creates a copy of the specified settings object.
-     * 
+     *
      * @param settings the settings to copy into the new object.
      */
     public FileWriterSettings(final FileWriterSettings settings) {
@@ -126,6 +132,8 @@ public class FileWriterSettings {
         m_replaceSepInString = settings.m_replaceSepInString;
         m_writeColumnHeader = settings.m_writeColumnHeader;
         m_writeRowID = settings.m_writeRowID;
+
+        m_decimalSeparator = settings.m_decimalSeparator;
     }
 
     /**
@@ -133,7 +141,7 @@ public class FileWriterSettings {
      * NodeSettings object. If the settings object doesn't contain all settings
      * an exception is thrown. Settings are accepted and set internally even if
      * they are invalid or inconsistent.
-     * 
+     *
      * @param settings the object to read the initial values from.
      * @throws InvalidSettingsException if the settings object contains
      *             incomplete, invalid, or inconsistent values.
@@ -159,14 +167,18 @@ public class FileWriterSettings {
 
         m_quoteReplacement = settings.getString(CFGKEY_QUOTE_REPL, "");
         m_separatorReplacement = settings.getString(CFGKEY_SEPARATOR_REPL, "");
-        m_replaceSepInString = settings.getBoolean(CFGKEY_REPL_SEP_IN_STR, 
+        m_replaceSepInString = settings.getBoolean(CFGKEY_REPL_SEP_IN_STR,
                 false);
+
+        // available since 2.0
+        m_decimalSeparator = settings.getChar(CFGKEY_DEC_SEPARATOR, '.');
+
     }
 
     /**
      * Saves the current values (even if they are incomplete or invalid) in the
      * specified settings object.
-     * 
+     *
      * @param settings the object to write the current values to.
      */
     public void saveSettingsTo(final NodeSettingsWO settings) {
@@ -183,6 +195,8 @@ public class FileWriterSettings {
         settings.addBoolean(CFGKEY_REPL_SEP_IN_STR, m_replaceSepInString);
         settings.addBoolean(CFGKEY_COLHEADER, m_writeColumnHeader);
         settings.addBoolean(CFGKEY_ROWHEADER, m_writeRowID);
+
+        settings.addChar(CFGKEY_DEC_SEPARATOR, m_decimalSeparator);
 
     }
 
@@ -276,7 +290,7 @@ public class FileWriterSettings {
         m_separatorReplacement = separatorReplacement;
     }
 
-    
+
     /**
      * @return the replaceSepInString
      */
@@ -287,7 +301,7 @@ public class FileWriterSettings {
     /**
      * @param replaceSepInStrings if set true, the column separator will be
      * replaced in non-numerical columns - even if the data item written was
-     * quoted. 
+     * quoted.
      */
     public void setReplaceSeparatorInStrings(
             final boolean replaceSepInStrings) {
@@ -337,10 +351,25 @@ public class FileWriterSettings {
     }
 
     /**
+     * @return the current decimal separator
+     */
+    char getDecimalSeparator() {
+        return m_decimalSeparator;
+    }
+
+    /**
+     * Sets a new decimal separator character.
+     * @param newSeparator the new decimal separator
+     */
+    void setDecimalSeparator(final char newSeparator) {
+        m_decimalSeparator = newSeparator;
+    }
+
+    /**
      * takes a string that could contain "\t", or "\n", or "\\", and returns a
      * corresponding string with these patterns replaced by the characters '\t',
      * '\n', '\'.
-     * 
+     *
      * @param str a string with escape sequences in
      * @return a string with all sequences translated. If there are no escape
      *         sequences in the specified string the exact same reference will
@@ -395,7 +424,7 @@ public class FileWriterSettings {
     /**
      * Returns a string with all TABS and newLines being replaced by "\t" or
      * "\n" - and backslashes replaced by "\\".
-     * 
+     *
      * @param str a string with tabs and newlines
      * @return a string with the special chars translated.
      */

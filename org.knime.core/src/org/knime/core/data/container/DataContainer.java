@@ -46,6 +46,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
@@ -140,6 +141,9 @@ public class DataContainer implements RowAppender {
      */
     private DataCell[] m_maxCells;
     
+    /** Comparators used to update the domain. */
+    private DataValueComparator[] m_comparators;
+    
     /** Global repository map, created lazily. */
     private Map<Integer, ContainerTable> m_globalMap;
     
@@ -218,6 +222,7 @@ public class DataContainer implements RowAppender {
         m_possibleValuesSizes = new int[m_spec.getNumColumns()];
         m_minCells = new DataCell[m_spec.getNumColumns()];
         m_maxCells = new DataCell[m_spec.getNumColumns()];
+        m_comparators = new DataValueComparator[m_spec.getNumColumns()];
         for (int i = 0; i < m_spec.getNumColumns(); i++) {
             DataColumnSpec colSpec = m_spec.getColumnSpec(i);
             DataType colType = colSpec.getType();
@@ -225,6 +230,7 @@ public class DataContainer implements RowAppender {
             // type is in the column (we had the problem where one passed
             // a FuzzyIntervalCell which is not compatible to doublevalue).
             
+            m_comparators[i] = colType.getComparator();
             // do first for possible values
             if (initDomain) {
                 Set<DataCell> values = colSpec.getDomain().getValues();
@@ -412,6 +418,7 @@ public class DataContainer implements RowAppender {
         m_possibleValues = null;
         m_minCells = null;
         m_maxCells = null;
+        m_comparators = null;
     }
     
     /** Get the number of rows that have been added so far.
@@ -653,8 +660,7 @@ public class DataContainer implements RowAppender {
         }
         DataCell value = cell instanceof BlobWrapperDataCell 
         ? ((BlobWrapperDataCell)cell).getCell() : cell;
-        DataType colType = m_spec.getColumnSpec(col).getType();
-        Comparator<DataCell> comparator = colType.getComparator();
+        Comparator<DataCell> comparator = m_comparators[col];
         if (m_minCells[col].isMissing()
                 || comparator.compare(value, m_minCells[col]) < 0) {
             m_minCells[col] = value;

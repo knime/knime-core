@@ -230,6 +230,10 @@ public class CSVWriterNodeModel extends NodeModel {
 
         tableWriter.close();
 
+        if (tableWriter.hasWarningMessage()) {
+            setWarningMessage(tableWriter.getLastWarningMessage());
+        }
+
         // execution successful return empty array
         return new BufferedDataTable[0];
     }
@@ -385,6 +389,10 @@ public class CSVWriterNodeModel extends NodeModel {
             }
         } else {
             File parentDir = file.getParentFile();
+            if (parentDir == null) {
+                throw new InvalidSettingsException("Can't determine parent "
+                        + "directory of file \"" + file + "\"");
+            }
             if (!parentDir.exists()) {
                 warnMsg +=
                         "Directory of specified output file doesn't exist"
@@ -416,6 +424,13 @@ public class CSVWriterNodeModel extends NodeModel {
                 throw new InvalidSettingsException(
                         "Input table must only contain "
                                 + "String, Int, or Doubles");
+            }
+        }
+        if (inSpec.containsCompatibleType(DoubleValue.class)) {
+            if (m_settings.getColSeparator().indexOf(
+                    m_settings.getDecimalSeparator()) >= 0) {
+                warnMsg += "The data separator contains (or is equal to) the "
+                    + "decimal separator\nWritten data will be hard to read!";
             }
         }
 

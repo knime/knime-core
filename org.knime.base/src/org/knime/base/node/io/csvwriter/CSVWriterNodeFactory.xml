@@ -100,6 +100,11 @@
 		    line comments, in contrast to block comment if you specify both
 		    patterns).
 			</option>
+		<option name="Decimal Separator">
+		    In the tab "decimal separator" you can enter a character that is used as 
+		    decimal separator for floating point numbers. It replaces the default 
+		    character '.' then.
+		    </option>
 	</fullDescription>
 	
 	<ports>

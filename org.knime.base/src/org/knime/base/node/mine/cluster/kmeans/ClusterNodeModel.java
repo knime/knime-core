@@ -547,7 +547,7 @@ public class ClusterNodeModel extends NodeModel {
     }
 
     private PMMLPortObject getPMMLOutPortObject() throws Exception {
-        Set<DataColumnSpec> usedCols = new HashSet<DataColumnSpec>();
+        Set<DataColumnSpec> usedCols = new LinkedHashSet<DataColumnSpec>();
         for (int i = 0; i < m_spec.getNumColumns(); i++) {
             if (!m_ignoreColumn[i]) {
                 usedCols.add(m_spec.getColumnSpec(i));
