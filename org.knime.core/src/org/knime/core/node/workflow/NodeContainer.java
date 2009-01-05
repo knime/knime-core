@@ -765,6 +765,24 @@ public abstract class NodeContainer {
             final ScopeObjectStack inStack, final ExecutionMonitor exec)
             throws CanceledExecutionException;
     
+    /** Load result from a remote execution (e.g. remote grid execution)
+     * @param result The execution result (contains port objects, messages, etc)
+     * @return A load result that contains, e.g. error messages.
+     */
+    public LoadResult loadExecutionResult(
+            final NodeContainerExecutionResult result) {
+        // TODO load node message etc.
+        return loadExecutionResultOverride(result);
+    }
+    
+    /** Load specialized information from execution result. Called from
+     * {@link #loadExecutionResult(NodeContainerExecutionResult)}.
+     * @param result The execution result (contains port objects, messages, etc)
+     * @return A load result that contains, e.g. error messages.
+     */
+    abstract LoadResult loadExecutionResultOverride(
+            final NodeContainerExecutionResult result);
+    
     /** Helper class that defines load/save routines for general NodeContainer
      * properties. This is currently only the job manager. */
     public static final class NodeContainerSettings {

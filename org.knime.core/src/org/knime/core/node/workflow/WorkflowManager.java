@@ -2857,6 +2857,13 @@ public final class WorkflowManager extends NodeContainer {
             InvalidSettingsException, CanceledExecutionException {
         return ROOT.load(directory, exec);
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    LoadResult loadExecutionResultOverride(
+            final NodeContainerExecutionResult result) {
+        return null;
+    }
 
     public WorkflowLoadResult load(File directory, final ExecutionMonitor exec) 
         throws IOException, InvalidSettingsException, 

@@ -38,6 +38,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeContentPersistor;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
@@ -741,17 +742,6 @@ public final class SingleNodeContainer extends NodeContainer
         getParent().doAfterExecution(SingleNodeContainer.this, success);
     }
 
-    /** Hook to insert new port objects into this node. This method is used,
-     * for instance in grid execution in order to load the results into the
-     * node instance.
-     * @param outData The new output data.
-     * @return If that's successful (false if for instance, elements are null
-     * or incompatible)
-     */
-    public boolean loadExecutionResult(final PortObject[] outData) {
-        return m_node.loadExecutionResult(outData, false);
-    }
-
     /** Set a node message on this node. This method should be used when
      * the node is executed remotely, i.e. the local Node instance is not
      * used for the calculation but should represent a calculation result.
@@ -849,6 +839,41 @@ public final class SingleNodeContainer extends NodeContainer
             }
         }
         return result;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    LoadResult loadExecutionResultOverride(
+            final NodeContainerExecutionResult execResult) {
+        synchronized (m_nodeMutex) {
+            if (!(execResult instanceof SingleNodeContainerExecutionResult)) {
+                throw new IllegalArgumentException("Argument must be instance "
+                        + "of \"" + SingleNodeContainerExecutionResult.
+                        class.getSimpleName() + "\": " 
+                        + execResult.getClass().getSimpleName());
+            }
+            SingleNodeContainerExecutionResult sncExecResult =
+                (SingleNodeContainerExecutionResult)execResult;
+            NodeContentPersistor nodeExecResult = 
+                sncExecResult.getNodeContentPersistor();
+            LoadResult errors = m_node.loadDataAndInternals(
+                    nodeExecResult, new ExecutionMonitor());
+            boolean needsReset = nodeExecResult.needsResetAfterLoad();
+            if (!needsReset && State.EXECUTED.equals(
+                    sncExecResult.getState())) {
+                for (int i = 0; i < getNrOutPorts(); i++) {
+                    if (m_node.getOutputObject(i) == null) {
+                        errors.addError(
+                                "Output object at port " + i + " is null");
+                        needsReset = true; 
+                    }
+                }
+            }
+            if (needsReset) {
+                execResult.setNeedsResetAfterLoad();
+            }
+            return errors;
+        }
     }
 
     /** {@inheritDoc} */
