@@ -206,6 +206,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         // Create project description, set the nature IDs and build-commands
         IProject project = root.getProject(projectName.trim());
         ProjectDescription description = new ProjectDescription();
+        description.setName(projectName.trim());
         description.setNatureIds(KNIME_NATURES);
         description.setBuildSpec(KNIME_BUILDSPECS);
         // actually create the project in workspace
