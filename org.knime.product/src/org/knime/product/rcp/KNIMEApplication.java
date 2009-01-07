@@ -463,6 +463,10 @@ public class KNIMEApplication implements IApplication {
      * crashes on linux with firefox 3.0 installed).
      */
     private boolean checkXULRunner() throws Exception {
+        // temporarily disabled for 2.0 build on eclipse 3.4
+        if (true) {
+            return true;
+        }
         if (!"linux".equalsIgnoreCase(System.getProperty("os.name"))) {
             return true;
         }
