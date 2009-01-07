@@ -44,8 +44,8 @@ import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.ide.IDEActionFactory;
 import org.knime.workbench.help.intro.InvokeInstallSiteAction;
-import org.knime.workbench.ui.navigator.ExportKnimeWorkflowAction;
-import org.knime.workbench.ui.navigator.ImportKnimeWorkflowAction;
+import org.knime.workbench.ui.navigator.actions.ExportKnimeWorkflowAction;
+import org.knime.workbench.ui.navigator.actions.ImportKnimeWorkflowAction;
 
 /**
  * This advisor is resposible for creating the workbench actions and fills them
