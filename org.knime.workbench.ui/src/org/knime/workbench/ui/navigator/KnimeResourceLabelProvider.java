@@ -24,9 +24,11 @@
  */
 package org.knime.workbench.ui.navigator;
 
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.DecoratingLabelProvider;
@@ -49,6 +51,7 @@ import org.eclipse.ui.model.IWorkbenchAdapter2;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
@@ -57,7 +60,7 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
  *
  * @author Christoph Sieb, University of Konstanz
  */
-public class KnimeResourceLableProvider extends LabelProvider implements
+public class KnimeResourceLabelProvider extends LabelProvider implements
         IColorProvider, IFontProvider {
 
     private static final Image PROJECT = KNIMEUIPlugin.getDefault().getImage(
@@ -74,10 +77,17 @@ public class KnimeResourceLableProvider extends LabelProvider implements
 
     private static final Image NODE = KNIMEUIPlugin.getDefault().getImage(
             KNIMEUIPlugin.PLUGIN_ID, "icons/node.png");
+    
+    private static final Image WORKFLOW_SET 
+        = KNIMEUIPlugin.imageDescriptorFromPlugin(KNIMEUIPlugin.PLUGIN_ID, 
+                "icons/wf_set.png").createImage(); 
 
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(
 //            KnimeResourceLableProvider.class);
 
+    
+    private static final Path WORKFLOW_FILE = new Path(
+            WorkflowPersistor.WORKFLOW_FILE);
 
     /**
      * Returns a workbench label provider that is hooked up to the decorator
@@ -103,7 +113,7 @@ public class KnimeResourceLableProvider extends LabelProvider implements
                         final int propId) {
                     if (propId == IEditorRegistry.PROP_CONTENTS) {
                         fireLabelProviderChanged(new LabelProviderChangedEvent(
-                                KnimeResourceLableProvider.this));
+                                KnimeResourceLabelProvider.this));
                     }
                 }
             };
@@ -111,7 +121,7 @@ public class KnimeResourceLableProvider extends LabelProvider implements
     /**
      * Creates a new workbench label provider.
      */
-    public KnimeResourceLableProvider() {
+    public KnimeResourceLabelProvider() {
         PlatformUI.getWorkbench().getEditorRegistry().addPropertyListener(
                 m_editorRegistryListener);
     }
@@ -160,6 +170,7 @@ public class KnimeResourceLableProvider extends LabelProvider implements
         CONFIGURED.dispose();
         NODE.dispose();
         CLOSED.dispose();
+        WORKFLOW_SET.dispose();
         ProjectWorkflowMap.clearMap();
         super.dispose();
     }
@@ -197,8 +208,7 @@ public class KnimeResourceLableProvider extends LabelProvider implements
     /**
      * {@inheritDoc}
      */
-    @Override
-    public Image getImage(final Object element) {
+    public Image getImage2(final Object element) {
         Image img = PROJECT;
         NodeContainer projectNode = null;
         if (element instanceof IFolder) {
@@ -235,6 +245,59 @@ public class KnimeResourceLableProvider extends LabelProvider implements
                 } else {
                     img = NODE;
                 }
+        }
+        return img;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Image getImage(final Object element) {
+        Image img = super.getImage(element);
+        NodeContainer projectNode = null;
+        if (element instanceof IContainer) {
+            IContainer container = (IContainer)element;
+            if (container.exists(WORKFLOW_FILE)) {
+                // in any case a knime workflow
+                projectNode = ProjectWorkflowMap.getWorkflow(
+                        container.getFullPath().toString());
+                if (projectNode == null) {
+                    return CLOSED;
+                }
+            } else if (container.getParent().exists(WORKFLOW_FILE)) {
+                return NODE;
+            } else {
+                // no workflow file -> workflow set
+                return WORKFLOW_SET;
+            }
+        } else if (element instanceof NodeContainer) {
+                projectNode = (NodeContainer)element;
+        }
+        if (projectNode != null) {
+            if (projectNode instanceof WorkflowManager
+                    // display state only for projects
+                    // with this check only projects (
+                    // direct children of the ROOT 
+                    // are displayed with state
+                    && ((WorkflowManager)projectNode).getID()
+                        .hasSamePrefix(WorkflowManager.ROOT.getID())) {
+                if (projectNode.getState().equals(
+                        NodeContainer.State.EXECUTED)) {
+                    img = EXECUTED;
+                } else if (projectNode.getState().equals(
+                        NodeContainer.State.EXECUTING)) {
+                    img = EXECUTING;
+                } else if (projectNode.getState().equals(
+                        NodeContainer.State.CONFIGURED)
+                        || projectNode.getState().equals(
+                                NodeContainer.State.IDLE)) {
+                    img = CONFIGURED;
+                }
+            } else {
+                img = NODE;
+            }
+            
         }
         return img;
     }
@@ -290,7 +353,8 @@ public class KnimeResourceLableProvider extends LabelProvider implements
         Font font = JFaceResources.getFontRegistry().get(descriptor.getName());
         if (font == null) {
             font = new Font(Display.getCurrent(), descriptor);
-            JFaceResources.getFontRegistry().put(descriptor.getName(), font.getFontData());
+            JFaceResources.getFontRegistry().put(descriptor.getName(), 
+                    font.getFontData());
         }
         return font;
     }
@@ -307,10 +371,12 @@ public class KnimeResourceLableProvider extends LabelProvider implements
             return null;
         }
 
-        Color color = JFaceResources.getColorRegistry().get(descriptor.toString());
+        Color color = JFaceResources.getColorRegistry().get(
+                descriptor.toString());
         if (color == null) {
             color = new Color(Display.getCurrent(), descriptor);
-            JFaceResources.getColorRegistry().put(descriptor.toString(), color.getRGB());
+            JFaceResources.getColorRegistry().put(
+                    descriptor.toString(), color.getRGB());
         }
         return color;
     }

@@ -24,10 +24,8 @@
  */
 package org.knime.workbench.ui.navigator;
 
-import java.util.Iterator;
-
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
@@ -35,15 +33,20 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.OpenEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.FileTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -60,7 +63,13 @@ import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
+import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.SyncExecQueueDispatcher;
+import org.knime.workbench.ui.navigator.actions.CreateSubfolderAction;
+import org.knime.workbench.ui.navigator.actions.ExportKnimeWorkflowAction;
+import org.knime.workbench.ui.navigator.actions.ImportKnimeWorkflowAction;
+import org.knime.workbench.ui.navigator.actions.NewWorkflowSetAction;
+
 
 /**
  * This class is a filtered view on a knime project which hides utitility files
@@ -75,6 +84,10 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
             NodeLogger.getLogger(KnimeResourceNavigator.class);
 
     private OpenFileAction m_openFileAction;
+    
+    /** ID as defined in plugin.xml. */
+    public static final String ID 
+        = "org.knime.workbench.ui.navigator.KnimeResourceNavigator";
 
     /**
      * Creates a new <code>KnimeResourceNavigator</code> with an final
@@ -157,7 +170,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                         // we have to find the resource again, hence we cannot 
                         // put the project's name with toLowercase into the map
                         IResource rsrc = ResourcesPlugin.getWorkspace()
-                            .getRoot().findMember(name);
+                            .getRoot().findMember(new Path(name));
                         if (rsrc != null) {
                             getTreeViewer().update(rsrc, null);
                         }
@@ -193,7 +206,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         initLabelProvider(viewer);
         initFilters(viewer);
         initListeners(viewer);
-        viewer.getControl().setDragDetect(false);
+//        viewer.getControl().setDragDetect(false);
         
         /*
         // TODO: if we want to support linking to editor
@@ -211,6 +224,17 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         */
         
         return viewer;
+    }
+    
+    @Override
+    protected void initDragAndDrop() {
+        TreeViewer viewer = getViewer();
+        viewer.addDragSupport(DND.DROP_MOVE, new Transfer[]{
+                LocalSelectionTransfer.getTransfer(),
+                FileTransfer.getInstance()}, new WorkflowMoveDragListener());
+        viewer.addDropSupport(DND.DROP_MOVE, new Transfer[]{
+                LocalSelectionTransfer.getTransfer(),
+                FileTransfer.getInstance()}, new WorkflowMoveDropListener());
     }
     
     /**
@@ -234,7 +258,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      */
     @Override
     protected void initFilters(final TreeViewer viewer) {
-        super.initFilters(viewer);
+//        super.initFilters(viewer);
         // viewer.resetFilters();
         viewer.addFilter(new KnimeResourcePatternFilter());
     }
@@ -247,7 +271,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      */
     @Override
     protected void initLabelProvider(final TreeViewer viewer) {
-        viewer.setLabelProvider(new KnimeResourceLableProvider());
+        viewer.setLabelProvider(new KnimeResourceLabelProvider());
     }
 
     /**
@@ -259,31 +283,27 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     @Override
     protected void handleOpen(final OpenEvent event) {
 
-        IStructuredSelection selection =
-                (IStructuredSelection)event.getSelection();
+        Object selection =
+                ((IStructuredSelection)event.getSelection()).getFirstElement();
 
-        Iterator<Object> elements = selection.iterator();
-        while (elements.hasNext()) {
-            Object element = elements.next();
-            if (element instanceof IProject) {
+        if (selection instanceof IContainer) {
+            
+            IContainer container = (IContainer)selection;
+            
+            IFile workflowFile = (IFile)container.findMember(
+                    WorkflowPersistor.WORKFLOW_FILE);
 
-                // get the workflow file of the project
-                // must be "workflow.knime"
-                final IProject project = (IProject)element;
-                LOGGER.debug("opening: " + project.getName());
+            LOGGER.debug("opening: " + container.getName());
+            
+            if (workflowFile != null && workflowFile.exists()) {
+                StructuredSelection selection2 =
+                        new StructuredSelection(workflowFile);
                 
-                IFile workflowFile = project.getFile("workflow.knime");
-                
-                if (workflowFile.exists()) {
-                    StructuredSelection selection2 =
-                            new StructuredSelection(workflowFile);
-                    if (m_openFileAction == null) {
-                        m_openFileAction =
-                                new OpenFileAction(this.getSite().getPage());
-                    }
-                    m_openFileAction.selectionChanged(selection2);
-                    m_openFileAction.run();
-                }
+                OpenFileAction action = new OpenFileAction(
+                        PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+                        .getActivePage());
+                action.selectionChanged(selection2);
+                action.run();
             }
         }
     }
@@ -345,6 +365,14 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         // not openable.
         menu.insertBefore(id, new Separator());
         menu.insertBefore(id, new OpenKnimeProjectAction(this));
+        
+        menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
+        menu.insertAfter(ExportKnimeWorkflowAction.ID, 
+                new NewWorkflowSetAction());
+        menu.insertAfter(ExportKnimeWorkflowAction.ID, 
+                new CreateSubfolderAction());
+        menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
+        
 
         // TODO: insert actions for
         // - execute
@@ -376,8 +404,9 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      */
     @Override
     protected void initContentProvider(final TreeViewer viewer) {
-        viewer.setContentProvider(new KnimeContentProvider());
+        viewer.setContentProvider(new KnimeResourceContentProvider());
     }
+    
 
     /// NOT REGISTERED!!!
     

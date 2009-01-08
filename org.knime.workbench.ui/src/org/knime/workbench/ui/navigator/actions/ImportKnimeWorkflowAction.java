@@ -22,7 +22,7 @@
  * History
  *   20.10.2006 (sieb): created
  */
-package org.knime.workbench.ui.navigator;
+package org.knime.workbench.ui.navigator.actions;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;

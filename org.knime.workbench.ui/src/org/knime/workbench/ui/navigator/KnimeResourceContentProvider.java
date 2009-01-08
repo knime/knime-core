@@ -24,16 +24,19 @@
  */
 package org.knime.workbench.ui.navigator;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.eclipse.core.resources.IFolder;
-import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.ui.model.WorkbenchContentProvider;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
@@ -42,48 +45,70 @@ import org.knime.core.node.workflow.WorkflowPersistor;
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-public class KnimeContentProvider extends WorkbenchContentProvider {
+public class KnimeResourceContentProvider extends WorkbenchContentProvider {
     
-//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-//            KnimeContentProvider.class);
-
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            KnimeResourceContentProvider.class);
+    
+    private static final Object[] EMPTY_ARRAY = new Object[0];
+    
     /**
      * {@inheritDoc}
      */
     @Override
     public boolean hasChildren(final Object element) {
-        // check whether it is a IProject (closed project)
-        if (element instanceof IProject) {
-            // try to find the registered workflow manager
+        if (isKNIMEWorkflow(element)) {
+            IContainer project = (IContainer)element;
             NodeContainer workflow = ProjectWorkflowMap.getWorkflow(
-                    ((IProject)element).getName());
+                    project.getFullPath().toString());
             if (workflow != null) {
                 // if the workflow is open then it is regsitered and 
                 // the number of contained nodes is returned
                 return ((WorkflowManager)workflow).getNodeContainers()
                     .size() > 0;
-            }
-            // if the project is closed check for existence of workflow.knime 
-            // file
-            boolean isKnime = ((IProject)element).exists(new Path("/" 
-                    + WorkflowPersistor.WORKFLOW_FILE));
-            try {
-                // if workflow.knime file is contained and there are other 
-                // elements -> except the workflow.knime file 
-                // hence > 2  (workflow.knime and .lock)
-                return isKnime && (((IProject)element).members().length > 2);
-            } catch (CoreException ce) {
-                return false;
-            }
-        } else if (element instanceof IFolder) {
-            // also closed meta nodes are detected and can be expanded
-            return ((IFolder)element).exists(new Path("/" 
-                     + WorkflowPersistor.WORKFLOW_FILE));
-            // process meta nodes (no project but workflow manager = MetaNode)
+            } 
         } else if (element instanceof WorkflowManager) {
             return ((WorkflowManager)element).getNodeContainers().size() > 0;
+        } 
+        // check if parent is a KNIME workflow
+        // then it is a node and has no children
+        if (element instanceof IContainer) {
+            IContainer container = (IContainer)element;
+            if (isKNIMEWorkflow(container.getParent())) {
+                return false;
+            }
         }
+        return getFolders(element).length > 0;
+    }
+    
+    
+    private boolean isKNIMEWorkflow(final Object element) {
+        if (element instanceof IContainer) {
+            IContainer container = (IContainer)element;
+            return container.exists(new Path(WorkflowPersistor.WORKFLOW_FILE));
+        } 
         return false;
+    }
+
+    
+    private Object[] getFolders(final Object element) {
+        if (element instanceof IContainer) {
+            IContainer container = (IContainer)element;
+            List<IResource> children = new ArrayList<IResource>();
+            try {
+                for (IResource r : container.members()) {
+                    if (r instanceof IContainer) {
+                        children.add(r);
+                    }
+                }
+                return children.toArray();
+            } catch (CoreException e) {
+                LOGGER.debug("Error while retrieving information for element "
+                        + container.getName()); 
+                return EMPTY_ARRAY;
+            }
+        }
+        return EMPTY_ARRAY;
     }
     
     /**
@@ -92,20 +117,21 @@ public class KnimeContentProvider extends WorkbenchContentProvider {
      */
     @Override
     public Object[] getChildren(final Object element) {
-        // return the nodes and meta nodes etc.
-        if (element instanceof IProject) {
-            NodeContainer workflow = ProjectWorkflowMap.getWorkflow(
-                    ((IProject)element).getName());
+        if (isKNIMEWorkflow(element)) {
+            IContainer project = (IContainer)element;
+            NodeContainer workflow = ProjectWorkflowMap.getWorkflow(project
+                    .getFullPath().toString());
             if (workflow != null) {
-                return getSortedNodeContainers(((WorkflowManager)workflow)
-                        .getNodeContainers());
+                // if the workflow is open then it is regsitered and
+                // the number of contained nodes is returned
+                return getSortedNodeContainers(
+                        ((WorkflowManager)workflow).getNodeContainers());
             }
-            // process meta nodes
         } else if (element instanceof WorkflowManager) {
             return getSortedNodeContainers(((WorkflowManager)element)
                     .getNodeContainers());
         }
-        return super.getChildren(element);
+        return getFolders(element);
     }
 
     // bugfix: 1474 (now nodes are always sorted lexicographically)

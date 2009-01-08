@@ -42,8 +42,8 @@ import org.knime.core.node.workflow.WorkflowManager;
  * this information to display opened instances differently. 
  * 
  * @see KnimeResourceNavigator
- * @see KnimeContentProvider
- * @see KnimeResourceLableProvider
+ * @see KnimeResourceContentProvider
+ * @see KnimeResourceLabelProvider
  * @see KnimeResourcePatternFilter
  * 
  * @author Fabian Dill, University of Konstanz
@@ -196,8 +196,8 @@ public final class ProjectWorkflowMap {
      * Might be <code>null</code> if the {@link WorkflowManager} was not 
      * registered under this name or is already closed.
      * 
-     * @see KnimeContentProvider
-     * @see KnimeResourceLableProvider
+     * @see KnimeResourceContentProvider
+     * @see KnimeResourceLabelProvider
      * 
      * @param projectName name of the project file resource (usually the 
      *  directory name)
