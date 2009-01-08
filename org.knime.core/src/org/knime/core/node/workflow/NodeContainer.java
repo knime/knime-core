@@ -51,6 +51,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 
 /**
  * Abstract super class for containers holding node or just structural

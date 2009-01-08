@@ -17,17 +17,22 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
+ * 
  */
-package org.knime.core.node.workflow;
+package org.knime.core.node.workflow.execresult;
 
-import java.util.Map;
+import org.knime.core.node.NodeContentPersistor;
+import org.knime.core.node.workflow.SingleNodeContainer;
 
 /**
- * Specialized execution result for {@link WorkflowManager}. Offers access
- * to all contained node's execution result. 
+ * Specialized execution result for {@link SingleNodeContainer}. Offers access
+ * to the node's execution result (containing port objects and possibly 
+ * internals).
  * @author Bernd Wiswedel, University of Konstanz
  */
-public interface WorkflowExecutionResult extends NodeContainerExecutionResult {
+public interface SingleNodeContainerExecutionResult 
+    extends NodeContainerExecutionResult {
 
-    public Map<NodeID, NodeContainerExecutionResult> getExecutionResultMap();
+    /** @return The execution result for the node. */
+    public NodeContentPersistor getNodeContentPersistor();
 }

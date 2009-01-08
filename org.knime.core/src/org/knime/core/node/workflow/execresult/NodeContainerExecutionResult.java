@@ -18,8 +18,9 @@
  * email: contact@knime.org
  * ---------------------------------------------------------------------
  */
-package org.knime.core.node.workflow;
+package org.knime.core.node.workflow.execresult;
 
+import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeContainer.State;
 
 /**

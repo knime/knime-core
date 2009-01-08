@@ -77,6 +77,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplat
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -2862,9 +2863,12 @@ public final class WorkflowManager extends NodeContainer {
     @Override
     LoadResult loadExecutionResultOverride(
             final NodeContainerExecutionResult result) {
-        return null;
+        synchronized (m_workflowMutex) {
+            LoadResult loadResult = new LoadResult();
+            return loadResult;
+        }
     }
-
+    
     public WorkflowLoadResult load(File directory, final ExecutionMonitor exec) 
         throws IOException, InvalidSettingsException, 
         CanceledExecutionException {
@@ -2874,6 +2878,7 @@ public final class WorkflowManager extends NodeContainer {
         if (!directory.isDirectory() || !directory.canRead()) {
             throw new IOException("Can't read directory " + directory);
         }
+        
         exec.setMessage("Loading workflow structure from \""
                 + directory.getAbsolutePath() + "\"");
         ReferencedFile workflowDirRef = new ReferencedFile(directory);
