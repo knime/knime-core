@@ -306,7 +306,8 @@ public class WorkflowEditor extends GraphicalEditor implements
     @Override
     public void dispose() {
         if (m_fileResource != null) {
-            ProjectWorkflowMap.remove(m_fileResource.getProject().getName());
+            ProjectWorkflowMap.remove(m_fileResource.getParent().getFullPath()
+                    .toString());
         }
         
         // remember that this editor has been closed
@@ -652,7 +653,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                 }
             }
             ProjectWorkflowMap.putWorkflow(
-                    m_fileResource.getProject().getName(), 
+                    m_fileResource.getParent().getFullPath().toString(),
+//                    m_fileResource.getParent().getName(), 
                     m_manager);
             m_manager.addListener(this);
             m_manager.addNodeStateChangeListener(this);
@@ -719,7 +721,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     private void setWorkflowManagerInput(final WorkflowManagerInput input) {
         m_parentEditor = input.getParentEditor();
         WorkflowManager wfm =
-                ((WorkflowManagerInput)input).getWorkflowManager();
+                (input).getWorkflowManager();
         setWorkflowManager(wfm);
         setPartName(input.getName());
         wfm.addListener(this);
@@ -1259,7 +1261,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
                 if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
                     final String newName = delta.getMovedToPath().segment(0);
-                    String oldName = m_fileResource.getName();
+                    String oldName = m_fileResource.getParent().getFullPath()
+                        .toString();
                     WorkflowEditor.this.m_manager.renameWorkflowDirectory(
                             newName);
                     ProjectWorkflowMap.replace(newName, 
