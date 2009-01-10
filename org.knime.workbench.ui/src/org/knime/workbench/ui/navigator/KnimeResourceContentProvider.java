@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
@@ -57,6 +58,9 @@ public class KnimeResourceContentProvider extends WorkbenchContentProvider {
      */
     @Override
     public boolean hasChildren(final Object element) {
+        if (element instanceof IFile) {
+            return false;
+        }
         if (isKNIMEWorkflow(element)) {
             IContainer project = (IContainer)element;
             NodeContainer workflow = ProjectWorkflowMap.getWorkflow(
@@ -117,6 +121,9 @@ public class KnimeResourceContentProvider extends WorkbenchContentProvider {
      */
     @Override
     public Object[] getChildren(final Object element) {
+        if (element instanceof IFile) {
+            return EMPTY_ARRAY;
+        }
         if (isKNIMEWorkflow(element)) {
             IContainer project = (IContainer)element;
             NodeContainer workflow = ProjectWorkflowMap.getWorkflow(project

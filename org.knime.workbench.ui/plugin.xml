@@ -181,6 +181,16 @@
          </run>
       </runtime>
    </extension>
+      <extension
+         id="KNIMEWorkflowsetProject"
+         name="KNIME Workflow Set Nature"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run
+               class="org.knime.workbench.ui.nature.KNIMEWorkflowSetProjectNature">
+         </run>
+      </runtime>
+   </extension>
    <extension
          point="org.eclipse.ui.views">
       <category
@@ -269,5 +279,17 @@
           </action>
        </viewContribution>
     </extension>
+    
+       <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            name="Workflow Set Meta Information Editor"
+            extensions="meta"
+            icon="icons/wf_set.png"
+            contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
+            class="org.knime.workbench.ui.metainfo.editor.WorkflowSetMetaInfoEditor"
+            id="org.knime.workbench.meta.editor.editor.WorkflowSetMetaInfoEditor">
+      </editor>
+   </extension>
    
 </plugin>

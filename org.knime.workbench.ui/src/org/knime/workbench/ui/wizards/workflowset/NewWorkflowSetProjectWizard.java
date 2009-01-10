@@ -18,10 +18,12 @@
  */
 package org.knime.workbench.ui.wizards.workflowset;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -32,6 +34,7 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.WizardNewProjectCreationPage;
 import org.knime.core.node.NodeLogger;
+import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
 import org.knime.workbench.ui.nature.KNIMEWorkflowSetProjectNature;
 
 
@@ -70,7 +73,22 @@ public class NewWorkflowSetProjectWizard extends Wizard implements INewWizard {
             IProjectDescription desc = project.getDescription();
             desc.setNatureIds(new String[] {KNIMEWorkflowSetProjectNature.ID});
             project.setDescription(desc, null);
-            System.out.println("Project " + project.getName() 
+            MetaInfoFile.createMetaInfoFile(new File(project.getLocationURI()));
+            PlatformUI.getWorkbench().getProgressService().busyCursorWhile(
+                    new IRunnableWithProgress() {
+                @Override
+                public void run(final IProgressMonitor monitor)
+                        throws InvocationTargetException, InterruptedException {
+                    try {
+                        project.refreshLocal(
+                                IResource.DEPTH_ONE, monitor);
+                    } catch (CoreException ce) {
+                        System.err.println(ce);
+                    }
+                    
+                }
+            });
+            LOGGER.debug("Project " + project.getName() 
                     + " successfully created!");
             return true;
         } catch (Exception ce) {

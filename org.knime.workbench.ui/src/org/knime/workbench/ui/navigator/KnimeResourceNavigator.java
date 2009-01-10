@@ -66,9 +66,9 @@ import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.SyncExecQueueDispatcher;
 import org.knime.workbench.ui.navigator.actions.CreateSubfolderAction;
+import org.knime.workbench.ui.navigator.actions.EditMetaInfoAction;
 import org.knime.workbench.ui.navigator.actions.ExportKnimeWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ImportKnimeWorkflowAction;
-import org.knime.workbench.ui.navigator.actions.NewWorkflowSetAction;
 
 
 /**
@@ -287,17 +287,22 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 ((IStructuredSelection)event.getSelection()).getFirstElement();
 
         if (selection instanceof IContainer) {
-            
             IContainer container = (IContainer)selection;
-            
-            IFile workflowFile = (IFile)container.findMember(
-                    WorkflowPersistor.WORKFLOW_FILE);
-
+            IFile file = null;
+            if (container.exists(new Path(WorkflowPersistor.WORKFLOW_FILE))) {
+                file = (IFile)container.findMember(
+                        WorkflowPersistor.WORKFLOW_FILE);
             LOGGER.debug("opening: " + container.getName());
-            
-            if (workflowFile != null && workflowFile.exists()) {
+            } else {
+                EditMetaInfoAction action = new EditMetaInfoAction();
+                if (action.isEnabled()) {
+                    action.run();
+                }
+                return;
+            }
+            if (file != null && file.exists()) {
                 StructuredSelection selection2 =
-                        new StructuredSelection(workflowFile);
+                        new StructuredSelection(file);
                 
                 OpenFileAction action = new OpenFileAction(
                         PlatformUI.getWorkbench().getActiveWorkbenchWindow()
@@ -368,9 +373,9 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         
         menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
         menu.insertAfter(ExportKnimeWorkflowAction.ID, 
-                new NewWorkflowSetAction());
-        menu.insertAfter(ExportKnimeWorkflowAction.ID, 
                 new CreateSubfolderAction());
+        menu.insertAfter(ExportKnimeWorkflowAction.ID, 
+                new EditMetaInfoAction());
         menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
         
 
