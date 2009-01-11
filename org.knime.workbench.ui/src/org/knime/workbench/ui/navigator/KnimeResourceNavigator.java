@@ -83,8 +83,6 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(KnimeResourceNavigator.class);
 
-//    private OpenFileAction m_openFileAction;
-    
     /** ID as defined in plugin.xml. */
     public static final String ID 
         = "org.knime.workbench.ui.navigator.KnimeResourceNavigator";
