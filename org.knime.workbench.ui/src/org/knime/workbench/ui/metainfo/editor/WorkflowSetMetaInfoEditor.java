@@ -81,21 +81,29 @@ public class WorkflowSetMetaInfoEditor extends EditorPart {
         m_form.setText(getPartName());
         GridLayout layout = new GridLayout();
         layout.numColumns = 2; 
+        layout.makeColumnsEqualWidth = true;
+        m_form.getBody().setLayout(layout);
+
+        // content composite
+        Composite content = m_toolkit.createComposite(m_form.getBody());
+        layout = new GridLayout();
+        layout.numColumns = 2; 
         layout.horizontalSpacing = 20;
         layout.makeColumnsEqualWidth = false;
-        m_form.getBody().setLayout(layout);
+        content.setLayout(layout);
+        // placeholder composite
+        m_toolkit.createComposite(m_form.getBody());
         
         GridData layoutData = new GridData();
-        
         layoutData.minimumWidth = 100;
         layoutData.widthHint = 100;
         layoutData.verticalAlignment = SWT.TOP;
         for (MetaGUIElement element : m_elements) {
             LOGGER.debug("element " + element.getLabel());
-            Label  label = m_toolkit.createLabel(m_form.getBody(), 
+            Label  label = m_toolkit.createLabel(content, 
                     element.getLabel() + ": ");
             label.setLayoutData(layoutData);
-            element.createGUIElement(m_toolkit, m_form.getBody());
+            element.createGUIElement(m_toolkit, content);
             element.addListener(new ModifyListener() {
                 
                 @Override
