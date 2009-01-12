@@ -715,6 +715,8 @@ public class NodeContainerFigure extends RectangleFigure {
          * Is used once the overlay has to be undone
          */
         private Image m_baseIcon;
+        
+        private Label m_jobExecutorLabel;
 
         /**
          * Creates a new content figure.
@@ -756,15 +758,22 @@ public class NodeContainerFigure extends RectangleFigure {
 
         
         protected void refreshJobManagerIcon() {
+            // do we have to remove it?
+            if (m_jobExecutorLabel != null && m_jobExec == null) {
+                m_backgroundIcon.remove(m_jobExecutorLabel);
+                m_jobExecutorLabel = null;
+                return;
+            }
             // job executor icon
-            Label jobExecutorIcon = new Label();
-            jobExecutorIcon.setOpaque(false);
-            jobExecutorIcon.setIcon(m_jobExec);
-            m_backgroundIcon.add(jobExecutorIcon);
-            m_backgroundIcon.setConstraint(jobExecutorIcon,
+            m_jobExecutorLabel = new Label();
+            m_jobExecutorLabel.setOpaque(false);
+            m_jobExecutorLabel.setIcon(m_jobExec);
+            m_backgroundIcon.add(m_jobExecutorLabel);
+            m_backgroundIcon.setConstraint(m_jobExecutorLabel,
                     new RelativeLocator(m_backgroundIcon, 0.85, 0.9));
             repaint();
         }
+        
         
         /**
          * This determines the background image according to the "type" of the
