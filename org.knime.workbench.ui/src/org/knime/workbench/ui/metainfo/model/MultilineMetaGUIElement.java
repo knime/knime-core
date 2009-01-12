@@ -48,7 +48,7 @@ public class MultilineMetaGUIElement extends MetaGUIElement {
     @Override
     public Control createGUIElement(FormToolkit toolkit, Composite parent) {
         Text text = toolkit.createText(parent, getValue().trim(), 
-                SWT.MULTI | SWT.SCROLL_LINE);
+                SWT.BORDER | SWT.MULTI | SWT.SCROLL_LINE);
         GridData layout = new GridData(GridData.FILL_HORIZONTAL);
         layout.heightHint = 350;
         text.setLayoutData(layout);

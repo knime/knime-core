@@ -20,6 +20,7 @@ package org.knime.workbench.ui.metainfo.model;
 
 import javax.xml.transform.sax.TransformerHandler;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
@@ -48,12 +49,13 @@ public class TextMetaGUIElement extends MetaGUIElement {
     @Override
     public Control createGUIElement(final FormToolkit toolkit, 
             final Composite parent) {
-        Text text = toolkit.createText(parent, getValue());
+        Text text = toolkit.createText(parent, getValue(), 
+                SWT.BORDER | SWT.FILL);
         text.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         text.addModifyListener(new ModifyListener() {
 
             @Override
-            public void modifyText(ModifyEvent e) {
+            public void modifyText(final ModifyEvent e) {
                 fireModifiedEvent(e);
             }
             
@@ -70,7 +72,8 @@ public class TextMetaGUIElement extends MetaGUIElement {
      * {@inheritDoc}
      */
     @Override
-    public void saveTo(TransformerHandler parentElement) throws SAXException {
+    public void saveTo(final TransformerHandler parentElement) 
+        throws SAXException {
         AttributesImpl atts = new AttributesImpl();
         atts.addAttribute(null, null, MetaGUIElement.FORM, "CDATA", 
                 FORM_TYPE);
