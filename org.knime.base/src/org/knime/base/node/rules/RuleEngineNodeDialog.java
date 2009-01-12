@@ -525,12 +525,12 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
             m_operatorModel.addElement(op);
         }
         RuleEngineSettings ruleSettings = new RuleEngineSettings();
+        ruleSettings.loadSettingsForDialog(settings);
         String defaultLabel = ruleSettings.getDefaultLabel();
         m_defaultLabelEditor.setText(defaultLabel);
         String newColName = ruleSettings.getNewColName();
         m_newColumnName.setText(newColName);
         m_ruleModel.clear();
-        ruleSettings.loadSettingsForDialog(settings);
         for (String rs : ruleSettings.rules()) {
             try {
                 Rule r = new Rule(rs, m_spec);

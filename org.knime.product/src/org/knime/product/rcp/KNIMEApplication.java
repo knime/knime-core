@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 
@@ -489,6 +490,11 @@ public class KNIMEApplication implements IApplication {
                                 || pathname.getName().startsWith("mozilla"));
             }
         });
+        if (System.getenv("MOZILLA_FIVE_HOME") != null) {
+            xulLocations = Arrays.copyOf(xulLocations, xulLocations.length + 1);
+            xulLocations[xulLocations.length - 1] =
+                    new File(System.getenv("MOZILLA_FIVE_HOME"));
+        }
 
         File xul19Location = null;
         File xul18Location = null;
@@ -503,7 +509,9 @@ public class KNIMEApplication implements IApplication {
                 File xulrunner = new File(dir, s);
                 if (xulrunner.canExecute()) {
                     ProcessBuilder pb =
-                            new ProcessBuilder("bash", "-c", xulrunner.getAbsolutePath() + " -v");
+                            new ProcessBuilder("bash", "-c", xulrunner
+                                    .getAbsolutePath()
+                                    + " -v");
                     pb.redirectErrorStream(true);
                     Map<String, String> env = pb.environment();
                     String ldPath = env.get("LD_LIBRARY_PATH");
@@ -549,11 +557,11 @@ public class KNIMEApplication implements IApplication {
                     + "' as internal web browser. If you want to change this,"
                     + " add '-D" + XUL + "=...' to knime.ini");
         } else if (System.getenv("MOZILLA_FIVE_HOME") != null) {
-            System.setProperty(XUL, System.getenv("MOZILLA_FIVE_HOME"));
             System.out.println("Using xulrunner at '"
                     + System.getenv("MOZILLA_FIVE_HOME")
                     + "' as internal web browser. If you want to change this,"
-                    + " add '-D" + XUL + "=...' to knime.ini");
+                    + " change the value of the MOZILLA_FIVE_HOME environment"
+                    + " variable");
         } else {
             System.out.println("No xulrunner found, Node descriptions and "
                     + "online help will possibly not work. If you have "

@@ -205,7 +205,7 @@ public class Rule {
             expect('G');
             skipWS();
             int col = parseColumn(spec);
-            return RuleNodeFactory.missing(col);
+            leftNode = RuleNodeFactory.missing(col);
         } else {
             leftNode = parseArithmeticExpression(spec);
         }

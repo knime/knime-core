@@ -154,10 +154,10 @@ class Buffer implements KNIMEStreamConstants {
         "collection.element.type";
     
     /** Current version string. */
-    private static final String VERSION = "container_7";
+    private static final String VERSION = "container_8";
 
     /** The version number corresponding to VERSION. */
-    private static final int IVERSION = 7;
+    private static final int IVERSION = 8;
 
     private static final HashMap<String, Integer> COMPATIBILITY_MAP;
 
@@ -169,7 +169,8 @@ class Buffer implements KNIMEStreamConstants {
         COMPATIBILITY_MAP.put("container_4", 4);     // version 1.2.x - 1.3.x
         COMPATIBILITY_MAP.put("container_5", 5);     // 2.0 TechPreview Version
         COMPATIBILITY_MAP.put("container_6", 6);     // 2.0 Alpha
-        COMPATIBILITY_MAP.put(VERSION, IVERSION);    // version 2.0
+        COMPATIBILITY_MAP.put("container_7", 7);     // 2.0.0 (final)
+        COMPATIBILITY_MAP.put(VERSION, IVERSION);    // version 2.0.1++
     }
 
     /**
@@ -876,7 +877,12 @@ class Buffer implements KNIMEStreamConstants {
                         + m_bufferID + "), unpredictable errors may occur");
                 }
             }
-            if (m_version >= 5) { // no back into memory option prior 2.0 
+            if (m_version >= 8) { // no back into memory option prior 2.0
+                // the "back into memory" option was added in buffer
+                // version 5 (2.0 TechPreview Version), though it has a bug
+                // (#1631) which caused all data to be held in memory when
+                // converted into 2.0 schema. Therefore we enable this feature
+                // with buffer version 8 (> 2.0)
                 if (subSettings.getBoolean(CFG_IS_IN_MEMORY)) {
                     restoreIntoMemory();
                 }
@@ -1460,6 +1466,12 @@ class Buffer implements KNIMEStreamConstants {
                 count++;
             }
             shortCutsLookup = copy.closeFile(copy.m_outStream);
+            // bug fix #1631 ... the memory policy is not properly preserved
+            // in this if-statement
+            if (usesOutFile()) {
+                // can safely be set to null because it wrote to stream already
+                copy.m_list = null;
+            }
             File blobDir = m_blobDir;
             // use the copy's blob dir if we have a version hop 
             // (otherwise its blob dir will be empty

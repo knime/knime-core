@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.knime.base.node.mine.cluster.PMMLClusterPortObject;
@@ -45,8 +45,8 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
@@ -66,7 +66,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
     /**
      * Key for the Cluster Columns in the output DataTable.
      */
-    public static final String CLUSTER_KEY = "Cluster_";
+    public static final String CLUSTER_KEY = "cluster_";
 
     /**
      * Key for the Cluster Columns in the output DataTable.
@@ -296,9 +296,9 @@ public class FuzzyClusterNodeModel extends NodeModel {
         m_spec = indata.getDataTableSpec();
         int nrCols = m_spec.getNumColumns();
 
-        Set<String> learningCols = new HashSet<String>();
-        Set<String> ignoreCols = new HashSet<String>();
-        Set<String> targetCols = new HashSet<String>();
+        Set<String> learningCols = new LinkedHashSet<String>();
+        Set<String> ignoreCols = new LinkedHashSet<String>();
+        Set<String> targetCols = new LinkedHashSet<String>();
         // counter for included columns
         int z = 0;
         final int[] columns = new int[m_list.size()];
@@ -544,9 +544,9 @@ public class FuzzyClusterNodeModel extends NodeModel {
             setWarningMessage("List of columns to use has been set"
                     + " automatically, please check it in the dialog.");
         }
-        Set<String> learningCols = new HashSet<String>();
-        Set<String> ignoreCols = new HashSet<String>();
-        Set<String> targetCols = new HashSet<String>();
+        Set<String> learningCols = new LinkedHashSet<String>();
+        Set<String> ignoreCols = new LinkedHashSet<String>();
+        Set<String> targetCols = new LinkedHashSet<String>();
         // counter for included columns
         for (int i = 0; i < inspec.getNumColumns(); i++) {
             // if include does contain current column name

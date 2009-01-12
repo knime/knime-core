@@ -229,7 +229,7 @@ public final class BatchExecutor {
         }
         setupEncryptionKey(isPromptForPassword, masterKey);
 
-        final File workflowDir;
+        File workflowDir;
         if (input == null) {
             System.err.println("No input file or directory given.");
             return 1;
@@ -241,6 +241,13 @@ public final class BatchExecutor {
             workflowDir = input;
         }
 
+        // the workflow may be contained in a sub-directory 
+        // if run on a archived workflow (typical scenario if workflow is
+        // exported to a zip using the wizard)
+        if (!new File(workflowDir, WorkflowPersistor.WORKFLOW_FILE).exists()) {
+            workflowDir = workflowDir.listFiles()[0];
+        }
+        
         WorkflowLoadResult loadResult = WorkflowManager.loadProject(
                 workflowDir, new ExecutionMonitor());
         WorkflowManager wfm = loadResult.getWorkflowManager();

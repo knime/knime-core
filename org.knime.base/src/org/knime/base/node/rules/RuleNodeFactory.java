@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 
 import org.knime.base.node.rules.Rule.Operators;
 import org.knime.base.util.WildcardMatcher;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.DoubleValue;
@@ -181,7 +182,9 @@ final class RuleNodeFactory {
             final int v = value.intValue();
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
-                    return ((IntValue)row.getCell(col)).getIntValue() > v;
+                    DataCell c = row.getCell(col);
+                    if (c.isMissing()) { return false; }
+                    return ((IntValue)c).getIntValue() > v;
                 }
 
                 /**
@@ -196,7 +199,9 @@ final class RuleNodeFactory {
             final double v = value.doubleValue();
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
-                    return ((DoubleValue)row.getCell(col)).getDoubleValue() > v;
+                    DataCell c = row.getCell(col);
+                    if (c.isMissing()) { return false; }
+                    return ((DoubleValue)c).getDoubleValue() > v;
                 }
 
                 /**
@@ -222,7 +227,9 @@ final class RuleNodeFactory {
     public static RuleNode gt(final int col, final String value) {
         return new RuleNode() {
             public boolean evaluate(final DataRow row) {
-                return row.getCell(col).toString().compareTo(value) > 0;
+                DataCell c = row.getCell(col);
+                if (c.isMissing()) { return false; }
+                return c.toString().compareTo(value) > 0;
             }
 
             /**
@@ -279,7 +286,9 @@ final class RuleNodeFactory {
             final int v = value.intValue();
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
-                    return ((IntValue)row.getCell(col)).getIntValue() >= v;
+                    DataCell c = row.getCell(col);
+                    if (c.isMissing()) { return false; }
+                    return ((IntValue)c).getIntValue() >= v;
                 }
 
                 /**
@@ -294,7 +303,9 @@ final class RuleNodeFactory {
             final double v = value.doubleValue();
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
-                    return ((DoubleValue)row.getCell(col)).getDoubleValue() >= v;
+                    DataCell c = row.getCell(col);
+                    if (c.isMissing()) { return false; }
+                    return ((DoubleValue)c).getDoubleValue() >= v;
                 }
 
                 /**
@@ -320,7 +331,9 @@ final class RuleNodeFactory {
     public static RuleNode ge(final int col, final String value) {
         return new RuleNode() {
             public boolean evaluate(final DataRow row) {
-                return row.getCell(col).toString().compareTo(value) >= 0;
+                DataCell c = row.getCell(col);
+                if (c.isMissing()) { return false; }
+                return c.toString().compareTo(value) >= 0;
             }
 
             /**
@@ -376,7 +389,9 @@ final class RuleNodeFactory {
             final int v = value.intValue();
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
-                    return ((IntValue)row.getCell(col)).getIntValue() < v;
+                    DataCell c = row.getCell(col);
+                    if (c.isMissing()) { return false; }
+                    return ((IntValue)c).getIntValue() < v;
                 }
 
                 /**
@@ -392,7 +407,9 @@ final class RuleNodeFactory {
             final double v = value.doubleValue();
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
-                    return ((DoubleValue)row.getCell(col)).getDoubleValue() < v;
+                    DataCell c = row.getCell(col);
+                    if (c.isMissing()) { return false; }
+                    return ((DoubleValue)c).getDoubleValue() < v;
                 }
 
                 /**
@@ -418,7 +435,9 @@ final class RuleNodeFactory {
     public static RuleNode lt(final int col, final String value) {
         return new RuleNode() {
             public boolean evaluate(final DataRow row) {
-                return row.getCell(col).toString().compareTo(value) < 0;
+                DataCell c = row.getCell(col);
+                if (c.isMissing()) { return false; }
+                return c.toString().compareTo(value) < 0;
             }
 
             /**
@@ -475,7 +494,9 @@ final class RuleNodeFactory {
             final int v = value.intValue();
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
-                    return ((IntValue)row.getCell(col)).getIntValue() <= v;
+                    DataCell c = row.getCell(col);
+                    if (c.isMissing()) { return false; }
+                    return ((IntValue)c).getIntValue() <= v;
                 }
 
                 /**
@@ -490,7 +511,9 @@ final class RuleNodeFactory {
             final double v = value.doubleValue();
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
-                    return ((DoubleValue)row.getCell(col)).getDoubleValue() <= v;
+                    DataCell c = row.getCell(col);
+                    if (c.isMissing()) { return false; }
+                    return ((DoubleValue)c).getDoubleValue() <= v;
                 }
 
                 /**
@@ -516,7 +539,9 @@ final class RuleNodeFactory {
     public static RuleNode le(final int col, final String value) {
         return new RuleNode() {
             public boolean evaluate(final DataRow row) {
-                return row.getCell(col).toString().compareTo(value) <= 0;
+                DataCell c = row.getCell(col);
+                if (c.isMissing()) { return false; }
+                return c.toString().compareTo(value) <= 0;
             }
 
             /**
@@ -568,7 +593,9 @@ final class RuleNodeFactory {
             final int v = value.intValue();
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
-                    return ((IntValue)row.getCell(col)).getIntValue() == v;
+                    DataCell c = row.getCell(col);
+                    if (c.isMissing()) { return false; }
+                    return ((IntValue)c).getIntValue() == v;
                 }
 
                 /**
@@ -583,7 +610,9 @@ final class RuleNodeFactory {
             final double v = value.doubleValue();
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
-                    return ((DoubleValue)row.getCell(col)).getDoubleValue() == v;
+                    DataCell c = row.getCell(col);
+                    if (c.isMissing()) { return false; }
+                    return ((DoubleValue)c).getDoubleValue() == v;
                 }
 
                 /**
@@ -609,7 +638,9 @@ final class RuleNodeFactory {
     public static RuleNode eq(final int col, final String value) {
         return new RuleNode() {
             public boolean evaluate(final DataRow row) {
-                return row.getCell(col).toString().equals(value);
+                DataCell c = row.getCell(col);
+                if (c.isMissing()) { return false; }
+                return c.toString().equals(value);
             }
 
             /**
@@ -638,7 +669,9 @@ final class RuleNodeFactory {
 
         return new RuleNode() {
             public boolean evaluate(final DataRow row) {
-                return p.matcher(row.getCell(col).toString()).matches();
+                DataCell c = row.getCell(col);
+                if (c.isMissing()) { return false; }
+                return p.matcher(c.toString()).matches();
             }
 
             /**
@@ -664,9 +697,9 @@ final class RuleNodeFactory {
     public static RuleNode like(final String value, final int col) {
         return new RuleNode() {
             public boolean evaluate(final DataRow row) {
-                String regex =
-                        WildcardMatcher.wildcardToRegex(row.getCell(col)
-                                .toString());
+                DataCell c = row.getCell(col);
+                if (c.isMissing()) { return false; }
+                String regex = WildcardMatcher.wildcardToRegex(c.toString());
                 return value.matches(regex);
             }
 
@@ -695,7 +728,10 @@ final class RuleNodeFactory {
 
             public boolean evaluate(final DataRow row) {
                 for (String s : temp) {
-                    if (row.getCell(col).toString().equals(s)) {
+                    DataCell c = row.getCell(col);
+                    if (c.isMissing()) { continue; }
+
+                    if (c.toString().equals(s)) {
                         return true;
                     }
                 }
