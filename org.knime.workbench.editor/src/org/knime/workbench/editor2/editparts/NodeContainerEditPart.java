@@ -24,6 +24,7 @@
  */
 package org.knime.workbench.editor2.editparts;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -37,6 +38,7 @@ import org.eclipse.gef.EditPartListener;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.RequestConstants;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
@@ -47,6 +49,8 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.workflow.JobManagerChangedEvent;
+import org.knime.core.node.workflow.JobManagerChangedListener;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeMessage;
@@ -86,7 +90,8 @@ import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
  */
 public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         NodeStateChangeListener, NodeProgressListener, NodeMessageListener,
-        NodeUIInformationListener, EditPartListener, ConnectableEditPart {
+        NodeUIInformationListener, EditPartListener, ConnectableEditPart,
+        JobManagerChangedListener {
     /**
      * The time (in ms) within two clicks are treated as double click. TODO: get
      * the system double click time
@@ -155,6 +160,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         getNodeContainer().addNodeMessageListener(this);
         getNodeContainer().addProgressListener(this);
         getNodeContainer().addUIInformationListener(this);
+        getNodeContainer().addJobManagerChangedListener(this);
         addEditPartListener(this);
 
         // If we already have extra info, init figure now
@@ -175,7 +181,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             NodeUIInformation info = new NodeUIInformation();
             info.setNodeLocation(0, 0, -1, -1);
             getNodeContainer().setUIInformation(info);
-
+        }
+        NodeContainer cont = getNodeContainer();
+        if (cont != null && cont.findJobManager() != null) {
+            URL iconURL = getNodeContainer().findJobManager().getIcon();
+            setJobManagerIcon(iconURL);
         }
     }
 
@@ -203,7 +213,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 new NodeContainerFigure(new ProgressFigure());
         // init the user specified node name
         nodeFigure.setCustomName(getCustomName());
-
         return nodeFigure;
     }
 
@@ -688,6 +697,20 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         }
         return;
     }
+    
+    @Override
+    public void jobManagerChanged(JobManagerChangedEvent e) {
+        URL iconURL = getNodeContainer().findJobManager().getIcon();
+        setJobManagerIcon(iconURL);
+    }
+    
+    private void setJobManagerIcon(final URL iconURL) {
+        Image icon = null;
+        if (iconURL != null) {
+            icon = ImageDescriptor.createFromURL(iconURL).createImage();
+        } 
+        ((NodeContainerFigure)getFigure()).setJobExecutorIcon(icon);
+    }
 
     public void childAdded(final EditPart child, final int index) {
         // TODO Auto-generated method stub
@@ -712,4 +735,5 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     public void selectedStateChanged(final EditPart editpart) {
         LOGGER.debug(getNodeContainer().toString());
     }
+
 }

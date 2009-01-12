@@ -202,6 +202,8 @@ public class NodeContainerFigure extends RectangleFigure {
      * An optional user description.
      */
     private String m_description;
+    
+    private Image m_jobExec;
 
     /**
      * Creates a new node figure.
@@ -303,6 +305,11 @@ public class NodeContainerFigure extends RectangleFigure {
     public void setType(final NodeType type) {
         m_contentFigure.setType(type);
 
+    }
+    
+    public void setJobExecutorIcon(final Image jobExecIcon) {
+        m_jobExec = jobExecIcon;
+        m_contentFigure.refreshJobManagerIcon();
     }
 
     /**
@@ -738,16 +745,31 @@ public class NodeContainerFigure extends RectangleFigure {
 
             // center the icon figure
             add(m_backgroundIcon);
-            m_backgroundIcon.setLayoutManager(new BorderLayout());
-            m_backgroundIcon.add(m_iconFigure, BorderLayout.CENTER);
-            setConstraint(m_backgroundIcon, new RelativeLocator(this, 0.5, 0.5));
+            m_backgroundIcon.setLayoutManager(new DelegatingLayout());
+            m_backgroundIcon.add(m_iconFigure);
+            m_backgroundIcon.setConstraint(m_iconFigure, 
+                    new RelativeLocator(m_backgroundIcon, 0.5, 0.5));
 
+            setConstraint(m_backgroundIcon, 
+                    new RelativeLocator(this, 0.5, 0.5));
         }
 
+        
+        protected void refreshJobManagerIcon() {
+            // job executor icon
+            Label jobExecutorIcon = new Label();
+            jobExecutorIcon.setOpaque(false);
+            jobExecutorIcon.setIcon(m_jobExec);
+            m_backgroundIcon.add(jobExecutorIcon);
+            m_backgroundIcon.setConstraint(jobExecutorIcon,
+                    new RelativeLocator(m_backgroundIcon, 0.85, 0.9));
+            repaint();
+        }
+        
         /**
          * This determines the background image according to the "type" of the
          * node as stored in the repository model.
-         *
+         * 
          * @param type The Type
          * @return Image that should be uses as background for this node
          */
