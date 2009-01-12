@@ -39,6 +39,7 @@ import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.viewers.DecoratingLabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.OpenEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -95,7 +96,6 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
 
     public KnimeResourceNavigator() {
         super(); 
-
         LOGGER.debug("KNIME resource navigator created");
         
         ResourcesPlugin.getWorkspace().addResourceChangeListener(
@@ -269,7 +269,9 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      */
     @Override
     protected void initLabelProvider(final TreeViewer viewer) {
-        viewer.setLabelProvider(new KnimeResourceLabelProvider());
+        viewer.setLabelProvider(
+                new DecoratingLabelProvider(new KnimeResourceLabelProvider(),
+                        new JobManagerDecorator()));
     }
 
     /**
