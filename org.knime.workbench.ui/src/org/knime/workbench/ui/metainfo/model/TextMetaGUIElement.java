@@ -49,7 +49,7 @@ public class TextMetaGUIElement extends MetaGUIElement {
     @Override
     public Control createGUIElement(final FormToolkit toolkit, 
             final Composite parent) {
-        Text text = toolkit.createText(parent, getValue(), 
+        Text text = toolkit.createText(parent, getValue().trim(), 
                 SWT.BORDER | SWT.FILL);
         text.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         text.addModifyListener(new ModifyListener() {
