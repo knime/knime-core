@@ -24,6 +24,8 @@
  */
 package org.knime.core.node.workflow;
 
+import java.net.URL;
+
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -61,7 +63,13 @@ public interface NodeExecutionJobManager {
      * @return a unique ID of this job manager implementations
      */
     String getID();
-
+    
+    /**
+     * 
+     * @return the URL of the decorating image for the implementing manager
+     */
+    public URL getIcon();
+    
     /**
      * Returns true, if a executing job continues running even after closing the
      * workflow - and if this manager can reconnect to this job after re-opening

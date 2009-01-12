@@ -143,6 +143,10 @@ public abstract class NodeContainer {
     private final CopyOnWriteArraySet<NodeUIInformationListener> m_uiListeners =
         new CopyOnWriteArraySet<NodeUIInformationListener>();
 
+    private final CopyOnWriteArraySet<JobManagerChangedListener> m_jobManagerListeners 
+            = new CopyOnWriteArraySet<JobManagerChangedListener>();
+
+    
     private UIInformation m_uiInformation;
 
 
@@ -186,6 +190,8 @@ public abstract class NodeContainer {
     public final WorkflowManager getParent() {
         return m_parent;
     }
+    
+    /* ----------------- Job Manager ------------------ */
 
     /**
      * Set a new NodeExecutionJobManager for this node and all it's children.
@@ -198,6 +204,7 @@ public abstract class NodeContainer {
                     "NodeExecutionJobManager must not be null.");
         }
         m_jobManager = je;
+        notifyJobManagerChangedListener();
     }
 
     /**
@@ -213,7 +220,7 @@ public abstract class NodeContainer {
      * @return NodeExecutionJobManager 
      * responsible for this node and all its children.
      */
-    protected final NodeExecutionJobManager findJobManager() {
+    public final NodeExecutionJobManager findJobManager() {
         if (m_jobManager == null) {
             assert m_parent != null : "Root has no associated job manager";
             return m_parent.findJobManager();
@@ -234,7 +241,24 @@ public abstract class NodeContainer {
     NodeExecutionJob getExecutionJob() {
         return m_executionJob;
     }
+    
+    public boolean addJobManagerChangedListener(
+            final JobManagerChangedListener l) {
+        return m_jobManagerListeners.add(l);
+    }
 
+    public boolean removeJobManagerChangedListener(
+            final JobManagerChangedListener l) {
+        return m_jobManagerListeners.remove(l);
+    }
+    
+    protected void notifyJobManagerChangedListener() {
+        JobManagerChangedEvent e = new JobManagerChangedEvent(getID());
+        for (JobManagerChangedListener l : m_jobManagerListeners) {
+            l.jobManagerChanged(e);
+        }
+    }
+    
     /////////////////////////////////////////////////
     // Convenience functions for all derived classes
     /////////////////////////////////////////////////

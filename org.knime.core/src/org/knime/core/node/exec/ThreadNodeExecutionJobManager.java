@@ -23,6 +23,7 @@
  */
 package org.knime.core.node.exec;
 
+import java.net.URL;
 import java.util.concurrent.Future;
 
 import org.knime.core.node.ExecutionContext;
@@ -134,6 +135,15 @@ public class ThreadNodeExecutionJobManager implements NodeExecutionJobManager {
     @Override
     public void load(final NodeSettingsRO settings)
     throws InvalidSettingsException {
+    }
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public URL getIcon() {
+        return null;
     }
 
 }
