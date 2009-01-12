@@ -49,10 +49,10 @@ class NoKeyBuffer extends Buffer {
         NodeLogger.getLogger(NoKeyBuffer.class);
     
     /** Current version string. */
-    private static final String VERSION = "noRowKeyContainer_7";
+    private static final String VERSION = "noRowKeyContainer_8";
     
     /** The version number corresponding to VERSION. */
-    private static final int IVERSION = 7;
+    private static final int IVERSION = 8;
     
     private static final HashMap<String, Integer> COMPATIBILITY_MAP;
     
@@ -65,6 +65,7 @@ class NoKeyBuffer extends Buffer {
         COMPATIBILITY_MAP.put("noRowKeyContainer_4", 4);
         COMPATIBILITY_MAP.put("noRowKeyContainer_5", 5);
         COMPATIBILITY_MAP.put("noRowKeyContainer_6", 6);
+        COMPATIBILITY_MAP.put("noRowKeyContainer_7", 7);
         COMPATIBILITY_MAP.put(VERSION, IVERSION);
     }
     
