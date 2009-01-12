@@ -190,7 +190,7 @@ public abstract class NodeContainer {
     public final WorkflowManager getParent() {
         return m_parent;
     }
-    
+
     /* ----------------- Job Manager ------------------ */
 
     /**
@@ -241,7 +241,7 @@ public abstract class NodeContainer {
     NodeExecutionJob getExecutionJob() {
         return m_executionJob;
     }
-    
+
     public boolean addJobManagerChangedListener(
             final JobManagerChangedListener l) {
         return m_jobManagerListeners.add(l);
@@ -790,23 +790,39 @@ public abstract class NodeContainer {
             final ScopeObjectStack inStack, final ExecutionMonitor exec)
             throws CanceledExecutionException;
     
-    /** Load result from a remote execution (e.g. remote grid execution)
+    /** Load information from execution result. Subclasses will override this
+     * method and will call this implementation as <code>super.loadEx...</code>.
      * @param result The execution result (contains port objects, messages, etc)
      * @return A load result that contains, e.g. error messages.
      */
     public LoadResult loadExecutionResult(
             final NodeContainerExecutionResult result) {
-        // TODO load node message etc.
-        return loadExecutionResultOverride(result);
+        /* Ideally this code would go into a separate final method that calls
+         * an abstract method .... however, this is risky as subclasses may 
+         * wish to synchronize the entire load procedure. 
+         */
+        LoadResult r = new LoadResult();
+        if (result.shouldStateBeLoaded()) {
+            State newState = result.getState();
+            if (newState == null) {
+                r.addError("Can't restore state because it's null");
+            } else {
+                setState(newState);
+            }
+        }
+        setNodeMessage(result.getNodeMessage());
+        return r;
     }
     
-    /** Load specialized information from execution result. Called from
-     * {@link #loadExecutionResult(NodeContainerExecutionResult)}.
-     * @param result The execution result (contains port objects, messages, etc)
-     * @return A load result that contains, e.g. error messages.
+    /** Saves all information that is held in this abstract NodeContainer
+     * into the argument.
+     * @param result Where to save to.
      */
-    abstract LoadResult loadExecutionResultOverride(
-            final NodeContainerExecutionResult result);
+    protected void saveExecutionResult(
+            final NodeContainerExecutionResult result) {
+        result.setState(getState());
+        result.setMessage(m_nodeMessage);
+    }
     
     /** Helper class that defines load/save routines for general NodeContainer
      * properties. This is currently only the job manager. */

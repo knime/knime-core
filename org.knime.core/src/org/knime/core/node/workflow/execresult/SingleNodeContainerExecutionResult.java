@@ -21,7 +21,6 @@
  */
 package org.knime.core.node.workflow.execresult;
 
-import org.knime.core.node.NodeContentPersistor;
 import org.knime.core.node.workflow.SingleNodeContainer;
 
 /**
@@ -30,9 +29,26 @@ import org.knime.core.node.workflow.SingleNodeContainer;
  * internals).
  * @author Bernd Wiswedel, University of Konstanz
  */
-public interface SingleNodeContainerExecutionResult 
+public class SingleNodeContainerExecutionResult 
     extends NodeContainerExecutionResult {
+    
+    private NodeExecutionResult m_nodeExecutionResult;
 
     /** @return The execution result for the node. */
-    public NodeContentPersistor getNodeContentPersistor();
+    public NodeExecutionResult getNodeExecutionResult() {
+        return m_nodeExecutionResult;
+    }
+    
+    /**
+     * @param nodeExecutionResult the result to set
+     * @throws NullPointerException If argument is null.
+     */
+    public void setNodeExecutionResult(
+            final NodeExecutionResult nodeExecutionResult) {
+        if (nodeExecutionResult == null) {
+            throw new NullPointerException("Argument must not be null");
+        }
+        m_nodeExecutionResult = nodeExecutionResult;
+    }
+    
 }

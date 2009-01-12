@@ -38,7 +38,6 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
-import org.knime.core.node.NodeContentPersistor;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
@@ -54,6 +53,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
+import org.knime.core.node.workflow.execresult.NodeExecutionResult;
 import org.knime.core.node.workflow.execresult.SingleNodeContainerExecutionResult;
 import org.w3c.dom.Element;
 
@@ -845,7 +845,7 @@ public final class SingleNodeContainer extends NodeContainer
     
     /** {@inheritDoc} */
     @Override
-    LoadResult loadExecutionResultOverride(
+    public LoadResult loadExecutionResult(
             final NodeContainerExecutionResult execResult) {
         synchronized (m_nodeMutex) {
             if (!(execResult instanceof SingleNodeContainerExecutionResult)) {
@@ -854,12 +854,16 @@ public final class SingleNodeContainer extends NodeContainer
                         class.getSimpleName() + "\": " 
                         + execResult.getClass().getSimpleName());
             }
+            LoadResult errors = super.loadExecutionResult(execResult);
             SingleNodeContainerExecutionResult sncExecResult =
                 (SingleNodeContainerExecutionResult)execResult;
-            NodeContentPersistor nodeExecResult = 
-                sncExecResult.getNodeContentPersistor();
-            LoadResult errors = m_node.loadDataAndInternals(
+            NodeExecutionResult nodeExecResult = 
+                sncExecResult.getNodeExecutionResult();
+            LoadResult nodeErrors = m_node.loadDataAndInternals(
                     nodeExecResult, new ExecutionMonitor());
+            if (nodeErrors.hasEntries()) {
+                errors.addError(nodeErrors);
+            }
             boolean needsReset = nodeExecResult.needsResetAfterLoad();
             if (!needsReset && State.EXECUTED.equals(
                     sncExecResult.getState())) {
@@ -875,6 +879,28 @@ public final class SingleNodeContainer extends NodeContainer
                 execResult.setNeedsResetAfterLoad();
             }
             return errors;
+        }
+    }
+    
+    /** Saves all internals that are necessary to mimic the execution result
+     * into a new execution result object. This method is called on node 
+     * instances, which are, e.g. executed on a server and later on read back
+     * into a true KNIME instance (upon which 
+     * {@link #loadExecutionResult(NodeContainerExecutionResult)} is called). 
+     * @param exec For progress information (this method will copy port 
+     *        objects).
+     * @return A new execution result instance.
+     * @throws CanceledExecutionException If canceled.
+     */
+    public SingleNodeContainerExecutionResult createExecutionResult(
+            final ExecutionMonitor exec) throws CanceledExecutionException {
+        synchronized (m_nodeMutex) {
+            SingleNodeContainerExecutionResult result = 
+                new SingleNodeContainerExecutionResult();
+            super.saveExecutionResult(result);
+            result.setNodeExecutionResult(
+                    m_node.createNodeExecutionResult(exec));
+            return result;
         }
     }
 

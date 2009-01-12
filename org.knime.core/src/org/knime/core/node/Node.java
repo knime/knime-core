@@ -70,6 +70,7 @@ import org.knime.core.node.workflow.ScopeLoopContext;
 import org.knime.core.node.workflow.ScopeObjectStack;
 import org.knime.core.node.workflow.ScopeVariable;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.execresult.NodeExecutionResult;
 import org.knime.core.util.FileUtil;
 import org.w3c.dom.Element;
 
@@ -303,6 +304,50 @@ public final class Node implements NodeModelWarningListener {
         notifyMessageListeners(message);
     }
     
+    /**
+     * Creates an execution result containing all calculated values in a 
+     * execution. The returned value is suitable to be used in
+     * {@link #loadDataAndInternals(NodeContentPersistor, ExecutionMonitor)}.
+     * If this node is not executed, it will assign null values to the fields
+     * in the returned execution result.
+     * @param exec For progress information.
+     * @return A new execution result containing the values being calculated.
+     * @throws CanceledExecutionException If canceled
+     */
+    public NodeExecutionResult createNodeExecutionResult(
+            final ExecutionMonitor exec) throws CanceledExecutionException {
+        NodeExecutionResult result = new NodeExecutionResult();
+        result.setWarningMessage(m_model.getWarningMessage());
+        if (hasContent()) {
+            File internTempDir;
+            try {
+                internTempDir = FileUtil.createTempDir("knime_node_internDir");
+                exec.setMessage("Saving internals");
+                saveInternals(internTempDir, exec.createSubProgress(0.0));
+                result.setNodeInternDir(new ReferencedFile(internTempDir));
+            } catch (IOException ioe) {
+                m_logger.error("Unable to save internals", ioe);
+            }
+        }
+        PortObject[] pos = new PortObject[getNrOutPorts()];
+        PortObjectSpec[] poSpecs = new PortObjectSpec[getNrOutPorts()];
+        for (int i = 0; i < pos.length; i++) {
+            PortObject po = getOutputObject(i);
+            if (po != null) {
+                pos[i] = po;
+                poSpecs[i] = po.getSpec();
+            }
+        }
+        result.setPortObjects(pos);
+        result.setPortObjectSpecs(poSpecs);
+        return result;
+    }
+    
+    /** Loads data from an argument persistor.
+     * @param loader To load from.
+     * @param exec For progress.
+     * @return The load result object containing errors and warnings (if any).
+     */
     public LoadResult loadDataAndInternals(
             final NodeContentPersistor loader, final ExecutionMonitor exec) {
         LoadResult result = new LoadResult();

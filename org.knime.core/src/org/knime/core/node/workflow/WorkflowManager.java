@@ -2861,10 +2861,10 @@ public final class WorkflowManager extends NodeContainer {
     
     /** {@inheritDoc} */
     @Override
-    LoadResult loadExecutionResultOverride(
+    public LoadResult loadExecutionResult(
             final NodeContainerExecutionResult result) {
         synchronized (m_workflowMutex) {
-            LoadResult loadResult = new LoadResult();
+            LoadResult loadResult = super.loadExecutionResult(result);
             return loadResult;
         }
     }
