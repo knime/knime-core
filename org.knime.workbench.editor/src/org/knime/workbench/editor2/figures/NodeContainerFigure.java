@@ -26,7 +26,6 @@ package org.knime.workbench.editor2.figures;
 
 import java.util.List;
 
-import org.eclipse.draw2d.BorderLayout;
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.DelegatingLayout;
 import org.eclipse.draw2d.Figure;
@@ -1250,9 +1249,11 @@ public class NodeContainerFigure extends RectangleFigure {
      * @see NodeContainerFigure#unmark()
      */
     public void mark() {
-
-        m_contentFigure.m_backgroundIcon.add(m_contentFigure.m_deleteIcon,
-                BorderLayout.CENTER);
+        m_contentFigure.m_backgroundIcon.add(m_contentFigure.m_deleteIcon);
+        m_contentFigure.m_backgroundIcon.setConstraint(
+                m_contentFigure.m_deleteIcon, 
+                new RelativeLocator(m_contentFigure.m_backgroundIcon,
+                        0.5, 0.5));
     }
 
     /**
