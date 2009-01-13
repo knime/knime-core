@@ -107,14 +107,23 @@ public class MoveWorkflowAction extends Action
         throws InvocationTargetException, InterruptedException {
         final IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
         final IResource source = root.findMember(getSource());
+        IPath target = getTarget();
+        IResource targetRes = root.findMember(target);
+        
+        if (getSource().isPrefixOf(getTarget())) {
+            LOGGER.debug("Operation not allowed. " + source.getName() 
+                    + " is parent resource of target " 
+                    + getTarget());
+            showIsParent(source.getName(), targetRes.getName());
+            return;            
+        }
+        
         if (source != null && !source.isLinked()) {
             final File sourceFile = new File(source.getLocationURI());
             if (!sourceFile.exists()) {
                 showUnsupportedLinkedProject(sourceFile.getName());
                 return;
             }
-            IPath target = getTarget();
-            IResource targetRes = root.findMember(target);
             File targetFile = new File(targetRes.getLocationURI());
             LOGGER.debug("target path: " + targetFile);
             // create path here
@@ -179,5 +188,16 @@ public class MoveWorkflowAction extends Action
         });
     }
     
+    private void showIsParent(final String source, final String target) {
+        Display.getDefault().syncExec(new Runnable() {
+            @Override
+            public void run() {
+                MessageDialog.openWarning(Display.getDefault()
+                        .getActiveShell(), "Cannot Move Resource",
+                        "Operation not allowed. \"" + source 
+                    + "\" is parent resource of target \"" + target + "\"");
+            }
+        });        
+    }
 
 }
