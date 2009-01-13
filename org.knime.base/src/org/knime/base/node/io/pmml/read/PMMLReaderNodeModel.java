@@ -24,9 +24,8 @@ import java.io.IOException;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
@@ -41,9 +40,6 @@ import org.xml.sax.SAXException;
  * @author Fabian Dill, University of Konstanz
  */
 public class PMMLReaderNodeModel extends NodeModel {
-
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(PMMLReaderNodeModel.class);
     
     private SettingsModelString m_file =
             PMMLReaderNodeDialog.createFileChooserModel();
@@ -71,12 +67,17 @@ public class PMMLReaderNodeModel extends NodeModel {
                 throw new InvalidSettingsException(
                         "Please select a PMML file!");
             }
+            File file = new File(m_file.getStringValue());
+            if (!file.exists() || !file.canRead()) {
+                throw new InvalidSettingsException("Can't access PMML file \""
+                        + file + "\".");
+            }
             try {
-                m_importer = new PMMLImport(new File(m_file.getStringValue()));
+                m_importer = new PMMLImport(file);
             } catch (SAXException e) {
-                LOGGER.error("PMML file is not valid", e);
                 setWarningMessage(
-                        "File seems to be not a vaild PMML file.");
+                    "File \"" + file + "\" is not a valid PMML file:\n" 
+                        + e.getMessage());
                 throw new InvalidSettingsException(e);
             }  
             return new PortObjectSpec[]{m_importer.getPortObjectSpec()};
