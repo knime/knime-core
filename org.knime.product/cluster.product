@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?pde version="3.1"?>
+<?pde version="3.4"?>
 
 <product name="KNIME" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" useFeatures="true">
 
@@ -21,7 +21,8 @@ Uses: Java, GEF, Log4J
       </text>
    </aboutInfo>
 
-   <configIni use="default"/>
+   <configIni use="default">
+   </configIni>
 
    <launcherArgs>
       <programArgs>-clean</programArgs>
@@ -61,7 +62,7 @@ Uses: Java, GEF, Log4J
       <feature id="org.eclipse.rcp" version="0.0.0"/>
       <feature id="org.knime.features.base" version="2.1.0.0018128"/>
       <feature id="org.knime.features.product" version="2.1.0.0018128"/>
-      <feature id="com.knime.features.cluster" version="2.1.0.0018128"/>
+      <feature id="com.knime.features.cluster" version="2.1.0.0019385"/>
       <feature id="org.knime.features.chem.types" version="2.1.0.0018128"/>
       <feature id="org.knime.features.ext.chem.cdk" version="2.1.0"/>
       <feature id="org.knime.features.ext.chem.plants" version="2.1.0.0018128"/>
