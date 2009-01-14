@@ -290,7 +290,7 @@ public final class Node implements NodeModelWarningListener {
         exec.setProgress(1.0);
         return result;
     }
-    
+
     /** Load a node message. This method is used in case of a remote execution,
      * e.g. See {@link org.knime.core.node.workflow.SingleNodeContainer#
      * loadNodeMessage(NodeMessage)} for details.
@@ -303,7 +303,7 @@ public final class Node implements NodeModelWarningListener {
         }
         notifyMessageListeners(message);
     }
-    
+
     /**
      * Creates an execution result containing all calculated values in a 
      * execution. The returned value is suitable to be used in
@@ -363,7 +363,7 @@ public final class Node implements NodeModelWarningListener {
             } else {
                 m_outputs[i].spec = spec;
             }
-            
+
             Class<? extends PortObject> objClass =
                 m_outputs[i].type.getPortObjectClass();
             PortObject obj = loader.getPortObject(i);
@@ -380,8 +380,8 @@ public final class Node implements NodeModelWarningListener {
                 // overwrites the spec that is read few rows above
                 spec = m_outputs[i].object.getSpec();
                 if (spec == null || !specClass.isInstance(spec)) {
-                    String error = spec == null 
-                        ? "PortObjectSpec to PortObject \"" 
+                    String error = spec == null
+                        ? "PortObjectSpec to PortObject \""
                             + m_outputs[i].object.getClass().getSimpleName()
                             + "\" must not be null"
                         : "Loaded PortObjectSpec of class \""
@@ -757,7 +757,7 @@ public final class Node implements NodeModelWarningListener {
         return true;
     } // executeNode(ExecutionMonitor)
 
-    /** Called after execute in order to put the computed result into the 
+    /** Called after execute in order to put the computed result into the
      * outports. It will do a sequence of sanity checks whether the argument
      * is valid (non-null, correct type, etc.)
      * @param newOutData The computed output data
@@ -766,13 +766,13 @@ public final class Node implements NodeModelWarningListener {
      * @return Whether that is successful (false in case of incompatible port
      *         objects)
      */
-    private boolean setOutPortObjects(final PortObject[] newOutData, 
+    private boolean setOutPortObjects(final PortObject[] newOutData,
             final boolean continuesLoop) {
         if (newOutData == null) {
             throw new NullPointerException("Port object array is null");
         }
         if (newOutData.length != getNrOutPorts()) {
-            throw new IndexOutOfBoundsException("Array is expected to be of " 
+            throw new IndexOutOfBoundsException("Array is expected to be of "
                     + "length " + getNrOutPorts() + ": " + newOutData.length);
         }
         // check for compatible output PortObjects
@@ -784,7 +784,7 @@ public final class Node implements NodeModelWarningListener {
             }
             if (newOutData[i] != null) {
                 if (!thisType.getPortObjectClass().isInstance(newOutData[i])) {
-                    createErrorMessageAndNotify("Invalid output port object " 
+                    createErrorMessageAndNotify("Invalid output port object "
                             + "at port " + i);
                     m_logger.error("  (Wanted: "
                             + thisType.getPortObjectClass().getName()
@@ -842,15 +842,15 @@ public final class Node implements NodeModelWarningListener {
         }
         return true;
     }
-    
+
     /** Copies the PortObject so that the copy can be given to the node model
      * implementation (and potentially modified). The copy is carried out by
      * means of the respective serializer (via streams).
-     * 
-     * <p> Note that this method is meant to be used by the framework only. 
+     *
+     * <p> Note that this method is meant to be used by the framework only.
      * @param portObject The object to be copied.
      * @param exec For progress/cancel
-     * @return The (deep) copy. 
+     * @return The (deep) copy.
      * @throws IOException In case of exceptions while accessing the stream or
      * if the argument is an instance of {@link BufferedDataTable}.
      * @throws CanceledExecutionException If canceled.*/
@@ -977,7 +977,7 @@ public final class Node implements NodeModelWarningListener {
             createResetMessageAndNotify();
         }
     }
-    
+
     /** Getter for the currently set node warning message in the corresponding
      * NodeModel.
      * @return The currently set warning message (may be null).
@@ -1320,6 +1320,21 @@ public final class Node implements NodeModelWarningListener {
      * @return flag indicating success of configure
      */
     public boolean configure(final PortObjectSpec[] inSpecs) {
+        return configure(inSpecs, null);
+    }
+
+    /**
+     * Allows passing an object that may modify the specs created by the
+     * {@link NodeModel}, for example in case the node is wrapped and the
+     * output is modified.
+     *
+     * @param inSpecs table specs from the predecessors
+     * @param postConfigure object called after node model calculated output
+     *            specs
+     * @return true if configure finished successfully.
+     */
+    public boolean configure(final PortObjectSpec[] inSpecs,
+            final NodePostConfigure postConfigure) {
         boolean success = false;
         synchronized (m_configureLock) {
             // reset message object
@@ -1348,6 +1363,9 @@ public final class Node implements NodeModelWarningListener {
                 // call configure model to create output table specs
                 // guaranteed to return non-null, correct-length array
                 newOutSpec = m_model.configureModel(inSpecs);
+                if (postConfigure != null) {
+                    newOutSpec = postConfigure.configure(inSpecs, newOutSpec);
+                }
                 pushOntoStack(newVariables);
                 success = true;
             } catch (InvalidSettingsException ise) {

@@ -97,7 +97,7 @@ public abstract class NodeContainer {
     private final WorkflowManager m_parent;
 
     private NodeExecutionJobManager m_jobManager;
-    
+
     /** The job representing the pending task of executing the node. */
     private NodeExecutionJob m_executionJob;
 
@@ -130,23 +130,23 @@ public abstract class NodeContainer {
     /*--------- listener administration------------*/
 
 
-    private final CopyOnWriteArraySet<NodeStateChangeListener> 
-        m_stateChangeListeners = 
+    private final CopyOnWriteArraySet<NodeStateChangeListener>
+        m_stateChangeListeners =
             new CopyOnWriteArraySet<NodeStateChangeListener>();
 
     private final CopyOnWriteArraySet<NodeMessageListener> m_messageListeners =
         new CopyOnWriteArraySet<NodeMessageListener>();
 
-    private final CopyOnWriteArraySet<NodeProgressListener> 
+    private final CopyOnWriteArraySet<NodeProgressListener>
         m_progressListeners = new CopyOnWriteArraySet<NodeProgressListener>();
 
     private final CopyOnWriteArraySet<NodeUIInformationListener> m_uiListeners =
         new CopyOnWriteArraySet<NodeUIInformationListener>();
 
-    private final CopyOnWriteArraySet<JobManagerChangedListener> m_jobManagerListeners 
+    private final CopyOnWriteArraySet<JobManagerChangedListener> m_jobManagerListeners
             = new CopyOnWriteArraySet<JobManagerChangedListener>();
 
-    
+
     private UIInformation m_uiInformation;
 
 
@@ -172,6 +172,7 @@ public abstract class NodeContainer {
     NodeContainer(final WorkflowManager parent, final NodeID id,
             final NodeContainerMetaPersistor persistor) {
         this(parent, id);
+        assert parent != null;
         assert persistor.getState() != null : "State of node \"" + id
         + "\" in \"" + persistor.getClass().getSimpleName() + "\" is null";
         m_state = persistor.getState();
@@ -199,9 +200,9 @@ public abstract class NodeContainer {
      * @param je the new NodeExecutionJobManager.
      */
     public void setJobManager(final NodeExecutionJobManager je) {
-        if (je == null) {
+        if (m_parent == null && je == null) {
             throw new NullPointerException(
-                    "NodeExecutionJobManager must not be null.");
+                    "Root workflow manager must have a job manager.");
         }
         m_jobManager = je;
         notifyJobManagerChangedListener();
@@ -212,12 +213,12 @@ public abstract class NodeContainer {
      * node will use the job manager of the parent (or the parent of ...)
      * @see #findJobManager()
      */
-    protected final NodeExecutionJobManager getJobManager() {
+    public final NodeExecutionJobManager getJobManager() {
         return m_jobManager;
     }
-    
+
     /**
-     * @return NodeExecutionJobManager 
+     * @return NodeExecutionJobManager
      * responsible for this node and all its children.
      */
     public final NodeExecutionJobManager findJobManager() {
@@ -227,14 +228,14 @@ public abstract class NodeContainer {
         }
         return m_jobManager;
     }
-    
+
     /**
      * @param executionJob the executionJob to set
      */
     void setExecutionJob(final NodeExecutionJob executionJob) {
         m_executionJob = executionJob;
     }
-    
+
     /**
      * @return the executionJob
      */
@@ -251,14 +252,14 @@ public abstract class NodeContainer {
             final JobManagerChangedListener l) {
         return m_jobManagerListeners.remove(l);
     }
-    
+
     protected void notifyJobManagerChangedListener() {
         JobManagerChangedEvent e = new JobManagerChangedEvent(getID());
         for (JobManagerChangedListener l : m_jobManagerListeners) {
             l.jobManagerChanged(e);
         }
     }
-    
+
     /////////////////////////////////////////////////
     // Convenience functions for all derived classes
     /////////////////////////////////////////////////
@@ -383,7 +384,7 @@ public abstract class NodeContainer {
    public final NodeMessage getNodeMessage() {
        return m_nodeMessage;
    }
-   
+
    /**
     * @param newMessage the nodeMessage to set
     */
@@ -607,9 +608,9 @@ public abstract class NodeContainer {
         throws InvalidSettingsException {
         NodeContainerSettings ncSet = new NodeContainerSettings();
         ncSet.load(settings);
-        m_jobManager = ncSet.getJobManager();
+        setJobManager(ncSet.getJobManager());
     }
-    
+
     void saveSettings(final NodeSettingsWO settings) {
         NodeContainerSettings ncSet = new NodeContainerSettings();
         ncSet.setJobManager(m_jobManager);
@@ -661,13 +662,13 @@ public abstract class NodeContainer {
     public final String getNameWithID() {
         return getName() + " " + getID().toString();
     }
-    
+
     /** @return Node name with status information.  */
     @Override
     public String toString() {
         return getNameWithID() + " (" + getState() + ")";
     }
-    
+
     /**
      * @return the display label for {@link NodeView}, {@link OutPortView} and
      * {@link NodeDialog}
@@ -789,7 +790,7 @@ public abstract class NodeContainer {
             final Map<Integer, BufferedDataTable> tblRep,
             final ScopeObjectStack inStack, final ExecutionMonitor exec)
             throws CanceledExecutionException;
-    
+
     /** Load information from execution result. Subclasses will override this
      * method and will call this implementation as <code>super.loadEx...</code>.
      * @param result The execution result (contains port objects, messages, etc)
@@ -813,7 +814,7 @@ public abstract class NodeContainer {
         setNodeMessage(result.getNodeMessage());
         return r;
     }
-    
+
     /** Saves all information that is held in this abstract NodeContainer
      * into the argument.
      * @param result Where to save to.
@@ -823,23 +824,23 @@ public abstract class NodeContainer {
         result.setState(getState());
         result.setMessage(m_nodeMessage);
     }
-    
+
     /** Helper class that defines load/save routines for general NodeContainer
      * properties. This is currently only the job manager. */
     public static final class NodeContainerSettings {
-        
+
         private NodeExecutionJobManager m_jobManager;
-        
+
         /** @param jobManager the jobManager to set */
         public void setJobManager(final NodeExecutionJobManager jobManager) {
             m_jobManager = jobManager;
         }
-        
+
         /** @return the jobManager */
         public NodeExecutionJobManager getJobManager() {
             return m_jobManager;
         }
-        
+
         /** Save all properties (currently only job manager) to argument.
          * @param settings To save to.
          */
@@ -849,19 +850,19 @@ public abstract class NodeContainer {
                         m_jobManager, settings.addNodeSettings("job.manager"));
             }
         }
-        
+
         /** Restores all settings (currently only job manager) from argument.
          * @param settings To load from.
          * @throws InvalidSettingsException If that's not possible.
          */
-        public void load(final NodeSettingsRO settings) 
+        public void load(final NodeSettingsRO settings)
         throws InvalidSettingsException {
             if (settings.containsKey("job.manager")) {
                 NodeSettingsRO s = settings.getNodeSettings("job.manager");
                 m_jobManager = NodeExecutionJobManagerPool.load(s);
             }
         }
-        
+
     }
 
 }

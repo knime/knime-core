@@ -31,6 +31,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * Main entry point for compute intensive jobs. Controls resource (thread)
@@ -98,7 +99,7 @@ public interface NodeExecutionJobManager {
      * an executing job.
      *
      * @param settings reconnect information stored during
-     *        {@link #saveReconnectSettings(NodeExecutionJob, NodeSettingsWO)}
+     *            {@link #saveReconnectSettings(NodeExecutionJob, NodeSettingsWO)}
      * @param inports port objects that were provided at execution start time.
      * @return a new job restored and representing the running job
      * @throws InvalidSettingsException if the information in the settings
@@ -109,25 +110,46 @@ public interface NodeExecutionJobManager {
     public NodeExecutionJob loadFromReconnectSettings(
             final NodeSettingsRO settings, final PortObject[] inports,
             final SingleNodeContainer snc, final ExecutionContext exec)
-    throws InvalidSettingsException, NodeExecutionJobReconnectException;
-    
-    /** Disconnects the running job.
-     * @param job The job to cancel. */
+            throws InvalidSettingsException, NodeExecutionJobReconnectException;
+
+    /**
+     * Disconnects the running job.
+     *
+     * @param job The job to cancel.
+     */
     public void disconnect(final NodeExecutionJob job);
 
-    /** Saves parameters that customize this instance. It does not save
-     * the general job manager ID (that happens elsewhere). Job managers that
-     * are represented by a singleton, leave this method empty.
+    /**
+     * Saves parameters that customize this instance. It does not save the
+     * general job manager ID (that happens elsewhere). Job managers that are
+     * represented by a singleton, leave this method empty.
+     *
      * @param settings to save to.
      */
     public void save(final NodeSettingsWO settings);
 
-    /** Restores the properties of the specific job manager. This is the reverse
+    /**
+     * Restores the properties of the specific job manager. This is the reverse
      * operation to {@link #save(NodeSettingsWO)}.
+     *
      * @param settings To load from.
      * @throws InvalidSettingsException If that fails.
      */
     public void load(final NodeSettingsRO settings)
-    throws InvalidSettingsException;
+            throws InvalidSettingsException;
+
+    /**
+     * In case the executor modifies the result of the underlying node it can
+     * create the appropriate output specs. Trivial implementations just return
+     * the <code>nodeModelOutSpecs</code>.
+     *
+     * @param inSpecs port object specs from predecessor node(s)
+     * @param nodeModelOutSpecs the output specs created by the underlying node
+     * @return the output specs actually delivered at the node's output ports
+     * @throws InvalidSettingsException if the node can't be executed.
+     */
+    public PortObjectSpec[] configure(final PortObjectSpec[] inSpecs,
+            PortObjectSpec[] nodeModelOutSpecs)
+            throws InvalidSettingsException;
 
 }

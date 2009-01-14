@@ -41,6 +41,7 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodePostConfigure;
 import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -317,14 +318,14 @@ public final class SingleNodeContainer extends NodeContainer
             // perform action
             switch (getState()) {
             case IDLE:
-                if (m_node.configure(inObjectSpecs)) {
+                if (nodeConfigure(inObjectSpecs)) {
                     setState(State.CONFIGURED);
                 } else {
                     setState(State.IDLE);
                 }
                 break;
             case UNCONFIGURED_MARKEDFOREXEC:
-                if (m_node.configure(inObjectSpecs)) {
+                if (nodeConfigure(inObjectSpecs)) {
                     setState(State.MARKEDFOREXEC);
                 } else {
                     setState(State.UNCONFIGURED_MARKEDFOREXEC);
@@ -332,7 +333,7 @@ public final class SingleNodeContainer extends NodeContainer
                 break;
             case CONFIGURED:
                 // m_node.reset();
-                boolean success = m_node.configure(inObjectSpecs);
+                boolean success = nodeConfigure(inObjectSpecs);
                 if (success) {
                     setState(State.CONFIGURED);
                 } else {
@@ -344,7 +345,7 @@ public final class SingleNodeContainer extends NodeContainer
                 // these are dangerous - otherwise re-queued loop-ends are
                 // reset!
                 // m_node.reset();
-                success = m_node.configure(inObjectSpecs);
+                success = nodeConfigure(inObjectSpecs);
                 if (success) {
                     setState(State.MARKEDFOREXEC);
                 } else {
@@ -369,6 +370,27 @@ public final class SingleNodeContainer extends NodeContainer
             }
             return false; // all specs stayed the same!
         }
+    }
+
+    /**
+     * Calls configure in the node, allowing the current job manager to modify
+     * the output specs according to its settings (in case it modifies the
+     * node's output).
+     *
+     * @param inSpecs the input specs to node configure
+     */
+    private boolean nodeConfigure(final PortObjectSpec[] inSpecs) {
+
+        final NodeExecutionJobManager jobMgr = findJobManager();
+
+        NodePostConfigure npc = new NodePostConfigure() {
+            public PortObjectSpec[] configure(PortObjectSpec[] inObjSpecs,
+                    PortObjectSpec[] nodeModelOutSpecs)
+                    throws InvalidSettingsException {
+                return jobMgr.configure(inObjSpecs, nodeModelOutSpecs);
+            }
+        };
+        return m_node.configure(inSpecs, npc);
     }
 
     /**
@@ -546,8 +568,8 @@ public final class SingleNodeContainer extends NodeContainer
         }
     }
 
-    
-    /** 
+
+    /**
      * Cancel execution of a marked, queued, or executing node. (Tolerate
      * execute as this may happen throughout cancelation).
      *
@@ -724,7 +746,7 @@ public final class SingleNodeContainer extends NodeContainer
             for (int i = 0; i < specs.length; i++) {
                 specs[i] = inObjects[i].getSpec();
             }
-            if (!m_node.configure(specs)) {
+            if (!nodeConfigure(specs)) {
                 LOGGER.error("Configure failed after Execute failed!");
             }
             // TODO don't remove the stack conflict message (if any)
@@ -842,7 +864,7 @@ public final class SingleNodeContainer extends NodeContainer
         }
         return result;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public LoadResult loadExecutionResult(
@@ -851,7 +873,7 @@ public final class SingleNodeContainer extends NodeContainer
             if (!(execResult instanceof SingleNodeContainerExecutionResult)) {
                 throw new IllegalArgumentException("Argument must be instance "
                         + "of \"" + SingleNodeContainerExecutionResult.
-                        class.getSimpleName() + "\": " 
+                        class.getSimpleName() + "\": "
                         + execResult.getClass().getSimpleName());
             }
             LoadResult errors = super.loadExecutionResult(execResult);
@@ -871,7 +893,7 @@ public final class SingleNodeContainer extends NodeContainer
                     if (m_node.getOutputObject(i) == null) {
                         errors.addError(
                                 "Output object at port " + i + " is null");
-                        needsReset = true; 
+                        needsReset = true;
                     }
                 }
             }
@@ -881,7 +903,7 @@ public final class SingleNodeContainer extends NodeContainer
             return errors;
         }
     }
-    
+
     /** Saves all internals that are necessary to mimic the execution result
      * into a new execution result object. This method is called on node 
      * instances, which are, e.g. executed on a server and later on read back

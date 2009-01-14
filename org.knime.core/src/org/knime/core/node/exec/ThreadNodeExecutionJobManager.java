@@ -32,6 +32,7 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.workflow.NodeExecutionJob;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeExecutionJobManagerPanel;
@@ -110,7 +111,7 @@ public class ThreadNodeExecutionJobManager implements NodeExecutionJobManager {
         throw new NodeExecutionJobReconnectException(
                 "Threaded jobs can't be reconnected");
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void disconnect(final NodeExecutionJob job) {
@@ -138,7 +139,16 @@ public class ThreadNodeExecutionJobManager implements NodeExecutionJobManager {
     }
 
     /**
-     * 
+     * {@inheritDoc}
+     */
+    public PortObjectSpec[] configure(final PortObjectSpec[] inSpecs,
+            final PortObjectSpec[] nodeModelOutSpecs) {
+        // this executor doesn't modify the node's result
+        return nodeModelOutSpecs;
+    }
+
+    /**
+     *
      * {@inheritDoc}
      */
     @Override
