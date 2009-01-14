@@ -25,8 +25,6 @@
 package org.knime.workbench.ui.navigator;
 
 import org.eclipse.core.resources.IContainer;
-import org.eclipse.core.resources.IFolder;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -203,50 +201,6 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
         }
         return (IWorkbenchAdapter2)((IAdaptable)o)
                 .getAdapter(IWorkbenchAdapter2.class);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Image getImage2(final Object element) {
-        Image img = PROJECT;
-        NodeContainer projectNode = null;
-        if (element instanceof IFolder) {
-            // then its a node
-            img = NODE;
-        } else if (element instanceof IProject) {
-            IProject project = (IProject)element;
-            projectNode = ProjectWorkflowMap.getWorkflow(project.getName());
-            if (projectNode == null) {
-                return CLOSED;
-            }
-        } else if (element instanceof NodeContainer) {
-            projectNode = (NodeContainer)element;
-        }
-        if (projectNode != null) {
-                if (projectNode instanceof WorkflowManager
-                        // display state only for projects
-                        // with this check only projects (direct children of the
-                        // ROOT are displayed with state
-                        && ((WorkflowManager)projectNode).getID().hasSamePrefix(
-                                WorkflowManager.ROOT.getID())) {
-                    if (projectNode.getState().equals(
-                            NodeContainer.State.EXECUTED)) {
-                        img = EXECUTED;
-                    } else if (projectNode.getState().equals(
-                            NodeContainer.State.EXECUTING)) {
-                        img = EXECUTING;
-                    } else if (projectNode.getState().equals(
-                            NodeContainer.State.CONFIGURED)
-                            || projectNode.getState().equals(
-                                    NodeContainer.State.IDLE)) {
-                        img = CONFIGURED;
-                    }
-                } else {
-                    img = NODE;
-                }
-        }
-        return img;
     }
     
     /**
