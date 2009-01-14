@@ -61,8 +61,8 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
 public class KnimeResourceLabelProvider extends LabelProvider implements
         IColorProvider, IFontProvider {
 
-    private static final Image PROJECT = KNIMEUIPlugin.getDefault().getImage(
-            KNIMEUIPlugin.PLUGIN_ID, "icons/project_basic.png");
+//    private static final Image PROJECT = KNIMEUIPlugin.getDefault().getImage(
+//            KNIMEUIPlugin.PLUGIN_ID, "icons/project_basic.png");
 
     private static final Image EXECUTING = KNIMEUIPlugin.getDefault()
         .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_executing.png");
