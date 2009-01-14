@@ -285,7 +285,7 @@
       <editor
             name="Workflow Set Meta Information Editor"
             extensions="meta"
-            icon="icons/wf_set.png"
+            icon="icons/meta_info_edit.png"
             contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
             class="org.knime.workbench.ui.metainfo.editor.WorkflowSetMetaInfoEditor"
             id="org.knime.workbench.meta.editor.editor.WorkflowSetMetaInfoEditor">

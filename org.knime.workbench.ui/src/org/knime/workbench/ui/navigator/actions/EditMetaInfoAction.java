@@ -55,7 +55,7 @@ public class EditMetaInfoAction extends Action {
     public ImageDescriptor getImageDescriptor() {
         if (icon == null) {
             icon = KNIMEUIPlugin.imageDescriptorFromPlugin(
-                    KNIMEUIPlugin.PLUGIN_ID, "icons/wf_group_new.png");
+                    KNIMEUIPlugin.PLUGIN_ID, "icons/meta_info_edit.png");
         }
         return icon;
     }
