@@ -108,8 +108,8 @@ public class DialogComponentColumnFilter extends DialogComponent {
                 updateComponent();
             }
         });
-        //call this method to be in sync with the settings model
-        updateComponent();
+        // to be in sync with the settings model (clear settings model)
+        updateModel();
     }
 
     /**
@@ -145,23 +145,19 @@ public class DialogComponentColumnFilter extends DialogComponent {
             }
         }
         if (!update) {
-            for (final String s : compIncl) {
-                if (!modelIncl.contains(s)) {
-                    update = true;
-                    break;
-                }
-            }
+            // one way check, because size is equal
+            update = !modelIncl.containsAll(compIncl);
         }
         if (!update) {
-            for (final String s : compExcl) {
-                if (!modelExcl.contains(s)) {
-                    update = true;
-                    break;
-                }
-            }
+            // one way check, because size is equal
+            update = !modelExcl.containsAll(compExcl);
         }
         if (update) {
             m_specInFilter = (DataTableSpec)getLastTableSpec(m_inPortIndex);
+            if (m_specInFilter == null) {
+                // the component doesn't take a null spec. Create an empty one
+                m_specInFilter = new DataTableSpec();
+            }
             m_columnFilter.update(m_specInFilter, true, filterModel
                     .getExcludeList());
         }
