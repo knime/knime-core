@@ -278,7 +278,8 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
             String normalizationMethod =
                 getValue(atts, "normalizationMethod", "RegressionModel");
             if (!"none".equals(normalizationMethod)) {
-                LOGGER.warn("Normalization currently not supported, skipping");
+                throw new SAXException("Normalization currently not "
+                        + "supported: " + normalizationMethod);
             }
             m_algorithmName = atts.getValue("algorithmName");
         } else if ("MiningSchema".equals(name)) {
@@ -290,11 +291,14 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
         } else if ("Output".equals(name)
                 || "ModelStats".equals(name)
                 || "Targets".equals(name)
-                || "LocalTransformations".equals(name)
                 || "ModelVerification".equals(name)
                 || "Extension".equals(name)) {
             LOGGER.warn("Skipping unknown element " + name);
+        } else if ("LocalTransformations".equals(name)) {
+            throw new SAXException("LocalTransformation currently not "
+                    + "supported.");
         }
+
     }
 
     private static final class PMMLMiningSchemaHandler
