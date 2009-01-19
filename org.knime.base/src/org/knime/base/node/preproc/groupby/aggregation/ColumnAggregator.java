@@ -75,21 +75,21 @@ public class ColumnAggregator {
     }
 
     /**
-     * @return the colName
+     * @return the colName of the original column
      */
     public String getColName() {
         return m_origColSpec.getName();
     }
 
     /**
-     * @return the {@link DataColumnSpec}
+     * @return the {@link DataColumnSpec} of the original column
      */
     public DataColumnSpec getColSpec() {
         return m_origColSpec;
     }
 
     /**
-     * @return the {@link DataType} of this column
+     * @return the {@link DataType} of the original column
      */
     public DataType getDataType() {
         return m_origColSpec.getType();
