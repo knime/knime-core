@@ -122,7 +122,7 @@ public class PMMLImport {
      * Reads the passed file, checks the PMML version, the PMML model type,
      * and namespace and also validates the file against the schema, then 
      * creates the {@link PMMLPortObjectSpec} and {@link PMMLPortObject} from
-     * the cotnent of the file.
+     * the content of the file.
      * 
      * @param file containing the PMML model
      * @param errorHandler error handler used during parsing

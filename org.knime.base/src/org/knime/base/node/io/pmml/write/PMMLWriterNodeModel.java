@@ -129,16 +129,14 @@ public class PMMLWriterNodeModel extends NodeModel {
             throws InvalidSettingsException {
         LOGGER.debug("file name: " + fileName);
         if (fileName == null || fileName.isEmpty()) {
-            LOGGER.error("Invalid file name: " + fileName);
             throw new InvalidSettingsException("No file name provided! " 
-                    + "Please enter a valid file name");            
+                    + "Please enter a valid file name.");            
         }
         File f = new File(fileName);
         if ((f.exists() && !f.canWrite())
                 || (!f.exists() && !f.getParentFile().canWrite())) {
-            LOGGER.error("Invalid file name: " + fileName);
-            throw new InvalidSettingsException("File name " + fileName
-                    + " is not valid. " + "Please enter a valid file name");
+            throw new InvalidSettingsException("File name \"" + fileName
+                    + "\" is not valid. Please enter a valid file name.");
         }
     }
 
