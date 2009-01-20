@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -116,7 +117,14 @@ public class NodeContainerOutPort extends NodePortAdaptor
      * {@inheritDoc}
      */
     public ScopeObjectStack getScopeContextStackContainer() {
-        return m_snc.getNode().getScopeContextStackContainer();
+        ScopeObjectStack st = m_snc.getNode().getScopeContextStackContainer();
+        if (m_snc.getLoopRole().equals(LoopRole.END)) {
+            // FIXME: this also pops variables, which were added from the loop
+            // end node ... this is not what one would expect.
+            st = new ScopeObjectStack(m_snc.getID(), st);
+            st.pop(ScopeLoopContext.class);
+        }
+        return st;
     }
 
     /**

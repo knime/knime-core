@@ -1406,18 +1406,6 @@ public final class WorkflowManager extends NodeContainer {
                 // restart it explicitly!)
                 snc.getNode().setLoopEndNode(null);
             }
-            if (snc.getLoopRole().equals(LoopRole.END)) {
-                // no matter what happened, try to clean up the stack.
-                ScopeLoopContext slc =
-                    snc.getScopeObjectStack().pop(ScopeLoopContext.class);
-                assert !success || slc != null 
-                    : "No Loop start for this Loop End. This should have been "
-                        + "caught in doBeforeExecution";
-                assert !success || !(slc instanceof RestoredScopeLoopContext) 
-                    : "Can't continue loop as the workflow was restored " 
-                            + "with the loop being partially executed. This " 
-                            + "should have been caught in doBeforeExecution";
-            }
             Node node = snc.getNode();
             if (node.getLoopStatus() != null) {
                 // we are supposed to execute this loop again!
@@ -2324,8 +2312,6 @@ public final class WorkflowManager extends NodeContainer {
                     ScopeLoopContext slc = new ScopeLoopContext();
                     scsc.push(slc);
                 }
-                // TODO: the stack is invalid if if a predecessor 
-                // is a loop end node, need to pop...()
                 snc.setScopeObjectStack(scsc);
                 // update HiLiteHandlers on inports of SNC only
                 // TODO think about it... happens magically
@@ -2352,7 +2338,11 @@ public final class WorkflowManager extends NodeContainer {
                 } else {
                     outputSpecsChanged = snc.configure(inSpecs);
                 }
-
+                // NOTE:
+                // no need to clean stacks of LoopEnd nodes - done automagically
+                // inside the getScopeContextStack of the ports of LoopEnd
+                // Nodes.
+                
                 // check if ScopeContextStacks have changed
                 boolean stackChanged = false;
                 // TODO: once SOS.equals() actually works...
