@@ -89,8 +89,6 @@ public class JobManagerDecorator implements
                             descr, IDecoration.TOP_RIGHT).createImage();
                 }
             }
-//            image.addOverlay(descr, IDecoration.TOP_RIGHT);
-            
         }
         return image;
     }

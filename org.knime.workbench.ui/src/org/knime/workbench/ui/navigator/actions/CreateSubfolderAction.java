@@ -57,6 +57,8 @@ public class CreateSubfolderAction extends Action {
     private IContainer m_parent;
 
     private static ImageDescriptor icon;
+    
+    private boolean m_isWorkflow = false;
 
     /**
      * 
@@ -96,6 +98,7 @@ public class CreateSubfolderAction extends Action {
      */
     @Override
     public boolean isEnabled() {
+        m_isWorkflow = false;
         // getSelection from navigator
         IWorkbenchPage page = PlatformUI.getWorkbench()
                 .getActiveWorkbenchWindow().getActivePage();
@@ -107,20 +110,21 @@ public class CreateSubfolderAction extends Action {
         if (strucSel.size() > 1) {
             // multiple selection
             return false;
-        } else {
-            Object o = strucSel.getFirstElement();
-            if (o instanceof IContainer) {
-                IContainer cont = (IContainer)o;
-                // check if its a KNIME workflow
-                if (cont.findMember(WorkflowPersistor.WORKFLOW_FILE) != null) {
-                    return false;
-                }
-            } else if (o instanceof IFile) {
-                return false;
-            }
-            m_parent = (IContainer)o;
-            return true;
         }
+        Object o = strucSel.getFirstElement();
+        if (o instanceof IContainer) {
+            IContainer cont = (IContainer)o;
+            // check if its a KNIME workflow
+            if (cont.findMember(WorkflowPersistor.WORKFLOW_FILE) != null) {
+                m_isWorkflow = true;
+                return true;
+            }
+        } else if (o instanceof IFile) {
+            return false;
+        }
+        m_parent = (IContainer)o;
+        return true;
+        
     }
 
     /**
@@ -130,19 +134,19 @@ public class CreateSubfolderAction extends Action {
     @Override
     public void run() {
         // if no folder is selected its root
-        if (m_parent == null) {
+        if (m_parent == null || m_isWorkflow) {
             m_parent = ResourcesPlugin.getWorkspace().getRoot();
         }
         InputDialog dialog = new InputDialog(PlatformUI.getWorkbench()
                 .getActiveWorkbenchWindow().getShell(),
                 "Enter Workflow Set Name",
-                "Please enter the name of the workflow set: ", "",
+                "Name of new workflow group: ", "",
                 new IInputValidator() {
 
                     @Override
                     public String isValid(final String newText) {
                         if (newText.trim().length() == 0) {
-                            return "Please enter the name of the workflow set";
+                           return "Please enter the name of the workflow group";
                         }
                         if (m_parent.findMember(newText) != null) {
                             return "File " + newText + " already exists in "
@@ -152,7 +156,10 @@ public class CreateSubfolderAction extends Action {
                     }
 
                 });
-        if (dialog.open() == Window.OK) {
+        if (m_isWorkflow) {
+            dialog.setErrorMessage("Workflow group will be created in root");
+        }
+        if (dialog.open() == Window.OK) { 
             String name = dialog.getValue();
             if (name == null) {
                 throw new IllegalArgumentException(

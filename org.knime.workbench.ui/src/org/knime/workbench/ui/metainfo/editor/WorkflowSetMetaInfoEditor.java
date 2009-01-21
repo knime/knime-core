@@ -112,6 +112,7 @@ public class WorkflowSetMetaInfoEditor extends EditorPart {
                 }
             });
         }
+        m_form.reflow(true);
     }
 
     /**

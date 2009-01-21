@@ -38,8 +38,9 @@ import org.xml.sax.helpers.AttributesImpl;
 public class MultilineMetaGUIElement extends MetaGUIElement {
     
     
-    public MultilineMetaGUIElement(final String label, final String value) {
-        super(label, value);
+    public MultilineMetaGUIElement(final String label, final String value,
+            final boolean isReadOnly) {
+        super(label, value, isReadOnly);
     }
 
     /**
@@ -47,18 +48,18 @@ public class MultilineMetaGUIElement extends MetaGUIElement {
      */
     @Override
     public Control createGUIElement(FormToolkit toolkit, Composite parent) {
-        Text text = toolkit.createText(parent, getValue().trim(), 
-                SWT.BORDER | SWT.MULTI | SWT.SCROLL_LINE);
+        int style = SWT.BORDER | SWT.MULTI | SWT.SCROLL_LINE;
+        Text text = toolkit.createText(parent, getValue().trim(), style);
         GridData layout = new GridData(GridData.FILL_HORIZONTAL);
         layout.heightHint = 350;
         text.setLayoutData(layout);
-        
         text.addModifyListener(new ModifyListener() {
             @Override
-            public void modifyText(ModifyEvent e) {
+            public void modifyText(final ModifyEvent e) {
                 fireModifiedEvent(e);
             }
         });
+        text.setEnabled(!isReadOnly());
         setControl(text);
         return text;
     }
@@ -72,11 +73,14 @@ public class MultilineMetaGUIElement extends MetaGUIElement {
      * {@inheritDoc}
      */
     @Override
-    public void saveTo(TransformerHandler parentElement) throws SAXException {
+    public void saveTo(final TransformerHandler parentElement) 
+        throws SAXException {
         AttributesImpl atts = new AttributesImpl();
         atts.addAttribute(null, null, MetaGUIElement.FORM, "CDATA", 
                 "multiline");
         atts.addAttribute(null, null, MetaGUIElement.NAME, "CDATA", getLabel());
+        atts.addAttribute(null, null, MetaGUIElement.READ_ONLY, "CDATA", 
+                "" + isReadOnly());
         parentElement.startElement(null, null, MetaGUIElement.ELEMENT, atts);
         char[] value = getTextControl().getText().trim().toCharArray();
         parentElement.characters(value, 0, value.length);

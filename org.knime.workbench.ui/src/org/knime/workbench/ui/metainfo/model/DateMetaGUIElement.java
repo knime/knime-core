@@ -53,10 +53,11 @@ public class DateMetaGUIElement extends MetaGUIElement {
     private int m_month;
     
     private int m_year;
+
     
-    
-    public DateMetaGUIElement(final String label, final String value) {
-        super(label, value);
+    public DateMetaGUIElement(final String label, final String value, 
+            final boolean isReadOnly) {
+        super(label, value, isReadOnly);
         // if value == null -> current date
         if (value == null || value.trim().isEmpty()) {
             Calendar c = Calendar.getInstance();
@@ -72,21 +73,136 @@ public class DateMetaGUIElement extends MetaGUIElement {
         }
     }
     
-    
-
+    /**
+     * Sets the represented date to the current time.
+     */
+    public void updateDate() {
+        Calendar date = Calendar.getInstance();
+        m_day = date.get(Calendar.DAY_OF_MONTH);
+        m_month = date.get(Calendar.MONTH);
+        m_year = date.get(Calendar.YEAR);
+    }
     
     /**
      * {@inheritDoc}
      */
     @Override
-    public Control createGUIElement(FormToolkit toolkit, Composite parent) {
+    public Control createGUIElement(final FormToolkit toolkit, 
+            final Composite parent) {
         Composite date = toolkit.createComposite(parent);
         GridLayout layout = new GridLayout(6, true);
         layout.horizontalSpacing = 10;
         date.setLayout(layout);        
-
+        
         toolkit.createLabel(date, "Day:");
-        final Combo day = new Combo(date, SWT.DROP_DOWN);
+        createDayCombo(date);
+
+        toolkit.createLabel(date, "Month:");
+        createMonthCombo(date);
+
+        toolkit.createLabel(date, "Year:");
+        createYearCombo(date);
+        return date;
+    }
+
+    
+    
+    
+    private void createYearCombo(final Composite parent) {
+        final Combo year = new Combo(parent, SWT.DROP_DOWN);
+        year.add("2008");
+        year.add("2009");
+        year.add("2010");
+        year.add("2011");
+        year.add("2012");
+        year.add("2013");
+        year.add("2014");
+        year.add("2015");
+        // current year
+        year.select(year.indexOf("" + m_year));
+        year.addSelectionListener(new SelectionListener() {
+
+            @Override
+            public void widgetDefaultSelected(final SelectionEvent e) {
+                widgetSelected(e);
+            }
+
+            @Override
+            public void widgetSelected(final SelectionEvent e) {
+                int selectionIdx = year.getSelectionIndex();
+                if (selectionIdx >= 0) {
+                    String yearString = year.getItem(selectionIdx);
+                    m_year = Integer.parseInt(yearString);
+                    fireModifiedEvent(new ModifyEvent(new Event()));
+                } else {
+                    showSelectPrompt("Year");
+                }
+            }
+            
+        });
+        year.addModifyListener(new ModifyListener() {
+
+            @Override
+            public void modifyText(final ModifyEvent e) {
+                fireModifiedEvent(e);
+            }
+            
+        });
+        year.setEnabled(!isReadOnly());
+    }
+
+
+
+
+    private void createMonthCombo(final Composite parent) {
+        final Combo month = new Combo(parent, SWT.DROP_DOWN);
+        month.add("01");
+        month.add("02");
+        month.add("03");
+        month.add("04");
+        month.add("05");
+        month.add("06");
+        month.add("07");
+        month.add("08");
+        month.add("09");
+        month.add("10");
+        month.add("11");
+        month.add("12");
+        // current month
+        month.select(m_month);
+        month.addSelectionListener(new SelectionListener() {
+
+            @Override
+            public void widgetDefaultSelected(final SelectionEvent e) {
+                widgetSelected(e);
+            }
+
+            @Override
+            public void widgetSelected(final SelectionEvent e) {
+                int index = month.getSelectionIndex(); 
+                if (index < 0) {
+                    showSelectPrompt("Month");
+                } else {
+                    m_month = index;
+                }
+            }
+        });
+        month.addModifyListener(new ModifyListener() {
+
+            @Override
+            public void modifyText(final ModifyEvent e) {
+                fireModifiedEvent(e);
+            }
+            
+        });
+        month.setEnabled(!isReadOnly());
+    }
+
+
+
+
+    private void createDayCombo(final Composite parent) {
+        final Combo day = new Combo(parent, SWT.DROP_DOWN);
         day.add("01");
         day.add("02");
         day.add("03");
@@ -123,12 +239,12 @@ public class DateMetaGUIElement extends MetaGUIElement {
         day.addSelectionListener(new SelectionListener() {
 
             @Override
-            public void widgetDefaultSelected(SelectionEvent e) {
+            public void widgetDefaultSelected(final SelectionEvent e) {
                 widgetSelected(e);
             }
 
             @Override
-            public void widgetSelected(SelectionEvent e) {
+            public void widgetSelected(final SelectionEvent e) {
                 int index = day.getSelectionIndex(); 
                 if (index < 0) {
                     showSelectPrompt("Day");
@@ -140,108 +256,31 @@ public class DateMetaGUIElement extends MetaGUIElement {
         day.addModifyListener(new ModifyListener() {
 
             @Override
-            public void modifyText(ModifyEvent e) {
+            public void modifyText(final ModifyEvent e) {
                 fireModifiedEvent(e);
             }
             
-        });
-
-        toolkit.createLabel(date, "Month:");
-        final Combo month = new Combo(date, SWT.DROP_DOWN);
-        month.add("01");
-        month.add("02");
-        month.add("03");
-        month.add("04");
-        month.add("05");
-        month.add("06");
-        month.add("07");
-        month.add("08");
-        month.add("09");
-        month.add("10");
-        month.add("11");
-        month.add("12");
-        // current month
-        month.select(m_month);
-        month.addSelectionListener(new SelectionListener() {
-
-            @Override
-            public void widgetDefaultSelected(SelectionEvent e) {
-                widgetSelected(e);
-            }
-
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                int index = month.getSelectionIndex() ; 
-                if (index < 0) {
-                    showSelectPrompt("Month");
-                } else {
-                    m_month = index;
-                }
-            }
-        });
-        month.addModifyListener(new ModifyListener() {
-
-            @Override
-            public void modifyText(ModifyEvent e) {
-                fireModifiedEvent(e);
-            }
-            
-        });
-        
-        toolkit.createLabel(date, "Year:");
-        final Combo year = new Combo(date, SWT.DROP_DOWN);
-        year.add("2008");
-        year.add("2009");
-        year.add("2010");
-        year.add("2011");
-        year.add("2012");
-        year.add("2013");
-        year.add("2014");
-        year.add("2015");
-        // current year
-        year.select(year.indexOf("" + m_year));
-        year.addSelectionListener(new SelectionListener() {
-
-            @Override
-            public void widgetDefaultSelected(SelectionEvent e) {
-                widgetSelected(e);
-            }
-
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                int selectionIdx = year.getSelectionIndex();
-                if (selectionIdx >= 0) {
-                    String yearString = year.getItem(selectionIdx);
-                    m_year = Integer.parseInt(yearString);
-                    fireModifiedEvent(new ModifyEvent(new Event()));
-                } else {
-                    showSelectPrompt("Year");
-                }
-            }
-            
-        });
-        year.addModifyListener(new ModifyListener() {
-
-            @Override
-            public void modifyText(ModifyEvent e) {
-                fireModifiedEvent(e);
-            }
-            
-        });
-        return date;
+        });    
+        day.setEnabled(!isReadOnly());
     }
+
+
+
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void saveTo(TransformerHandler parentElement) throws SAXException {
+    public void saveTo(final TransformerHandler parentElement) 
+        throws SAXException {
         AttributesImpl atts = new AttributesImpl();
         atts.addAttribute(null, null, MetaGUIElement.FORM, "CDATA", 
                 FORM_TYPE);
         atts.addAttribute(null, null, MetaGUIElement.NAME, "CDATA", getLabel());
+        atts.addAttribute(null, null, MetaGUIElement.READ_ONLY, "CDATA", 
+                "" + isReadOnly());
         parentElement.startElement(null, null, MetaGUIElement.ELEMENT, atts);
-        String dateString = m_day + SEPARATOR + m_month + SEPARATOR + m_year;
+        String dateString = createStorageString(m_day, m_month, m_year);
         char[] date = dateString.toCharArray();
         parentElement.characters(date, 0, date.length);
         parentElement.endElement(null, null, MetaGUIElement.ELEMENT);
@@ -259,6 +298,19 @@ public class DateMetaGUIElement extends MetaGUIElement {
             }
             
         });
+    }
+    
+    /**
+     * Return the string representation that is used to store the date within 
+     * XML.
+     * @param day 1-31
+     * @param month 0-11
+     * @param year 2008 - 2015 (for now)
+     * @return string representation
+     */
+    public static String createStorageString(final int day, final int month,
+            final int year) {
+        return day + SEPARATOR + month + SEPARATOR + year;
     }
 
 }

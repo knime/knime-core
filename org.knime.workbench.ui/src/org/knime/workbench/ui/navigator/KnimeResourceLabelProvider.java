@@ -24,13 +24,17 @@
  */
 package org.knime.workbench.ui.navigator;
 
+import java.net.URL;
+
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.DecoratingLabelProvider;
+import org.eclipse.jface.viewers.DecorationOverlayIcon;
 import org.eclipse.jface.viewers.IColorProvider;
+import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.jface.viewers.IFontProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -48,6 +52,7 @@ import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.eclipse.ui.model.IWorkbenchAdapter2;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -72,7 +77,9 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
         .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_configured.png");
     private static final Image CLOSED = KNIMEUIPlugin.getDefault()
         .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_closed2.png");
-
+    private static final Image ERROR = KNIMEUIPlugin.getDefault()
+        .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_Error.png");
+    
     private static final Image NODE = KNIMEUIPlugin.getDefault().getImage(
             KNIMEUIPlugin.PLUGIN_ID, "icons/node.png");
     
@@ -139,8 +146,22 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
      */
     protected ImageDescriptor decorateImage(final ImageDescriptor input,
             final Object element) {
+        if (element instanceof IContainer) {
+            NodeContainer cont = ProjectWorkflowMap.getWorkflow(
+                    ((IContainer)element).getFullPath().toString());
+            if (cont != null) {
+                URL iconURL = cont.findJobManager().getIcon();
+                if (iconURL != null) {
+                    ImageDescriptor descr = ImageDescriptor.createFromURL(
+                            iconURL);
+                    return new DecorationOverlayIcon(input.createImage(), 
+                            descr, IDecoration.TOP_RIGHT);
+                }
+            }
+        }
         return input;
     }
+    
 
     /**
      * Returns a label that is based on the given label, but decorated with
@@ -153,7 +174,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
      * @return the resulting text
      */
     protected String decorateText(final String input, final Object element) {
-        return input;
+        return input;    
     }
 
     /**
@@ -236,22 +257,23 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
                     // are displayed with state
                     && ((WorkflowManager)projectNode).getID()
                         .hasSamePrefix(WorkflowManager.ROOT.getID())) {
+                if (projectNode.getNodeMessage().getMessageType().equals(
+                        NodeMessage.Type.ERROR)) {
+                    return ERROR;
+                }
                 switch (projectNode.getState()) {
                 case EXECUTED:
-                    img = EXECUTED;
-                    break;
+                    return EXECUTED;
                 case EXECUTING:
                 case EXECUTINGREMOTELY:
-                    img = EXECUTING;
-                    break;
+                    return EXECUTING;
                 case CONFIGURED:
                 case IDLE:
-                    img = CONFIGURED;
-                    break;
+                    return CONFIGURED;
                 default:
                 }
             } else {
-                img = NODE;
+                return NODE;
             }
             
         }

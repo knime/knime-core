@@ -60,14 +60,19 @@ import org.eclipse.ui.views.framelist.GoIntoAction;
 import org.eclipse.ui.views.navigator.ResourceNavigator;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeMessageEvent;
+import org.knime.core.node.workflow.NodeMessageListener;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.SyncExecQueueDispatcher;
+import org.knime.workbench.ui.navigator.actions.ConfigureWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.CreateSubfolderAction;
 import org.knime.workbench.ui.navigator.actions.EditMetaInfoAction;
+import org.knime.workbench.ui.navigator.actions.ExecuteWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ExportKnimeWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ImportKnimeWorkflowAction;
 
@@ -80,7 +85,7 @@ import org.knime.workbench.ui.navigator.actions.ImportKnimeWorkflowAction;
  * @author Christoph Sieb, University of Konstanz
  */
 public class KnimeResourceNavigator extends ResourceNavigator implements
-        IResourceChangeListener, NodeStateChangeListener {
+        IResourceChangeListener, NodeStateChangeListener, NodeMessageListener {
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(KnimeResourceNavigator.class);
 
@@ -102,6 +107,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 new KnimeResourceChangeListener(this));
 
         ProjectWorkflowMap.addStateListener(this);
+        ProjectWorkflowMap.addNodeMessageListener(this);
         // WorkflowManager.ROOT.addListener(
         ProjectWorkflowMap.addWorkflowListener(new WorkflowListener() {
 
@@ -159,11 +165,25 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      */
     public void stateChanged(final NodeStateEvent state) {
         LOGGER.debug("state changed to " + state.getState());
+        doRefresh(state.getSource());
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public void messageChanged(final NodeMessageEvent messageEvent) {
+        LOGGER.debug("Node message changed: " + messageEvent.getMessage());
+        doRefresh(messageEvent.getSource());
+    }
+    
+    private void doRefresh(final NodeID nodeResource) {
         SyncExecQueueDispatcher.asyncExec(new Runnable() {
             public void run() {
                 try {
                     String name =  ProjectWorkflowMap.findProjectFor(
-                            state.getSource());
+                            nodeResource);
                     if (name != null) {
                         // we have to find the resource again, hence we cannot 
                         // put the project's name with toLowercase into the map
@@ -180,7 +200,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                     // node couldn't be found -> so we don't make a refresh
                 }
             }
-        });
+        });        
     }
     
     
@@ -243,7 +263,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     public void dispose() {
         super.dispose();
         ProjectWorkflowMap.removeStateListener(this);
-        
+        ProjectWorkflowMap.removeNodeMessageListener(this);
     }
     
     
@@ -378,6 +398,12 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 new EditMetaInfoAction());
         menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
         
+//        if (NodeExecutionJobManagerPool.getNumberOfJobManagersFactories() > 1) {
+            menu.insertAfter(ExportKnimeWorkflowAction.ID, 
+                    new ConfigureWorkflowAction());
+            menu.insertAfter(ExportKnimeWorkflowAction.ID, 
+                    new ExecuteWorkflowAction());            
+//        }
 
         // TODO: insert actions for
         // - execute
@@ -513,4 +539,5 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         return true;
     }
     }
+
 }

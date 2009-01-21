@@ -39,8 +39,9 @@ public class TextMetaGUIElement extends MetaGUIElement {
     
     private static final String FORM_TYPE = "text";
     
-    public TextMetaGUIElement(final String label, final String value) {
-        super(label, value);
+    public TextMetaGUIElement(final String label, final String value, 
+            final boolean isReadOnly) {
+        super(label, value, isReadOnly);
     }
 
     /**
@@ -48,20 +49,20 @@ public class TextMetaGUIElement extends MetaGUIElement {
      */
     @Override
     public Control createGUIElement(final FormToolkit toolkit, 
-            final Composite parent) {
-        Text text = toolkit.createText(parent, getValue().trim(), 
-                SWT.BORDER | SWT.FILL);
-        text.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        text.addModifyListener(new ModifyListener() {
+            final Composite parent) { 
 
-            @Override
-            public void modifyText(final ModifyEvent e) {
-                fireModifiedEvent(e);
-            }
-            
-        });
-        setControl(text);
-        return text;
+            Text text = toolkit.createText(parent, getValue().trim(),
+                    SWT.BORDER | SWT.FILL);
+            text.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+            text.addModifyListener(new ModifyListener() {
+                @Override
+                public void modifyText(final ModifyEvent e) {
+                    fireModifiedEvent(e);
+                }
+            });
+            text.setEnabled(!isReadOnly());
+            setControl(text);
+            return text;
     }
     
     private Text getTextControl() {
@@ -77,6 +78,8 @@ public class TextMetaGUIElement extends MetaGUIElement {
         AttributesImpl atts = new AttributesImpl();
         atts.addAttribute(null, null, MetaGUIElement.FORM, "CDATA", 
                 FORM_TYPE);
+        atts.addAttribute(null, null, MetaGUIElement.READ_ONLY, "CDATA", 
+                "" + isReadOnly());
         atts.addAttribute(null, null, MetaGUIElement.NAME, "CDATA", getLabel());
         parentElement.startElement(null, null, MetaGUIElement.ELEMENT, atts);
         char[] value = getTextControl().getText().trim().toCharArray();

@@ -154,6 +154,12 @@
             id="org.knime.workbench.ui.preferences"
             name="KNIME">
       </page>
+      <page
+            category="org.knime.workbench.ui.preferences"
+            class="org.knime.workbench.ui.preferences.MetaInfoPreferencePage"
+            id="org.knime.workbench.ui.metainfo"
+            name="Meta Info Preferences">
+      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.preferences">
