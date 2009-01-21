@@ -39,8 +39,16 @@ public class MetaInfoPreferencePage extends FieldEditorPreferencePage implements
      */
     @Override
     protected void createFieldEditors() {
-        addField(new FileFieldEditor(MetaInfoFile.PREF_KEY_META_INFO_TEMPLATE,
-                "Meta Info Template:", true, getFieldEditorParent()));
+        addField(new FileFieldEditor(
+                MetaInfoFile.PREF_KEY_META_INFO_TEMPLATE_WF,
+                "Meta Info Template for workflows:", true, 
+                getFieldEditorParent()));
+        
+        addField(new FileFieldEditor(
+                MetaInfoFile.PREF_KEY_META_INFO_TEMPLATE_WFS,
+                "Meta Info Template for workflow sets:", true, 
+                getFieldEditorParent()));        
+        
     }
 
     /**
@@ -50,7 +58,8 @@ public class MetaInfoPreferencePage extends FieldEditorPreferencePage implements
     public void init(final IWorkbench workbench) {
         IPreferenceStore prefStore = KNIMEUIPlugin.getDefault()
             .getPreferenceStore();
-        prefStore.setDefault(MetaInfoFile.PREF_KEY_META_INFO_TEMPLATE, "");
+        prefStore.setDefault(MetaInfoFile.PREF_KEY_META_INFO_TEMPLATE_WF, "");
+        prefStore.setDefault(MetaInfoFile.PREF_KEY_META_INFO_TEMPLATE_WFS, "");
         setPreferenceStore(prefStore);
     }
 

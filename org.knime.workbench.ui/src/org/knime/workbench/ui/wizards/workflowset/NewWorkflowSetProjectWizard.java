@@ -73,7 +73,8 @@ public class NewWorkflowSetProjectWizard extends Wizard implements INewWizard {
             IProjectDescription desc = project.getDescription();
             desc.setNatureIds(new String[] {KNIMEWorkflowSetProjectNature.ID});
             project.setDescription(desc, null);
-            MetaInfoFile.createMetaInfoFile(new File(project.getLocationURI()));
+            MetaInfoFile.createMetaInfoFile(new File(project.getLocationURI()), 
+                    false);
             PlatformUI.getWorkbench().getProgressService().busyCursorWhile(
                     new IRunnableWithProgress() {
                 @Override

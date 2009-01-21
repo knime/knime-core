@@ -208,7 +208,7 @@ public class CreateSubfolderAction extends Action {
                     subFolder = new File(parent, name);
                     subFolder.mkdir();
                 }
-                MetaInfoFile.createMetaInfoFile(subFolder);
+                MetaInfoFile.createMetaInfoFile(subFolder, m_isWorkflow);
                 PlatformUI.getWorkbench().getProgressService().busyCursorWhile(
                         new IRunnableWithProgress() {
                             @Override

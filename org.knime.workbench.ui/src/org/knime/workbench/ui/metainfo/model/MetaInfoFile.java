@@ -45,8 +45,11 @@ public final class MetaInfoFile {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             MetaInfoFile.class);
     
-    public static final String PREF_KEY_META_INFO_TEMPLATE 
-        = "org.knime.ui.metainfo.template";
+    public static final String PREF_KEY_META_INFO_TEMPLATE_WF 
+        = "org.knime.ui.metainfo.template.workflow";
+
+    public static final String PREF_KEY_META_INFO_TEMPLATE_WFS 
+        = "org.knime.ui.metainfo.template.workflowset";
     
     private MetaInfoFile() {
         // utility class
@@ -54,9 +57,10 @@ public final class MetaInfoFile {
 
     public static final String METAINFO_FILE = "workflowset.meta";
     
-    public static void createMetaInfoFile(final File parent) {
+    public static void createMetaInfoFile(final File parent, 
+            final boolean isWorkflow) {
         // look into preference store
-        File f = getFileFromPreferences(); 
+        File f = getFileFromPreferences(isWorkflow); 
         if (f != null) {
             writeFileFromPreferences(parent, f);
         } else {
@@ -77,9 +81,13 @@ public final class MetaInfoFile {
         }
     }
 
-    private static File getFileFromPreferences() {
+    private static File getFileFromPreferences(final boolean isWorkflow) {
+        String key = PREF_KEY_META_INFO_TEMPLATE_WFS;
+        if (isWorkflow) {
+            key = PREF_KEY_META_INFO_TEMPLATE_WF;
+        }
         String fileName = KNIMEUIPlugin.getDefault().getPreferenceStore()
-            .getString(PREF_KEY_META_INFO_TEMPLATE);
+            .getString(key);
         if (fileName == null || fileName.isEmpty()) {
             return null;
         }

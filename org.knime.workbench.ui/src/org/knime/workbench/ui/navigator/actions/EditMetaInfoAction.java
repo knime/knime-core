@@ -31,6 +31,7 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.OpenFileAction;
+import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
 import org.knime.workbench.ui.navigator.KnimeResourceNavigator;
@@ -105,13 +106,17 @@ public class EditMetaInfoAction extends Action {
      */
     @Override
     public void run() {
+        boolean isWorkflow = false;
+        if (m_parent.exists(new Path(WorkflowPersistor.WORKFLOW_FILE))) {
+            isWorkflow = true;
+        }
         // if no meta file is available
         File metaFileTest = new File(m_parent.getLocation().toFile(), 
                 MetaInfoFile.METAINFO_FILE);
         if (!metaFileTest.exists()) {
             // create one
             MetaInfoFile.createMetaInfoFile(
-                    new File(m_parent.getLocationURI()));
+                    new File(m_parent.getLocationURI()), isWorkflow);
         }
         IFile metaFile = m_parent.getFile(new Path(MetaInfoFile.METAINFO_FILE));
         // open file action -> run with meta file..
