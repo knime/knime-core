@@ -60,26 +60,19 @@ public class ExecuteWorkflowAction extends Action {
             if (cont.exists(new Path(WorkflowPersistor.WORKFLOW_FILE))) {
                 m_workflow = (WorkflowManager)ProjectWorkflowMap
                         .getWorkflow(cont.getFullPath().toString());
-                boolean canExecute = WorkflowManager.ROOT.canExecuteNode(
-                        m_workflow.getID()); 
-                if (m_workflow != null && canExecute) {
+                if (m_workflow != null && WorkflowManager.ROOT.canExecuteNode(
+                        m_workflow.getID())) {
                     return true;
                 }
             }
         }
-        return true;
+        return false;
         
     }
     
     @Override
     public void run() {
-        Thread t = new Thread() {
-            @Override
-            public void run() {
-                WorkflowManager.ROOT.executeUpToHere(m_workflow.getID());
-            }
-        };
-        t.start();
+        WorkflowManager.ROOT.executeUpToHere(m_workflow.getID());
     }
 
 }
