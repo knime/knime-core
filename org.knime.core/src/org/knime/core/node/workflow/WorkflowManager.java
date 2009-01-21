@@ -942,8 +942,7 @@ public final class WorkflowManager extends NodeContainer {
      */
     private void markForExecutionAllNodesInWorkflow(final boolean flag) {
         synchronized (m_workflowMutex) {
-            for (NodeID id : m_workflow.getNodeIDs()) {
-                NodeContainer nc = m_workflow.getNode(id);
+            for (NodeContainer nc : m_workflow.getNodeValues()) {
                 if (nc instanceof SingleNodeContainer) {
                     switch (nc.getState()) {
                     case EXECUTED:
@@ -1050,7 +1049,8 @@ public final class WorkflowManager extends NodeContainer {
                     ((SingleNodeContainer)nc).markForExecution(false);
                 } else {
                     assert nc instanceof WorkflowManager;
-                    ((WorkflowManager)nc).disableNodeForExecution(id);
+                    ((WorkflowManager)nc).markForExecutionAllNodesInWorkflow(
+                            false);
                 }
             default:
                 // ignore all other states (but touch successors)
@@ -2014,7 +2014,7 @@ public final class WorkflowManager extends NodeContainer {
                 assert !isLocalWFM();
                 job.cancel();
             }
-            checkForNodeStateChanges(false);
+            checkForNodeStateChanges(true);
         }
     }
 
