@@ -43,21 +43,21 @@ public abstract class AbstractWorkflowAction extends Action {
     @Override
     public boolean isEnabled() {
         // get selection
-          IStructuredSelection s = (IStructuredSelection)PlatformUI.getWorkbench()
-          .getActiveWorkbenchWindow().getSelectionService()
-          .getSelection(KnimeResourceNavigator.ID);
-          Object element = s.getFirstElement();
-          // check if is KNIME workflow
-          if (element instanceof IContainer) {
-              IContainer cont = (IContainer)element;
-              if (cont.exists(new Path(WorkflowPersistor.WORKFLOW_FILE))) {
-                  m_workflow = (WorkflowManager)ProjectWorkflowMap.getWorkflow(
-                          cont.getFullPath().toString());
-                  if (m_workflow != null) {
-                      return true;
-                  }
-              }
-          }
+        IStructuredSelection s = (IStructuredSelection)PlatformUI
+                .getWorkbench().getActiveWorkbenchWindow()
+                .getSelectionService().getSelection(KnimeResourceNavigator.ID);
+        Object element = s.getFirstElement();
+        // check if is KNIME workflow
+        if (element instanceof IContainer) {
+            IContainer cont = (IContainer)element;
+            if (cont.exists(new Path(WorkflowPersistor.WORKFLOW_FILE))) {
+                m_workflow = (WorkflowManager)ProjectWorkflowMap
+                        .getWorkflow(cont.getFullPath().toString());
+                if (m_workflow != null) {
+                    return true;
+                }
+            }
+        }
         return false;
     }    
 
