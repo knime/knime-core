@@ -31,6 +31,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 
 /**
  * Main entry point for compute intensive jobs. Controls resource (thread)
@@ -42,16 +43,17 @@ public interface NodeExecutionJobManager {
 
     /**
      * Executes the given node container with this job manager.
+     *
      * @param nc The node to execute (may be a single node container or a meta
-     *           node)
+     *            node)
      * @param data The input data for that node.
      * @return A job representing the pending execution.
      * @throws IllegalStateException If this job manager is not able to execute
-     * the given argument node container (for instance a local thread executor
-     * will not allow an execution of a meta node).
+     *             the given argument node container (for instance a local
+     *             thread executor will not allow an execution of a meta node).
      */
-    public NodeExecutionJob submitJob(
-            final NodeContainer nc, final PortObject[] data);
+    public NodeExecutionJob submitJob(final NodeContainer nc,
+            final PortObject[] data);
 
     /**
      * Creates a new instance of a panel that holds components to display the
@@ -61,9 +63,11 @@ public interface NodeExecutionJobManager {
      * transfers the settings of the job manager in the panel. The returned
      * panel can be un-initialized.
      *
+     * @param nodeSplitType type of splitting permitted by the underlying node
      * @return a new instance of the dialog component for this job manager
      */
-    NodeExecutionJobManagerPanel getSettingsPanelComponent();
+    NodeExecutionJobManagerPanel getSettingsPanelComponent(
+            final SplitType nodeSplitType);
 
     /**
      * Returns a unique ID of this job manager implementations. Preferably this
@@ -73,13 +77,13 @@ public interface NodeExecutionJobManager {
      * @return a unique ID of this job manager implementations
      */
     String getID();
-    
+
     /**
-     * 
+     *
      * @return the URL of the decorating image for the implementing manager
      */
     public URL getIcon();
-    
+
     /**
      * Returns true, if a executing job continues running even after closing the
      * workflow - and if this manager can reconnect to this job after re-opening
@@ -98,8 +102,8 @@ public interface NodeExecutionJobManager {
      *
      * @param job the job that is disconnected and must be restored later.
      * @param settings stores the information in here
-     * @see #loadFromReconnectSettings(
-     * NodeSettingsRO, PortObject[], NodeContainer)
+     * @see #loadFromReconnectSettings( NodeSettingsRO, PortObject[],
+     *      NodeContainer)
      */
     public void saveReconnectSettings(final NodeExecutionJob job,
             final NodeSettingsWO settings);
@@ -109,7 +113,7 @@ public interface NodeExecutionJobManager {
      * an executing job.
      *
      * @param settings reconnect information stored during
-     *        {@link #saveReconnectSettings(NodeExecutionJob, NodeSettingsWO)}
+     *            {@link #saveReconnectSettings(NodeExecutionJob, NodeSettingsWO)}
      * @param inports port objects that were provided at execution start time.
      * @param nc Node whose remote executing is to be continued.
      * @return a new job restored and representing the running job
@@ -120,8 +124,8 @@ public interface NodeExecutionJobManager {
      */
     public NodeExecutionJob loadFromReconnectSettings(
             final NodeSettingsRO settings, final PortObject[] inports,
-            final NodeContainer nc)
-            throws InvalidSettingsException, NodeExecutionJobReconnectException;
+            final NodeContainer nc) throws InvalidSettingsException,
+            NodeExecutionJobReconnectException;
 
     /**
      * Disconnects the running job.
@@ -160,7 +164,6 @@ public interface NodeExecutionJobManager {
      * @throws InvalidSettingsException if the node can't be executed.
      */
     public PortObjectSpec[] configure(final PortObjectSpec[] inSpecs,
-            PortObjectSpec[] nodeModelOutSpecs)
-            throws InvalidSettingsException;
+            PortObjectSpec[] nodeModelOutSpecs) throws InvalidSettingsException;
 
 }

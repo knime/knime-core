@@ -45,6 +45,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
+import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.util.Pair;
 
 /**
@@ -60,7 +61,7 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
             NodeLogger.getLogger(NodeExecutorJobManagerDialogTab.class);
 
     private final JComboBox m_jobManagerSelect;
-    
+
     private static final String DEFAULT_ENTRY = "<<default>>";
 
     private static final NodeExecutionJobManagerPanel EMPTY_PANEL;
@@ -101,14 +102,16 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
     private NodeExecutionJobManagerPanel m_currentPanel;
 
     // we keep previously shown panels in case the manager is re-selected
-    private final HashMap<String, 
+    private final HashMap<String,
         Pair<NodeExecutionJobManager, NodeExecutionJobManagerPanel>> m_panels =
-            new HashMap<String, 
+            new HashMap<String,
             Pair<NodeExecutionJobManager, NodeExecutionJobManagerPanel>>();
 
     // if a job manager panel is displayed for the first time we must give it
     // the sport specs
     private PortObjectSpec[] m_lastPortSpecs;
+
+    private SplitType m_nodeSplitType;
 
     /**
      * Creates a new selection tab for {@link NodeExecutionJobManager}s. To be
@@ -177,14 +180,14 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
             selJobMgr = m_panels.get(sel).getFirst();
             m_currentPanel = m_panels.get(sel).getSecond();
         } else {
-            NodeExecutionJobManagerFactory fac = 
+            NodeExecutionJobManagerFactory fac =
                 NodeExecutionJobManagerPool.getJobManagerFactory(sel);
             selJobMgr = fac.getInstance();
-            m_currentPanel = selJobMgr.getSettingsPanelComponent();
+            m_currentPanel = selJobMgr.getSettingsPanelComponent(m_nodeSplitType);
             if (m_currentPanel != null) {
                 m_currentPanel.loadSettings(new NodeSettings("empty"));
             }
-            m_panels.put(sel, new Pair<NodeExecutionJobManager, 
+            m_panels.put(sel, new Pair<NodeExecutionJobManager,
                     NodeExecutionJobManagerPanel>(selJobMgr, m_currentPanel));
         }
         if (m_currentPanel == null) {
@@ -224,6 +227,8 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
 
         // we must store the port specs in case job manager selection changes
         m_lastPortSpecs = inSpecs;
+        // we store the node split type
+        m_nodeSplitType = settings.getSplitType();
 
         // select the job manager in the combo box
         NodeExecutionJobManager newMgr = settings.getJobManager();
@@ -270,9 +275,9 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
         }
         settings.setJobManager(selMgr);
     }
-    
+
     private static final class ComboRenderer extends DefaultListCellRenderer {
-        
+
         /** {@inheritDoc} */
         @Override
         public Component getListCellRendererComponent(final JList list,
@@ -283,7 +288,7 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
                 newValue = value;
             } else if (value instanceof String) {
                 String id = (String)value;
-                NodeExecutionJobManagerFactory jobMgrFac = 
+                NodeExecutionJobManagerFactory jobMgrFac =
                     NodeExecutionJobManagerPool.getJobManagerFactory(id);
                 if (jobMgrFac != null) {
                     newValue = jobMgrFac.getLabel();

@@ -53,6 +53,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
+import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 
@@ -101,7 +102,7 @@ public abstract class NodeContainer implements NodeProgressListener {
     private final WorkflowManager m_parent;
 
     private NodeExecutionJobManager m_jobManager;
-    
+
     /** The job representing the pending task of executing the node. */
     private NodeExecutionJob m_executionJob;
 
@@ -138,20 +139,20 @@ public abstract class NodeContainer implements NodeProgressListener {
     /*--------- listener administration------------*/
 
 
-    private final CopyOnWriteArraySet<NodeStateChangeListener> 
-        m_stateChangeListeners = 
+    private final CopyOnWriteArraySet<NodeStateChangeListener>
+        m_stateChangeListeners =
             new CopyOnWriteArraySet<NodeStateChangeListener>();
 
     private final CopyOnWriteArraySet<NodeMessageListener> m_messageListeners =
         new CopyOnWriteArraySet<NodeMessageListener>();
 
-    private final CopyOnWriteArraySet<NodeProgressListener> 
+    private final CopyOnWriteArraySet<NodeProgressListener>
         m_progressListeners = new CopyOnWriteArraySet<NodeProgressListener>();
 
     private final CopyOnWriteArraySet<NodeUIInformationListener> m_uiListeners =
         new CopyOnWriteArraySet<NodeUIInformationListener>();
 
-    private final CopyOnWriteArraySet<JobManagerChangedListener> m_jobManagerListeners 
+    private final CopyOnWriteArraySet<JobManagerChangedListener> m_jobManagerListeners
             = new CopyOnWriteArraySet<JobManagerChangedListener>();
 
     private UIInformation m_uiInformation;
@@ -223,9 +224,9 @@ public abstract class NodeContainer implements NodeProgressListener {
     public final NodeExecutionJobManager getJobManager() {
         return m_jobManager;
     }
-    
+
     /**
-     * @return NodeExecutionJobManager 
+     * @return NodeExecutionJobManager
      * responsible for this node and all its children.
      */
     public final NodeExecutionJobManager findJobManager() {
@@ -235,14 +236,14 @@ public abstract class NodeContainer implements NodeProgressListener {
         }
         return m_jobManager;
     }
-    
+
     /**
      * @param executionJob the executionJob to set
      */
     void setExecutionJob(final NodeExecutionJob executionJob) {
         m_executionJob = executionJob;
     }
-    
+
     /**
      * @return the executionJob
      */
@@ -259,14 +260,14 @@ public abstract class NodeContainer implements NodeProgressListener {
             final JobManagerChangedListener l) {
         return m_jobManagerListeners.remove(l);
     }
-    
+
     protected void notifyJobManagerChangedListener() {
         JobManagerChangedEvent e = new JobManagerChangedEvent(getID());
         for (JobManagerChangedListener l : m_jobManagerListeners) {
             l.jobManagerChanged(e);
         }
     }
-    
+
     /////////////////////////////////////////////////
     // Convenience functions for all derived classes
     /////////////////////////////////////////////////
@@ -276,7 +277,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      *   resetable.
      */
     abstract boolean isResetable();
-    
+
     /** Enable (or disable) queuing of underlying node for execution. This
      * really only changes the state of the node and once all pre-conditions
      * for execution are fulfilled (e.g. configuration succeeded and all
@@ -466,7 +467,7 @@ public abstract class NodeContainer implements NodeProgressListener {
 
 
     /* ----------- progress ----------*/
-    
+
     /**
      * @return the progressMonitor
      */
@@ -556,7 +557,7 @@ public abstract class NodeContainer implements NodeProgressListener {
    public final NodeMessage getNodeMessage() {
        return m_nodeMessage;
    }
-   
+
    /**
     * @param newMessage the nodeMessage to set
     */
@@ -777,15 +778,18 @@ public abstract class NodeContainer implements NodeProgressListener {
     public abstract boolean areDialogAndNodeSettingsEqual();
 
     void loadSettings(final NodeSettingsRO settings)
-        throws InvalidSettingsException {
+            throws InvalidSettingsException {
         NodeContainerSettings ncSet = new NodeContainerSettings();
         ncSet.load(settings);
         setJobManager(ncSet.getJobManager());
+        assert ncSet.getSplitType() == null
+                || ncSet.getSplitType().equals(this.getSplitType());
     }
-    
+
     void saveSettings(final NodeSettingsWO settings) {
         NodeContainerSettings ncSet = new NodeContainerSettings();
         ncSet.setJobManager(m_jobManager);
+        ncSet.setSplitType(getSplitType());
         ncSet.save(settings);
     }
 
@@ -798,6 +802,17 @@ public abstract class NodeContainer implements NodeProgressListener {
         return true;
     }
 
+    private SplitType getSplitType() {
+        if (this instanceof WorkflowManager) {
+            return NodeContainerSettings.SplitType.DISALLOWED;
+        }
+        if (this instanceof SingleNodeContainer) {
+            // TODO: distinguish between ThreadedNodeModel and "simple" node
+            return NodeContainerSettings.SplitType.USER;
+        }
+        // every thing not know is simple node.
+        return NodeContainerSettings.SplitType.USER;
+    }
 
     /* ------------- ports --------------- */
 
@@ -834,13 +849,13 @@ public abstract class NodeContainer implements NodeProgressListener {
     public final String getNameWithID() {
         return getName() + " " + getID().toString();
     }
-    
+
     /** @return Node name with status information.  */
     @Override
     public String toString() {
         return getNameWithID() + " (" + getState() + ")";
     }
-    
+
     /**
      * @return the display label for {@link NodeView}, {@link OutPortView} and
      * {@link NodeDialog}
@@ -881,16 +896,16 @@ public abstract class NodeContainer implements NodeProgressListener {
                     m_customName, m_customDescription));
         }
     }
-    
+
     /** Is this node a to be locally executed workflow. In contrast to remotely
-     * executed workflows, the nodes in the encapsulated workflow will be 
+     * executed workflows, the nodes in the encapsulated workflow will be
      * executed independently (each represented by an own job), whereas remote
      * execution means that the entire workflow execution is one single job.
      * <p>This method returns false for all single node container.
      * @return The above described property.
      */
     protected abstract boolean isLocalNodeContainer();
-    
+
     /**
      * @return the isDeletable
      */
@@ -971,7 +986,7 @@ public abstract class NodeContainer implements NodeProgressListener {
             final Map<Integer, BufferedDataTable> tblRep,
             final ScopeObjectStack inStack, final ExecutionMonitor exec)
             throws CanceledExecutionException;
-    
+
     /** Load information from execution result. Subclasses will override this
      * method and will call this implementation as <code>super.loadEx...</code>.
      * @param result The execution result (contains port objects, messages, etc)
@@ -979,11 +994,11 @@ public abstract class NodeContainer implements NodeProgressListener {
      * @return A load result that contains, e.g. error messages.
      */
     public LoadResult loadExecutionResult(
-            final NodeContainerExecutionResult result, 
+            final NodeContainerExecutionResult result,
             final ExecutionMonitor exec) {
         /* Ideally this code would go into a separate final method that calls
-         * an abstract method .... however, this is risky as subclasses may 
-         * wish to synchronize the entire load procedure. 
+         * an abstract method .... however, this is risky as subclasses may
+         * wish to synchronize the entire load procedure.
          */
         LoadResult r = new LoadResult();
         if (result.shouldStateBeLoaded()) {
@@ -999,11 +1014,11 @@ public abstract class NodeContainer implements NodeProgressListener {
     }
 
     /** Saves all internals that are necessary to mimic the computed result
-     * into a new execution result object. This method is called on node 
+     * into a new execution result object. This method is called on node
      * instances, which are, e.g. executed on a server and later on read back
      * into a true KNIME instance (upon which {@link #loadExecutionResult(
-     * NodeContainerExecutionResult, ExecutionMonitor) is called). 
-     * @param exec For progress information (this method will copy port 
+     * NodeContainerExecutionResult, ExecutionMonitor) is called).
+     * @param exec For progress information (this method will copy port
      *        objects).
      * @return A new execution result instance.
      * @throws CanceledExecutionException If canceled.
@@ -1011,7 +1026,7 @@ public abstract class NodeContainer implements NodeProgressListener {
     public abstract NodeContainerExecutionResult createExecutionResult(
             final ExecutionMonitor exec) throws CanceledExecutionException;
 
-    
+
     /** Saves all information that is held in this abstract NodeContainer
      * into the argument.
      * @param result Where to save to.
@@ -1021,23 +1036,47 @@ public abstract class NodeContainer implements NodeProgressListener {
         result.setState(getState());
         result.setMessage(m_nodeMessage);
     }
-    
+
     /** Helper class that defines load/save routines for general NodeContainer
      * properties. This is currently only the job manager. */
     public static final class NodeContainerSettings {
-        
+
+        public enum SplitType {
+            /** Node can't handle it */
+            DISALLOWED,
+            /** Node is designed for splitting */
+            SUPPORTED,
+            /** May work... */
+            USER
+        }
         private NodeExecutionJobManager m_jobManager;
-        
+        private SplitType m_splitType;
+
         /** @param jobManager the jobManager to set */
         public void setJobManager(final NodeExecutionJobManager jobManager) {
             m_jobManager = jobManager;
         }
-        
+
         /** @return the jobManager */
         public NodeExecutionJobManager getJobManager() {
             return m_jobManager;
         }
-        
+
+        /**
+         * Stores the type of splitting the node supports
+         * @param type the splitting type to store
+         */
+        public void setSplitType(final SplitType type) {
+            m_splitType = type;
+        }
+
+        /**
+         * @return the stored split type
+         */
+        public SplitType getSplitType() {
+            return m_splitType;
+        }
+
         /** Save all properties (currently only job manager) to argument.
          * @param settings To save to.
          */
@@ -1046,20 +1085,32 @@ public abstract class NodeContainer implements NodeProgressListener {
                 NodeExecutionJobManagerPool.saveJobManager(
                         m_jobManager, settings.addNodeSettings("job.manager"));
             }
+            if  (m_splitType != null) {
+                settings.addString("split.type", m_splitType.name());
+            }
         }
-        
+
         /** Restores all settings (currently only job manager) from argument.
          * @param settings To load from.
          * @throws InvalidSettingsException If that's not possible.
          */
-        public void load(final NodeSettingsRO settings) 
-        throws InvalidSettingsException {
+        public void load(final NodeSettingsRO settings)
+                throws InvalidSettingsException {
             if (settings.containsKey("job.manager")) {
                 NodeSettingsRO s = settings.getNodeSettings("job.manager");
                 m_jobManager = NodeExecutionJobManagerPool.load(s);
             }
+            if (settings.containsKey("split.type")) {
+                try {
+                    m_splitType =
+                            SplitType.valueOf(settings.getString("split.type",
+                                    SplitType.DISALLOWED.name()));
+                } catch (IllegalArgumentException iae) {
+                    m_splitType = null;
+                }
+            }
         }
-        
+
     }
 
 }
