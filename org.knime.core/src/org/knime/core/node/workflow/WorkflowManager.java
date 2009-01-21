@@ -1996,7 +1996,9 @@ public final class WorkflowManager extends NodeContainer {
                     return true;
                 }
             } else {
-                return ((WorkflowManager)nc).hasExecutableNode();
+                if (((WorkflowManager)nc).hasExecutableNode()) {
+                    return true;
+                }
             }
         }
         return false;
