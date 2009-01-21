@@ -1688,6 +1688,10 @@ public final class WorkflowManager extends NodeContainer {
             + " for locally executing (sub-)flows";
         synchronized (m_nodeMutex) {
             switch (getState()) {
+            // FIXME: This should check for QUEUED only ... the problem is
+            // that even if supe.queue(PO[]) sets the QUEUED state, this state
+            // may be overridden by one of the many checkForNodeSt() ... calls
+            case MARKEDFOREXEC:
             case QUEUED:
                 for (NodeContainer nc : m_workflow.getNodeValues()) {
                     nc.markAsRemoteExecuting();
@@ -1698,7 +1702,7 @@ public final class WorkflowManager extends NodeContainer {
                 throw new IllegalStateException(
                         "Invalid state transition, can't set meta-node "
                         + getNameWithID() + " from " + getState()
-                        + "to executing state");
+                        + " to executing state");
             }
         }
     }
@@ -2031,6 +2035,7 @@ public final class WorkflowManager extends NodeContainer {
             if (nc.getState().executionInProgress()) {
                 nc.cancelExecution();
             }
+            checkForNodeStateChanges(true);
         }
     }
     
