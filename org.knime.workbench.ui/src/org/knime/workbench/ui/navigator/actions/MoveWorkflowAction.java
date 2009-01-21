@@ -34,6 +34,8 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
 
 /**
  * 
@@ -117,6 +119,11 @@ public class MoveWorkflowAction extends Action
             showIsParent(source.getName(), targetRes.getName());
             return;            
         }
+        // check if the source is an opened workflow
+        if (isOpenedWorkflow(source)) {
+            showWorkflowIsOpenMessage();
+            return;
+        }
         
         if (source != null && !source.isLinked()) {
             final File sourceFile = new File(source.getLocationURI());
@@ -159,6 +166,28 @@ public class MoveWorkflowAction extends Action
                 throw new InvocationTargetException(e);
             }
         }
+    }
+    
+    private void showWorkflowIsOpenMessage() {
+        Display.getDefault().syncExec(new Runnable() {
+            @Override
+            public void run() {
+                MessageDialog.openInformation(
+                        Display.getDefault().getActiveShell(),
+                        "Open Workflow",
+                        "Cannot move opened workflows. Please save and close " 
+                        + "the open workflow editor.");
+            }
+        });    
+    }
+
+    private boolean isOpenedWorkflow(final IResource source) {
+        NodeContainer nc = ProjectWorkflowMap.getWorkflow(
+                source.getFullPath().toString());
+        if (nc != null) {
+            return true;
+        }
+        return false;
     }
     
     private void showUnsupportedLinkedProject(final String name) {
