@@ -301,4 +301,12 @@ public abstract class BasisFunctionPredictorRow {
         pp.addInt("wrong_covered", m_wrongCovered);
         pp.addDouble("within-cluster_variance", m_clusterVariance);
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return m_key.getString();
+    }
 }

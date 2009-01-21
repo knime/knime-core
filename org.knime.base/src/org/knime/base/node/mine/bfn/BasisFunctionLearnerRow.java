@@ -197,8 +197,9 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @param classInfo and class.
      */
     public final void addCovered(final DataRow row, final DataCell classInfo) {
-        m_coveredPattern.add(row.getKey());
-        getPredictorRow().cover(row, classInfo);
+        if (m_coveredPattern.add(row.getKey())) {
+            getPredictorRow().cover(row, classInfo);
+        }
     }
 
     /**

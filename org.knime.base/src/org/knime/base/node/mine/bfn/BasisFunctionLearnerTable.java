@@ -28,6 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
@@ -578,10 +579,13 @@ public final class BasisFunctionLearnerTable implements DataTable {
         final int idx = spec.getNumColumns() - 5;
         final DataColumnSpec cspec = spec.getColumnSpec(idx);
         DataColumnSpecCreator cr = new DataColumnSpecCreator(cspec);
-        DataColumnDomainCreator domcr = 
-            new DataColumnDomainCreator(cspec.getDomain());
-        domcr.setValues(m_bfs.keySet());
-        cr.setDomain(domcr.createDomain());
+        TreeSet<DataCell> domValues = 
+            new TreeSet<DataCell>(cspec.getType().getComparator());
+        domValues.addAll(m_bfs.keySet());
+        if (cspec.getDomain().hasValues()) {
+            domValues.addAll(cspec.getDomain().getValues());
+        }
+        cr.setDomain(new DataColumnDomainCreator(domValues).createDomain());
         ColumnRearranger colre = new ColumnRearranger(spec);
         colre.replace(new SingleCellFactory(cr.createSpec()) {
             @Override

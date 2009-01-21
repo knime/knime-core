@@ -37,7 +37,7 @@ public interface Norm {
             YagerNorm.getInstance()};
 
     /**
-     * Computes the fuzzy disjunktion.
+     * Computes the fuzzy disjunction.
      * 
      * @param a the membership degree of fuzzy membership function A
      * @param b the membership degree of fuzzy membership function B
@@ -46,7 +46,7 @@ public interface Norm {
     double computeTNorm(double a, double b);
 
     /**
-     * Computes fuzzy conjunktion.
+     * Computes fuzzy conjunction.
      * 
      * @param a the membership degree of fuzzy membership function A
      * @param b the membership degree of fuzzy membership function B
