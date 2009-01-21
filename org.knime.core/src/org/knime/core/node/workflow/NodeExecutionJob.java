@@ -26,40 +26,38 @@ package org.knime.core.node.workflow;
 
 import java.util.Arrays;
 
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.port.PortObject;
 
 public abstract class NodeExecutionJob implements Runnable {
 
-    private final SingleNodeContainer m_snc;
+    private final NodeContainer m_nc;
     private final PortObject[] m_data;
-    private final ExecutionContext m_execContext;
 
-    public NodeExecutionJob(final SingleNodeContainer snc,
-            final PortObject[] data, final ExecutionContext ec) {
-        if (snc == null || data == null || ec == null) {
+    public NodeExecutionJob(final NodeContainer snc, final PortObject[] data) {
+        if (snc == null || data == null) {
             throw new NullPointerException("Args must not be null.");
         }
         if (Arrays.asList(data).contains(null)) {
             throw new NullPointerException("Array arg must not contain null.");
         }
-        m_snc = snc;
+        m_nc = snc;
         m_data = data;
-        m_execContext = ec;
     }
 
     @Override
     public void run() {
+        // TODO errors and exceptions must not be swallowed
+        // test exception here and see that you don't see it.
         boolean success = true;
         if (!isReConnecting()) {
             try {
-                m_snc.performBeforeExecuteNode();
+                m_nc.notifyParentExecuteStart();
             } catch (IllegalContextStackObjectException e) {
                 success = false;
             }
         }
         success = success && mainExecute();
-        m_snc.performAfterExecuteNode(success);
+        m_nc.notifyParentExecuteFinished(success);
     }
 
     public abstract boolean isReConnecting();
@@ -70,11 +68,8 @@ public abstract class NodeExecutionJob implements Runnable {
         return m_data;
     }
 
-    public SingleNodeContainer getSingleNodeContainer() {
-        return m_snc;
+    public NodeContainer getNodeContainer() {
+        return m_nc;
     }
 
-    public ExecutionContext getExecutionContext() {
-        return m_execContext;
-    }
 }

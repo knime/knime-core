@@ -165,9 +165,9 @@ class NodeContainerMetaPersistorVersion200 extends
     
     protected void saveNodeExecutionJob(
             final NodeSettingsWO settings, final NodeContainer nc) {
-        assert nc.getState().equals(State.EXECUTING)
-            : "Can't save node execution job, node is not EXECUTING but "
-                + nc.getState();
+        assert nc.getState().equals(State.EXECUTINGREMOTELY)
+            : "Can't save node execution job, node is not executing "
+                + "remotely but " + nc.getState();
         NodeExecutionJobManager jobManager = nc.getJobManager();
         NodeExecutionJob job = nc.getExecutionJob();
         assert nc.findJobManager().canDisconnect(nc.getExecutionJob())
@@ -188,11 +188,13 @@ class NodeContainerMetaPersistorVersion200 extends
         case EXECUTED:
             state = State.EXECUTED.toString();
             break;
-        case EXECUTING:
+        case EXECUTINGREMOTELY:
             if (nc.findJobManager().canDisconnect(nc.getExecutionJob())) {
                 // state will also be CONFIGURED only ... we set executing later
                 mustAlsoSaveExecutorSettings = true;
             }
+            state = State.EXECUTINGREMOTELY.toString();
+            break;
         default:
             state = State.CONFIGURED.toString();
         }

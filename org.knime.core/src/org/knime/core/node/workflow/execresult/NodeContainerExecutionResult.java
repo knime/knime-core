@@ -31,7 +31,7 @@ import org.knime.core.node.workflow.NodeContainer.State;
 public abstract class NodeContainerExecutionResult {
     
     private State m_state;
-    private boolean m_stateShouldBeLoaded;
+    private boolean m_stateShouldBeLoaded = true;
     private NodeMessage m_message;
     private boolean m_needsResetAfterLoad;
     

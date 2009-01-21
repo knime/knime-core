@@ -33,7 +33,6 @@ import java.util.Set;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -49,6 +48,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -63,8 +63,7 @@ import org.w3c.dom.Element;
  *
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
-public final class SingleNodeContainer extends NodeContainer
-    implements NodeProgressListener {
+public final class SingleNodeContainer extends NodeContainer {
 
     /** my logger. */
     private static final NodeLogger LOGGER =
@@ -72,10 +71,6 @@ public final class SingleNodeContainer extends NodeContainer
 
     /** underlying node. */
     private final Node m_node;
-
-    /** progress monitor. */
-    private final NodeProgressMonitor m_progressMonitor =
-            new DefaultNodeProgressMonitor(this);
 
     private SingleNodeContainerSettings m_settings =
         new SingleNodeContainerSettings();
@@ -279,20 +274,23 @@ public final class SingleNodeContainer extends NodeContainer
     @Override
     public void setJobManager(final NodeExecutionJobManager je) {
         synchronized (m_nodeMutex) {
-            if (getState().equals(State.EXECUTING)
-                    || getState().equals(State.QUEUED)) {
+            switch (getState()) {
+            case QUEUED:
+            case EXECUTING:
+            case EXECUTINGREMOTELY:
                 throw new IllegalStateException("Illegal state " + getState()
                         + " in setJobExecutor - "
                         + "can not change a running node.");
-
+            default:
             }
             super.setJobManager(je);
         }
     }
 
-    private ExecutionContext createExecutionContext() {
-        m_progressMonitor.reset();
-        return new ExecutionContext(m_progressMonitor, getNode(),
+    public ExecutionContext createExecutionContext() {
+        NodeProgressMonitor progressMonitor = getProgressMonitor();
+        progressMonitor.reset();
+        return new ExecutionContext(progressMonitor, getNode(),
                 getOutDataMemoryPolicy(),
                 getParent().getGlobalTableRepository());
     }
@@ -351,6 +349,12 @@ public final class SingleNodeContainer extends NodeContainer
                 } else {
                     // m_node.reset();
                     setState(State.UNCONFIGURED_MARKEDFOREXEC);
+                }
+                break;
+            case EXECUTINGREMOTELY: // this should only happen during load
+                success = nodeConfigure(inObjectSpecs);
+                if (!success) {
+                    setState(State.IDLE);
                 }
                 break;
             default:
@@ -443,6 +447,7 @@ public final class SingleNodeContainer extends NodeContainer
      * @param flag determines if node is marked or unmarked for execution
      * @throws IllegalStateException in case of illegal entry state.
      */
+    @Override
     void markForExecution(final boolean flag) {
         synchronized (m_nodeMutex) {
             if (flag) {  // we want to mark the node for execution!
@@ -494,82 +499,7 @@ public final class SingleNodeContainer extends NodeContainer
         }
     }
 
-    /**
-     * Change state of marked (for execution) node to queued once it has been
-     * assigned to a NodeExecutionJobManager.
-     *
-     * @param inData the incoming data for the execution
-     * @throws IllegalStateException in case of illegal entry state.
-     */
-    void queue(final PortObject[] inData) {
-        synchronized (m_nodeMutex) {
-            switch (getState()) {
-            case MARKEDFOREXEC:
-                setState(State.QUEUED);
-                NodeExecutionJobManager jobManager = findJobManager();
-                try {
-                    ExecutionContext execCon = createExecutionContext();
-                    NodeExecutionJob job =
-                        jobManager.submitJob(this, inData, execCon);
-                    setExecutionJob(job);
-                } catch (Throwable t) {
-                    String error = "Failed to submit job to job executor \""
-                        + jobManager + "\": " + t.getMessage();
-                    setNodeMessage(new NodeMessage(
-                            NodeMessage.Type.ERROR, error));
-                    LOGGER.error(error, t);
-                    try {
-                        performBeforeExecuteNode();
-                    } catch (IllegalContextStackObjectException e) {
-                        // ignore, we have something more serious to deal with
-                    }
-                    performAfterExecuteNode(false);
-                }
-                return;
-            default:
-                throw new IllegalStateException("Illegal state " + getState()
-                        + " encountered in queue(). Node "
-                        + getNameWithID());
-            }
-        }
-    }
-
-    /**
-     */
-    void continueExecutionOnLoad(final PortObject[] inData,
-            final NodeSettingsRO settings)
-        throws InvalidSettingsException, NodeExecutionJobReconnectException {
-        synchronized (m_nodeMutex) {
-            switch (getState()) {
-            case CONFIGURED:
-                NodeExecutionJobManager jobManager = findJobManager();
-                ExecutionContext execCon = createExecutionContext();
-                try {
-                    NodeExecutionJob job =
-                        jobManager.loadFromReconnectSettings(
-                                settings, inData, this, execCon);
-                    setExecutionJob(job);
-                    setState(State.EXECUTING, false);
-                } catch (NodeExecutionJobReconnectException t) {
-                    throw t;
-                } catch (InvalidSettingsException t) {
-                    throw t;
-                } catch (Throwable t) {
-                    throw new InvalidSettingsException(
-                            "Failed to continue job on job manager \""
-                            + jobManager + "\": " + t.getMessage(), t);
-                }
-                return;
-            default:
-                throw new IllegalStateException("Illegal state " + getState()
-                        + " encountered in continueExecutionOnLoad(). Node "
-                        + getNameWithID());
-            }
-        }
-    }
-
-
-    /**
+    /** 
      * Cancel execution of a marked, queued, or executing node. (Tolerate
      * execute as this may happen throughout cancelation).
      *
@@ -577,7 +507,7 @@ public final class SingleNodeContainer extends NodeContainer
      */
     void cancelOrDisconnectExecution() {
         synchronized (m_nodeMutex) {
-            if (getState().equals(State.EXECUTING)) {
+            if (getState().equals(State.EXECUTINGREMOTELY)) {
                 NodeExecutionJobManager jobMgr = findJobManager();
                 NodeExecutionJob job = getExecutionJob();
                 if (jobMgr.canDisconnect(job)) {
@@ -607,7 +537,7 @@ public final class SingleNodeContainer extends NodeContainer
                 // m_executionFuture has not yet started or if it has started,
                 // it will not hand off to node implementation (otherwise it
                 // would be executing)
-                m_progressMonitor.setExecuteCanceled();
+                getProgressMonitor().setExecuteCanceled();
                 NodeExecutionJob job = getExecutionJob();
                 assert job != null : "node is queued but no job represents "
                     + "the execution task (is null)";
@@ -616,11 +546,27 @@ public final class SingleNodeContainer extends NodeContainer
                 break;
             case EXECUTING:
                 // future is running in thread pool, use ordinary cancel policy
-                m_progressMonitor.setExecuteCanceled();
+                getProgressMonitor().setExecuteCanceled();
                 job = getExecutionJob();
-                assert job != null : "node is queued but no job represents "
+                assert job != null : "node is executing but no job represents "
                     + "the execution task (is null)";
                 job.cancel();
+                break;
+            case EXECUTINGREMOTELY:
+                // execute remotely can be both truly executing remotely 
+                // (job will be non-null) or marked as executing remotely
+                // (e.g. node is part of meta node which is remote executed
+                // -- the job will be null). We tolerate both cases here.
+                job = getExecutionJob();
+                if (job == null) {
+                    // we can't decide on whether this node is now IDLE or
+                    // CONFIGURED -- we rely on the parent to call configure 
+                    // (pessimistic guess here that node was not configured)
+                    setState(State.IDLE);
+                } else {
+                    getProgressMonitor().setExecuteCanceled();
+                    job.cancel();
+                }                    
                 break;
             case EXECUTED:
                 // Too late - do nothing.
@@ -637,12 +583,23 @@ public final class SingleNodeContainer extends NodeContainer
     //  internal state change actions
     //////////////////////////////////////
 
-    /**
-     * This should be used to change the nodes states correctly (and likely
-     * needs to be synchronized with other changes visible to successors of this
-     * node as well!) BEFORE the actual execution. The main reason is that the
-     * actual execution should be performed unsychronized!
-     */
+    /** {@inheritDoc} */
+    @Override
+    void markAsRemoteExecuting() {
+        switch (getState()) {
+        case MARKEDFOREXEC:
+        case UNCONFIGURED_MARKEDFOREXEC:
+            setState(State.EXECUTINGREMOTELY);
+            break;
+        default:
+            throw new IllegalStateException("Illegal state " + getState()
+                    + " encountered in markAsRemoteExecuting(). Node "
+                    + getNameWithID());
+        }
+    }
+    
+    /** {@inheritDoc} */
+    @Override
     void preExecuteNode() {
         synchronized (m_nodeMutex) {
             switch (getState()) {
@@ -650,7 +607,11 @@ public final class SingleNodeContainer extends NodeContainer
                 // clear loop status
                 m_node.clearLoopStatus();
                 // change state to avoid more than one executor
-                setState(State.EXECUTING);
+                if (findJobManager() instanceof ThreadNodeExecutionJobManager) {
+                    setState(State.EXECUTING);
+                } else {
+                    setState(State.EXECUTINGREMOTELY);
+                }
                 break;
             default:
                 throw new IllegalStateException("Illegal state " + getState()
@@ -659,14 +620,8 @@ public final class SingleNodeContainer extends NodeContainer
         }
     }
 
-    /**
-     * This should be used to change the nodes states correctly (and likely
-     * needs to be synchronized with other changes visible to successors of this
-     * node as well!) AFTER the actual execution. The main reason is that the
-     * actual execution should be performed unsychronized!
-     *
-     * @param success indicates if execution was successful
-     */
+    /** {@inheritDoc} */
+    @Override
     void postExecuteNode(final boolean success) {
         synchronized (m_nodeMutex) {
             if (success) {
@@ -690,37 +645,16 @@ public final class SingleNodeContainer extends NodeContainer
     }
 
     /**
-     * Invoked by the job executor immediately before the execution is
-     * triggered. It invokes doBeforeExecution on the parent.
-     *
-     * @throws IllegalContextStackObjectException in case of wrongly connected
-     *             loops, for instance.
-     */
-    void performBeforeExecuteNode() {
-        // this will allow the parent to call state changes etc properly
-        // synchronized. The main execution is done asynchronously.
-        try {
-            getParent().doBeforeExecution(SingleNodeContainer.this);
-        } catch (IllegalContextStackObjectException e) {
-            LOGGER.warn(e.getMessage());
-            setNodeMessage(new NodeMessage(
-                    NodeMessage.Type.ERROR, e.getMessage()));
-            throw e;
-        }
-    }
-
-    /**
      * Execute underlying Node asynchronously. Make sure to give Workflow-
      * Manager a chance to call pre- and postExecuteNode() appropriately and
      * synchronize those parts (since they changes states!).
      *
      * @param inObjects input data
-     * @param ec The execution context for progress, e.g.
      * @return whether execution was successful.
      * @throws IllegalStateException in case of illegal entry state.
      */
-    public boolean performExecuteNode(final PortObject[] inObjects,
-            final ExecutionContext ec) {
+    public boolean performExecuteNode(final PortObject[] inObjects) {
+        ExecutionContext ec = createExecutionContext();
         boolean success;
         try {
             ec.checkCanceled();
@@ -753,28 +687,6 @@ public final class SingleNodeContainer extends NodeContainer
             setNodeMessage(orgMessage);
         }
         return success;
-    }
-
-    /**
-     * Called immediately after the execution took place in the job executor. It
-     * will trigger an doAfterExecution on the parent wfm.
-     *
-     * @param success Whether the execution was successful.
-     */
-    void performAfterExecuteNode(final boolean success) {
-        // clean up stuff and especially change states synchronized again
-        getParent().doAfterExecution(SingleNodeContainer.this, success);
-    }
-
-    /** Set a node message on this node. This method should be used when
-     * the node is executed remotely, i.e. the local Node instance is not
-     * used for the calculation but should represent a calculation result.
-     * @param message A message that should be shown at the node. Must not be
-     * null (use a reset message instead).
-     * @throws NullPointerException If the argument is null
-     */
-    public void loadNodeMessage(final NodeMessage message) {
-        m_node.loadNodeMessage(message);
     }
 
     /**
@@ -864,19 +776,20 @@ public final class SingleNodeContainer extends NodeContainer
         }
         return result;
     }
-
+    
     /** {@inheritDoc} */
     @Override
     public LoadResult loadExecutionResult(
-            final NodeContainerExecutionResult execResult) {
+            final NodeContainerExecutionResult execResult,
+            final ExecutionMonitor exec) {
         synchronized (m_nodeMutex) {
             if (!(execResult instanceof SingleNodeContainerExecutionResult)) {
                 throw new IllegalArgumentException("Argument must be instance "
                         + "of \"" + SingleNodeContainerExecutionResult.
-                        class.getSimpleName() + "\": "
+                        class.getSimpleName() + "\": " 
                         + execResult.getClass().getSimpleName());
             }
-            LoadResult errors = super.loadExecutionResult(execResult);
+            LoadResult errors = super.loadExecutionResult(execResult, exec);
             SingleNodeContainerExecutionResult sncExecResult =
                 (SingleNodeContainerExecutionResult)execResult;
             NodeExecutionResult nodeExecResult = 
@@ -893,7 +806,7 @@ public final class SingleNodeContainer extends NodeContainer
                     if (m_node.getOutputObject(i) == null) {
                         errors.addError(
                                 "Output object at port " + i + " is null");
-                        needsReset = true;
+                        needsReset = true; 
                     }
                 }
             }
@@ -903,17 +816,9 @@ public final class SingleNodeContainer extends NodeContainer
             return errors;
         }
     }
-
-    /** Saves all internals that are necessary to mimic the execution result
-     * into a new execution result object. This method is called on node 
-     * instances, which are, e.g. executed on a server and later on read back
-     * into a true KNIME instance (upon which 
-     * {@link #loadExecutionResult(NodeContainerExecutionResult)} is called). 
-     * @param exec For progress information (this method will copy port 
-     *        objects).
-     * @return A new execution result instance.
-     * @throws CanceledExecutionException If canceled.
-     */
+    
+    /** {@inheritDoc} */
+    @Override
     public SingleNodeContainerExecutionResult createExecutionResult(
             final ExecutionMonitor exec) throws CanceledExecutionException {
         synchronized (m_nodeMutex) {
@@ -1004,21 +909,6 @@ public final class SingleNodeContainer extends NodeContainer
         return getNode().getLoopRole();
     }
 
-    ////////////////////////
-    // Progress forwarding
-    ////////////////////////
-
-    /**
-     * {@inheritDoc}
-     */
-    public void progressChanged(final NodeProgressEvent pe) {
-        // set our ID as source ID
-        NodeProgressEvent event =
-                new NodeProgressEvent(getID(), pe.getNodeProgress());
-        // forward the event
-        notifyProgressListeners(event);
-    }
-
     ///////////////////////////////////
     // NodeContainer->Node forwarding
     ///////////////////////////////////
@@ -1075,7 +965,13 @@ public final class SingleNodeContainer extends NodeContainer
     public Element getXMLDescription() {
         return m_node.getXMLDescription();
     }
-
+    
+    /** {@inheritDoc} */
+    @Override
+    protected boolean isLocalNodeContainer() {
+        return false;
+    }
+    
     /**
      * Overridden to also ensure that outport tables are "open" (node directory
      * is deleted upon save() - so the tables are better copied into temp).

@@ -624,10 +624,9 @@ public class ProgressFigure extends RectangleFigure implements
                 }
 
                 if (INVOKE_DISPLAY) {
-                    if (m_currentDisplay != null) {
+                    if (m_currentDisplay != null && !m_currentDisplay.isDisposed()) {
                         m_currentDisplay.syncExec(new Runnable() {
                             public void run() {
-
                                 synchronized (m_figuresToPaint) {
                                     for (ProgressFigure figure : m_figuresToPaint) {
                                         figure.repaint();

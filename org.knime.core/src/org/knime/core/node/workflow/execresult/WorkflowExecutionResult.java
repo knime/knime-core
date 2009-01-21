@@ -51,6 +51,12 @@ public class WorkflowExecutionResult extends NodeContainerExecutionResult {
         m_baseID = baseID;
     }
     
+    /**@return The base id of the workflow. Used to amend the node ids in
+     * {@link #getExecutionResultMap()}. */
+    public NodeID getBaseID() {
+        return m_baseID;
+    }
+    
     /** @return The map containing node id to their execution result, 
      * never null. */
     public Map<NodeID, NodeContainerExecutionResult> getExecutionResultMap() {

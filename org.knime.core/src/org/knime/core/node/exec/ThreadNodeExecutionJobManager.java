@@ -26,13 +26,13 @@ package org.knime.core.node.exec;
 import java.net.URL;
 import java.util.concurrent.Future;
 
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeExecutionJob;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeExecutionJobManagerPanel;
@@ -64,9 +64,15 @@ public class ThreadNodeExecutionJobManager implements NodeExecutionJobManager {
 
     /** {@inheritDoc} */
     @Override
-    public NodeExecutionJob submitJob(final SingleNodeContainer snc,
-            final PortObject[] data, final ExecutionContext exec) {
-        LocalNodeExecutionJob job = new LocalNodeExecutionJob(snc, data, exec);
+    public NodeExecutionJob submitJob(final NodeContainer nc,
+            final PortObject[] data) {
+        if (!(nc instanceof SingleNodeContainer)) {
+            throw new IllegalStateException(getClass().getSimpleName() 
+                    + " is not able to execute a meta node: " 
+                    + nc.getNameWithID());
+        }
+        LocalNodeExecutionJob job = new LocalNodeExecutionJob(
+                (SingleNodeContainer)nc, data);
         Future<?> future = m_pool.enqueue(job);
         job.setFuture(future);
         return job;
@@ -105,9 +111,10 @@ public class ThreadNodeExecutionJobManager implements NodeExecutionJobManager {
 
     /** {@inheritDoc} */
     @Override
-    public NodeExecutionJob loadFromReconnectSettings(final NodeSettingsRO settings,
-            final PortObject[] inports, final SingleNodeContainer snc, final ExecutionContext exec)
-            throws InvalidSettingsException, NodeExecutionJobReconnectException {
+    public NodeExecutionJob loadFromReconnectSettings(
+            final NodeSettingsRO settings, final PortObject[] inports, 
+            final NodeContainer snc) 
+        throws InvalidSettingsException, NodeExecutionJobReconnectException {
         throw new NodeExecutionJobReconnectException(
                 "Threaded jobs can't be reconnected");
     }

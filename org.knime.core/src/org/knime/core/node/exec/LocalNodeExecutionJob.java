@@ -25,7 +25,6 @@ package org.knime.core.node.exec;
 
 import java.util.concurrent.Future;
 
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.NodeExecutionJob;
 import org.knime.core.node.workflow.SingleNodeContainer;
@@ -38,9 +37,9 @@ public class LocalNodeExecutionJob extends NodeExecutionJob {
 
     private Future<?> m_future;
 
-    public LocalNodeExecutionJob(final SingleNodeContainer snc,
-            final PortObject[] data, final ExecutionContext ec) {
-        super(snc, data, ec);
+    public LocalNodeExecutionJob(
+            final SingleNodeContainer snc, final PortObject[] data) {
+        super(snc, data);
     }
 
 
@@ -65,8 +64,7 @@ public class LocalNodeExecutionJob extends NodeExecutionJob {
     /** {@inheritDoc} */
     @Override
     public boolean mainExecute() {
-        return getSingleNodeContainer().performExecuteNode(
-                getPortObjects(), getExecutionContext());
+        return getNodeContainer().performExecuteNode(getPortObjects());
     }
 
     /**
@@ -75,6 +73,12 @@ public class LocalNodeExecutionJob extends NodeExecutionJob {
     @Override
     public boolean isReConnecting() {
         return false;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public SingleNodeContainer getNodeContainer() {
+        return (SingleNodeContainer)super.getNodeContainer();
     }
 
 }

@@ -35,18 +35,21 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialog;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
@@ -60,7 +63,7 @@ import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
  *
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
-public abstract class NodeContainer {
+public abstract class NodeContainer implements NodeProgressListener {
 
     /** my logger. */
     private static final NodeLogger LOGGER =
@@ -74,6 +77,7 @@ public abstract class NodeContainer {
         MARKEDFOREXEC,
         QUEUED,
         EXECUTING,
+        EXECUTINGREMOTELY,
         EXECUTED;
 
         /** @return Whether this state represents an intermediate state,
@@ -97,9 +101,13 @@ public abstract class NodeContainer {
     private final WorkflowManager m_parent;
 
     private NodeExecutionJobManager m_jobManager;
-
+    
     /** The job representing the pending task of executing the node. */
     private NodeExecutionJob m_executionJob;
+
+    /** progress monitor. */
+    private final NodeProgressMonitor m_progressMonitor =
+            new DefaultNodeProgressMonitor(this);
 
     private NodeMessage m_nodeMessage = NodeMessage.NONE;
 
@@ -130,22 +138,21 @@ public abstract class NodeContainer {
     /*--------- listener administration------------*/
 
 
-    private final CopyOnWriteArraySet<NodeStateChangeListener>
-        m_stateChangeListeners =
+    private final CopyOnWriteArraySet<NodeStateChangeListener> 
+        m_stateChangeListeners = 
             new CopyOnWriteArraySet<NodeStateChangeListener>();
 
     private final CopyOnWriteArraySet<NodeMessageListener> m_messageListeners =
         new CopyOnWriteArraySet<NodeMessageListener>();
 
-    private final CopyOnWriteArraySet<NodeProgressListener>
+    private final CopyOnWriteArraySet<NodeProgressListener> 
         m_progressListeners = new CopyOnWriteArraySet<NodeProgressListener>();
 
     private final CopyOnWriteArraySet<NodeUIInformationListener> m_uiListeners =
         new CopyOnWriteArraySet<NodeUIInformationListener>();
 
-    private final CopyOnWriteArraySet<JobManagerChangedListener> m_jobManagerListeners
+    private final CopyOnWriteArraySet<JobManagerChangedListener> m_jobManagerListeners 
             = new CopyOnWriteArraySet<JobManagerChangedListener>();
-
 
     private UIInformation m_uiInformation;
 
@@ -216,9 +223,9 @@ public abstract class NodeContainer {
     public final NodeExecutionJobManager getJobManager() {
         return m_jobManager;
     }
-
+    
     /**
-     * @return NodeExecutionJobManager
+     * @return NodeExecutionJobManager 
      * responsible for this node and all its children.
      */
     public final NodeExecutionJobManager findJobManager() {
@@ -228,14 +235,14 @@ public abstract class NodeContainer {
         }
         return m_jobManager;
     }
-
+    
     /**
      * @param executionJob the executionJob to set
      */
     void setExecutionJob(final NodeExecutionJob executionJob) {
         m_executionJob = executionJob;
     }
-
+    
     /**
      * @return the executionJob
      */
@@ -252,14 +259,14 @@ public abstract class NodeContainer {
             final JobManagerChangedListener l) {
         return m_jobManagerListeners.remove(l);
     }
-
+    
     protected void notifyJobManagerChangedListener() {
         JobManagerChangedEvent e = new JobManagerChangedEvent(getID());
         for (JobManagerChangedListener l : m_jobManagerListeners) {
             l.jobManagerChanged(e);
         }
     }
-
+    
     /////////////////////////////////////////////////
     // Convenience functions for all derived classes
     /////////////////////////////////////////////////
@@ -269,6 +276,152 @@ public abstract class NodeContainer {
      *   resetable.
      */
     abstract boolean isResetable();
+    
+    /** Enable (or disable) queuing of underlying node for execution. This
+     * really only changes the state of the node and once all pre-conditions
+     * for execution are fulfilled (e.g. configuration succeeded and all
+     * ingoing objects are available) the node will be actually queued.
+     *
+     * @param flag determines if node is marked or unmarked for execution
+     * @throws IllegalStateException in case of illegal entry state.
+     */
+    abstract void markForExecution(final boolean flag);
+
+    /**
+     * Change state of marked (for execution) node to queued once it has been
+     * assigned to a NodeExecutionJobManager.
+     *
+     * @param inData the incoming data for the execution
+     * @throws IllegalStateException in case of illegal entry state.
+     */
+    /**
+     * Change state of marked (for execution) node to queued once it has been
+     * assigned to a NodeExecutionJobManager.
+     *
+     * @param inData the incoming data for the execution
+     * @throws IllegalStateException in case of illegal entry state.
+     */
+    void queue(final PortObject[] inData) {
+        synchronized (m_nodeMutex) {
+            switch (getState()) {
+            case MARKEDFOREXEC:
+                setState(State.QUEUED);
+                NodeExecutionJobManager jobManager = findJobManager();
+                try {
+                    NodeExecutionJob job = jobManager.submitJob(this, inData);
+                    setExecutionJob(job);
+                } catch (Throwable t) {
+                    String error = "Failed to submit job to job executor \""
+                        + jobManager + "\": " + t.getMessage();
+                    setNodeMessage(new NodeMessage(
+                            NodeMessage.Type.ERROR, error));
+                    LOGGER.error(error, t);
+                    try {
+                        notifyParentExecuteStart();
+                    } catch (IllegalContextStackObjectException e) {
+                        // ignore, we have something more serious to deal with
+                    }
+                    notifyParentExecuteFinished(false);
+                }
+                return;
+            default:
+                throw new IllegalStateException("Illegal state " + getState()
+                        + " encountered in queue(). Node "
+                        + getNameWithID());
+            }
+        }
+    }
+
+    /** Marks this node as remotely executing. This is necessary if the entire
+     * (sub-) flow that this node is part of is executed remotely.
+     * @throws IllegalStateException In case of an illegal state transition.
+     */
+    abstract void markAsRemoteExecuting();
+
+    /** Called upon load when the node has been saved as remotely executing.
+     * @param inData The input data for continued execution.
+     * @param settings the reconnect settings.
+     * @throws InvalidSettingsException If the settings are invalid
+     * @throws NodeExecutionJobReconnectException If that fails for any reason.
+     */
+    void continueExecutionOnLoad(final PortObject[] inData,
+            final NodeSettingsRO settings)
+        throws InvalidSettingsException, NodeExecutionJobReconnectException {
+        synchronized (m_nodeMutex) {
+            switch (getState()) {
+            case EXECUTINGREMOTELY:
+                NodeExecutionJobManager jobManager = findJobManager();
+                try {
+                    NodeExecutionJob job = jobManager.loadFromReconnectSettings(
+                            settings, inData, this);
+                    setExecutionJob(job);
+//                    setState(State.EXECUTINGREMOTELY, false);
+                } catch (NodeExecutionJobReconnectException t) {
+                    throw t;
+                } catch (InvalidSettingsException t) {
+                    throw t;
+                } catch (Throwable t) {
+                    throw new InvalidSettingsException(
+                            "Failed to continue job on job manager \""
+                            + jobManager + "\": " + t.getMessage(), t);
+                }
+                return;
+            default:
+                throw new IllegalStateException("Illegal state " + getState()
+                        + " encountered in continueExecutionOnLoad(). Node "
+                        + getNameWithID());
+            }
+        }
+    }
+
+    /**
+     * Invoked by the job executor immediately before the execution is
+     * triggered. It invokes doBeforeExecution on the parent.
+     *
+     * @throws IllegalContextStackObjectException in case of wrongly connected
+     *             loops, for instance.
+     */
+    void notifyParentExecuteStart() {
+        // this will allow the parent to call state changes etc properly
+        // synchronized. The main execution is done asynchronously.
+        try {
+            getParent().doBeforeExecution(NodeContainer.this);
+        } catch (IllegalContextStackObjectException e) {
+            LOGGER.warn(e.getMessage());
+            setNodeMessage(new NodeMessage(
+                    NodeMessage.Type.ERROR, e.getMessage()));
+            throw e;
+        }
+    }
+
+    /**
+     * Called immediately after the execution took place in the job executor. It
+     * will trigger an doAfterExecution on the parent wfm.
+     *
+     * @param success Whether the execution was successful.
+     */
+    void notifyParentExecuteFinished(final boolean success) {
+        // clean up stuff and especially change states synchronized again
+        getParent().doAfterExecution(NodeContainer.this, success);
+    }
+
+    /**
+     * This should be used to change the nodes states correctly (and likely
+     * needs to be synchronized with other changes visible to successors of this
+     * node as well!) BEFORE the actual execution. The main reason is that the
+     * actual execution should be performed unsynchronized!
+     */
+    abstract void preExecuteNode();
+
+    /**
+     * This should be used to change the nodes states correctly (and likely
+     * needs to be synchronized with other changes visible to successors of this
+     * node as well!) AFTER the actual execution. The main reason is that the
+     * actual execution should be performed unsynchronized!
+     *
+     * @param success indicates if execution was successful
+     */
+    abstract void postExecuteNode(final boolean success);
 
     /////////////////////////////////////////////////
     // List Management of Waiting Loop Head Nodes
@@ -313,6 +466,25 @@ public abstract class NodeContainer {
 
 
     /* ----------- progress ----------*/
+    
+    /**
+     * @return the progressMonitor
+     */
+    NodeProgressMonitor getProgressMonitor() {
+        return m_progressMonitor;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void progressChanged(final NodeProgressEvent pe) {
+        // set our ID as source ID
+        NodeProgressEvent event =
+                new NodeProgressEvent(getID(), pe.getNodeProgress());
+        // forward the event
+        notifyProgressListeners(event);
+    }
 
     /**
     *
@@ -384,7 +556,7 @@ public abstract class NodeContainer {
    public final NodeMessage getNodeMessage() {
        return m_nodeMessage;
    }
-
+   
    /**
     * @param newMessage the nodeMessage to set
     */
@@ -610,7 +782,7 @@ public abstract class NodeContainer {
         ncSet.load(settings);
         setJobManager(ncSet.getJobManager());
     }
-
+    
     void saveSettings(final NodeSettingsWO settings) {
         NodeContainerSettings ncSet = new NodeContainerSettings();
         ncSet.setJobManager(m_jobManager);
@@ -662,13 +834,13 @@ public abstract class NodeContainer {
     public final String getNameWithID() {
         return getName() + " " + getID().toString();
     }
-
+    
     /** @return Node name with status information.  */
     @Override
     public String toString() {
         return getNameWithID() + " (" + getState() + ")";
     }
-
+    
     /**
      * @return the display label for {@link NodeView}, {@link OutPortView} and
      * {@link NodeDialog}
@@ -709,7 +881,16 @@ public abstract class NodeContainer {
                     m_customName, m_customDescription));
         }
     }
-
+    
+    /** Is this node a to be locally executed workflow. In contrast to remotely
+     * executed workflows, the nodes in the encapsulated workflow will be 
+     * executed independently (each represented by an own job), whereas remote
+     * execution means that the entire workflow execution is one single job.
+     * <p>This method returns false for all single node container.
+     * @return The above described property.
+     */
+    protected abstract boolean isLocalNodeContainer();
+    
     /**
      * @return the isDeletable
      */
@@ -790,14 +971,16 @@ public abstract class NodeContainer {
             final Map<Integer, BufferedDataTable> tblRep,
             final ScopeObjectStack inStack, final ExecutionMonitor exec)
             throws CanceledExecutionException;
-
+    
     /** Load information from execution result. Subclasses will override this
      * method and will call this implementation as <code>super.loadEx...</code>.
      * @param result The execution result (contains port objects, messages, etc)
+     * @param exec For progress information (no cancelation supported)
      * @return A load result that contains, e.g. error messages.
      */
     public LoadResult loadExecutionResult(
-            final NodeContainerExecutionResult result) {
+            final NodeContainerExecutionResult result, 
+            final ExecutionMonitor exec) {
         /* Ideally this code would go into a separate final method that calls
          * an abstract method .... however, this is risky as subclasses may 
          * wish to synchronize the entire load procedure. 
@@ -815,6 +998,20 @@ public abstract class NodeContainer {
         return r;
     }
 
+    /** Saves all internals that are necessary to mimic the computed result
+     * into a new execution result object. This method is called on node 
+     * instances, which are, e.g. executed on a server and later on read back
+     * into a true KNIME instance (upon which {@link #loadExecutionResult(
+     * NodeContainerExecutionResult, ExecutionMonitor) is called). 
+     * @param exec For progress information (this method will copy port 
+     *        objects).
+     * @return A new execution result instance.
+     * @throws CanceledExecutionException If canceled.
+     */
+    public abstract NodeContainerExecutionResult createExecutionResult(
+            final ExecutionMonitor exec) throws CanceledExecutionException;
+
+    
     /** Saves all information that is held in this abstract NodeContainer
      * into the argument.
      * @param result Where to save to.
@@ -824,23 +1021,23 @@ public abstract class NodeContainer {
         result.setState(getState());
         result.setMessage(m_nodeMessage);
     }
-
+    
     /** Helper class that defines load/save routines for general NodeContainer
      * properties. This is currently only the job manager. */
     public static final class NodeContainerSettings {
-
+        
         private NodeExecutionJobManager m_jobManager;
-
+        
         /** @param jobManager the jobManager to set */
         public void setJobManager(final NodeExecutionJobManager jobManager) {
             m_jobManager = jobManager;
         }
-
+        
         /** @return the jobManager */
         public NodeExecutionJobManager getJobManager() {
             return m_jobManager;
         }
-
+        
         /** Save all properties (currently only job manager) to argument.
          * @param settings To save to.
          */
@@ -850,19 +1047,19 @@ public abstract class NodeContainer {
                         m_jobManager, settings.addNodeSettings("job.manager"));
             }
         }
-
+        
         /** Restores all settings (currently only job manager) from argument.
          * @param settings To load from.
          * @throws InvalidSettingsException If that's not possible.
          */
-        public void load(final NodeSettingsRO settings)
+        public void load(final NodeSettingsRO settings) 
         throws InvalidSettingsException {
             if (settings.containsKey("job.manager")) {
                 NodeSettingsRO s = settings.getNodeSettings("job.manager");
                 m_jobManager = NodeExecutionJobManagerPool.load(s);
             }
         }
-
+        
     }
 
 }

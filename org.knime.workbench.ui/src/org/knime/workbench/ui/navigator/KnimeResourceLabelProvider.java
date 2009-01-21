@@ -236,17 +236,19 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
                     // are displayed with state
                     && ((WorkflowManager)projectNode).getID()
                         .hasSamePrefix(WorkflowManager.ROOT.getID())) {
-                if (projectNode.getState().equals(
-                        NodeContainer.State.EXECUTED)) {
+                switch (projectNode.getState()) {
+                case EXECUTED:
                     img = EXECUTED;
-                } else if (projectNode.getState().equals(
-                        NodeContainer.State.EXECUTING)) {
+                    break;
+                case EXECUTING:
+                case EXECUTINGREMOTELY:
                     img = EXECUTING;
-                } else if (projectNode.getState().equals(
-                        NodeContainer.State.CONFIGURED)
-                        || projectNode.getState().equals(
-                                NodeContainer.State.IDLE)) {
+                    break;
+                case CONFIGURED:
+                case IDLE:
                     img = CONFIGURED;
+                    break;
+                default:
                 }
             } else {
                 img = NODE;

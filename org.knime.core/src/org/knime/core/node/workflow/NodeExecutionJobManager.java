@@ -26,7 +26,6 @@ package org.knime.core.node.workflow;
 
 import java.net.URL;
 
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -41,8 +40,18 @@ import org.knime.core.node.port.PortObjectSpec;
  */
 public interface NodeExecutionJobManager {
 
-    public NodeExecutionJob submitJob(final SingleNodeContainer snc,
-            final PortObject[] data, final ExecutionContext exec);
+    /**
+     * Executes the given node container with this job manager.
+     * @param nc The node to execute (may be a single node container or a meta
+     *           node)
+     * @param data The input data for that node.
+     * @return A job representing the pending execution.
+     * @throws IllegalStateException If this job manager is not able to execute
+     * the given argument node container (for instance a local thread executor
+     * will not allow an execution of a meta node).
+     */
+    public NodeExecutionJob submitJob(
+            final NodeContainer nc, final PortObject[] data);
 
     /**
      * Creates a new instance of a panel that holds components to display the
@@ -89,7 +98,8 @@ public interface NodeExecutionJobManager {
      *
      * @param job the job that is disconnected and must be restored later.
      * @param settings stores the information in here
-     * @see #loadFromReconnectSettings(NodeSettingsRO, PortObject[])
+     * @see #loadFromReconnectSettings(
+     * NodeSettingsRO, PortObject[], NodeContainer)
      */
     public void saveReconnectSettings(final NodeExecutionJob job,
             final NodeSettingsWO settings);
@@ -99,8 +109,9 @@ public interface NodeExecutionJobManager {
      * an executing job.
      *
      * @param settings reconnect information stored during
-     *            {@link #saveReconnectSettings(NodeExecutionJob, NodeSettingsWO)}
+     *        {@link #saveReconnectSettings(NodeExecutionJob, NodeSettingsWO)}
      * @param inports port objects that were provided at execution start time.
+     * @param nc Node whose remote executing is to be continued.
      * @return a new job restored and representing the running job
      * @throws InvalidSettingsException if the information in the settings
      *             object is invalid
@@ -109,7 +120,7 @@ public interface NodeExecutionJobManager {
      */
     public NodeExecutionJob loadFromReconnectSettings(
             final NodeSettingsRO settings, final PortObject[] inports,
-            final SingleNodeContainer snc, final ExecutionContext exec)
+            final NodeContainer nc)
             throws InvalidSettingsException, NodeExecutionJobReconnectException;
 
     /**

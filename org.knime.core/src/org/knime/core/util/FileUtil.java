@@ -432,6 +432,19 @@ public final class FileUtil {
             final boolean ownerOnly) {
         boolean b = true;
 
+        // if the x on a directory is removed recursion must happen first
+        if (executable != null && !executable.booleanValue()) {
+            if (f.isDirectory()) {
+                File[] dirList = f.listFiles(); // null if no read permissions
+                if (dirList != null) {
+                    for (File entry : dirList) {
+                        b &= chmod(entry, readable, writable, executable,
+                                        ownerOnly);
+                    }
+                }
+            }
+        }
+
         if (readable != null) {
             b &= f.setReadable(readable, ownerOnly);
         }
@@ -441,9 +454,17 @@ public final class FileUtil {
         if (executable != null) {
             b &= f.setExecutable(executable, ownerOnly);
         }
+
+        // in all other cases do the recursion after changing the permissions
+        if (executable == null || executable.booleanValue()) {
         if (f.isDirectory()) {
-            for (File entry : f.listFiles()) {
-                b &= chmod(entry, readable, writable, executable, ownerOnly);
+                File[] dirList = f.listFiles();  // null if no read permissions
+                if (dirList != null) {
+                    for (File entry : dirList) {
+                        b &= chmod(entry, readable, writable, executable,
+                                        ownerOnly);
+                    }
+                }
             }
         }
 

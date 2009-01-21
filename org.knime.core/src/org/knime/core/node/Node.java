@@ -291,19 +291,6 @@ public final class Node implements NodeModelWarningListener {
         return result;
     }
 
-    /** Load a node message. This method is used in case of a remote execution,
-     * e.g. See {@link org.knime.core.node.workflow.SingleNodeContainer#
-     * loadNodeMessage(NodeMessage)} for details.
-     * @param message the message to be loaded
-     * @throws NullPointerException If the argument is null
-     */
-    public void loadNodeMessage(final NodeMessage message) {
-        if (message == null) {
-            throw new NullPointerException("Message must not be null");
-        }
-        notifyMessageListeners(message);
-    }
-
     /**
      * Creates an execution result containing all calculated values in a 
      * execution. The returned value is suitable to be used in

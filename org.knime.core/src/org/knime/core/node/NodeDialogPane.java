@@ -164,7 +164,7 @@ public abstract class NodeDialogPane {
     /**
      * Creates and adds the job manager selection tab.
      */
-    void addJobMgrTab() {
+    public void addJobMgrTab() {
         m_jobMgrTab = new NodeExecutorJobManagerDialogTab();
         addTab(m_jobMgrTab.getTabName(), m_jobMgrTab);
     }
@@ -200,7 +200,7 @@ public abstract class NodeDialogPane {
      * If loadSettingsFrom throws this exception.
      * @see #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])
      */
-    void internalLoadSettingsFrom(final NodeSettingsRO settings,
+    public void internalLoadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs, final ScopeObjectStack scopeStack)
         throws NotConfigurableException {
         NodeSettings modelSettings = null;

@@ -196,11 +196,12 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
         }
         try {
             m_state = loadState(settings, parentSettings);
-            if (State.EXECUTING.equals(m_state) 
-                    && m_executionJobSettings == null) {
-                throw new InvalidSettingsException("State loaded as EXECUTING "
-                        + "but no execution job settings available");
-            }
+//            if (State.EXECUTINGREMOTELY.equals(m_state) 
+//                    && m_executionJobSettings == null) {
+//                throw new InvalidSettingsException("State loaded as "
+//                        + "EXECUTINGREMOTELY but no execution job "
+//                        + "settings available");
+//            }
         } catch (InvalidSettingsException e) {
             String error = "Can't restore node's state, fallback to " 
                 + State.IDLE + ": " + e.getMessage();

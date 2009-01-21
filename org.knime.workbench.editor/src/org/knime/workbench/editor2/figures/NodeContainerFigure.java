@@ -498,22 +498,28 @@ public class NodeContainerFigure extends RectangleFigure {
      * @param state new state of underlying node
      */
     public void setState(final NodeContainer.State state) {
-        if (state.equals(NodeContainer.State.IDLE)) {
+        switch (state) {
+        case IDLE:
             setStatusAmple();
             m_statusFigure.setIcon(RED);
-        } else if (state.equals(NodeContainer.State.CONFIGURED)) {
+            break;
+        case CONFIGURED:
             setStatusAmple();
             m_statusFigure.setIcon(YELLOW);
-        } else if (state.equals(NodeContainer.State.EXECUTING)) {
-            setProgressBar(true);
-        } else if (state.equals(NodeContainer.State.EXECUTED)) {
+            break;
+        case EXECUTED:
             setStatusAmple();
             m_statusFigure.setIcon(GREEN);
-        } else if (state.equals(
-                NodeContainer.State.UNCONFIGURED_MARKEDFOREXEC)
-                || state.equals(NodeContainer.State.QUEUED)
-                || state.equals(NodeContainer.State.MARKEDFOREXEC)) {
+            break;
+        case EXECUTING:
+        case EXECUTINGREMOTELY:
+            setProgressBar(true);
+            break;
+        case MARKEDFOREXEC:
+        case UNCONFIGURED_MARKEDFOREXEC:
+        case QUEUED:
             setProgressBar(false);
+            break;
         }
         m_statusFigure.repaint();
     }
