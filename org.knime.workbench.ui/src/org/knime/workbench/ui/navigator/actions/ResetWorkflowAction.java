@@ -33,11 +33,19 @@ public class ResetWorkflowAction extends AbstractWorkflowAction {
                 KNIMEUIPlugin.PLUGIN_ID, 
                 "icons/actions/reset.gif");
     
+    /**
+     * 
+     * {@inheritDoc}
+     */
     @Override
     public String getText() {
         return "Reset";
     }
     
+    /**
+     * 
+     * {@inheritDoc}
+     */
     @Override
     public ImageDescriptor getImageDescriptor() {
         return IMG;
@@ -50,17 +58,19 @@ public class ResetWorkflowAction extends AbstractWorkflowAction {
     @Override
     public boolean isEnabled() {
         if (super.isEnabled()) {
-            WorkflowManager workflow = getWorkflow();
-            // TODO: when to enable reset?
-            // one node executed? workflow state = executed?
+            return WorkflowManager.ROOT.canResetNode(getWorkflow().getID());
         }
         return false;
     }
-    
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
     @Override
     public void run() {
-        // TODO Auto-generated method stub
-        super.run();
+        WorkflowManager workflow = getWorkflow();
+        WorkflowManager.ROOT.resetAndConfigureNode(workflow.getID());
     }
     
 }
