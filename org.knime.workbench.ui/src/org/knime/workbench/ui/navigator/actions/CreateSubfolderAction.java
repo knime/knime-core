@@ -29,6 +29,7 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
@@ -59,6 +60,9 @@ public class CreateSubfolderAction extends Action {
     private static ImageDescriptor icon;
     
     private boolean m_isWorkflow = false;
+    
+    private static final Path WF_PATH = new Path(
+            WorkflowPersistor.WORKFLOW_FILE);
 
     /**
      * 
@@ -115,18 +119,23 @@ public class CreateSubfolderAction extends Action {
         if (o instanceof IContainer) {
             IContainer cont = (IContainer)o;
             // check if its a KNIME workflow
-            if (cont.findMember(WorkflowPersistor.WORKFLOW_FILE) != null) {
+            if (cont.exists(WF_PATH)) {
                 m_isWorkflow = true;
                 return true;
+            } else if (cont.getParent() != null 
+                        && cont.getParent().exists(WF_PATH)) {
+                // then it is a node
+                    return false;
             }
+            m_parent = (IContainer)o;
+            return true;
         } else if (o instanceof IFile) {
             return false;
         }
-        m_parent = (IContainer)o;
-        return true;
-        
+        return false;
     }
 
+    
     /**
      * 
      * {@inheritDoc}
