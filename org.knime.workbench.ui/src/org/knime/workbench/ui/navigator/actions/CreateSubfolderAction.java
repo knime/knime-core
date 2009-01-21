@@ -165,9 +165,16 @@ public class CreateSubfolderAction extends Action {
                     }
 
                 });
-        if (m_isWorkflow) {
-            dialog.setErrorMessage("Workflow group will be created in root");
-        }
+        /*
+         * Uncommented: if a workflow was selected, the workflow group will be 
+         * created in ROOT. We may or may not inform the user about it...
+         */
+// if (m_isWorkflow) {
+// MessageDialog.openInformation(Display.getDefault().getActiveShell(),
+// "Invalid Parent", 
+// "A workflow set cannot be created inside a KNIME workflow." 
+// + " Will be created in ROOT.");
+//        }
         if (dialog.open() == Window.OK) { 
             String name = dialog.getValue();
             if (name == null) {
