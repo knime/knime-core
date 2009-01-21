@@ -892,7 +892,6 @@ public final class WorkflowManager extends NodeContainer {
      */
     public void loadNodeSettings(final NodeID id, final NodeSettingsRO settings)
     throws InvalidSettingsException {
-        // TODO load setting for MetaNodeContainer/WorkflowManager-nodes
         synchronized (m_workflowMutex) {
             NodeContainer nc = getNodeContainer(id);
             if (!nc.getState().executionInProgress()
@@ -946,7 +945,16 @@ public final class WorkflowManager extends NodeContainer {
             for (NodeID id : m_workflow.getNodeIDs()) {
                 NodeContainer nc = m_workflow.getNode(id);
                 if (nc instanceof SingleNodeContainer) {
-                    ((SingleNodeContainer)nc).markForExecution(flag);
+                    switch (nc.getState()) {
+                    case EXECUTED:
+                    case MARKEDFOREXEC:
+                    case UNCONFIGURED_MARKEDFOREXEC:
+                    case EXECUTING:
+                    case EXECUTINGREMOTELY:
+                        break;
+                    default:
+                        ((SingleNodeContainer)nc).markForExecution(flag);
+                    }
                 } else {
                     assert nc instanceof WorkflowManager;
                     ((WorkflowManager)nc).
@@ -1644,10 +1652,13 @@ public final class WorkflowManager extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     void markAsRemoteExecuting() {
-        for (NodeContainer nc : m_workflow.getNodeValues()) {
-            nc.markAsRemoteExecuting();
+        synchronized (m_workflowMutex) {
+            for (NodeContainer nc : m_workflow.getNodeValues()) {
+                nc.markAsRemoteExecuting();
+            }
+            // do not propagate -- this method is called from parent
+            checkForNodeStateChanges(false);
         }
-        setState(State.EXECUTINGREMOTELY);
     }
 
     /** {@inheritDoc} */
@@ -1677,22 +1688,21 @@ public final class WorkflowManager extends NodeContainer {
     void postExecuteNode(final boolean success) {
         assert !isLocalNodeContainer() : "Execution of meta node not allowed"
             + " for locally executing (sub-)flows";
-        if (!success) {
-            cancelExecutionOfAllChildren();
-            // TODO two problems:
-            //   - this misses source nodes (eg file reader)
-            //   - this already calls checkForNodeStateChanges
-            configureWorkFlowPortSuccessors(-1);
-        }
-        String stateList = printNodeSummary(getID(), 0);
-        // this method is called from the parent's doAfterExecute
-        // we don't propagate state changes (i.e. the argument flag is false) 
-        // because the check for state changes in the parent will happen next
-        if (!sweep(false)) {
-            LOGGER.debug("Some states were invalid, old states are:");
-            LOGGER.debug(stateList);
-            LOGGER.debug("The new (corrected) states are: ");
-            LOGGER.debug(printNodeSummary(getID(), 0));
+        synchronized (m_workflowMutex) {
+            if (!success) {
+                cancelExecutionOfAllChildren();
+                configureAllNodesInWFM();
+            }
+            String stateList = printNodeSummary(getID(), 0);
+            // this method is called from the parent's doAfterExecute
+            // we don't propagate state changes (i.e. argument flag is false) 
+            // since the check for state changes in the parent will happen next
+            if (!sweep(false)) {
+                LOGGER.debug("Some states were invalid, old states are:");
+                LOGGER.debug(stateList);
+                LOGGER.debug("The new (corrected) states are: ");
+                LOGGER.debug(printNodeSummary(getID(), 0));
+            }
         }
     }
     
@@ -2381,6 +2391,29 @@ public final class WorkflowManager extends NodeContainer {
         NodeContainer nc = getNodeContainer(id);
         // Note that this enforces FULLY connected nodes
         return m_workflow.getConnectionsByDest(id).size() == nc.getNrInPorts();
+    }
+    
+    /** Attempts to configure all nodes in the workflow. It will also try to 
+     * configure nodes whose predecessors did not change their output specs.
+     * This method does not call for {@link #checkForNodeStateChanges(boolean)}.
+     */
+    private void configureAllNodesInWFM() {
+        assert Thread.holdsLock(m_workflowMutex);
+        Set<NodeID> bfsSortedSet = m_workflow.createBreadthFirstSortedList(
+                m_workflow.getNodeIDs(), true).keySet();
+        for (NodeID id : bfsSortedSet) {
+            NodeContainer nc = getNodeContainer(id);
+            if (nc instanceof SingleNodeContainer) {
+                switch (nc.getState()) {
+                case EXECUTED:
+                    break;
+                default:
+                    configureSingleNodeContainer((SingleNodeContainer)nc);
+                }
+            } else {
+                ((WorkflowManager)nc).configureAllNodesInWFM();
+            }
+        }
     }
 
     /*

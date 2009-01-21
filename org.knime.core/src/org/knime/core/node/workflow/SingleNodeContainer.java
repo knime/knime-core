@@ -591,6 +591,9 @@ public final class SingleNodeContainer extends NodeContainer {
         case UNCONFIGURED_MARKEDFOREXEC:
             setState(State.EXECUTINGREMOTELY);
             break;
+        case EXECUTED:
+            // ignore executed nodes
+            break;
         default:
             throw new IllegalStateException("Illegal state " + getState()
                     + " encountered in markAsRemoteExecuting(). Node "

@@ -25,10 +25,15 @@
 package org.knime.core.node.workflow;
 
 import java.util.Arrays;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 
-public abstract class NodeExecutionJob implements Runnable {
+public abstract class NodeExecutionJob implements Callable<Void> {
+    
+    private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
     private final NodeContainer m_nc;
     private final PortObject[] m_data;
@@ -44,20 +49,26 @@ public abstract class NodeExecutionJob implements Runnable {
         m_data = data;
     }
 
+    /** {@inheritDoc} */
     @Override
-    public void run() {
-        // TODO errors and exceptions must not be swallowed
-        // test exception here and see that you don't see it.
-        boolean success = true;
-        if (!isReConnecting()) {
-            try {
-                m_nc.notifyParentExecuteStart();
-            } catch (IllegalContextStackObjectException e) {
-                success = false;
+    public Void call() throws Exception {
+        try {
+            boolean success = true;
+            if (!isReConnecting()) {
+                try {
+                    m_nc.notifyParentExecuteStart();
+                } catch (IllegalContextStackObjectException e) {
+                    success = false;
+                }
             }
+            success = success && mainExecute();
+            m_nc.notifyParentExecuteFinished(success);
+        } catch (Throwable e) {
+            m_logger.error("Caught \"" + e.getClass().getSimpleName() 
+                    + "\": " + e.getMessage(), e);
+            throw new ExecutionException(e);
         }
-        success = success && mainExecute();
-        m_nc.notifyParentExecuteFinished(success);
+        return null;
     }
 
     public abstract boolean isReConnecting();

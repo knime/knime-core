@@ -784,6 +784,7 @@ public abstract class NodeContainer implements NodeProgressListener {
         setJobManager(ncSet.getJobManager());
         assert ncSet.getSplitType() == null
                 || ncSet.getSplitType().equals(this.getSplitType());
+        setDirty();
     }
 
     void saveSettings(final NodeSettingsWO settings) {
