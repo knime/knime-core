@@ -1309,7 +1309,13 @@ public final class WorkflowManager extends NodeContainer {
             return false;
         }
         if (!isLocalWFM()) {
-            return getParent().queueIfQueuable(this);
+            switch (getState()) {
+            case MARKEDFOREXEC:
+            case UNCONFIGURED_MARKEDFOREXEC:
+                return getParent().queueIfQueuable(this);
+            default:
+                return false;
+            }
         }
         assert Thread.holdsLock(m_workflowMutex);
         switch (nc.getState()) {
@@ -1972,23 +1978,27 @@ public final class WorkflowManager extends NodeContainer {
                 return false;
             }
             // check for WorkflowManager - which we handle differently
-            if (nc.isLocalWFM() && nc instanceof WorkflowManager) {
-                // simply check if there is ANY excutable node in this
-                // WFM. If yes: return true.
-                WorkflowManager wfm = (WorkflowManager)nc;
-                for (NodeID id : wfm.m_workflow.getNodeIDs()) {
-                    if (wfm.canExecuteNode(id)) {
-                        return true;
-                    }
-                }
+            if (nc instanceof WorkflowManager) {
+                return ((WorkflowManager)nc).hasExecutableNode();
             } else {
-                // node itself needs to be configured.
+                return nc.getState().equals(State.CONFIGURED);
+            }
+        }
+    }
+    
+    /** @return true if any node contained in this workflow is executable,
+     * that is configured.
+     */
+    private boolean hasExecutableNode() {
+        for (NodeContainer nc : m_workflow.getNodeValues()) {
+            if (nc instanceof SingleNodeContainer) {
                 if (nc.getState().equals(State.CONFIGURED)) {
                     return true;
                 }
+            } else {
+                return ((WorkflowManager)nc).hasExecutableNode();
             }
         }
-        // all other cases: not executable!
         return false;
     }
     
