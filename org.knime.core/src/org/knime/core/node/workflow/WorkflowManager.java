@@ -1139,7 +1139,18 @@ public final class WorkflowManager extends NodeContainer {
     public void executeUpToHere(final NodeID... ids) {
         synchronized (m_workflowMutex) {
             for (NodeID id : ids) {
-                markAndQueueNodeAndPredecessors(id, -1);
+                NodeContainer nc = getNodeContainer(id);
+                if (nc instanceof SingleNodeContainer) {
+                    markAndQueueNodeAndPredecessors(id, -1);
+                } else if (nc.isLocalNodeContainer()) {
+                    // if the execute option on a meta node is selected, run
+                    // all nodes in it, not just the ones that are connected
+                    // to the outports
+                    // this will also trigger an execute on predecessors
+                    ((WorkflowManager)nc).executeAll();
+                } else {
+                    markAndQueueNodeAndPredecessors(id, -1);
+                }
             }
             checkForNodeStateChanges(true);
         }
@@ -1690,7 +1701,7 @@ public final class WorkflowManager extends NodeContainer {
             + " for locally executing (sub-)flows";
         synchronized (m_workflowMutex) {
             if (!success) {
-                cancelExecutionOfAllChildren();
+                cancelExecution();
                 configureAllNodesInWFM();
             }
             String stateList = printNodeSummary(getID(), 0);
@@ -1974,22 +1985,23 @@ public final class WorkflowManager extends NodeContainer {
         // all other cases: not executable!
         return false;
     }
-
-    /**
-     * Cancel execution of all children.
-     */
-    void cancelExecutionOfAllChildren() {
-        for (NodeContainer nc : m_workflow.getNodeValues()) {
-            // TODO may need to be sorted last-first.
-            if (nc instanceof SingleNodeContainer) {
-                ((SingleNodeContainer)nc).cancelExecution();
-            } else {
-                assert nc instanceof WorkflowManager;
-                ((WorkflowManager)nc).cancelExecutionOfAllChildren();
+    
+    /** {@inheritDoc} */
+    @Override
+    void cancelExecution() {
+        synchronized (m_workflowMutex) {
+            for (NodeContainer nc : m_workflow.getNodeValues()) {
+                nc.cancelExecution();
             }
+            NodeExecutionJob job = getExecutionJob();
+            if (job != null) {
+                assert !isLocalNodeContainer();
+                job.cancel();
+            }
+            checkForNodeStateChanges(false);
         }
     }
-    
+
     /**
      * Cancel execution of the given NodeContainer.
      *
@@ -1999,12 +2011,7 @@ public final class WorkflowManager extends NodeContainer {
         disableNodeForExecution(nc.getID());
         synchronized (m_workflowMutex) {
             if (nc.getState().executionInProgress()) {
-                if (nc instanceof SingleNodeContainer) {
-                    ((SingleNodeContainer)nc).cancelExecution();
-                } else {
-                    assert nc instanceof WorkflowManager;
-                    ((WorkflowManager)nc).cancelExecutionOfAllChildren();
-                }
+                nc.cancelExecution();
             }
         }
     }
@@ -2018,11 +2025,7 @@ public final class WorkflowManager extends NodeContainer {
         disableNodeForExecution(nc.getID());
         synchronized (m_workflowMutex) {
             if (nc.getState().executionInProgress()) {
-                if (nc instanceof SingleNodeContainer) {
-                    ((SingleNodeContainer)nc).cancelOrDisconnectExecution();
-                } else {
-                    ((WorkflowManager)nc).cancelExecutionOfAllChildren();
-                }
+                nc.cancelOrDisconnectExecution();
             }
         }
     }
@@ -2059,7 +2062,7 @@ public final class WorkflowManager extends NodeContainer {
                 try {
                     mySemaphore.wait();
                 } catch (InterruptedException ie) {
-                    cancelExecutionOfAllChildren();
+                    cancelExecution();
                     return false;
                 }
             }

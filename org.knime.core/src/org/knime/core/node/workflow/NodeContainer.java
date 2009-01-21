@@ -375,6 +375,32 @@ public abstract class NodeContainer implements NodeProgressListener {
         }
     }
 
+    /** Cancel execution of a marked, queued, or executing node. (Tolerate
+     * execute as this may happen throughout cancelation).
+     * @throws IllegalStateException
+     */
+    abstract void cancelExecution();
+
+    /** 
+     * Cancel execution of a marked, queued, or executing node. (Tolerate
+     * execute as this may happen throughout cancelation).
+     *
+     * @throws IllegalStateException
+     */
+    void cancelOrDisconnectExecution() {
+        synchronized (m_nodeMutex) {
+            if (getState().equals(State.EXECUTINGREMOTELY)) {
+                NodeExecutionJobManager jobMgr = findJobManager();
+                NodeExecutionJob job = getExecutionJob();
+                if (jobMgr.canDisconnect(job)) {
+                    jobMgr.disconnect(job);
+                    return;
+                }
+            }
+            cancelExecution();
+        }
+    }
+
     /**
      * Invoked by the job executor immediately before the execution is
      * triggered. It invokes doBeforeExecution on the parent.

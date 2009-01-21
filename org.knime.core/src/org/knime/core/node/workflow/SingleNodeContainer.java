@@ -499,31 +499,8 @@ public final class SingleNodeContainer extends NodeContainer {
         }
     }
 
-    /** 
-     * Cancel execution of a marked, queued, or executing node. (Tolerate
-     * execute as this may happen throughout cancelation).
-     *
-     * @throws IllegalStateException
-     */
-    void cancelOrDisconnectExecution() {
-        synchronized (m_nodeMutex) {
-            if (getState().equals(State.EXECUTINGREMOTELY)) {
-                NodeExecutionJobManager jobMgr = findJobManager();
-                NodeExecutionJob job = getExecutionJob();
-                if (jobMgr.canDisconnect(job)) {
-                    jobMgr.disconnect(job);
-                    return;
-                }
-            }
-            cancelExecution();
-        }
-    }
-
-    /** Cancel execution of a marked, queued, or executing node. (Tolerate
-     * execute as this may happen throughout cancelation).
-     *
-     * @throws IllegalStateException
-     */
+    /** {@inheritDoc} */
+    @Override
     void cancelExecution() {
         synchronized (m_nodeMutex) {
             switch (getState()) {
