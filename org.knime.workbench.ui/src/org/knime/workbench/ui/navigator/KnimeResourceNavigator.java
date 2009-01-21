@@ -311,10 +311,14 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         if (selection instanceof IContainer) {
             IContainer container = (IContainer)selection;
             IFile file = null;
-            if (container.exists(new Path(WorkflowPersistor.WORKFLOW_FILE))) {
-                file = (IFile)container.findMember(
-                        WorkflowPersistor.WORKFLOW_FILE);
-            LOGGER.debug("opening: " + container.getName());
+            Path wfPath = new Path(WorkflowPersistor.WORKFLOW_FILE);
+            if (container.exists(wfPath)) {
+                if (container.getParent() != null 
+                        && !container.getParent().exists(wfPath)) {
+                    file = (IFile)container.findMember(
+                            WorkflowPersistor.WORKFLOW_FILE);
+                    LOGGER.debug("opening: " + container.getName());
+                }
             } else {
                 EditMetaInfoAction action = new EditMetaInfoAction();
                 if (action.isEnabled()) {
