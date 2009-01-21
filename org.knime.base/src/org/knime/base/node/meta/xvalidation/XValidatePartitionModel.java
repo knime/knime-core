@@ -160,6 +160,8 @@ implements LoopStartNodeTerminator {
      */
     @Override
     protected void reset() {
+        m_currIteration = 0;
+        m_nrIterations = -1;
         m_partNumbers = null;
     }
     
@@ -177,6 +179,10 @@ implements LoopStartNodeTerminator {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        assert m_currIteration == 0;
+        // we need to put the counts on the stack for the loop's tail to see:
+        pushScopeVariableInt("currentIteration", m_currIteration);
+        pushScopeVariableInt("maxIterations", m_nrIterations);
         return new DataTableSpec[]{inSpecs[0], inSpecs[0]};
     }
 

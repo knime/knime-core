@@ -174,16 +174,39 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
             throw new Exception("Conflicting loop variables, count is " + count
                     + " and max count is " + maxCount);
         }
+        final BufferedDataTable in = inData[0];
+        final DataTableSpec inSpec = in.getDataTableSpec();
         if (count == 0) {
-            m_predictionTable =
-                    exec.createDataContainer(inData[0].getDataTableSpec());
+            m_predictionTable = exec.createDataContainer(in.getDataTableSpec());
         } else if (m_predictionTable == null) {
             throw new Exception(
                     "Loop Head claims this is NOT the first iteration"
                     + " but the tail believes it is?!");
+        } else {
+            if (!inSpec.equalStructure(m_predictionTable.getTableSpec())) {
+                DataTableSpec predSpec = m_predictionTable.getTableSpec();
+                StringBuilder error = new StringBuilder(
+                        "Input table's structure differs from reference " 
+                        + "(first iteration) table: ");
+                if (inSpec.getNumColumns() != predSpec.getNumColumns()) {
+                    error.append("different column counts ");
+                    error.append(inSpec.getNumColumns());
+                    error.append(" vs. ").append(predSpec.getNumColumns());
+                } else {
+                    for (int i = 0; i < inSpec.getNumColumns(); i++) {
+                        DataColumnSpec inCol = inSpec.getColumnSpec(i);
+                        DataColumnSpec predCol = predSpec.getColumnSpec(i);
+                        if (!inCol.equalStructure(predCol)) {
+                          error.append("Column ").append(i).append(" [");
+                          error.append(inCol).append("] vs. [");
+                          error.append(predCol).append("]");
+                        }
+                    }
+                }
+                throw new IllegalArgumentException(error.toString());
+            }
         }
 
-        final BufferedDataTable in = inData[0];
 
         final int rowCount = in.getRowCount();
         final int targetColIndex =

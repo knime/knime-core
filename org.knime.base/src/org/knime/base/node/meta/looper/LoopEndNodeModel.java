@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.knime.base.data.append.column.AppendedColumnRow;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -89,19 +90,40 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
             final ExecutionContext exec) throws Exception {
 
         if (!(this.getLoopStartNode() instanceof LoopStartNodeTerminator)) {
-            throw new IllegalStateException("Loop end is not connected"
-                   + " to matching/corresponding loop start node. You"
-                   + "are trying to create an infinite loop!");
+            throw new IllegalStateException("Loop End is not connected"
+                   + " to matching/corresponding Loop Start node. You"
+                   + " are trying to create an infinite loop!");
         }
+        BufferedDataTable in = inData[0];
+        DataTableSpec amendedSpec = createSpec(in.getDataTableSpec());
         if (m_resultContainer == null) {
             // first time we are getting to this: open container
-            m_resultContainer =
-                    exec.createDataContainer(createSpec(inData[0]
-                            .getDataTableSpec()));
+            m_resultContainer = exec.createDataContainer(amendedSpec);
+        } else if (!amendedSpec.equalStructure(m_resultContainer.getTableSpec())) {
+            DataTableSpec predSpec = m_resultContainer.getTableSpec();
+            StringBuilder error = new StringBuilder(
+                    "Input table's structure differs from reference " 
+                    + "(first iteration) table: ");
+            if (amendedSpec.getNumColumns() != predSpec.getNumColumns()) {
+                error.append("different column counts ");
+                error.append(amendedSpec.getNumColumns());
+                error.append(" vs. ").append(predSpec.getNumColumns());
+            } else {
+                for (int i = 0; i < amendedSpec.getNumColumns(); i++) {
+                    DataColumnSpec inCol = amendedSpec.getColumnSpec(i);
+                    DataColumnSpec predCol = predSpec.getColumnSpec(i);
+                    if (!inCol.equalStructure(predCol)) {
+                      error.append("Column ").append(i).append(" [");
+                      error.append(inCol).append("] vs. [");
+                      error.append(predCol).append("]");
+                    }
+                }
+            }
+            throw new IllegalArgumentException(error.toString());
         }
 
         IntCell currIterCell = new IntCell(m_count);
-        for (DataRow row : inData[0]) {
+        for (DataRow row : in) {
             AppendedColumnRow newRow =
                     new AppendedColumnRow(new DefaultRow(new RowKey(row.getKey()
                     + "#" + m_count), row), currIterCell);
