@@ -80,7 +80,7 @@ public final class MetaInfoFile {
     private static File getFileFromPreferences() {
         String fileName = KNIMEUIPlugin.getDefault().getPreferenceStore()
             .getString(PREF_KEY_META_INFO_TEMPLATE);
-        if (fileName == null) {
+        if (fileName == null || fileName.isEmpty()) {
             return null;
         }
         File f = new File(fileName);
