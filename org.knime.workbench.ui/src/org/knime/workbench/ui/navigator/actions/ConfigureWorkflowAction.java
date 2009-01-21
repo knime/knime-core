@@ -18,8 +18,6 @@
  */
 package org.knime.workbench.ui.navigator.actions;
 
-import javax.swing.SwingUtilities;
-
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.Action;
@@ -27,12 +25,12 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.navigator.KnimeResourceNavigator;
 import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
+import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
 /**
  * 
@@ -54,12 +52,14 @@ public class ConfigureWorkflowAction extends Action {
     
     @Override
     public void run() {
-        SwingUtilities.invokeLater(new Runnable() {
+        Display.getDefault().syncExec(new Runnable() {
             @Override
             public void run() {
                 try {
-                    m_workflow.openDialogInJFrame();
-                    m_workflow.applySettingsFromDialog();
+                    WrappedNodeDialog dialog = new WrappedNodeDialog(
+                            Display.getDefault().getActiveShell(), m_workflow);
+                    dialog.setBlockOnOpen(true);
+                    dialog.open();
                 } catch (final NotConfigurableException nce) {
                     Display.getDefault().syncExec(new Runnable() {
                         @Override
@@ -69,17 +69,6 @@ public class ConfigureWorkflowAction extends Action {
                                     "Workflow Not Configurable", 
                                     "This workflow can not be configured: "
                                     + nce.getMessage());
-                        }
-                    });
-                } catch (final InvalidSettingsException e) {
-                    Display.getDefault().syncExec(new Runnable() {
-                        @Override
-                        public void run() {
-                            MessageDialog.openError(
-                                    Display.getDefault().getActiveShell(), 
-                                    "Invalid Settings", 
-                                    "The entered settings are invalid: "
-                                    + e.getMessage());
                         }
                     });
                 }
