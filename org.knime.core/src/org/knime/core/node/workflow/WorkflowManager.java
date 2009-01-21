@@ -2122,11 +2122,11 @@ public final class WorkflowManager extends NodeContainer {
             }
             // try to execute the current node
             NodeContainer nc = m_workflow.getNode(thisID);
-            if (nc instanceof SingleNodeContainer) {
-                executeUpToHere(thisID);
-            } else {
+            if (nc.isLocalWFM()) {
                 assert nc instanceof WorkflowManager;
                 ((WorkflowManager)nc).executeAll();
+            } else {
+                executeUpToHere(thisID);
             }
             // and finally move the current node to the other list
             executedNodes.add(thisID);
