@@ -931,7 +931,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      * <p>This method returns false for all single node container.
      * @return The above described property.
      */
-    protected abstract boolean isLocalNodeContainer();
+    protected abstract boolean isLocalWFM();
 
     /**
      * @return the isDeletable

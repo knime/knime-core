@@ -948,7 +948,7 @@ public final class SingleNodeContainer extends NodeContainer {
     
     /** {@inheritDoc} */
     @Override
-    protected boolean isLocalNodeContainer() {
+    protected boolean isLocalWFM() {
         return false;
     }
     

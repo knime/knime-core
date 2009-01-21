@@ -1142,7 +1142,7 @@ public final class WorkflowManager extends NodeContainer {
                 NodeContainer nc = getNodeContainer(id);
                 if (nc instanceof SingleNodeContainer) {
                     markAndQueueNodeAndPredecessors(id, -1);
-                } else if (nc.isLocalNodeContainer()) {
+                } else if (nc.isLocalWFM()) {
                     // if the execute option on a meta node is selected, run
                     // all nodes in it, not just the ones that are connected
                     // to the outports
@@ -1217,7 +1217,7 @@ public final class WorkflowManager extends NodeContainer {
                 return true;
             }
             // 2) its a to-be-locally-executed WFM:
-            if (nc.isLocalNodeContainer()) {
+            if (nc.isLocalWFM()) {
                 // hand over control to the sub workflow (who will hand
                 // back up to this level if there are (implicit or explicit)
                 // through connections to follow:
@@ -1305,8 +1305,11 @@ public final class WorkflowManager extends NodeContainer {
      * @return whether successfully queued.
      */
     private boolean queueIfQueuable(final NodeContainer nc) {
-        if (nc.isLocalNodeContainer()) {
+        if (nc.isLocalWFM()) {
             return false;
+        }
+        if (!isLocalWFM()) {
+            return getParent().queueIfQueuable(this);
         }
         assert Thread.holdsLock(m_workflowMutex);
         switch (nc.getState()) {
@@ -1315,7 +1318,7 @@ public final class WorkflowManager extends NodeContainer {
                 break;
             default:
                 assert false : "Queuing of " + nc.getNameWithID()
-                    + "not possible, node is " + nc.getState();
+                    + " not possible, node is " + nc.getState();
                 return false;
         }
         NodeOutPort[] ports = assemblePredecessorOutPorts(nc.getID());
@@ -1357,7 +1360,7 @@ public final class WorkflowManager extends NodeContainer {
      */
     void doBeforeExecution(final NodeContainer nc) {
         assert !nc.getID().equals(this.getID());
-        assert !nc.isLocalNodeContainer() : "Invalid invocation of doBeforeExecution on "
+        assert !nc.isLocalWFM() : "Invalid invocation of doBeforeExecution on "
             + "locally executed meta node";
         synchronized (m_workflowMutex) {
             LOGGER.debug(nc.getNameWithID() + " doBeforeExecute");
@@ -1415,7 +1418,7 @@ public final class WorkflowManager extends NodeContainer {
      *    (note that this does not imply State=EXECUTED e.g. for loop ends)
      */
     void doAfterExecution(final NodeContainer nc, final boolean success) {
-        assert isLocalNodeContainer() : "doAfterExecute not allowed for "
+        assert isLocalWFM() : "doAfterExecute not allowed for "
             + "remotely executing workflows";
         assert !nc.getID().equals(this.getID());
         synchronized (m_workflowMutex) {
@@ -1650,7 +1653,7 @@ public final class WorkflowManager extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     void markForExecution(final boolean flag) {
-        assert !isLocalNodeContainer() : "Setting execution mark on meta node not allowed"
+        assert !isLocalWFM() : "Setting execution mark on meta node not allowed"
             + " for locally executing (sub-)flows";
         if (getState().executionInProgress()) {
             throw new IllegalStateException("Execution of (sub-)flow already "
@@ -1675,7 +1678,7 @@ public final class WorkflowManager extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     void preExecuteNode() {
-        assert !isLocalNodeContainer() : "Execution of meta node not allowed"
+        assert !isLocalWFM() : "Execution of meta node not allowed"
             + " for locally executing (sub-)flows";
         synchronized (m_nodeMutex) {
             switch (getState()) {
@@ -1697,7 +1700,7 @@ public final class WorkflowManager extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     void postExecuteNode(final boolean success) {
-        assert !isLocalNodeContainer() : "Execution of meta node not allowed"
+        assert !isLocalWFM() : "Execution of meta node not allowed"
             + " for locally executing (sub-)flows";
         synchronized (m_workflowMutex) {
             if (!success) {
@@ -1964,8 +1967,12 @@ public final class WorkflowManager extends NodeContainer {
             if (nc == null) {
                 return false;
             }
+            // don't allow individual execution of nodes in a remote exec flow
+            if (!isLocalWFM()) {
+                return false;
+            }
             // check for WorkflowManager - which we handle differently
-            if (nc instanceof WorkflowManager) {
+            if (nc.isLocalWFM() && nc instanceof WorkflowManager) {
                 // simply check if there is ANY excutable node in this
                 // WFM. If yes: return true.
                 WorkflowManager wfm = (WorkflowManager)nc;
@@ -1975,9 +1982,8 @@ public final class WorkflowManager extends NodeContainer {
                     }
                 }
             } else {
-                assert nc instanceof SingleNodeContainer;
                 // node itself needs to be configured.
-                if (nc.getState().equals(NodeContainer.State.CONFIGURED)) {
+                if (nc.getState().equals(State.CONFIGURED)) {
                     return true;
                 }
             }
@@ -1995,7 +2001,7 @@ public final class WorkflowManager extends NodeContainer {
             }
             NodeExecutionJob job = getExecutionJob();
             if (job != null) {
-                assert !isLocalNodeContainer();
+                assert !isLocalWFM();
                 job.cancel();
             }
             checkForNodeStateChanges(false);
@@ -3647,7 +3653,7 @@ public final class WorkflowManager extends NodeContainer {
     
     /** {@inheritDoc} */
     @Override
-    protected boolean isLocalNodeContainer() {
+    protected boolean isLocalWFM() {
         return findJobManager() instanceof ThreadNodeExecutionJobManager;
     }
 
