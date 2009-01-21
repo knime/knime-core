@@ -27,6 +27,7 @@ import java.awt.Component;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
@@ -82,6 +83,7 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
             public void updateInputSpecs(final PortObjectSpec[] inSpecs) {
                 // we don't care
             }
+
             /**
              * {@inheritDoc}
              */
@@ -102,10 +104,8 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
     private NodeExecutionJobManagerPanel m_currentPanel;
 
     // we keep previously shown panels in case the manager is re-selected
-    private final HashMap<String,
-        Pair<NodeExecutionJobManager, NodeExecutionJobManagerPanel>> m_panels =
-            new HashMap<String,
-            Pair<NodeExecutionJobManager, NodeExecutionJobManagerPanel>>();
+    private final HashMap<String, Pair<NodeExecutionJobManager, NodeExecutionJobManagerPanel>> m_panels =
+            new HashMap<String, Pair<NodeExecutionJobManager, NodeExecutionJobManagerPanel>>();
 
     // if a job manager panel is displayed for the first time we must give it
     // the sport specs
@@ -124,8 +124,13 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
         // add the selection combo box at the top of the panel
         Vector<Object> jobManagerChoices = new Vector<Object>();
         jobManagerChoices.add(DEFAULT_ENTRY);
-        jobManagerChoices.addAll(
-                NodeExecutionJobManagerPool.getAllJobManagerFactoryIDs());
+        LinkedList<String> execs =
+                new LinkedList<String>(NodeExecutionJobManagerPool
+                        .getAllJobManagerFactoryIDs());
+        // the default executor is represented by the <<default>> entry
+        execs.remove(NodeExecutionJobManagerPool.getDefaultJobManagerFactory()
+                .getID());
+        jobManagerChoices.addAll(execs);
         m_jobManagerSelect = new JComboBox(jobManagerChoices);
         m_jobManagerSelect.setRenderer(new ComboRenderer());
         m_jobManagerSelect.addItemListener(new ItemListener() {
@@ -181,14 +186,18 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
             m_currentPanel = m_panels.get(sel).getSecond();
         } else {
             NodeExecutionJobManagerFactory fac =
-                NodeExecutionJobManagerPool.getJobManagerFactory(sel);
+                    NodeExecutionJobManagerPool.getJobManagerFactory(sel);
             selJobMgr = fac.getInstance();
-            m_currentPanel = selJobMgr.getSettingsPanelComponent(m_nodeSplitType);
+            m_currentPanel =
+                    selJobMgr.getSettingsPanelComponent(m_nodeSplitType);
             if (m_currentPanel != null) {
                 m_currentPanel.loadSettings(new NodeSettings("empty"));
             }
-            m_panels.put(sel, new Pair<NodeExecutionJobManager,
-                    NodeExecutionJobManagerPanel>(selJobMgr, m_currentPanel));
+            m_panels
+                    .put(
+                            sel,
+                            new Pair<NodeExecutionJobManager, NodeExecutionJobManagerPanel>(
+                                    selJobMgr, m_currentPanel));
         }
         if (m_currentPanel == null) {
             m_currentPanel = EMPTY_PANEL;
@@ -245,8 +254,8 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
             m_currentPanel.loadSettings(s);
         } else {
             // seems we got a manager we currently don't have
-            LOGGER.warn("Unable to find job manager '"
-                    + id + "'; using parent manager");
+            LOGGER.warn("Unable to find job manager '" + id
+                    + "'; using parent manager");
             m_jobManagerSelect.setSelectedItem(DEFAULT_ENTRY);
         }
 
@@ -289,7 +298,7 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
             } else if (value instanceof String) {
                 String id = (String)value;
                 NodeExecutionJobManagerFactory jobMgrFac =
-                    NodeExecutionJobManagerPool.getJobManagerFactory(id);
+                        NodeExecutionJobManagerPool.getJobManagerFactory(id);
                 if (jobMgrFac != null) {
                     newValue = jobMgrFac.getLabel();
                 } else {
