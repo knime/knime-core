@@ -18,27 +18,23 @@
  */
 package org.knime.workbench.ui.navigator.actions;
 
-import org.eclipse.core.resources.IContainer;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowPersistor;
-import org.knime.workbench.ui.navigator.KnimeResourceNavigator;
-import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
+import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
 /**
  * 
  * @author Fabian Dill, KNIME.com GmbH
  */
-public class ConfigureWorkflowAction extends Action {
+public class ConfigureWorkflowAction extends AbstractWorkflowAction {
     
-    private WorkflowManager m_workflow;
+    private static final ImageDescriptor IMG 
+        = KNIMEUIPlugin.imageDescriptorFromPlugin(
+                KNIMEUIPlugin.PLUGIN_ID, 
+                "icons/actions/configure.gif");
     
     @Override
     public String getText() {
@@ -51,13 +47,19 @@ public class ConfigureWorkflowAction extends Action {
     }
     
     @Override
+    public ImageDescriptor getImageDescriptor() {
+        return IMG;
+    }
+    
+    @Override
     public void run() {
         Display.getDefault().syncExec(new Runnable() {
             @Override
             public void run() {
                 try {
                     WrappedNodeDialog dialog = new WrappedNodeDialog(
-                            Display.getDefault().getActiveShell(), m_workflow);
+                            Display.getDefault().getActiveShell(), 
+                            getWorkflow());
                     dialog.setBlockOnOpen(true);
                     dialog.open();
                 } catch (final NotConfigurableException nce) {
@@ -77,24 +79,15 @@ public class ConfigureWorkflowAction extends Action {
         });
     }
     
+    /**
+     * 
+     * {@inheritDoc}
+     */
     @Override
     public boolean isEnabled() {
-        // get selection
-          IStructuredSelection s = (IStructuredSelection)PlatformUI.getWorkbench()
-          .getActiveWorkbenchWindow().getSelectionService()
-          .getSelection(KnimeResourceNavigator.ID);
-          Object element = s.getFirstElement();
-          // check if is KNIME workflow
-          if (element instanceof IContainer) {
-              IContainer cont = (IContainer)element;
-              if (cont.exists(new Path(WorkflowPersistor.WORKFLOW_FILE))) {
-                  m_workflow = (WorkflowManager)ProjectWorkflowMap.getWorkflow(
-                          cont.getFullPath().toString());
-                  if (m_workflow != null && m_workflow.hasDialog()) {
-                      return true;
-                  }
-              }
-          }
+        if (super.isEnabled()) {
+            return getWorkflow().hasDialog();
+        }
         return false;
     }
 

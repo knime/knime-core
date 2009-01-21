@@ -26,23 +26,35 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
  * 
  * @author Fabian Dill, KNIME.com GmbH
  */
-public class ExecuteWorkflowAction extends AbstractWorkflowAction {
+public class CancelWorkflowAction extends AbstractWorkflowAction {
     
     private static final ImageDescriptor IMG 
         = KNIMEUIPlugin.imageDescriptorFromPlugin(
                 KNIMEUIPlugin.PLUGIN_ID, 
-                "/icons/actions/execute.gif");
+                "icons/actions/cancel.gif");
     
+    /**
+     * 
+     * {@inheritDoc}
+     */
     @Override
     public String getText() {
-        return "Execute...";
+        return "Cancel Execution";
     }
-    
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
     @Override
     public String getDescription() {
-        return "Executes the workflow with the conigured JobExecutor";
+        return "Cancels the execution of all nodes of this workflow";
     }
     
+    /**
+     * 
+     * {@inheritDoc}
+     */
     @Override
     public ImageDescriptor getImageDescriptor() {
         return IMG;
@@ -53,16 +65,24 @@ public class ExecuteWorkflowAction extends AbstractWorkflowAction {
      * {@inheritDoc}
      */
     @Override
-    public boolean isEnabled() {
-        if (super.isEnabled()) {
-            return WorkflowManager.ROOT.canExecuteNode(getWorkflow().getID());
+    public void run() {
+        WorkflowManager workflow = getWorkflow();
+        if (workflow != null) {
+            WorkflowManager.ROOT.cancelExecution(workflow);
         }
-        return false;
     }
     
+    /**
+     * 
+     * {@inheritDoc}
+     */
     @Override
-    public void run() {
-        WorkflowManager.ROOT.executeUpToHere(getWorkflow().getID());
+    public boolean isEnabled() {
+        if (super.isEnabled()) {
+            WorkflowManager workflow = getWorkflow();
+            return workflow.getState().executionInProgress();
+        }
+        return false;
     }
 
 }

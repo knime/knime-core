@@ -69,12 +69,14 @@ import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.SyncExecQueueDispatcher;
+import org.knime.workbench.ui.navigator.actions.CancelWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ConfigureWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.CreateSubfolderAction;
 import org.knime.workbench.ui.navigator.actions.EditMetaInfoAction;
 import org.knime.workbench.ui.navigator.actions.ExecuteWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ExportKnimeWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ImportKnimeWorkflowAction;
+import org.knime.workbench.ui.navigator.actions.ResetWorkflowAction;
 
 
 /**
@@ -399,10 +401,15 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
         
 //        if (NodeExecutionJobManagerPool.getNumberOfJobManagersFactories() > 1) {
-            menu.insertAfter(ExportKnimeWorkflowAction.ID, 
+        menu.insertAfter(ExportKnimeWorkflowAction.ID,
+                new ResetWorkflowAction());
+        menu.insertAfter(ExportKnimeWorkflowAction.ID,
+                new CancelWorkflowAction());
+        menu.insertAfter(ExportKnimeWorkflowAction.ID,
+                new ExecuteWorkflowAction());
+            menu.insertAfter(ExportKnimeWorkflowAction.ID,
                     new ConfigureWorkflowAction());
-            menu.insertAfter(ExportKnimeWorkflowAction.ID, 
-                    new ExecuteWorkflowAction());            
+            menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
 //        }
 
         // TODO: insert actions for

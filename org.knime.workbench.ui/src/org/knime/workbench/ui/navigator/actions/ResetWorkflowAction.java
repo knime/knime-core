@@ -26,21 +26,16 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
  * 
  * @author Fabian Dill, KNIME.com GmbH
  */
-public class ExecuteWorkflowAction extends AbstractWorkflowAction {
+public class ResetWorkflowAction extends AbstractWorkflowAction {
     
     private static final ImageDescriptor IMG 
         = KNIMEUIPlugin.imageDescriptorFromPlugin(
                 KNIMEUIPlugin.PLUGIN_ID, 
-                "/icons/actions/execute.gif");
+                "icons/actions/reset.gif");
     
     @Override
     public String getText() {
-        return "Execute...";
-    }
-    
-    @Override
-    public String getDescription() {
-        return "Executes the workflow with the conigured JobExecutor";
+        return "Reset";
     }
     
     @Override
@@ -55,14 +50,17 @@ public class ExecuteWorkflowAction extends AbstractWorkflowAction {
     @Override
     public boolean isEnabled() {
         if (super.isEnabled()) {
-            return WorkflowManager.ROOT.canExecuteNode(getWorkflow().getID());
+            WorkflowManager workflow = getWorkflow();
+            // TODO: when to enable reset?
+            // one node executed? workflow state = executed?
         }
         return false;
     }
     
     @Override
     public void run() {
-        WorkflowManager.ROOT.executeUpToHere(getWorkflow().getID());
+        // TODO Auto-generated method stub
+        super.run();
     }
-
+    
 }
