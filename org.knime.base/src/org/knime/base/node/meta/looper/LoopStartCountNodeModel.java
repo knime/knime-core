@@ -91,9 +91,10 @@ implements LoopStartNodeTerminator {
             assert m_iteration > 0;
             // otherwise we do this again, and we increment our counter
             // and we can do a quick sanity check
-            if (!(getLoopEndNode() instanceof LoopEndNodeModel)) {
-                throw new IllegalArgumentException("Loop tail has wrong type!");
-            }
+            // FIXME: this test is to specific, do we need it after all?
+//            if (!(getLoopEndNode() instanceof LoopEndNodeModel)) {
+//                throw new IllegalArgumentException("Loop tail has wrong type!");
+//            }
         }
         // let's also put the counts on the stack for someone else:
         pushScopeVariableInt("currentIteration", m_iteration);
@@ -102,7 +103,7 @@ implements LoopStartNodeTerminator {
         m_iteration++;
         return inData;
     }
-    
+
     /**
      * {@inheritDoc}
      */
