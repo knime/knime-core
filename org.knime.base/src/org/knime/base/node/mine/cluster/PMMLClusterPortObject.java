@@ -20,8 +20,8 @@ package org.knime.base.node.mine.cluster;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.sax.TransformerHandler;
@@ -46,7 +46,7 @@ public class PMMLClusterPortObject extends PMMLPortObject {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             PMMLClusterPortObject.class);
     
-    private Set<DataColumnSpec> m_usedColumns;
+    private List<DataColumnSpec> m_usedColumns;
     private double[][]m_prototypes;
     private int m_nrOfClusters;
     private int[] m_clusterCoverage;
@@ -104,9 +104,9 @@ public class PMMLClusterPortObject extends PMMLPortObject {
     }
     
     
-    private Set<DataColumnSpec> getColumnSpecsFor(final Set<String> colNames,
+    private List<DataColumnSpec> getColumnSpecsFor(final List<String> colNames,
             final DataTableSpec tableSpec) {
-        Set<DataColumnSpec> colSpecs = new LinkedHashSet<DataColumnSpec>();
+        List<DataColumnSpec> colSpecs = new LinkedList<DataColumnSpec>();
         for (String colName : colNames) {
             DataColumnSpec colSpec = tableSpec.getColumnSpec(colName);
             if (colName == null) {
@@ -155,7 +155,7 @@ public class PMMLClusterPortObject extends PMMLPortObject {
      * 
      * @return used columns
      */
-    public Set<DataColumnSpec> getUsedColumns() {
+    public List<DataColumnSpec> getUsedColumns() {
         return m_usedColumns;
     }
 
@@ -249,7 +249,7 @@ public class PMMLClusterPortObject extends PMMLPortObject {
      * @throws SAXException if something goes wrong
      */
     protected void addClusteringFields(final TransformerHandler handler,
-            final Set<DataColumnSpec> colSpecs) throws SAXException {
+            final List<DataColumnSpec> colSpecs) throws SAXException {
         for (DataColumnSpec colSpec : colSpecs) {
             AttributesImpl atts = new AttributesImpl();
             atts.addAttribute(null, null, "field", CDATA, colSpec.getName());

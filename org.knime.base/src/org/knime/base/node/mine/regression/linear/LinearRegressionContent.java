@@ -24,7 +24,7 @@
  */
 package org.knime.base.node.mine.regression.linear;
 
-import java.util.Collections;
+import java.util.Arrays;
 
 import org.knime.base.node.mine.regression.PMMLRegressionContentHandler;
 import org.knime.base.node.mine.regression.PMMLRegressionPortObject;
@@ -141,8 +141,8 @@ public final class LinearRegressionContent {
     public static PMMLPortObjectSpec createPortObjectSpec(
             final DataTableSpec spec) throws InvalidSettingsException {
         PMMLPortObjectSpecCreator c = new PMMLPortObjectSpecCreator(spec);
-        c.setTargetCols(Collections.singleton(
-                spec.getColumnSpec(spec.getNumColumns() - 1)));
+        c.setTargetCols(Arrays.asList(spec.getColumnSpec(
+                spec.getNumColumns() - 1)));
         return c.createSpec();
     }
 

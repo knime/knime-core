@@ -31,7 +31,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
@@ -50,8 +51,8 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
@@ -217,9 +218,9 @@ public class RPropNodeModel extends NodeModel {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         if (m_classcol.getStringValue() != null) {
-            Set<String> learningCols = new HashSet<String>();
-            Set<String> ignoredCols = new HashSet<String>();
-            Set<String> targetCols = new HashSet<String>();
+            List<String> learningCols = new LinkedList<String>();
+            List<String> ignoredCols = new LinkedList<String>();
+            List<String> targetCols = new LinkedList<String>();
             boolean classcolinspec = false;
             for (DataColumnSpec colspec : (DataTableSpec)inSpecs[INPORT]) {
                 if (!(colspec.getName().toString().compareTo(
@@ -303,9 +304,9 @@ public class RPropNodeModel extends NodeModel {
             m_classcol.setStringValue(posSpec.getColumnSpec(
                     posSpec.getNumColumns() - 1).getName());
         }
-        Set<String> learningCols = new HashSet<String>();
-        Set<String> ignoredCols = new HashSet<String>();
-        Set<String> targetCols = new HashSet<String>();
+        List<String> learningCols = new LinkedList<String>();
+        List<String> ignoredCols = new LinkedList<String>();
+        List<String> targetCols = new LinkedList<String>();
 
         // Determine the number of inputs and the number of outputs. Make also
         // sure that the inputs are double values.

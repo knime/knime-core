@@ -119,7 +119,7 @@ public class PMMLSVMPortObject extends PMMLPortObject {
             }
         }
 
-        Set<DataColumnSpec> targetCols = spec.getTargetCols();
+        List<DataColumnSpec> targetCols = spec.getTargetCols();
         assert (targetCols.size() == 1)
             : "Only one target column allowed in SVM";
         DataColumnSpec classcolspec = targetCols.iterator().next();
@@ -286,7 +286,7 @@ public class PMMLSVMPortObject extends PMMLPortObject {
      * @throws SAXException if something goes wrong.
      */
     protected void addVectorDictionary(final TransformerHandler handler,
-            final Svm[] svms, final Set<String> colNames) throws SAXException {
+            final Svm[] svms, final List<String> colNames) throws SAXException {
         DoubleVector[][] supVecs = new DoubleVector[svms.length][];
         int totalNumber = 0;
         for (int i = 0; i < svms.length; i++) {

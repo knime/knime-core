@@ -29,8 +29,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.knime.base.node.mine.cluster.PMMLClusterPortObject;
 import org.knime.core.data.DataColumnSpec;
@@ -296,9 +296,9 @@ public class FuzzyClusterNodeModel extends NodeModel {
         m_spec = indata.getDataTableSpec();
         int nrCols = m_spec.getNumColumns();
 
-        Set<String> learningCols = new LinkedHashSet<String>();
-        Set<String> ignoreCols = new LinkedHashSet<String>();
-        Set<String> targetCols = new LinkedHashSet<String>();
+        List<String> learningCols = new LinkedList<String>();
+        List<String> ignoreCols = new LinkedList<String>();
+        List<String> targetCols = new LinkedList<String>();
         // counter for included columns
         int z = 0;
         final int[] columns = new int[m_list.size()];
@@ -544,9 +544,9 @@ public class FuzzyClusterNodeModel extends NodeModel {
             setWarningMessage("List of columns to use has been set"
                     + " automatically, please check it in the dialog.");
         }
-        Set<String> learningCols = new LinkedHashSet<String>();
-        Set<String> ignoreCols = new LinkedHashSet<String>();
-        Set<String> targetCols = new LinkedHashSet<String>();
+        List<String> learningCols = new LinkedList<String>();
+        List<String> ignoreCols = new LinkedList<String>();
+        List<String> targetCols = new LinkedList<String>();
         // counter for included columns
         for (int i = 0; i < inspec.getNumColumns(); i++) {
             // if include does contain current column name

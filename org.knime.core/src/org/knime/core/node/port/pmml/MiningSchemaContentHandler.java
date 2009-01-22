@@ -18,9 +18,10 @@
  */
 package org.knime.core.node.port.pmml;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
 
+import org.knime.core.node.NodeLogger;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
@@ -30,9 +31,12 @@ import org.xml.sax.SAXException;
  */
 public class MiningSchemaContentHandler extends PMMLContentHandler {
     
-    private Set<String>m_learningFields;
-    private Set<String>m_ignoredFields;
-    private Set<String>m_targetFields;
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            MiningSchemaContentHandler.class); 
+    
+    private List<String>m_learningFields;
+    private List<String>m_ignoredFields;
+    private List<String>m_targetFields;
     
     /** ID of this handler. */
     public static final String ID = "MiningSchemaContentHandler";
@@ -41,16 +45,16 @@ public class MiningSchemaContentHandler extends PMMLContentHandler {
      * 
      */
     public MiningSchemaContentHandler() {
-        m_learningFields = new LinkedHashSet<String>();
-        m_ignoredFields = new LinkedHashSet<String>();
-        m_targetFields = new LinkedHashSet<String>();
+        m_learningFields = new LinkedList<String>();
+        m_ignoredFields = new LinkedList<String>();
+        m_targetFields = new LinkedList<String>();
     }
     
     /**
      * 
      * @return the names of the columns used for learning
      */
-    public Set<String>getLearningFields() {
+    public List<String>getLearningFields() {
         return m_learningFields;
     }
     
@@ -58,7 +62,7 @@ public class MiningSchemaContentHandler extends PMMLContentHandler {
      * 
      * @return the names of the ignored columns
      */
-    public Set<String>getIgnoredFields() {
+    public List<String>getIgnoredFields() {
         return m_ignoredFields;
     }
     
@@ -66,7 +70,7 @@ public class MiningSchemaContentHandler extends PMMLContentHandler {
      * 
      * @return the names of the target columns
      */
-    public Set<String>getTargetFields() {
+    public List<String>getTargetFields() {
         return m_targetFields;
     }
 
@@ -104,6 +108,19 @@ public class MiningSchemaContentHandler extends PMMLContentHandler {
             final Attributes atts) throws SAXException {
         if ("MiningField".equals(name)) {
             // get attributes
+            // check for unsupported attributes:
+            if (atts.getValue("missingValueReplacement") != null) {
+                LOGGER.warn("\"missingValueReplacement\" is not supported and " 
+                        + "will be ignored. Skipping it");
+            }
+            if (atts.getValue("missingValueTreatment") != null) {
+                LOGGER.warn("\"missingValueTreatment\" is not supported and " 
+                        + "will be ignored. Skipping it");
+            }
+            if (atts.getValue("outliers") != null) {
+                LOGGER.warn("\"outliers\" is not supported and " 
+                        + "will be ignored. Skipping it");
+            }
             String colName = atts.getValue("name");
             String usageType = atts.getValue("usageType");
             if (usageType == null) {

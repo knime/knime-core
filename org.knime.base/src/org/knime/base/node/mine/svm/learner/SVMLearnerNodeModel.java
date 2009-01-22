@@ -30,10 +30,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TimerTask;
 import java.util.Vector;
 import java.util.concurrent.Callable;
@@ -198,7 +198,7 @@ public class SVMLearnerNodeModel extends NodeModel {
         DataTableSpec myspec = (DataTableSpec)inSpecs[0];
         StringBuilder errormessage = new StringBuilder();
         DataColumnSpec targetcol = null;
-        Set<DataColumnSpec> validCols = new HashSet<DataColumnSpec>();
+        List<DataColumnSpec> validCols = new LinkedList<DataColumnSpec>();
         if (myspec.getNumColumns() > 0) {
             if (m_classcol.getStringValue().equals("")) {
                 throw new InvalidSettingsException("Class column not set");
