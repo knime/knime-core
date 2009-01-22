@@ -109,7 +109,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
 
         // TODO: we have to check if at least one node of the selection
         // has nrOfViews > 0 && if at least one node is configured
-        
+
         // only if just one node part is selected
         if (parts.length != 1) {
             return false;
@@ -196,10 +196,12 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
                                 IAction viewAction = new OpenViewAction(
                                         cont, 0);
                                 viewAction.run();
-                            };
+                            }
                         });
                     }
-                    // in every case remove the listener
+                }
+                if (!cont.getState().executionInProgress()) {
+                    // in those cases remove the listener
                     cont.removeNodeStateChangeListener(this);
                 }
             }
