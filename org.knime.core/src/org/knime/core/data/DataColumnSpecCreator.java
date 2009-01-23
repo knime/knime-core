@@ -161,7 +161,7 @@ public final class DataColumnSpecCreator {
         DataColumnDomain domain2 = cspec2.getDomain();
         boolean hasDomainChanged = false;
         final Set<DataCell> myValues = m_domain.getValues();
-        final Set<DataCell> oValues = m_domain.getValues();
+        final Set<DataCell> oValues = domain2.getValues();
         Set<DataCell> newValues;
         if (myValues == null || oValues == null) {
             newValues = null;
