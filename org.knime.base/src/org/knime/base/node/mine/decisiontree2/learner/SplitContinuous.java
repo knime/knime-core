@@ -185,7 +185,7 @@ public class SplitContinuous extends Split {
         m_partitionValidCount = new double[2];
         while (rowIterator.hasNext()) {
             // if the above part has too few rows terminate the loop
-            if (partitionCount[ABOVE_INDEX] < minCount) {
+            if (partitionCount[ABOVE_INDEX] <= minCount) {
                 break;
             }
             // adapt the below and above histogram with the previous value
@@ -209,18 +209,15 @@ public class SplitContinuous extends Split {
                         m_splitQualityMeasure.measureQuality(alloverCount,
                                 partitionCount, partitionHisto,
                                 alloverMissingValueWeight);
+                // post process measure
+                qualityMeasure =
+                    m_splitQualityMeasure.postProcessMeasure(
+                            qualityMeasure, alloverCount,
+                            partitionCount, alloverMissingValueWeight);
 
                 if (m_splitQualityMeasure.isBetterOrEqual(qualityMeasure,
                         bestQualityMeasure)) {
-                    // if (attributeIndex == 12) {
-                    // LOGGER.error("Counting structures: All: "
-                    // + (alloverMissingValueWeight + alloverCount)
-                    // + " "
-                    // + printCountStructures(alloverCount,
-                    // partitionCount, partitionHisto));
-                    // LOGGER.error("Split point: " + previouseAttrValue
-                    // + " at: " + qualityMeasure + (""));
-                    // }
+                    bestQualityMeasure = qualityMeasure;
                     // middle value as split value
                     if (averageSplitpoint) {
                         bestSplitValue =
@@ -243,17 +240,6 @@ public class SplitContinuous extends Split {
             weight = row.getWeight();
         }
 
-        // if (LOGGER.isInfoEnabled()) {
-        // LOGGER.info("Best split point: " + bestSplitValue + " at: " +
-        // bestQualityMeasure);
-        // }
-        // post process the best split value
-        if (bestQualityMeasure > 0.0) {
-            bestQualityMeasure =
-                    m_splitQualityMeasure.postProcessMeasure(
-                            bestQualityMeasure, alloverCount,
-                            m_partitionValidCount, alloverMissingValueWeight);
-        }
         setBestQualityMeasure(bestQualityMeasure);
         m_bestSplitValue = bestSplitValue;
     }
