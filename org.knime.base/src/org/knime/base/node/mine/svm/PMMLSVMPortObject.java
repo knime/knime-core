@@ -270,8 +270,9 @@ public class PMMLSVMPortObject extends PMMLPortObject {
     protected void addRBFKernel(final TransformerHandler handler,
             final Kernel kernel) throws SAXException {
         double sigma = kernel.getParameter(0);
+        double gamma = 1.0 / (2.0 * (sigma * sigma));
         AttributesImpl atts = new AttributesImpl();
-        atts.addAttribute(null, null, "gamma", CDATA, "" + sigma);
+        atts.addAttribute(null, null, "gamma", CDATA, "" + gamma);
         handler.startElement(null, null, "RadialBasisKernelType", atts);
         handler.endElement(null, null, "RadialBasisKernelType");
     }
@@ -312,8 +313,8 @@ public class PMMLSVMPortObject extends PMMLPortObject {
         for (int i = 0; i < supVecs.length; i++) {
             for (int j = 0; j < supVecs[i].length; j++) {
                 atts = new AttributesImpl();
-                atts.addAttribute(null, null, "id", CDATA, svms[i]
-                        .getPositive()
+                atts.addAttribute(null, null, "id", CDATA, supVecs[i][j]
+                        .getClassValue()
                         + "_" + supVecs[i][j].getKey().getString());
                 handler.startElement(null, null, "VectorInstance", atts);
                 int nrValues = supVecs[i][j].getNumberValues();
@@ -407,8 +408,8 @@ public class PMMLSVMPortObject extends PMMLPortObject {
             handler.startElement(null, null, "SupportVectors", atts);
             for (int v = 0; v < supVecs.length; v++) {
                 atts = new AttributesImpl();
-                atts.addAttribute(null, null, "vectorId", CDATA, svms[s]
-                        .getPositive()
+                atts.addAttribute(null, null, "vectorId", CDATA, supVecs[v]
+                        .getClassValue()
                         + "_" + supVecs[v].getKey().getString());
                 handler.startElement(null, null, "SupportVector", atts);
                 handler.endElement(null, null, "SupportVector");

@@ -97,9 +97,9 @@ public class PMMLSVMHandler extends PMMLContentHandler {
     public Kernel getKernel() {
         return m_kernel;
     }
-    
+
     /**
-     * 
+     *
      * @return the target values
      */
     public List<String>getTargetValues() {
@@ -158,7 +158,9 @@ public class PMMLSVMHandler extends PMMLContentHandler {
                 for (int j = 0; j < m_doubleVectors.length; j++) {
                     if (m_doubleVectors[j].getKey().getString().equals(id)) {
                         svmVecs[i] = m_doubleVectors[j];
-                        svmVecs[i].setClassValue(m_curSVMTargetCategory);
+                        String classvalue =
+                                id.substring(0, id.lastIndexOf('_'));
+                        svmVecs[i].setClassValue(classvalue);
                         break;
                     }
                 }
@@ -206,7 +208,8 @@ public class PMMLSVMHandler extends PMMLContentHandler {
             m_kernel.setParameter(1, delta);
         } else if (name.equals("RadialBasisKernelType")) {
             m_kernel = KernelFactory.getKernel(KernelType.RBF);
-            double sigma = Double.parseDouble(atts.getValue("gamma"));
+            double gamma = Double.parseDouble(atts.getValue("gamma"));
+            double sigma = Math.sqrt(1.0 / (2.0 * gamma));
             m_kernel.setParameter(0, sigma);
         } else if (name.equals("VectorInstance")) {
             m_curVecID = atts.getValue("id");
