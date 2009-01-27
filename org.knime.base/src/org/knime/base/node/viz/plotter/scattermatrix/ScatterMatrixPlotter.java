@@ -81,7 +81,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
     private static final double V_MARGIN_FACTOR = 0.08;
     
     /** The space at top and bottom in %. */
-    private static final double H_MARGIN_FACTOR = 0.1;
+    private static final double H_MARGIN_FACTOR = 0.13;
     
 
     private Set<String> m_selectedColumns;
