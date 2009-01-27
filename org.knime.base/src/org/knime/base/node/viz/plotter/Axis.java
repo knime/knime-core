@@ -132,8 +132,6 @@ public class Axis extends JComponent {
     // private int m_nrOfTicks;
     private int m_tickDist;
 
-    private List<Integer> m_tickPositions;
-
     private int m_tickLength;
 
     private CoordinateMapping[] m_coordMap;
@@ -155,6 +153,8 @@ public class Axis extends JComponent {
     private JMenu m_mappingMethodMenu;
 
     private JMenu m_notationsMenu;
+    
+    private final boolean m_inverse;
 
     /**
      * Adds a {@link ChangeListener}, which is notified if repaint is
@@ -183,15 +183,20 @@ public class Axis extends JComponent {
      * @param length the initial entire length of the ruler in pixels.
      */
     public Axis(final int orientation, final int length) {
+        this(orientation, length, false);
+    }
+    
+    public Axis(final int orientation, final int length, 
+            final boolean inverse) {
         if ((orientation != HORIZONTAL) && (orientation != VERTICAL)) {
             throw new IllegalArgumentException("Argument 'orientation' must"
                     + " be either Header.HORIZONTAL or Header.VERTICAL.");
         }
         m_fullLength = length;
-        m_tickPositions = new LinkedList<Integer>();
         m_horizontal = (orientation == HORIZONTAL);
         setToolTipText("complete label");
         m_tickLength = TICKLENGTH;
+        m_inverse = inverse;
     }
 
     /**
@@ -249,14 +254,12 @@ public class Axis extends JComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void paintComponent(final Graphics g) {
+    public void paintComponent(final Graphics g) {
         super.paintComponent(g);
 
         if (g.getClipBounds() == null) {
             return;
         }
-
-        m_tickPositions.clear();
 
         Graphics2D g2 = (Graphics2D)g;
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
@@ -288,7 +291,7 @@ public class Axis extends JComponent {
             // no use in drawing in such a small area
             return;
         }
-
+        
         // draw the axis
         if (m_horizontal) {
             g.drawLine(x, y + 2, x + width, y + 2);
@@ -375,7 +378,9 @@ public class Axis extends JComponent {
             }
 
             drawnLabels.add(label);
-            drawTick(g, (long)mapping.getMappingValue() + m_startTickOffset,
+            long pos = (long)mapping.getMappingValue() + m_startTickOffset;
+            drawTick(g, 
+                    pos,
                     label, useOffset);
             useOffset = !useOffset;
         }
@@ -484,7 +489,13 @@ public class Axis extends JComponent {
             if (x < 0) {
                 x = 0;
             }
-            g.drawLine(x, 2, x, m_tickLength + 2);
+            int y = 2;
+            if (m_inverse) {
+                y -= m_tickLength;
+            } else {              
+                y += m_tickLength;
+            }
+            g.drawLine(x, 2, x, y);
 
             // if (!m_coordinate.isNominal()) {
             // for the label we adjust the coordinates
@@ -508,23 +519,30 @@ public class Axis extends JComponent {
             if (x < 0) {
                 x = 0;
             }
+            
 
-            // store the tick position for later tool tip retrieval
-            m_tickPositions.add(x);
             int labelY = SIZE - m_tickLength - 3;
             if (useOffset) {
                 labelY -= HORIZ_OFFSET;
             }
-            if (labelY < FONTSIZE) {
-                labelY = FONTSIZE;
+            if (m_inverse) {
+                labelY -= SIZE; 
             }
-            if (m_coordinate.isNominal() && m_rotateXLabels) {
+            if (m_coordinate.isNominal()) {
                 Rectangle rect =
                         new Rectangle(x, m_tickLength
                                 + g.getFontMetrics().getHeight(), m_tickDist,
                                 SIZE - m_tickLength);
-                LabelPaintUtil.drawLabel(label, (Graphics2D)g, rect,
+                if (m_inverse) {
+                    int trans = SIZE + m_tickLength + FONTSIZE + 5;
+                    g.translate(0, -trans);
+                    LabelPaintUtil.drawLabel(label, (Graphics2D)g, rect,
+                            LabelPaintUtil.Position.TOP, m_rotateXLabels);
+                    g.translate(0, trans);
+                } else {
+                    LabelPaintUtil.drawLabel(label, (Graphics2D)g, rect,
                         LabelPaintUtil.Position.BOTTOM, m_rotateXLabels);
+                }
             } else {
                 g.drawString(label, x, labelY);
             }
@@ -543,12 +561,35 @@ public class Axis extends JComponent {
                 y -= 1;
             }
 
-            g.drawLine(SIZE - m_tickLength - 1, y, SIZE - 1, y);
-
-            m_tickPositions.add(y);
-
-            // System.out.println(m_rotateYLabels);
-
+            int xLabelStart = -1;
+//            int xLabelEnd = -1;
+            int xTickStart = -1;
+            int xTickEnd = -1;
+            
+            if (m_inverse) {
+                xTickStart = getX() + SIZE;
+                xTickEnd = xTickStart + m_tickLength;
+                if (m_coordinate.isNominal()) {
+                    xLabelStart = SIZE + (int)(1.4 * m_tickLength);
+                } else {                    
+                    xLabelStart = xTickStart + (int)(1.4 * m_tickLength);
+//                    xLabelEnd = xLabelStart + g.getFontMetrics().stringWidth(
+//                            label);
+                }
+            } else {
+                xTickStart = SIZE - 2;
+                xTickEnd = xTickStart - m_tickLength;
+                if (m_coordinate.isNominal()) {
+                    xLabelStart = m_tickLength;
+//                    xLabelEnd = xLabelStart + g.getFontMetrics().stringWidth(
+//                            label);
+                } else {
+                    xLabelStart = SIZE - (int)(1.4 * m_tickLength) 
+                        - g.getFontMetrics().stringWidth(label);
+//                    xLabelEnd = SIZE - (int)(1.4 * m_tickLength);
+                }
+            }
+            g.drawLine(xTickStart, y, xTickEnd, y);
             if (!m_coordinate.isNominal()) { // for the label we adjust the
                 // coordinates
                 int lablePixelHeight = g.getFontMetrics().getHeight();
@@ -564,18 +605,18 @@ public class Axis extends JComponent {
                     // move the upper tick a bit
                     y = lablePixelHeight;
                 }
-                g.drawString(label, SIZE - (int)(1.4 * m_tickLength)
-                        - g.getFontMetrics().stringWidth(label), y);
-                // + g.getFontMetrics().getHeight() / 3);
+                g.drawString(label, xLabelStart, y);
             } else {
-
                 Rectangle rect =
-                        new Rectangle(m_tickLength, y - m_tickDist, SIZE
-                                - (2 * m_tickLength), m_tickDist);
-                // new Rectangle(0, y - m_tickDist, SIZE - m_tickLength,
-                // m_tickDist);
-                LabelPaintUtil.drawLabel(label, (Graphics2D)g, rect,
-                        LabelPaintUtil.Position.LEFT, m_rotateYLabels);
+                        new Rectangle(xLabelStart, y - m_tickDist, 
+                                SIZE - (int)(1.4 * m_tickLength), m_tickDist);
+                if (m_inverse) {
+                    LabelPaintUtil.drawLabel(label, (Graphics2D)g, rect,
+                            LabelPaintUtil.Position.RIGHT, m_rotateYLabels);
+                } else {                    
+                    LabelPaintUtil.drawLabel(label, (Graphics2D)g, rect,
+                            LabelPaintUtil.Position.LEFT, m_rotateYLabels);
+                }
             }
         }
     }
