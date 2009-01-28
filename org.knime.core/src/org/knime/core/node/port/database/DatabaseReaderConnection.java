@@ -282,6 +282,14 @@ public final class DatabaseReaderConnection {
         private boolean m_hasExceptionReported = false;
         
         private int m_rowCounter = 0;
+        
+        /** FIXME: Some database (such as sqlite do NOT support) methods like
+         * #getAsciiStream nor #getBinaryStream and will fail with an 
+         * SQLException. To prevent this exception for each ResultSet's value,
+         * this flag for each column indicated that this exception has been 
+         * thrown and we directly can access the value via #getString.
+         */
+        private final boolean[] m_streamException;
 
         /**
          * Creates new iterator.
@@ -289,6 +297,7 @@ public final class DatabaseReaderConnection {
          */
         DBRowIterator(final ResultSet result) {
             m_result = result;
+            m_streamException = new boolean[m_spec.getNumColumns()];
         }
 
         /**
@@ -356,7 +365,7 @@ public final class DatabaseReaderConnection {
                             case Types.BIGINT: s = readBigDecimal(i); break;
                             case Types.CHAR:
                             case Types.VARCHAR:
-                            case Types.LONGVARCHAR: 
+                            case Types.LONGVARCHAR:
                                 s = readAsciiStream(i); break;
                             case Types.DATE: s = readDate(i); break;
                             case Types.TIME: s = readTime(i); break;
@@ -449,35 +458,64 @@ public final class DatabaseReaderConnection {
         
         private String readAsciiStream(final int i)
                 throws IOException, SQLException {
-            InputStream is = m_result.getAsciiStream(i + 1);
-            if (wasNull() || is == null) {
+            if (m_streamException[i]) {
+                return getString(i);
+            }
+            try {
+                InputStream is = m_result.getAsciiStream(i + 1);
+                if (wasNull() || is == null) {
+                    return null;
+                } else {
+                    InputStreamReader reader =
+                    // TODO: using default encoding
+                            new InputStreamReader(is);
+                    StringWriter writer = new StringWriter();
+                    FileUtil.copy(reader, writer);
+                    reader.close();
+                    writer.close();
+                    return writer.toString();
+                }
+            } catch (SQLException sql) {
+                m_streamException[i] = true;
+                handlerException("Can't read from ASCII stream, "
+                        + "trying to read string... ", sql);
+                return getString(i);
+            }
+        }
+        
+        private String getString(final int i) throws SQLException {
+            String s = m_result.getString(i + 1);
+            if (wasNull() || s == null) {
                 return null;
             } else {
-                InputStreamReader reader =
-                // TODO: using default encoding
-                        new InputStreamReader(is);
-                StringWriter writer = new StringWriter();
-                FileUtil.copy(reader, writer);
-                reader.close();
-                writer.close();
-                return writer.toString();
+                return s;
             }
         }
         
         private String readBinaryStream(final int i)
                 throws IOException, SQLException {
-            InputStream is = m_result.getBinaryStream(i + 1);
-            if (wasNull() || is == null) {
-                return null;
-            } else {
-                InputStreamReader reader =
-                // TODO: using default encoding
-                        new InputStreamReader(is);
-                StringWriter writer = new StringWriter();
-                FileUtil.copy(reader, writer);
-                reader.close();
-                writer.close();
-                return writer.toString();
+            if (m_streamException[i]) {
+                return getString(i);
+            }
+            try {
+                InputStream is = m_result.getBinaryStream(i + 1);
+                if (wasNull() || is == null) {
+                    return null;
+                } else {
+                    InputStreamReader reader =
+                    // TODO: using default encoding
+                            new InputStreamReader(is);
+                    StringWriter writer = new StringWriter();
+                    FileUtil.copy(reader, writer);
+                    reader.close();
+                    writer.close();
+                    return writer.toString();
+                }
+            } catch (SQLException sql) {
+                m_streamException[i] = true;
+                handlerException("Can't read from binary stream, "
+                        + "trying to read string... ", sql);
+                return getString(i);
             }
         }
         
