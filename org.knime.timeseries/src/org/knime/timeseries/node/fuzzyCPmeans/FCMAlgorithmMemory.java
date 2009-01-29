@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -283,7 +283,7 @@ public class FCMAlgorithmMemory extends FCCAlgorithm {
                 }
             } // end while for all datarows sum up
 
-			// finde die beste Position fuer die Übernahme als Prototyp
+			// finde die beste Position fuer die ï¿½bernahme als Prototyp
 			double wsum = 0;
 			for (int i=0;i<dimension;++i) wsum+=sumDenominator[i];
 			double maxsum = wsum;
@@ -293,7 +293,7 @@ public class FCMAlgorithmMemory extends FCCAlgorithm {
 				if (wsum>maxsum) { maxsum = wsum; maxpos = i; }
 			}
 			
-			// Übernahme           
+			// ï¿½bernahme           
 			double t = 0;
            for (int j = 0; j < dimension; j++) {
              double newValue = sumNumerator[maxpos+j]/sumDenominator[maxpos+j];
