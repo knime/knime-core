@@ -72,6 +72,11 @@ public class BWElimFilterNodeModel extends NodeModel {
         if (model == null) {
             throw new InvalidSettingsException("No model available");
         }
+
+        if (m_settings.nrOfFeatures() < 1) {
+            throw new InvalidSettingsException("No features selected yet");
+        }
+
         DataTableSpec tSpec = (DataTableSpec)inSpecs[1];
 
         int missing = 0;
@@ -89,9 +94,6 @@ public class BWElimFilterNodeModel extends NodeModel {
                     + "any of the columns used in the feature elimination ");
         }
 
-        if (m_settings.nrOfFeatures() < 1) {
-            throw new InvalidSettingsException("No features selected yet");
-        }
 
         missing = 0;
         String missingColumns = ", ";
