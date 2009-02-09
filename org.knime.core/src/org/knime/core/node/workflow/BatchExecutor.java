@@ -174,7 +174,7 @@ public final class BatchExecutor {
                 } else {
                     isPromptForPassword = true;
                 }
-            } else if ("-workflowFile".equals(parts[0])) {
+            } else if ("-preferences".equals(parts[0])) {
                 if (parts.length != 2) {
                     System.err.println(
                             "Couldn't parse -preferences argument: " + s);
