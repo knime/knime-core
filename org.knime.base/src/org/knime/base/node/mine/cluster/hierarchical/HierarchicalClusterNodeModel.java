@@ -195,8 +195,8 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
 
         DataTable outputData = null;
 
-        if (m_distFunctionName.getStringValue().equals(
-                DistanceFunction.Names.Manhattan)) {
+        if (DistanceFunction.Names.Manhattan.toString().equals(
+                m_distFunctionName.getStringValue())) {
             m_distFunction = ManhattanDist.MANHATTEN_DISTANCE;
         } else {
             m_distFunction = EuclideanDist.EUCLIDEAN_DISTANCE;
