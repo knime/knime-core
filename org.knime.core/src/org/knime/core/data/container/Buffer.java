@@ -1399,8 +1399,10 @@ class Buffer implements KNIMEStreamConstants {
                     m_openIteratorSet.put(f, DUMMY);
                 }
             } catch (IOException ioe) {
-                throw new RuntimeException("Cannot read file \""
-                        + m_binFile.getName() + "\"", ioe);
+                StringBuilder b = new StringBuilder("Cannot read file \"");
+                b.append(m_binFile != null ? m_binFile.getName() : "<unknown>");
+                b.append("\"");
+                throw new RuntimeException(b.toString(), ioe);
             }
             return f;
         } else {
