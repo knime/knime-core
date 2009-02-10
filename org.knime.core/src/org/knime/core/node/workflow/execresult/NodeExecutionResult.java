@@ -110,6 +110,12 @@ public class NodeExecutionResult implements NodeContentPersistor {
     public void setNodeInternDir(final ReferencedFile nodeInternDir) {
         m_nodeInternDir = nodeInternDir;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public boolean hasContent() {
+        return m_nodeInternDir != null;
+    }
 
     /**
      * @param warningMessage the warningMessage to set

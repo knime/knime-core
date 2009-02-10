@@ -2,7 +2,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -19,30 +19,24 @@
  * ---------------------------------------------------------------------
  * 
  * History
- *   Jan 13, 2009 (wiswedel): created
+ *   Feb 10, 2009 (wiswedel): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.node;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * Dialog for workflow manager. It allows the selection of a job executor. 
- * It may contain more controls in the future (e.g. selected options of 
- * contained nodes).
+ * An empty dialog, which is used to create dialogs with only miscellaneous tabs
+ * (such as memory policy and job selector panel).
+ * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-final class WorkflowManagerDialogPane extends NodeDialogPane {
+public final class EmptyNodeDialogPane extends NodeDialogPane {
 
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-
     }
     
     /** {@inheritDoc} */
@@ -50,5 +44,4 @@ final class WorkflowManagerDialogPane extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
     }
-
 }

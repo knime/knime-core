@@ -44,7 +44,6 @@ import javax.swing.UIManager;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.NodeDialogPane.MiscNodeDialogPane;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.config.ConfigEditTreeModel;
@@ -246,8 +245,6 @@ public final class Node implements NodeModelWarningListener {
     LoadResult load(final NodePersistor loader, final ExecutionMonitor exec)
             throws CanceledExecutionException {
         LoadResult result = new LoadResult();
-        boolean hasContent = loader.hasContent();
-        m_model.setHasContent(hasContent);
         try {
             // this also validates the settings
             loadSettingsFrom(loader.getSettings());
@@ -316,6 +313,11 @@ public final class Node implements NodeModelWarningListener {
                 m_logger.error("Unable to save internals", ioe);
             }
         }
+        if (m_internalHeldTables != null) {
+            BufferedDataTable[] internalHeldTables = Arrays.copyOf(
+                    m_internalHeldTables, m_internalHeldTables.length);
+            result.setInternalHeldTables(internalHeldTables);
+        }
         PortObject[] pos = new PortObject[getNrOutPorts()];
         PortObjectSpec[] poSpecs = new PortObjectSpec[getNrOutPorts()];
         for (int i = 0; i < pos.length; i++) {
@@ -338,6 +340,8 @@ public final class Node implements NodeModelWarningListener {
     public LoadResult loadDataAndInternals(
             final NodeContentPersistor loader, final ExecutionMonitor exec) {
         LoadResult result = new LoadResult();
+        boolean hasContent = loader.hasContent();
+        m_model.setHasContent(hasContent);
         for (int i = 0; i < getNrOutPorts(); i++) {
             Class<? extends PortObjectSpec> specClass =
                 m_outputs[i].type.getPortObjectSpecClass();
@@ -1545,8 +1549,7 @@ public final class Node implements NodeModelWarningListener {
                 if (m_factory.hasDialog()) {
                     m_dialogPane = m_factory.createNodeDialogPane();
                 } else {
-                    assert (getNrOutPorts() > 0);
-                    m_dialogPane = new MiscNodeDialogPane();
+                    m_dialogPane = new EmptyNodeDialogPane();
                 }
                 if (getNrOutPorts() > 0) {
                     m_dialogPane.addMiscTab();

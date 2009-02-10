@@ -87,7 +87,6 @@ public interface NodePersistor extends NodeContentPersistor {
     
     boolean isConfigured();
     boolean isExecuted();
-    boolean hasContent();
     // may return null in which case the node decides what to do.
     LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy();
     NodeSettingsRO getSettings();

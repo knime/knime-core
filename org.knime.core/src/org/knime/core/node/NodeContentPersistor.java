@@ -39,6 +39,7 @@ public interface NodeContentPersistor {
     void setNeedsResetAfterLoad();
     boolean mustWarnOnDataLoadError();
     
+    boolean hasContent();
     ReferencedFile getNodeInternDirectory();
     PortObjectSpec getPortObjectSpec(final int outportIndex);
     PortObject getPortObject(final int outportIndex);

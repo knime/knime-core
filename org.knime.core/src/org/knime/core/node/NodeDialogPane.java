@@ -959,34 +959,5 @@ public abstract class NodeDialogPane {
 
     }
 
-
-    /**
-     * <code>NodeDialogPane</code> that only keeps a
-     * <i>General Node Settings</i> tab. Load and save methods are left blank.
-     *
-     * @author Thomas Gabriel, University of Konstanz
-     */
-    static class MiscNodeDialogPane extends NodeDialogPane {
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected void loadSettingsFrom(final NodeSettingsRO settings,
-                final PortObjectSpec[] specs) throws NotConfigurableException {
-
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected void saveSettingsTo(final NodeSettingsWO settings)
-                throws InvalidSettingsException {
-
-        }
-
-    }
-
 }
 

@@ -51,6 +51,7 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.EmptyNodeDialogPane;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
@@ -2191,7 +2192,7 @@ public final class WorkflowManager extends NodeContainer {
     NodeDialogPane getDialogPane() {
         if (m_nodeDialogPane == null) {
             if (hasDialog()) {
-                m_nodeDialogPane = new WorkflowManagerDialogPane();
+                m_nodeDialogPane = new EmptyNodeDialogPane();
                 m_nodeDialogPane.addJobMgrTab();
             } else {
                 throw new IllegalStateException("Workflow has no dialog");
