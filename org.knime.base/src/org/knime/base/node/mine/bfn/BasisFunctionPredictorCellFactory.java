@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -21,16 +21,13 @@
  */
 package org.knime.base.node.mine.bfn;
 
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.knime.base.data.filter.column.FilterColumnRow;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -57,95 +54,56 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
     
     private final DataColumnSpec[] m_specs;
     
+    private final boolean m_appendClassProps;
+    
     /**
      * Create new predictor cell factory. Only used to create the 
      * <code>ColumnRearranger</code> with the appended model spec.
-     * @param modelSpecs column specs of the model
-     * @param newTargetName new column target name
-     * @param appendClassProps if class probability columns are appended
+     * @param specs the appended column specs
+     * @param appendClassProps if class probabilities should be append 
      */
-    public BasisFunctionPredictorCellFactory(
-            final DataTableSpec modelSpecs,
-            final String newTargetName,
+    public BasisFunctionPredictorCellFactory(final DataColumnSpec[] specs,
             final boolean appendClassProps) {
         m_model = null;
         m_filteredColumns = null;
         m_dontKnowClass = Double.NaN;
         m_normClass = false;
-        m_specs = createSpec(modelSpecs, newTargetName, appendClassProps);
-    }
-    
-    private static DataColumnSpec[] createSpec(
-            final DataTableSpec modelSpecs, 
-            final String newTargetName,
-            final boolean appendClassProps) {
-        int modelClassIdx = modelSpecs.getNumColumns() - 5;
-        Set<DataCell> possClasses = 
-            modelSpecs.getColumnSpec(modelClassIdx).getDomain().getValues();
-        final DataColumnSpec[] specs;
-        if (possClasses == null || !appendClassProps) {
-            specs = new DataColumnSpec[1];
-        } else {
-            specs = new DataColumnSpec[possClasses.size() + 1];
-            Iterator<DataCell> it = possClasses.iterator();
-            for (int i = 0; i < possClasses.size(); i++) {
-                specs[i] = new DataColumnSpecCreator(
-                        it.next().toString(), DoubleCell.TYPE).createSpec();
-            }
-        }
-        DataColumnSpecCreator newTargetSpec = new DataColumnSpecCreator(
-                modelSpecs.getColumnSpec(modelClassIdx));
-        newTargetSpec.setName(newTargetName);
-        specs[specs.length - 1] = newTargetSpec.createSpec();
-        return specs;
+        m_specs = specs;
+        m_appendClassProps = appendClassProps;
     }
 
     /**
      * Appends one column to the given data to make a prediction for each row
      * using the model which contains one {@link BasisFunctionPredictorRow}
      * column.
-     * 
      * @param dataSpec the spec of the test data
-     * @param modelSpecs names and types of the rule model
+     * @param specs names and types of the rule model
+     * @param filteredColumns use only those column for prediction (part of the
+     *        of training data)
      * @param model the trained model as list of rows
-     * @param newTargetName name of the new predicted column
      * @param dontKnowClass the don't know class probability
      * @param normClass normalize classification output
-     * @param appendClassProps if class probability columns are appended 
+     * @param appendClassProps if class probabilities should be append  
      * @throws NullPointerException if one of the arguments is <code>null</code>
      */
     public BasisFunctionPredictorCellFactory(final DataTableSpec dataSpec, 
-            final DataTableSpec modelSpecs,
+            final DataColumnSpec[] specs,
+            final int[] filteredColumns,
             final Map<DataCell, List<BasisFunctionPredictorRow>> model,
-            final String newTargetName,
             final double dontKnowClass,
             final boolean normClass,
             final boolean appendClassProps) {
-        
-        // check input
         assert (model != null);
-        // keep the model for later mapping
-        if (model.size() == 0) {
-            throw new IllegalArgumentException("Model must not be empty.");
-        }
         m_model = model;
-        
         m_dontKnowClass = dontKnowClass;
-        
         m_normClass = normClass;
-        
-        m_specs = createSpec(modelSpecs, newTargetName, appendClassProps);
-        
-        m_filteredColumns = new int[modelSpecs.getNumColumns() - 5];
-        for (int i = 0; i < m_filteredColumns.length; i++) {
-            m_filteredColumns[i] = dataSpec.findColumnIndex(
-                    modelSpecs.getColumnSpec(i).getName());
-        }
+        m_specs = specs;
+        m_filteredColumns = filteredColumns;
+        m_appendClassProps = appendClassProps;
     }
     
     /**
      * Predicts an unknown row to the given model.
-     * 
      * @param row the row to predict
      * @param model a list of rules
      * @return mapping class label to array of assigned class degrees
@@ -174,8 +132,7 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
         // find best class activation index
         DataCell best = DataType.getMissingCell();
         // set default highest activation, not yet set
-        double hact = -1.0;
-        // skip last column which is the winner
+        double hact = -1.0; 
         double sumAct = 0.0;
         Double[] act = new Double[m_specs.length]; 
         for (DataCell cell : map.keySet()) {
@@ -191,8 +148,9 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
             }
         }
   
-        // all class values, skip winner
-        DataCell[] res = new DataCell[m_specs.length];
+        // all class values
+        DataCell[] res = new DataCell[act.length];
+        // skip last column which is the winner
         for (int i = 0; i < res.length - 1; i++) {
             if (act[i] == null) {
                 res[i] = new DoubleCell(0.0);
@@ -204,7 +162,8 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
                 }
             }
         }
-        if (hact < m_dontKnowClass) {
+        // insert class label
+        if (hact == 0.0 || hact < m_dontKnowClass) {
             res[res.length - 1] = DataType.getMissingCell();
         } else {
             res[res.length - 1] = best;
@@ -213,19 +172,30 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
     }
 
     /**
-     * Predicts given row using the underlying basisfunction model.
+     * Predicts given row using the underlying basis function model.
      * {@inheritDoc}
      */
     public DataCell[] getCells(final DataRow row) {
         DataRow wRow = new FilterColumnRow(row, m_filteredColumns);
-        return predict(wRow, m_model);  
+        DataCell[] pred = predict(wRow, m_model);
+        if (m_appendClassProps) {
+            // complete prediction including class probs and label
+            return pred;
+        } else {
+            // don't append class probabilities
+            return new DataCell[]{pred[pred.length - 1]};
+        }
     }
     
     /**
      * {@inheritDoc}
      */
     public DataColumnSpec[] getColumnSpecs() {
-        return m_specs;
+        if (m_appendClassProps) {
+            return m_specs;
+        } else {
+            return new DataColumnSpec[]{m_specs[m_specs.length - 1]};
+        }
     }
 
     /**

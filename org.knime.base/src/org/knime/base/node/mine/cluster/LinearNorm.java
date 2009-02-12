@@ -1,7 +1,7 @@
 /* This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -57,6 +57,10 @@ public class LinearNorm {
             return m_norm;
         }
         
+        /**
+         * 
+         * {@inheritDoc}
+         */
         @Override
         public String toString() {
             return "orig=" + m_original + " norm=" + m_norm;
@@ -84,6 +88,16 @@ public class LinearNorm {
      * @param normValue the mapped norm value
      */
     public void addInterval(final double origValue, final double normValue) {
+        // check for valid intervals
+        if (!m_intervals.isEmpty()) {
+            Interval lower = m_intervals.get(m_intervals.size() - 1);
+            if (normValue <= lower.m_norm
+                    || origValue <= lower.m_original) {
+                throw new IllegalArgumentException(
+                        "Intervals for LinearNorm must be added " 
+                        + "in ascending order!");
+            }
+        }
         m_intervals.add(new Interval(origValue, normValue));
     }
     
@@ -97,7 +111,7 @@ public class LinearNorm {
     
     /**
      * Unnormalizes the given values.
-     * @param value
+     * @param value normalized which should be "unnormalized"
      * @return unnormalized value
      */
     public double unnormalize(final double value) {
@@ -109,15 +123,11 @@ public class LinearNorm {
                         * ((upper.m_original - lower.m_original)
                                 / (upper.m_norm - lower.m_norm)));
                 return y;
-                /*
-                return value * (upper.m_original - lower.m_original
-                    + lower.m_original);
-                    */
             }
         }
         throw new IllegalArgumentException(
                 "Value " + value 
-                + "is out of reported linear normalization!");
+                + " is out of reported linear normalization!");
     }
     
 }

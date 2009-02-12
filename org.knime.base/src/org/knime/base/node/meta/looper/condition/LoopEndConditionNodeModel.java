@@ -2,7 +2,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -29,6 +29,7 @@ import java.util.NoSuchElementException;
 
 import org.knime.base.data.append.column.AppendedColumnRow;
 import org.knime.base.node.meta.looper.condition.LoopEndConditionSettings.Operator;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -152,14 +153,35 @@ public class LoopEndConditionNodeModel extends NodeModel implements
             final ExecutionContext exec) throws Exception {
         int count = peekScopeVariableInt("currentIteration");
         exec.setMessage("Iteration " + count);
-        if (count == 0) {
+        DataTableSpec spec1 = createSpec1(inData[0].getDataTableSpec());
+        if (m_collectContainer == null) {
+            assert m_variableContainer == null;
             // first time we are getting to this: open container
-            m_collectContainer =
-                    exec.createDataContainer(createSpec1(inData[0]
-                            .getDataTableSpec()));
+            m_collectContainer = exec.createDataContainer(spec1);
             m_variableContainer = exec.createDataContainer(createSpec2());
+        } else if (!spec1.equalStructure(m_collectContainer.getTableSpec())) {
+            DataTableSpec predSpec = m_collectContainer.getTableSpec();
+            StringBuilder error = new StringBuilder(
+                    "Input table's structure differs from reference " 
+                    + "(first iteration) table: ");
+            if (spec1.getNumColumns() != predSpec.getNumColumns()) {
+                error.append("different column counts ");
+                error.append(spec1.getNumColumns());
+                error.append(" vs. ").append(predSpec.getNumColumns());
+            } else {
+                for (int i = 0; i < spec1.getNumColumns(); i++) {
+                    DataColumnSpec inCol = spec1.getColumnSpec(i);
+                    DataColumnSpec predCol = predSpec.getColumnSpec(i);
+                    if (!inCol.equalStructure(predCol)) {
+                      error.append("Column ").append(i).append(" [");
+                      error.append(inCol).append("] vs. [");
+                      error.append(predCol).append("]");
+                    }
+                }
+            }
+            throw new IllegalArgumentException(error.toString());
         }
-
+        
         RowKey rk = new RowKey("Iteration " + count);
         if (m_settings.variableType() == Type.DOUBLE) {
             m_variableContainer.addRowToTable(new DefaultRow(rk,
@@ -276,6 +298,7 @@ public class LoopEndConditionNodeModel extends NodeModel implements
      */
     @Override
     protected void reset() {
+        m_variableContainer = null;
         m_collectContainer = null;
     }
 

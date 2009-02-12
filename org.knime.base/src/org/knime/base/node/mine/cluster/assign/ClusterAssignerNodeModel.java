@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -28,7 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.knime.base.node.mine.cluster.PMMLClusterPortObject;
 import org.knime.base.node.mine.cluster.PMMLClusterPortObject.ComparisonMeasure;
@@ -123,7 +122,7 @@ public class ClusterAssignerNodeModel extends NodeModel {
     }
     
     private static int[] findLearnedColumnIndices(final DataTableSpec ospec,
-            final Set<DataColumnSpec> learnedCols) 
+            final List<DataColumnSpec> learnedCols) 
             throws InvalidSettingsException {
         int[] colIndices = new int[learnedCols.size()];
         int idx = 0;
@@ -219,6 +218,8 @@ public class ClusterAssignerNodeModel extends NodeModel {
             DataCell winnercell = DataType.getMissingCell();
             for (Prototype proto : m_prototypes) {
                 double dist;
+                // TODO: if prototypes are normalized
+                // we have to normalize input data here
                 if (m_measure.equals(ComparisonMeasure.squaredEuclidean)) {
                     dist = proto.getSquaredEuclideanDistance(row, m_colIndices);
                 } else {

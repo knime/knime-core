@@ -2,7 +2,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * and KNIME GmbH, Konstanz, Germany
  *
@@ -25,7 +25,7 @@ package org.knime.base.node.mine.neural.mlp;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.Set;
+import java.util.List;
 import java.util.Map.Entry;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -128,7 +128,7 @@ public class PMMLNeuralNetworkPortObject extends PMMLPortObject {
      */
     protected void addTargets(final TransformerHandler handler,
             final MultiLayerPerceptron mlp) throws SAXException {
-        Set<DataColumnSpec> targetCols = getSpec().getTargetCols();
+        List<DataColumnSpec> targetCols = getSpec().getTargetCols();
         assert (targetCols.size() == 1) : "Only one target column allowed";
         DataColumnSpec classcol = targetCols.iterator().next();
         // open targets schema

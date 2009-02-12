@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.knime.base.data.neural.MultiLayerPerceptron;
@@ -134,7 +135,7 @@ public class MLPPredictorNodeModel extends NodeModel {
 
     private int[] getLearningColumnIndices(final DataTableSpec testspec,
             final PMMLPortObjectSpec portspec) throws InvalidSettingsException {
-        Set<String> learnfields = portspec.getLearningFields();
+        List<String> learnfields = portspec.getLearningFields();
         int[] indices = new int[learnfields.size()];
         int counter = 0;
         for (String s : learnfields) {

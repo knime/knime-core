@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -41,10 +41,8 @@ import java.util.Set;
 
 import javax.swing.ToolTipManager;
 
-import org.knime.base.node.viz.plotter.LabelPaintUtil;
+import org.knime.base.node.viz.plotter.Axis;
 import org.knime.base.node.viz.plotter.basic.BasicDrawingPane;
-import org.knime.base.util.coordinate.NominalCoordinate;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.data.property.ShapeFactory;
 
@@ -80,8 +78,6 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
     
     private List<LineInfo> m_lines;
     
-    private boolean m_skewLabels;
-    
     private boolean m_showDots = true;
     
     private boolean m_skipValues;
@@ -97,8 +93,6 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
     private static final String MISSING = "missing values";
     
     private static final int DASH = 8;
-    
-
     
     /**
      * 
@@ -218,9 +212,10 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
         Stroke backupStroke = ((Graphics2D)g).getStroke();
         drawAxes(g);
         drawLines(g, m_lines);
-        g.setColor(backupColor);
+        g.setColor(Color.BLACK);
+        drawLabels(g);
         ((Graphics2D)g).setStroke(backupStroke);
-        
+        g.setColor(backupColor);
     }
     
     /**
@@ -241,38 +236,29 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
             // if the axis is selected paint it thicker
             if (axis.isSelected()) {
                 ((Graphics2D)g).setStroke(new BasicStroke(3));
-            } 
+            }
             // draw the axis line
-            g.drawLine(axis.getXPosition(), TOP_SPACE, axis.getXPosition(), 
+            g.drawLine(axis.getXPosition(), TOP_SPACE, axis.getXPosition(),
                     getHeight() - BOTTOM_SPACE);
             ((Graphics2D)g).setStroke(new BasicStroke(1));
-            // and add textual information (min,max or possible values)
-                int distance;
-                // if it is not the last axis
-                if (m_axes.indexOf(axis) < m_axes.size() - 1) {
-                    // get distance to next axis
-                    ParallelAxis nextAxis = m_axes.get(
-                            m_axes.indexOf(axis) + 1);
-                    distance = nextAxis.getXPosition() - axis.getXPosition();
-                } else {
-                    // get distance to border
-                    distance = getWidth() - 10 - axis.getXPosition(); 
-                }
-                if (!axis.isNominal()) {
-                    drawNumericAxis(g, (NumericParallelAxis)axis);
-                } else {
-                    m_skewLabels = !checkLabelSpace(
-                            ((NominalParallelAxis)axis).getPossibleValues(),
-                            g.getFontMetrics(), distance);
-                    // paint possible values
-                    drawNominalAxis(g, (NominalParallelAxis)axis);
-                }
         }
         if (m_showMissingVals) {
             int y = getHeight() - (2 * g.getFontMetrics().getHeight());
             g.drawLine(10, y, getWidth() - 10, y);
             g.drawString(MISSING, 15, getHeight() 
                     -  g.getFontMetrics().getHeight());
+        }
+    }
+    
+    protected void drawLabels(final Graphics g) {
+        // go through the axes
+        for (ParallelAxis axis : m_axes) {
+            if (axis.isNominal()) {
+                drawNominalAxis(g, (NominalParallelAxis)axis);
+            } else {
+                // paint min/max values at bottom and top
+                drawNumericAxis(g, (NumericParallelAxis)axis);
+            }
         }
     }
     
@@ -284,32 +270,15 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
      */
     protected void drawNominalAxis(final Graphics g,
             final NominalParallelAxis axis) {
-        Graphics2D g2 = (Graphics2D)g;
-        double ticks = ((double)((double)axis.getHeight() / (double)axis
-                .getPossibleValues().size()));
-        if (ticks == 0) {
-            ticks = 2 * g.getFontMetrics().getHeight();
-        }
-        int vSpace = getWidth() / m_axes.size();
-        m_skewLabels = LabelPaintUtil.rotateLabels(
-                ((NominalCoordinate)axis.getCoordinate())
-                .getReducedTickPositions(axis.getHeight()),
-                vSpace, g.getFontMetrics());
-        int i = 0;
-        for (String value : axis.getPossibleValues()) {
-                int x = axis.getXPosition() + g.getFontMetrics().getHeight();
-                int y = (int)axis.getMappedValue(new StringCell(value))
-                        - (g.getFontMetrics().getHeight() / 2);
-                y = getHeight() - y - BOTTOM_SPACE - TOP_SPACE;
-                Rectangle rect = new Rectangle(x, 
-                        y - BOTTOM_SPACE + g.getFontMetrics().getDescent(), 
-                        vSpace, 
-                        axis.getHeight() / axis.getPossibleValues().size());
-                LabelPaintUtil.drawLabel(value, g2, rect, 
-                        LabelPaintUtil.Position.RIGHT, m_skewLabels);
-//                g.drawString(value, x, y);
-            i++;
-        }
+        // check whether the axis is on the right side of the center
+        boolean right = getWidth() / 2.0 < axis.getXPosition();  
+        Axis paintAxis = new Axis(Axis.VERTICAL, axis.getHeight(), right);
+        paintAxis.setCoordinate(axis.getCoordinate());
+        int x = axis.getXPosition() - Axis.SIZE + 1;
+        int y = TOP_SPACE; 
+        g.translate(x, y);
+        paintAxis.paintComponent(g);
+        g.translate(-x, -y);
     }
     
     /**

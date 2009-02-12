@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -195,8 +195,8 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
 
         DataTable outputData = null;
 
-        if (m_distFunctionName.getStringValue().equals(
-                DistanceFunction.Names.Manhattan)) {
+        if (DistanceFunction.Names.Manhattan.toString().equals(
+                m_distFunctionName.getStringValue())) {
             m_distFunction = ManhattanDist.MANHATTEN_DISTANCE;
         } else {
             m_distFunction = EuclideanDist.EUCLIDEAN_DISTANCE;

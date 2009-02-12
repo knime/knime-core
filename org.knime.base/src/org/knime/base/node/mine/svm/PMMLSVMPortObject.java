@@ -2,7 +2,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * and KNIME GmbH, Konstanz, Germany
  *
@@ -119,7 +119,7 @@ public class PMMLSVMPortObject extends PMMLPortObject {
             }
         }
 
-        Set<DataColumnSpec> targetCols = spec.getTargetCols();
+        List<DataColumnSpec> targetCols = spec.getTargetCols();
         assert (targetCols.size() == 1)
             : "Only one target column allowed in SVM";
         DataColumnSpec classcolspec = targetCols.iterator().next();
@@ -270,8 +270,9 @@ public class PMMLSVMPortObject extends PMMLPortObject {
     protected void addRBFKernel(final TransformerHandler handler,
             final Kernel kernel) throws SAXException {
         double sigma = kernel.getParameter(0);
+        double gamma = 1.0 / (2.0 * (sigma * sigma));
         AttributesImpl atts = new AttributesImpl();
-        atts.addAttribute(null, null, "gamma", CDATA, "" + sigma);
+        atts.addAttribute(null, null, "gamma", CDATA, "" + gamma);
         handler.startElement(null, null, "RadialBasisKernelType", atts);
         handler.endElement(null, null, "RadialBasisKernelType");
     }
@@ -286,7 +287,7 @@ public class PMMLSVMPortObject extends PMMLPortObject {
      * @throws SAXException if something goes wrong.
      */
     protected void addVectorDictionary(final TransformerHandler handler,
-            final Svm[] svms, final Set<String> colNames) throws SAXException {
+            final Svm[] svms, final List<String> colNames) throws SAXException {
         DoubleVector[][] supVecs = new DoubleVector[svms.length][];
         int totalNumber = 0;
         for (int i = 0; i < svms.length; i++) {
@@ -312,8 +313,8 @@ public class PMMLSVMPortObject extends PMMLPortObject {
         for (int i = 0; i < supVecs.length; i++) {
             for (int j = 0; j < supVecs[i].length; j++) {
                 atts = new AttributesImpl();
-                atts.addAttribute(null, null, "id", CDATA, svms[i]
-                        .getPositive()
+                atts.addAttribute(null, null, "id", CDATA, supVecs[i][j]
+                        .getClassValue()
                         + "_" + supVecs[i][j].getKey().getString());
                 handler.startElement(null, null, "VectorInstance", atts);
                 int nrValues = supVecs[i][j].getNumberValues();
@@ -407,8 +408,8 @@ public class PMMLSVMPortObject extends PMMLPortObject {
             handler.startElement(null, null, "SupportVectors", atts);
             for (int v = 0; v < supVecs.length; v++) {
                 atts = new AttributesImpl();
-                atts.addAttribute(null, null, "vectorId", CDATA, svms[s]
-                        .getPositive()
+                atts.addAttribute(null, null, "vectorId", CDATA, supVecs[v]
+                        .getClassValue()
                         + "_" + supVecs[v].getKey().getString());
                 handler.startElement(null, null, "SupportVector", atts);
                 handler.endElement(null, null, "SupportVector");

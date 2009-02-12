@@ -2,7 +2,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,7 +25,6 @@ package org.knime.base.node.mine.regression;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.Stack;
 
 import javax.xml.transform.sax.TransformerHandler;
@@ -149,7 +148,7 @@ public class PMMLRegressionContentHandler extends PMMLContentHandler {
             final RegressionTable regressionTable) {
         m_regressionTable = regressionTable;
         List<NumericPredictor> preds = m_regressionTable.getVariables();
-        Set<String> regressorCols = m_spec.getLearningFields();
+        List<String> regressorCols = m_spec.getLearningFields();
         for (NumericPredictor p : preds) {
             if (!regressorCols.contains(p.getName())) {
                 LOGGER.warn("Regression column not found in spec");

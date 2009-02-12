@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -161,7 +161,7 @@ public final class DataColumnSpecCreator {
         DataColumnDomain domain2 = cspec2.getDomain();
         boolean hasDomainChanged = false;
         final Set<DataCell> myValues = m_domain.getValues();
-        final Set<DataCell> oValues = m_domain.getValues();
+        final Set<DataCell> oValues = domain2.getValues();
         Set<DataCell> newValues;
         if (myValues == null || oValues == null) {
             newValues = null;

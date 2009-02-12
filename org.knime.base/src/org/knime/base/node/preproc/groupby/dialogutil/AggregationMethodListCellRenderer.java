@@ -1,7 +1,7 @@
 /*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files are protected by
- * copyright law. All rights reserved. Copyright, 2003 - 2008 University of
+ * copyright law. All rights reserved. Copyright, 2003 - 2009 University of
  * Konstanz, Germany. Chair for Bioinformatics and Information Mining Prof. Dr.
  * Michael R. Berthold You may not modify, publish, transmit, transfer or sell,
  * reproduce, create derivative works from, distribute, perform, display, or in

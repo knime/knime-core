@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -28,12 +28,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -423,7 +422,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         timer = System.currentTimeMillis();
 
         DecisionTreeNode root = null;
-        root = buildTree(initialTable, exec, 0, splitQualityMeasure, parallelProcessing);
+        root = buildTree(initialTable, exec, 0, splitQualityMeasure, 
+                parallelProcessing);
 
         LOGGER.info("Tree built in (ms) "
                 + (System.currentTimeMillis() - timer));
@@ -473,17 +473,16 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      * @return
      */
     private PortObject getPMMLOutPortObject(final DataTableSpec spec) {
-        Set<String> targetSet = new LinkedHashSet<String>();
-        targetSet.add(m_classifyColumn.getStringValue());
-        Set<String> learnCols = new LinkedHashSet<String>();
+        String targetCol = m_classifyColumn.getStringValue();
+        List<String> learnCols = new LinkedList<String>();
         for (int i = 0; i < spec.getNumColumns(); i++) {
             String col = spec.getColumnSpec(i).getName();
-            if (!targetSet.contains(col)) {
+            if (!col.equals(targetCol)) {
                 learnCols.add(spec.getColumnSpec(i).getName());
             }
         }
         PMMLPortObjectSpec outSpec = new PMMLPortObjectSpec(
-                spec, learnCols, Collections.EMPTY_SET, targetSet);
+                spec, learnCols, null, Arrays.asList(targetCol));
         return new PMMLDecisionTreePortObject(m_decisionTree, outSpec);
     }
 
@@ -749,9 +748,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
     private PMMLPortObjectSpec createPMMLSpec(final DataTableSpec spec)
         throws InvalidSettingsException {
         PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(spec);
-        Set<String> targetCols = new HashSet<String>();
-        targetCols.add(m_classifyColumn.getStringValue());
-        creator.setTargetColsNames(targetCols);
+        creator.setTargetColsNames(Arrays.asList(
+                m_classifyColumn.getStringValue()));
         return creator.createSpec();
     }
 

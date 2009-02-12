@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -72,6 +72,11 @@ public class BWElimFilterNodeModel extends NodeModel {
         if (model == null) {
             throw new InvalidSettingsException("No model available");
         }
+
+        if (m_settings.nrOfFeatures() < 1) {
+            throw new InvalidSettingsException("No features selected yet");
+        }
+
         DataTableSpec tSpec = (DataTableSpec)inSpecs[1];
 
         int missing = 0;
@@ -89,9 +94,6 @@ public class BWElimFilterNodeModel extends NodeModel {
                     + "any of the columns used in the feature elimination ");
         }
 
-        if (m_settings.nrOfFeatures() < 1) {
-            throw new InvalidSettingsException("No features selected yet");
-        }
 
         missing = 0;
         String missingColumns = ", ";

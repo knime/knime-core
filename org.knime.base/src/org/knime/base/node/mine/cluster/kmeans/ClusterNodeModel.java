@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -547,7 +547,7 @@ public class ClusterNodeModel extends NodeModel {
     }
 
     private PMMLPortObject getPMMLOutPortObject() throws Exception {
-        Set<DataColumnSpec> usedCols = new LinkedHashSet<DataColumnSpec>();
+        List<DataColumnSpec> usedCols = new LinkedList<DataColumnSpec>();
         for (int i = 0; i < m_spec.getNumColumns(); i++) {
             if (!m_ignoreColumn[i]) {
                 usedCols.add(m_spec.getColumnSpec(i));
@@ -684,7 +684,7 @@ public class ClusterNodeModel extends NodeModel {
         }
         PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
                 tableSpec);
-        Set<String>activeCols = new LinkedHashSet<String>();
+        List<String>activeCols = new LinkedList<String>();
         activeCols.addAll(m_usedColumns.getIncludeList());
         creator.setLearningColsNames(activeCols);
         return creator.createSpec();

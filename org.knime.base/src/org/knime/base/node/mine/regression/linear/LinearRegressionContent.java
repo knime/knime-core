@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -24,7 +24,7 @@
  */
 package org.knime.base.node.mine.regression.linear;
 
-import java.util.Collections;
+import java.util.Arrays;
 
 import org.knime.base.node.mine.regression.PMMLRegressionContentHandler;
 import org.knime.base.node.mine.regression.PMMLRegressionPortObject;
@@ -141,8 +141,8 @@ public final class LinearRegressionContent {
     public static PMMLPortObjectSpec createPortObjectSpec(
             final DataTableSpec spec) throws InvalidSettingsException {
         PMMLPortObjectSpecCreator c = new PMMLPortObjectSpecCreator(spec);
-        c.setTargetCols(Collections.singleton(
-                spec.getColumnSpec(spec.getNumColumns() - 1)));
+        c.setTargetCols(Arrays.asList(spec.getColumnSpec(
+                spec.getNumColumns() - 1)));
         return c.createSpec();
     }
 

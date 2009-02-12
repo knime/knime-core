@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -38,6 +38,7 @@ import org.knime.base.node.viz.plotter.LabelPaintUtil;
 import org.knime.base.node.viz.plotter.scatter.DotInfo;
 import org.knime.base.node.viz.plotter.scatter.DotInfoArray;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
+import org.knime.core.data.DoubleValue;
 
 /**
  * Paints the {@link org.knime.base.node.viz.plotter.box.Box}es, the dots from 
@@ -263,7 +264,10 @@ public class BoxPlotDrawingPane extends ScatterPlotterDrawingPane {
             int y = dot.getYCoord() + fontHeight / 4;
             int x = dot.getXCoord() + DOT_SIZE;
             if (dot.getYDomainValue() != null) {
-                g.drawString(dot.getYDomainValue().toString(), x, y);
+                double d = ((DoubleValue)dot.getYDomainValue())
+                    .getDoubleValue();
+                g.drawString(LabelPaintUtil.getDoubleAsString(
+                        d, Box.ROUNDING_FACTOR), x, y);
             }
             lastDot = dot;
         }

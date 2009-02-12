@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -28,6 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
@@ -95,6 +96,9 @@ public final class BasisFunctionLearnerTable implements DataTable {
 
     /** Counts number of pattern per class. */
     private final Map<DataCell, int[]> m_numPatPerClass;
+    
+    /** if max. class coverage should be used (for numeric tragets only). */
+    private final boolean m_maxClassCoverage;
 
     /**
      * Creates a new basis function learner and starts the training algorithm.
@@ -173,8 +177,10 @@ public final class BasisFunctionLearnerTable implements DataTable {
         m_bfs = new LinkedHashMap<DataCell, List<BasisFunctionLearnerRow>>();
         // keep factory
         m_factory = factory;
-        // keeps missing replacement function
+        // keep missing replacement function
         m_missing = missing;
+        // keep use max class coverage flag
+        m_maxClassCoverage = maxClassCoverage;
         assert (m_missing != null);
         // correct max epochs
         final int maxNrEpochs = (maxEpochs > 0 ? maxEpochs : Integer.MAX_VALUE);
@@ -241,48 +247,8 @@ public final class BasisFunctionLearnerTable implements DataTable {
                 /* --- C O V E R S --- */
 
                 // find best covering bf of correct class, if exist
-                BasisFunctionLearnerRow bestBF = null;
-                // overall bfs within the model
-                for (BasisFunctionIterator it = getBasisFunctionIterator();
-                        it.hasNext();) {
-                    // get next basisfunction
-                    BasisFunctionLearnerRow nextBF = it.nextBasisFunction();
-                    // check if classes match
-                    boolean classMatch = false;
-                    // if max class coverage
-                    if (maxClassCoverage) {
-                        // check only for same classes
-                        if (row.getBestClass().equals(nextBF.getClassLabel())) {
-                            classMatch = true;
-                        }
-                    } else if (row.getMatch(nextBF.getClassLabel()) 
-                          > nextBF.getPredictorRow().getDontKnowClassDegree()) {
-                        // otherwise all classes with degree greater 0 match
-                        classMatch = true;
-                    }
-                    // class match, true
-                    if (classMatch) {
-                        // if pattern covered
-                        if (nextBF.covers(row)) {
-                            // null?; first one
-                            if (bestBF == null) {
-                                // init with first one
-                                bestBF = nextBF; // first one that covers
-                            } else if (nextBF.compareCoverage(bestBF, row)) {
-                                if (!maxClassCoverage
-                                     || row.getMatch(bestBF.getClassLabel()) 
-                                     >= row.getMatch(nextBF.getClassLabel())) {
-                                    // otherwise compare coverage with best one
-                                    assert (bestBF != nextBF);
-                                    bestBF = nextBF;
-                                }
-                            }
-                        }
-                    } else { // skip current class
-                        it.skipClass();
-                    }
-                }
-
+                BasisFunctionLearnerRow bestBF = bestBasisFunction(row);
+            
                 // we didn't find any covering prototype
                 if (bestBF == null 
                         || row.getMatch(bestBF.getClassLabel()) 
@@ -355,6 +321,52 @@ public final class BasisFunctionLearnerTable implements DataTable {
         prune(0, m_cycles); // prune all rules with zero coverage
     }
     
+    private BasisFunctionLearnerRow bestBasisFunction(
+            final BasisFunctionFilterRow row) {
+        BasisFunctionLearnerRow bestBF = null;
+        // overall bfs within the model
+        for (BasisFunctionIterator it = getBasisFunctionIterator();
+                it.hasNext();) {
+            // get next basisfunction
+            BasisFunctionLearnerRow nextBF = it.nextBasisFunction();
+            // check if classes match
+            boolean classMatch = false;
+            // if max class coverage
+            if (m_maxClassCoverage) {
+                // check only for same classes
+                if (row.getBestClass().equals(nextBF.getClassLabel())) {
+                    classMatch = true;
+                }
+            } else if (row.getMatch(nextBF.getClassLabel()) 
+                  > nextBF.getPredictorRow().getDontKnowClassDegree()) {
+                // otherwise all classes with degree greater 0 match
+                classMatch = true;
+            }
+            // class match, true
+            if (classMatch) {
+                // if pattern covered
+                if (nextBF.covers(row)) {
+                    // null?; first one
+                    if (bestBF == null) {
+                        // init with first one
+                        bestBF = nextBF; // first one that covers
+                    } else if (nextBF.compareCoverage(bestBF, row)) {
+                        if (!m_maxClassCoverage
+                             || row.getMatch(bestBF.getClassLabel()) 
+                             >= row.getMatch(nextBF.getClassLabel())) {
+                            // otherwise compare coverage with best one
+                            assert (bestBF != nextBF);
+                            bestBF = nextBF;
+                        }
+                    }
+                }
+            } else { // skip current class
+                it.skipClass();
+            }
+        }
+        return bestBF;
+    }
+    
     private static int[] findTargetIndices(
             final DataTableSpec spec, final String[] targets) {
         // indices of the class columns
@@ -384,28 +396,22 @@ public final class BasisFunctionLearnerTable implements DataTable {
     public void explain(final BufferedDataTable data,
             final String[] dataColumns, final String[] targetColumns) {
         DataTableSpec spec = data.getDataTableSpec();
+        // indices of the class columns
+        int[] classColumns = findTargetIndices(spec, targetColumns);
+        String[] classColumnNames = new String[classColumns.length];
+        for (int i = 0; i < classColumnNames.length; i++) {
+            classColumnNames[i] = spec.getColumnSpec(
+                    classColumns[i]).getName();
+        }
+        int[] dataIndices = findDataIndices(spec, dataColumns);
         // overall rows to explain
-        for (RowIterator rowIt = data.iterator(); rowIt.hasNext();) {
-            // indices of the class columns
-            int[] classColumns = findTargetIndices(spec, targetColumns);
-            String[] classColumnNames = new String[classColumns.length];
-            for (int i = 0; i < classColumnNames.length; i++) {
-                classColumnNames[i] = spec.getColumnSpec(
-                        classColumns[i]).getName();
-            }
+        for (DataRow dataRow : data) {
             final BasisFunctionFilterRow row = new BasisFunctionFilterRow(
-                    this, rowIt.next(), findDataIndices(spec, dataColumns), 
+                    this, dataRow, dataIndices, 
                     classColumns, classColumnNames, m_missing);
-            // overall basisfunctions in the model
-            for (BasisFunctionIterator it = getBasisFunctionIterator(); it
-                    .hasNext();) {
-                // get current basisfunction
-                BasisFunctionLearnerRow bf = it.nextBasisFunction();
-                // if row is explained
-                if (bf.explains(row)) {
-                    // keep key
-                    bf.addCovered(row, row.getBestClass());
-                }
+            BasisFunctionLearnerRow bestBF = bestBasisFunction(row);
+            if (bestBF != null) {
+                bestBF.addCovered(row, row.getBestClass());
             }
         }
     }
@@ -578,10 +584,13 @@ public final class BasisFunctionLearnerTable implements DataTable {
         final int idx = spec.getNumColumns() - 5;
         final DataColumnSpec cspec = spec.getColumnSpec(idx);
         DataColumnSpecCreator cr = new DataColumnSpecCreator(cspec);
-        DataColumnDomainCreator domcr = 
-            new DataColumnDomainCreator(cspec.getDomain());
-        domcr.setValues(m_bfs.keySet());
-        cr.setDomain(domcr.createDomain());
+        TreeSet<DataCell> domValues = 
+            new TreeSet<DataCell>(cspec.getType().getComparator());
+        domValues.addAll(m_bfs.keySet());
+        if (cspec.getDomain().hasValues()) {
+            domValues.addAll(cspec.getDomain().getValues());
+        }
+        cr.setDomain(new DataColumnDomainCreator(domValues).createDomain());
         ColumnRearranger colre = new ColumnRearranger(spec);
         colre.replace(new SingleCellFactory(cr.createSpec()) {
             @Override

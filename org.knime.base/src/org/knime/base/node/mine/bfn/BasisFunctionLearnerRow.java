@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -197,8 +197,9 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @param classInfo and class.
      */
     public final void addCovered(final DataRow row, final DataCell classInfo) {
-        m_coveredPattern.add(row.getKey());
-        getPredictorRow().cover(row, classInfo);
+        if (m_coveredPattern.add(row.getKey())) {
+            getPredictorRow().cover(row, classInfo);
+        }
     }
 
     /**

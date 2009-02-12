@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -178,22 +178,21 @@ public class Many2OneColNodeModel extends NodeModel {
         for (String colName : m_includedColumns.getIncludeList()) {
             includedColIndices[index++] = spec.findColumnIndex(colName);
         }
+        String newColName = DataTableSpec.getUniqueColumnName(spec, 
+                m_appendedColumnName.getStringValue());
+        m_appendedColumnName.setStringValue(newColName);
         if (method.equals(IncludeMethod.RegExpPattern)) {
             cellFactory = new RegExpCellFactory(spec,
-                    m_appendedColumnName.getStringValue(),
-                    includedColIndices, m_pattern.getStringValue());
+                    newColName, includedColIndices, m_pattern.getStringValue());
         } else if (method.equals(IncludeMethod.Minimum)) {
             cellFactory = new MinMaxCellFactory(spec,
-                    m_appendedColumnName.getStringValue(),
-                    includedColIndices, false);
+                    newColName, includedColIndices, false);
         } else if (method.equals(IncludeMethod.Binary)) {
             cellFactory = new BinaryCellFactory(spec,
-                    m_appendedColumnName.getStringValue(),
-                    includedColIndices);
+                    newColName, includedColIndices);
         } else {
             cellFactory = new MinMaxCellFactory(spec,
-                    m_appendedColumnName.getStringValue(),
-                    includedColIndices, true);
+                    newColName, includedColIndices, true);
         }
         if (!m_keepColumns.getBooleanValue()) {
             rearranger.remove(includedColIndices);

@@ -1,7 +1,7 @@
 /* This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -64,9 +64,9 @@ public class PMMLClusterHandler extends PMMLContentHandler {
     
     static {
         UNSUPPORTED.add("KohonenMap");
-        UNSUPPORTED.add("Covariances");
         UNSUPPORTED.add("LocalTransformations");
         
+        IGNORED.add("Covariances");
         IGNORED.add("MissingValueWeights");
         
         KNOWN.add("PMML");
@@ -94,7 +94,6 @@ public class PMMLClusterHandler extends PMMLContentHandler {
     
     private Map<String, LinearNorm>m_linearNorms;
     private LinearNorm m_currentLinearNorm;
-    
     
     
     /**
@@ -168,6 +167,7 @@ public class PMMLClusterHandler extends PMMLContentHandler {
         m_buffer = null;
         m_currentCluster = 0;
         m_lastDerivedField = null;
+        
         if (m_linearNorms != null) {
             for (int clusterNr = 0; clusterNr < m_prototypes.length; 
                 clusterNr++) {
@@ -177,6 +177,9 @@ public class PMMLClusterHandler extends PMMLContentHandler {
                     LinearNorm linearNorm = m_linearNorms.get(col);
                     if (linearNorm != null) {
                         // normalize
+                        LOGGER.warn(
+                                "De-normalizing prototype value for column \"" 
+                                + col + "\"");
                         m_prototypes[clusterNr][columnIndex] =
                                 linearNorm.unnormalize(
                                         m_prototypes[clusterNr][columnIndex]);
@@ -207,6 +210,15 @@ public class PMMLClusterHandler extends PMMLContentHandler {
         if (name.equals("Cluster") 
                 && m_elementStack.peek().equals("ClusteringModel")) {
             m_currentCluster++;            
+        }
+        if (name.equals("NormContinuous")) {
+            // initialize only when necessary
+            if (m_linearNorms == null) {
+                m_linearNorms = new LinkedHashMap<String, LinearNorm>();
+            }
+            // element NormContinuos put on map 
+            m_linearNorms.put(m_currentLinearNorm.getName(), 
+                    m_currentLinearNorm);
         }
     }
 
@@ -281,12 +293,6 @@ public class PMMLClusterHandler extends PMMLContentHandler {
                 m_currentLinearNorm = new LinearNorm(m_lastDerivedField);
             }
             if (!m_currentLinearNorm.getName().equals(m_lastDerivedField)) {
-                // initialize only when necessary
-                if (m_linearNorms == null) {
-                    m_linearNorms = new LinkedHashMap<String, LinearNorm>();
-                }
-                m_linearNorms.put(m_currentLinearNorm.getName(), 
-                        m_currentLinearNorm);
                 m_currentLinearNorm = new LinearNorm(m_lastDerivedField);
             }
             double val = Double.parseDouble(atts.getValue("orig"));

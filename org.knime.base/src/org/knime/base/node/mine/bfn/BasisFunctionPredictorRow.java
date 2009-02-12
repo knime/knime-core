@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -300,5 +300,13 @@ public abstract class BasisFunctionPredictorRow {
         pp.addInt("correct_covered", m_correctCovered);
         pp.addInt("wrong_covered", m_wrongCovered);
         pp.addDouble("within-cluster_variance", m_clusterVariance);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return m_key.getString();
     }
 }

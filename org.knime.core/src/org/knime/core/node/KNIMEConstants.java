@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -44,7 +44,7 @@ public final class KNIMEConstants {
     /** KNIME's minor release number. */
     public static final int MINOR = 1;
     /** KNIME's revision number. */
-    public static final int REV = 0;
+    public static final int REV = 1;
     /** KNIME's build id. */
     public static final String BUILD = ".0018128";
     
@@ -88,7 +88,7 @@ public final class KNIMEConstants {
                 "***  Welcome to KNIME v" + VERSION
                         + " - the Konstanz Information Miner  ***";
         String line2 =
-                "Copyright, 2003 - 2008, Uni Konstanz and "
+                "Copyright, 2003 - 2009, Uni Konstanz and "
                         + "KNIME GmbH, Germany";
         line2 =
                 "***"

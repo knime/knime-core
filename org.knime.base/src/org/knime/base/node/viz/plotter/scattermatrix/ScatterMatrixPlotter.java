@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -81,7 +81,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
     private static final double V_MARGIN_FACTOR = 0.08;
     
     /** The space at top and bottom in %. */
-    private static final double H_MARGIN_FACTOR = 0.1;
+    private static final double H_MARGIN_FACTOR = 0.13;
     
 
     private Set<String> m_selectedColumns;

@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2009
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -37,7 +37,7 @@ public interface Norm {
             YagerNorm.getInstance()};
 
     /**
-     * Computes the fuzzy disjunktion.
+     * Computes the fuzzy disjunction.
      * 
      * @param a the membership degree of fuzzy membership function A
      * @param b the membership degree of fuzzy membership function B
@@ -46,7 +46,7 @@ public interface Norm {
     double computeTNorm(double a, double b);
 
     /**
-     * Computes fuzzy conjunktion.
+     * Computes fuzzy conjunction.
      * 
      * @param a the membership degree of fuzzy membership function A
      * @param b the membership degree of fuzzy membership function B
