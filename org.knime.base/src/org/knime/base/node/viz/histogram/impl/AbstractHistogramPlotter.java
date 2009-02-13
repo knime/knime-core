@@ -24,34 +24,6 @@
  */
 package org.knime.base.node.viz.histogram.impl;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.util.Collection;
-import java.util.Set;
-import java.util.SortedSet;
-
-import javax.swing.JSlider;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.histogram.HistogramLayout;
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
-import org.knime.base.node.viz.histogram.util.ColorColumn;
-import org.knime.base.node.viz.histogram.util.NoDomainColumnFilter;
-import org.knime.base.node.viz.plotter.AbstractPlotter;
-import org.knime.base.node.viz.plotter.Axis;
-import org.knime.base.util.coordinate.Coordinate;
-import org.knime.base.util.coordinate.CoordinateMapping;
-import org.knime.base.util.coordinate.NumericCoordinate;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
@@ -70,6 +42,35 @@ import org.knime.core.node.property.hilite.KeyEvent;
 import org.knime.core.node.util.ColumnFilter;
 import org.knime.core.node.util.CombinedColumnFilter;
 import org.knime.core.node.util.DataValueColumnFilter;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
+import org.knime.base.node.viz.histogram.util.NoDomainColumnFilter;
+import org.knime.base.node.viz.plotter.AbstractPlotter;
+import org.knime.base.node.viz.plotter.Axis;
+import org.knime.base.util.coordinate.Coordinate;
+import org.knime.base.util.coordinate.CoordinateMapping;
+import org.knime.base.util.coordinate.NumericCoordinate;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
+import javax.swing.JSlider;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 /**
  * Abstract class which is the coordinator between the
@@ -108,11 +109,9 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
 
     private final AbstractHistogramProperties m_histoProps;
 
-    /**If the user changes the layout to side-by-side we automatically
-     * set the bin width to maximum. If he goes back to stacked layout
-     * show the bars with the original bar width. Thats what this variable
-     * stores.*/
-    private int m_lastStackedBinWidth = -1;
+    /**Save the width of the bins for the actual layout prior layout changes
+     * to reset it again.*/
+    private int m_lastBinWidth = -1;
 
     /**Constructor for class AbstractHistogramPlotter.
      * @param histogramProps the histogram properties panel
@@ -334,7 +333,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             final int baseLine = (int)(drawingHeight
                     - yCoordinates.calculateMappedValue(
                             new DoubleCell(0), drawingHeight));
-            drawingPane.setBaseLine(new Integer(baseLine));
+            drawingPane.setBaseLine(Integer.valueOf(baseLine));
         } else {
             drawingPane.setBaseLine(null);
         }
@@ -376,7 +375,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
 
         final int newBinWidth = vizModel.getBinWidth();
-        final SortedSet<Color> barElementColors =
+        final List<Color> barElementColors =
             vizModel.getRowColors();
         final HistogramHiliteCalculator calculator =
                 vizModel.getHiliteCalculator();
@@ -445,7 +444,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         final Dimension drawingSpace = vizModel.getDrawingSpace();
         final int binWidth = vizModel.getBinWidth();
         final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
-        final SortedSet<Color> barElementColors =
+        final List<Color> barElementColors =
             vizModel.getRowColors();
         final Collection<ColorColumn> aggrColumns =
             vizModel.getAggrColumns();
@@ -877,20 +876,21 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         if (vizModel.setHistogramLayout(layout)) {
 //          if the layout has changed we have to update the y coordinates
             setYCoordinates();
-            if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
-              //save the current bin width to restore it after changing the
-                //layout again
-                m_lastStackedBinWidth = vizModel.getBinWidth();
-                if (vizModel.getAggrColumns() != null
-                            && vizModel.getAggrColumns().size() > 1) {
-                    //... and set the bin width to the maximum bin
-                    //with by changing to the side by side layout
+            //save the current bin width
+            final int currentWidth = vizModel.getBinWidth();
+            if (m_lastBinWidth > 0) {
+                //set the bin width to the last used width for this layout
+                vizModel.setBinWidth(m_lastBinWidth);
+            } else if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
+                //this is the first time the side by side layout is called
+                //maximize the bin width if the bins contain more than
+                //one element
+                if (vizModel.getNoOfElements() > 1) {
                     vizModel.setBinWidth(vizModel.getMaxBinWidth());
                 }
-            } else if (HistogramLayout.STACKED.equals(layout)) {
-                //set the previous used bin width
-                vizModel.setBinWidth(m_lastStackedBinWidth);
             }
+            //and save the bin width for the next change
+            m_lastBinWidth = currentWidth;
             updatePaintModel();
         }
     }

@@ -25,17 +25,17 @@
 
 package org.knime.base.node.viz.histogram.datamodel;
 
-import java.awt.Color;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.SortedSet;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.RowKey;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.RowKey;
+
+import java.awt.Color;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -59,7 +59,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
      * @param aggrMethod the {@link AggregationMethod} to use
      * @param layout {@link HistogramLayout} to use
      */
-    public FixedHistogramVizModel(final SortedSet<Color> rowColors,
+    public FixedHistogramVizModel(final List<Color> rowColors,
             final List<BinDataModel> bins, final BinDataModel missingValueBin,
             final DataColumnSpec xColSpec,
             final Collection<ColorColumn> aggrColumns,

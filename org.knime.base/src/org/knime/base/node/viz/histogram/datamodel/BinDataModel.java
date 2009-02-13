@@ -25,22 +25,6 @@
 
 package org.knime.base.node.viz.histogram.datamodel;
 
-import java.awt.Color;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.geom.Rectangle2D;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedSet;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.histogram.HistogramLayout;
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
-import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DoubleCell;
@@ -51,6 +35,22 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
+
+import java.awt.Color;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.geom.Rectangle2D;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This class represents one bin in the histogram. A bin represents a value of
@@ -351,7 +351,7 @@ public class BinDataModel implements Serializable {
      */
     public void setBinRectangle(final Rectangle binRectangle,
             final int baseLine,
-            final SortedSet<Color> barElementColors,
+            final List<Color> barElementColors,
             final Collection<ColorColumn> aggrColumns,
             final HistogramHiliteCalculator calculator) {
         m_binRectangle = binRectangle;
@@ -386,7 +386,7 @@ public class BinDataModel implements Serializable {
      * the order of the bars
      */
     private void setBarRectangle(final int baseLine,
-            final SortedSet<Color> barElementColors,
+            final List<Color> barElementColors,
             final Collection<? extends ColorColumn> aggrColumns,
             final HistogramHiliteCalculator calculator) {
             if (m_binRectangle == null) {
@@ -459,7 +459,7 @@ public class BinDataModel implements Serializable {
      * @param calculator the hilite shape calculator
      */
     public void updateBinWidth(final int startX, final int binWidth,
-            final SortedSet<Color> barElementColors,
+            final List<Color> barElementColors,
             final Collection<ColorColumn> aggrColumns,
             final int baseLine,
             final HistogramHiliteCalculator calculator) {

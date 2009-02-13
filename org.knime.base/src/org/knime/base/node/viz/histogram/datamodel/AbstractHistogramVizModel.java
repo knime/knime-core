@@ -48,11 +48,12 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.SortedSet;
 
 /**
  * This is the basic visualization model for a histogram. It handles bin
@@ -232,7 +233,7 @@ public abstract class AbstractHistogramVizModel {
         }
     }
 
-    private final SortedSet<Color> m_rowColors;
+    private final List<Color> m_rowColors;
 
     private boolean m_binNominal = false;
 
@@ -298,14 +299,14 @@ public abstract class AbstractHistogramVizModel {
      * @param aggrMethod the {@link AggregationMethod} to use
      * @param noOfBins the no of bins to create
      */
-    public AbstractHistogramVizModel(final SortedSet<Color> rowColors,
+    public AbstractHistogramVizModel(final List<Color> rowColors,
             final AggregationMethod aggrMethod, final HistogramLayout layout,
             final int noOfBins) {
         if (rowColors == null) {
             throw new IllegalArgumentException(
                     "Bar elements must not be null");
         }
-        m_rowColors = rowColors;
+        m_rowColors = new ArrayList<Color>(rowColors);
         m_aggrMethod = aggrMethod;
         m_layout = layout;
         m_noOfBins = noOfBins;
@@ -399,8 +400,16 @@ public abstract class AbstractHistogramVizModel {
      * @return all available element colors. This is the color the user has
      * set for one attribute in the Color Manager node.
      */
-    public SortedSet<Color> getRowColors() {
-        return m_rowColors;
+    public List<Color> getRowColors() {
+        return Collections.unmodifiableList(m_rowColors);
+    }
+
+    /**
+     * @return the number of different elements which depends on the
+     * coloration of the input data
+     */
+    public int getNoOfElements() {
+        return m_rowColors.size();
     }
 
     /**
@@ -987,20 +996,8 @@ public abstract class AbstractHistogramVizModel {
         if (selectedBins == null || selectedBins.size() < 1) {
             return (GUIUtils.NO_ELEMENT_SELECTED_TEXT);
         }
-        final StringBuilder aggrHeadBuf = new StringBuilder();
-        aggrHeadBuf.append("<th>");
-        aggrHeadBuf.append(AggregationMethod.COUNT);
-        aggrHeadBuf.append("</th>");
-        aggrHeadBuf.append("<th>");
-        aggrHeadBuf.append(AggregationMethod.VALUE_COUNT);
-        aggrHeadBuf.append("</th>");
-        aggrHeadBuf.append("<th>");
-        aggrHeadBuf.append(AggregationMethod.SUM);
-        aggrHeadBuf.append("</th>");
-        aggrHeadBuf.append("<th>");
-        aggrHeadBuf.append(AggregationMethod.AVERAGE);
-        aggrHeadBuf.append("</th>");
-//        final String aggrMethodHead = aggrHeadBuf.toString();
+        final double[] vals = new double[3];
+        Arrays.fill(vals, 0);
         final StringBuilder buf = new StringBuilder();
         buf.append("<table border='1'>");
         for (final BinDataModel bin : selectedBins) {
@@ -1016,12 +1013,24 @@ public abstract class AbstractHistogramVizModel {
             if (selectedBars == null || selectedBars.size() < 1) {
                 buf.append("No bars selected");
             } else {
-                buf.append(GUIUtils.createHTMLDetailData(selectedBars));
+                buf.append(GUIUtils.createHTMLDetailData(selectedBars, vals));
             }
             buf.append("</td>");
             buf.append("</tr>");
         }
-        buf.append("</table>");
+        if (selectedBins.size() > 1) {
+            buf.append("<tr>");
+            buf.append("<td title='");
+            buf.append("Total");
+            buf.append("'>");
+            buf.append("Total");
+            buf.append("</td>");
+            buf.append("<td>");
+            buf.append(GUIUtils.createHTMLTotalData(vals));
+            buf.append("</td>");
+            buf.append("</tr>");
+            buf.append("</table>");
+        }
         return buf.toString();
     }
 

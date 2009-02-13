@@ -25,19 +25,20 @@
 
 package org.knime.base.node.viz.histogram.datamodel;
 
-import java.awt.Color;
-import java.awt.Rectangle;
-import java.awt.geom.Rectangle2D;
-import java.util.Collection;
-import java.util.Set;
-import java.util.SortedSet;
+import org.knime.core.data.RowKey;
+import org.knime.core.node.NodeLogger;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
-import org.knime.core.data.RowKey;
-import org.knime.core.node.NodeLogger;
+
+import java.awt.Color;
+import java.awt.Rectangle;
+import java.awt.geom.Rectangle2D;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 /**
  * This class extends the {@link BinDataModel} to support hiliting.
@@ -76,7 +77,7 @@ public class InteractiveBinDataModel extends BinDataModel {
     @Override
     public void setBinRectangle(final Rectangle binRectangle,
             final int baseLine,
-            final SortedSet<Color> barElementColors,
+            final List<Color> barElementColors,
             final Collection<ColorColumn> aggrColumns,
             final HistogramHiliteCalculator calculator) {
         super.setBinRectangle(binRectangle, baseLine, barElementColors,
@@ -89,7 +90,7 @@ public class InteractiveBinDataModel extends BinDataModel {
      */
     @Override
     public void updateBinWidth(final int startX, final int binWidth,
-            final SortedSet<Color> barElementColors,
+            final List<Color> barElementColors,
             final Collection<ColorColumn> aggrColumns, final int baseLine,
             final HistogramHiliteCalculator calculator) {
         super.updateBinWidth(startX, binWidth, barElementColors,

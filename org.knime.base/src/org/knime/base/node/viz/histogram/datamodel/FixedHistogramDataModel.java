@@ -25,6 +25,24 @@
 
 package org.knime.base.node.viz.histogram.datamodel;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowKey;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.config.Config;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.histogram.util.BinningUtil;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
+
 import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -44,22 +62,6 @@ import java.util.TreeSet;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.knime.base.node.viz.histogram.util.BinningUtil;
-import org.knime.base.node.viz.histogram.util.ColorColumn;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnDomain;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.RowKey;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeSettings;
-import org.knime.core.node.config.Config;
-import org.knime.core.node.config.ConfigRO;
-import org.knime.core.node.config.ConfigWO;
-
 /**
  * This is the fixed data model implementation of the histogram which
  * is created only once when the user executes a node.
@@ -76,6 +78,7 @@ public class FixedHistogramDataModel {
     private static final String CFG_X_COL_SPEC = "xColSpec";
     private static final String CFG_NOMINAL = "binNominal";
     private static final String CFG_AGGR_COLS = "aggregationColumns";
+    private static final String CFG_AGGR_METHOD = "aggregationMethod";
     private static final String CFG_AGGR_COL_COUNTER = "aggrColCounter";
     private static final String CFG_COLOR_COL = "aggrCol_";
     private static final String CFG_BINS = "bins";
@@ -94,12 +97,16 @@ public class FixedHistogramDataModel {
     private final List<BinDataModel> m_bins;
     private final BinDataModel m_missingValueBin;
 
+    private final AggregationMethod m_aggrMethod;
+
     /**Constructor for class HistogramDataModel.
      * @param xColSpec the column specification of the bin column
+     * @param aggrMethod the {@link AggregationMethod} to use
      * @param aggrColumns the aggregation columns
      * @param noOfBins the number of bins to create
      */
     public FixedHistogramDataModel(final DataColumnSpec xColSpec,
+            final AggregationMethod aggrMethod,
             final Collection<ColorColumn> aggrColumns, final int noOfBins) {
         LOGGER.debug("Entering HistogramDataModel(xColSpec, aggrColumns) "
                 + "of class HistogramDataModel.");
@@ -107,6 +114,7 @@ public class FixedHistogramDataModel {
             throw new NullPointerException(
                     "Binning column specification must not be null");
         }
+        m_aggrMethod = aggrMethod;
         m_aggrColumns = aggrColumns;
         m_xColSpec = xColSpec;
         final DataColumnDomain domain = m_xColSpec.getDomain();
@@ -114,13 +122,6 @@ public class FixedHistogramDataModel {
             throw new NullPointerException(
                     "The binning column domain must not be null");
         }
-//        if (BinningUtil.binNominal(xColSpec, noOfBins)) {
-//            m_binNominal = true;
-//            m_bins = BinningUtil.createNominalBins(xColSpec);
-//        } else {
-//            m_binNominal = false;
-//            m_bins = BinningUtil.createIntervalBins(xColSpec, noOfBins);
-//        }
         if (m_xColSpec.getType().isCompatible(
                 DoubleValue.class)) {
             m_binNominal = false;
@@ -146,11 +147,12 @@ public class FixedHistogramDataModel {
      * @param rowColors the row colors
      */
     private FixedHistogramDataModel(final DataColumnSpec xColSpec,
+            final AggregationMethod aggrMethod,
             final Collection<ColorColumn> aggrColumns,
-            final boolean binNominal,
-            final List<BinDataModel> bins, final BinDataModel missingBin,
-            final SortedSet<Color> rowColors) {
+            final boolean binNominal, final List<BinDataModel> bins,
+            final BinDataModel missingBin, final SortedSet<Color> rowColors) {
         m_xColSpec = xColSpec;
+        m_aggrMethod = aggrMethod;
         m_aggrColumns = aggrColumns;
         m_binNominal = binNominal;
         m_bins = bins;
@@ -212,13 +214,20 @@ public class FixedHistogramDataModel {
         return Collections.unmodifiableCollection(m_aggrColumns);
     }
 
+
+    /**
+     * @return the aggrMethod to use
+     */
+    public AggregationMethod getAggrMethod() {
+        return m_aggrMethod;
+    }
+
     /**
      * @return all available element colors. This is the color the user has
      * set for one attribute in the Color Manager node.
-     * THIS IS AN UNMODIFIABLE {@link SortedSet}!
      */
-    public SortedSet<Color> getRowColors() {
-        return Collections.unmodifiableSortedSet(m_rowColors);
+    public List<Color> getRowColors() {
+        return new ArrayList<Color>(m_rowColors);
     }
 
     /**
@@ -292,6 +301,7 @@ public class FixedHistogramDataModel {
             exec.setMessage("Start saving aggregation columns...");
         }
         config.addBoolean(CFG_NOMINAL, m_binNominal);
+        config.addString(CFG_AGGR_METHOD, m_aggrMethod.getActionCommand());
 
         final Config aggrConf = config.addConfig(CFG_AGGR_COLS);
         aggrConf.addInt(CFG_AGGR_COL_COUNTER, m_aggrColumns.size());
@@ -316,7 +326,7 @@ public class FixedHistogramDataModel {
         if (exec != null) {
             exec.setProgress(0.8, "Start saving element colors...");
         }
-        final SortedSet<Color> rowColors = getRowColors();
+        final List<Color> rowColors = getRowColors();
         final ConfigWO colorColsConf = config.addConfig(CFG_COLOR_COLS);
         colorColsConf.addInt(CFG_ROW_COLOR_COUNTER, rowColors.size());
         idx = 0;
@@ -367,6 +377,13 @@ public class FixedHistogramDataModel {
         final Config xConfig = config.getConfig(CFG_X_COL_SPEC);
         final DataColumnSpec xColSpec = DataColumnSpec.load(xConfig);
         final boolean binNominal = config.getBoolean(CFG_NOMINAL);
+        AggregationMethod aggrMethod = AggregationMethod.getDefaultMethod();
+        try {
+            aggrMethod = AggregationMethod.getMethod4Command(
+                    config.getString(CFG_AGGR_METHOD));
+        } catch (final Exception e) {
+            // Take the default method
+        }
         if (exec != null) {
             exec.setProgress(0.1, "Binning column specification loaded");
             exec.setProgress("Loading aggregation columns...");
@@ -408,7 +425,7 @@ public class FixedHistogramDataModel {
         //close the stream
         inData.close();
         is.close();
-        return new FixedHistogramDataModel(xColSpec, aggrCols, binNominal,
-                bins, missingBin, rowColors);
+        return new FixedHistogramDataModel(xColSpec, aggrMethod, aggrCols,
+                binNominal, bins, missingBin, rowColors);
     }
 }
