@@ -27,7 +27,7 @@ package org.knime.core.node.workflow;
 import java.util.List;
 
 import org.knime.core.node.Node;
-import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 
 
 /**
@@ -44,7 +44,7 @@ interface SingleNodeContainerPersistor extends NodeContainerPersistor {
 
     Node getNode();
     
-    NodeSettingsRO getSNCSettings();
+    SingleNodeContainerSettings getSNCSettings();
     
     List<ScopeObject> getScopeObjects();
 }

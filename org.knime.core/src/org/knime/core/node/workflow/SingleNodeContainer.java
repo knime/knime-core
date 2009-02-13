@@ -746,13 +746,14 @@ public final class SingleNodeContainer extends NodeContainer {
                 inStack.push(s);
             }
             setScopeObjectStack(inStack);
-            try {
-                loadSNCSettings(persistor.getSNCSettings());
-            } catch (InvalidSettingsException e) {
-                String error = "Error loading SNC settings: " + e.getMessage();
-                LOGGER.warn(error, e);
-                result.addError(error);
+            SingleNodeContainerSettings sncSettings = 
+                persistor.getSNCSettings();
+            if (sncSettings == null) {
+                LOGGER.coding(
+                        "SNC settings from persistor are null, using default");
+                sncSettings = new SingleNodeContainerSettings();
             }
+            m_settings = sncSettings;
         }
         return result;
     }
@@ -842,6 +843,12 @@ public final class SingleNodeContainer extends NodeContainer {
         synchronized (m_nodeMutex) {
             m_settings = new SingleNodeContainerSettings(settings);
         }
+    }
+    
+    /** @return reference to internally used settings (contains information for
+     * memory policy, e.g.) */
+    SingleNodeContainerSettings getSingleNodeContainerSettings() {
+        return m_settings;
     }
 
     /** {@inheritDoc} */
@@ -987,7 +994,7 @@ public final class SingleNodeContainer extends NodeContainer {
      * Handles the settings specific to a SingleNodeContainer. Reads and writes
      * them from and into a NodeSettings object.
      */
-    public static class SingleNodeContainerSettings {
+    public static class SingleNodeContainerSettings implements Cloneable {
 
         private MemoryPolicy m_memoryPolicy = MemoryPolicy.CacheSmallInMemory;
         /**
@@ -1049,6 +1056,18 @@ public final class SingleNodeContainer extends NodeContainer {
          */
         public MemoryPolicy getMemoryPolicy() {
             return m_memoryPolicy;
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        protected SingleNodeContainerSettings clone() {
+            try {
+                return (SingleNodeContainerSettings)super.clone();
+            } catch (CloneNotSupportedException e) {
+                LOGGER.coding("clone() threw exception although class "
+                        + "implements Clonable", e);
+                return new SingleNodeContainerSettings();
+            }
         }
 
     }

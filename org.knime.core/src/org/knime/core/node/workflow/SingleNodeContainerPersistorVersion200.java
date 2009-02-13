@@ -35,6 +35,7 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodePersistorVersion1xx;
 import org.knime.core.node.NodePersistorVersion200;
 import org.knime.core.node.NodeSettings;
@@ -42,6 +43,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.ScopeLoopContext.RestoredScopeLoopContext;
 import org.knime.core.node.workflow.ScopeVariable.Type;
+import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
+import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -80,15 +83,36 @@ public class SingleNodeContainerPersistorVersion200 extends
     
     /** {@inheritDoc} */
     @Override
-    protected NodeSettingsRO loadSNCSettings(NodeSettingsRO settings,
-            NodePersistorVersion1xx nodePersistor)
-            throws InvalidSettingsException {
+    protected SingleNodeContainerSettings loadSNCSettings(
+            final NodeSettingsRO settings, 
+            final NodePersistorVersion1xx nodePersistor)
+    throws InvalidSettingsException {
+        // TODO : don't use hard-coded strings here (what about "2.0.3"?)
         if ("2.0.0".equals(getVersionString())) {
-            return nodePersistor.getSettings();
+            return super.loadSNCSettings(settings, nodePersistor);
         } else {
             // any version after 2.0 saves the snc settings in the settings.xml
             // (previously these settings were saves as part of the node.xml)
-            return settings;
+            SingleNodeContainerSettings sncs = 
+                new SingleNodeContainerSettings();
+            MemoryPolicy p;
+            NodeSettingsRO sub =
+                    settings.getNodeSettings(Node.CFG_MISC_SETTINGS);
+            String memoryPolicy =
+                    sub.getString(SingleNodeContainer.CFG_MEMORY_POLICY,
+                            MemoryPolicy.CacheSmallInMemory.toString());
+            if (memoryPolicy == null) {
+                throw new InvalidSettingsException(
+                        "Can't use null memory policy.");
+            }
+            try {
+                p = MemoryPolicy.valueOf(memoryPolicy);
+            } catch (IllegalArgumentException iae) {
+                throw new InvalidSettingsException(
+                        "Invalid memory policy: " + memoryPolicy);
+            }
+            sncs.setMemoryPolicy(p);
+            return sncs;
         }
             
     }

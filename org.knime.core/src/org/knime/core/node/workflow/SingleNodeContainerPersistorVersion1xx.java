@@ -49,6 +49,8 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
+import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
@@ -68,7 +70,7 @@ public class SingleNodeContainerPersistorVersion1xx
     private final WorkflowPersistorVersion1xx m_wfmPersistor;
     
     private NodeSettingsRO m_nodeSettings;
-    private NodeSettingsRO m_sncSettings; 
+    private SingleNodeContainerSettings m_sncSettings; 
     private ReferencedFile m_nodeDir;
     private boolean m_needsResetAfterLoad;
     private boolean m_isDirtyAfterLoad;
@@ -126,7 +128,7 @@ public class SingleNodeContainerPersistorVersion1xx
     
     /** {@inheritDoc} */
     @Override
-    public NodeSettingsRO getSNCSettings() {
+    public SingleNodeContainerSettings getSNCSettings() {
         return m_sncSettings;
     }
     
@@ -255,6 +257,7 @@ public class SingleNodeContainerPersistorVersion1xx
             String error = "Unable to load SNC settings: " + e.getMessage();
             result.addError(error);
             getLogger().debug(error, e);
+            m_sncSettings = new SingleNodeContainerSettings();
             setDirtyAfterLoad();
             return result;
         }
@@ -320,10 +323,39 @@ public class SingleNodeContainerPersistorVersion1xx
         return SETTINGS_FILE_NAME;
     }
     
-    protected NodeSettingsRO loadSNCSettings(final NodeSettingsRO settings, 
+    protected SingleNodeContainerSettings loadSNCSettings(
+            final NodeSettingsRO settings, 
             final NodePersistorVersion1xx nodePersistor)
         throws InvalidSettingsException {
-        return nodePersistor.getSettings();
+        NodeSettingsRO s = nodePersistor.getSettings();
+        SingleNodeContainerSettings sncs = new SingleNodeContainerSettings();
+        // in versions before KNIME 1.2.0, there were no misc settings
+        // in the dialog, we must use caution here: if they are not present
+        // we use the default, i.e. small data are kept in memory
+        MemoryPolicy p;
+        if (s.containsKey(Node.CFG_MISC_SETTINGS)
+                && s.getNodeSettings(Node.CFG_MISC_SETTINGS).containsKey(
+                        SingleNodeContainer.CFG_MEMORY_POLICY)) {
+            NodeSettingsRO sub =
+                    s.getNodeSettings(Node.CFG_MISC_SETTINGS);
+            String memoryPolicy =
+                    sub.getString(SingleNodeContainer.CFG_MEMORY_POLICY,
+                            MemoryPolicy.CacheSmallInMemory.toString());
+            if (memoryPolicy == null) {
+                throw new InvalidSettingsException(
+                        "Can't use null memory policy.");
+            }
+            try {
+                p = MemoryPolicy.valueOf(memoryPolicy);
+            } catch (IllegalArgumentException iae) {
+                throw new InvalidSettingsException(
+                        "Invalid memory policy: " + memoryPolicy);
+            }
+        } else {
+            p = MemoryPolicy.CacheSmallInMemory;
+        }
+        sncs.setMemoryPolicy(p);
+        return sncs;
     }
     
     protected List<ScopeObject> loadScopeObjects(
