@@ -181,6 +181,12 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     public boolean isDirtyAfterLoad() {
         return false;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public boolean mustComplainIfStateDoesNotMatch() {
+        return true;
+    }
 
     /** {@inheritDoc} */
     @Override

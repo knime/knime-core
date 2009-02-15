@@ -71,6 +71,12 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         return VERSION_LATEST;
     }
     
+    /** {@inheritDoc} */
+    @Override
+    public boolean mustComplainIfStateDoesNotMatch() {
+        return true;
+    }
+    
     @Override
     protected String loadWorkflowName(NodeSettingsRO set)
             throws InvalidSettingsException {

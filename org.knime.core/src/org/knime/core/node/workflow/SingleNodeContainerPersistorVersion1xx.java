@@ -112,6 +112,12 @@ public class SingleNodeContainerPersistorVersion1xx
         return m_isDirtyAfterLoad;
     }
     
+    /** {@inheritDoc} */
+    @Override
+    public boolean mustComplainIfStateDoesNotMatch() {
+        return true;
+    }
+    
     /** Mark as dirty. */
     protected void setDirtyAfterLoad() {
         m_isDirtyAfterLoad = true;

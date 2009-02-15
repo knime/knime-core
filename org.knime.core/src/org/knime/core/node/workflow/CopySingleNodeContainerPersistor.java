@@ -124,6 +124,12 @@ final class CopySingleNodeContainerPersistor implements
     
     /** {@inheritDoc} */
     @Override
+    public boolean mustComplainIfStateDoesNotMatch() {
+        return true;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
     public SingleNodeContainerSettings getSNCSettings() {
         return m_sncSettings;
     }

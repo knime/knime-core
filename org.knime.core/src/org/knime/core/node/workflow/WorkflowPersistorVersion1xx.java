@@ -201,6 +201,12 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return m_isDirtyAfterLoad;
     }
     
+    /** {@inheritDoc} */
+    @Override
+    public boolean mustComplainIfStateDoesNotMatch() {
+        return false;
+    }
+    
     /** Mark node as dirty. */
     protected void setDirtyAfterLoad() {
         m_isDirtyAfterLoad = true;

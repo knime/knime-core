@@ -3150,21 +3150,19 @@ public final class WorkflowManager extends NodeContainer {
         WorkflowLoadResult result = new WorkflowLoadResult();
         result.addError(persistor.preLoadNodeContainer(
                 workflowknimeRef, settings));
-        ExecutionMonitor contentExec = exec.createSubProgress(0.1);
-        ExecutionMonitor loadExec = exec.createSubProgress(0.9);
-        exec.setMessage("Loading content");
-        result.addError(persistor.loadNodeContainer(tblRep, contentExec));
-        contentExec.setProgress(1.0);
         WorkflowManager manager;
-        exec.setMessage("Creating workflow instance");
         boolean fixDataLoadProblems = false;
+        InsertWorkflowPersistor insertPersistor = 
+            new InsertWorkflowPersistor(persistor);
         synchronized (m_workflowMutex) {
-            NodeID newID = createUniqueID();
-            manager = createSubWorkflow(persistor, newID);
-            addNodeContainer(manager, false);
-            synchronized (manager.m_workflowMutex) {
-                result.addError(manager.loadContent(
-                        persistor, tblRep, null, loadExec));
+            WorkflowLoadResult subR = loadContent(
+                    insertPersistor, tblRep, null, exec);
+            result.addError(subR);
+            manager = subR.getWorkflowManager();
+            if (manager == null) {
+                throw new InvalidSettingsException("Loading workflow failed, " 
+                        + "couldn't identify child sub flow (typically "
+                        + "a project)");
             }
             // if all errors during the load process are related to data loading
             // it might be that the flow is ex/imported without data;
@@ -3211,7 +3209,7 @@ public final class WorkflowManager extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    LoadResult loadContent(final NodeContainerPersistor nodePersistor,
+    WorkflowLoadResult loadContent(final NodeContainerPersistor nodePersistor,
             final Map<Integer, BufferedDataTable> tblRep,
             final ScopeObjectStack ignoredStack, final ExecutionMonitor exec)
         throws CanceledExecutionException {
@@ -3222,7 +3220,9 @@ public final class WorkflowManager extends NodeContainer {
                     + nodePersistor.getClass().getSimpleName());
         }
         WorkflowPersistor persistor = (WorkflowPersistor)nodePersistor;
-        LoadResult loadResult = new LoadResult();
+        WorkflowLoadResult loadResult = new WorkflowLoadResult();
+        assert this != ROOT || persistor.getConnectionSet().isEmpty() 
+        : "ROOT workflow has no connections: " + persistor.getConnectionSet();
         Map<NodeID, NodeContainerPersistor> persistorMap =
             new HashMap<NodeID, NodeContainerPersistor>();
         Map<Integer, NodeContainerPersistor> nodeLoaderMap =
@@ -3237,6 +3237,10 @@ public final class WorkflowManager extends NodeContainer {
             NodeContainerPersistor p = nodeLoaderMap.get(e.getKey());
             assert p != null : "Deficient translation map";
             persistorMap.put(id, p);
+            NodeContainer nc = m_workflow.getNode(id);
+            if (nc instanceof WorkflowManager) {
+                loadResult.setWorkflowManager((WorkflowManager)nc);
+            }
         }
 
         m_inPortsBarUIInfo = persistor.getInPortsBarUIInfo();
@@ -3331,8 +3335,15 @@ public final class WorkflowManager extends NodeContainer {
                 needsReset = true;
             }
             sub1.setProgress(1.0);
-            subResult.addError(cont.loadContent(
-                    persistor, tblRep, inStack, sub2));
+            // if cont == isolated meta nodes, then we need to block that meta 
+            // node as well (that is being asserted in methods which get called
+            // indirectly)
+            Object mutex = cont instanceof WorkflowManager 
+                ? ((WorkflowManager)cont).m_workflowMutex : m_workflowMutex;
+            synchronized (mutex) {
+                subResult.addError(cont.loadContent(
+                        persistor, tblRep, inStack, sub2));
+            }
             sub2.setProgress(1.0);
             if (persistor.isDirtyAfterLoad()) {
                 cont.setDirty();
@@ -3373,7 +3384,9 @@ public final class WorkflowManager extends NodeContainer {
             if (!isExecuted && cont instanceof SingleNodeContainer) {
                 configureSingleNodeContainer((SingleNodeContainer)cont);
             }
-            if (!cont.getState().equals(loadState) && !hasPredecessorFailed) {
+            if (persistor.mustComplainIfStateDoesNotMatch() 
+                    && !cont.getState().equals(loadState) 
+                    && !hasPredecessorFailed) {
                 String warning = "State of node " + cont.getNameWithID() 
                 + " has changed from " + loadState + " to " + cont.getState();
                 if (subResult.hasEntries() 
