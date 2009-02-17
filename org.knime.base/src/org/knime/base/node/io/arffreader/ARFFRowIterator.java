@@ -50,8 +50,8 @@ import org.knime.core.node.NodeLogger;
  */
 public class ARFFRowIterator extends RowIterator {
     /** The node logger fot this class. */
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(ARFFRowIterator.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(ARFFRowIterator.class);
 
     private final DataTableSpec m_tSpec;
 
@@ -103,8 +103,8 @@ public class ARFFRowIterator extends RowIterator {
         m_numMsgMissVal = 0;
 
         InputStream inStream = m_file.openStream();
-        BufferedReader fReader = new BufferedReader(
-                new InputStreamReader(inStream));
+        BufferedReader fReader =
+                new BufferedReader(new InputStreamReader(inStream));
 
         // eat the ARFF header
         String line;
@@ -144,9 +144,10 @@ public class ARFFRowIterator extends RowIterator {
         String token = null;
         try {
             token = m_tokenizer.nextToken();
-            // skip empty lines. Dont call this from within 'next()'
+            // skip empty lines.
             while ((token != null)
-                    && (token.equals("\n") || (token.length() == 0))) {
+                    && (token.equals("\n") || (!m_tokenizer
+                            .lastTokenWasQuoted() && token.isEmpty()))) {
                 token = m_tokenizer.nextToken();
             }
             m_tokenizer.pushBack();
@@ -162,6 +163,7 @@ public class ARFFRowIterator extends RowIterator {
     @Override
     public DataRow next() {
         // before anything else: check if there is more in the stream
+        // skips empty lines!
         if (!hasNext()) {
             throw new NoSuchElementException(
                     "The row iterator proceeded beyond the last line of '"
@@ -205,7 +207,7 @@ public class ARFFRowIterator extends RowIterator {
             if (createdCols == 0) {
                 // if the token in the first column starts with a '{' then
                 // this is a sparce ARFF file. We are not supporting this. Yet.
-                if ((token.charAt(0) == '{')
+                if (!token.isEmpty() && (token.charAt(0) == '{')
                         && (!m_tokenizer.lastTokenWasQuoted())) {
                     throw new IllegalStateException("ARFF Reader: Sparce ARFF "
                             + "files not supported yet.");
@@ -236,9 +238,8 @@ public class ARFFRowIterator extends RowIterator {
 
             // now get that new cell (it throws something at us if it couldn't)
             rowCells[createdCols] =
-                createNewDataCellOfType(
-                        m_tSpec.getColumnSpec(createdCols).getType(), token,
-                                isMissingCell);
+                    createNewDataCellOfType(m_tSpec.getColumnSpec(createdCols)
+                            .getType(), token, isMissingCell);
 
             createdCols++;
 
@@ -259,8 +260,9 @@ public class ARFFRowIterator extends RowIterator {
                 m_numMsgMissCol++;
             }
             while (createdCols < noOfCols) {
-                rowCells[createdCols] = createNewDataCellOfType(m_tSpec
-                        .getColumnSpec(createdCols).getType(), null, true);
+                rowCells[createdCols] =
+                        createNewDataCellOfType(m_tSpec.getColumnSpec(
+                                createdCols).getType(), null, true);
                 createdCols++;
             }
         }
@@ -313,6 +315,7 @@ public class ARFFRowIterator extends RowIterator {
      * createMissingCell If set true the default ' <code> missing </code> '
      * value of that cell type will be set indicating that the data in that cell
      * was not specified. The <code> data </code> parameter is ignored then.
+     *
      * @return <code> DataCell </code> of the type specified in <code> type
      * </code> .
      */
