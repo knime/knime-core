@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
@@ -34,6 +35,17 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -100,12 +112,44 @@ public class DataContainer implements RowAppender {
      */
     private static final int MAX_POSSIBLE_VALUES = 60;
     
+    /** Number of rows in <code>m_addRowQueue</code> queue. That is, the 
+     * maximal number of rows that are kept in the "write to disk" queue. */
+    static final int ASYNC_CACHE_SIZE = 10;
+    
+    /** The executor, which runs the IO tasks. This includes adding rows to
+     * the Buffer and reading from a file iterator. */
+    static final ExecutorService ASYNC_EXECUTORS = 
+        Executors.newCachedThreadPool(new ThreadFactory() {
+            private final AtomicInteger m_threadCount = new AtomicInteger(); 
+           /** {@inheritDoc} */
+            @Override
+            public Thread newThread(final Runnable r) {
+                return new Thread(r, "KNIME-TableIO-" 
+                        + m_threadCount.incrementAndGet());
+            } 
+        });
+    
+    /** Whether to use synchronous IO while adding rows to a buffer or reading
+     * from an file iterator. This is by default <code>false</code> but can be
+     * enabled by setting the appropriate java property at startup.  */
+    static final boolean SYNCHRONOUS_IO = 
+        Boolean.getBoolean("knime.synchronous.io");
+    
     /** The object that instantiates the buffer, may be set right after 
      * constructor call before any rows are added. */
     private BufferCreator m_bufferCreator;
     
     /** The object that saves the rows. */
     private Buffer m_buffer;
+    
+    /** The object that represent the pending task of adding a data rows to a 
+     * table. */
+    private Future<Void> m_asyncAddFuture;
+    
+    private AtomicReference<Throwable> m_writeThrowable;
+    
+    /** The asynchronous queue holding the most recently added rows. */
+    private LinkedBlockingQueue<Object> m_addRowQueue;
     
     private int m_maxRowsInMemory; 
     
@@ -154,6 +198,10 @@ public class DataContainer implements RowAppender {
      * See {@link #setForceCopyOfBlobs(boolean)} for details. */
     private boolean m_forceCopyOfBlobs;
     
+    /** Used to report statistics regarding the asynchronous caching while
+     * adding rows to the buffer. */
+    private int m_cacheSize = 0;
+    
     /**
      * Opens the container so that rows can be added by
      * <code>addRowToTable(DataRow)</code>. The table spec of the resulting
@@ -182,7 +230,6 @@ public class DataContainer implements RowAppender {
      *        container are initialized with the domains from spec. 
      * @throws NullPointerException If <code>spec</code> is <code>null</code>.
      */
-    @SuppressWarnings ("unchecked")
     public DataContainer(final DataTableSpec spec, 
             final boolean initDomain) {
         this(spec, initDomain, MAX_CELLS_IN_MEMORY);
@@ -209,13 +256,18 @@ public class DataContainer implements RowAppender {
         if (spec == null) {
             throw new NullPointerException("Spec must not be null!");
         }
-        DataTableSpec oldSpec = m_spec;
         m_spec = spec;
         m_duplicateChecker = new DuplicateChecker();
-        if (m_buffer != null) {
-            m_buffer.close(oldSpec);
+        if (SYNCHRONOUS_IO) {
+            m_addRowQueue = null;
+            m_asyncAddFuture = null;
+            m_writeThrowable = null;
+        } else {
+            m_addRowQueue = new LinkedBlockingQueue<Object>(ASYNC_CACHE_SIZE);
+            m_writeThrowable = new AtomicReference<Throwable>();
+            m_asyncAddFuture = ASYNC_EXECUTORS.submit(
+                    new ASyncWriteCallable(this));
         }
-        
         // figure out for which columns it's worth to keep the list of possible
         // values and min/max ranges
         m_possibleValues = new LinkedHashSet[m_spec.getNumColumns()];
@@ -288,6 +340,60 @@ public class DataContainer implements RowAppender {
         final int colCount = spec.getNumColumns();
         m_maxRowsInMemory = maxCellsInMemory / ((colCount > 0) ? colCount : 1);
         m_bufferCreator = new BufferCreator();
+    }
+    
+    private void addRowToTableWrite(final DataRow row) {
+        // let's do every possible sanity check
+        int numCells = row.getNumCells();
+        RowKey key = row.getKey();
+        if (numCells != m_spec.getNumColumns()) {
+            throw new IllegalArgumentException(
+                    "Cell count in row \"" + key
+                    + "\" is not equal to length of column names " 
+                    + "array: " + numCells + " vs. " 
+                    + m_spec.getNumColumns());
+        }
+        for (int c = 0; c < numCells; c++) {
+            DataType columnClass = 
+                m_spec.getColumnSpec(c).getType();
+            DataCell value;
+            DataType runtimeType;
+            if (row instanceof BlobSupportDataRow) {
+                BlobSupportDataRow bsvalue = 
+                    (BlobSupportDataRow)row;
+                value  = bsvalue.getRawCell(c);
+            } else {
+                value = row.getCell(c);
+            }
+            if (value instanceof BlobWrapperDataCell) {
+                BlobWrapperDataCell bw = (BlobWrapperDataCell)value;
+                runtimeType = bw.getBlobDataType();
+            } else {
+                runtimeType = value.getType();
+            }
+            
+            if (!columnClass.isASuperTypeOf(runtimeType)) {
+                String valString = value.toString();
+                // avoid too long string representations
+                if (valString.length() > 30) {
+                    valString = valString.substring(0, 30) + "...";
+                }
+                throw new IllegalArgumentException(
+                        "Runtime class of object \"" + valString 
+                        + "\" (index " + c + ") in " + "row \"" + key 
+                        + "\" is " + runtimeType.toString() + " and does "
+                        + "not comply with its supposed superclass "
+                        + columnClass.toString());
+            }
+            // keep the list of possible values and the range updated
+            updatePossibleValues(c, value);
+            updateMinMax(c, value);
+            
+        } // for all cells
+        // do not swap the following two lines:
+        // addRowKeyForDuplicateCheck relies on m_buffer.size()
+        addRowKeyForDuplicateCheck(key);
+        m_buffer.addRow(row, false, m_forceCopyOfBlobs);
     }
     
     /** Set a buffer creator to be used to initialize the buffer. This
@@ -398,6 +504,22 @@ public class DataContainer implements RowAppender {
                     getLocalTableRepository());
         }
         DataTableSpec finalSpec = createTableSpecWithRange();
+        if (!SYNCHRONOUS_IO) {
+            try {
+                offerToAsynchronousQueue(new Object());
+                m_asyncAddFuture.get();
+                NodeLogger.getLogger(DataContainer.class).debug(
+                        "Average size of asynchronous write cache: " 
+                        + m_cacheSize / (double)m_buffer.size() + " (for "
+                        + m_buffer.size() + " rows)");
+            } catch (InterruptedException e) {
+                throw new RuntimeException(
+                        "Adding rows to table was interrupted", e);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(
+                        "Adding rows to table threw exception", e);
+            }
+        }
         m_buffer.close(finalSpec);
         m_table = new ContainerTable(m_buffer);
         getLocalTableRepository().put(m_table.getBufferID(), m_table);
@@ -419,6 +541,33 @@ public class DataContainer implements RowAppender {
         m_minCells = null;
         m_maxCells = null;
         m_comparators = null;
+    }
+    
+    /** Adds the argument object (which will be a DataRow unless when called
+     * from close()) to the asynchronous queue. It will also handle cases, in
+     * which the write thread has died.
+     * @param object the object to add.
+     */
+    private void offerToAsynchronousQueue(final Object object) {
+        try {
+            while (!m_addRowQueue.offer(object, 5, TimeUnit.SECONDS)) {
+                if (m_asyncAddFuture.isDone()) {
+                    StringBuilder error = new StringBuilder(
+                            "Writing to table has unexpectedly stopped");
+                    Throwable t = m_writeThrowable.get();
+                    if (t != null) {
+                        error.append(" (caused by \"");
+                        error.append(t.getClass().getSimpleName());
+                        error.append("\")");
+                    }
+                    throw new RuntimeException(error.toString(), t);
+                }
+             }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(
+                    "Adding rows to buffer was interrupted", e);
+        }
+
     }
     
     /** Get the number of rows that have been added so far.
@@ -474,10 +623,8 @@ public class DataContainer implements RowAppender {
         }
         throw new IllegalStateException("Cannot get spec: container not open.");
     }
-    
-    /**
-     * {@inheritDoc}
-     */
+
+    /** {@inheritDoc} */
     public void addRowToTable(final DataRow row) {
         if (!isOpen()) {
             throw new IllegalStateException("Cannot add row: container has"
@@ -496,53 +643,17 @@ public class DataContainer implements RowAppender {
                         "Implementation error, must not return a null buffer.");
             }
         }
-        // let's do every possible sanity check
-        int numCells = row.getNumCells();
-        RowKey key = row.getKey();
-        if (numCells != m_spec.getNumColumns()) {
-            throw new IllegalArgumentException("Cell count in row \"" + key
-                    + "\" is not equal to length of column names " + "array: "
-                    + numCells + " vs. " + m_spec.getNumColumns());
+        if (SYNCHRONOUS_IO) {
+          addRowToTableWrite(row);
+        } else {
+            Throwable t = m_writeThrowable.get();
+            if (t != null) {
+                throw new RuntimeException("Writing to table threw " 
+                        + t.getClass().getSimpleName(), t);
+            }
+            offerToAsynchronousQueue(row);
+            m_cacheSize += m_addRowQueue.size();
         }
-        for (int c = 0; c < numCells; c++) {
-            DataType columnClass = m_spec.getColumnSpec(c).getType();
-            DataCell value;
-            DataType runtimeType;
-            if (row instanceof BlobSupportDataRow) {
-                BlobSupportDataRow bsvalue = (BlobSupportDataRow)row;
-                value  = bsvalue.getRawCell(c);
-            } else {
-                value = row.getCell(c);
-            }
-            if (value instanceof BlobWrapperDataCell) {
-                BlobWrapperDataCell bw = (BlobWrapperDataCell)value;
-                runtimeType = bw.getBlobDataType();
-            } else {
-                runtimeType = value.getType();
-            }
-                
-            if (!columnClass.isASuperTypeOf(runtimeType)) {
-                String valString = value.toString();
-                // avoid too long string representations
-                if (valString.length() > 30) {
-                    valString = valString.substring(0, 30) + "...";
-                }
-                throw new IllegalArgumentException("Runtime class of object \""
-                        + valString + "\" (index " + c
-                        + ") in " + "row \"" + key + "\" is "
-                        + runtimeType.toString()
-                        + " and does not comply with its supposed superclass "
-                        + columnClass.toString());
-            }
-            // keep the list of possible values and the range updated
-            updatePossibleValues(c, value);
-            updateMinMax(c, value);
-            
-        } // for all cells
-        // do not swap the following two lines:
-        // addRowKeyForDuplicateCheck relies on m_buffer.size()
-        addRowKeyForDuplicateCheck(key);
-        m_buffer.addRow(row, false, m_forceCopyOfBlobs);
     } // addRowToTable(DataRow)
     
     /**
@@ -631,7 +742,7 @@ public class DataContainer implements RowAppender {
      * This method does nothing if the values don't need to be stored for the
      * respective column.
      * @param col The column of interest.
-     * @param value The (maybe) new value.
+     * @param cell The (maybe) new value.
      */
     private void updatePossibleValues(final int col, final DataCell cell) {
         if (m_possibleValues[col] == null || cell.isMissing()) {
@@ -652,7 +763,7 @@ public class DataContainer implements RowAppender {
      * does nothing if the min and max values don't need to be stored, e.g.
      * the column at hand contains string values.
      * @param col The column of interest.
-     * @param value The new value to check.
+     * @param cell The new value to check.
      */
     private void updateMinMax(final int col, final DataCell cell) {
         if (m_minCells[col] == null || cell.isMissing()) {
@@ -968,6 +1079,57 @@ public class DataContainer implements RowAppender {
      */
     public static final boolean isContainerTable(final DataTable table) {
         return table instanceof ContainerTable;
+    }
+    
+    /** Background task that wil write the output data. This is kept as 
+     * static inner class in order to allow for a garbage collection of the 
+     * outer class (which indicates an early stopped buffer writing). */
+    private static final class ASyncWriteCallable implements Callable<Void> {
+        
+        private final WeakReference<DataContainer> m_containerRef;
+        
+        /** @param cont The outer container. */
+        ASyncWriteCallable(final DataContainer cont) {
+            m_containerRef = new WeakReference<DataContainer>(cont);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public Void call() throws Exception {
+            DataContainer d = m_containerRef.get();
+            if (d == null) {
+                // data container was already discarded (no rows added)
+                return null;
+            }
+            final BlockingQueue<Object> queue = d.m_addRowQueue;
+            final AtomicReference<Throwable> throwable = d.m_writeThrowable;
+            try {
+                while (true) {
+                    d = null; // allow it to be gc'ed
+                    Object obj = queue.poll(5, TimeUnit.SECONDS);
+                    d = m_containerRef.get();
+                    if (d == null) {
+                        // close() was never called on the container 
+                        // (which was garbage collected already), 
+                        // end this thread
+                        return null;
+                    }
+                    if (obj != null) { // continue with loop if null
+                        if (obj instanceof DataRow) {
+                            DataRow row = (DataRow)obj;
+                            d.addRowToTableWrite(row);
+                        } else {
+                            // table has been closed 
+                            // (some non-DataRow was queued)
+                            return null;
+                        }
+                    }
+                }
+            } catch (Throwable t) {
+                throwable.compareAndSet(null, t);
+                return null;
+            }
+        }
     }
     
     /**

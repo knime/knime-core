@@ -483,7 +483,6 @@ class Buffer implements KNIMEStreamConstants {
      * is true for loop end nodes, which need to aggregate the data generated
      * in the loop body 
      */
-    @SuppressWarnings("unchecked")
     void addRow(final DataRow r, final boolean isCopyOfExisting, 
             final boolean forceCopyOfBlobs) {
         try {
@@ -849,7 +848,6 @@ class Buffer implements KNIMEStreamConstants {
      * @throws ClassNotFoundException If any of the classes can't be loaded.
      * @throws InvalidSettingsException If the internal structure is broken.
      */
-    @SuppressWarnings("unchecked") // cast with generics
     private void readMetaFromFile(final InputStream metaIn)
     throws IOException, InvalidSettingsException {
         InputStream inStream = new BufferedInputStream(metaIn);
@@ -1403,6 +1401,9 @@ class Buffer implements KNIMEStreamConstants {
                 b.append(m_binFile != null ? m_binFile.getName() : "<unknown>");
                 b.append("\"");
                 throw new RuntimeException(b.toString(), ioe);
+            }
+            if (!DataContainer.SYNCHRONOUS_IO) {
+                return new ASyncCloseableRowIterator(f);
             }
             return f;
         } else {
