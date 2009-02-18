@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
  */
-package org.knime.base.node.mine.scorer.hilitescorer;
+package org.knime.base.node.mine.scorer.accuracy;
 
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -44,7 +44,7 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
  * @author Christoph Sieb, University of Konstanz
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class HiliteScorerNodeDialog extends NodeDialogPane {
+public final class AccuracyScorerNodeDialog extends NodeDialogPane {
     /*
      * The main panel in this view.
      */
@@ -66,7 +66,7 @@ public final class HiliteScorerNodeDialog extends NodeDialogPane {
      * Creates a new {@link NodeDialogPane} for scoring in order to set the two
      * columns to compare.
      */
-    public HiliteScorerNodeDialog() {
+    public AccuracyScorerNodeDialog() {
         super();
 
         m_p = new JPanel();
@@ -113,7 +113,7 @@ public final class HiliteScorerNodeDialog extends NodeDialogPane {
         m_firstColumns.removeAllItems();
         m_secondColumns.removeAllItems();
 
-        DataTableSpec spec = specs[HiliteScorerNodeModel.INPORT];
+        DataTableSpec spec = specs[AccuracyScorerNodeModel.INPORT];
 
         if ((spec == null) || (spec.getNumColumns() < 2)) {
             throw new NotConfigurableException("Scorer needs an input table "
@@ -133,16 +133,16 @@ public final class HiliteScorerNodeDialog extends NodeDialogPane {
                 (numCols > 1) ? spec.getColumnSpec(numCols - 2) : col2;
         col1 =
                 spec.getColumnSpec(settings.getString(
-                        HiliteScorerNodeModel.FIRST_COMP_ID, col1.getName()));
+                        AccuracyScorerNodeModel.FIRST_COMP_ID, col1.getName()));
         col2 =
                 spec.getColumnSpec(settings.getString(
-                        HiliteScorerNodeModel.SECOND_COMP_ID, col2.getName()));
+                        AccuracyScorerNodeModel.SECOND_COMP_ID, col2.getName()));
         m_firstColumns.setSelectedItem(col1);
         m_secondColumns.setSelectedItem(col2);
     }
 
     /**
-     * Sets the selected columns inside the {@link HiliteScorerNodeModel}.
+     * Sets the selected columns inside the {@link AccuracyScorerNodeModel}.
      * 
      * @param settings the object to write the settings into
      * @throws InvalidSettingsException if the column selection is invalid
@@ -166,7 +166,7 @@ public final class HiliteScorerNodeDialog extends NodeDialogPane {
             throw new InvalidSettingsException(
                     "First and second column cannot be the same.");
         }
-        settings.addString(HiliteScorerNodeModel.FIRST_COMP_ID, firstColumn);
-        settings.addString(HiliteScorerNodeModel.SECOND_COMP_ID, secondColumn);
+        settings.addString(AccuracyScorerNodeModel.FIRST_COMP_ID, firstColumn);
+        settings.addString(AccuracyScorerNodeModel.SECOND_COMP_ID, secondColumn);
     }
 }

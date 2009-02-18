@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
  */
-package org.knime.base.node.mine.scorer.hilitescorer;
+package org.knime.base.node.mine.scorer.accuracy;
 
 import java.awt.Point;
 import java.io.BufferedInputStream;
@@ -45,11 +45,13 @@ import org.knime.base.node.util.DataArray;
 import org.knime.base.node.viz.plotter.DataProvider;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -62,6 +64,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * The hilite scorer node's model. The scoring is performed on two given columns
@@ -69,13 +72,13 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author Christoph Sieb, University of Konstanz
  * 
- * @see HiliteScorerNodeFactory
+ * @see AccuracyScorerNodeFactory
  */
-public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
+public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
     
     /** The node logger for this class. */
     protected static final NodeLogger LOGGER = NodeLogger
-            .getLogger(HiliteScorerNodeModel.class);
+            .getLogger(AccuracyScorerNodeModel.class);
 
     /** Identifier in model spec to address first column name to compare. */
     static final String FIRST_COMP_ID = "first";
@@ -86,8 +89,21 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     /** The input port 0. */
     static final int INPORT = 0;
 
-    /** The output port 0. */
-    static final int OUTPORT = 0;
+    /** The output port 0: confusion matrix. */
+    static final int OUTPORT_0 = 0;
+    
+    /** The output port 1: accuracy measures. */
+    static final int OUTPORT_1 = 1;
+    
+    /** 
+     * New instance of a HiLiteHandler return on the confusion matrix 
+     * out-port. */
+    private final HiLiteHandler m_cmHiLiteHandler = new HiLiteHandler();
+    
+    /** 
+     * New instance of a HiLiteHandler return on the accuracy measures 
+     * out-port. */
+    private final HiLiteHandler m_amHiLiteHandler = new HiLiteHandler();
 
     /** The name of the first column to compare. */
     private String m_firstCompareColumn;
@@ -124,8 +140,8 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     private int m_nrRows;
 
     /** Inits a new <code>ScorerNodeModel</code> with one in- and one output. */
-    HiliteScorerNodeModel() {
-        super(1, 1);
+    AccuracyScorerNodeModel() {
+        super(1, 2);
     }
 
     /**
@@ -286,9 +302,67 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
                 + incorrect + ", #rows=" + nrRows + ", #missing=" + missing);
         // our view displays the table - we must keep a reference in the model.
         BufferedDataTable result = container.getTable();
-        return new BufferedDataTable[] {result};
-
-    } // execute(DataTable[],ExecutionMonitor)
+        
+        // start creating accuracy statistics
+        BufferedDataContainer accTable = exec.createDataContainer(
+                new DataTableSpec(QUALITY_MEASURES_SPECS));
+        for (int r = 0; r < m_values.length; r++) {
+            int tp = getTP(r);  // true positives
+            int fp = getFP(r);  // false positives
+            int tn = getTN(r);  // true negatives
+            int fn = getFN(r);  // false negatives
+            final DataCell sensitivity; // TP / (TP + FN)
+            DoubleCell recall = null; // TP / (TP + FN)
+            if (tp + fn > 0) {
+                recall = new DoubleCell(1.0 * tp / (tp + fn));
+                sensitivity = new DoubleCell(1.0 * tp / (tp + fn));
+            } else {
+                sensitivity = DataType.getMissingCell();
+            }
+            DoubleCell prec = null; // TP / (TP + FP)
+            if (tp + fp > 0) {
+                prec = new DoubleCell(1.0 * tp / (tp + fp));
+            }
+            final DataCell specifity; // TN / (TN + FP)
+            if (tn + fp > 0) {
+                specifity = new DoubleCell(1.0 * tn / (tn + fp));
+            } else {
+                specifity = DataType.getMissingCell();
+            }
+            final DataCell fmeasure; // 2 * Prec. * Recall / (Prec. + Recall)
+            if (recall != null && prec != null) {
+                fmeasure = new DoubleCell(2.0 * prec.getDoubleValue() 
+                    * recall.getDoubleValue() / (prec.getDoubleValue() 
+                            + recall.getDoubleValue()));
+            } else {
+                fmeasure = DataType.getMissingCell();
+            }
+            // add complete row for class value to table
+            DataRow row = new DefaultRow(new RowKey(m_values[r]),
+                    new DataCell[]{new IntCell(tp), new IntCell(fp),
+                        new IntCell(tn), new IntCell(fn), 
+                        recall == null ? DataType.getMissingCell() : recall,
+                        prec == null ? DataType.getMissingCell() : prec,
+                        sensitivity, specifity, fmeasure, 
+                        DataType.getMissingCell()});
+            accTable.addRowToTable(row);
+        }
+        List<String> classIds = Arrays.asList(m_values);
+        RowKey overallID = new RowKey("Overall");
+        int uniquifier = 1;
+        while (classIds.contains(overallID)) {
+            overallID = new RowKey("Overall (#" + (uniquifier++) + ")");
+        }
+        // append additional row for overall accuracy
+        accTable.addRowToTable(new DefaultRow(overallID, new DataCell[]{
+                DataType.getMissingCell(), DataType.getMissingCell(),
+                DataType.getMissingCell(), DataType.getMissingCell(),
+                DataType.getMissingCell(), DataType.getMissingCell(),
+                DataType.getMissingCell(), DataType.getMissingCell(),
+                DataType.getMissingCell(), new DoubleCell(getAccuracy())}));
+        accTable.close();
+        return new BufferedDataTable[] {result, accTable.getTable()};
+    }
 
     /**
      * Resets all internal data.
@@ -341,8 +415,31 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
             throw new InvalidSettingsException("Column "
                     + m_secondCompareColumn + " not found.");
         }
-        return new DataTableSpec[1];
+        return new DataTableSpec[]{null, 
+                new DataTableSpec(QUALITY_MEASURES_SPECS)};
     }
+    
+    private static final DataColumnSpec[] QUALITY_MEASURES_SPECS
+        = new DataColumnSpec[]{
+            new DataColumnSpecCreator(
+                    "TruePositives", IntCell.TYPE).createSpec(),
+            new DataColumnSpecCreator(
+                    "FalsePositives", IntCell.TYPE).createSpec(),
+            new DataColumnSpecCreator(
+                    "TrueNegatives", IntCell.TYPE).createSpec(),
+            new DataColumnSpecCreator(
+                    "FalseNegatives", IntCell.TYPE).createSpec(),
+            new DataColumnSpecCreator("Recall", DoubleCell.TYPE).createSpec(),
+            new DataColumnSpecCreator(
+                    "Precision", DoubleCell.TYPE).createSpec(),
+            new DataColumnSpecCreator(
+                    "Sensitivity", DoubleCell.TYPE).createSpec(),
+            new DataColumnSpecCreator(
+                    "Specifity", DoubleCell.TYPE).createSpec(),
+            new DataColumnSpecCreator(
+                    "F-measure", DoubleCell.TYPE).createSpec(),
+            new DataColumnSpecCreator("Accuracy", DoubleCell.TYPE).createSpec(),
+        };
 
     /**
      * Get the correct classification count, i.e. where both columns agree.
@@ -364,7 +461,45 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     public int getFalseCount() {
         return m_falseCount;
     }
-
+    
+    private int getTP(final int classIndex) {
+        return m_scorerCount[classIndex][classIndex];
+    }
+    
+    private int getFP(final int classIndex) {
+        int ret = 0;
+        for (int i = 0; i < m_scorerCount[classIndex].length; i++) {
+            if (classIndex != i) {
+                ret += m_scorerCount[classIndex][i];
+            }
+        }
+        return ret;
+    }
+    
+    private int getTN(final int classIndex) {
+        int ret = 0;
+        for (int i = 0; i < m_scorerCount.length; i++) {
+            if (i != classIndex) {
+                for (int j = 0; j < m_scorerCount[i].length; j++) {
+                    if (classIndex != j) {
+                        ret += m_scorerCount[i][j];
+                    }
+                }
+            }
+        }
+        return ret;
+    }
+    
+    private int getFN(final int classIndex) {
+        int ret = 0;
+        for (int i = 0; i < m_scorerCount.length; i++) {
+            if (classIndex != i) {
+                ret += m_scorerCount[i][classIndex];
+            }
+        }
+        return ret;
+    }
+    
     /**
      * Get the number of rows in the input table. This count can be different
      * from {@link #getFalseCount()} + {@link #getCorrectCount()}, though it
@@ -378,20 +513,28 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     }
 
     /**
-     * Returns the error of wrong classified pattern in percentage of the number
-     * of patterns.
-     * 
-     * @return the 1.0 - classification accuracy
+     * @return ratio of wrong classified and all patterns 
      */
-    public float getError() {
-        float error;
+    public double getError() {
         long totalNumberDataSets = getFalseCount() + getCorrectCount();
         if (totalNumberDataSets == 0) {
-            error = Float.NaN;
+            return Double.NaN;
         } else {
-            error = 100.0f * getFalseCount() / totalNumberDataSets;
+            return 1.0 * getFalseCount() / totalNumberDataSets;
         }
-        return error;
+    }
+    
+    /**
+     * @return ratio of correct classified and all patterns
+     */
+    public double getAccuracy() {
+        long totalNumberDataSets = getFalseCount() + getCorrectCount();
+        if (totalNumberDataSets == 0) {
+            return Double.NaN;
+        } else {
+            return 1.0 * getCorrectCount()
+                / (getCorrectCount() + getFalseCount());
+        }
     }
 
     /**
@@ -659,23 +802,12 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
                 NodeSettingsRO subSub = sub.getNodeSettings("hilightMap");
                 for (int j = 0; j < m_values.length; j++) {
                     NodeSettingsRO sub3 = subSub.getNodeSettings(m_values[j]);
-                    m_keyStore[i][j] = new ArrayList<RowKey>();
-                    try {
-                        // load key stores before 2.0
-                        DataCell[] cells = sub3.getDataCellArray("keyStore");
-                        for (DataCell dc : cells) {
-                            m_keyStore[i][j].add(new RowKey(dc.toString()));
-                        }
-                    } catch (InvalidSettingsException ise) {
-                        m_keyStore[i][j] = Arrays.asList(
+                    m_keyStore[i][j]  = Arrays.asList(
                                 sub3.getRowKeyArray("keyStore"));
-                    }    
                 }
             }
         } catch (InvalidSettingsException ise) {
-            IOException ioe = new IOException("Unable to read internals");
-            ioe.initCause(ise);
-            throw ioe;
+            throw new IOException("Unable to read internals", ise);
         }
     }
 
@@ -759,4 +891,18 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     public String getSecondCompareColumn() {
         return m_secondCompareColumn;
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
+        if (outIndex == 0) {
+            return m_cmHiLiteHandler;
+        } else if (outIndex == 1) {
+            return m_amHiLiteHandler;
+        }
+        return null;
+    }
+
 }

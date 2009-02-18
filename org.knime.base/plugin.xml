@@ -245,8 +245,8 @@
       </node>
       <node
             category-path="/mining/modeleval"
-            factory-class="org.knime.base.node.mine.scorer.hilitescorer.HiliteScorerNodeFactory"
-            id="org.knime.base.node.mine.scorer.hilitescorer.HiliteScorerNodeFactory">
+            factory-class="org.knime.base.node.mine.scorer.accuracy.AccuracyScorerNodeFactory"
+            id="org.knime.base.node.mine.scorer.scorer.AccuracyScorerNodeFactory">
       </node>
       <node
             category-path="/manipulation/column"

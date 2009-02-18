@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * ------------------------------------------------------------------- * 
  */
-package org.knime.base.node.mine.scorer.hilitescorer;
+package org.knime.base.node.mine.scorer.accuracy;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -42,7 +42,7 @@ public class ROCView extends DefaultVisualizationNodeView {
     /* (BW, 20. Dec 2006) Disabled this view as a ROC curve is senseless for 
      * the scorer */
     private static class ROCPlotter extends BasicPlotterImpl {
-        private final HiliteScorerNodeModel m_model;
+        private final AccuracyScorerNodeModel m_model;
         private final NumberFormat m_formatter = new DecimalFormat("0.000");
         
         /**
@@ -50,7 +50,7 @@ public class ROCView extends DefaultVisualizationNodeView {
          * 
          * @param model the scorer's model
          */
-        public ROCPlotter(final HiliteScorerNodeModel model) {
+        public ROCPlotter(final AccuracyScorerNodeModel model) {
             super(new ROCDrawingPane());
             m_model = model;
         }
@@ -129,7 +129,7 @@ public class ROCView extends DefaultVisualizationNodeView {
      * 
      * @param nodeModel the scorer model
      */
-    public ROCView(final HiliteScorerNodeModel nodeModel) {
+    public ROCView(final AccuracyScorerNodeModel nodeModel) {
         super(nodeModel, new ROCPlotter(nodeModel), "ROC curve");
     }
 }

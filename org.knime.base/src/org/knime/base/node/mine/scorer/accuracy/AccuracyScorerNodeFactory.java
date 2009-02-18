@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
  */
-package org.knime.base.node.mine.scorer.hilitescorer;
+package org.knime.base.node.mine.scorer.accuracy;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
@@ -30,15 +30,15 @@ import org.knime.core.node.NodeView;
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-public class HiliteScorerNodeFactory 
-        extends NodeFactory<HiliteScorerNodeModel> {
+public class AccuracyScorerNodeFactory 
+        extends NodeFactory<AccuracyScorerNodeModel> {
     
     /**
      * {@inheritDoc}
      */
     @Override
-    public HiliteScorerNodeModel createNodeModel() {
-        return new HiliteScorerNodeModel();
+    public AccuracyScorerNodeModel createNodeModel() {
+        return new AccuracyScorerNodeModel();
     }
 
     /**
@@ -53,12 +53,10 @@ public class HiliteScorerNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public NodeView<HiliteScorerNodeModel> createNodeView(
-            final int i, final HiliteScorerNodeModel nodeModel) {
+    public NodeView<AccuracyScorerNodeModel> createNodeView(
+            final int i, final AccuracyScorerNodeModel nodeModel) {
         if (i == 0) {
-            return new HiliteScorerNodeView(nodeModel);
-//        } else if (i == 1) {
-//            return new ROCView((HiliteScorerNodeModel)nodeModel);
+            return new AccuracyScorerNodeView(nodeModel);
         } else {
             throw new IllegalArgumentException("No such view");
         }
@@ -78,6 +76,6 @@ public class HiliteScorerNodeFactory
     @Override
     public NodeDialogPane createNodeDialogPane() {
 
-        return new HiliteScorerNodeDialog();
+        return new AccuracyScorerNodeDialog();
     }
 }

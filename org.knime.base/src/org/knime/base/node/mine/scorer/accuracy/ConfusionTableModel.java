@@ -24,7 +24,7 @@
  * History
  *   29.09.2006 (sieb): created
  */
-package org.knime.base.node.mine.scorer.hilitescorer;
+package org.knime.base.node.mine.scorer.accuracy;
 
 import javax.swing.table.AbstractTableModel;
 

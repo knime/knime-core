@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
  */
-package org.knime.base.node.mine.scorer.hilitescorer;
+package org.knime.base.node.mine.scorer.accuracy;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -56,7 +56,7 @@ import org.knime.core.node.property.hilite.KeyEvent;
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel> 
+final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel> 
         implements HiLiteListener {
     /*
      * Components displaying the scorer table, number of correct/wrong
@@ -74,10 +74,6 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
 
     private JLabel m_accuracy;
 
-    // private JLabel m_recall;
-    //    
-    // private JLabel m_precision;
-
     private boolean[][] m_cellHilited;
     
     /**
@@ -90,7 +86,7 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
      * @param nodeModel
      *            the underlying <code>NodeModel</code>
      */
-    public HiliteScorerNodeView(final HiliteScorerNodeModel nodeModel) {
+    public AccuracyScorerNodeView(final AccuracyScorerNodeModel nodeModel) {
         super(nodeModel);
 
         getJMenuBar().add(createHiLiteMenu());
@@ -136,31 +132,15 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
         outerPanel.add(m_scrollPane, BorderLayout.CENTER);
         outerPanel.add(summary, BorderLayout.SOUTH);
 
-        // summary = new JPanel(new FlowLayout());
-        // summary.add(new JLabel("Recall:"));
-        // m_recall = new JLabel("n/a");
-        // summary.add(m_recall);
-        // summary.add(new JLabel("%"));
-        // outerPanel.add(summary);
-        //        
-        // summary = new JPanel(new FlowLayout());
-        // summary.add(new JLabel("Precision:"));
-        // m_precision = new JLabel("n/a");
-        // summary.add(m_precision);
-        // summary.add(new JLabel("%"));
-        // outerPanel.add(summary);
-
         setComponent(outerPanel);
     }
 
     /**
-     * Call this function to tell the view that the model has changed.
-     * 
-     * @see NodeView#modelChanged()
+     * {@inheritDoc}
      */
     @Override
     public void modelChanged() {
-        HiliteScorerNodeModel model = getNodeModel();
+        AccuracyScorerNodeModel model = getNodeModel();
 
         /*
          * get the new scorer table and compute the numbers we display
@@ -197,24 +177,14 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
         NumberFormat nf = NumberFormat.getInstance();
         m_correct.setText(String.valueOf(nf.format(model.getCorrectCount())));
         m_wrong.setText(String.valueOf(nf.format(model.getFalseCount())));
-        m_error.setText(String.valueOf(nf.format(model.getError())));
+        double error = 100.0 * model.getError();
+        m_error.setText(String.valueOf(nf.format(error)));
         m_error.setToolTipText("Error: " 
-                + String.valueOf(model.getError()) + " %");
-        double accurarcy = 100.0 * model.getCorrectCount()
-            / (model.getCorrectCount() + model.getFalseCount());
+                + String.valueOf(error) + " %");
+        double accurarcy = 100.0 * model.getAccuracy();
         m_accuracy.setText(String.valueOf(nf.format(accurarcy)));
         m_accuracy.setToolTipText("Accuracy: " 
                 + String.valueOf(accurarcy) + " %");
-
-        // if (scoreCount.length == 2) { // binary classification problem
-        // m_precision.setText(String.valueOf(100.0 * scoreCount[0][0]
-        // / (scoreCount[0][0] + scoreCount[1][0])));
-        // m_recall.setText(String.valueOf(100.0 * scoreCount[0][0]
-        // / (scoreCount[0][0] + scoreCount[0][1])));
-        // } else {
-        // m_precision.setText(" n/a ");
-        // m_recall.setText(" n/a ");
-        // }
     }
 
     /**
@@ -447,8 +417,8 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
      * {@inheritDoc}
      */
     @Override
-    protected HiliteScorerNodeModel getNodeModel() {
-        return (HiliteScorerNodeModel) super.getNodeModel();
+    protected AccuracyScorerNodeModel getNodeModel() {
+        return (AccuracyScorerNodeModel) super.getNodeModel();
     }
 
     /**

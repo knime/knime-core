@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Other" icon="./hilitescorer.png">
+<knimeNode type="Other" icon="./scorer.png">
     <name>Scorer</name>
     <shortDescription>Compares two columns by their attribute value pairs.</shortDescription>
     <fullDescription>
@@ -15,11 +15,17 @@
 			confusion matrix's rows and the values from the second column by the
 			confusion matrix's columns. The output of the node is the confusion 
 			matrix with the number of matches in each cell.
+			Additionally, the second out-port reports a number of 
+			<a href="http://en.wikipedia.org/wiki/Information_retrieval">
+			accuracy statistics</a> such as True-Positives, False-Positives, 
+			True-Negatives, False-Negatives, Recall, Precision, Sensitivity, 
+			Specifity, F-measure, as well as the overall accuracy.
 		</intro>
 	</fullDescription>
     <ports>
         <inPort index="0" name="Input table">Table containing at least two columns to compare.</inPort>
         <outPort index="0" name="Confusion matrix">The confusion matrix.</outPort>
+        <outPort index="1" name="Accuracy statistics">The accuracy statistics table.</outPort>
 	</ports>
 	<views>
 		<view index="0" name="Confusion Matrix">
