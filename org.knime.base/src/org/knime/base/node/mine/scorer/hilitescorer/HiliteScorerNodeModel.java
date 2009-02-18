@@ -62,6 +62,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * The hilite scorer node's model. The scoring is performed on two given columns
@@ -758,5 +759,14 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
      */
     public String getSecondCompareColumn() {
         return m_secondCompareColumn;
+    }
+    
+    /** Output hilite handler for confusion matrix. */
+    private final HiLiteHandler m_outHiLiteHandler = new HiLiteHandler();
+
+    /** {@inheritDoc} */
+    @Override
+    protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
+        return m_outHiLiteHandler;
     }
 }
