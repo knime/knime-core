@@ -97,13 +97,6 @@ public final class SingleNodeContainer extends NodeContainer {
     static final String CFG_MEMORY_POLICY = "memory_policy";
 
     /**
-     * The memory policy for the data outports, i.e. keep in memory or hold on
-     * disc. Default is to keep small tables in memory
-     */
-    private MemoryPolicy m_outDataPortsMemoryPolicy =
-            MemoryPolicy.CacheSmallInMemory;
-
-    /**
      * Create new SingleNodeContainer based on existing Node.
      *
      * @param parent the workflow manager holding this node
@@ -215,7 +208,7 @@ public final class SingleNodeContainer extends NodeContainer {
      * @return The memory policy to use.
      */
     final MemoryPolicy getOutDataMemoryPolicy() {
-        return m_outDataPortsMemoryPolicy;
+        return m_settings.getMemoryPolicy();
     }
 
     /* ------------------ Views ---------------- */
