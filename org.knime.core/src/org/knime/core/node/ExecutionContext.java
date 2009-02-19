@@ -22,7 +22,10 @@
  */
 package org.knime.core.node;
 
+import java.lang.reflect.Constructor;
 import java.util.HashMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -36,6 +39,8 @@ import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
 import org.knime.core.data.container.WrappedTable;
 import org.knime.core.node.Node.LoopRole;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.util.KNIMEJob;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 
 /**
@@ -182,7 +187,7 @@ public class ExecutionContext extends ExecutionMonitor {
             throws CanceledExecutionException {
         BufferedDataTable[] temp = new BufferedDataTable[tables.length];
         for (int i = 0; i < tables.length; i++) {
-            temp[i] = createBufferedDataTable(tables[i], 
+            temp[i] = createBufferedDataTable(tables[i],
                     exec.createSubProgress(1.0 / tables.length));
         }
         return temp;
@@ -258,7 +263,7 @@ public class ExecutionContext extends ExecutionMonitor {
             final boolean initDomain, final int maxCellsInMemory) {
         boolean forceCopyOfBlobs = LoopRole.END.equals(m_node.getLoopRole());
         return new BufferedDataContainer(spec, initDomain, m_node,
-                m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory, 
+                m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory,
                 m_globalTableRepository, m_localTableRepository);
     }
 
@@ -453,5 +458,35 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     HashMap<Integer, ContainerTable> getLocalTableRepository() {
         return m_localTableRepository;
+    }
+
+
+    /**
+     * Submits a job to an executor, which can be a threaded one, a cluster
+     * executor or anything else.
+     *
+     * @param input the input data for the job
+     * @param settings the settings for the job
+     * @param jobClass the job's class that is
+     * @param exec the execution monitor
+     * @return a future holding the job's results
+     * @throws NoSuchMethodException of the job class does not have
+     * a default constructor
+     */
+    public Future<PortObject[]> submitJob(final PortObject[] input,
+            final NodeSettingsRO settings,
+            final Class<? extends KNIMEJob> jobClass,
+            final ExecutionMonitor exec) throws NoSuchMethodException {
+        final Constructor<? extends KNIMEJob> cons = jobClass.getConstructor();
+
+        Callable<PortObject[]> task = new Callable<PortObject[]>() {
+            @Override
+            public PortObject[] call() throws Exception {
+                return cons.newInstance().run(input, settings,
+                        ExecutionContext.this);
+            }
+        };
+
+        return KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(task);
     }
 }
