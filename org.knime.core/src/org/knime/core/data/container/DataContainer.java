@@ -510,10 +510,13 @@ public class DataContainer implements RowAppender {
                 m_asyncAddFuture.get();
                 Throwable t = m_writeThrowable.get();
                 if (t != null) {
-                    StringBuilder error = new StringBuilder(
-                        "Writing to table process has thrown a \"");
-                    error.append(t.getClass().getSimpleName());
-                    error.append("\"");
+                    StringBuilder error = new StringBuilder();
+                    if (t.getMessage() != null) {
+                        error.append(t.getMessage());
+                    } else {
+                        error.append("Writing to table process threw \"");
+                        error.append(t.getClass().getSimpleName()).append("\"");
+                    }
                     throw new RuntimeException(error.toString(), t);
                 }
                 NodeLogger.getLogger(DataContainer.class).debug(
@@ -560,13 +563,19 @@ public class DataContainer implements RowAppender {
         try {
             do {
                 if (m_asyncAddFuture.isDone()) {
-                    StringBuilder error = new StringBuilder(
-                            "Writing to table has unexpectedly stopped");
                     Throwable t = m_writeThrowable.get();
+                    StringBuilder error = new StringBuilder();
                     if (t != null) {
-                        error.append(" (caused by \"");
-                        error.append(t.getClass().getSimpleName());
-                        error.append("\")");
+                        if (t.getMessage() != null) {
+                            error.append(t.getMessage());
+                        } else {
+                            error.append("Writing to table has caused a \"");
+                            error.append(t.getClass().getSimpleName());
+                            error.append("\")");
+                        }
+                    } else {
+                        error.append(
+                                "Writing to table has unexpectedly stopped");
                     }
                     throw new RuntimeException(error.toString(), t);
                 }
@@ -656,8 +665,14 @@ public class DataContainer implements RowAppender {
         } else {
             Throwable t = m_writeThrowable.get();
             if (t != null) {
-                throw new RuntimeException("Writing to table threw " 
-                        + t.getClass().getSimpleName(), t);
+                StringBuilder error = new StringBuilder();
+                if (t.getMessage() != null) {
+                    error.append(t.getMessage());
+                } else {
+                    error.append("Writing to table threw \"");
+                    error.append(t.getClass().getSimpleName()).append("\"");
+                }
+                throw new RuntimeException(error.toString(), t);
             }
             offerToAsynchronousQueue(row);
             m_cacheSize += m_addRowQueue.size();
