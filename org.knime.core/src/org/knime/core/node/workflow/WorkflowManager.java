@@ -1536,7 +1536,12 @@ public final class WorkflowManager extends NodeContainer {
                 return;
             }
         }
-        // (3) reset the nodes in the body (only those -
+        // (3) mark the origin of the loop to be executed again
+        //     do this now so that we have an executing node in this WFM
+        //     and an intermediate state does not suggest everything is done.
+        //     (this used to happen before (9))
+        ((SingleNodeContainer)headNode).enableReQueuing();
+        // (4) reset the nodes in the body (only those -
         //     make sure end of loop is NOT reset)
         for (NodeID id : loopBodyNodes) {
             NodeContainer nc = m_workflow.getNode(id);
@@ -1552,7 +1557,7 @@ public final class WorkflowManager extends NodeContainer {
                 ((WorkflowManager)nc).resetAllNodesInWFM();
             }
         }
-        // (4) configure the nodes from start to rest (it's not
+        // (5) configure the nodes from start to rest (it's not
         //     so important if we configure more than the body)
         //     do NOT configure start of loop because otherwise
         //     we will re-create the ScopeContextStack and
@@ -1562,7 +1567,7 @@ public final class WorkflowManager extends NodeContainer {
         // configure, so we have to check here if the node
         // is really configured before...
         if (tailNode.getState().equals(State.CONFIGURED)) {
-            // (5) ... we enable the body to be queued again.
+            // (6) ... we enable the body to be queued again.
             for (NodeID id : loopBodyNodes) {
                 NodeContainer nc = m_workflow.getNode(id);
                 if (nc instanceof SingleNodeContainer) {
@@ -1572,15 +1577,13 @@ public final class WorkflowManager extends NodeContainer {
                     ((WorkflowManager)nc).markForExecutionAllNodesInWorkflow(true);
                 }
             }
-            // and (6) mark end of loop for re-execution
+            // and (7) mark end of loop for re-execution
             ((SingleNodeContainer)tailNode).markForExecution(true);
         }
-        // (7) allow access to tail node
+        // (8) allow access to tail node
         ((SingleNodeContainer)headNode).getNode().setLoopEndNode(
                 ((SingleNodeContainer)tailNode).getNode());
-        // (8) mark the origin of the loop to be executed again
-        ((SingleNodeContainer)headNode).enableReQueuing();
-        // (9) try to queue the head of this loop!
+        // (9) and finally try to queue the head of this loop!
         assert headNode.getState().equals(State.MARKEDFOREXEC);
         queueIfQueuable(headNode);
     }
