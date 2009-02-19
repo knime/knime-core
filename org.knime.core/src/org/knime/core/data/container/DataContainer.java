@@ -508,6 +508,14 @@ public class DataContainer implements RowAppender {
             try {
                 offerToAsynchronousQueue(new Object());
                 m_asyncAddFuture.get();
+                Throwable t = m_writeThrowable.get();
+                if (t != null) {
+                    StringBuilder error = new StringBuilder(
+                        "Writing to table process has thrown a \"");
+                    error.append(t.getClass().getSimpleName());
+                    error.append("\"");
+                    throw new RuntimeException(error.toString(), t);
+                }
                 NodeLogger.getLogger(DataContainer.class).debug(
                         "Average size of asynchronous write cache: " 
                         + m_cacheSize / (double)m_buffer.size() + " (for "
@@ -550,7 +558,7 @@ public class DataContainer implements RowAppender {
      */
     private void offerToAsynchronousQueue(final Object object) {
         try {
-            while (!m_addRowQueue.offer(object, 5, TimeUnit.SECONDS)) {
+            do {
                 if (m_asyncAddFuture.isDone()) {
                     StringBuilder error = new StringBuilder(
                             "Writing to table has unexpectedly stopped");
@@ -562,7 +570,7 @@ public class DataContainer implements RowAppender {
                     }
                     throw new RuntimeException(error.toString(), t);
                 }
-             }
+             } while (!m_addRowQueue.offer(object, 5, TimeUnit.SECONDS));
         } catch (InterruptedException e) {
             throw new RuntimeException(
                     "Adding rows to buffer was interrupted", e);
