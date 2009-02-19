@@ -390,10 +390,28 @@ public class DataContainer implements RowAppender {
             updateMinMax(c, value);
             
         } // for all cells
-        // do not swap the following two lines:
-        // addRowKeyForDuplicateCheck relies on m_buffer.size()
         addRowKeyForDuplicateCheck(key);
         m_buffer.addRow(row, false, m_forceCopyOfBlobs);
+    }
+    
+    private void checkAsyncWriteThrowable() {
+        Throwable t = m_writeThrowable.getAndSet(null);
+        if (t != null) {
+            StringBuilder error = new StringBuilder();
+            if (t.getMessage() != null) {
+                error.append(t.getMessage());
+            } else {
+                error.append("Writing to table process threw \"");
+                error.append(t.getClass().getSimpleName()).append("\"");
+            }
+            if (t instanceof DuplicateKeyException) {
+                // self-causation not allowed
+                throw new DuplicateKeyException(
+                        (DuplicateKeyException)t);
+            } else {
+                throw new RuntimeException(error.toString(), t);
+            }
+        }
     }
     
     /** Set a buffer creator to be used to initialize the buffer. This
@@ -494,10 +512,6 @@ public class DataContainer implements RowAppender {
         if (isClosed()) {
             return;
         }
-        if (!isOpen()) {
-            throw new IllegalStateException("Cannot close table: container has"
-                    + " not been initialized (opened).");
-        }
         if (m_buffer == null) {
             m_buffer = m_bufferCreator.createBuffer(m_maxRowsInMemory, 
                     createInternalBufferID(), getGlobalTableRepository(),
@@ -508,17 +522,7 @@ public class DataContainer implements RowAppender {
             try {
                 offerToAsynchronousQueue(new Object());
                 m_asyncAddFuture.get();
-                Throwable t = m_writeThrowable.get();
-                if (t != null) {
-                    StringBuilder error = new StringBuilder();
-                    if (t.getMessage() != null) {
-                        error.append(t.getMessage());
-                    } else {
-                        error.append("Writing to table process threw \"");
-                        error.append(t.getClass().getSimpleName()).append("\"");
-                    }
-                    throw new RuntimeException(error.toString(), t);
-                }
+                checkAsyncWriteThrowable();
                 NodeLogger.getLogger(DataContainer.class).debug(
                         "Average size of asynchronous write cache: " 
                         + m_cacheSize / (double)m_buffer.size() + " (for "
@@ -532,10 +536,6 @@ public class DataContainer implements RowAppender {
             }
         }
         m_buffer.close(finalSpec);
-        m_table = new ContainerTable(m_buffer);
-        getLocalTableRepository().put(m_table.getBufferID(), m_table);
-        m_buffer = null;
-        m_spec = null;
         try {
             m_duplicateChecker.checkForDuplicates();
         } catch (IOException ioe) {
@@ -546,6 +546,10 @@ public class DataContainer implements RowAppender {
             throw new DuplicateKeyException("Found duplicate row ID \"" 
                     + key + "\" (at unknown position)", key);
         }
+        m_table = new ContainerTable(m_buffer);
+        getLocalTableRepository().put(m_table.getBufferID(), m_table);
+        m_buffer = null;
+        m_spec = null;
         m_duplicateChecker.clear();
         m_duplicateChecker = null;
         m_possibleValues = null;
@@ -563,21 +567,11 @@ public class DataContainer implements RowAppender {
         try {
             do {
                 if (m_asyncAddFuture.isDone()) {
-                    Throwable t = m_writeThrowable.get();
-                    StringBuilder error = new StringBuilder();
-                    if (t != null) {
-                        if (t.getMessage() != null) {
-                            error.append(t.getMessage());
-                        } else {
-                            error.append("Writing to table has caused a \"");
-                            error.append(t.getClass().getSimpleName());
-                            error.append("\")");
-                        }
-                    } else {
-                        error.append(
-                                "Writing to table has unexpectedly stopped");
-                    }
-                    throw new RuntimeException(error.toString(), t);
+                    checkAsyncWriteThrowable();
+                    // if we reach this code, the write process has not thrown
+                    // an exception (the above line will likely throw an exc.)
+                    throw new RuntimeException(
+                            "Writing to table has unexpectedly stopped");
                 }
              } while (!m_addRowQueue.offer(object, 5, TimeUnit.SECONDS));
         } catch (InterruptedException e) {
@@ -661,19 +655,9 @@ public class DataContainer implements RowAppender {
             }
         }
         if (SYNCHRONOUS_IO) {
-          addRowToTableWrite(row);
+            addRowToTableWrite(row);
         } else {
-            Throwable t = m_writeThrowable.get();
-            if (t != null) {
-                StringBuilder error = new StringBuilder();
-                if (t.getMessage() != null) {
-                    error.append(t.getMessage());
-                } else {
-                    error.append("Writing to table threw \"");
-                    error.append(t.getClass().getSimpleName()).append("\"");
-                }
-                throw new RuntimeException(error.toString(), t);
-            }
+            checkAsyncWriteThrowable();
             offerToAsynchronousQueue(row);
             m_cacheSize += m_addRowQueue.size();
         }
