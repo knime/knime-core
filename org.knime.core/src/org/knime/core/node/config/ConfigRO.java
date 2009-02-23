@@ -258,6 +258,15 @@ public interface ConfigRO extends TreeNode, Iterable<String> {
     public double[] getDoubleArray(final String key, final double... def);
     
     /**
+     * Return float for key.
+     * 
+     * @param key The key.
+     * @return A generic float.
+     * @throws InvalidSettingsException If the key is not available.
+     */
+    public float getFloat(final String key) throws InvalidSettingsException;
+
+    /**
      * Return float for key or the default value if not available.
      * 
      * @param key The key.
