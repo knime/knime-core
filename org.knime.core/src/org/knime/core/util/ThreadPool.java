@@ -561,8 +561,8 @@ public class ThreadPool {
      * @param newValue the new maximum thread number
      */
     public void setMaxThreads(final int newValue) {
-        if (newValue < 1) {
-            throw new IllegalArgumentException("Thread count must be > 0");
+        if (newValue < 0) {
+            throw new IllegalArgumentException("Thread count must be >= 0");
         }
         if (m_parent == null) {
             if (newValue < m_maxThreads.get()) {
