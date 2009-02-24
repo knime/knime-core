@@ -389,6 +389,69 @@ public class ThreadPool {
         return ftask;
     }
 
+
+    /**
+     * Tries to submits a value-returning task for immediate execution and
+     * returns a Future representing the pending results of the task if a thread
+     * is free. If no thread is currently available <code>null</code> is
+     * returned and the task is not queued.
+     *
+     * <p>
+     * If you would like to immediately block waiting for a task, you can use
+     * constructions of the form <tt>result = exec.submit(aCallable).get();</tt>
+     *
+     * <p>
+     * Note: The {@link java.util.concurrent.Executors} class includes a set of
+     * methods that can convert some other common closure-like objects, for
+     * example, {@link java.security.PrivilegedAction} to {@link Callable} form
+     * so they can be submitted.
+     *
+     * @param t the task to submit
+     * @param <T> any result type
+     * @return a Future representing pending completion of the task or
+     * <code>null</code> if no thread was available
+     * @throws NullPointerException if <code>task</code> null
+     *
+     * @see #submit(Callable)
+     */
+    public <T> Future<T> trySubmit(final Callable<T> t) {
+        MyFuture<T> ftask = new MyFuture<T>(t);
+
+        synchronized (m_queuedFutures) {
+            if (wakeupWorker(ftask, this) == null) {
+                return null;
+            }
+        }
+
+        return ftask;
+    }
+
+    /**
+     * Tries to submits a Runnable task for immediate execution and
+     * returns a Future representing the task if a thread
+     * is free. If no thread is currently available <code>null</code> is
+     * returned and the task is not queued.
+     *
+     * @param r the task to submit
+     * @return a Future representing pending completion of the task, and whose
+     *         <tt>get()</tt> method will return <tt>null</tt> upon
+     *         completion.
+     * @throws NullPointerException if <code>task</code> null
+     * @see #submit(Runnable)
+     */
+    public Future<?> trySubmit(final Runnable r) {
+        MyFuture<?> ftask = new MyFuture<Object>(r, null);
+
+        synchronized (m_queuedFutures) {
+            if (wakeupWorker(ftask, this) == null) {
+                return null;
+            }
+        }
+
+        return ftask;
+    }
+
+
     private Worker wakeupWorker(final RunnableFuture<?> task,
             final ThreadPool pool) {
         synchronized (m_runningWorkers) {
