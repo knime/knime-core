@@ -517,7 +517,6 @@ public class DataContainer implements RowAppender {
                     createInternalBufferID(), getGlobalTableRepository(),
                     getLocalTableRepository());
         }
-        DataTableSpec finalSpec = createTableSpecWithRange();
         if (!SYNCHRONOUS_IO) {
             try {
                 offerToAsynchronousQueue(new Object());
@@ -535,6 +534,9 @@ public class DataContainer implements RowAppender {
                         "Adding rows to table threw exception", e);
             }
         }
+        // create table spec _after_ all_ rows have been added (i.e. wait for
+        // asynchronous write thread to finish)
+        DataTableSpec finalSpec = createTableSpecWithRange();
         m_buffer.close(finalSpec);
         try {
             m_duplicateChecker.checkForDuplicates();
