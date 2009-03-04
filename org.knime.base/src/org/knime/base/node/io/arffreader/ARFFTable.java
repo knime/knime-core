@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   09.02.2005 (ohl): created
  */
@@ -32,6 +32,8 @@ import java.io.StringReader;
 import java.net.URL;
 import java.util.Vector;
 
+import org.knime.base.node.io.filetokenizer.FileTokenizer;
+import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
@@ -48,11 +50,8 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 
-import org.knime.base.node.io.filetokenizer.FileTokenizer;
-import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
-
 /**
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class ARFFTable implements DataTable {
@@ -70,7 +69,7 @@ public class ARFFTable implements DataTable {
     /**
      * Create a new DataTable reading its content from an ARFF file at the
      * specified location.
-     * 
+     *
      * @param arffFileLocation valid URL which points to the ARFF file to read
      * @param tSpec the structure of the table to create
      * @param rowKeyPrefix row keys are constructed like rowKeyPrefix + lineNo
@@ -110,7 +109,7 @@ public class ARFFTable implements DataTable {
     /**
      * Reads in the header of the specified ARFF file and returns a
      * corresponding table spec object.
-     * 
+     *
      * @param fileLoc the location of the ARFF file to read
      * @param exec to enable users to cancel this process
      * @return a table spec reflecting the settings in the file header
@@ -159,13 +158,13 @@ public class ARFFTable implements DataTable {
                 // defines a new data column
                 String colName = tokenizer.nextToken();
                 String colType = null;
-                if (tokenizer.lastTokenWasQuoted() 
+                if (tokenizer.lastTokenWasQuoted()
                         && tokenizer.getLastQuoteBeginPattern().equals("{")) {
                     // Weka allows the nominal value list to be appended without
-                    // a space delimiter. We will get it then hanging at the 
+                    // a space delimiter. We will get it then hanging at the
                     // name. Extract it from there and set it in the 'colType'
                     if (colName.charAt(0) == '{') {
-                        // seems we only got a value list. 
+                        // seems we only got a value list.
                         // The col name must be empty/missing then...
                         colType = colName;
                         colName = null;
@@ -331,20 +330,10 @@ public class ARFFTable implements DataTable {
         for (String val = tokizer.nextToken(); val != null; val = tokizer
                 .nextToken()) {
 
+            String newval = val;
             // trimm off any whitespaces.
-            // This leads us into trouble if people start a quoted value with a
-            // space (inside the quote). That space will be gone then - but
-            // probably shouldn't. Hum. Oh, well.
-            String newval = val.trim();
-            if (newval.length() == 0) {
-                if (tokizer.lastTokenWasQuoted() && (val.length() > 0)) {
-                    LOGGER.warn("ARFF reader: Quoted spaces as nominal "
-                            + " values are not supported - they will lead to "
-                            + "empty values!");
-                }
-                throw new InvalidSettingsException("Empty nominal values are"
-                        + " not supported. In header of ARFF file '" + fileName
-                        + "' line " + lineNo + ".");
+            if (!tokizer.lastTokenWasQuoted()) {
+                newval = val.trim();
             }
 
             // make sure we don't add the same value twice.

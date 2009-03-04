@@ -46,7 +46,7 @@ public class CreateConnectionCommand extends Command {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             CreateConnectionCommand.class);
-    
+
     private ConnectableEditPart m_sourceNode;
 
     private ConnectableEditPart m_targetNode;
@@ -60,12 +60,12 @@ public class CreateConnectionCommand extends Command {
     private boolean m_startedOnOutPort;
 
     private ConnectionContainer m_connection;
-    
+
     private boolean m_confirm;
-    
-    
+
+
     /**
-     * Initializes from preference store, whether to confirm reconnection or 
+     * Initializes from preference store, whether to confirm reconnection or
      * not.
      */
     public CreateConnectionCommand() {
@@ -82,10 +82,10 @@ public class CreateConnectionCommand extends Command {
         m_manager = workflowManager;
 
     }
-    
+
     /**
-     * 
-     * @param confirm if the replacement of  an existing connection should be 
+     *
+     * @param confirm if the replacement of  an existing connection should be
      *  confirmed by the user
      */
     public void setConfirm(final boolean confirm) {
@@ -93,8 +93,8 @@ public class CreateConnectionCommand extends Command {
     }
 
     /**
-     * 
-     * @return true if the replacement of  an existing connection should be 
+     *
+     * @return true if the replacement of  an existing connection should be
      *  confirmed by the user
      */
     public boolean doConfirm() {
@@ -203,11 +203,11 @@ public class CreateConnectionCommand extends Command {
             if (m_sourceNode == null || m_targetNode == null) {
                 return false;
             }
-            
+
             // let the workflow manager check if the connection can be created
             // or removed
             boolean canAdd = m_manager.canAddConnection(
-                    m_sourceNode.getNodeContainer().getID(), 
+                    m_sourceNode.getNodeContainer().getID(),
                     m_sourcePortID, m_targetNode.getNodeContainer()
                     .getID(), m_targetPortID);
             ConnectionContainer conn = m_manager.getIncomingConnectionFor(
@@ -238,7 +238,7 @@ public class CreateConnectionCommand extends Command {
         // return (m_connection != null) && (!(m_sourceNode.isLocked()))
         // && (!(m_targetNode.isLocked()));
     }
-    
+
 
     /**
      * {@inheritDoc}
@@ -253,17 +253,17 @@ public class CreateConnectionCommand extends Command {
         // check whether it is the same connection
         ConnectionContainer conn = m_manager.getIncomingConnectionFor(
                 m_targetNode.getNodeContainer().getID(), m_targetPortID);
-        if (conn != null 
+        if (conn != null
                 && conn.getSource().equals(
-                        m_sourceNode.getNodeContainer().getID()) 
+                        m_sourceNode.getNodeContainer().getID())
                 && conn.getSourcePort() == m_sourcePortID
                 && conn.getDest().equals(
                         m_targetNode.getNodeContainer().getID())
                 && conn.getDestPort() == m_targetPortID) {
             // it is the very same connection -> do nothing
-            return; 
+            return;
         }
-        
+
 //        LOGGER.info("source node: " + m_sourceNode.getNodeContainer());
 //        LOGGER.info("target node: " + m_targetNode.getNodeContainer());
         // let check the workflow manager if the connection can be created
@@ -272,31 +272,31 @@ public class CreateConnectionCommand extends Command {
         try {
             // if target nodeport is already connected
             if (m_manager.getIncomingConnectionFor(
-                    m_targetNode.getNodeContainer().getID(), 
+                    m_targetNode.getNodeContainer().getID(),
                     m_targetPortID) != null) {
                 // ask user if it should be replaced...
-                if (m_confirm 
-                        // show confirmation message 
-                        // only if target node is executed 
+                if (m_confirm
+                        // show confirmation message
+                        // only if target node is executed
                         && m_targetNode.getNodeContainer().getState().equals(
                                 NodeContainer.State.EXECUTED)) {
                     MessageDialogWithToggle msgD = openReconnectConfirmDialog(
-                            m_confirm, 
+                            m_confirm,
                             "Do you want to replace existing connection? \n"
                             + "This will reset the target node!");
                     m_confirm = !msgD.getToggleState();
                     if (msgD.getReturnCode() != IDialogConstants.YES_ID) {
                         return;
                     }
-                } 
+                }
                 // remove existing connection
                 m_manager.removeConnection(
                         m_manager.getIncomingConnectionFor(
                         m_targetNode.getNodeContainer().getID(),
                         m_targetPortID));
             }
-            
-            
+
+
             LOGGER.info("adding connection from "
                     + m_sourceNode.getNodeContainer()
                     .getID() + " " + m_sourcePortID
@@ -315,10 +315,10 @@ public class CreateConnectionCommand extends Command {
             m_sourcePortID = -1;
             m_targetPortID = -1;
             MessageDialog.openError(Display.getDefault().getActiveShell(),
-                    "Connection could not be created", 
+                    "Connection could not be created",
                     "The two nodes could not be connected due to "
                     + "the following reason:\n " + e.getMessage());
-            
+
         }
 
     }
@@ -333,10 +333,10 @@ public class CreateConnectionCommand extends Command {
         mb.open();
     }
     */
-    
+
     /**
      * @param confirm initial toggle state
-     * @param question of the confirmation dialog (not the toggle) 
+     * @param question of the confirmation dialog (not the toggle)
      * @return a confirmation dialog
      */
     public static MessageDialogWithToggle openReconnectConfirmDialog(
@@ -344,9 +344,9 @@ public class CreateConnectionCommand extends Command {
         return MessageDialogWithToggle
         .openYesNoQuestion(
             Display.getDefault().getActiveShell(),
-            "Replace Connection?", 
+            "Replace Connection?",
             question,
-            "Always replace without confirm.", !confirm, 
+            "Always replace without confirming.", !confirm,
             KNIMEUIPlugin.getDefault().getPreferenceStore(),
             PreferenceConstants.P_CONFIRM_RECONNECT);
     }
