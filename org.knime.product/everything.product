@@ -81,8 +81,8 @@ Uses: Java, GEF, Log4J
       <feature id="com.knime.features.cluster" version="1.0.0"/>
       <feature id="org.knime.features.ext.webservice.client" version="2.1.0.0018799"/>
       <feature id="org.knime.features.ext.textprocessing" version="2.1.0.0010000"/>
-      <feature id="org.knime.features.distmatrix" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.neighborgram" version="2.0.1.0019867"/>
+      <feature id="org.knime.features.distmatrix" version="2.1.0.0019867"/>
+      <feature id="org.knime.features.neighborgram" version="2.1.0.0019867"/>
    </features>
 
 </product>
