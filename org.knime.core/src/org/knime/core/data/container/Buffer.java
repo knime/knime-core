@@ -1383,6 +1383,7 @@ class Buffer implements KNIMEStreamConstants {
         if (usesOutFile()) {
             synchronized (this) {
                 if (m_useBackIntoMemoryIterator) {
+                    // the order of the following lines is very important!
                     m_useBackIntoMemoryIterator = false;
                     m_backIntoMemoryIterator = iterator();
                     m_list = new ArrayList<BlobSupportDataRow>(size());
@@ -1407,9 +1408,6 @@ class Buffer implements KNIMEStreamConstants {
                 b.append(m_binFile != null ? m_binFile.getName() : "<unknown>");
                 b.append("\"");
                 throw new RuntimeException(b.toString(), ioe);
-            }
-            if (!DataContainer.SYNCHRONOUS_IO) {
-                return new ASyncCloseableRowIterator(f);
             }
             return f;
         } else {
