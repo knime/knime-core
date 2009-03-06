@@ -89,8 +89,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         }
         
         for (ConnectionContainer cc : original.getConnectionContainers()) {
-            ConnectionContainerTemplate t = new ConnectionContainerTemplate(cc);
-            m_cons.add(t);
+            m_cons.add(new ConnectionContainerTemplate(cc, true));
         }
     }
     

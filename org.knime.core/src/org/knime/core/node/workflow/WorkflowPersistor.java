@@ -107,8 +107,11 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         }
         
         /** Copies an existing connection (used for copy&paste).
-         * @param original To copy. */
-        ConnectionContainerTemplate(final ConnectionContainer original) {
+         * @param original To copy.
+         * @param preserveDeletableFlag Whether to retain the deletable status
+         * of the original connection. */
+        ConnectionContainerTemplate(final ConnectionContainer original, 
+                final boolean preserveDeletableFlag) {
             m_sourcePort = original.getSourcePort();
             m_destPort = original.getDestPort();
             switch (original.getType()) {
@@ -131,7 +134,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             default:
                 throw new InternalError("Unknown type " + original.getType());
             }
-            m_isDeletable = original.isDeletable();
+            m_isDeletable = !preserveDeletableFlag || original.isDeletable();
             UIInformation origUIInfo = original.getUIInfo();
             m_uiInfo = origUIInfo == null ? null : origUIInfo.clone();
         }

@@ -2749,9 +2749,11 @@ public final class WorkflowManager extends NodeContainer {
                 loaderMap.put(cont.getID().getIndex(), 
                         cont.getCopyPersistor(m_globalTableRepository, false));
                 for (ConnectionContainer out 
-                        : sourceManager.m_workflow.getConnectionsBySource(nodeIDs[i])) {
+                        : sourceManager.m_workflow.getConnectionsBySource(
+                                nodeIDs[i])) {
                     if (idsHashed.contains(out.getDest())) {
-                        connTemplates.add(new ConnectionContainerTemplate(out));
+                        connTemplates.add(
+                                new ConnectionContainerTemplate(out, false));
                     }
                 }
             }
