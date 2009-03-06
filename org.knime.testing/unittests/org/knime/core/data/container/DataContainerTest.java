@@ -115,8 +115,40 @@ public class DataContainerTest extends TestCase {
     /**
      * method being tested: addRowToTable().
      */
-    public final void testAddRowToTable() {
+    public final void testDuplicateKey() {
+        String[] colNames = new String[]{"Column 1", "Column 2"};
+        DataType[] colTypes = new DataType[] {
+                StringCell.TYPE,
+                IntCell.TYPE
+        };
+        DataTableSpec spec1 = new DataTableSpec(colNames, colTypes);
+        DataContainer c = new DataContainer(spec1);
+        RowKey r1Key = new RowKey("row 1");
+        DataCell r1Cell1 = new StringCell("Row 1, Cell 1");
+        DataCell r1Cell2 = new IntCell(12);
+        DataRow r1 = new DefaultRow(r1Key, new DataCell[] {r1Cell1, r1Cell2});
+        RowKey r2Key = new RowKey("row 2");
+        DataCell r2Cell1 = new StringCell("Row 2, Cell 1");
+        DataCell r2Cell2 = new IntCell(22);
+        DataRow r2 = new DefaultRow(r2Key, new DataCell[] {r2Cell1, r2Cell2});
+        c.addRowToTable(r1);
+        c.addRowToTable(r2);
         
+        // add row 1 twice
+        try {
+            c.addRowToTable(r1);
+            c.close();
+            // ... eh eh, you don't do this
+            fail();
+        } catch (DuplicateKeyException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+        
+    /**
+     * method being tested: addRowToTable().
+     */
+    public final void testIncompatibleTypes() {
         String[] colNames = new String[]{"Column 1", "Column 2"};
         DataType[] colTypes = new DataType[] {
                 StringCell.TYPE,
@@ -138,15 +170,6 @@ public class DataContainerTest extends TestCase {
         DataRow r3 = new DefaultRow(r3Key, new DataCell[] {r3Cell1, r3Cell2});
         c.addRowToTable(r1);
         c.addRowToTable(r2);
-
-        // add row 1 twice
-        try {
-            c.addRowToTable(r1);
-            // ... eh eh, you don't do this
-            fail();
-        } catch (DuplicateKeyException e) {
-            System.out.println(e.getMessage());
-        }
         c.addRowToTable(r3);
         
         // add incompatible types
@@ -156,11 +179,47 @@ public class DataContainerTest extends TestCase {
         DataRow r4 = new DefaultRow(r4Key, new DataCell[] {r4Cell1, r4Cell2});
         try {
             c.addRowToTable(r4);
+            c.close();
             fail();
+        } catch (DataContainerException e) {
+            if (!(e.getCause() instanceof IllegalArgumentException)) {
+                throw e;
+            } else {
+                System.out.println(e.getCause().getMessage());
+            }
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
         }
         
+    }
+    
+    /**
+     * method being tested: addRowToTable().
+     */
+    public final void testWrongCellCountRow() {
+        String[] colNames = new String[]{"Column 1", "Column 2"};
+        DataType[] colTypes = new DataType[] {
+                StringCell.TYPE,
+                IntCell.TYPE
+        };
+        DataTableSpec spec1 = new DataTableSpec(colNames, colTypes);
+        DataContainer c = new DataContainer(spec1);
+        RowKey r1Key = new RowKey("row 1");
+        DataCell r1Cell1 = new StringCell("Row 1, Cell 1");
+        DataCell r1Cell2 = new IntCell(12);
+        DataRow r1 = new DefaultRow(r1Key, new DataCell[] {r1Cell1, r1Cell2});
+        RowKey r2Key = new RowKey("row 2");
+        DataCell r2Cell1 = new StringCell("Row 2, Cell 1");
+        DataCell r2Cell2 = new IntCell(22);
+        DataRow r2 = new DefaultRow(r2Key, new DataCell[] {r2Cell1, r2Cell2});
+        RowKey r3Key = new RowKey("row 3");
+        DataCell r3Cell1 = new StringCell("Row 3, Cell 1");
+        DataCell r3Cell2 = new IntCell(32);
+        DataRow r3 = new DefaultRow(r3Key, new DataCell[] {r3Cell1, r3Cell2});
+        c.addRowToTable(r1);
+        c.addRowToTable(r2);
+        c.addRowToTable(r3);
+
         // add wrong sized row
         RowKey r5Key = new RowKey("row 5");
         DataCell r5Cell1 = new StringCell("Row 5, Cell 1");
@@ -170,20 +229,40 @@ public class DataContainerTest extends TestCase {
                 r5Key, new DataCell[] {r5Cell1, r5Cell2, r5Cell3});
         try {
             c.addRowToTable(r5);
+            c.close();
             fail();
+        } catch (DataContainerException e) {
+            if (!(e.getCause() instanceof IllegalArgumentException)) {
+                throw e;
+            } else {
+                System.out.println(e.getCause().getMessage());
+            }
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
         }
-
+    }
+    
+    /**
+     * method being tested: addRowToTable().
+     */
+    public final void testAddNullRow() {
+        DataContainer c = new DataContainer(EMPTY_SPEC);
+        c.addRowToTable(new DefaultRow(new RowKey("Row1"), new DataCell[0]));
         // add null
         try {
             c.addRowToTable((DataRow)null);
+            c.close();
             fail();
         } catch (NullPointerException e) {
             System.out.println(e.getMessage());
         }
-        
-        // addRow should preserve the order, we try here randomely generated
+    }
+    
+    /**
+     * method being tested: addRowToTable().
+     */
+    public final void testRowOrder() {
+        // addRow should preserve the order, we try here randomly generated
         // IntCells as key (the container puts it in a linked has map)
         DataCell[] values = new DataCell[0];
         Vector<RowKey> order = new Vector<RowKey>(500); 
@@ -194,7 +273,7 @@ public class DataContainerTest extends TestCase {
         }
         // shuffle it - that should screw it up
         Collections.shuffle(order);
-        c = new DataContainer(EMPTY_SPEC);
+        DataContainer c = new DataContainer(EMPTY_SPEC);
         for (RowKey key : order) {
             c.addRowToTable(new DefaultRow(key, values));
         }
