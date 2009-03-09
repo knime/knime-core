@@ -47,35 +47,39 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * This is the model for the node that converts
  * {@link org.knime.core.data.def.StringCell}s into {@link TimestampCell}s.
  * 
- * @author Rosaria Silipo 
+ * @author Rosaria Silipo
  */
 public class String2DateNodeModel extends NodeModel {
     /** Config identifier: column name. */
     static final String CFG_COLUMN_NAME = "column_name";
+
     /** Config identifier: date format. */
-//    static final String CFG_DATE_FORMAT = "date_format";
+    // static final String CFG_DATE_FORMAT = "date_format";
     /** Config identifier: edited date format. */
     static final String CFG_EDITED_DATE_FORMAT = "edited_date_format";
-    
-//     private SettingsModelString m_dateFormat =
-//        new SettingsModelString(CFG_DATE_FORMAT, null);
 
-     private SettingsModelString m_edDateFormat =
-         new SettingsModelString(CFG_EDITED_DATE_FORMAT, 
-                 "yyyy-MM-dd;HH:mm:ss.S");
+    // private SettingsModelString m_dateFormat =
+    // new SettingsModelString(CFG_DATE_FORMAT, null);
 
-     private SettingsModelString m_columnName =
-            new SettingsModelString(CFG_COLUMN_NAME, null);
- 
-    private SimpleDateFormat m_df; 
+    private SettingsModelString m_edDateFormat = new SettingsModelString(
+            CFG_EDITED_DATE_FORMAT, "yyyy-MM-dd;HH:mm:ss.S");
 
-        /** Inits node, 1 input, 1 output. */
+    private SettingsModelString m_columnName = new SettingsModelString(
+            CFG_COLUMN_NAME, null);
+
+    private final SettingsModelBoolean m_replace = String2DateDialog
+            .createReplaceModel();
+
+    private SimpleDateFormat m_df;
+
+    /** Inits node, 1 input, 1 output. */
     public String2DateNodeModel() {
         super(1, 1);
     }
@@ -86,20 +90,17 @@ public class String2DateNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        
+
         int colIndex = -1;
-        
+
         if (m_edDateFormat.getStringValue() == null) {
-            throw new InvalidSettingsException(
-                    "No format selected."); 
+            throw new InvalidSettingsException("No format selected.");
         } else {
-            m_df = new SimpleDateFormat(
-                    m_edDateFormat.getStringValue());
+            m_df = new SimpleDateFormat(m_edDateFormat.getStringValue());
         }
-        
+
         if (m_df == null) {
-                throw new InvalidSettingsException(
-                "Invalid format."); 
+            throw new InvalidSettingsException("Invalid format.");
         }
 
         if (m_columnName.getStringValue() == null) {
@@ -123,8 +124,8 @@ public class String2DateNodeModel extends NodeModel {
             setWarningMessage("Column '" + m_columnName.getStringValue()
                     + "' auto selected");
         } else {
-            colIndex =
-                    inSpecs[0].findColumnIndex(m_columnName.getStringValue());
+            colIndex = inSpecs[0]
+                    .findColumnIndex(m_columnName.getStringValue());
             if (colIndex < 0) {
                 throw new InvalidSettingsException("No such column: "
                         + m_columnName.getStringValue());
@@ -144,11 +145,13 @@ public class String2DateNodeModel extends NodeModel {
 
     private ColumnRearranger createColRearranger(final DataTableSpec spec) {
         ColumnRearranger result = new ColumnRearranger(spec);
-        final int colIndex =
-                spec.findColumnIndex(m_columnName.getStringValue());
-        DataColumnSpec newColSpec =
-                new DataColumnSpecCreator(m_columnName.getStringValue(),
-                        TimestampCell.TYPE).createSpec();
+        final int colIndex = spec
+                .findColumnIndex(m_columnName.getStringValue());
+        String uniqueColName = DataTableSpec.getUniqueColumnName(spec,
+                m_columnName.getStringValue() + "_date");
+        // m_columnName.setStringValue(uniqueColName);
+        DataColumnSpec newColSpec = new DataColumnSpecCreator(uniqueColName,
+                TimestampCell.TYPE).createSpec();
         SingleCellFactory c = new SingleCellFactory(newColSpec) {
             @Override
             public DataCell getCell(final DataRow row) {
@@ -157,18 +160,21 @@ public class String2DateNodeModel extends NodeModel {
                     return DataType.getMissingCell();
                 }
                 try {
-                    DataCell dc = new TimestampCell(
-                         ((StringValue)cell).getStringValue(), m_df); 
+                    DataCell dc = new TimestampCell(((StringValue)cell)
+                            .getStringValue(), m_df);
                     return dc;
                 } catch (ParseException pe) {
-                    setWarningMessage(
-                            "Missing Cell due to Parse Exception.\n" +
-                            "Date format incorrect?");
+                    setWarningMessage("Missing Cell due to Parse Exception.\n"
+                            + "Date format incorrect?");
                     return DataType.getMissingCell();
-               }
+                }
             }
         };
-        result.replace(c, colIndex);
+        if (m_replace.getBooleanValue()) {
+            result.replace(c, colIndex);
+        } else {
+            result.insertAt(colIndex + 1, c);
+        }
         return result;
     }
 
@@ -189,18 +195,20 @@ public class String2DateNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        SettingsModelString temp =
-            new SettingsModelString(CFG_COLUMN_NAME, null);        
+        SettingsModelString temp = new SettingsModelString(CFG_COLUMN_NAME,
+                null);
         temp.loadSettingsFrom(settings);
- 
-//        SettingsModelString temp1 =
-//            new SettingsModelString(CFG_DATE_FORMAT, null);        
-//        temp1.loadSettingsFrom(settings);
 
-        SettingsModelString temp2 =
-            new SettingsModelString(CFG_EDITED_DATE_FORMAT, null);        
+        // SettingsModelString temp1 =
+        // new SettingsModelString(CFG_DATE_FORMAT, null);
+        // temp1.loadSettingsFrom(settings);
+
+        SettingsModelString temp2 = new SettingsModelString(
+                CFG_EDITED_DATE_FORMAT, null);
         temp2.loadSettingsFrom(settings);
-}
+
+        m_replace.validateSettings(settings);
+    }
 
     /**
      * {@inheritDoc}
@@ -209,9 +217,10 @@ public class String2DateNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_columnName.loadSettingsFrom(settings);
-//        m_dateFormat.loadSettingsFrom(settings);
+        // m_dateFormat.loadSettingsFrom(settings);
         m_edDateFormat.loadSettingsFrom(settings);
-   }
+        m_replace.loadSettingsFrom(settings);
+    }
 
     /**
      * {@inheritDoc}
@@ -220,6 +229,7 @@ public class String2DateNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_columnName.saveSettingsTo(settings);
         m_edDateFormat.saveSettingsTo(settings);
+        m_replace.saveSettingsTo(settings);
     }
 
     /**

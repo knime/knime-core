@@ -25,4 +25,3 @@ Export-Package: org.knime.timeseries,
  org.knime.timeseries.node.display.timeplot,
  org.knime.timeseries.node.fuzzyCPmeans,
  org.knime.timeseries.node.stringtotimestamp
-
