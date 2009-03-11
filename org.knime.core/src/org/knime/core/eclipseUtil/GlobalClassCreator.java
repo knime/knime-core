@@ -24,6 +24,9 @@
  */
 package org.knime.core.eclipseUtil;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -40,7 +43,13 @@ public final class GlobalClassCreator {
             .getLogger(GlobalClassCreator.class);
 
     private static ClassCreator classCreator = null;
-
+    
+    /** Contains mappings from obsolete classes to new classes, replacing the 
+     * old implementation (e.g. if chemical type implementations were moved into
+     * org.knime.chem.types). */
+    private static final Map<String, String> CLASS_REPLACEMENT_MAP = 
+        new HashMap<String, String>();
+    
     /**
      * overwrite ClassCreator to be used by everybody.
      * 
@@ -49,6 +58,37 @@ public final class GlobalClassCreator {
     public static void setClassCreator(final ClassCreator cc) {
         classCreator = cc;
         LOGGER.debug("ClassCreater registered: " + cc);
+    }
+    
+    /**
+     * Adds a replacement string for obsolete class names. This is used 
+     * primarily by data cell class implementations, which were moved from 
+     * specific vendor plugins to KNIME core (mostly in a org.knime.chem.types).
+     * The replaced class is supposed to use the same internals (e.g. a similar
+     * persistor) as the replacing class.
+     * 
+     * <p>This method is not intended for public use; if you want to replace
+     * an obsolete class by a KNIME core class, contact the KNIME team. 
+     * @param oldClassName The old, to be replaced class
+     * @param replacedClassName The new class replacing oldClassName
+     * @throws NullPointerException If either argument is null
+     * @throws IllegalStateException If there is already an entry for the 
+     *         old class name.
+     */
+    public static void addClassReplacementPair(
+            final String oldClassName, final String replacedClassName) {
+        if (oldClassName == null || replacedClassName == null) {
+            throw new NullPointerException("Argument must not be null");
+        }
+        if (CLASS_REPLACEMENT_MAP.containsKey(oldClassName)) {
+            throw new IllegalStateException(
+                    "Replacement for class \"" + oldClassName 
+                    + "\" already set (by \"" 
+                    + CLASS_REPLACEMENT_MAP.get(oldClassName) + "\"");
+        }
+        LOGGER.debug("Adding class replacement tuple from \""
+                + oldClassName + "\" to \"" + replacedClassName + "\""); 
+        CLASS_REPLACEMENT_MAP.put(oldClassName, replacedClassName);
     }
 
     /**
@@ -62,7 +102,11 @@ public final class GlobalClassCreator {
     public static Class<?> createClass(final String className)
             throws ClassNotFoundException {
 
-        String translatedClassName = className;
+        String translatedClassName = CLASS_REPLACEMENT_MAP.get(className);
+        if (translatedClassName == null) {
+            translatedClassName = className;
+        }
+        
         if (className.startsWith("de.unikn.knime.")) {
             translatedClassName = className.replace("de.unikn.knime.",
                     "org.knime.");
