@@ -5,11 +5,9 @@ Bundle-SymbolicName: org.knime.timeseries; singleton:=true
 Bundle-Version: 2.1.0.0018128
 Bundle-Vendor: KNIME GmbH
 Bundle-Localization: plugin
-Require-Bundle: org.eclipse.core.runtime,
- org.knime.workbench.core,
- org.knime.workbench.repository,
- org.knime.core,
- org.knime.base
+Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.2.0,4.0.0)";visibility:=reexport,
+ org.knime.workbench.repository;bundle-version="[2.0.0,2.1.0)";visibility:=reexport,
+ org.knime.base;bundle-version="[2.0.0,2.1.0)";visibility:=reexport
 Eclipse-LazyStart: true
 Bundle-ClassPath: knime-timeseries-patches.jar,
  knime-timeseries.jar
