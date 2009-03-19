@@ -1,5 +1,5 @@
 /*
- * ------------------------------------------------------------------- 
+ * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.mine.cluster.hierarchical;
 
@@ -65,7 +65,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * Implements a Hierarchical Clustering.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class HierarchicalClusterNodeModel extends NodeModel implements
@@ -73,7 +73,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
 
     /**
      * Different types of determination of the distance between two clusters.
-     * 
+     *
      * @author Fabian Dill, University of Konstanz
      */
     public enum Linkage {
@@ -90,7 +90,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     private static final String CFG_H_CLUST_DATA = "hClustData";
 
     private static final String CFG_DIST_DATA = "distanceData";
-    
+
 
     /**
      * Key to store the number of clusters for output in the settings.
@@ -106,43 +106,43 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
      * Key to store the linkage type in the settings.
      */
     public static final String LINKAGETYPE_KEY = "linkageType";
-    
+
     /**
      * Key to store the selected columns in the settings.
      */
     public static final String SELECTED_COLUMNS_KEY = "selectedColumns";
-    
+
     /**
      * Key to store the cache flag in the settings.
      */
     public static final String USE_CACHE_KEY = "cacheDistances";
-    
+
     /**
      * Specifies the mode the distance between two clusters is calculated.
      */
-    private final SettingsModelString m_linkageType = 
+    private final SettingsModelString m_linkageType =
         HierarchicalClusterNodeDialog.createSettingsLinkageType();
 
     /**
      * Specifies the number clusters when the output table should be generated.
      */
-    private final SettingsModelIntegerBounded m_numClustersForOutput = 
+    private final SettingsModelIntegerBounded m_numClustersForOutput =
         HierarchicalClusterNodeDialog.createSettingsNumberOfClusters();
 
     private final SettingsModelBoolean m_cacheDistances =
         HierarchicalClusterNodeDialog.createSettingsCacheKeys();
-    
-    private final SettingsModelFilterString m_selectedColumns = 
+
+    private final SettingsModelFilterString m_selectedColumns =
         HierarchicalClusterNodeDialog.createSettingsColumns();
-    
+
     /**
      * The distance function to use.
      */
-    private final SettingsModelString m_distFunctionName =  
+    private final SettingsModelString m_distFunctionName =
         HierarchicalClusterNodeDialog.createSettingsDistanceFunction();
 
     private DistanceFunction m_distFunction;
-    
+
     private DataArray m_dataArray;
 
     private ClusterNode m_rootNode;
@@ -168,7 +168,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     }
 
     /**
-     * 
+     *
      * @return the root node of the cluster hierarchy.
      */
     public ClusterNode getRootNode() {
@@ -181,7 +181,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws Exception {
-        
+
         // determine the indices of the selected columns
         List<String> inlcludedCols = m_selectedColumns.getIncludeList();
         int[] selectedColIndices = new int[inlcludedCols.size()];
@@ -306,9 +306,9 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
         // if there was no input data create an empty output data
         if (outputData == null) {
             outputData = createResultTable(inputData, clusters, exec);
-        } 
+        }
         m_dataArray = new DefaultDataArray(
-                outputData, 1, inputData.getRowCount());
+                inputData, 1, inputData.getRowCount());
         m_fusionTable = new DefaultDataArray(
                 fusionCont.getTable(), 1, iterationStep);
 
@@ -339,7 +339,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     /*
      * Calculates the distance via the single linkage paradigm. That means two
      * clusters have the distance of its closest data rows
-     * 
+     *
      */
     private float calculateSingleLinkageDist(final ClusterNode node1,
             final ClusterNode node2, final HalfFloatMatrix cache,
@@ -377,7 +377,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     /*
      * Calculates the distance via the complete linkage paradigm. That means two
      * clusters have the distance of its farest data rows
-     * 
+     *
      */
     private float calculateCompleteLinkageDist(final ClusterNode node1,
             final ClusterNode node2, final HalfFloatMatrix cache,
@@ -451,15 +451,15 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
 
     /**
      * Creates number of data rows clusters as initial clustering.
-     * 
+     *
      * @param inputData
      *            the input data rows
      * @param exec
      *            to check for user cancelations
-     * 
+     *
      * @throws CanceledExecutionException
      *             if user canceled
-     * 
+     *
      * @return the vector with all initial clusters.
      */
     private List<ClusterNode> initClusters(final DataTable inputData,
@@ -476,11 +476,11 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     /**
      * Creates a standard table as the result table. The result table is
      * constructed for the desired number of clusters.
-     * 
+     *
      * @param inputData
      *            the input data table which has the meta information like
      *            column names classes, and so on
-     * 
+     *
      * @param clusters
      *            the vector with the clusters
      * @param exec
@@ -617,7 +617,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
         m_distFunctionName.validateSettings(settings);
         m_selectedColumns.validateSettings(settings);
         m_cacheDistances.validateSettings(settings);
-        SettingsModelString linkageType = 
+        SettingsModelString linkageType =
             m_linkageType.createCloneWithValidatedValue(settings);
         // check linkage method
         boolean valid = false;
