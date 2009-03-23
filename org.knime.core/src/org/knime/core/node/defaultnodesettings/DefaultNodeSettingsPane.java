@@ -33,6 +33,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -270,7 +271,12 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
     }
 
     /**
-     * This method can be overridden to load additional settings.
+     * This method can be overridden to load additional settings. Override
+     * this method if you have mixed input types (different port types). 
+     * Alternatively, if your node only has ordinary data inputs, consider
+     * to overwrite the 
+     * {@link #loadAdditionalSettingsFrom(NodeSettingsRO, DataTableSpec[])}
+     * method, which does the type casting already.
      *
      * @param settings the <code>NodeSettings</code> to read from
      * @param specs the input specs
@@ -280,9 +286,38 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
     @SuppressWarnings("unused")
     public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
-        assert settings != null;
-        assert specs != null;
+        DataTableSpec[] dtsArray = new DataTableSpec[specs.length];
+        boolean canCallDTSMethod = true;
+        for (int i = 0; i < dtsArray.length; i++) {
+            PortObjectSpec s = specs[i];
+            if (s instanceof DataTableSpec) {
+                dtsArray[i] = (DataTableSpec)s;
+            } else if (s == null) {
+                dtsArray[i] = new DataTableSpec();
+            } else {
+                canCallDTSMethod = false;
+            }
+        }
+        if (canCallDTSMethod) {
+            loadAdditionalSettingsFrom(settings, dtsArray);
+        }
     }
+    
+    /**
+     * Override hook to load additional settings when all input ports are
+     * data ports. This method is the specific implementation to 
+     * {@link #loadAdditionalSettingsFrom(NodeSettingsRO, PortObjectSpec[])} if
+     * all input ports are data ports. All elements in the <code>specs</code>
+     * argument are guaranteed to be non-null.
+     * @param settings The settings of the node
+     * @param specs The <code>DataTableSpec</code> of the input tables.
+     * @throws NotConfigurableException If not configurable
+     */
+    public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
+            final DataTableSpec[] specs) throws NotConfigurableException {
+    }
+    
+    
 
     /**
      * This method can be overridden to save additional settings to the given
