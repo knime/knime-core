@@ -99,9 +99,9 @@ public class RowIDRowFilter extends RowFilter {
     private Pattern compileRegExpr(final String regExpr,
             final boolean caseSensitive) throws PatternSyntaxException {
         // support \n in the data and weird international characters.
-        int flags = Pattern.DOTALL | Pattern.UNICODE_CASE | Pattern.MULTILINE;
+        int flags = Pattern.DOTALL | Pattern.MULTILINE;
         if (!caseSensitive) {
-            flags |= Pattern.CASE_INSENSITIVE;
+            flags |= Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
         }
         return Pattern.compile(regExpr, flags);
 

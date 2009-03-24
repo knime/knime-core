@@ -148,9 +148,9 @@ public class StringCompareRowFilter extends AttrValueRowFilter {
         if (regExprToUse != null) {
             // allow - and match - LF and international chars in the data
             int flags =
-                Pattern.DOTALL | Pattern.MULTILINE | Pattern.UNICODE_CASE;
+                Pattern.DOTALL | Pattern.MULTILINE;
             if (!m_caseSensitive) {
-                flags |= Pattern.CASE_INSENSITIVE;
+                flags |= Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
             }
             m_regExpr = Pattern.compile(regExprToUse, flags);
         } else {
