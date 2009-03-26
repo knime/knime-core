@@ -36,6 +36,7 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -277,6 +278,8 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         }
         NodeSettings settings = 
             new NodeSettings(WorkflowPersistor.WORKFLOW_FILE);
+        settings.addString(
+                WorkflowManager.CFG_CREATED_BY, KNIMEConstants.VERSION);
         settings.addString(WorkflowManager.CFG_VERSION, getSaveVersion());
         saveWorkflowName(settings, wm.getName());
         NodeContainerMetaPersistorVersion200 metaPersistor = 

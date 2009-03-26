@@ -45,7 +45,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 
 /**
- * Utitlity class to do some basic file handling that is not available through
+ * Utility class to do some basic file handling that is not available through
  * java API. This includes copying of files and deleting entire directories.
  * These methods are mainly used for the load/save of the workflow.
  *

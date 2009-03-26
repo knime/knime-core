@@ -164,6 +164,8 @@ public class DecSepPanel extends JPanel {
         }
         boolean changed =
                 (oldDecSep != newDecSep) || (oldThousSep != newThousSep);
+        // clear the thousand sep first.
+        settings.setThousandsSeparator('\0');
         settings.setDecimalSeparator(newDecSep);
         settings.setThousandsSeparator(newThousSep);
         if (changed) {

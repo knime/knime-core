@@ -2970,9 +2970,11 @@ public final class WorkflowManager extends NodeContainer {
                 loaderMap.put(cont.getID().getIndex(), 
                         cont.getCopyPersistor(m_globalTableRepository, false));
                 for (ConnectionContainer out 
-                        : sourceManager.m_workflow.getConnectionsBySource(nodeIDs[i])) {
+                        : sourceManager.m_workflow.getConnectionsBySource(
+                                nodeIDs[i])) {
                     if (idsHashed.contains(out.getDest())) {
-                        connTemplates.add(new ConnectionContainerTemplate(out));
+                        connTemplates.add(
+                                new ConnectionContainerTemplate(out, false));
                     }
                 }
             }
@@ -3014,8 +3016,11 @@ public final class WorkflowManager extends NodeContainer {
     ///////// LOAD & SAVE /////////
     ///////////////////////////////
 
-    /** Workflow version. */
+    /** Workflow version, indicates the "oldest" 
+      * version that is compatible to the current workflow format. */
     static final String CFG_VERSION = "version";
+    /** Version of KNIME that has written the workflow. */
+    static final String CFG_CREATED_BY = "created_by";
 
     public static WorkflowLoadResult loadProject(File directory,
             final ExecutionMonitor exec) throws IOException,
