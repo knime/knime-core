@@ -171,6 +171,8 @@ class Buffer implements KNIMEStreamConstants {
         COMPATIBILITY_MAP.put("container_6", 6);     // 2.0 Alpha
         COMPATIBILITY_MAP.put("container_7", 7);     // 2.0.0 (final)
         COMPATIBILITY_MAP.put(VERSION, IVERSION);    // version 2.0.1++
+        // NOTE consider to also increment the workflow.knime version number
+        // when updating this list
     }
 
     /**
