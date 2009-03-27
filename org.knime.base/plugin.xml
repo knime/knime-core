@@ -860,6 +860,11 @@
             factory-class="org.knime.base.node.rules.RuleEngineNodeFactory"
             id="org.knime.base.node.rules.RuleEngineNodeFactory">
       </node>
+      <node
+            category-path="/loopsupport"
+            factory-class="org.knime.base.node.meta.looper.LoopStartIntervalNodeFactory"
+            id="org.knime.base.node.meta.looper.LoopStartIntervalNodeFactory">
+      </node>
       
    </extension>
       <extension
