@@ -30,6 +30,11 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -66,6 +71,13 @@ public class DatabaseConnectionSettings {
     /** Keeps the history of all database URLs. */
     public static final StringHistory DATABASE_URLS = StringHistory.getInstance(
             "database_urls");
+    
+    private static final ExecutorService CONNECTION_CREATOR_EXECUTOR = 
+        Executors.newCachedThreadPool();
+    
+    static {
+        DriverManager.setLoginTimeout(5);
+    }
 
     private String m_driver;
     private String m_dbName;
@@ -124,9 +136,25 @@ public class DatabaseConnectionSettings {
             throw new InvalidSettingsException("Driver \"" + d 
                     + "\" does not accept URL: " + m_dbName);
         }
-        String password = KnimeEncryption.decrypt(m_pass);
-        DriverManager.setLoginTimeout(5);
-        return DriverManager.getConnection(m_dbName, m_user, password);
+        
+        final String password = KnimeEncryption.decrypt(m_pass);
+        final String user = m_user;
+        final String dbName = m_dbName;
+
+        Callable<Connection> callable = new Callable<Connection>() {
+            /** {@inheritDoc} */
+            @Override
+            public Connection call() throws Exception {
+                return DriverManager.getConnection(dbName, user, password);
+            }
+        };
+        Future<Connection> task = CONNECTION_CREATOR_EXECUTOR.submit(callable);
+        try {
+            return task.get(DriverManager.getLoginTimeout() + 1, 
+                    TimeUnit.SECONDS);
+        } catch (Exception ie) {
+            throw new SQLException(ie);
+        }
     }
     
     /**
