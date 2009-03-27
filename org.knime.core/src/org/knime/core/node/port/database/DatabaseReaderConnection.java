@@ -138,7 +138,7 @@ public final class DatabaseReaderConnection {
                         result.close();
                     }
                     // ensure we have a non-prepared statement to access data
-                    if (m_stmt == null || m_stmt instanceof PreparedStatement) {
+                    if (m_stmt != null && m_stmt instanceof PreparedStatement) {
                         m_stmt = m_conn.createConnection().createStatement();   
                     }
                 }
