@@ -34,7 +34,7 @@ public interface Norm {
     /** Number of available norm choices. */
     public static final Norm[] NORMS = new Norm[]{MinMaxNorm.getInstance(),
             ProdNorm.getInstance(), LukaNorm.getInstance(),
-            YagerNorm.getInstance()};
+            YagerNorm.getInstance(2.0), YagerNorm.getInstance(0.5)};
 
     /**
      * Computes the fuzzy disjunction.

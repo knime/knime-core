@@ -36,7 +36,7 @@ public final class YagerNorm implements Norm {
     /**
      * Inits a new NormYager object.
      * 
-     * @param  p the potenz factor for this norm
+     * @param  p the power for this norm
      * @throws IllegalArgumentException if the parameter <code>p</code> less or 
      *         equal to zero
      */
@@ -84,7 +84,7 @@ public final class YagerNorm implements Norm {
     }
     
     /**
-     * Returns the string representation as <b>Yaper[p] Norm</b> of this norm.
+     * Returns the string representation as <b>Yager[p] Norm</b> of this norm.
      * @return an identifier for this norm
      */
     @Override
