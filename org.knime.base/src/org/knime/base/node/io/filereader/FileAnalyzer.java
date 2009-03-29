@@ -690,7 +690,7 @@ public final class FileAnalyzer {
                 colProp = new ColProperty();
                 // take over or create a name
                 String name;
-                if (colNames[c] != null && !colNames[c].isEmpty()) {
+                if (colNames[c] != null && !colNames[c].trim().isEmpty()) {
                     name = colNames[c];
                 } else {
                     name = "Col" + c;
