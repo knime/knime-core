@@ -35,6 +35,7 @@ import org.knime.base.node.viz.aggregation.ValueScale;
 import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -232,13 +233,27 @@ public final class GUIUtils {
     }
 
     /**
-     * @param vals the values to create the details information for
+     * @param valModels the values to create the details information for
      * @return the html detail representation of the given values
      */
     @SuppressWarnings("unchecked")
     public static String createHTMLDetailData(
-            final List<? extends AggregationValModel> vals) {
-        if (vals == null || vals.size() < 1) {
+            final List<? extends AggregationValModel> valModels) {
+        final double[] vals = new double[3];
+        Arrays.fill(vals, 0);
+        return createHTMLDetailData(valModels, vals);
+    }
+    /**
+     * @param valModels the values to create the details information for
+     * @param vals the value array to add the current count, value count and
+     * sum to
+     * @return the html detail representation of the given values
+     */
+    @SuppressWarnings("unchecked")
+    public static String createHTMLDetailData(
+            final List<? extends AggregationValModel> valModels,
+            final double[] vals) {
+        if (valModels == null || valModels.size() < 1) {
             return (NO_ELEMENT_SELECTED_TEXT);
         }
         final StringBuilder aggrHeadBuf = new StringBuilder();
@@ -257,7 +272,7 @@ public final class GUIUtils {
         final String aggrMethodHead = aggrHeadBuf.toString();
         final StringBuilder buf = new StringBuilder();
         buf.append("<table border='1'>");
-        for (final AggregationValModel bar : vals) {
+        for (final AggregationValModel bar : valModels) {
             final String barBgColor = "#" + Integer.toHexString(
                     bar.getColor().getRGB() & 0x00ffffff);
             buf.append("<tr>");
@@ -338,12 +353,15 @@ public final class GUIUtils {
                     buf.append("</td>");
                     buf.append("<td>");
                     buf.append(totalCount);
+                    vals[0] += totalCount;
                     buf.append("</td>");
                     buf.append("<td>");
                     buf.append(totalValCount);
+                    vals[1] += totalValCount;
                     buf.append("</td>");
                     buf.append("<td>");
                     buf.append(totalSum);
+                    vals[2] += totalSum;
                     buf.append("</td>");
                     buf.append("<td>");
                     if (totalCount != 0) {
@@ -359,6 +377,53 @@ public final class GUIUtils {
             buf.append("</td>");
             buf.append("</tr>");
         }
+        buf.append("</table>");
+        return buf.toString();
+    }
+
+    /**
+     * @param vals the array contains the total count, value count and sum
+     * in this order
+     * @return the html code with the total value information
+     */
+    public static String createHTMLTotalData(final double[] vals) {
+        if (vals == null || vals.length != 3) {
+            throw new IllegalArgumentException("invalid total values");
+        }
+        final StringBuilder buf = new StringBuilder();
+        buf.append("<table border='1' width='100%''>");
+        buf.append("<tr>");
+        buf.append("<th>");
+        buf.append(AggregationMethod.COUNT);
+        buf.append("</th>");
+        buf.append("<th>");
+        buf.append(AggregationMethod.VALUE_COUNT);
+        buf.append("</th>");
+        buf.append("<th>");
+        buf.append(AggregationMethod.SUM);
+        buf.append("</th>");
+        buf.append("<th>");
+        buf.append(AggregationMethod.AVERAGE);
+        buf.append("</th>");
+        buf.append("</tr>");
+        buf.append("<tr>");
+        buf.append("<td>");
+        buf.append(vals[0]);
+        buf.append("</td>");
+        buf.append("<td>");
+        buf.append(vals[1]);
+        buf.append("</td>");
+        buf.append("<td>");
+        buf.append(vals[2]);
+        buf.append("</td>");
+        buf.append("<td>");
+        if (vals[1] != 0) {
+            buf.append(vals[2] / vals[1]);
+        } else {
+            buf.append("&nbsp;");
+        }
+        buf.append("</td>");
+        buf.append("</tr>");
         buf.append("</table>");
         return buf.toString();
     }

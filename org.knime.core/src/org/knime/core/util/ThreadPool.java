@@ -38,18 +38,18 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.RunnableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.JobExecutor;
-import org.knime.core.node.workflow.JobRunnable;
 
 /**
  * Implements a sophisticated thread pool.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ThreadPool implements JobExecutor {
+public class ThreadPool {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(ThreadPool.class);
@@ -116,6 +116,46 @@ public class ThreadPool implements JobExecutor {
          */
         public void waitUntilStarted() throws InterruptedException {
             m_startWaiter.await();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public T get() throws InterruptedException, ExecutionException {
+            if (Thread.currentThread() instanceof Worker) {
+                Worker w = (Worker)Thread.currentThread();
+                w.m_startedFrom.m_invisibleThreads.incrementAndGet();
+                try {
+                    checkQueue();
+                    return super.get();
+                } finally {
+                    w.m_startedFrom.m_invisibleThreads.decrementAndGet();
+                }
+            } else {
+                return super.get();
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public T get(final long timeout, final TimeUnit unit)
+                throws InterruptedException, ExecutionException,
+                TimeoutException {
+            if (Thread.currentThread() instanceof Worker) {
+                Worker w = (Worker)Thread.currentThread();
+                w.m_startedFrom.m_invisibleThreads.incrementAndGet();
+                try {
+                    checkQueue();
+                    return super.get(timeout, unit);
+                } finally {
+                    w.m_startedFrom.m_invisibleThreads.decrementAndGet();
+                }
+            } else {
+                return super.get(timeout, unit);
+            }
         }
     }
 
@@ -225,6 +265,9 @@ public class ThreadPool implements JobExecutor {
      * @param maxThreads the maximum number of threads
      */
     public ThreadPool(final int maxThreads) {
+        if (maxThreads < 1) {
+            throw new IllegalArgumentException("Thread count must be > 0");
+        }
         m_maxThreads.set(maxThreads);
         m_parent = null;
         m_queuedFutures = new LinkedList<MyFuture<?>>();
@@ -238,6 +281,9 @@ public class ThreadPool implements JobExecutor {
      * @param parent the parent pool
      */
     protected ThreadPool(final int maxThreads, final ThreadPool parent) {
+        if (maxThreads < 1) {
+            throw new IllegalArgumentException("Thread count must be > 0");
+        }
         m_parent = parent;
         m_maxThreads.set(maxThreads);
         m_queuedFutures = m_parent.m_queuedFutures;
@@ -261,6 +307,15 @@ public class ThreadPool implements JobExecutor {
             }
         }
         return false;
+    }
+
+    /**
+     * Creates a sub pool that shares the threads with this (parent) pool.
+     *
+     * @return a thread pool
+     */
+    public ThreadPool createSubPool() {
+        return new ThreadPool(m_maxThreads.get(), this);
     }
 
     /**
@@ -334,10 +389,74 @@ public class ThreadPool implements JobExecutor {
         return ftask;
     }
 
+
+    /**
+     * Tries to submits a value-returning task for immediate execution and
+     * returns a Future representing the pending results of the task if a thread
+     * is free. If no thread is currently available <code>null</code> is
+     * returned and the task is not queued.
+     *
+     * <p>
+     * If you would like to immediately block waiting for a task, you can use
+     * constructions of the form <tt>result = exec.submit(aCallable).get();</tt>
+     *
+     * <p>
+     * Note: The {@link java.util.concurrent.Executors} class includes a set of
+     * methods that can convert some other common closure-like objects, for
+     * example, {@link java.security.PrivilegedAction} to {@link Callable} form
+     * so they can be submitted.
+     *
+     * @param t the task to submit
+     * @param <T> any result type
+     * @return a Future representing pending completion of the task or
+     * <code>null</code> if no thread was available
+     * @throws NullPointerException if <code>task</code> null
+     *
+     * @see #submit(Callable)
+     */
+    public <T> Future<T> trySubmit(final Callable<T> t) {
+        MyFuture<T> ftask = new MyFuture<T>(t);
+
+        synchronized (m_queuedFutures) {
+            if (wakeupWorker(ftask, this) == null) {
+                return null;
+            }
+        }
+
+        return ftask;
+    }
+
+    /**
+     * Tries to submits a Runnable task for immediate execution and
+     * returns a Future representing the task if a thread
+     * is free. If no thread is currently available <code>null</code> is
+     * returned and the task is not queued.
+     *
+     * @param r the task to submit
+     * @return a Future representing pending completion of the task, and whose
+     *         <tt>get()</tt> method will return <tt>null</tt> upon
+     *         completion.
+     * @throws NullPointerException if <code>task</code> null
+     * @see #submit(Runnable)
+     */
+    public Future<?> trySubmit(final Runnable r) {
+        MyFuture<?> ftask = new MyFuture<Object>(r, null);
+
+        synchronized (m_queuedFutures) {
+            if (wakeupWorker(ftask, this) == null) {
+                return null;
+            }
+        }
+
+        return ftask;
+    }
+
+
     private Worker wakeupWorker(final RunnableFuture<?> task,
             final ThreadPool pool) {
         synchronized (m_runningWorkers) {
-            if (m_runningWorkers.size() - m_invisibleThreads.get() < m_maxThreads.get()) {
+            if (m_runningWorkers.size() - m_invisibleThreads.get() < m_maxThreads
+                    .get()) {
                 Worker w;
                 if (m_parent == null) {
                     w = m_availableWorkers.poll();
@@ -436,12 +555,15 @@ public class ThreadPool implements JobExecutor {
     /**
      * Sets the maximum number of threads in the pool. If the new value is
      * smaller than the old value running surplus threads will not be
-     * interrupted. If the new value is bigger than the old one, waiting
-     * jobs will be started immediately.
+     * interrupted. If the new value is bigger than the old one, waiting jobs
+     * will be started immediately.
      *
      * @param newValue the new maximum thread number
      */
     public void setMaxThreads(final int newValue) {
+        if (newValue < 0) {
+            throw new IllegalArgumentException("Thread count must be >= 0");
+        }
         if (m_parent == null) {
             if (newValue < m_maxThreads.get()) {
                 for (int i = (m_maxThreads.get() - newValue); i >= 0; i--) {
@@ -614,11 +736,4 @@ public class ThreadPool implements JobExecutor {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Future<?> submitJob(final JobRunnable r) {
-        return enqueue(r);
-    }
 }

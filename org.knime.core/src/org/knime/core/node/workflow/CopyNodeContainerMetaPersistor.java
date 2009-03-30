@@ -25,7 +25,10 @@
 package org.knime.core.node.workflow;
 
 import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
@@ -70,6 +73,31 @@ final class CopyNodeContainerMetaPersistor implements
     @Override
     public int getNodeIDSuffix() {
         return m_original.getID().getIndex();
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public NodeExecutionJobManager getExecutionJobManager() {
+        NodeExecutionJobManager orig = m_original.getJobManager();
+        if (orig == null) {
+            return null;
+        }
+        NodeSettings s = new NodeSettings("job_manager_clone_config");
+        NodeExecutionJobManagerPool.saveJobManager(orig, s);
+        try {
+            return NodeExecutionJobManagerPool.load(s);
+        } catch (InvalidSettingsException ise) {
+            throw new IllegalStateException("Cannot clone job manager", ise);
+        }
+        
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public NodeSettingsRO getExecutionJobSettings() {
+        // return null here (non-null value means that the
+        // node is still executing, i.e. m_original is executing) 
+        return null;
     }
 
     /** {@inheritDoc} */

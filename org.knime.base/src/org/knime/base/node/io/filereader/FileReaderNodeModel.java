@@ -179,7 +179,7 @@ public class FileReaderNodeModel extends NodeModel {
                 setWarningMessage("Source is a ZIP archive with multiple "
                         + "entries. Only reading first entry!");
             }
-
+            c.close();
         } catch (DuplicateKeyException dke) {
             String msg = dke.getMessage();
             if (msg == null) {
@@ -189,8 +189,6 @@ public class FileReaderNodeModel extends NodeModel {
             DuplicateKeyException newDKE = new DuplicateKeyException(msg);
             newDKE.initCause(dke);
             throw newDKE;
-        } finally {
-            c.close();
         }
 
         // user settings allow for truncating the table

@@ -79,8 +79,9 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
     private MetaNodeType m_metaNodeType = MetaNodeType.ORDINARY;
     
     public ObsoleteMetaNodeWorkflowPersistorVersion1xx(
-            final HashMap<Integer, ContainerTable> globalRep) {
-        super(globalRep);
+            final HashMap<Integer, ContainerTable> globalRep, 
+            final String versionString) {
+        super(globalRep, versionString);
     }
     
     /** {@inheritDoc} */
@@ -161,7 +162,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
     protected SingleNodeContainerPersistorVersion1xx 
             createSingleNodeContainerPersistor() {
         return new ObsoleteSpecialNodeSingleNodeContainerPersistorVersion1xx(
-                this);
+                this, getVersionString());
     }
     
     /** {@inheritDoc} */
@@ -374,8 +375,9 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
          * 
          */
         public ObsoleteSpecialNodeSingleNodeContainerPersistorVersion1xx(
-                final WorkflowPersistorVersion1xx workflowPersistor) {
-            super(workflowPersistor);
+                final WorkflowPersistorVersion1xx workflowPersistor, 
+                final String versionString) {
+            super(workflowPersistor, versionString);
         }
         
         /** {@inheritDoc} */

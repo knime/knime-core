@@ -100,6 +100,7 @@ import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.CancelAction;
 import org.knime.workbench.editor2.actions.CancelAllAction;
@@ -306,7 +307,8 @@ public class WorkflowEditor extends GraphicalEditor implements
     @Override
     public void dispose() {
         if (m_fileResource != null) {
-            ProjectWorkflowMap.remove(m_fileResource.getProject().getName());
+            ProjectWorkflowMap.remove(m_fileResource.getParent().getFullPath()
+                    .toString());
         }
         
         // remember that this editor has been closed
@@ -528,7 +530,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                     if (m_manager.getState().executionInProgress()) {
                         for (NodeContainer container 
                                     : m_manager.getNodeContainers()) {
-                            m_manager.cancelExecution(container);
+                            // TODO this need to be revised
+                            m_manager.cancelOrDisconnectExecution(container);
                         }
                     }
                 } catch (Throwable t) {
@@ -651,7 +654,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                 }
             }
             ProjectWorkflowMap.putWorkflow(
-                    m_fileResource.getProject().getName(), 
+                    m_fileResource.getParent().getFullPath().toString(),
+//                    m_fileResource.getParent().getName(), 
                     m_manager);
             m_manager.addListener(this);
             m_manager.addNodeStateChangeListener(this);
@@ -718,7 +722,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     private void setWorkflowManagerInput(final WorkflowManagerInput input) {
         m_parentEditor = input.getParentEditor();
         WorkflowManager wfm =
-                ((WorkflowManagerInput)input).getWorkflowManager();
+                (input).getWorkflowManager();
         setWorkflowManager(wfm);
         setPartName(input.getName());
         wfm.addListener(this);
@@ -930,7 +934,9 @@ public class WorkflowEditor extends GraphicalEditor implements
                     new SaveWorkflowRunnable(this, file, exceptionMessage,
                             monitor);
             
-            wasInProgress = m_manager.getState().executionInProgress();
+            State state = m_manager.getState();
+            wasInProgress = state.executionInProgress() 
+                && !state.equals(State.EXECUTINGREMOTELY);                
             
             ps.run(true, false, saveWorflowRunnable);
             // after saving the workflow, check for the import marker
@@ -1258,7 +1264,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
                 if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
                     final String newName = delta.getMovedToPath().segment(0);
-                    String oldName = m_fileResource.getName();
+                    String oldName = m_fileResource.getParent().getFullPath()
+                        .toString();
                     WorkflowEditor.this.m_manager.renameWorkflowDirectory(
                             newName);
                     ProjectWorkflowMap.replace(newName, 

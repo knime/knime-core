@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   15.05.2007 (thor): created
  */
@@ -28,19 +28,23 @@ import java.io.IOException;
 import java.io.Writer;
 
 /**
- * This writer just swallows everything that is written to it. This class is a
- * singleton, use the {@link #INSTANCE} field to get access to the its single
- * instance.
- * 
+ * This writer just swallows everything that is written to it.
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public final class NullWriter extends Writer {
     /**
      * The singleton instance of the NullWriter.
+     * @deprecated Do not use this public instance because Writers are
+     * internally synchronized on themselves.
      */
+    @Deprecated
     public static final NullWriter INSTANCE = new NullWriter();
 
-    private NullWriter() {
+    /**
+     * Creates a new NullWriter.
+     */
+    public NullWriter() {
     }
 
     /**

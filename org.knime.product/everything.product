@@ -6,9 +6,9 @@
    <aboutInfo>
       <image path="/org.knime.product/icons/gif/about.gif"/>
       <text>
-         Welcome to KNIME v2.0.1.0019867
+         Welcome to KNIME v2.1.0.0018128
 the Konstanz Information Miner
-Copyright, 2003 - 2009
+Copyright, 2003 - 2008
 email: contact@knime.org
 
 This version of KNIME is licensed under the Aladdin Open Source 
@@ -58,28 +58,31 @@ Uses: Java, GEF, Log4J
       <feature id="org.eclipse.rcp" version="0.0.0"/>
       <feature id="org.eclipse.gef" version="0.0.0"/>
       <feature id="org.eclipse.platform" version="0.0.0"/>
-      <feature id="org.knime.features.base" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.chem.types" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.ext.chem.cdk" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.ext.chem.tools" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.ext.jfreechart" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.ext.jython" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.ext.r" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.ext.weka" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.wizard" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.product" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.ext.jep" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.ext.birt" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.ext.poi" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.ext.exttool" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.ext.r.bin" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.ext.chem.plants" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.ext.scripting" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.testing" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.timeseries" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.ext.textprocessing" version="2.0.1.0010000"/>
-      <feature id="org.knime.features.distmatrix" version="2.0.1.0019867"/>
-      <feature id="org.knime.features.neighborgram" version="2.0.1.0019867"/>
+      <feature id="org.knime.features.base" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.chem.types" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.chem.cdk" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.chem.tools" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.jfreechart" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.jython" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.r" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.weka" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.wizard" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.product" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.jep" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.birt" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.poi" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.exttool" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.r.bin" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.chem.plants" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.scripting" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.testing" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.timeseries" version="2.0.0.0017855"/>
+      <feature id="org.knime.features.ext.chem.shapes" version="2.1.0"/>
+      <feature id="com.knime.features.cluster" version="1.0.0"/>
+      <feature id="org.knime.features.ext.webservice.client" version="2.1.0.0018799"/>
+      <feature id="org.knime.features.ext.textprocessing" version="2.1.0.0010000"/>
+      <feature id="org.knime.features.distmatrix" version="2.1.0.0019867"/>
+      <feature id="org.knime.features.neighborgram" version="2.1.0.0019867"/>
    </features>
 
 </product>

@@ -1,5 +1,5 @@
 
-KNIME v2.0.0
+KNIME v2.1.0
 ============================================================
 
 Quickstart guide:
@@ -24,6 +24,6 @@ How to get additional features:
   click the "Select Required" button. This automatically selects all required 
   features. You need to restart KNIME after installing new extensions in order 
   to get them activated.
-  
+
   Note, the update site is also available as zip archive for a later offline
   installation. Refer to the knime.org website for details.

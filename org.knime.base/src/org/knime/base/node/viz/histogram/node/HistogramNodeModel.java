@@ -25,7 +25,9 @@
 package org.knime.base.node.viz.histogram.node;
 
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -34,9 +36,12 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObjectSpec;
 
+import org.knime.base.node.util.DataArray;
+import org.knime.base.node.util.DefaultDataArray;
 import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.base.node.viz.histogram.datamodel.HSBColorComparator;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramDataModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramVizModel;
 import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
@@ -46,6 +51,9 @@ import org.knime.base.node.viz.histogram.util.ColorColumn;
 import java.awt.Color;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 
 /**
@@ -61,17 +69,11 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
     private InteractiveHistogramDataModel m_model;
 
     /**
-     * The constructor.
-     */
-    protected HistogramNodeModel() {
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
     protected void createHistogramModel(final ExecutionContext exec,
-            final int noOfRows, final BufferedDataTable dataTable)
+            final int noOfRows, final BufferedDataTable data)
     throws CanceledExecutionException {
         LOGGER.debug("Entering createHistogramModel(exec, dataTable) "
                 + "of class HistogramNodeModel.");
@@ -79,7 +81,46 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
            m_model = null;
            return;
        }
-       m_model = new InteractiveHistogramDataModel(exec, dataTable, noOfRows);
+       if (exec == null) {
+           throw new NullPointerException("exec must not be null");
+       }
+       if (data == null) {
+           throw new IllegalArgumentException(
+                   "Table shouldn't be null");
+       }
+       ExecutionMonitor subExec = exec.createSubProgress(0.5);
+       exec.setMessage("Adding rows to histogram model...");
+        final DataArray dataArray =
+            new DefaultDataArray(data, 1, noOfRows, subExec);
+       exec.setMessage("Adding row color to histogram...");
+       final SortedSet<Color> colorSet =
+           new TreeSet<Color>(HSBColorComparator.getInstance());
+       subExec = exec.createSubProgress(0.5);
+       final double progressPerRow = 1.0 / noOfRows;
+       double progress = 0.0;
+       final CloseableRowIterator rowIterator = data.iterator();
+       try {
+           for (int i = 0; i < noOfRows && rowIterator.hasNext();
+               i++) {
+               final DataRow row = rowIterator.next();
+               final Color color = data.getDataTableSpec().
+                   getRowColor(row).getColor(false, false);
+               if (!colorSet.contains(color)) {
+                   colorSet.add(color);
+               }
+               progress += progressPerRow;
+               subExec.setProgress(progress,
+                       "Adding data rows to histogram...");
+               subExec.checkCanceled();
+           }
+       } finally {
+           if (rowIterator != null) {
+               rowIterator.close();
+           }
+       }
+       exec.setProgress(1.0, "Histogram finished.");
+       m_model = new InteractiveHistogramDataModel(dataArray,
+               new ArrayList<Color>(colorSet));
        LOGGER.debug("Exiting createHistogramModel(exec, dataTable) "
                 + "of class HistogramNodeModel.");
     }
@@ -153,10 +194,10 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
         }
         final AbstractHistogramVizModel vizModel =
             new InteractiveHistogramVizModel(m_model.getRowColors(),
-                AggregationMethod.getDefaultMethod(),
-                HistogramLayout.getDefaultLayout(), getTableSpec(),
-                m_model.getDataRows(), getXColSpec(), getAggrColumns(),
-                BinningUtil.calculateIntegerMaxNoOfBins(
+                    AggregationMethod.getDefaultMethod(),
+                    HistogramLayout.getDefaultLayout(), getTableSpec(),
+                    m_model.getDataRows(), getXColSpec(),
+                getAggrColumns(), BinningUtil.calculateIntegerMaxNoOfBins(
                         AbstractHistogramVizModel.DEFAULT_NO_OF_BINS,
                         getXColSpec()));
         return vizModel;

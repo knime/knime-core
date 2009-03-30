@@ -339,7 +339,13 @@ class Buffer implements KNIMEStreamConstants {
 
     /** The iterator that is used to read the content back into memory.
      * This instance is used after the workflow is restored from disk. */
-    private FromFileIterator m_backIntoMemoryIterator;
+    private CloseableRowIterator m_backIntoMemoryIterator;
+    
+    /** A flag indicating whether the next call to iterator() hast to 
+     * initialize m_backIntoMemoryIterator. This flag is mostly false but may
+     * be true right after object initialization when the settings contain
+     * the "was-previously-in-memory" flag. */
+    private boolean m_useBackIntoMemoryIterator = false;
 
     /**
      * The version of the file we are reading (if initiated with
@@ -485,7 +491,6 @@ class Buffer implements KNIMEStreamConstants {
      * is true for loop end nodes, which need to aggregate the data generated
      * in the loop body 
      */
-    @SuppressWarnings("unchecked")
     void addRow(final DataRow r, final boolean isCopyOfExisting, 
             final boolean forceCopyOfBlobs) {
         try {
@@ -851,7 +856,6 @@ class Buffer implements KNIMEStreamConstants {
      * @throws ClassNotFoundException If any of the classes can't be loaded.
      * @throws InvalidSettingsException If the internal structure is broken.
      */
-    @SuppressWarnings("unchecked") // cast with generics
     private void readMetaFromFile(final InputStream metaIn)
     throws IOException, InvalidSettingsException {
         InputStream inStream = new BufferedInputStream(metaIn);
@@ -1020,14 +1024,7 @@ class Buffer implements KNIMEStreamConstants {
      * implementation). The restoring will be performed with the next iteration.
      */
     final void restoreIntoMemory() {
-        if (usesOutFile()) {
-            CloseableRowIterator it = iterator();
-            assert it instanceof FromFileIterator : "Iterator on a file-based "
-                + "buffer must be instance of " 
-                + FromFileIterator.class.getSimpleName(); 
-            m_backIntoMemoryIterator = (FromFileIterator)it;
-            m_list = new ArrayList<BlobSupportDataRow>(size());
-        }
+        m_useBackIntoMemoryIterator = true;
     }
 
     /** Get reference to the table repository that this buffer was initially
@@ -1386,9 +1383,17 @@ class Buffer implements KNIMEStreamConstants {
      */
     CloseableRowIterator iterator() {
         if (usesOutFile()) {
+            synchronized (this) {
+                if (m_useBackIntoMemoryIterator) {
+                    // the order of the following lines is very important!
+                    m_useBackIntoMemoryIterator = false;
+                    m_backIntoMemoryIterator = iterator();
+                    m_list = new ArrayList<BlobSupportDataRow>(size());
+                }
+            }
             FromFileIterator f;
             try {
-                if (getReadVersion() <= 5) { // tech preview and before
+                if (getReadVersion() <= 5) { // 2.0 tech preview and before
                     f = new BufferFromFileIteratorVersion1x(this);
                 } else {
                     f = new BufferFromFileIteratorVersion20(this);
@@ -1401,8 +1406,10 @@ class Buffer implements KNIMEStreamConstants {
                     m_openIteratorSet.put(f, DUMMY);
                 }
             } catch (IOException ioe) {
-                throw new RuntimeException("Cannot read file \""
-                        + m_binFile.getName() + "\"", ioe);
+                StringBuilder b = new StringBuilder("Cannot read file \"");
+                b.append(m_binFile != null ? m_binFile.getName() : "<unknown>");
+                b.append("\"");
+                throw new RuntimeException(b.toString(), ioe);
             }
             return f;
         } else {
@@ -1700,7 +1707,8 @@ class Buffer implements KNIMEStreamConstants {
             }
             // assignment avoids race condition in following statements
             // (parallel thread may set m_backIntoMemoryIterator to null)
-            FromFileIterator backIntoMemoryIterator = m_backIntoMemoryIterator;
+            CloseableRowIterator backIntoMemoryIterator = 
+                m_backIntoMemoryIterator;
             if (m_nextIndex < m_list.size()) {
                 return m_list.get(m_nextIndex++);
             }
@@ -1714,7 +1722,8 @@ class Buffer implements KNIMEStreamConstants {
                 if (m_nextIndex < m_list.size()) {
                     return m_list.get(m_nextIndex++);
                 }
-                BlobSupportDataRow next = m_backIntoMemoryIterator.next();
+                BlobSupportDataRow next = 
+                    (BlobSupportDataRow)m_backIntoMemoryIterator.next();
                 if (next == null) {
                     throw new InternalError(
                             "Unable to restore data row from disk");

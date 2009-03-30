@@ -161,7 +161,7 @@ public class ExecutionMonitor {
      * @param maxProg The fraction of the progress this sub progress
      * contributes to the whole progress 
      * @return A new sub node progress monitor.
-     * @throws IllegalArgumentException If the argument is not in (0, 1].
+     * @throws IllegalArgumentException If the argument is not in [0, 1].
      */ 
     NodeProgressMonitor createSubProgressMonitor(final double maxProg) {
         if (maxProg > 1.0 || maxProg < 0.0) {

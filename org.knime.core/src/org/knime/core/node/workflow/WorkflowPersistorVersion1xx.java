@@ -65,6 +65,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     private static final NodeSettingsRO EMPTY_SETTINGS = 
         new NodeSettings("<<empty>>");
 
+    private String m_versionString;
     private final TreeMap<Integer, NodeContainerPersistor> 
         m_nodeContainerLoaderMap;
 
@@ -79,7 +80,6 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     private UIInformation m_inPortsBarUIInfo;
     private UIInformation m_outPortsBarUIInfo;
     
-    private String m_loadVersion;
     private String m_name;
     
     private boolean m_needsResetAfterLoad;
@@ -96,12 +96,17 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return result;
     }
     
-    WorkflowPersistorVersion1xx(
-            final HashMap<Integer, ContainerTable> tableRep) {
+    WorkflowPersistorVersion1xx(final HashMap<Integer, ContainerTable> tableRep,
+            final String versionString) {
         m_globalTableRepository = tableRep;
+        m_versionString = versionString;
         m_nodeContainerLoaderMap = 
             new TreeMap<Integer, NodeContainerPersistor>();
         m_connectionSet = new HashSet<ConnectionContainerTemplate>();
+    }
+    
+    protected final String getVersionString() {
+        return m_versionString;
     }
     
     protected NodeLogger getLogger() {
@@ -110,7 +115,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     
     /** {@inheritDoc} */
     public String getLoadVersion() {
-        return m_loadVersion;
+        return getVersionString();
     }
     
     /**
@@ -196,6 +201,12 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return m_isDirtyAfterLoad;
     }
     
+    /** {@inheritDoc} */
+    @Override
+    public boolean mustComplainIfStateDoesNotMatch() {
+        return false;
+    }
+    
     /** Mark node as dirty. */
     protected void setDirtyAfterLoad() {
         m_isDirtyAfterLoad = true;
@@ -236,13 +247,15 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         m_workflowDir = parentRef;
 
         try {
-            m_loadVersion = loadVersion(m_workflowSett);
+            m_versionString = loadVersion(m_workflowSett);
         } catch (InvalidSettingsException e) {
             String error = "Unable to load version string: " + e.getMessage();
             getLogger().debug(error, e);
             loadResult.addError(error);
             // this will enforce the WFM to save everything from scratch
-            m_loadVersion = "1.3.0";
+            // (this is tough problem; pretty much everything can go wrong
+            // in the following... can't guess load version)
+            m_versionString = "1.3.0";
         }
         
         try {
@@ -882,12 +895,13 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
 
     protected SingleNodeContainerPersistorVersion1xx 
             createSingleNodeContainerPersistor() {
-        return new SingleNodeContainerPersistorVersion1xx(this);
+        return new SingleNodeContainerPersistorVersion1xx(
+                this, getVersionString());
     }
 
     protected WorkflowPersistorVersion1xx createWorkflowPersistor() {
         return new ObsoleteMetaNodeWorkflowPersistorVersion1xx(
-                getGlobalTableRepository());
+                getGlobalTableRepository(), getVersionString());
     }
     
     private int getRandomNodeID() {

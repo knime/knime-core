@@ -1,11 +1,12 @@
 
-KNIME SDK v2.0.0
+KNIME SDK v2.1.0
 ============================================================
 
 Quickstart guide:
 - Extract the archive (if you read this here, you likely already did so).
 - Launch eclipse.exe to start the Eclipse IDE, select a workspace directory
   in the workspace prompt and continue from there.
+
 
 How to get additional features:
   KNIME allows for an easy integration of new features. These often 
@@ -20,6 +21,6 @@ How to get additional features:
   click the "Select Required" button. This automatically selects all required 
   features. You need to restart Eclipse after installing new extensions in order 
   to get them activated.
-  
+
   Note, the update site is also available as zip archive for a later offline
   installation. Refer to the knime.org website for details.

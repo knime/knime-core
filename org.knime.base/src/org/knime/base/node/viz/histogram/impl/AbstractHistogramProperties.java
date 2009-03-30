@@ -366,36 +366,18 @@ public abstract class AbstractHistogramProperties extends
     private JPanel createVizSettingsPanel() {
         final JPanel vizPanel = new JPanel();
 //visualisation box
-        final Box vizBoxLeft = Box.createVerticalBox();
-        vizBoxLeft.add(Box.createVerticalGlue());
-        vizBoxLeft.add(m_showGrid);
-        vizBoxLeft.add(Box.createVerticalGlue());
-        final Box vizBoxRight = Box.createVerticalBox();
-        vizBoxRight.add(Box.createVerticalGlue());
-        vizBoxRight.add(m_showBinOutline);
-        vizBoxRight.add(Box.createVerticalGlue());
-        vizBoxRight.add(m_showBarOutline);
-        vizBoxRight.add(Box.createVerticalGlue());
-        vizBoxRight.add(Box.createVerticalGlue());
-        vizBoxRight.add(m_showElementOutline);
-        final Box vizBox = Box.createHorizontalBox();
+        final Box vizBox = Box.createVerticalBox();
         vizBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), "Display option"));
-        vizBox.add(Box.createHorizontalGlue());
-        vizBox.add(vizBoxLeft);
-        vizBox.add(Box.createHorizontalGlue());
-        vizBox.add(vizBoxRight);
-        vizBox.add(Box.createHorizontalGlue());
-//        vizBox.add(Box.createVerticalGlue());
-//        vizBox.add(m_showGrid);
-//        vizBox.add(Box.createVerticalGlue());
-//        vizBox.add(m_showBinOutline);
-//        vizBox.add(Box.createVerticalGlue());
-//        vizBox.add(m_showBarOutline);
-//        vizBox.add(Box.createVerticalGlue());
-//        vizBox.add(Box.createVerticalGlue());
-//        vizBox.add(m_showElementOutline);
-
+        vizBox.add(Box.createVerticalGlue());
+        vizBox.add(m_showGrid);
+        vizBox.add(Box.createVerticalGlue());
+        vizBox.add(m_showBinOutline);
+        vizBox.add(Box.createVerticalGlue());
+        vizBox.add(m_showBarOutline);
+        vizBox.add(Box.createVerticalGlue());
+        vizBox.add(Box.createVerticalGlue());
+        vizBox.add(m_showElementOutline);
 
 //label layout box
         final Box labelBox = Box.createHorizontalBox();

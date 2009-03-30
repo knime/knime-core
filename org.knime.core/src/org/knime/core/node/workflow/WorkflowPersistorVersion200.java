@@ -52,17 +52,30 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     /** Key for UI info's class name. */
     private static final String CFG_UIINFO_CLASS = "ui_classname";
     
+    static final String VERSION_LATEST = "2.0.1";
+    
     static boolean canReadVersion(final String versionString) {
-        return versionString.equals("2.0.0");
+        return versionString.equals("2.0.0") 
+            || versionString.equals(VERSION_LATEST);
     }
     
-    WorkflowPersistorVersion200(
-            final HashMap<Integer, ContainerTable> tableRep) {
-        super(tableRep);
+    WorkflowPersistorVersion200() {
+        super(null, VERSION_LATEST);
+    }
+    
+    WorkflowPersistorVersion200(final HashMap<Integer, ContainerTable> tableRep,
+            final String versionString) {
+        super(tableRep, versionString);
     }
     
     protected String getSaveVersion() {
-        return "2.0.0";
+        return VERSION_LATEST;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public boolean mustComplainIfStateDoesNotMatch() {
+        return true;
     }
     
     @Override
@@ -237,14 +250,16 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     /** {@inheritDoc} */
     @Override
     protected WorkflowPersistorVersion200 createWorkflowPersistor() {
-        return new WorkflowPersistorVersion200(getGlobalTableRepository());
+        return new WorkflowPersistorVersion200(
+                getGlobalTableRepository(), getVersionString());
     }
     
     /** {@inheritDoc} */
     @Override
     protected SingleNodeContainerPersistorVersion200 
         createSingleNodeContainerPersistor() {
-        return new SingleNodeContainerPersistorVersion200(this);
+        return new SingleNodeContainerPersistorVersion200(
+                this, getVersionString());
     }
     
     public String save(final WorkflowManager wm,

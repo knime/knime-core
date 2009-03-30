@@ -30,6 +30,7 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeMessage.Type;
 
@@ -42,13 +43,36 @@ class NodeContainerMetaPersistorVersion200 extends
     
     private static final String CFG_STATE = "state";
     private static final String CFG_IS_DELETABLE = "isDeletable";
+    private static final String CFG_JOB_MANAGER_CONFIG = "job.manager";
+    private static final String CFG_JOB_CONFIG = "execution.job";
     
     /** @param baseDir The node container directory (only important while load)
      */
     NodeContainerMetaPersistorVersion200(final ReferencedFile baseDir) {
         super(baseDir);
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected NodeExecutionJobManager loadNodeExecutionJobManager(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        if (!settings.containsKey(CFG_JOB_MANAGER_CONFIG)) {
+            return null;
+        }
+        return NodeExecutionJobManagerPool.load(
+                settings.getNodeSettings(CFG_JOB_MANAGER_CONFIG));
+    }
 
+    /** {@inheritDoc} */
+    @Override
+    protected NodeSettingsRO loadNodeExecutionJobSettings(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        if (!settings.containsKey(CFG_JOB_CONFIG)) {
+            return null;
+        }
+        return settings.getNodeSettings(CFG_JOB_CONFIG);
+    }
+    
     /** {@inheritDoc} */
     @Override
     protected State loadState(final NodeSettingsRO settings, final NodeSettingsRO parentSettings)
@@ -121,14 +145,41 @@ class NodeContainerMetaPersistorVersion200 extends
         throws IOException {
         saveCustomName(settings, nc);
         saveCustomDescription(settings, nc);
-        saveState(settings, nc);
+        saveNodeExecutionJobManager(settings, nc);
+        boolean mustAlsoSaveExecutorSettings = saveState(settings, nc);
+        if (mustAlsoSaveExecutorSettings) {
+            saveNodeExecutionJob(settings, nc);
+        }
         saveNodeMessage(settings, nc);
         saveIsDeletable(settings, nc);
     }
 
-    protected void saveState(final NodeSettingsWO settings,
+    protected void saveNodeExecutionJobManager(final NodeSettingsWO settings,
+            final NodeContainer nc) {
+        NodeExecutionJobManager jobManager = nc.getJobManager();
+        if (jobManager != null) {
+            NodeSettingsWO s = settings.addNodeSettings(CFG_JOB_MANAGER_CONFIG);
+            NodeExecutionJobManagerPool.saveJobManager(jobManager, s);
+        }
+    }
+    
+    protected void saveNodeExecutionJob(
+            final NodeSettingsWO settings, final NodeContainer nc) {
+        assert nc.getState().equals(State.EXECUTINGREMOTELY)
+            : "Can't save node execution job, node is not executing "
+                + "remotely but " + nc.getState();
+        NodeExecutionJobManager jobManager = nc.getJobManager();
+        NodeExecutionJob job = nc.getExecutionJob();
+        assert nc.findJobManager().canDisconnect(nc.getExecutionJob())
+        : "Execution job can be saved/disconnected";
+        NodeSettingsWO sub = settings.addNodeSettings(CFG_JOB_CONFIG);
+        jobManager.saveReconnectSettings(job, sub);
+    }
+
+    protected boolean saveState(final NodeSettingsWO settings,
             final NodeContainer nc) {
         String state;
+        boolean mustAlsoSaveExecutorSettings = false;
         switch (nc.getState()) {
         case IDLE:
         case UNCONFIGURED_MARKEDFOREXEC:
@@ -137,10 +188,18 @@ class NodeContainerMetaPersistorVersion200 extends
         case EXECUTED:
             state = State.EXECUTED.toString();
             break;
+        case EXECUTINGREMOTELY:
+            if (nc.findJobManager().canDisconnect(nc.getExecutionJob())) {
+                // state will also be CONFIGURED only ... we set executing later
+                mustAlsoSaveExecutorSettings = true;
+            }
+            state = State.EXECUTINGREMOTELY.toString();
+            break;
         default:
             state = State.CONFIGURED.toString();
         }
         settings.addString(CFG_STATE, state);
+        return mustAlsoSaveExecutorSettings;
     }
     
     protected void saveCustomName(final NodeSettingsWO settings,
