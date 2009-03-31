@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?pde version="3.4"?>
+<?pde version="3.1"?>
 
 <product name="KNIME" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" useFeatures="true">
 
@@ -11,7 +11,7 @@ the Konstanz Information Miner
 Copyright, 2003 - 2008
 email: contact@knime.org
 
-This version of KNIME is licensed under the Aladdin Open Source 
+This version of KNIME is licensed under the Aladdin 
 License. Please see the license file in the installation directory and 
 contact us if you cannot locate it. More details can be found at
 http://www.knime.org
@@ -21,8 +21,7 @@ Uses: Java, GEF, Log4J
       </text>
    </aboutInfo>
 
-   <configIni use="default">
-   </configIni>
+   <configIni use="default"/>
 
    <launcherArgs>
       <programArgs>-clean</programArgs>
