@@ -34,6 +34,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.container.RowAppender;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -91,7 +92,8 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
                     BufferedDataContainer[] result =
                         new BufferedDataContainer[m_specs.length];
                     for (int i = 0; i < result.length; i++) {
-                        result[i] = m_exec.createDataContainer(m_specs[i]);
+                        result[i] = m_exec.createDataContainer(m_specs[i], true,
+                             DataContainer.MAX_CELLS_IN_MEMORY / result.length);
                     }
 
                     for (DataRow r : data) {
@@ -116,7 +118,7 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
         }
 
         /**
-         * 
+         *
          * {@inheritDoc}
          */
         public Void call() throws Exception {
