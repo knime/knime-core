@@ -139,12 +139,25 @@ public class SingleNodeContainerPersistorVersion200 extends
             return SETTINGS_FILE_NAME;
         }
         File nodeDir = nodeDirRef.getFile();
-        FileUtil.deleteRecursively(nodeDir);
+        boolean nodeDirExists = nodeDir.exists();
+        boolean nodeDirDeleted = FileUtil.deleteRecursively(nodeDir);
         nodeDir.mkdirs();
         if (!nodeDir.isDirectory() || !nodeDir.canWrite()) {
                 throw new IOException("Unable to write or create directory \""
                         + nodeDirRef + "\"");
         }
+        String debug;
+        if (nodeDirExists) {
+            if (nodeDirDeleted) {
+                debug = "Replaced node directory \"" + nodeDirRef + "\"";
+            } else {
+                debug = "Failed to replace node directory \"" + nodeDirRef 
+                    + "\" -- writing into existing directory";
+            }
+        } else {
+            debug = "Created node directory \"" + nodeDirRef + "\"";
+        }
+        getLogger().debug(debug);
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
         saveNodeFactoryClassName(settings, snc);
         ReferencedFile nodeXMLFileRef = saveNodeFileName(settings, nodeDirRef);
