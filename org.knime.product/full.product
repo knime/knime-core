@@ -1,27 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?pde version="3.1"?>
+<?pde version="3.4"?>
 
 <product name="KNIME" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" useFeatures="true">
 
    <aboutInfo>
       <image path="/org.knime.product/icons/gif/about.gif"/>
-      <text>
-         Welcome to KNIME v2.1.0.0018128
-the Konstanz Information Miner
-Copyright, 2003 - 2009
-email: contact@knime.org
-
-This version of KNIME is licensed under the Aladdin 
-License. Please see the license file in the installation directory and 
-contact us if you cannot locate it. More details can be found at
-http://www.knime.org
-
-Based on Eclipse, www.eclipse.org 
-Uses: Java, GEF, Log4J
-      </text>
    </aboutInfo>
 
-   <configIni use="default"/>
+   <configIni use="default">
+   </configIni>
 
    <launcherArgs>
       <programArgs>-clean</programArgs>
