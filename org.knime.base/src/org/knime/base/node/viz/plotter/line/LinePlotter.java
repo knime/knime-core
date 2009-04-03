@@ -320,10 +320,6 @@ public class LinePlotter extends ScatterPlotter {
             // if we have no columns to display
             ((ScatterPlotterDrawingPane)getDrawingPane()).setDotInfoArray(
                     new DotInfoArray(new DotInfo[0]));
-           
-            // the max dot size is subtracted as a dot can vary in size
-            int width = getDrawingPaneDimension().width - (getDotSize());
-            int height = getDrawingPaneDimension().height - (getDotSize());
             
             // first store them in a list to avoid keep tracking of indices
             List<DotInfo> dotList = new ArrayList<DotInfo>();
@@ -344,13 +340,10 @@ public class LinePlotter extends ScatterPlotter {
                     DataCell cell = array.getRow(row).getCell(colIdx);
                     int y = -1;
                     DotInfo dot;
-                    int x = (int)getXAxis().getCoordinate()
-                    .calculateMappedValue(new StringCell(
-                            array.getRow(row).getKey()
-                            .getString()), width, true);
+                    int x = getMappedXValue(new StringCell(
+                            array.getRow(row).getKey().getString()));
                     if (!cell.isMissing()) {
-                        y = (int)getYAxis().getCoordinate()
-                        .calculateMappedValue(cell, height, true);
+                        y = getMappedYValue(cell);
                         if (missingValues.size() > 0) {
                             // we have some missing values in between, 
                             // thus we have to interpolate
@@ -365,8 +358,7 @@ public class LinePlotter extends ScatterPlotter {
                             missingValues.clear();
                         }
                         p1 = new Point(x, y);
-                        dot = new DotInfo(x, (int)getScreenYCoordinate(y), 
-                                array.getRow(row).getKey(),
+                        dot = new DotInfo(x, y, array.getRow(row).getKey(),
                                 delegateIsHiLit(array.getRow(row).getKey()), 
                                 color, 1, row);
                         dot.setXDomainValue(new StringCell(

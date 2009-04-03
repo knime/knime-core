@@ -100,9 +100,10 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
         m_properties.getDotSizeSpinner().addChangeListener(
                 new ChangeListener() {
                     public void stateChanged(final ChangeEvent e) {
-                        ((ScatterPlotterDrawingPane)m_distancePlotter
-                                .getDrawingPane()).setDotSize((Integer)
-                                m_properties.getDotSizeSpinner().getValue());
+                        int dotSize = (Integer)
+                        m_properties.getDotSizeSpinner().getValue();
+                        m_distancePlotter.setDotSize(dotSize);
+                        m_distancePlotter.updateSize();
                         m_distancePlotter.getDrawingPane().repaint();
                     }
 

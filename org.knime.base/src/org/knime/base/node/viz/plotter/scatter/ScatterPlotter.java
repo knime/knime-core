@@ -458,11 +458,6 @@ public class ScatterPlotter extends TwoColumnPlotter {
         if (getDataProvider().getDataArray(getDataArrayIdx()) == null) {
             return;
         }
-
-        // the max dot size is subtracted as a dot can vary in size
-        int width = getDrawingPaneDimension().width - (2 * m_dotSize);
-        int height = getDrawingPaneDimension().height - (2 * m_dotSize);
-
         // get the coordinates from the headers
         Coordinate xCoordinate = getXAxis().getCoordinate();
         Coordinate yCoordinate = getYAxis().getCoordinate();
@@ -488,26 +483,18 @@ public class ScatterPlotter extends TwoColumnPlotter {
             if (!xCell.isMissing() && !yCell.isMissing()) {
 
                 // temp variables for the coordinates
-                int x =
-                        (int)(xCoordinate.calculateMappedValue(xCell, width));
-                // translate the x position to the right to center it at its pos
-                x += m_dotSize;
+                int x = getMappedXValue(xCell);
+
                 // need to be transformed to lower left origin later on
                 // (see below)
-                int y =
-                        (int)(yCoordinate.calculateMappedValue(yCell, height));
+                int y = getMappedYValue(yCell);
                 // if one of the values is not a valid one set -1 for both
                 if (x < 0 || y < 0) {
                     dots[i].setXCoord(-1);
                     dots[i].setYCoord(-1);
                 } else {
-                    // for coordinate origin down there in the left lower
-                    // corner:
                     // here was the offset used
                     dots[i].setXCoord(x);
-                    y = height - y;
-                    // move it up, since we have dotsize offset at the bottom
-                    y += m_dotSize;
                     dots[i].setYCoord(y);
                 }
             } else {
@@ -529,6 +516,9 @@ public class ScatterPlotter extends TwoColumnPlotter {
                 getScatterPlotterProperties().getJitterSlider().setEnabled(
                         true);
             }
+            // the max dot size is subtracted as a dot can vary in size
+            int width = getDrawingPaneDimension().width - (2 * m_dotSize);
+            int height = getDrawingPaneDimension().height - (2 * m_dotSize);
             // for jittering only 90% of the available space are used
             // to avoid that the dots of different nominal values touces each
             // other
@@ -731,6 +721,39 @@ public class ScatterPlotter extends TwoColumnPlotter {
                     .getDotInfoArray());
             getDrawingPane().repaint();
         }
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    protected int getMappedXValue(final DataCell x) {
+        // the max dot size is subtracted as a dot can vary in size
+        int width = getDrawingPaneDimension().width - (2 * m_dotSize);
+        int mappedX = (int)getXAxis().getCoordinate().calculateMappedValue(
+                x, width);
+        // translate the x position to the right to center it at its pos
+        mappedX += m_dotSize;
+        return mappedX;
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    protected int getMappedYValue(final DataCell y) {
+        // the max dot size is subtracted as a dot can vary in size
+        int height = getDrawingPaneDimension().height - (2 * m_dotSize);
+        int mappedY = (int)getYAxis().getCoordinate().calculateMappedValue(
+                y, height);
+        // for coordinate origin down there in the left lower
+        // corner:        
+        mappedY = height - mappedY;
+        // move it up, since we have dotsize offset at the bottom
+        mappedY += m_dotSize;
+        return mappedY;
     }
 
     /**
