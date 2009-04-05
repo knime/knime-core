@@ -336,13 +336,13 @@ public abstract class BasicPlotter extends AbstractPlotter {
         List<Point>newPoints = new ArrayList<Point>();
         List<DataCellPoint>domainValues = line.getDomainValues();
         for (int i = 0; i < domainValues.size() - 1; i++) {
-            double x1 = ((DoubleCell)domainValues.get(i).getX())
+            double x1 = ((DoubleValue)domainValues.get(i).getX())
                 .getDoubleValue();
-            double y1 = ((DoubleCell)domainValues.get(i).getY())
+            double y1 = ((DoubleValue)domainValues.get(i).getY())
                 .getDoubleValue();
-            double x2 = ((DoubleCell)domainValues.get(i + 1).getX())
+            double x2 = ((DoubleValue)domainValues.get(i + 1).getX())
                 .getDoubleValue();
-            double y2 = ((DoubleCell)domainValues.get(i + 1).getY())
+            double y2 = ((DoubleValue)domainValues.get(i + 1).getY())
                 .getDoubleValue();
 
 //            newPoints.add(line.getPoints().get(i));

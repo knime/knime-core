@@ -109,12 +109,23 @@ public class DendrogramPlotter extends ScatterPlotter {
              * {@inheritDoc}
              */
             public void stateChanged(final ChangeEvent e) {
-                ((DendrogramDrawingPane)getDrawingPane()).setDotSize(
-                        (Integer)props.getDotSizeSpinner().getValue());
+                int dotSize = (Integer)props.getDotSizeSpinner().getValue();
+                setDotSize(dotSize);
+                updateSize();
                 getDrawingPane().repaint();
             }
         });
         
+    }
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public void setDotSize(final int dotSize) {
+        ((DendrogramDrawingPane)getDrawingPane()).setDotSize(dotSize);
+        super.setDotSize(dotSize);
     }
     
     
@@ -291,11 +302,7 @@ public class DendrogramPlotter extends ScatterPlotter {
         }
         BinaryTreeNode<DendrogramPoint> viewNode;
 //        distinction between cluster node and leaf:
-        int height = getDrawingPaneDimension().height - (2 * OFFSET) 
-            - (m_dotSize / 2);
-        int y = (int)getYAxis().getCoordinate().calculateMappedValue(
-                new DoubleCell(node.getDist()), height);
-        y = getDrawingPaneDimension().height - y - OFFSET - m_dotSize;
+        int y = getMappedYValue(new DoubleCell(node.getDist())); 
         int x;
         DendrogramPoint p;
         if (!node.isLeaf()) {
@@ -304,9 +311,7 @@ public class DendrogramPlotter extends ScatterPlotter {
                     node.getDist());
         } else {
             DataRow row = node.getLeafDataPoint();
-            x = (int)getXAxis().getCoordinate().calculateMappedValue(
-                    new StringCell(row.getKey().getString()),
-                    getDrawingPaneDimension().width);
+            x = getMappedXValue(new StringCell(row.getKey().getString()));
             p = new DendrogramPoint(new Point(x, y), 
                     node.getDist());
             DataTableSpec spec = getDataProvider().getDataArray(1)
@@ -350,8 +355,7 @@ public class DendrogramPlotter extends ScatterPlotter {
         if (node.isLeaf()) {
             DataCell value = new StringCell(
                     node.getLeafDataPoint().getKey().getString());
-            return (int)getXAxis().getCoordinate().calculateMappedValue(
-                    value, getDrawingPaneDimension().width);
+            return getMappedXValue(value);
         }
         return (getXPosition(node.getFirstSubnode()) + getXPosition(
                 node.getSecondSubnode())) / 2;

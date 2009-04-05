@@ -103,12 +103,50 @@ public class DataContainer implements RowAppender {
     
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(DataContainer.class);
-
+    
+    /** Java property name to set a different threshold for the number of
+     * cells to be held in main memory. This property is set at startup, usually
+     * by adding a line such as 
+     * <code>-Dorg.knime.container.cellsinmemory=1000</code> to the knime.ini
+     * file in the installation directory.
+     */
+    public static final String PROPERTY_CELLS_IN_MEMORY =
+        "org.knime.container.cellsinmemory";
+    
+    /** The default number of cells to be held in memory. */
+    public static final int DEF_MAX_CELLS_IN_MEMORY = 100000;
+    
+    static {
+        int size = DEF_MAX_CELLS_IN_MEMORY;
+        String envVar = PROPERTY_CELLS_IN_MEMORY;
+        String property = System.getProperty(envVar);
+        if (property != null) {
+            String s = property.trim();
+            try {
+                int newSize = Integer.parseInt(s);
+                if (newSize < 0) {
+                    throw new NumberFormatException(
+                            "max cell count in memory < 0" + newSize);
+                }
+                size = newSize;
+                LOGGER.debug("Max cell count to be held in memory to " + size);
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Unable to parse property " + envVar
+                        + ", using default (" + DEF_MAX_CELLS_IN_MEMORY 
+                        + ")", e);
+            }
+        }
+        MAX_CELLS_IN_MEMORY = size;
+    }
+    
+    
     /**
      * Number of cells that are cached without being written to the
-     * temp file (see Buffer implementation).
+     * temp file (see Buffer implementation); It defaults to the 
+     * value defined by {@link #DEF_MAX_CELLS_IN_MEMORY} but can be changed 
+     * using the java property {@link #PROPERTY_CELLS_IN_MEMORY}.
      */
-    public static final int MAX_CELLS_IN_MEMORY = 100000;
+    public static final int MAX_CELLS_IN_MEMORY;
 
     /**
      * The number of possible values being kept at most. If the number of

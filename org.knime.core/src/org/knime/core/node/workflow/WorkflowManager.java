@@ -3580,9 +3580,16 @@ public final class WorkflowManager extends NodeContainer {
                     for (ReferencedFile deletedNodeDir
                             : m_deletedNodesFileLocations) {
                         File f = deletedNodeDir.getFile();
-                        if (f.exists() && !FileUtil.deleteRecursively(f)) {
-                            LOGGER.warn("Deletion of obsolete node directory \""
-                                    + f.getAbsolutePath() + "\" failed");
+                        if (f.exists()) {
+                            if (FileUtil.deleteRecursively(f)) {
+                                LOGGER.debug(
+                                        "Deleted obsolote node directory \""
+                                        + f.getAbsolutePath() + "\"");
+                            } else {
+                                LOGGER.warn(
+                                        "Deletion of obsolete node directory \""
+                                        + f.getAbsolutePath() + "\" failed");
+                            }
                         }
                     }
                     m_loadVersion = saveVersion;

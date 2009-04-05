@@ -52,6 +52,7 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
+import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
@@ -106,14 +107,14 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
         m_intervals = new LinkedHashMap<String, IntervalPanel>();
 
         // numeric panel in tab
-        final JPanel numericPanel = new JPanel(new GridLayout(1, 2));
+        final JPanel numericPanel = new JPanel(new GridLayout(1, 1));
 
         // numeric column list
         m_numMdl = new DefaultListModel();
         m_numMdl.addElement("<empty>");
         m_numList = new JList(m_numMdl);
         /**
-         * Overright renderer to plot number of defined bins.
+         * Override renderer to plot number of defined bins.
          */
         class BinnerListCellRenderer extends DataColumnSpecListCellRenderer {
             /**
@@ -169,8 +170,9 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
         m_numInterval.setBorder(BorderFactory.createTitledBorder(" "));
         m_numInterval.setMinimumSize(new Dimension(350, 300));
         m_numInterval.setPreferredSize(new Dimension(350, 300));
-        numericPanel.add(numScroll);
-        numericPanel.add(m_numInterval);
+        JSplitPane split = new JSplitPane(
+                JSplitPane.HORIZONTAL_SPLIT, numScroll, m_numInterval);
+        numericPanel.add(split);
         super.addTab(" Intervals ", numericPanel);
     }
 
@@ -449,7 +451,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
         }
 
         /**
-         * @return if a new column should be appened
+         * @return if a new column should be appended
          */
         public boolean isAppendedColumn() {
             return m_appendColumn.isSelected();
@@ -472,9 +474,9 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
 
         private final JComboBox m_borderLeft = new JComboBox();
 
-        private final JSpinner m_left = new JSpinner();
+        private final JSpinner m_left;
 
-        private final JSpinner m_right = new JSpinner();
+        private final JSpinner m_right;
 
         private final JComboBox m_borderRight = new JComboBox();
 
@@ -548,17 +550,19 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
 
             m_bin.setPreferredSize(new Dimension(50, 25));
 
-            JSpinner.DefaultEditor editorLeft = (JSpinner.DefaultEditor)m_left
-                    .getEditor();
-            editorLeft.getTextField().setColumns(5);
-            m_left.setModel(createNumberModel(type));
-            m_left.setPreferredSize(new Dimension(75, 25));
+            m_left = new JSpinner(createNumberModel(type));
+            JSpinner.DefaultEditor editorLeft = 
+                new JSpinner.NumberEditor(m_left, "0.0##############");
+            editorLeft.getTextField().setColumns(15);
+            m_left.setEditor(editorLeft);
+            m_left.setPreferredSize(new Dimension(125, 25));
 
-            JSpinner.DefaultEditor editorRight = (JSpinner.DefaultEditor)m_right
-                    .getEditor();
-            editorRight.getTextField().setColumns(5);
-            m_right.setModel(createNumberModel(type));
-            m_right.setPreferredSize(new Dimension(75, 25));
+            m_right = new JSpinner(createNumberModel(type));
+            JSpinner.DefaultEditor editorRight = 
+                new JSpinner.NumberEditor(m_right, "0.0##############");
+            editorRight.getTextField().setColumns(15);
+            m_right.setEditor(editorRight);
+            m_right.setPreferredSize(new Dimension(125, 25));
 
             m_borderLeft.setPreferredSize(new Dimension(50, 25));
             m_borderLeft.setLightWeightPopupEnabled(false);
@@ -756,7 +760,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
 
         /**
          * @return left value
-         * @param commit if the value has to be commited first
+         * @param commit if the value has to be committed first
          */
         public double getLeftValue(final boolean commit) {
             if (commit) {
@@ -821,7 +825,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
 
         /**
          * @return right value
-         * @param commit if the value has to be commited first
+         * @param commit if the value has to be committed first
          */
         public double getRightValue(final boolean commit) {
             if (commit) {
