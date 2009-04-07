@@ -95,7 +95,9 @@ public class DuplicateChecker {
      */
     public void addKey(final String s) throws DuplicateKeyException,
             IOException {
-        if (!m_chunk.add(s)) {
+        // bug fix #1737: keys may be just wrappers of very large strings ...
+        // we make a copy, which consist of the important characters only
+        if (!m_chunk.add(new String(s))) {
             throw new DuplicateKeyException(s);
         }
         if (m_chunk.size() >= m_maxChunkSize) {

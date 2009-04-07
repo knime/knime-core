@@ -5,7 +5,7 @@ Bundle-Version: 2.1.0.0018128
 Bundle-ClassPath: workbench-ui-patches.jar,
  workbench-ui.jar
 Bundle-Activator: org.knime.workbench.ui.KNIMEUIPlugin
-Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui,
  org.eclipse.core.resources,

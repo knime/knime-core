@@ -5,7 +5,7 @@ Bundle-ManifestVersion: 2
 Bundle-Version: 2.1.0.0018128
 Bundle-ClassPath: knime-base-patches.jar,
  knime-base.jar
-Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Eclipse-RegisterBuddy: org.knime.core
 Require-Bundle: org.knime.core;visibility:=reexport
 Export-Package: org.knime.base.collection.list.create,
