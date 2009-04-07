@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Workbench UI
 Bundle-SymbolicName: org.knime.workbench.ui;singleton:=true
-Bundle-Version: 2.0.1.0019867
+Bundle-Version: 2.0.2.0020587
 Bundle-ClassPath: workbench-ui-patches.jar,
  workbench-ui.jar
 Bundle-Activator: org.knime.workbench.ui.KNIMEUIPlugin
