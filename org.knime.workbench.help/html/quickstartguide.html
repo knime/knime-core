@@ -2,457 +2,230 @@
 <head>
 <link rel="stylesheet" href="style.css" />
 
-<title>KNIME: Getting Started</title>
+<title>KNIME Quickstart Guide</title>
 </head>
 <body>
-<a name="top"></a>
-<h1><span>KNIME Quickstart Guide</span></h1>
+<h1>KNIME Quickstart Guide</h1>
+<h2>License</h2>
+<p>KNIME is available under a dual licensing model. A <a
+	href="AladdinLicenseForKNIME.html">free public license</a> based on the
+Aladdin Free Public License is available for non-profit use as well as
+for-profit internal use by commercial organizations, provided such
+organizations do not distribute KNIME to third parties in exchange for
+payment. If you wish to distribute KNIME to third parties on a paid
+basis, please <a href="mailto:contact@knime.org">contact us</a> to
+discuss licensing arrangements.</p>
 
+<h2>Versions</h2>
 
-<h3>License</h3>
+<table>
+	<caption>The table describes the KNIME versions and on which
+	platform they are available or not.</caption>
+	<tbody class="products">
+		<tr class="column_title">
 
-KNIME is released under the
-<a href="AladdinLicenseForKNIME.html">Aladdin Free Public
-License.</a>
-If you need another license, please contact us at
-<a href="mailto:contact@knime.org">contact@knime.org</a>
-.
+			<th></th>
+			<th>Linux</th>
+			<th>Windows</th>
+		</tr>
+		<tr>
+			<th>KNIME (32bit)</th>
+			<td><img src="img/quick/supported.png" /></td>
 
+			<td><img src="img/quick/supported.png" /></td>
+		</tr>
+		<tr>
+			<th>KNIME (64bit)</th>
+			<td><img src="img/quick/supported.png" /></td>
+			<td><img src="img/quick/not_supported.png" /></td>
+		</tr>
+		<th>KNIME Developer Version (32bit)</th>
+		<td><img src="img/quick/supported.png" /></td>
+		<td><img src="img/quick/supported.png" /></td>
 
-<h3>Supported Operating Systems</h3>
+		</tr>
+		<th>KNIME Developer Version (64bit)</th>
+		<td><img src="img/quick/supported.png" /></td>
+		<td><img src="img/quick/not_supported.png" /></td>
+		</tr>
+</table>
 
-<ul>
-	<li>Windows (32bit)</li>
-	<li>Linux (32bit)</li>
-	<li>Linux (64bit)</li>
-</ul>
+<h2>Welcome Screen / Additional features</h2>
+<p>When KNIME is started for the first time a welcome screen
+appears.</p>
 
-<h2>Installing KNIME</h2>
+<p><img src="img/quick/KNIME_welcome_small.png" /></p>
 
-<p>The installation procedure is illustrated for the standalone
-version of KNIME.</p>
+<p>From here you can
+<ol>
 
-<h3>Windows users</h3>
-<p>Download the standalone version of KNIME from <a
-	href="http://www.knime.org/download/win32/knime_win32.x86.zip">
-http://www.knime.org/download/win32/knime_win32.x86.zip</a>. Extract the
-downloaded zip file to any directory on which you have write
-permissions.</p>
-
-<p>This is all that is needed to install KNIME. There is no need to
-execute a Setup application or set any variables. KNIME will not leave
-many traces in your system.</p>
-
-<h3>Linux users</h3>
-<p>Download the standalone version of KNIME from <a
-	href="http://www.knime.org/download/linux/knime_linux.gtk.x86.tar.gz">
-http://www.knime.org/download/linux/knime_linux.gtk.x86.tar.gz</a>. Extract
-the downloaded archive to any directory on which you have write
-permissions.</p>
-<p>This is all that is needed to install KNIME. There is no need to
-execute a Setup application or set any variables. KNIME will not leave
-many traces in your system.</p>
-
-
-<h3>Sample data sets</h3>
-
-<p>After installation, in the root directory of KNIME you will find
-the sub directory "IrisDataset", which contains a small dataset on iris
-plants. The dataset has five columns (attributes). Each row represents a
-single iris plant. The first four columns describe the width and length
-of the two characteristical leaves of an iris plant. The fifth column
-describes the class the iris belongs to. This dataset represents a
-simple classification dataset and can easily be used to get to know to
-the basics of KNIME.</p>
-
-<p>More example datasets can be downloaded from our web site at <a
-	href="http://www.knime.org/download/datasets.zip">http://www.knime.org/download/datasets.zip</a>.
+	<li>Open KNIME workbench: opens the KNIME workbench to immediately
+	start exploring KNIME, build own workflows and explore your data.</li>
+	<li>Get additional nodes: in addition to the ready-to-start basic
+	KNIME installation there are additional plug-ins for KNIME e.g. an R
+	and Weka integration, or the integration of the Chemistry Development
+	Kit with additional nodes for the processing of chemical structures,
+	compounds, etc. You can download these features later from within KNIME
+	(File, Update KNIME...) as well</li>
+</ol>
 </p>
 
-<p><a href="#top">&uarr; Back to top</a></p>
+<h2>Workbench overview</h2>
+<p>The KNIME Workbench is organized as follows:</p>
 
-<h2>Starting the Application</h2>
+<p><img src="img/quick/workbench_small.png" /></p>
 
-<p>In the KNIME root directory the application is started via</p>
-<ul>
-	<li><em>knime.exe</em> (for Windows) and</li>
-	<li><em>knime.sh</em> (Linux).</li>
-</ul>
-<p>After the application has been started the KNIME application
-window appears (the screen shots in the following haven been taken from
-the Windows version).</p>
+<h2>Building a workflow</h2>
+<p>A workflow is built by dragging nodes from the Node Repository to
+the Workflow Editor and connecting them. Nodes are the basic processing
+units of a workflow. Each node has a number of input- and/or output
+ports. Data (or a model) is transfered via a connection from an out-port
+to the in-port of another node.</p>
 
-<p><img
-	src="img/quick/emptyWorkbench_small.png" alt="empty KNIME workflow" />
-</p>
+<h3>Node Status</h3>
+<p>When a node is dragged to the workflow editor the status light
+lights up red, which means that the node has to be configured in order
+to be able to be executed. A node is configured by right-clicking it,
+choosing "Configure", and adjusting the necessary settings in the node's
+dialog.</p>
 
-<p>KNIME is implemented as an Eclipse Plugin. The current KNIME
-product version 1.2.1 is running on the Eclipse version 3.2. For details
-on using the Eclipse workbench we refer to the User Guide at <a
-	href="http://www.eclipse.org/documentation/">http://www.eclipse.org/documentation/</a>
-or the "Help" menu of KNIME which also includes the Eclipse workbench
-help.</p>
-<p>In the following the different parts of the KNIME workbench (see
-the above screenshot) are described.</p>
+<p><img src="img/quick/configure_execute.png" /></p>
 
-<h3>Editor Window:</h3>
-<p>The big window in the middle is the editor window in which data
-analysis flows are constructed.</p>
+<p>When the dialog is closed by clicking the "OK" button, the node
+is configured and the status light changes to yellow: the node is ready
+to be executed. Right-click the node again shows an enabled "Execute"
+option; clicking it will execute the node and the result of this node
+will be available at the out-port. After a successful execution the
+stauts light of the node is green. The result(s) can be inspected by
+exploring the out-port view(s): the last entries in the context menu
+open them.</p>
 
+<h3>Ports</h3>
+<p>Ports on the left are input ports, where the data from the
+out-port of the predecessor node is provided. Ports on the right are
+out-ports. The result of the node's operation on the data is provided at
+the out-port to successor nodes. A tooltip provides information about
+the output of the node, further information can be found in the node
+description. Nodes are typed such that only ports of the same type can
+be connected.</p>
 
-<h3>Node Repository:</h3>
-<p>The lower-left <em>Node Repository</em> provides you with a view
-that lists all nodes (modules), grouped in several category folders.
-From here you can Drag&amp;Drop nodes to the editor window as you need
-them.</p>
+<dl>
+	<dt>Data Port</dt>
+	<dd>The most common type is the data port (a white triangle) which
+	transfers flat data tables from node to node.</dd>
+	<dd><img src="img/quick/data_ports.png" /></dd>
 
-<h3>Console:</h3>
-<p>The <em>Console</em> view, in the lower part of the screen,
-displays error and warning messages. They are also sent to the log file.
-You may change the log level (DEBUG, WARN, ERROR) under File -&gt;
-Preferences -&gt; KNIME.</p>
+	<dt>Database Port</dt>
+	<dd>Nodes executing commands inside a database are recognized by
+	their database ports (brown square):</dd>
+	<dd><img src="img/quick/database_port.png" /></dd>
 
+	<dt>PMML Ports</dt>
+	<dd>Data Mining nodes learn a model which is passed to the
+	referring predictor node via a blue squared PMML port.</dd>
+	<dd><img src="img/quick/pmml_ports.png" /></dd>
 
-<h3>Node Description:</h3>
-<p>The <em>Node Description</em> view provides information about
-selected nodes (this view is empty in the picture above, because no node
-has been selected yet). It also shows the content of a node category if
-a category has been selected in the <em>Node Repository</em> view.</p>
+	<dt>Other Ports</dt>
+	<dd>Whenever a node provides data that does not fit a flat data
+	table structure, a general purpose port for structured data is used
+	(dark cyan square). All ports not listed above are known as "unknown"
+	types (gray square).</dd>
+	<dd><img src="img/quick/aspo_port.png" /> <img
+		src="img/quick/unknown_port.png" /></dd>
+</dl>
 
-<h3>Workflow Projects Navigator:</h3>
-<p>The workflow projects navigator window shows all currently
-defined workflow projects. The context menu of the navigator allows you
-to create new projects, import existing workflows into the workbench and
-export own workflows. Each project is saved in the workspace. The
-workspace is located in your KNIME installation directory by default
-(see below how to change this). On the file system a workflow project
-consist of several files and folders to store the current status of a
-flow; this structure is not visible in the <em>Workflow Projects
-Navigator</em> as it represents internal information not intended to be
-changed manually.</p>
+<h2>Uninstalling</h2>
+<p>KNIME is uninstalled from your system by simply deleting the
+installation directory. By default the workspace is also in this
+directory. If you have chosen a different location for the workspace be
+sure to delete this directory as well.</p>
 
-<h2>Getting More Functionality</h2>
-<p>KNIME allows to easily integrate new modules, i.e. analysis
-nodes. Available are node extensions at our Update Site. A convenient
-way to download these new KNIME features is via the KNIME update
-mechanism. In KNIME select "File", "Update KNIME..." (or in the
-Developer Version it is "Help", "Software Updates", "Find and
-Install..."). The Update Wizard opens. If you expand the KNIME site, you
-see three main categories, (dependent on whether you use KNIME or the
-KNIME developer version): KNIME Base Package, (KNIME Development
-Wizard), KNIME Extensions. You may now select the features you want to
-install. If you select a feature and receive an error about a
-configuration problem, click the "Select Required" button. This
-automatically selects all required features. You need to restart KNIME
-after installing new extensions in order to get them activated.</p>
-
-<p><a href="#top">&uarr; Back to top</a></p>
-
-<h2>Building a Data Flow</h2>
-
-<p>You build a flow by dragging and dropping nodes from the Node
-Repository into the Editor window and connecting them. Nodes are the
-basic processing units of a workflow. Each node has input and/or output
-ports. Data is transported through connections from these node output
-ports into connected input ports. After positioning the nodes, you fully
-connect the inputs of each node to outputs of a predecessor node. Click
-on an output port and drag the connection to the input port that should
-receive data from this output. Feedback loops are not permitted. Model
-generating nodes also have model ports to transfer prediction or other
-models (blue squares). Model ports should only be connected to ports
-expecting the same kind of model.</p>
-
-<h3>Nodes</h3>
-
-<p><img src="img/quick/kMeansNode.png" alt="A sample node icon" />
-Nodes in the editor appear with their icon, their name, their ports and
-a traffic-light status display:</p>
-
-<!-- 
-<p>The background color indicates different node types. The available types are: Source
-(any kind of data source, orange), Sink (any kind of persisting nodes, red),
-Manipulator (Data transforming nodes, yellow), Miner (light-green), Predictor (dark-green),
-View (nodes that display data, blue), Meta (nodes that can contain other
-nodes, turquoise) and Other (brown).</p>
--->
-
-<p>Ports on the left are input ports; the ones on the right are
-output ports. Ports with a triangle are data ports. Data model ports are
-represented by small blue squares. The status display has three states:
-red, amber and green.</p>
-
-<p>The red light means that the node is not ready to execute yet. It
-is either not fully connected, some settings may be missing or
-incorrect, or the state of the predecessor node is also red. User action
-is required to set up this node.</p>
-
-<p>When all settings have been made and all incoming ports are
-connected, the node is ready to be executed and shows the amber light.</p>
-
-<p>When a node is executed (i.e., the node has read the data from
-its input ports, performed its task - such as filtering, transforming,
-or clustering data, etc. - and has sent the result data and/or models to
-its output ports), the status bar shows a green light.</p>
-
-<h3><a name="ColorManager_Node">ColorManager Node</a></h3>
-
-<p>A central KNIME node is the <em>Color Manager</em> node (in the
-categories <em>Data Views</em> / <em>Property</em>) required to color
-data rows. This color affects many views and helps to differentiate the
-data. If you insert this node into the flow, the data rows will be coded
-according to specific colors. In the settings of this node, colors are
-mapped to values of an attribute. The color of a displayed data row
-depends on the row's value for this attribute.</p>
-
-<h3>Configuring Nodes</h3>
-
-<p>After the flow is fully connected, nodes still showing a red
-light need to be configured. If a node shows an amber state after
-connecting it, the default settings have been applied. A right-click on
-the node opens the context menu; the item <q>Configure</q> shows the
-node's individual settings dialog. Adjust the settings as needed (refer
-to the <em>Node Description</em> view for special node settings) and
-close the dialog with <q>OK</q>. Re-configuring a previously executed
-node resets it (i.e. all data or models computed during execution and
-available at the output ports will be discarded). The user settings from
-the dialog are stored with the flow when it is saved.</p>
-
-<p><a href="#top">&uarr; Back to top</a></p>
-
-<h3>Executing a Data Flow</h3>
-
-<p>When all nodes show an amber status the flow can be executed.
-During execution a node performs its specific task (a filter node starts
-filtering, a decision tree node builds its data model). Nodes are
-executed from left to right, i.e. a node can only be executed once all
-of its connected predecessors have finished executing. Execution is
-triggered from the context menu (right-click) of a node. If you execute
-a node at the end of the flow, the workbench will first execute all
-predecessor nodes before the selected node is executed. You can select
-multiple nodes in the flow and trigger execution for all of them;
-optionally you can execute all executable nodes with the corresponding
-button <img width="16" height="16" src="img/quick/executeAll.png"
-	alt="Execute all button" /> in the action bar. The workbench
-determines the order in which the nodes have to be executed and executes
-nodes in parallel (each in its own thread), if possible. During
-execution, the status indicator is replaced by a progress bar (see the
-left Row Sampling node below) and a progress message can be seen by
-hovering the mouse over the progress bar. A running node can be canceled
-using the context menu. Successfully executed nodes switch to a green
-status. Saving the workflow after execution stores all results. If
-execution of a node was not able to be finished, (e. g. due to
-cancelation or errors in the incoming data), an icon will appear in the
-nodes symbol and a tooltip will display the warning or error message if
-you move the mouse over that node's warning or error sign (see the right
-Row Sampling node below).</p>
-<img src="img/quick/RowSampling_running.png"
-	alt="Running node with progress bar and tooltip showing progress message" />
-<img src="img/quick/RowSampling_canceled.png"
-	alt="Canceled node with tooltip showing warning message" />
-
-<p><a href="#top">&uarr; Back to top</a></p>
-
-<h3>Displaying the Results</h3>
-
-<p>Most nodes provide a view that displays their computed results.
-To open a node's view, select the view from the context menu
-(right-click) of the node. Some nodes may have multiple views, providing
-different representations of their results. You can always open several
-instances of a view to allow for different views of the same data. Most
-views will only be displayed once the node has been executed. The color
-of the data displayed in the views depends on the settings in the <em>Color
-Manager</em> node. This should be inserted into the flow as a predecessor of
-the view node(see Section <a href="#ColorManager_Node">Color Manager
-Node</a>). If you do not include the <em>Color Manager</em>, all data is
-displayed in gray.</p>
-
-<h3>HiLiting</h3>
-
-<p>If you select data in one view and hilite it, you can have it
-hilited automatically in all other available views of the workflow that
-support this function. Supporting views will either have a menu item in
-the window menu bar or a context menu with a hilited entry. The hilited
-data points are emphasized by orange color in all views showing the same
-data, independent of whether the corresponding node is positioned
-towards the beginning or towards the end of the flow. This even works
-across different data models (if the transforming node supports it).</p>
-
-<p><a href="#top">&uarr; Back to top</a></p>
-
-<h2>Uninstalling the Application</h2>
-
-<p>If you want to delete KNIME from your system, first, close the
-application, and then simply delete all files from your installation
-directory: the directory to which you extracted the files.</p>
-
-<p><a href="#top">&uarr; Back to top</a></p>
-
-<h2>A Simple Example Flow</h2>
-
+<h2>Getting Started</h2>
 <p>We now want to take you step-by-step through the process of
-building a small, simple work flow: we read in data from an ASCII file,
-cluster the data and display the data in a table and a scatter plot.
-After we execute this flow we will examine the data model that has been
-built. We assume you have just started KNIME with an empty worksheet.</p>
+building a small, simple workflow: we read in data from an ASCII file,
+assign color to it, cluster the data and display the data in a table and
+a scatter plot. After we execute this flow we will examine the data
+model that has been built. We assume you have just started KNIME with an
+empty workflow.</p>
 
-<h4>Adding Nodes</h4>
+<h3>Adding Nodes</h3>
+<p>In the Node Repository expand the &quot;IO&quot; and the contained &quot;Read&quot;
+category as depicted below (left picture) and drag&amp;drop the <i>File
+Reader</i> icon to the <i>Workflow Editor</i> window.</p>
 
-<p>In the <em>Node Repository</em> expand the <em>IO</em> and the
-contained <em>Read</em> category as depicted below (left side) and
-Drag&amp;Drop the <em>File Reader</em> icon into the Editor window.</p>
+<p><img src="img/quick/node_repositories.png" /></p>
+<p>The next node for now will be the k-Means clustering algorithm.
+Expand the &quot;Mining&quot; category followed by the &quot;Clustering&quot; category, and
+then drag the <i>K-Means</i> node to the flow (picture on the right).</p>
+<p>In the search box of the <i>Node Repository</i> enter &quot;color&quot; and
+press Enter. This limits the nodes shown to the ones with &quot;color&quot; in
+their name (see figure above in the middle). Drag the <i>Color
+Manger</i> node to the workflow (this node will define the color in the data
+views later). To see all nodes in the repository again, press the ESC or
+Backspace key in the search field of the <i>Node Repository</i>. Now,
+drag the <i>Interactive Table</i> and the <i>Scatter Plot</i> from the
+"Data Views" category to the <i>Workflow Editor</i> and position it to
+the right of the <i>Color Manager</i> node.</p>
 
-<img src="img/quick/NodeRepositoryAll.png" alt="Node Repository" />
-
-<p>The next node for now will be the <em>K-Means</em> clustering
-algorithm. Expand the <em>Mining</em> category followed by the <em>Clustering</em>
-category, and then drag the <em>K-Means</em> node to the flow.</p>
-<p>In the search box of the <em>Node Repository</em>, enter <q>color</q>
-and press Enter. This limits the nodes shown to the ones with <q>color</q>
-in their name (see figure above in the middle). Pull the <em>Color
-Manger Node</em> into the workflow (this node will define the color in the
-data views later). To get all nodes back in the repository, press ESC in
-the search field of the Repository View. Now, drag the <em>Interactive
-Table</em> and the <em>Scatter Plot</em> from the <em>Data Views</em>
-category to the Editor Window and position it to the right of the Color
-Manager node.</p>
-
-<p><a href="#top">&uarr; Back to top</a></p>
-
-<h4>Connecting Nodes</h4>
-
+<h3>Connecting Nodes</h3>
 <p>Now you need to connect the nodes in order to get the data
 flowing. Click an output port and drag the connection to an appropriate
 input port. Complete the flow as pictured below:</p>
+<p><img src="img/quick/kmeans_flow.png" /></p>
+<p>Your nodes will not show a green status, as long as they are not
+configured and executed.</p>
 
-<div id="screenshot"><img src="img/quick/kmeans_flow.png"
-	alt="The above described workflow" /></div>
+<h3>Configuring Nodes</h3>
+<p>Fully connected nodes with a red status icon need to be
+configured. Start with the <i>File Reader</i>, right-click it and select
+&quot;Configure&quot; from the menu. Navigate to the &quot;IrisDataSet&quot; directory
+located in the KNIME installation directory. Select the data.all file
+from this location. The <i>File Reader</i>'s preview table shows a
+sample of the data.</p>
+<p><img src="img/quick/FileReaderDialog_2.png" /></p>
+<p>Click OK to close the dialog of the <i>File Reader</i> node. Once
+the node has been configured correctly, it switches to yellow (meaning
+ready for execution). After that, the <i>K-Means</i> node immediately
+turns yellow, as its default settings are applied. To be sure, that the
+default settings fit your needs, open the dialog and inspect the default
+settings.<br />
 
-<p>Of course, your nodes will not show a green status, as long as
-they are not configured and executed.</p>
+In order to configure the <i>Color Manager</i> node you must first
+execute the <i>K-Means</i> node. After execution all nominal values and
+the ranges of all attributes are known: this meta information is
+propagated to the successor nodes. The <i>Color Manager</i> needs this
+data before it can be configured. Once the <i>K-Means</i> node is
+executed, open the configuration dialog of the <i>Color Manger</i> node.</p>
 
-<p><a href="#top">&uarr; Back to top</a></p>
+<p><img src="img/quick/ColorManagerDialog_2.png" /></p>
 
-<h4>Configuring Nodes</h4>
+<h3>Executing Nodes</h3>
+<p>Now execute the <i>Scatter Plot</i> node: the workbench executes
+all predecessor nodes for you. In a larger, more complex flow you could
+select multiple nodes and trigger execution for all of them. The
+workflow manager executes the nodes as needed, if possible in parallel.
+</p>
+<h3>Inspecting the Results</h3>
+<p>In order to examine the data and the results, open the nodes'
+views. In our example, the <i>K-Means</i>, the <i>Interactive Table</i>
+and the <i>Scatter Plot</i> have views. Open them from the nodes'
+context menus.</p>
 
-<p>Fully connected nodes still showing a red status icon need to be
-configured.</p>
-
-<p>Start with the File Reader, right-click it and select <em>Configure</em>
-from the menu. Navigate to the &quot;IrisDataSet&quot; directory located
-in the KNIME root directory. Select the <em>data.all</em> file from this
-location. The dialog tries to guess the settings for the selected file.
-For purposes this data set, these settings are just fine. The File
-Reader's preview table shows a sample of the data. Press <em>OK</em> to
-store the settings in the file reader node.</p>
-
-
-<img src="img/quick/FileReaderDialog.png" alt="FileReader dialog" />
-
-<p>You will see that once the node has been configured correctly, it
-switches to yellow (meaning ready for execution). After that, the <em>K-Means</em>
-node will immediately turn yellow, since its default settings will be
-applied. To be sure, that the default settings fit your needs, open the
-dialog and inspect the default settings.</p>
-<p>In order to configure the Color Manager node you must first
-execute the K-Means node. After execution all possible values and ranges
-of all attributes are known: this meta information is propagated to the
-successor nodes. The Color Manager needs this data before it can be
-configured: Right-click on the K-Means node and choose Execute. Once it
-has finished, open the configuration dialog of the Color Manger node.</p>
-<p>Select the column that contains the attribute you want to use for
-coloring and assign a color to each nominal value. The Color Manager, by
-default, chooses the first nominal column (here the String column with
-the class information) and assigns default colors to it. Choose the
-column containing the cluster and click OK to close the dialog. You
-might want to change the assigned color: select the attribute value and
-choose a color in the color chooser panel below. The color will be
-updated immediately. (Of course, also numeric data can be colored).</p>
-
-
-<img src="img/quick/ColorManagerDialog.png" alt="Color Manager dialog" />
-
-<p>The successor nodes do not need to be configured. The <em>Interactive
-Table</em> node is a pure view node (it shows the data in a table) and has no
-user settings, while the <em>K-Means</em> and the <em>Scatter Plot</em>
-nodes apply default settings.</p>
-
-<p><a href="#top">&uarr; Back to top</a></p>
-
-<h4>Executing Nodes</h4>
-
-<p>Now execute the <em>Scatter Plot</em> node by selecting <em>Execute</em>
-from its context menu. The workbench will execute all predecessor nodes
-for you. In a larger, more complex flow you could select multiple nodes
-and trigger execution for all of them. The workflow manager will execute
-the nodes as needed, each in its own thread, in parallel, if possible.<br />
-Note, that the Interactive Table node is executed automatically. It does
-not perform any time-consuming task during execute (it simply displays
-data); therefore it executes itself whenever its successor has been
-executed. This is a convenience feature.</p>
-
-<p><a href="#top">&uarr; Back to top</a></p>
-
-<h4>Inspecting the Results</h4>
-
-<p>In order to examine the data and the results, you need to open
-the nodes' views. In our example, the K-Means, the Interactive Table and
-the Scatter Plot have views. Open them from the nodes' context menus as
-displayed in the figure of the flow. <br />
-<em>The table view</em>: displays the data vectors in rows. Each row is
-marked with the color set by the color manager node. There are several
-renderers available for different data types, right click on the type
-icon ( <img src="img/quick/double_type.png" alt="Double type symbol" />
-in the column header in the table to try them out. The column with the
-class labels is a String column ( <img src="img/quick/string_type.png"
-	alt="String type symbol" />); instead of renderes this column just
-provides a list with all possible values.<br />
-<em>The K-Means view</em>: shows the resulting centroids.<br />
-<em>The Scatter Plot view</em>: shows the data points with the colors
-assinged to the clusters.<br />
+<h4>Hiliting</h4>
+<p>Select some points in the scatter plot and choose &quot;Hilite
+Selected&quot; from the &quot;Hilite&quot; menu. The hilited points are marked with an
+orange border. You will also see the hilited points in the table view.
+The propagation of the hilite status works for all views in all branches
+of the flow displaying the same data.</p>
+<p><img src="img/quick/kmeans_views_small.png" /><br />
 </p>
 
-<br />
-<em>Hiliting</em>
-
-<p>Select some points in the scatter plot and choose <em>Hilite
-Selected</em> from the <em>Hilite</em> menu. The hilited points are marked
-with an orange border. You will also see the hilited points in the table
-view, where the row background of hilited rows is colored with orange as
-displayed in the figure below. The propagation of the hilite status
-works for all views in the flow displaying the same data.</p>
-
-<div id="screenshot">
-<img
-	src="img/quick/kmeans_views_small.png"
-	alt="The above described workflow with opened views" />
-	</div>
-
-<p><a href="#top">&uarr; Back to top</a></p>
-
-<h2>Embark on your own voyage of discovery!</h2>
-
-<p>Now this was just a very simple example to get you started. There
-is a lot more to discover. Play with it! We tried to keep it simple and
-intuitive. We would love to receive your feedback and find out what you
-liked and what you did not like; things you find awkward or things that
-did not seem to work. If you want to report a problem, it would be
-helpful if you could provide us with a stack trace. This can be found in
-the log file (&lt;workspace_dir&gt;/.metadata/knime/knime.log). <br />
-To report a problem: send an email to <a href="mailto:contact@knime.org">contact@knime.org</a>
-and be sure to include:</p>
-
-<ul>
-	<li>a description on how to reproduce the problem,</li>
-	<li>the log file from the workspace the problem occurred
-	(&lt;workspace_dir&gt;/.metadata/knime/knime.log), and</li>
-	<li>the workflow project (you can export any workflow project by
-	right click on the project and select 'Export KNIME workflow...')</li>
-	<li>note that the data you used is contained in the workflow if
-	you save it. Be sure that you don't send confidential data.</li>
-</ul>
-
-
-<p><a href="#top">&uarr; Back to top</a></p>
+<h3>Embark on Your Own Voyage of Discovery!</h3>
+<p>This was just a very simple example to get you started. There is
+a lot more to discover. Play with it! We tried to keep it simple and
+intuitive. It would be great to receive your feedback and find out what
+you liked and what you did not like; things you find awkward or things
+that did not seem to work.</p>
 
 </body>
 </html>
