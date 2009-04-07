@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<feature id="org.knime.features.base" image="icons/knime64.gif" label="KNIME" plugin="org.knime.product" provider-name="KNIME GmbH, Konstanz, Germany" version="2.0.1.0019867">
+<feature id="org.knime.features.base" image="icons/knime64.gif" label="KNIME" plugin="org.knime.product" provider-name="KNIME GmbH, Konstanz, Germany" version="2.0.2.0020587">
 
    <description url="http://www.knime.org/">
       This features containes KNIME. All plugins needed to run the
