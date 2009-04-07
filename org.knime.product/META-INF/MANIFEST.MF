@@ -5,7 +5,7 @@ Bundle-Version: 2.0.1.0019867
 Bundle-ClassPath: knime-product-patches.jar,
  knime-product.jar
 Bundle-Activator: org.knime.product.ProductPlugin
-Bundle-Vendor: Chair for Bioinformatics and Information Mining, Prof. Berthold, University of Konstanz, Germany
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.core.resources,

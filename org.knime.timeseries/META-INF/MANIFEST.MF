@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: DummyNode-Node extension for KNIME Workbench
 Bundle-SymbolicName: org.knime.timeseries; singleton:=true
 Bundle-Version: 2.0.1.0019867
-Bundle-Vendor: KNIME GmbH
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Bundle-Localization: plugin
 Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.core,

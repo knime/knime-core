@@ -5,7 +5,7 @@ Bundle-Version: 2.0.1.0019867
 Bundle-ClassPath: workbench-help-patches.jar,
  workbench-help.jar
 Bundle-Activator: org.knime.workbench.help.KNIMEHelpPlugin
-Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Bundle-Localization: plugin
 Provide-Package: org.knime.workbench.help
 Require-Bundle: org.eclipse.core.runtime,

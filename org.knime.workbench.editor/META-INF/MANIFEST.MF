@@ -5,7 +5,7 @@ Bundle-Version: 2.0.1.0019867
 Bundle-ClassPath: workbench-editor-patches.jar,
  workbench-editor.jar
 Bundle-Activator: org.knime.workbench.KNIMEEditorPlugin
-Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Provide-Package: org.knime.workbench,
  org.knime.workbench.editor2,
  org.knime.workbench.editor2.actions,

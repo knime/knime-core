@@ -12,7 +12,7 @@ Eclipse-LazyStart: true
 Bundle-ClassPath: knime-sun-patches.jar,
  knime-sun.jar,
  lib/tools.jar
-Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.knime.ext.sun,
  org.knime.ext.sun.nodes.script,
  org.knime.ext.sun.nodes.script.expression
