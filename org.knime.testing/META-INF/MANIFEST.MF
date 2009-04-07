@@ -4,7 +4,7 @@ Bundle-Name: Test-Node extension for KNIME Workbench
 Bundle-SymbolicName: org.knime.testing; singleton:=true
 Bundle-Version: 2.1.0.0018128
 Bundle-ClassPath: knime-testing.jar
-Bundle-Vendor: 
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Bundle-Localization: plugin
 Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.core,
