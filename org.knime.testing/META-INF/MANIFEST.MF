@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Test-Node extension for KNIME Workbench
 Bundle-SymbolicName: org.knime.testing; singleton:=true
-Bundle-Version: 2.0.1.0019867
+Bundle-Version: 2.0.2.0020587
 Bundle-ClassPath: knime-testing.jar
 Bundle-Vendor: 
 Bundle-Localization: plugin
