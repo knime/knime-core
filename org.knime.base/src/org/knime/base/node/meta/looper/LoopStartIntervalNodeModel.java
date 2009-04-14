@@ -71,10 +71,18 @@ public class LoopStartIntervalNodeModel extends NodeModel implements
         if ((m_settings.from() > m_settings.to()) ^ (m_settings.step() < 0)) {
             throw new InvalidSettingsException("From must be smaller than to");
         }
-        pushScopeVariableDouble("loop_from", m_settings.from());
-        pushScopeVariableDouble("loop_to", m_settings.to());
-        pushScopeVariableDouble("loop_step", m_settings.step());
-        pushScopeVariableDouble("loop_value", Double.NaN);
+
+        if (m_settings.integerLoop()) {
+            pushScopeVariableInt("loop_from", (int)m_settings.from());
+            pushScopeVariableInt("loop_to", (int)m_settings.to());
+            pushScopeVariableInt("loop_step", (int)m_settings.step());
+            pushScopeVariableInt("loop_value", (int)Math.round(m_value));
+        } else {
+            pushScopeVariableDouble("loop_from", m_settings.from());
+            pushScopeVariableDouble("loop_to", m_settings.to());
+            pushScopeVariableDouble("loop_step", m_settings.step());
+            pushScopeVariableDouble("loop_value", m_value);
+        }
         return inSpecs;
     }
 
@@ -100,10 +108,19 @@ public class LoopStartIntervalNodeModel extends NodeModel implements
             // }
         }
         // let's also put the counts on the stack for someone else:
-        pushScopeVariableDouble("loop_from", m_settings.from());
-        pushScopeVariableDouble("loop_to", m_settings.to());
-        pushScopeVariableDouble("loop_step", m_settings.step());
-        pushScopeVariableDouble("loop_value", m_value);
+
+        if (m_settings.integerLoop()) {
+            pushScopeVariableInt("loop_from", (int)m_settings.from());
+            pushScopeVariableInt("loop_to", (int)m_settings.to());
+            pushScopeVariableInt("loop_step", (int)m_settings.step());
+            pushScopeVariableInt("loop_value", (int)Math.round(m_value));
+        } else {
+            pushScopeVariableDouble("loop_from", m_settings.from());
+            pushScopeVariableDouble("loop_to", m_settings.to());
+            pushScopeVariableDouble("loop_step", m_settings.step());
+            pushScopeVariableDouble("loop_value", m_value);
+        }
+
         // increment counter for next iteration
         m_value += m_settings.step();
         return inData;
@@ -132,7 +149,7 @@ public class LoopStartIntervalNodeModel extends NodeModel implements
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_settings.loadSettingsFrom(settings);
+        m_settings.loadSettings(settings);
     }
 
     /**
@@ -167,7 +184,7 @@ public class LoopStartIntervalNodeModel extends NodeModel implements
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         LoopStartIntervalSettings s = new LoopStartIntervalSettings();
-        s.loadSettingsFrom(settings);
+        s.loadSettings(settings);
 
         if ((s.from() > s.to()) ^ (s.step() < 0)) {
             throw new InvalidSettingsException("From must be smaller than to");

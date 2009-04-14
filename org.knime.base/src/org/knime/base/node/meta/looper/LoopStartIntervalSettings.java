@@ -23,6 +23,7 @@
  */
 package org.knime.base.node.meta.looper;
 
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
@@ -37,6 +38,26 @@ public class LoopStartIntervalSettings {
     private double m_to = 1;
 
     private double m_step = 0.01;
+
+    private boolean m_integerLoop;
+
+    /**
+     * Returns if the loop should iterate over integer and not doubles.
+     *
+     * @return <code>true</code> if the loop is over integers
+     */
+    public boolean integerLoop() {
+        return m_integerLoop;
+    }
+
+    /**
+     * Sets if the loop should iterate over integer and not doubles.
+     *
+     * @param il <code>true</code> if the loop is over integers
+     */
+    public void integerLoop(final boolean il) {
+        m_integerLoop = il;
+    }
 
     /**
      * Returns the interval's start value.
@@ -97,10 +118,25 @@ public class LoopStartIntervalSettings {
      *
      * @param settings a node settings object
      */
-    public void loadSettingsFrom(final NodeSettingsRO settings) {
+    public void loadSettingsForDialog(final NodeSettingsRO settings) {
         m_from = settings.getDouble("from", 0);
         m_to = settings.getDouble("to", 1);
         m_step = settings.getDouble("step", 0.01);
+        m_integerLoop = settings.getBoolean("integerLoop", false);
+    }
+
+    /**
+     * Loads the settings from the node settings object.
+     *
+     * @param settings a node settings object
+     * @throws InvalidSettingsException if some settings are missing
+     */
+    public void loadSettings(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        m_from = settings.getDouble("from");
+        m_to = settings.getDouble("to");
+        m_step = settings.getDouble("step");
+        m_integerLoop = settings.getBoolean("integerLoop");
     }
 
     /**
@@ -112,5 +148,6 @@ public class LoopStartIntervalSettings {
         settings.addDouble("from", m_from);
         settings.addDouble("to", m_to);
         settings.addDouble("step", m_step);
+        settings.addBoolean("integerLoop", m_integerLoop);
     }
 }

@@ -26,8 +26,10 @@ package org.knime.base.node.meta.looper;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
 import org.knime.core.data.DataTableSpec;
@@ -49,6 +51,10 @@ public class LoopStartIntervalNodeDialog extends NodeDialogPane {
 
     private final JTextField m_step = new JTextField(10);
 
+    private final JRadioButton m_doubleLoop = new JRadioButton("double");
+
+    private final JRadioButton m_integerLoop = new JRadioButton("integer");
+
     private final LoopStartIntervalSettings m_settings =
             new LoopStartIntervalSettings();
 
@@ -61,24 +67,38 @@ public class LoopStartIntervalNodeDialog extends NodeDialogPane {
 
         c.gridx = 0;
         c.gridy = 0;
-        c.anchor = GridBagConstraints.NORTHEAST;
+        c.anchor = GridBagConstraints.NORTHWEST;
         p.add(new JLabel("From   "), c);
         c.gridx = 1;
         p.add(m_from, c);
 
         c.gridx = 0;
         c.gridy++;
-        c.anchor = GridBagConstraints.NORTHEAST;
+        c.anchor = GridBagConstraints.NORTHWEST;
         p.add(new JLabel("To   "), c);
         c.gridx = 1;
         p.add(m_to, c);
 
         c.gridx = 0;
         c.gridy++;
-        c.anchor = GridBagConstraints.NORTHEAST;
+        c.anchor = GridBagConstraints.NORTHWEST;
         p.add(new JLabel("Step   "), c);
         c.gridx = 1;
         p.add(m_step, c);
+
+
+        c.gridx = 0;
+        c.gridy++;
+        c.anchor = GridBagConstraints.NORTHWEST;
+        p.add(new JLabel("Loop variable is   "), c);
+        c.gridx = 1;
+        p.add(m_doubleLoop, c);
+        c.gridy++;
+        p.add(m_integerLoop, c);
+
+        ButtonGroup bg = new ButtonGroup();
+        bg.add(m_doubleLoop);
+        bg.add(m_integerLoop);
 
         addTab("Standard settings", p);
     }
@@ -89,10 +109,12 @@ public class LoopStartIntervalNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        m_settings.loadSettingsFrom(settings);
+        m_settings.loadSettingsForDialog(settings);
         m_from.setText(Double.toString(m_settings.from()));
         m_to.setText(Double.toString(m_settings.to()));
         m_step.setText(Double.toString(m_settings.step()));
+        m_integerLoop.setSelected(m_settings.integerLoop());
+        m_doubleLoop.setSelected(!m_settings.integerLoop());
     }
 
     /**
@@ -104,6 +126,7 @@ public class LoopStartIntervalNodeDialog extends NodeDialogPane {
         m_settings.from(Double.parseDouble(m_from.getText()));
         m_settings.to(Double.parseDouble(m_to.getText()));
         m_settings.step(Double.parseDouble(m_step.getText()));
+        m_settings.integerLoop(m_integerLoop.isSelected());
         m_settings.saveSettingsTo(settings);
     }
 }
