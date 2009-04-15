@@ -32,5 +32,18 @@ public interface HeadlessPreferencesConstants {
 
     /** Preference constant: directory for temporary files. */
     public static final String P_TEMP_DIR = "knime.tempDir";
+    
+    /* --- Master Key constants --- */
+    
+    /** Preference constant if the master key dialog was opened. */
+    public static final String P_MASTER_KEY_DEFINED 
+        = "knime.master_key.defined";
+    /** Preference constant if a master key should be used. */
+    public static final String P_MASTER_KEY_ENABLED 
+        = "knime.master.key.enabled";
+    /** Preference constant to store the master key flag during a session. */
+    public static final String P_MASTER_KEY_SAVED = "knime.master_key.saved";
+    /** Preference constant to store the master key during a session. */
+    public static final String P_MASTER_KEY = "knime.master_key";
 
 }
