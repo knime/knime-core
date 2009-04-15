@@ -28,6 +28,7 @@ import javax.crypto.SecretKey;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -36,10 +37,10 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
-import org.knime.core.util.EncryptionKeySupplier;
 import org.knime.core.util.KnimeEncryption;
-import org.knime.workbench.ui.KNIMEUIPlugin;
-import org.knime.workbench.ui.preferences.PreferenceConstants;
+import org.knime.workbench.core.EclipseEncryptionKeySupplier;
+import org.knime.workbench.core.KNIMECorePlugin;
+import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
 
 /**
  * Preference page used to enter (or not) a master key for KNIME.
@@ -60,54 +61,22 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
      * the first time.
      */
     public static final EclipseEncryptionKeySupplier SUPPLIER = 
-        new EclipseEncryptionKeySupplier();    
-    
-    private static class EclipseEncryptionKeySupplier 
-            implements EncryptionKeySupplier {
-        private String m_lastMasterKey;
-        private boolean m_isEnabled;
-        private boolean m_isSet;
-
-        /**
-         * {@inheritDoc}
-         */
+            new EclipseEncryptionKeySupplier() {
+        @Override
         public synchronized String getEncryptionKey() {
-            m_isSet = KNIMEUIPlugin.getDefault().getPreferenceStore()
-                .getBoolean(PreferenceConstants.P_MASTER_KEY_DEFINED);
-            if (m_isSet) {
-                m_isEnabled = KNIMEUIPlugin.getDefault().getPreferenceStore()
-                    .getBoolean(PreferenceConstants.P_MASTER_KEY_ENABLED);
-                if (!m_isEnabled) {
-                    return null;
-                } else {
-                    if (KNIMEUIPlugin.getDefault().getPreferenceStore()
-                          .getBoolean(PreferenceConstants.P_MASTER_KEY_SAVED)) {
-                        try {
-                            String mk = KNIMEUIPlugin.getDefault().
-                                getPreferenceStore().getString(
-                                    PreferenceConstants.P_MASTER_KEY);
-                            SecretKey sk = KnimeEncryption.createSecretKey(
-                                    PreferenceConstants.P_MASTER_KEY);
-                            m_lastMasterKey = KnimeEncryption.decrypt(sk, mk);
-                        } catch (Exception e) {
-                            m_lastMasterKey = null;
-                        } 
+            super.getEncryptionKey();
+            if (m_lastMasterKey == null) {
+                Display.getDefault().syncExec(new Runnable() {
+                    public void run() {
+                        m_lastMasterKey = openDialogAndReadKey();
+                        m_isSet = true;
                     }
-                    if (m_lastMasterKey != null) {
-                        return m_lastMasterKey;
-                    }
-                }
+                });            
             }
-            Display.getDefault().syncExec(new Runnable() {
-                public void run() {
-                    m_lastMasterKey = openDialogAndReadKey();
-                    m_isSet = true;
-                }
-            });
             return m_lastMasterKey;
         }
-    }
-   
+    }; 
+    
     /**
      * 
      */
@@ -123,7 +92,7 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
     protected void createFieldEditors() {
         final Composite parent = getFieldEditorParent();
         m_isMasterKey = new BooleanFieldEditor(
-                PreferenceConstants.P_MASTER_KEY_ENABLED, 
+                HeadlessPreferencesConstants.P_MASTER_KEY_ENABLED, 
                 "Enable password en-/decryption", parent);
         m_isMasterKey.load();
         super.addField(m_isMasterKey);
@@ -136,12 +105,12 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
         m_masterKeyConfirm.getTextControl(parent).setEchoChar('*');
         super.addField(m_masterKeyConfirm);
         m_saveMasterKey = new BooleanFieldEditor(
-                PreferenceConstants.P_MASTER_KEY_SAVED, 
+                HeadlessPreferencesConstants.P_MASTER_KEY_SAVED, 
                 "Save Master Key and don't ask again on restart (unsafe)", 
                 parent);
         m_saveMasterKey.load();
         super.addField(m_saveMasterKey);
-    }    
+    }
     
     /**
      * {@inheritDoc}
@@ -153,11 +122,11 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
         if (SUPPLIER.m_lastMasterKey == null) {
             m_masterKey.load();
             try {
-                String mk = KNIMEUIPlugin.getDefault().
-                getPreferenceStore().getString(
-                    PreferenceConstants.P_MASTER_KEY);
+                String mk = KNIMECorePlugin.getDefault().
+                    getPreferenceStore().getString(
+                        HeadlessPreferencesConstants.P_MASTER_KEY);
                 SecretKey sk = KnimeEncryption.createSecretKey(
-                    PreferenceConstants.P_MASTER_KEY);
+                        HeadlessPreferencesConstants.P_MASTER_KEY);
                 SUPPLIER.m_lastMasterKey = KnimeEncryption.decrypt(sk, mk);
             } catch (Exception e) {
                 m_masterKey.setErrorMessage("Could not encrypt Master Key:\n"
@@ -175,7 +144,9 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
      * {@inheritDoc}
      */
     public void init(final IWorkbench workbench) {
-        setPreferenceStore(KNIMEUIPlugin.getDefault().getPreferenceStore());
+        IPreferenceStore corePrefStore = 
+            KNIMECorePlugin.getDefault().getPreferenceStore();
+        setPreferenceStore(corePrefStore);
     }
     
     /**
@@ -183,8 +154,9 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
      */
     @Override
     public boolean performOk() {
-        getPreferenceStore().setValue(
-                PreferenceConstants.P_MASTER_KEY, "");
+        IPreferenceStore pstore = 
+            KNIMECorePlugin.getDefault().getPreferenceStore();
+        pstore.setValue(HeadlessPreferencesConstants.P_MASTER_KEY, "");
         if (m_isMasterKey.getBooleanValue()) {
             String masterKey = m_masterKey.getStringValue();
             String encryptedMasterKey = 
@@ -196,19 +168,22 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
             SUPPLIER.m_isEnabled = true;
             SUPPLIER.m_lastMasterKey = masterKey;
             if (m_saveMasterKey.getBooleanValue()) {
-                getPreferenceStore().setValue(
-                    PreferenceConstants.P_MASTER_KEY, encryptedMasterKey);
+                pstore.setValue(
+                 HeadlessPreferencesConstants.P_MASTER_KEY, encryptedMasterKey);
              }
         } else {
             SUPPLIER.m_isEnabled = false;
             SUPPLIER.m_lastMasterKey = null;
         }
         SUPPLIER.m_isSet = true;
-        getPreferenceStore().setValue(PreferenceConstants.P_MASTER_KEY_DEFINED,
+        pstore.setValue(
+                HeadlessPreferencesConstants.P_MASTER_KEY_DEFINED,
                 Boolean.toString(SUPPLIER.m_isSet));
-        getPreferenceStore().setValue(PreferenceConstants.P_MASTER_KEY_ENABLED, 
+        pstore.setValue(
+                HeadlessPreferencesConstants.P_MASTER_KEY_ENABLED, 
                 Boolean.toString(SUPPLIER.m_isEnabled));
-        getPreferenceStore().setValue(PreferenceConstants.P_MASTER_KEY_SAVED, 
+        pstore.setValue(
+                HeadlessPreferencesConstants.P_MASTER_KEY_SAVED, 
                 Boolean.toString(m_saveMasterKey.getBooleanValue()));
         return true;        
     }
@@ -234,7 +209,7 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
         }
         try {
             SecretKey secretKey = KnimeEncryption.createSecretKey(
-                        PreferenceConstants.P_MASTER_KEY);
+                        HeadlessPreferencesConstants.P_MASTER_KEY);
             return KnimeEncryption.encrypt(secretKey, masterKey.toCharArray());
         } catch (Exception e) {
             MessageBox mb = new MessageBox(Display.getDefault()
