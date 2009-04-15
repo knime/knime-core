@@ -253,7 +253,7 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
      * Load a image from the given location from within the plugin.
      *
      * @param pluginID The ID of the hosting plugin
-     * @param filename The elative filename
+     * @param filename The relative filename
      * @return The image, a default will be returned if file was missing.
      */
     public Image getImage(final String pluginID, final String filename) {
@@ -265,12 +265,12 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
      * Returns a image descriptor.
      *
      * @param pluginID The plugin ID
-     * @param filename Th relative filename
+     * @param filename The relative filename
      * @return The descriptor, or null
      */
     public ImageDescriptor getImageDescriptor(final String pluginID,
             final String filename) {
         return AbstractUIPlugin.imageDescriptorFromPlugin(pluginID, filename);
-    }
+    } 
 
 }
