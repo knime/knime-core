@@ -5,7 +5,7 @@
  *
  * Copyright, 2003 - 2008
  * University of Konstanz, Germany
- * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * KNIME.com, Zurich, Switzerland
  * and KNIME GmbH, Konstanz, Germany
  *
  * You may not modify, publish, transmit, transfer or sell, reproduce,
@@ -49,13 +49,13 @@ public interface NodeExecutionJobManagerFactory {
      * @return a user readable label for this job manager
      */
     public String getLabel();
-    
-    /** Get an instance for use in a node. It is to the discretion of 
+
+    /** Get an instance for use in a node. It is to the discretion of
      * implementing classes to return a new instance or a singleton here,
-     * whereby the latter should be returned if the job manager can not be 
+     * whereby the latter should be returned if the job manager can not be
      * parameterized.
      * @return a new instance of a job manager or a singleton.
-     */ 
+     */
     NodeExecutionJobManager getInstance();
 
 }

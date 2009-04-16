@@ -36,6 +36,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeExecutionJob;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeExecutionJobManagerPanel;
+import org.knime.core.node.workflow.NodeExecutionJobManagerViewPanel;
 import org.knime.core.node.workflow.NodeExecutionJobReconnectException;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
@@ -165,4 +166,32 @@ public class ThreadNodeExecutionJobManager implements NodeExecutionJobManager {
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public int getNumberOfViews() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public NodeExecutionJobManagerViewPanel getViewPanel(final int viewIdx,
+            final NodeContainer nc) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getViewPanelName(final int viewIdx, final NodeContainer nc) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void resetViewPanels() {
+        assert false : "Can't reset no panels";
+    }
 }

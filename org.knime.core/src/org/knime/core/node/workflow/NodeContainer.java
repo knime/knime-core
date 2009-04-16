@@ -381,7 +381,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      */
     abstract void cancelExecution();
 
-    /** 
+    /**
      * Cancel execution of a marked, queued, or executing node. (Tolerate
      * execute as this may happen throughout cancelation).
      *
@@ -853,13 +853,63 @@ public abstract class NodeContainer implements NodeProgressListener {
 
     /* -------------- views ---------------- */
 
-    public abstract int getNrViews();
 
-    public abstract String getViewName(final int i);
+    public int getNrViews() {
 
-    public abstract NodeView<NodeModel> getView(final int i);
+        int numOfNodeViews = getNrNodeViews();
 
+        // TODO: Assuming that the Default has not views!!!
+        if (getJobManager() != null && getJobManager().getNumberOfViews() > 0) {
+            // all job manager panels go in one view!
+            return numOfNodeViews + 1;
+        }
 
+        return numOfNodeViews;
+    }
+
+    /**
+     * Returns the number of views provided by the node implementation.
+     * @return the number of views provided by the node implementation
+     */
+    public abstract int getNrNodeViews();
+
+    public String getViewName(final int i) {
+        if (i < getNrNodeViews()) {
+            return getNodeViewName(i);
+        } else {
+            assert getJobManager() != null : "Job Manager changed: illegal view idx";
+            return "Job Manager View";
+        }
+    }
+
+    public abstract String getNodeViewName(final int i);
+
+    public NodeView<NodeModel> getView(final int i) {
+        if (i < getNrNodeViews()) {
+            return getNodeView(i);
+        } else {
+            assert getJobManager() != null : "Job Manager changed: No view!!";
+            return new NodeExecutionJobManagerView(getJobManager(), this,
+                    new NodeExecutionJobManagerBlankModel());
+        }
+    }
+
+    /**
+     * Return the view with the specified index provided by the node.
+     *
+     * @param i the view to create
+     * @return a new view instance with index i provided by the node
+     */
+    public abstract NodeView<NodeModel> getNodeView(final int i);
+
+    /**
+     * Must be called when the node is reset.
+     */
+    protected void resetJobManagerViews() {
+        if (getJobManager() != null) {
+            getJobManager().resetViewPanels();
+        }
+    }
 
     /* ------------- Misc node info -------------- */
 

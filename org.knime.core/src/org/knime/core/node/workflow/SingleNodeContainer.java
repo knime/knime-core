@@ -224,7 +224,7 @@ public final class SingleNodeContainer extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    public NodeView<NodeModel> getView(final int i) {
+    public NodeView<NodeModel> getNodeView(final int i) {
         String title = getNameWithID() + " (" + getViewName(i) + ")";
         if (getCustomName() != null) {
             title += " - " + getCustomName();
@@ -234,13 +234,13 @@ public final class SingleNodeContainer extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    public String getViewName(final int i) {
+    public String getNodeViewName(final int i) {
         return m_node.getViewName(i);
     }
 
     /** {@inheritDoc} */
     @Override
-    public int getNrViews() {
+    public int getNrNodeViews() {
         return m_node.getNrViews();
     }
 
@@ -523,20 +523,20 @@ public final class SingleNodeContainer extends NodeContainer {
                 job.cancel();
                 break;
             case EXECUTINGREMOTELY:
-                // execute remotely can be both truly executing remotely 
+                // execute remotely can be both truly executing remotely
                 // (job will be non-null) or marked as executing remotely
                 // (e.g. node is part of meta node which is remote executed
                 // -- the job will be null). We tolerate both cases here.
                 job = getExecutionJob();
                 if (job == null) {
                     // we can't decide on whether this node is now IDLE or
-                    // CONFIGURED -- we rely on the parent to call configure 
+                    // CONFIGURED -- we rely on the parent to call configure
                     // (pessimistic guess here that node was not configured)
                     setState(State.IDLE);
                 } else {
                     getProgressMonitor().setExecuteCanceled();
                     job.cancel();
-                }                    
+                }
                 break;
             case EXECUTED:
                 // Too late - do nothing.
@@ -570,7 +570,7 @@ public final class SingleNodeContainer extends NodeContainer {
                     + getNameWithID());
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     void preExecuteNode() {
@@ -739,7 +739,7 @@ public final class SingleNodeContainer extends NodeContainer {
                 inStack.push(s);
             }
             setScopeObjectStack(inStack);
-            SingleNodeContainerSettings sncSettings = 
+            SingleNodeContainerSettings sncSettings =
                 persistor.getSNCSettings();
             if (sncSettings == null) {
                 LOGGER.coding(
@@ -750,7 +750,7 @@ public final class SingleNodeContainer extends NodeContainer {
         }
         return result;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public LoadResult loadExecutionResult(
@@ -760,13 +760,13 @@ public final class SingleNodeContainer extends NodeContainer {
             if (!(execResult instanceof SingleNodeContainerExecutionResult)) {
                 throw new IllegalArgumentException("Argument must be instance "
                         + "of \"" + SingleNodeContainerExecutionResult.
-                        class.getSimpleName() + "\": " 
+                        class.getSimpleName() + "\": "
                         + execResult.getClass().getSimpleName());
             }
             LoadResult errors = super.loadExecutionResult(execResult, exec);
             SingleNodeContainerExecutionResult sncExecResult =
                 (SingleNodeContainerExecutionResult)execResult;
-            NodeExecutionResult nodeExecResult = 
+            NodeExecutionResult nodeExecResult =
                 sncExecResult.getNodeExecutionResult();
             LoadResult nodeErrors = m_node.loadDataAndInternals(
                     nodeExecResult, new ExecutionMonitor());
@@ -780,7 +780,7 @@ public final class SingleNodeContainer extends NodeContainer {
                     if (m_node.getOutputObject(i) == null) {
                         errors.addError(
                                 "Output object at port " + i + " is null");
-                        needsReset = true; 
+                        needsReset = true;
                     }
                 }
             }
@@ -790,13 +790,13 @@ public final class SingleNodeContainer extends NodeContainer {
             return errors;
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public SingleNodeContainerExecutionResult createExecutionResult(
             final ExecutionMonitor exec) throws CanceledExecutionException {
         synchronized (m_nodeMutex) {
-            SingleNodeContainerExecutionResult result = 
+            SingleNodeContainerExecutionResult result =
                 new SingleNodeContainerExecutionResult();
             super.saveExecutionResult(result);
             result.setNodeExecutionResult(
@@ -837,7 +837,7 @@ public final class SingleNodeContainer extends NodeContainer {
             m_settings = new SingleNodeContainerSettings(settings);
         }
     }
-    
+
     /** @return reference to internally used settings (contains information for
      * memory policy, e.g.) */
     SingleNodeContainerSettings getSingleNodeContainerSettings() {
@@ -945,13 +945,13 @@ public final class SingleNodeContainer extends NodeContainer {
     public Element getXMLDescription() {
         return m_node.getXMLDescription();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected boolean isLocalWFM() {
         return false;
     }
-    
+
     /**
      * Overridden to also ensure that outport tables are "open" (node directory
      * is deleted upon save() - so the tables are better copied into temp).
@@ -1050,7 +1050,7 @@ public final class SingleNodeContainer extends NodeContainer {
         public MemoryPolicy getMemoryPolicy() {
             return m_memoryPolicy;
         }
-        
+
         /** {@inheritDoc} */
         @Override
         protected SingleNodeContainerSettings clone() {

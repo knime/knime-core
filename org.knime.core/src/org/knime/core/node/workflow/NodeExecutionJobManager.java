@@ -5,7 +5,7 @@
  *
  * Copyright, 2003 - 2008
  * University of Konstanz, Germany
- * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * KNIME.com, Zurich, Switzerland
  * and KNIME GmbH, Konstanz, Germany
  *
  * You may not modify, publish, transmit, transfer or sell, reproduce,
@@ -166,4 +166,37 @@ public interface NodeExecutionJobManager {
     public PortObjectSpec[] configure(final PortObjectSpec[] inSpecs,
             PortObjectSpec[] nodeModelOutSpecs) throws InvalidSettingsException;
 
+    /**
+     * Returns the number of views this job manager provides with each job
+     *
+     * @return the number of views this job manager provides with each job
+     */
+    public int getNumberOfViews();
+
+    /**
+     * Return a panel containing the content of the view. The passed index
+     * selects the view. Created panels should be stored in order to be able
+     * to clear them on node reset.
+     *
+     * @param viewIdx the index identifying the view to return (see
+     *            {@link #getNumberOfViews()})
+     * @param nc the corresponding node container
+     * @return the panel for the corresponding view
+     */
+    public NodeExecutionJobManagerViewPanel getViewPanel(final int viewIdx,
+            final NodeContainer nc);
+
+    /**
+     * Creates a title for the corresponding tab panel.
+     *
+     * @param viewIdx the index of the panel
+     * @param nc the corresponding node container.
+     * @return the title for the tab containing the corresponding panel.
+     */
+    public String getViewPanelName(final int viewIdx, final NodeContainer nc);
+
+    /**
+     * Called when the underlying node is reset.
+     */
+    public void resetViewPanels();
 }

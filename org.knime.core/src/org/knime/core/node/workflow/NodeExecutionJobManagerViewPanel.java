@@ -19,32 +19,34 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   08.12.2008 (ohl): created
+ *   02.04.2009 (ohl): created
  */
 package org.knime.core.node.workflow;
 
+import javax.swing.JPanel;
+
 /**
+ * Implements the content of a view to the {@link NodeExecutionJob}. The
+ * corresponding {@link NodeExecutionJobManager} creates an instance of this.
  *
- * @author ohl, University of Konstanz
+ * @author ohl, KNIME.com, Zurich, Switzerland
  */
-public class NodeExecutionJobReconnectException extends Exception {
+public abstract class NodeExecutionJobManagerViewPanel extends JPanel {
 
     /**
-     * @param message
+     * Called when the view is about to open.
      */
-    public NodeExecutionJobReconnectException(final String message) {
-        super(message);
-        // TODO Auto-generated constructor stub
-    }
+    public abstract void onOpen();
 
     /**
-     * @param message
-     * @param cause
+     * Called when the view is about to close and shut down. The panel should
+     * be unregistered with all lists so it can be disposed of after this call.
      */
-    public NodeExecutionJobReconnectException(final String message,
-            final Throwable cause) {
-        super(message, cause);
-        // TODO Auto-generated constructor stub
-    }
+    public abstract void onClose();
+
+    /**
+     * Called when the underlying node is reset.
+     */
+    public abstract void reset();
 
 }

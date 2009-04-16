@@ -4,6 +4,7 @@
  *
  * Copyright, 2003 - 2008
  * University of Konstanz, Germany
+ * KNIME.com, Zurich, Switzerland
  * and KNIME GmbH, Konstanz, Germany
  *
  * You may not modify, publish, transmit, transfer or sell, reproduce,
