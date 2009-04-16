@@ -1,13 +1,15 @@
-Aladdin Free Public License
-(Version 9, September 18, 2000)
+         Aladdin Free Public License
+       (Version 9, September 18, 2000)
+
 Copyright (C) 1994, 1995, 1997, 1998, 1999, 2000 Aladdin Enterprises,
 Menlo Park, California, U.S.A. All rights reserved. 
 
 NOTE: This License is not the same as any of the GNU Licenses
 published by the Free Software Foundation. Its terms are substantially
 different from those of the GNU Licenses. If you are familiar with the
-GNU Licenses, please read this license with extra care.  Aladdin
-Enterprises hereby grants to anyone the permission to apply this
+GNU Licenses, please read this license with extra care.  
+
+Aladdin Enterprises hereby grants to anyone the permission to apply this
 License to their own work, as long as the entire License (including
 the above notices and this paragraph) is copied with no changes,
 additions, or deletions except for changing the first paragraph of
@@ -37,9 +39,8 @@ pay for the privilege of doing so.
 
 This License applies to the computer program known as "KNIME". The
 "Program", below, refers to such program. The Program is a copyrighted
-work whose copyright is held by The Chair for Bioinformatics and
-Information Mining (Prof. Dr. Michael Berthold) at the University of
-Konstanz, Germany (the "Licensor").
+work whose copyright is held by KNIME GmbH Konstanz, Germany 
+(the "Licensor").
 
 A "work based on the Program" means either the Program or any
 derivative work of the Program, as defined in the United States
