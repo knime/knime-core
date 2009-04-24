@@ -22,11 +22,13 @@
 package org.knime.core.node.workflow;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.Console;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -285,7 +287,9 @@ public final class BatchExecutor {
 
         setNodeOptions(options, wfm);
 
-        System.out.println(wfm.printNodeSummary(wfm.getID(), 0));
+        LOGGER.debug("Status of workflow before execution:");
+        LOGGER.debug("------------------------------------");
+        dumpWorkflowToDebugLog(wfm);
         boolean successful = wfm.executeAllAndWaitUntilDone();
         if (!noSave) {
             wfm.save(workflowDir, new ExecutionMonitor(), true);
@@ -300,6 +304,10 @@ public final class BatchExecutor {
         String timeString = ("Finished in " + niceTime
                 + " (" + elapsedTimeMillis + "ms)");
         System.out.println(timeString);
+        LOGGER.debug("Workflow execution done " + timeString);
+        LOGGER.debug("Status of workflow after execution:");
+        LOGGER.debug("------------------------------------");
+        dumpWorkflowToDebugLog(wfm);
         return successful ? 0 : 1;
     }
 
@@ -325,7 +333,6 @@ public final class BatchExecutor {
                 WorkflowManager parent = cont.getParent();
                 NodeSettings settings = new NodeSettings("something");
                 parent.saveNodeSettings(cont.getID(), settings);
-                cont.saveSettings(settings);
                 NodeSettings model = settings.getNodeSettings(Node.CFG_MODEL);
                 String[] splitName = o.m_name.split("/");
                 String name = splitName[splitName.length - 1];
@@ -438,5 +445,19 @@ public final class BatchExecutor {
         res[3] = option.substring(index + 1);
 
         return res;
+    }
+    
+    private static void dumpWorkflowToDebugLog(final WorkflowManager wfm) {
+        String str = wfm.printNodeSummary(wfm.getID(), 0);
+        BufferedReader reader = new BufferedReader(new StringReader(str));
+        String line;
+        try {
+            while ((line = reader.readLine()) != null) {
+                LOGGER.debug(line);
+            }
+            reader.close();
+        } catch (IOException e) {
+            LOGGER.fatal("IOException while reading string", e);
+        }
     }
 }

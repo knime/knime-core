@@ -31,6 +31,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
+import java.net.InetAddress;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -291,6 +292,9 @@ public final class NodeLogger {
                         + Runtime.getRuntime().availableProcessors());
         l.info("# assertions=" + (KNIMEConstants.ASSERTIONS_ENABLED
                 ? "on" : "off"));
+        l.info("# host=" + getHostname());
+        l.info("# max mem=" + Runtime.getRuntime().maxMemory() / (1024 * 1024) 
+                + "MB");
         l.info("#############################################################");
     }
 
@@ -670,6 +674,15 @@ public final class NodeLogger {
             return LEVEL.FATAL;
         } else {
             return LEVEL.ALL;
+        }
+    }
+    
+    private static String getHostname() {
+        try {
+            InetAddress localMachine = InetAddress.getLocalHost();    
+            return localMachine.getHostName();
+        } catch (Exception uhe) {
+            return "<unknown host>";
         }
     }
 
