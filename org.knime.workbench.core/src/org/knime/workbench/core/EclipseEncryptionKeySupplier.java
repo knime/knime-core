@@ -26,38 +26,79 @@ package org.knime.workbench.core;
 
 import javax.crypto.SecretKey;
 
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.EncryptionKeySupplier;
 import org.knime.core.util.KnimeEncryption;
 import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
 
 /**
- * 
+ * Encryption key supplier used to en-/decrypt password (using a master key) in 
+ * an eclipse headless mode.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public class EclipseEncryptionKeySupplier implements
         EncryptionKeySupplier {
-    
+ 
+    /** Last master entered with the dialog/preference page. */
     public String m_lastMasterKey;
 
+    /** If encryption with master key is enabled. */
     public boolean m_isEnabled;
 
+    /** If a master key has been set already. */
     public boolean m_isSet;
 
+    /**
+     * Creates a new encryption key supplier.
+     */
     public EclipseEncryptionKeySupplier() {
-        // load stored or current master key
-        if (m_lastMasterKey == null) {
-            try {
-                String mk = KNIMECorePlugin.getDefault().getPreferenceStore().getString(
-                        HeadlessPreferencesConstants.P_MASTER_KEY);
-                SecretKey sk = KnimeEncryption.createSecretKey(
-                        HeadlessPreferencesConstants.P_MASTER_KEY);
-                m_lastMasterKey = KnimeEncryption.decrypt(sk, mk);
-            } catch (Exception e) {
-                NodeLogger.getLogger(EclipseEncryptionKeySupplier.class).warn(
-                        "Can't load MasterKey: " + e.getMessage(), e);
+        init();
+    }
+    
+    /**
+     * Read preference store.
+     * @return current master key or null, if not set
+     */
+    private synchronized String init() {
+        IPreferenceStore coreStore = 
+            KNIMECorePlugin.getDefault().getPreferenceStore();
+        m_isSet = coreStore.getBoolean(
+                HeadlessPreferencesConstants.P_MASTER_KEY_DEFINED);
+        if (m_isSet) {
+            m_isEnabled = coreStore.getBoolean(
+                    HeadlessPreferencesConstants.P_MASTER_KEY_ENABLED);
+            if (!m_isEnabled) {
+                m_lastMasterKey = null;
+                return null;
+            } else {
+                if (coreStore.getBoolean(
+                        HeadlessPreferencesConstants.P_MASTER_KEY_SAVED)) {
+                    try {
+                        String mk = coreStore.getString(
+                                     HeadlessPreferencesConstants.P_MASTER_KEY);
+                        // preference store returns empty string if not set
+                        if (mk.isEmpty()) {
+                            m_lastMasterKey = null;
+                            return null;
+                        }
+                        SecretKey sk = KnimeEncryption.createSecretKey(
+                                HeadlessPreferencesConstants.P_MASTER_KEY);
+                        m_lastMasterKey = KnimeEncryption.decrypt(sk, mk);
+                    } catch (Exception e) {
+                        NodeLogger.getLogger(EclipseEncryptionKeySupplier.class)
+                            .warn("Unable to decrypt master key: " 
+                                    + e.getMessage(), e);
+                        m_lastMasterKey = null;
+                    }
+                    return m_lastMasterKey;
+                }
+                return null;
             }
+        } else {
+            m_lastMasterKey = null;
+            return null;
         }
     }
 
@@ -65,32 +106,7 @@ public class EclipseEncryptionKeySupplier implements
      * {@inheritDoc}
      */
     public synchronized String getEncryptionKey() {
-        m_isSet = KNIMECorePlugin.getDefault().getPreferenceStore().getBoolean(
-                HeadlessPreferencesConstants.P_MASTER_KEY_DEFINED);
-        if (m_isSet) {
-            m_isEnabled = KNIMECorePlugin.getDefault().getPreferenceStore().getBoolean(
-                    HeadlessPreferencesConstants.P_MASTER_KEY_ENABLED);
-            if (!m_isEnabled) {
-                return null;
-            } else {
-                if (KNIMECorePlugin.getDefault().getPreferenceStore().getBoolean(
-                        HeadlessPreferencesConstants.P_MASTER_KEY_SAVED)) {
-                    try {
-                        String mk = KNIMECorePlugin.getDefault().getPreferenceStore().getString(
-                                     HeadlessPreferencesConstants.P_MASTER_KEY);
-                        SecretKey sk = KnimeEncryption.createSecretKey(
-                                HeadlessPreferencesConstants.P_MASTER_KEY);
-                        m_lastMasterKey = KnimeEncryption.decrypt(sk, mk);
-                    } catch (Exception e) {
-                        m_lastMasterKey = null;
-                    }
-                }
-                if (m_lastMasterKey != null) {
-                    return m_lastMasterKey;
-                }
-            }
-        }
-        return m_lastMasterKey;
+        return init();
     }
     
 }
