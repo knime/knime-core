@@ -24,6 +24,8 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -113,7 +115,7 @@ public interface NodeExecutionJobManager {
      * an executing job.
      *
      * @param settings reconnect information stored during
-     *            {@link #saveReconnectSettings(NodeExecutionJob, NodeSettingsWO)}
+     *        {@link #saveReconnectSettings(NodeExecutionJob, NodeSettingsWO)}
      * @param inports port objects that were provided at execution start time.
      * @param nc Node whose remote executing is to be continued.
      * @return a new job restored and representing the running job
@@ -167,7 +169,7 @@ public interface NodeExecutionJobManager {
             PortObjectSpec[] nodeModelOutSpecs) throws InvalidSettingsException;
 
     /**
-     * Returns the number of views this job manager provides with each job
+     * Returns the number of views this job manager provides with each job.
      *
      * @return the number of views this job manager provides with each job
      */
@@ -199,4 +201,24 @@ public interface NodeExecutionJobManager {
      * Called when the underlying node is reset.
      */
     public void resetViewPanels();
+
+    /** @return whether this job manager has meaningful internals, for instance
+     * log files of remote jobs that were run. 
+     * @see #saveInternals(File) */
+    public boolean canSaveInternals();
+    
+    /** Save the internals of this instance to the target directory. This
+     * method is only called if {@link #canSaveInternals()} returns true.
+     * @param directory To save to (guaranteed to be empty)
+     * @throws IOException If that fails for any reason.
+     */
+    public void saveInternals(final File directory) throws IOException;
+    
+    /** Restore the internals from a directory. This is the reverse operation
+     * to {@link #saveInternals(File)}.
+     * @param directory To load from.
+     * @throws IOException If that fails for any reason.
+     */
+    public void loadInternals(final File directory) throws IOException;
+    
 }

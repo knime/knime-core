@@ -23,6 +23,8 @@
  */
 package org.knime.core.node.exec;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.concurrent.Future;
 
@@ -193,5 +195,23 @@ public class ThreadNodeExecutionJobManager implements NodeExecutionJobManager {
      */
     public void resetViewPanels() {
         assert false : "Can't reset no panels";
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean canSaveInternals() {
+        return false;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void loadInternals(final File directory) throws IOException {
+        throw new IllegalStateException("Nothing to load.");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void saveInternals(final File directory) throws IOException {
+        throw new IllegalStateException("Nothing to save.");
     }
 }
