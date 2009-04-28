@@ -18,9 +18,6 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
- * History
- *   31.03.2008 (gabriel): created
  */
 package org.knime.workbench.ui.masterkey;
 
@@ -62,6 +59,10 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
      */
     public static final EclipseEncryptionKeySupplier SUPPLIER = 
             new EclipseEncryptionKeySupplier() {
+        /**
+         * Derived method to open a dialog, if the master key is not set.
+         * {@inheritDoc}
+         */
         @Override
         public synchronized String getEncryptionKey() {
             super.getEncryptionKey();
@@ -78,7 +79,7 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
     }; 
     
     /**
-     * 
+     * Create a new master key preference page.
      */
     public MasterKeyPreferencePage() {
         super(GRID);
@@ -118,7 +119,7 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
     @Override
     protected void initialize() {
         super.initialize();
-        // load stored or current master key
+        // init dialog options from preference store
         if (SUPPLIER.m_lastMasterKey == null) {
             m_masterKey.load();
             try {

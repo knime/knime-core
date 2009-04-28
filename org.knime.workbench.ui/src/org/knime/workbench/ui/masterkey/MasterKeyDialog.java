@@ -18,9 +18,6 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
- * History
- *   03.04.2008 (Fabian Dill): created
  */
 package org.knime.workbench.ui.masterkey;
 
@@ -29,7 +26,7 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.core.KNIMECorePlugin;
 
 /**
  * 
@@ -66,7 +63,7 @@ public class MasterKeyDialog extends Dialog {
         Composite composite = (Composite)super.createDialogArea(parent);
         composite.setSize(400, 600);
         m_prefPage = new MasterKeyPreferencePage();
-        m_prefPage.setPreferenceStore(KNIMEUIPlugin.getDefault()
+        m_prefPage.setPreferenceStore(KNIMECorePlugin.getDefault()
                 .getPreferenceStore());
         m_prefPage.createControl(composite);
         m_prefPage.initialize();
