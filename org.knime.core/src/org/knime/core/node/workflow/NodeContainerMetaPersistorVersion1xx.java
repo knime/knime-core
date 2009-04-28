@@ -62,9 +62,10 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     
     private final ReferencedFile m_nodeContainerDirectory;
     
-    /** @param baseDir The node container directory (only important while load)
+    /** @param baseDir The node container directory
      */
     NodeContainerMetaPersistorVersion1xx(final ReferencedFile baseDir) {
+        assert baseDir != null : "Directory must not be null"; 
         m_nodeContainerDirectory = baseDir;
     }
     
@@ -195,6 +196,23 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             hasJobManagerLoadFailed = true;
         }
         try {
+            if (!hasJobManagerLoadFailed) {
+                ReferencedFile jobManagerInternalsDirectory = 
+                    loadJobManagerInternalsDirectory(
+                            m_nodeContainerDirectory, settings);
+                if (jobManagerInternalsDirectory != null) {
+                    m_jobManager.loadInternals(jobManagerInternalsDirectory);
+                }
+            }
+        } catch (Throwable e) {
+            String error = "Can't restore node execution job "
+                + "manager internals directory " + e.getMessage();
+            loadResult.addError(error);
+            getLogger().debug(error, e);
+            setDirtyAfterLoad();
+            hasJobManagerLoadFailed = true;
+        }
+        try {
             m_state = loadState(settings, parentSettings);
 //            if (State.EXECUTINGREMOTELY.equals(m_state) 
 //                    && m_executionJobSettings == null) {
@@ -235,7 +253,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
         }
         return parentSettings.getString(KEY_CUSTOM_NAME);
     }
-
+    
     /** Read the custom description.
      * @param settings The settings associated with the node (used in 2.0+)
      * @param parentSettings The parent settings (workflow.knime, used in 1.3x)
@@ -270,6 +288,21 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
      */
     protected NodeSettingsRO loadNodeExecutionJobSettings(
             final NodeSettingsRO settings) throws InvalidSettingsException {
+        return null;
+    }
+    
+    /** Load the directory name that is used to persist internals of the 
+     * associated job manager. The default (local) job manager typically does
+     * not save any internals, but others (e.g. the grid executor) save 
+     * the logs of their remote jobs.
+     * @param parentDir The parent directory (the node dir).
+     * @param settings To load from.
+     * @return The file location containing the internals or null.
+     * @throws InvalidSettingsException If errors occur.
+     */
+    protected ReferencedFile loadJobManagerInternalsDirectory(
+            final ReferencedFile parentDir, final NodeSettingsRO settings) 
+    throws InvalidSettingsException {
         return null;
     }
     
@@ -309,8 +342,6 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     throws InvalidSettingsException {
         return null;
     }
-
-
     
     protected boolean loadIsDeletable(final NodeSettingsRO settings) {
         return true;

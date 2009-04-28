@@ -1113,15 +1113,15 @@ public abstract class NodeContainer implements NodeProgressListener {
         result.setState(getState());
         result.setMessage(m_nodeMessage);
     }
-
+    
     /** Helper class that defines load/save routines for general NodeContainer
      * properties. This is currently only the job manager. */
     public static final class NodeContainerSettings {
 
         public enum SplitType {
-            /** Node can't handle it */
+            /** Node can't handle it. */
             DISALLOWED,
-            /** Node is designed for splitting */
+            /** Node is designed for splitting. */
             SUPPORTED,
             /** May work... */
             USER
@@ -1140,7 +1140,7 @@ public abstract class NodeContainer implements NodeProgressListener {
         }
 
         /**
-         * Stores the type of splitting the node supports
+         * Stores the type of splitting the node supports.
          * @param type the splitting type to store
          */
         public void setSplitType(final SplitType type) {

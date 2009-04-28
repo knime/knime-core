@@ -24,6 +24,7 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.knime.core.internal.ReferencedFile;
@@ -33,6 +34,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeMessage.Type;
+import org.knime.core.util.FileUtil;
 
 /**
  * 
@@ -44,6 +46,7 @@ class NodeContainerMetaPersistorVersion200 extends
     private static final String CFG_STATE = "state";
     private static final String CFG_IS_DELETABLE = "isDeletable";
     private static final String CFG_JOB_MANAGER_CONFIG = "job.manager";
+    private static final String CFG_JOB_MANAGER_DIR = "job.manager.dir";
     private static final String CFG_JOB_CONFIG = "execution.job";
     
     /** @param baseDir The node container directory (only important while load)
@@ -75,8 +78,25 @@ class NodeContainerMetaPersistorVersion200 extends
     
     /** {@inheritDoc} */
     @Override
-    protected State loadState(final NodeSettingsRO settings, final NodeSettingsRO parentSettings)
-            throws InvalidSettingsException {
+    protected ReferencedFile loadJobManagerInternalsDirectory(
+            final ReferencedFile parentDir, final NodeSettingsRO settings) 
+    throws InvalidSettingsException {
+        if (!settings.containsKey(CFG_JOB_MANAGER_DIR)) {
+            return null;
+        }
+        String dir = settings.getString(CFG_JOB_MANAGER_DIR);
+        if (dir == null) {
+            throw new InvalidSettingsException(
+                    "Job manager internals dir is null");
+        }
+        return new ReferencedFile(parentDir, dir);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected State loadState(final NodeSettingsRO settings, 
+            final NodeSettingsRO parentSettings) 
+    throws InvalidSettingsException {
         String stateString = settings.getString(CFG_STATE);
         if (stateString == null) {
             throw new InvalidSettingsException("State information is null");
@@ -174,6 +194,48 @@ class NodeContainerMetaPersistorVersion200 extends
         : "Execution job can be saved/disconnected";
         NodeSettingsWO sub = settings.addNodeSettings(CFG_JOB_CONFIG);
         jobManager.saveReconnectSettings(job, sub);
+    }
+    
+    protected void saveJobManagerInternalsDirectory(
+            final NodeSettingsWO settings, final NodeContainer nc) {
+        NodeExecutionJobManager jobManager = nc.getJobManager();
+        if (jobManager != null && jobManager.canSaveInternals()) {
+            String dirName = "job_manager_internals";
+            ReferencedFile parentRefFile = getNodeContainerDirectory();
+            if (parentRefFile == null) {
+                // added this later, make it bullet proof
+                // this if-statement can be deleted if there are no reports 
+                // until, let's say, end of 2009
+                getLogger().coding("Node directory must not be null "
+                        + "at this time");
+                return;
+            }
+            File dir = new File(getNodeContainerDirectory().getFile(), dirName);
+            if (dir.exists()) {
+                getLogger().warn("Directory \"" + dir.getAbsolutePath() + "\""
+                        + " already exists; deleting it");
+                FileUtil.deleteRecursively(dir);
+            }
+            if (!dir.mkdirs()) {
+                getLogger().error("Unable to create directory \""
+                        + dir.getAbsolutePath() + "\"");
+                return;
+            }
+            try {
+                jobManager.saveInternals(
+                        new ReferencedFile(parentRefFile, dirName));
+                settings.addString(CFG_JOB_MANAGER_DIR, dirName);
+            } catch (Throwable e) {
+                if (!(e instanceof IOException)) {
+                    getLogger().coding("Saving internals of job manager should "
+                            + "only throw IOException, caught " 
+                            + e.getClass().getSimpleName());
+                }
+                String error = "Saving job manager internals failed: " 
+                    + e.getMessage();
+                getLogger().error(error, e);
+            }
+        }
     }
 
     protected boolean saveState(final NodeSettingsWO settings,

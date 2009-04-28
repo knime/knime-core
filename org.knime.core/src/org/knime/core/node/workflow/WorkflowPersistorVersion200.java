@@ -283,7 +283,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         settings.addString(WorkflowManager.CFG_VERSION, getSaveVersion());
         saveWorkflowName(settings, wm.getName());
         NodeContainerMetaPersistorVersion200 metaPersistor = 
-            createNodeContainerMetaPersistor(null);
+            createNodeContainerMetaPersistor(workflowDirRef);
         metaPersistor.save(wm, settings);
         
         NodeSettingsWO nodesSettings = saveSettingsForNodes(settings);
