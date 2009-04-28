@@ -23,11 +23,11 @@
  */
 package org.knime.core.node.exec;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.concurrent.Future;
 
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeSettingsRO;
@@ -205,13 +205,13 @@ public class ThreadNodeExecutionJobManager implements NodeExecutionJobManager {
 
     /** {@inheritDoc} */
     @Override
-    public void loadInternals(final File directory) throws IOException {
+    public void loadInternals(final ReferencedFile directory) throws IOException {
         throw new IllegalStateException("Nothing to load.");
     }
 
     /** {@inheritDoc} */
     @Override
-    public void saveInternals(final File directory) throws IOException {
+    public void saveInternals(final ReferencedFile directory) throws IOException {
         throw new IllegalStateException("Nothing to save.");
     }
 }

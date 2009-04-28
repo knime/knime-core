@@ -24,10 +24,10 @@
  */
 package org.knime.core.node.workflow;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -204,7 +204,7 @@ public interface NodeExecutionJobManager {
 
     /** @return whether this job manager has meaningful internals, for instance
      * log files of remote jobs that were run. 
-     * @see #saveInternals(File) */
+     * @see #saveInternals(ReferencedFile) */
     public boolean canSaveInternals();
     
     /** Save the internals of this instance to the target directory. This
@@ -212,13 +212,17 @@ public interface NodeExecutionJobManager {
      * @param directory To save to (guaranteed to be empty)
      * @throws IOException If that fails for any reason.
      */
-    public void saveInternals(final File directory) throws IOException;
+    public void saveInternals(final ReferencedFile directory) 
+    throws IOException;
     
     /** Restore the internals from a directory. This is the reverse operation
-     * to {@link #saveInternals(File)}.
+     * to {@link #saveInternals(ReferencedFile)}. Implementations should 
+     * consider to keep a pointer to the referenced file and load the internals
+     * on demand (in order to speed up the load routines).
      * @param directory To load from.
      * @throws IOException If that fails for any reason.
      */
-    public void loadInternals(final File directory) throws IOException;
+    public void loadInternals(final ReferencedFile directory) 
+    throws IOException;
     
 }
