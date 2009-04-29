@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?pde version="3.1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<?pde version="3.4"?>
 
-<product application="org.knime.product.KNIME_APPLICATION" id="org.knime.product.KNIME_PRODUCT" name="KNIME" useFeatures="true">
+<product name="KNIME" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" version="2.1.0.0020587" useFeatures="true">
 
    <aboutInfo>
       <image path="/org.knime.product/icons/gif/about.gif"/>
@@ -24,21 +24,29 @@ All other trademarks are the property of their respective owners.
       </text>
    </aboutInfo>
 
-   <configIni use="default"/>
+   <configIni use="default">
+   </configIni>
 
    <launcherArgs>
       <programArgs>-clean</programArgs>
       <vmArgs>-Xmx256m -XX:MaxPermSize=128m -server</vmArgs>
    </launcherArgs>
 
-   <windowImages i128="/org.knime.product/icons/gif/knime128.gif" i16="/org.knime.product/icons/gif/knime16.gif" i32="/org.knime.product/icons/gif/knime32.gif" i48="/org.knime.product/icons/gif/knime48.gif" i64="/org.knime.product/icons/gif/knime64.gif"/>
+   <windowImages i16="/org.knime.product/icons/gif/knime16.gif" i32="/org.knime.product/icons/gif/knime32.gif" i48="/org.knime.product/icons/gif/knime48.gif" i64="/org.knime.product/icons/gif/knime64.gif" i128="/org.knime.product/icons/gif/knime128.gif"/>
 
-   <splash location="org.knime.product"/>
+   <splash
+      location="org.knime.product" />
    <launcher name="knime">
       <linux icon="/org.knime.product/icons/knime128.xpm"/>
       <solaris/>
       <win useIco="false">
-         <bmp winLargeHigh="/org.knime.product/icons/bmp/knime48.bmp" winLargeLow="/org.knime.product/icons/bmp/knime48x8.bmp" winMediumHigh="/org.knime.product/icons/bmp/knime32.bmp" winMediumLow="/org.knime.product/icons/bmp/knime32x8.bmp" winSmallHigh="/org.knime.product/icons/bmp/knime16.bmp" winSmallLow="/org.knime.product/icons/bmp/knime16x8.bmp"/>
+         <bmp
+            winSmallHigh="/org.knime.product/icons/bmp/knime16.bmp"
+            winSmallLow="/org.knime.product/icons/bmp/knime16x8.bmp"
+            winMediumHigh="/org.knime.product/icons/bmp/knime32.bmp"
+            winMediumLow="/org.knime.product/icons/bmp/knime32x8.bmp"
+            winLargeHigh="/org.knime.product/icons/bmp/knime48.bmp"
+            winLargeLow="/org.knime.product/icons/bmp/knime48x8.bmp"/>
       </win>
    </launcher>
 
