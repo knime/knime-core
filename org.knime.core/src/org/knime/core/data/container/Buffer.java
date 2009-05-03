@@ -1762,7 +1762,7 @@ class Buffer implements KNIMEStreamConstants {
         private static final Object LOCK = new Object();
 
         private DeleteInBackgroundThread() {
-            super("KNIME Temp File Deleter");
+            super("KNIME-Temp-File-Deleter");
             m_filesToDeleteList = new LinkedBlockingQueue<File>();
         }
 
