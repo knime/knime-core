@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Source" icon="db_looper.png">
-	<name>Database Looping (BETA)</name>
+	<name>Database Looping</name>
 	
 	<shortDescription>
 	    Establishes and opens a database access connection from which to read 
