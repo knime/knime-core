@@ -26,10 +26,9 @@
  */
 package org.knime.base.data.sort;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 
 import org.knime.core.data.DataRow;
@@ -37,11 +36,12 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.container.CloseableRowIterator;
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -56,12 +56,12 @@ public class SortedTable implements DataTable {
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(SortedTable.class);
 
-    /**
-     * Number of cells for each container.
-     */
-    private static final int CONTAINERSIZE = 100000;
-
     private BufferedDataTable m_sortedTable;
+
+    private static final int MAX_OPEN_CONTAINERS = 20;
+
+    private static final int MAX_CELLS_PER_CONTAINER =
+            Math.max(DataContainer.MAX_CELLS_IN_MEMORY, 10000);
 
     /**
      * Hold the table spec to be used by the comparator inner class.
@@ -83,6 +83,8 @@ public class SortedTable implements DataTable {
      * ascending false: descending
      */
     private boolean[] m_sortAscending;
+
+    private long m_counter = 0;
 
     /**
      * Creates a new sorted table. Sorting is done with the given comparator.
@@ -156,7 +158,7 @@ public class SortedTable implements DataTable {
     public SortedTable(final BufferedDataTable dataTable,
             final List<String> inclList, final boolean[] sortAscending,
             final boolean sortInMemory, final ExecutionContext exec)
-    throws CanceledExecutionException {
+            throws CanceledExecutionException {
         m_rowComparator = new RowComparator();
         m_spec = dataTable.getDataTableSpec();
         // get the column indices of the columns that will be sorted
@@ -164,7 +166,7 @@ public class SortedTable implements DataTable {
         if (inclList == null) {
             throw new IllegalArgumentException(
                     "List of colums to include (incllist) is "
-                    + "not set in the model");
+                            + "not set in the model");
         } else {
             m_indices = new int[inclList.size()];
         }
@@ -180,8 +182,8 @@ public class SortedTable implements DataTable {
             final String dc = inclList.get(i);
             pos = m_spec.findColumnIndex(dc);
             if (pos == -1) {
-                throw new IllegalArgumentException("Could not find column name:"
-                        + dc.toString());
+                throw new IllegalArgumentException(
+                        "Could not find column name:" + dc.toString());
             }
             m_indices[i] = pos;
         }
@@ -232,143 +234,186 @@ public class SortedTable implements DataTable {
         LOGGER.debug("Write time: " + (System.currentTimeMillis() - time));
     }
 
+    /**
+     * Sorts the given data table using a disk-based k-way merge sort.
+     *
+     * @param dataTable the data table that should be sorted
+     * @param exec an execution context for reporting progress and creating
+     *            BufferedDataContainers
+     * @throws CanceledExecutionException if the user has canceled execution
+     */
     private void sortOnDisk(final BufferedDataTable dataTable,
             final ExecutionContext exec) throws CanceledExecutionException {
-        final ArrayList<BufferedDataContainer> containerVector =
-                new ArrayList<BufferedDataContainer>();
-        // Initialize RowIterator
-        final RowIterator rowIt = dataTable.iterator();
-        final int nrRows = dataTable.getRowCount();
-        int currentRowNr = 0;
+        final double maxRowsPerContainer =
+                MAX_CELLS_PER_CONTAINER
+                        / (double)dataTable.getSpec().getNumColumns();
+        final int contCount =
+                (int)Math.ceil(dataTable.getRowCount() / maxRowsPerContainer);
 
-        final int nrContainerRows = CONTAINERSIZE
-            / Math.max(1, m_spec.getNumColumns());
-        // wrap all DataRows in Containers of size containerSize
-        // sort each container before it is'stored'.
-        BufferedDataContainer newContainer =
-            exec.createDataContainer(m_spec, true, 0);
-        int nrRowsinContainer = 0;
-        // TODO: can be omitted due to new buffered table with known row size
-        final ArrayList<DataRow> containerrowlist = new ArrayList<DataRow>();
-        final ExecutionMonitor subexec = exec.createSubProgress(.5);
-        int chunkCounter = 1;
-        final int numChunks = (int)Math.ceil((double)nrRows / nrContainerRows);
-        while (rowIt.hasNext()) {
-            subexec.setProgress((double)currentRowNr / (double)nrRows,
-                    "Reading in data-chunk " + chunkCounter + "...");
-            exec.checkCanceled();
-            if (newContainer.isClosed()) {
-                newContainer = exec.createDataContainer(m_spec, true, 0);
-                nrRowsinContainer = 0;
-            }
-            final DataRow row = rowIt.next();
-            currentRowNr++;
-            nrRowsinContainer++;
-            containerrowlist.add(row);
-            if (nrRowsinContainer == nrContainerRows) {
+        // split the input table into chunks
+        BufferedDataContainer[] cont = new BufferedDataContainer[contCount];
+        DataRow[] rows = new DataRow[(int)Math.ceil(maxRowsPerContainer)];
+        cont[0] =
+                exec.createDataContainer(dataTable.getDataTableSpec(), true, 0);
+        m_counter = 0;
+        int k = 0, j = 0;
+        double max =
+                dataTable.getRowCount()
+                        + dataTable.getRowCount()
+                        * Math.ceil(Math.log(contCount)
+                                / Math.log(MAX_OPEN_CONTAINERS));
+        exec.setMessage("Reading table");
+        for (DataRow row : dataTable) {
+            rows[j++] = row;
+            if (++m_counter % rows.length == 0) {
                 exec.checkCanceled();
-                // sort list
-                subexec.setMessage("Presorting chunk " + chunkCounter + " of "
-                        + numChunks);
-                Collections.sort(containerrowlist, m_rowComparator);
-                // write in container
-                for (final DataRow row2 : containerrowlist) {
-                    newContainer.addRowToTable(row2);
+                Arrays.sort(rows, m_rowComparator);
+                for (int i = 0; i < rows.length; i++) {
+                    cont[k].addRowToTable(rows[i]);
+                    rows[i] = null;
                 }
-                newContainer.close();
-                containerVector.add(newContainer);
-                chunkCounter++;
-                containerrowlist.clear();
+                cont[k].close();
+                j = 0;
+                exec.setProgress(m_counter / max, "Reading table, " + m_counter
+                        + " rows read");
+                if (m_counter < dataTable.getRowCount()) {
+                    cont[++k] =
+                            exec.createDataContainer(dataTable
+                                    .getDataTableSpec(), true, 0);
+                }
             }
         }
-        if (nrRowsinContainer % nrContainerRows != 0) {
-            exec.checkCanceled();
-            // sort list
-            subexec.setMessage("Presorting chunk " + chunkCounter + " of "
-                    + numChunks);
-            Collections.sort(containerrowlist, m_rowComparator);
-            // write in container
-            for (final DataRow row2 : containerrowlist) {
-                newContainer.addRowToTable(row2);
+        if (j > 0) {
+            Arrays.sort(rows, 0, j, m_rowComparator);
+            for (int i = 0; i < j; i++) {
+                cont[k].addRowToTable(rows[i]);
+                rows[i] = null;
             }
-            newContainer.close();
-            containerVector.add(newContainer);
-            containerrowlist.clear();
+        }
+        cont[k].close();
+
+        // merge containers until only one is left
+        while (k > 0) {
+            exec.setMessage("Merging temporary tables, " + (k + 1)
+                    + " remaining");
+            int l = 0;
+            // only merge at most MAX_OPEN_CONTAINERS at the same time
+            // to avoid too many open file handles
+            for (int i = 0; i <= k; i += MAX_OPEN_CONTAINERS) {
+                cont[l++] =
+                        merge(cont, i,
+                                Math.min(i + MAX_OPEN_CONTAINERS, k + 1), exec,
+                                max);
+            }
+            k = l - 1;
         }
 
-        // merge all sorted containers together
-        final BufferedDataContainer mergeContainer =
-                exec.createDataContainer(m_spec, true, 0);
+        m_sortedTable = cont[0].getTable();
+    }
 
-        // an array of RowIterators gives access to all (sorted) containers
-        final RowIterator[] currentRowIterators =
-                new RowIterator[containerVector.size()];
-        final DataRow[] currentRowValues = new DataRow[containerVector.size()];
+    private static class MergeIterator extends RowIterator {
+        private DataRow m_nextRow;
 
-        // Initialise both arrays
-        for (int c = 0; c < containerVector.size(); c++) {
-            final BufferedDataContainer tempContainer = containerVector.get(c);
-            final DataTable tempTable = tempContainer.getTable();
-            currentRowIterators[c] = tempTable.iterator();
-        }
-        for (int c = 0; c < containerVector.size(); c++) {
-            currentRowValues[c] = currentRowIterators[c].next();
-        }
-        int position = -1;
+        private final CloseableRowIterator m_it;
 
-        // find the smallest/biggest element of all, put it in
-        // mergeContainer
-        final ExecutionMonitor subexec2 = exec.createSubProgress(.5);
-        for (int i = 0; i < currentRowNr; i++) {
-            subexec2.setProgress((double)i / (double)currentRowNr, "Merging");
-            exec.checkCanceled();
-            position = findNext(currentRowValues);
-            mergeContainer.addRowToTable(currentRowValues[position]);
-            if (currentRowIterators[position].hasNext()) {
-                currentRowValues[position] =
-                        currentRowIterators[position].next();
+        MergeIterator(final BufferedDataTable table) {
+            m_it = table.iterator();
+            if (m_it.hasNext()) {
+                m_nextRow = m_it.next();
             } else {
-                currentRowIterators[position] = null;
-                currentRowValues[position] = null;
+                m_it.close();
             }
         }
-        // Everything should be written out in the MergeContainer
-        for (int i = 0; i < currentRowIterators.length; i++) {
-            assert (currentRowValues[i] == null);
-            assert (currentRowIterators[i] == null);
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean hasNext() {
+            return (m_nextRow != null);
         }
-        mergeContainer.close();
-        final BufferedDataTable dt = mergeContainer.getTable();
-        assert (dt != null);
-        m_sortedTable = dt;
+
+        /**
+         * Returns the next row without advancing the iterator.
+         *
+         * @return the next row
+         */
+        public DataRow showNext() {
+            return m_nextRow;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataRow next() {
+            DataRow r = m_nextRow;
+            if (m_it.hasNext()) {
+                m_nextRow = m_it.next();
+            } else {
+                m_nextRow = null;
+                m_it.close();
+            }
+            return r;
+        }
     }
 
     /**
-     * This method finds the next DataRow (position) that should be inserted in
-     * the MergeContainer.
+     * Merges the data containers in the given array into one data container.
+     *
+     * @param cont an array with data containers
+     * @param left the first container in the array to merge (inclusive)
+     * @param right the last container in the array to merge (exclusive)
+     * @param exec an execution context
+     * @param max the maximum progress (number of processed rows)
+     * @return a merged and sorted data container
+     * @throws CanceledExecutionException if execution has been canceled by the
+     *             user
      */
-    private int findNext(final DataRow[] currentValues) {
-        int min = 0;
-        while (currentValues[min] == null) {
-            min++;
+    private BufferedDataContainer merge(final BufferedDataContainer[] cont,
+            final int left, final int right, final ExecutionContext exec,
+            final double max) throws CanceledExecutionException {
+        BufferedDataContainer out =
+                exec.createDataContainer(cont[left].getTableSpec(), true, 0);
+
+        // open iterators for all containers
+        MergeIterator[] it = new MergeIterator[right - left];
+        for (int i = left; i < right; i++) {
+            it[i - left] = new MergeIterator(cont[i].getTable());
         }
 
-        for (int i = min + 1; i < currentValues.length; i++) {
-            if (currentValues[i] != null) {
-                if (m_rowComparator.compare(currentValues[i],
-                        currentValues[min]) < 0) {
-                    min = i;
+        // we make a linear search through all open iterators to find the
+        // smallest row which we then add to the output container and advance
+        // the corresponding iterator one further
+        HashSet<MergeIterator> finished = new HashSet<MergeIterator>();
+        while (finished.size() < it.length) {
+            MergeIterator min = it[0];
+            for (int i = 1; i < it.length; i++) {
+                if ((it[i].showNext() != null)
+                        && (m_rowComparator.compare(min.showNext(), it[i]
+                                .showNext()) > 0)) {
+                    min = it[i];
                 }
             }
+
+            out.addRowToTable(min.next());
+            if (++m_counter % 1000 == 0) {
+                exec.checkCanceled();
+                exec.setProgress(m_counter / max);
+            }
+            if (!min.hasNext()) {
+                finished.add(min);
+            }
         }
-        return min;
+
+        out.close();
+        return out;
     }
 
     /**
      * {@inheritDoc}
      */
     public DataTableSpec getDataTableSpec() {
-
         return m_sortedTable.getDataTableSpec();
     }
 
@@ -376,7 +421,6 @@ public class SortedTable implements DataTable {
      * {@inheritDoc}
      */
     public RowIterator iterator() {
-
         return m_sortedTable.iterator();
     }
 
