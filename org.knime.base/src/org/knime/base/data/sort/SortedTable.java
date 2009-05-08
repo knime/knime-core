@@ -58,7 +58,7 @@ public class SortedTable implements DataTable {
 
     private BufferedDataTable m_sortedTable;
 
-    private static final int MAX_OPEN_CONTAINERS = 20;
+    private static final int MAX_OPEN_CONTAINERS = 40;
 
     private static final int MAX_CELLS_PER_CONTAINER =
             Math.max(DataContainer.MAX_CELLS_IN_MEMORY, 10000);
