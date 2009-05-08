@@ -43,6 +43,10 @@ public interface PreferenceConstants {
     /** Preference constant to confirm reconnecting a node. */
     public static final String P_CONFIRM_RECONNECT = "knime.confirm.reconnect";
     
+    /** Preference constant to confirm executing nodes not saved on close. */
+    public static final String P_CONFIRM_EXEC_NODES_NOT_SAVED = 
+        "knime.confirm.exec_nodes_not_saved";
+    
     /** Preference constant for the size of the favorite nodes frequency 
      * history size.
      */
