@@ -33,6 +33,18 @@ All other trademarks are the property of their respective owners.
 
    <windowImages i16="icons/gif/knime16.gif" i32="icons/gif/knime32.gif" i48="icons/gif/knime64.gif"/>
 
+
+   <launcher>
+      <solaris/>
+      <win useIco="false">
+         <bmp/>
+      </win>
+   </launcher>
+
+
+   <vm>
+   </vm>
+
    <plugins>
       <plugin id="com.ibm.icu"/>
       <plugin id="org.apache.log4j"/>
@@ -104,12 +116,12 @@ All other trademarks are the property of their respective owners.
    </plugins>
 
    <features>
-      <feature id="com.knime.features.staticreporting.runtime" version="1.0.0"/>
       <feature id="org.eclipse.gef" version="0.0.0"/>
       <feature id="org.eclipse.platform" version="0.0.0"/>
       <feature id="org.eclipse.rcp" version="0.0.0"/>
       <feature id="org.knime.features.base" version="2.0.2.0020587"/>
       <feature id="org.knime.features.product" version="2.0.2.0020587"/>
+      <feature id="com.knime.features.staticreporting.runtime" version="1.0.0"/>
    </features>
 
 </product>
