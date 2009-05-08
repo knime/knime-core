@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.4"?>
 
-<product name="KNIME Static Reporting (runtime)" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" version="1.0.0" useFeatures="true">
+<product name="KNIME Static Reporting (runtime)" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" version="2.1.0.0018128" useFeatures="true">
 
    <aboutInfo>
       <image path="icons/gif/knime128.gif"/>
