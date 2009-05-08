@@ -275,9 +275,11 @@ public class Rule {
                     case LT:
                         return RuleNodeFactory.lt(leftColIndex, rightColIndex,
                                 comp);
+                    case LIKE:
+                        return RuleNodeFactory.like(leftColIndex, rightColIndex);
                     default:
-                        throw new IllegalStateException("Unhandeled operator "
-                                + op);
+                        throw new ParseException("Unhandeled operator "
+                                + op, start);
                 }
             } else if (s[p] == '"') {
                 String t = parseString();
@@ -295,8 +297,8 @@ public class Rule {
                     case LIKE:
                         return RuleNodeFactory.like(leftColIndex, t);
                     default:
-                        throw new IllegalStateException("Unhandeled operator "
-                                + op);
+                        throw new ParseException("Unhandeled operator "
+                                + op, start);
                 }
             } else {
                 Number n = parseNumber();
@@ -323,8 +325,8 @@ public class Rule {
                     case LT:
                         return RuleNodeFactory.lt(leftColIndex, n);
                     default:
-                        throw new IllegalStateException("Unhandeled operator "
-                                + op);
+                        throw new ParseException("Unhandeled operator "
+                                + op, start);
                 }
             }
         } else if (s[p] == '"') {
@@ -345,7 +347,7 @@ public class Rule {
                 case LIKE:
                     return RuleNodeFactory.like(t, rightColIndex);
                 default:
-                    throw new IllegalStateException("Unhandeled operator " + op);
+                    throw new ParseException("Unhandeled operator " + op, p);
             }
         } else if ((s[p] >= '0') && (s[p] <= '9')) {
             Number n = parseNumber();
@@ -377,7 +379,7 @@ public class Rule {
                 case LT:
                     return RuleNodeFactory.ge(rightColIndex, n);
                 default:
-                    throw new IllegalStateException("Unhandeled operator " + op);
+                    throw new ParseException("Unhandeled operator " + op, start);
             }
         } else {
             throw new ParseException(

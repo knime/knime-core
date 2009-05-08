@@ -183,7 +183,9 @@ final class RuleNodeFactory {
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
-                    if (c.isMissing()) { return false; }
+                    if (c.isMissing()) {
+                        return false;
+                    }
                     return ((IntValue)c).getIntValue() > v;
                 }
 
@@ -200,7 +202,9 @@ final class RuleNodeFactory {
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
-                    if (c.isMissing()) { return false; }
+                    if (c.isMissing()) {
+                        return false;
+                    }
                     return ((DoubleValue)c).getDoubleValue() > v;
                 }
 
@@ -228,7 +232,9 @@ final class RuleNodeFactory {
         return new RuleNode() {
             public boolean evaluate(final DataRow row) {
                 DataCell c = row.getCell(col);
-                if (c.isMissing()) { return false; }
+                if (c.isMissing()) {
+                    return false;
+                }
                 return c.toString().compareTo(value) > 0;
             }
 
@@ -287,7 +293,9 @@ final class RuleNodeFactory {
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
-                    if (c.isMissing()) { return false; }
+                    if (c.isMissing()) {
+                        return false;
+                    }
                     return ((IntValue)c).getIntValue() >= v;
                 }
 
@@ -304,7 +312,9 @@ final class RuleNodeFactory {
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
-                    if (c.isMissing()) { return false; }
+                    if (c.isMissing()) {
+                        return false;
+                    }
                     return ((DoubleValue)c).getDoubleValue() >= v;
                 }
 
@@ -332,7 +342,9 @@ final class RuleNodeFactory {
         return new RuleNode() {
             public boolean evaluate(final DataRow row) {
                 DataCell c = row.getCell(col);
-                if (c.isMissing()) { return false; }
+                if (c.isMissing()) {
+                    return false;
+                }
                 return c.toString().compareTo(value) >= 0;
             }
 
@@ -390,7 +402,9 @@ final class RuleNodeFactory {
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
-                    if (c.isMissing()) { return false; }
+                    if (c.isMissing()) {
+                        return false;
+                    }
                     return ((IntValue)c).getIntValue() < v;
                 }
 
@@ -408,7 +422,9 @@ final class RuleNodeFactory {
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
-                    if (c.isMissing()) { return false; }
+                    if (c.isMissing()) {
+                        return false;
+                    }
                     return ((DoubleValue)c).getDoubleValue() < v;
                 }
 
@@ -436,7 +452,9 @@ final class RuleNodeFactory {
         return new RuleNode() {
             public boolean evaluate(final DataRow row) {
                 DataCell c = row.getCell(col);
-                if (c.isMissing()) { return false; }
+                if (c.isMissing()) {
+                    return false;
+                }
                 return c.toString().compareTo(value) < 0;
             }
 
@@ -495,7 +513,9 @@ final class RuleNodeFactory {
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
-                    if (c.isMissing()) { return false; }
+                    if (c.isMissing()) {
+                        return false;
+                    }
                     return ((IntValue)c).getIntValue() <= v;
                 }
 
@@ -512,7 +532,9 @@ final class RuleNodeFactory {
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
-                    if (c.isMissing()) { return false; }
+                    if (c.isMissing()) {
+                        return false;
+                    }
                     return ((DoubleValue)c).getDoubleValue() <= v;
                 }
 
@@ -540,7 +562,9 @@ final class RuleNodeFactory {
         return new RuleNode() {
             public boolean evaluate(final DataRow row) {
                 DataCell c = row.getCell(col);
-                if (c.isMissing()) { return false; }
+                if (c.isMissing()) {
+                    return false;
+                }
                 return c.toString().compareTo(value) <= 0;
             }
 
@@ -594,7 +618,9 @@ final class RuleNodeFactory {
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
-                    if (c.isMissing()) { return false; }
+                    if (c.isMissing()) {
+                        return false;
+                    }
                     return ((IntValue)c).getIntValue() == v;
                 }
 
@@ -611,7 +637,9 @@ final class RuleNodeFactory {
             return new RuleNode() {
                 public boolean evaluate(final DataRow row) {
                     DataCell c = row.getCell(col);
-                    if (c.isMissing()) { return false; }
+                    if (c.isMissing()) {
+                        return false;
+                    }
                     return ((DoubleValue)c).getDoubleValue() == v;
                 }
 
@@ -639,7 +667,9 @@ final class RuleNodeFactory {
         return new RuleNode() {
             public boolean evaluate(final DataRow row) {
                 DataCell c = row.getCell(col);
-                if (c.isMissing()) { return false; }
+                if (c.isMissing()) {
+                    return false;
+                }
                 return c.toString().equals(value);
             }
 
@@ -670,7 +700,9 @@ final class RuleNodeFactory {
         return new RuleNode() {
             public boolean evaluate(final DataRow row) {
                 DataCell c = row.getCell(col);
-                if (c.isMissing()) { return false; }
+                if (c.isMissing()) {
+                    return false;
+                }
                 return p.matcher(c.toString()).matches();
             }
 
@@ -698,7 +730,9 @@ final class RuleNodeFactory {
         return new RuleNode() {
             public boolean evaluate(final DataRow row) {
                 DataCell c = row.getCell(col);
-                if (c.isMissing()) { return false; }
+                if (c.isMissing()) {
+                    return false;
+                }
                 String regex = WildcardMatcher.wildcardToRegex(c.toString());
                 return value.matches(regex);
             }
@@ -709,6 +743,43 @@ final class RuleNodeFactory {
             @Override
             public String toString() {
                 return " \"" + value + "\" " + Operators.LIKE + "$" + col + "$";
+            }
+        };
+    }
+
+    /**
+     * Returns a new like not that tries to match a fixed wildcard expression to
+     * the value in a column.
+     *
+     * @param col1 the left column's index
+     * @param col2 the right column's index, whose value is interpreted as a
+     *            wildcard pattern (with * and ? as wildcards)
+     *
+     * @return a new like node
+     */
+    public static RuleNode like(final int col1, final int col2) {
+        return new RuleNode() {
+            public boolean evaluate(final DataRow row) {
+                DataCell c1 = row.getCell(col1);
+                if (c1.isMissing()) {
+                    return false;
+                }
+
+                DataCell c2 = row.getCell(col2);
+                if (c2.isMissing()) {
+                    return false;
+                }
+
+                return c1.toString().matches(
+                        WildcardMatcher.wildcardToRegex(c2.toString()));
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public String toString() {
+                return "$" + col1 + "$ " + Operators.LIKE + " $" + col2 + "$";
             }
         };
     }
@@ -729,7 +800,9 @@ final class RuleNodeFactory {
             public boolean evaluate(final DataRow row) {
                 for (String s : temp) {
                     DataCell c = row.getCell(col);
-                    if (c.isMissing()) { continue; }
+                    if (c.isMissing()) {
+                        continue;
+                    }
 
                     if (c.toString().equals(s)) {
                         return true;
@@ -751,25 +824,25 @@ final class RuleNodeFactory {
     }
 
     /**
-    * Creates a new MISSING node.
-    *
-    * @param col the column int the row to be checked
-    *
-    * @return a new MISSING node
-    */
-   public static RuleNode missing(final int col) {
-       return new RuleNode() {
-           public boolean evaluate(final DataRow row) {
-               return row.getCell(col).isMissing();
-           }
+     * Creates a new MISSING node.
+     *
+     * @param col the column int the row to be checked
+     *
+     * @return a new MISSING node
+     */
+    public static RuleNode missing(final int col) {
+        return new RuleNode() {
+            public boolean evaluate(final DataRow row) {
+                return row.getCell(col).isMissing();
+            }
 
-           /**
-            * {@inheritDoc}
-            */
-           @Override
-           public String toString() {
-               return Operators.MISSING + " $" + col + "$";
-           }
-       };
-   }
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public String toString() {
+                return Operators.MISSING + " $" + col + "$";
+            }
+        };
+    }
 }
