@@ -161,6 +161,7 @@ public class SortedTable implements DataTable {
             throws CanceledExecutionException {
         m_rowComparator = new RowComparator();
         m_spec = dataTable.getDataTableSpec();
+
         // get the column indices of the columns that will be sorted
         // also make sure that m_inclList and m_sortOrder both exist
         if (inclList == null) {
@@ -188,7 +189,9 @@ public class SortedTable implements DataTable {
             m_indices[i] = pos;
         }
 
-        if (sortInMemory) {
+        if (dataTable.getRowCount() == 0) {
+            m_sortedTable = dataTable;
+        } else if (sortInMemory) {
             sortInMemory(dataTable, exec);
         } else {
             sortOnDisk(dataTable, exec);
@@ -244,6 +247,7 @@ public class SortedTable implements DataTable {
      */
     private void sortOnDisk(final BufferedDataTable dataTable,
             final ExecutionContext exec) throws CanceledExecutionException {
+        assert dataTable.getRowCount() > 0;
         final double maxRowsPerContainer =
                 MAX_CELLS_PER_CONTAINER
                         / (double)dataTable.getSpec().getNumColumns();
@@ -389,9 +393,9 @@ public class SortedTable implements DataTable {
         while (finished.size() < it.length) {
             MergeIterator min = it[0];
             for (int i = 1; i < it.length; i++) {
-                if ((it[i].showNext() != null)
-                        && (m_rowComparator.compare(min.showNext(), it[i]
-                                .showNext()) > 0)) {
+                if (!min.hasNext()
+                        || (it[i].hasNext() && (m_rowComparator.compare(min
+                                .showNext(), it[i].showNext()) > 0))) {
                     min = it[i];
                 }
             }
