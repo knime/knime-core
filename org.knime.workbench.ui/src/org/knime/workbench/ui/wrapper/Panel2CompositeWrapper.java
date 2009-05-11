@@ -24,15 +24,14 @@
  */
 package org.knime.workbench.ui.wrapper;
 
-import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.Frame;
-import java.awt.Panel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+import javax.swing.JApplet;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
@@ -80,15 +79,13 @@ public class Panel2CompositeWrapper extends Composite {
                 }
             });
         }
-        /* Use another panel to enable cursor switching (for instance
-         * in an embedded JSplitPane where the mouse cursor changes when you
-         * adjust the pane sizes. This is the workaround for bug #594 as
-         * suggested by 
-         * https://bugs.eclipse.org/bugs/show_bug.cgi?id=58308
-         */
-        Panel wrap = new Panel(new BorderLayout());
         // use panel as root
         m_awtPanel = panel;
+        /* Create another root pane container (JApplet) to enable swing/awt 
+         * components and SWT frames/dialogs to work smoothly together:
+         * http://www.eclipse.org/articles/article.php?file=Article-Swing-SWT-Integration/index.html
+         */
+        JApplet wrap = new JApplet();
         wrap.add(m_awtPanel);
         m_awtFrame.add(wrap);
         
