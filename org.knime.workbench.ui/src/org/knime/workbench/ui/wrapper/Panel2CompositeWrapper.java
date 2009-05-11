@@ -62,7 +62,7 @@ public class Panel2CompositeWrapper extends Composite {
      */
     public Panel2CompositeWrapper(final Composite parent,
             final JPanel panel, final int style) {
-        super(parent, style | SWT.EMBEDDED);
+        super(parent, style | SWT.EMBEDDED | SWT.NO_BACKGROUND);
         final GridLayout gridLayout = new GridLayout();
         gridLayout.verticalSpacing = 0;
         gridLayout.marginWidth = 0;
