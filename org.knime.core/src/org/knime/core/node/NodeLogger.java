@@ -418,7 +418,9 @@ public final class NodeLogger {
      */
     public void warn(final Object o, final Throwable t) {
         this.warn(o);
-        this.debug(o, t);
+        if (t != null) {
+            this.debug(o, t);
+        }
     }
 
     /**
@@ -439,7 +441,9 @@ public final class NodeLogger {
      */
     public void info(final Object o, final Throwable t) {
         this.info(o);
-        this.debug(o, t);
+        if (t != null) {
+            this.debug(o, t);
+        }
     }
 
     /**
@@ -450,7 +454,9 @@ public final class NodeLogger {
      */
     public void error(final Object o, final Throwable t) {
         this.error(o);
-        this.debug(o, t);
+        if (t != null) {
+            this.debug(o, t);
+        }
     }
 
     /**
@@ -501,7 +507,9 @@ public final class NodeLogger {
      */
     public void coding(final Object o, final Throwable t) {
         this.coding(o);
-        this.debug(o, t);
+        if (t != null) {
+            this.debug(o, t);
+        }
     }
 
     /**
@@ -512,7 +520,9 @@ public final class NodeLogger {
      */
     public void fatal(final Object o, final Throwable t) {
         this.fatal(o);
-        this.debug(o, t);
+        if (t != null) {
+            this.debug(o, t);
+        }
     }
 
     /**
