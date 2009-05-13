@@ -1102,12 +1102,13 @@ public final class WorkflowManager extends NodeContainer {
                 // we don't need to worry about the correct order since
                 // we will reset everything in here anyway.
                 NodeContainer nc = m_workflow.getNode(id);
-                assert nc != null;
-                if (nc instanceof SingleNodeContainer) {
-                    ((SingleNodeContainer)nc).reset();
-                } else {
-                    assert nc instanceof WorkflowManager;
-                    ((WorkflowManager)nc).resetAllNodesInWFM();
+                if (nc.isResetable()) {
+                    if (nc instanceof SingleNodeContainer) {
+                        ((SingleNodeContainer)nc).reset();
+                    } else {
+                        assert nc instanceof WorkflowManager;
+                        ((WorkflowManager)nc).resetAllNodesInWFM();
+                    }
                 }
             }
             // don't let the WFM decide on the state himself - for example,
@@ -1501,7 +1502,11 @@ public final class WorkflowManager extends NodeContainer {
             if (nc == null) {
                 throw new IllegalStateException("Node in loop body not in"
                     + " same workflow as head&tail!");
-            }
+            } else if (!nc.isResetable()) {
+                LOGGER.warn("Node " + nc.getNameWithID() + " is not resetable "
+                        + "during loop run, it is " + nc.getState());
+                continue;
+            } 
             if (nc instanceof SingleNodeContainer) {
                 ((SingleNodeContainer)nc).reset();
             } else {
