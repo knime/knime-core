@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 7, 2006 (sieb): created
  */
@@ -77,13 +77,14 @@ import org.knime.workbench.ui.navigator.actions.ExecuteWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ExportKnimeWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ImportKnimeWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ResetWorkflowAction;
+import org.knime.workbench.ui.navigator.actions.WFShowJobMgrViewAction;
 
 
 /**
  * This class is a filtered view on a knime project which hides utitility files
  * from the tree. Such files include the data files, pmml files and files being
  * used to save the internals of a node.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class KnimeResourceNavigator extends ResourceNavigator implements
@@ -92,7 +93,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
             NodeLogger.getLogger(KnimeResourceNavigator.class);
 
     /** ID as defined in plugin.xml. */
-    public static final String ID 
+    public static final String ID
         = "org.knime.workbench.ui.navigator.KnimeResourceNavigator";
 
     /**
@@ -102,9 +103,9 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      */
 
     public KnimeResourceNavigator() {
-        super(); 
+        super();
         LOGGER.debug("KNIME resource navigator created");
-        
+
         ResourcesPlugin.getWorkspace().addResourceChangeListener(
                 new KnimeResourceChangeListener(this));
 
@@ -117,7 +118,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 LOGGER.debug("ROOT's workflow has changed " + event.getType());
                 switch (event.getType()) {
                 case NODE_ADDED:
-                    NodeContainer ncAdded = (NodeContainer)event.getNewValue(); 
+                    NodeContainer ncAdded = (NodeContainer)event.getNewValue();
                     LOGGER.debug(
                             "Workflow " + ncAdded.getNameWithID() + " added");
                     if (getViewer() != null) {
@@ -129,8 +130,8 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                     }
                     break;
                 case NODE_REMOVED:
-                    NodeContainer ncRem = (NodeContainer)event.getOldValue(); 
-                    LOGGER.debug("Workflow " + ncRem.getNameWithID() 
+                    NodeContainer ncRem = (NodeContainer)event.getOldValue();
+                    LOGGER.debug("Workflow " + ncRem.getNameWithID()
                             + " removed");
                     if (getViewer() != null) {
                         Display.getDefault().asyncExec(new Runnable() {
@@ -146,32 +147,32 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                     // ignored, not interesting in this context
                 }
             }
-            
+
         });
-        
-        // to be sure register to all existing projects (in case they are added 
-        // before this constructor is called) 
+
+        // to be sure register to all existing projects (in case they are added
+        // before this constructor is called)
 //        for (NodeContainer nc : WorkflowManager.ROOT.getNodeContainers()) {
 //                // register here to this nc and listen to changes
 //                // on change -> update labels
 //                // TODO: remove the listener?
 //                nc.addNodeStateChangeListener(this);
 //        }
-        
+
     }
-    
-    
+
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     public void stateChanged(final NodeStateEvent state) {
         LOGGER.debug("state changed to " + state.getState());
         doRefresh(state.getSource());
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -179,7 +180,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         LOGGER.debug("Node message changed: " + messageEvent.getMessage());
         doRefresh(messageEvent.getSource());
     }
-    
+
     private void doRefresh(final NodeID nodeResource) {
         SyncExecQueueDispatcher.asyncExec(new Runnable() {
             public void run() {
@@ -187,7 +188,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                     String name =  ProjectWorkflowMap.findProjectFor(
                             nodeResource);
                     if (name != null) {
-                        // we have to find the resource again, hence we cannot 
+                        // we have to find the resource again, hence we cannot
                         // put the project's name with toLowercase into the map
                         IResource rsrc = ResourcesPlugin.getWorkspace()
                             .getRoot().findMember(new Path(name));
@@ -202,10 +203,10 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                     // node couldn't be found -> so we don't make a refresh
                 }
             }
-        });        
+        });
     }
-    
-    
+
+
     /**
      * {@inheritDoc}
      */
@@ -215,9 +216,9 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 | SWT.V_SCROLL) {
             @Override
             protected void handleDoubleSelect(final SelectionEvent event) {
-                // we have to consume this event in order to avoid 
+                // we have to consume this event in order to avoid
                 // expansion/collaps of the double clicked project
-                // strangly enough it opens anyway and the collopased or 
+                // strangly enough it opens anyway and the collopased or
                 // expanded state remains
             }
         };
@@ -227,7 +228,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         initFilters(viewer);
         initListeners(viewer);
 //        viewer.getControl().setDragDetect(false);
-        
+
         /*
         // TODO: if we want to support linking to editor
          * we have to enable this and add a cast to WorkflowRootEditPart
@@ -242,10 +243,10 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
             }
         });
         */
-        
+
         return viewer;
     }
-    
+
     @Override
     protected void initDragAndDrop() {
         TreeViewer viewer = getViewer();
@@ -256,9 +257,9 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 LocalSelectionTransfer.getTransfer(),
                 FileTransfer.getInstance()}, new WorkflowMoveDropListener());
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -267,12 +268,12 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         ProjectWorkflowMap.removeStateListener(this);
         ProjectWorkflowMap.removeNodeMessageListener(this);
     }
-    
-    
+
+
 
     /**
      * Adds the filters to the viewer.
-     * 
+     *
      * @param viewer the viewer
      * @since 2.0
      */
@@ -285,7 +286,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
 
     /**
      * Sets the label provider for the viewer.
-     * 
+     *
      * @param viewer the viewer
      * @since 2.0
      */
@@ -299,7 +300,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     /**
      * Handles an open event from the viewer. Opens an editor on the selected
      * knime project.
-     * 
+     *
      * @param event the open event
      */
     @Override
@@ -313,7 +314,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
             IFile file = null;
             Path wfPath = new Path(WorkflowPersistor.WORKFLOW_FILE);
             if (container.exists(wfPath)) {
-                if (container.getParent() != null 
+                if (container.getParent() != null
                         && !container.getParent().exists(wfPath)) {
                     file = (IFile)container.findMember(
                             WorkflowPersistor.WORKFLOW_FILE);
@@ -329,7 +330,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
             if (file != null && file.exists()) {
                 StructuredSelection selection2 =
                         new StructuredSelection(file);
-                
+
                 OpenFileAction action = new OpenFileAction(
                         PlatformUI.getWorkbench().getActiveWorkbenchWindow()
                         .getActivePage());
@@ -344,7 +345,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      * subgroups. Additionally the close project item is removed as not intended
      * for the kinme projects. Note: Projects which are closed in the default
      * navigator are not shown in the knime navigator any more.
-     * 
+     *
      * @param menu the context menu
      */
     @Override
@@ -369,7 +370,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 } else if (aItem.getAction() instanceof OpenInNewWindowAction) {
 
                     menu.remove(aItem);
-                } else if (aItem.getAction() 
+                } else if (aItem.getAction()
                         instanceof CloseUnrelatedProjectsAction) {
                     menu.remove(aItem);
                 }
@@ -396,15 +397,17 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         // not openable.
         menu.insertBefore(id, new Separator());
         menu.insertBefore(id, new OpenKnimeProjectAction(this));
-        
+
         menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
-        menu.insertAfter(ExportKnimeWorkflowAction.ID, 
+        menu.insertAfter(ExportKnimeWorkflowAction.ID,
                 new CreateSubfolderAction());
-        menu.insertAfter(ExportKnimeWorkflowAction.ID, 
+        menu.insertAfter(ExportKnimeWorkflowAction.ID,
                 new EditMetaInfoAction());
         menu.insertAfter(ExportKnimeWorkflowAction.ID, new Separator());
-        
+
 //        if (NodeExecutionJobManagerPool.getNumberOfJobManagersFactories() > 1) {
+        menu.insertAfter(ExportKnimeWorkflowAction.ID,
+                new WFShowJobMgrViewAction());
         menu.insertAfter(ExportKnimeWorkflowAction.ID,
                 new ResetWorkflowAction());
         menu.insertAfter(ExportKnimeWorkflowAction.ID,
@@ -419,7 +422,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         // TODO: insert actions for
         // - execute
         // - cancel
-        
+
         menu.insertBefore(id, new Separator());
 
         // another bad workaround to replace the first "New" menu manager
@@ -440,7 +443,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
 
     /**
      * Sets the content provider for the viewer.
-     * 
+     *
      * @param viewer the viewer
      * @since 2.0
      */
@@ -448,11 +451,11 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     protected void initContentProvider(final TreeViewer viewer) {
         viewer.setContentProvider(new KnimeResourceContentProvider());
     }
-    
+
 
     /// NOT REGISTERED!!!
-    
-    
+
+
     /**
      * {@inheritDoc}
      */
@@ -467,10 +470,10 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 e.printStackTrace();
             }
 
-        
+
         /*
         // do nothing
-        try {            
+        try {
             LOGGER.debug("refreshing " + event.getResource().getName());
             event.getResource().refreshLocal(IResource.DEPTH_INFINITE, null);
         } catch (CoreException ce) {
@@ -479,7 +482,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         }
         */
     }
-    
+
     private class ResourceVisitor implements IResourceDeltaVisitor {
     private String getTypeString(final IResourceDelta delta) {
         StringBuffer buffer = new StringBuffer();

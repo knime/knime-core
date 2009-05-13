@@ -75,6 +75,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
+import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.ScopeLoopContext.RestoredScopeLoopContext;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -331,6 +332,7 @@ public final class WorkflowManager extends NodeContainer {
      * @param nodeID id of node to be removed
      */
     public void removeNode(final NodeID nodeID) {
+
         NodeContainer nc;
         synchronized (m_workflowMutex) {
             // if node does not exist, simply return
@@ -2197,7 +2199,8 @@ public final class WorkflowManager extends NodeContainer {
         if (m_nodeDialogPane == null) {
             if (hasDialog()) {
                 m_nodeDialogPane = new EmptyNodeDialogPane();
-                m_nodeDialogPane.addJobMgrTab();
+                // workflow manager jobs can't be split
+                m_nodeDialogPane.addJobMgrTab(SplitType.DISALLOWED);
             } else {
                 throw new IllegalStateException("Workflow has no dialog");
             }
@@ -3845,6 +3848,7 @@ public final class WorkflowManager extends NodeContainer {
     @Override
     void cleanup() {
         synchronized (m_workflowMutex) {
+            super.cleanup();
             for (NodeContainer nc : m_workflow.getNodeValues()) {
                 nc.cleanup();
             }

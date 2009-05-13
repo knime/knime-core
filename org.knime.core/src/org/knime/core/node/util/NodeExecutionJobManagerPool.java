@@ -43,7 +43,7 @@ import org.knime.core.util.ThreadPool;
 /**
  * Collects all registered JobManager extensions and holds an instance of each
  * in a set.
- * 
+ *
  * @author ohl, University of Konstanz
  */
 public final class NodeExecutionJobManagerPool {
@@ -72,7 +72,7 @@ public final class NodeExecutionJobManagerPool {
      * doesn't exists. If the job manager factory is provided by an extension
      * (plug-in) that is currently not installed this returns null, even though
      * in another KNIME installation it may not.
-     * 
+     *
      * @param id the id of the job manager factory to return
      * @return the job manager factory with the specified id, or null if there
      *         is none.
@@ -93,7 +93,7 @@ public final class NodeExecutionJobManagerPool {
 
     /**
      * Saves the argument job manager to a settings object.
-     * 
+     *
      * @param jobManager The job manager to save.
      * @param settings To save to.
      */
@@ -107,7 +107,7 @@ public final class NodeExecutionJobManagerPool {
     /**
      * Restores a job manager given the parameters contained in the argument
      * settings.
-     * 
+     *
      * @param sncSettings To load from.
      * @return A customized job manager or the default one if no settings were
      *         stored.
@@ -132,8 +132,38 @@ public final class NodeExecutionJobManagerPool {
     }
 
     /**
+     * Updates the settings of the passed job manager - if the settings specify
+     * the same type of job manager - or creates and returns a new instance of
+     * that new type of job manager.
+     *
+     * @param instance the "old" job manager that will be updated if its type
+     *            fits the type in the settings, or null to create a new instance.
+     * @param ncSettings the new settings to apply
+     * @return either the specified instance with new settings, or a new
+     *         instance of a new type with the new settings.
+     * @throws InvalidSettingsException if the settings are invalid
+     */
+    public static NodeExecutionJobManager load(
+            final NodeExecutionJobManager instance,
+            final NodeSettingsRO ncSettings) throws InvalidSettingsException {
+        if (instance == null) {
+            // create a new instance then.
+            return load(ncSettings);
+        }
+        String jobManagerID = ncSettings.getString(CFG_JOB_MANAGER_FACTORY_ID);
+        if (!instance.getID().equals(jobManagerID)) {
+            // The settings request a different job manager: create it then.
+            return load(ncSettings);
+        }
+        NodeSettingsRO sub =
+                ncSettings.getNodeSettings(CFG_JOB_MANAGER_SETTINGS);
+        instance.load(sub);
+        return instance;
+    }
+
+    /**
      * There is always at least one job manager factory availably.
-     * 
+     *
      * @return the default job manager
      */
     public static NodeExecutionJobManagerFactory getDefaultJobManagerFactory() {
@@ -144,7 +174,7 @@ public final class NodeExecutionJobManagerPool {
      * Returns the number of job manager factories registered through the
      * extension point. A call to this method may trigger instantiation of all
      * job manager factories.
-     * 
+     *
      * @return the number of registered job manager factories
      */
     public static int getNumberOfJobManagersFactories() {
@@ -155,10 +185,10 @@ public final class NodeExecutionJobManagerPool {
     }
 
     /**
-     * Returns names of all registered {@link NodeExecutionJobManagerFactory}s. 
-     * If this method is called for the first time it starts instantiating all 
+     * Returns names of all registered {@link NodeExecutionJobManagerFactory}s.
+     * If this method is called for the first time it starts instantiating all
      * job manager factories.
-     * 
+     *
      * @return names of all registered {@link NodeExecutionJobManagerFactory}s
      */
     public static Collection<String> getAllJobManagerFactoryIDs() {

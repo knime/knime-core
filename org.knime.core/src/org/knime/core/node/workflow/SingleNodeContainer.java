@@ -924,7 +924,16 @@ public final class SingleNodeContainer extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     public boolean areDialogAndNodeSettingsEqual() {
-        return m_node.areDialogAndNodeSettingsEqual();
+        final String key = "snc_settings";
+        NodeSettingsWO nodeSettings = new NodeSettings(key);
+        saveSettings(nodeSettings);
+        NodeSettingsWO dlgSettings = new NodeSettings(key);
+        try {
+            m_node.getDialogPane().finishEditingAndSaveSettingsTo(dlgSettings);
+        } catch (InvalidSettingsException e) {
+            return false;
+        }
+        return dlgSettings.equals(nodeSettings);
     }
 
     /** {@inheritDoc} */

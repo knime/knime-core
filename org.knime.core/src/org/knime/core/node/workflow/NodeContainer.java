@@ -212,8 +212,13 @@ public abstract class NodeContainer implements NodeProgressListener {
             throw new NullPointerException(
                     "Root workflow manager must have a job manager.");
         }
-        m_jobManager = je;
-        notifyJobManagerChangedListener();
+        if (je != m_jobManager) {
+            if ( m_jobManager != null) {
+                m_jobManager.closeAllViews();
+            }
+            m_jobManager = je;
+            notifyJobManagerChangedListener();
+        }
     }
 
     /**
@@ -805,18 +810,25 @@ public abstract class NodeContainer implements NodeProgressListener {
 
     void loadSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        /*
+         * this is awkward. We don't have a member for NodeContainerSettings.
+         * This object is just created to load (and save) the node container
+         * settings. Now, we want to preserve the job manager instance, if
+         * possible (i.e. if the same type of mgr is set, just with new
+         * settings). Thus, we set it in the new NodeContainerSettings instance,
+         * that is overloaded then - but it takes care of the mgr set.
+         */
         NodeContainerSettings ncSet = new NodeContainerSettings();
+        ncSet.setJobManager(getJobManager());
         ncSet.load(settings);
+        // the job manager instance will be the same, if settings permit
         setJobManager(ncSet.getJobManager());
-        assert ncSet.getSplitType() == null
-                || ncSet.getSplitType().equals(this.getSplitType());
         setDirty();
     }
 
     void saveSettings(final NodeSettingsWO settings) {
         NodeContainerSettings ncSet = new NodeContainerSettings();
         ncSet.setJobManager(m_jobManager);
-        ncSet.setSplitType(getSplitType());
         ncSet.save(settings);
     }
 
@@ -829,7 +841,7 @@ public abstract class NodeContainer implements NodeProgressListener {
         return true;
     }
 
-    private SplitType getSplitType() {
+    SplitType getSplitType() {
         if (this instanceof WorkflowManager) {
             return NodeContainerSettings.SplitType.DISALLOWED;
         }
@@ -859,8 +871,8 @@ public abstract class NodeContainer implements NodeProgressListener {
         int numOfNodeViews = getNrNodeViews();
 
         // TODO: Assuming that the Default has not views!!!
-        if (getJobManager() != null && getJobManager().getNumberOfViews() > 0) {
-            // all job manager panels go in one view!
+        if (getJobManager() != null && getJobManager().hasView()) {
+            // job managers have only one view
             return numOfNodeViews + 1;
         }
 
@@ -889,8 +901,7 @@ public abstract class NodeContainer implements NodeProgressListener {
             return getNodeView(i);
         } else {
             assert getJobManager() != null : "Job Manager changed: No view!!";
-            return new NodeExecutionJobManagerView(getJobManager(), this,
-                    new NodeExecutionJobManagerBlankModel());
+            return getJobManager().getView(this);
         }
     }
 
@@ -906,8 +917,14 @@ public abstract class NodeContainer implements NodeProgressListener {
      * Must be called when the node is reset.
      */
     protected void resetJobManagerViews() {
-        if (getJobManager() != null) {
-            getJobManager().resetViewPanels();
+        if (getJobManager() != null && getJobManager().hasView()) {
+            getJobManager().resetAllViews();
+        }
+    }
+
+    protected void closeAllJobManagerViews() {
+        if (getJobManager() != null && getJobManager().hasView()) {
+            getJobManager().closeAllViews();
         }
     }
 
@@ -995,6 +1012,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      * node (deletes temp files).
      */
     void cleanup() {
+        closeAllJobManagerViews();
     }
 
     /**
@@ -1113,7 +1131,7 @@ public abstract class NodeContainer implements NodeProgressListener {
         result.setState(getState());
         result.setMessage(m_nodeMessage);
     }
-    
+
     /** Helper class that defines load/save routines for general NodeContainer
      * properties. This is currently only the job manager. */
     public static final class NodeContainerSettings {
@@ -1127,7 +1145,6 @@ public abstract class NodeContainer implements NodeProgressListener {
             USER
         }
         private NodeExecutionJobManager m_jobManager;
-        private SplitType m_splitType;
 
         /** @param jobManager the jobManager to set */
         public void setJobManager(final NodeExecutionJobManager jobManager) {
@@ -1139,21 +1156,6 @@ public abstract class NodeContainer implements NodeProgressListener {
             return m_jobManager;
         }
 
-        /**
-         * Stores the type of splitting the node supports.
-         * @param type the splitting type to store
-         */
-        public void setSplitType(final SplitType type) {
-            m_splitType = type;
-        }
-
-        /**
-         * @return the stored split type
-         */
-        public SplitType getSplitType() {
-            return m_splitType;
-        }
-
         /** Save all properties (currently only job manager) to argument.
          * @param settings To save to.
          */
@@ -1162,12 +1164,12 @@ public abstract class NodeContainer implements NodeProgressListener {
                 NodeExecutionJobManagerPool.saveJobManager(
                         m_jobManager, settings.addNodeSettings("job.manager"));
             }
-            if  (m_splitType != null) {
-                settings.addString("split.type", m_splitType.name());
-            }
         }
 
-        /** Restores all settings (currently only job manager) from argument.
+        /**
+         * Restores all settings (currently only job manager and its
+         * settings) from argument.
+         *
          * @param settings To load from.
          * @throws InvalidSettingsException If that's not possible.
          */
@@ -1175,16 +1177,10 @@ public abstract class NodeContainer implements NodeProgressListener {
                 throws InvalidSettingsException {
             if (settings.containsKey("job.manager")) {
                 NodeSettingsRO s = settings.getNodeSettings("job.manager");
-                m_jobManager = NodeExecutionJobManagerPool.load(s);
-            }
-            if (settings.containsKey("split.type")) {
-                try {
-                    m_splitType =
-                            SplitType.valueOf(settings.getString("split.type",
-                                    SplitType.DISALLOWED.name()));
-                } catch (IllegalArgumentException iae) {
-                    m_splitType = null;
-                }
+                m_jobManager =
+                        NodeExecutionJobManagerPool.load(m_jobManager, s);
+            } else {
+                m_jobManager = null;
             }
         }
 

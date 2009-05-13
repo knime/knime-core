@@ -29,8 +29,10 @@ import java.net.URL;
 
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
@@ -115,7 +117,7 @@ public interface NodeExecutionJobManager {
      * an executing job.
      *
      * @param settings reconnect information stored during
-     *        {@link #saveReconnectSettings(NodeExecutionJob, NodeSettingsWO)}
+     *            {@link #saveReconnectSettings(NodeExecutionJob, NodeSettingsWO)}
      * @param inports port objects that were provided at execution start time.
      * @param nc Node whose remote executing is to be continued.
      * @return a new job restored and representing the running job
@@ -169,60 +171,65 @@ public interface NodeExecutionJobManager {
             PortObjectSpec[] nodeModelOutSpecs) throws InvalidSettingsException;
 
     /**
-     * Returns the number of views this job manager provides with each job.
+     * Returns true if this job manager provides a view.
      *
-     * @return the number of views this job manager provides with each job
+     * @return true if this job manager provides a view.
      */
-    public int getNumberOfViews();
+    public boolean hasView();
 
     /**
-     * Return a panel containing the content of the view. The passed index
-     * selects the view. Created panels should be stored in order to be able
-     * to clear them on node reset.
+     * Return a new instance of a node view for the job of the provided node.
      *
-     * @param viewIdx the index identifying the view to return (see
-     *            {@link #getNumberOfViews()})
      * @param nc the corresponding node container
-     * @return the panel for the corresponding view
+     * @return the view for the job if the node
      */
-    public NodeExecutionJobManagerViewPanel getViewPanel(final int viewIdx,
-            final NodeContainer nc);
+    public NodeView<NodeModel> getView(final NodeContainer nc);
 
     /**
-     * Creates a title for the corresponding tab panel.
+     * Creates a title for the corresponding view.
      *
-     * @param viewIdx the index of the panel
      * @param nc the corresponding node container.
-     * @return the title for the tab containing the corresponding panel.
+     * @return the title for the view.
      */
-    public String getViewPanelName(final int viewIdx, final NodeContainer nc);
+    public String getViewName(final NodeContainer nc);
 
     /**
-     * Called when the underlying node is reset.
+     * Called when the underlying node is reset. Clear all open views.
      */
-    public void resetViewPanels();
+    public void resetAllViews();
 
-    /** @return whether this job manager has meaningful internals, for instance
-     * log files of remote jobs that were run. 
-     * @see #saveInternals(ReferencedFile) */
+    /**
+     * Close all open views.
+     */
+    public void closeAllViews();
+
+    /**
+     * @return whether this job manager has meaningful internals, for instance
+     *         log files of remote jobs that were run.
+     * @see #saveInternals(ReferencedFile)
+     */
     public boolean canSaveInternals();
-    
-    /** Save the internals of this instance to the target directory. This
-     * method is only called if {@link #canSaveInternals()} returns true.
+
+    /**
+     * Save the internals of this instance to the target directory. This method
+     * is only called if {@link #canSaveInternals()} returns true.
+     *
      * @param directory To save to (guaranteed to be empty)
      * @throws IOException If that fails for any reason.
      */
-    public void saveInternals(final ReferencedFile directory) 
-    throws IOException;
-    
-    /** Restore the internals from a directory. This is the reverse operation
-     * to {@link #saveInternals(ReferencedFile)}. Implementations should 
-     * consider to keep a pointer to the referenced file and load the internals
-     * on demand (in order to speed up the load routines).
+    public void saveInternals(final ReferencedFile directory)
+            throws IOException;
+
+    /**
+     * Restore the internals from a directory. This is the reverse operation to
+     * {@link #saveInternals(ReferencedFile)}. Implementations should consider
+     * to keep a pointer to the referenced file and load the internals on demand
+     * (in order to speed up the load routines).
+     *
      * @param directory To load from.
      * @throws IOException If that fails for any reason.
      */
-    public void loadInternals(final ReferencedFile directory) 
-    throws IOException;
-    
+    public void loadInternals(final ReferencedFile directory)
+            throws IOException;
+
 }

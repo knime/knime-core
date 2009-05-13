@@ -68,6 +68,7 @@ import org.knime.core.node.workflow.NodeMessageListener;
 import org.knime.core.node.workflow.ScopeLoopContext;
 import org.knime.core.node.workflow.ScopeObjectStack;
 import org.knime.core.node.workflow.ScopeVariable;
+import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
 import org.knime.core.util.FileUtil;
@@ -289,7 +290,7 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
-     * Creates an execution result containing all calculated values in a 
+     * Creates an execution result containing all calculated values in a
      * execution. The returned value is suitable to be used in
      * {@link #loadDataAndInternals(NodeContentPersistor, ExecutionMonitor)}.
      * If this node is not executed, it will assign null values to the fields
@@ -331,7 +332,7 @@ public final class Node implements NodeModelWarningListener {
         result.setPortObjectSpecs(poSpecs);
         return result;
     }
-    
+
     /** Loads data from an argument persistor.
      * @param loader To load from.
      * @param exec For progress.
@@ -1556,7 +1557,9 @@ public final class Node implements NodeModelWarningListener {
                 }
                 if (NodeExecutionJobManagerPool
                         .getNumberOfJobManagersFactories() > 1) {
-                    m_dialogPane.addJobMgrTab();
+                    // TODO: set the splittype depending on the nodemodel
+                    SplitType splitType = SplitType.USER;
+                    m_dialogPane.addJobMgrTab(splitType);
                 }
 
             } else {
@@ -1565,39 +1568,6 @@ public final class Node implements NodeModelWarningListener {
             }
         }
         return m_dialogPane;
-    }
-
-    public boolean areDialogAndNodeSettingsEqual() {
-        if (m_dialogPane == null) {
-            assert false : "No dialog available or not created yet";
-            return true;
-        }
-        NodeSettingsRO dialogSettings;
-        try {
-            dialogSettings = getSettingsFromDialog();
-        } catch (InvalidSettingsException ise) {
-            return false;
-        }
-        NodeSettingsRO nodeSettings = getSettingsFromNode();
-        return nodeSettings.equals(dialogSettings);
-    }
-
-    private NodeSettingsRO getSettingsFromNode() {
-        NodeSettings settings = new NodeSettings(getName());
-        saveSettingsTo(settings);
-        return settings;
-    }
-
-    private NodeSettingsRO getSettingsFromDialog()
-            throws InvalidSettingsException {
-        if (m_dialogPane == null) {
-            assert false : "Dialog has not been instantiated";
-            // fall back settings (not changed)
-            return getSettingsFromNode();
-        }
-        NodeSettings settings = new NodeSettings(getName());
-        m_dialogPane.finishEditingAndSaveSettingsTo(settings);
-        return settings;
     }
 
     /**

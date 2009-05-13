@@ -30,15 +30,16 @@ import java.util.concurrent.Future;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeExecutionJob;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeExecutionJobManagerPanel;
-import org.knime.core.node.workflow.NodeExecutionJobManagerViewPanel;
 import org.knime.core.node.workflow.NodeExecutionJobReconnectException;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
@@ -142,12 +143,14 @@ public class ThreadNodeExecutionJobManager implements NodeExecutionJobManager {
     /** {@inheritDoc} */
     @Override
     public void save(final NodeSettingsWO settings) {
+        // nothing to save
     }
 
     /** {@inheritDoc} */
     @Override
     public void load(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        // nothing to load.
     }
 
     /**
@@ -171,30 +174,36 @@ public class ThreadNodeExecutionJobManager implements NodeExecutionJobManager {
     /**
      * {@inheritDoc}
      */
-    public int getNumberOfViews() {
-        return 0;
+    public boolean hasView() {
+        return false;
     }
 
     /**
      * {@inheritDoc}
      */
-    public NodeExecutionJobManagerViewPanel getViewPanel(final int viewIdx,
-            final NodeContainer nc) {
+    public NodeView<NodeModel> getView(final NodeContainer nc) {
         return null;
     }
 
     /**
      * {@inheritDoc}
      */
-    public String getViewPanelName(final int viewIdx, final NodeContainer nc) {
+    public String getViewName(final NodeContainer nc) {
         return null;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void resetViewPanels() {
-        assert false : "Can't reset no panels";
+    public void resetAllViews() {
+        assert false : "Can't reset no views";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void closeAllViews() {
+        assert false : "Can't close no views";
     }
 
     /** {@inheritDoc} */
@@ -205,13 +214,15 @@ public class ThreadNodeExecutionJobManager implements NodeExecutionJobManager {
 
     /** {@inheritDoc} */
     @Override
-    public void loadInternals(final ReferencedFile directory) throws IOException {
+    public void loadInternals(final ReferencedFile directory)
+            throws IOException {
         throw new IllegalStateException("Nothing to load.");
     }
 
     /** {@inheritDoc} */
     @Override
-    public void saveInternals(final ReferencedFile directory) throws IOException {
+    public void saveInternals(final ReferencedFile directory)
+            throws IOException {
         throw new IllegalStateException("Nothing to save.");
     }
 }

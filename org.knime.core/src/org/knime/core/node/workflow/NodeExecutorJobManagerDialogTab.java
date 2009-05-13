@@ -119,9 +119,11 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
      * added to dialogs if more than the default manager is registered. Displays
      * a selection box and swaps the settings panel corresponding to the current
      * selection.
+     * @param splitType indicates the level of splitting this node supports
      */
-    public NodeExecutorJobManagerDialogTab() {
+    public NodeExecutorJobManagerDialogTab(final SplitType splitType) {
         super(new BorderLayout());
+        m_nodeSplitType = splitType;
         // add the selection combo box at the top of the panel
         Vector<Object> jobManagerChoices = new Vector<Object>();
         jobManagerChoices.add(DEFAULT_ENTRY);
@@ -237,8 +239,6 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
 
         // we must store the port specs in case job manager selection changes
         m_lastPortSpecs = inSpecs;
-        // we store the node split type
-        m_nodeSplitType = settings.getSplitType();
 
         // select the job manager in the combo box
         NodeExecutionJobManager newMgr = settings.getJobManager();

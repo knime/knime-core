@@ -63,6 +63,7 @@ import org.knime.core.node.workflow.NodeExecutorJobManagerDialogTab;
 import org.knime.core.node.workflow.ScopeObjectStack;
 import org.knime.core.node.workflow.ScopeVariable;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
+import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.util.MutableInteger;
@@ -163,9 +164,10 @@ public abstract class NodeDialogPane {
 
     /**
      * Creates and adds the job manager selection tab.
+     * @param splitType indicates how table splitting is supported in this node
      */
-    public void addJobMgrTab() {
-        m_jobMgrTab = new NodeExecutorJobManagerDialogTab();
+    public void addJobMgrTab(final SplitType splitType) {
+        m_jobMgrTab = new NodeExecutorJobManagerDialogTab(splitType);
         addTab(m_jobMgrTab.getTabName(), m_jobMgrTab);
     }
 
