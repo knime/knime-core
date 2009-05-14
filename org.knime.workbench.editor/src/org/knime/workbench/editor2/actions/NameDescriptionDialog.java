@@ -117,7 +117,7 @@ public class NameDescriptionDialog extends Dialog {
              
         // Name label
         Label nameLabel = new Label(content, SWT.RIGHT);
-        nameLabel.setText("User name:");
+        nameLabel.setText("Custom name:");
 
         // Name value
         m_nameField = new Text(content, SWT.SINGLE);
@@ -129,7 +129,7 @@ public class NameDescriptionDialog extends Dialog {
         }
         // Description label
         Label descriptionLabel = new Label(content, SWT.RIGHT);
-        descriptionLabel.setText("User description:");
+        descriptionLabel.setText("Custom description:");
         // Description value
         GridData descrData = new GridData(GridData.GRAB_HORIZONTAL
                 | GridData.GRAB_VERTICAL);

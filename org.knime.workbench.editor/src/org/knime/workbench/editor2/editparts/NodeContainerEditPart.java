@@ -431,11 +431,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     protected String getCustomName() {
-        String userName = getNodeContainer().getCustomName();
-        if (userName == null) {
-            userName = "Node " + getNodeContainer().getID().getIndex();
+        String customName = getNodeContainer().getCustomName();
+        if (customName == null) {
+            customName = "Node " + getNodeContainer().getID().getIndex();
         }
-        return userName;
+        return customName;
     }
 
     /**

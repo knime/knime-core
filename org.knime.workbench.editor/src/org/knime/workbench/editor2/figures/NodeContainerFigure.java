@@ -192,13 +192,13 @@ public class NodeContainerFigure extends RectangleFigure {
     private final Label m_name;
 
     /**
-     * Tooltip for displaying the user description. This tooltip is displayed
-     * with the user name
+     * Tooltip for displaying the custom description. This tooltip is displayed
+     * with the custom name
      */
     private final NewToolTipFigure m_nameTooltip;
 
     /**
-     * An optional user description.
+     * An optional custom description.
      */
     private String m_description;
     

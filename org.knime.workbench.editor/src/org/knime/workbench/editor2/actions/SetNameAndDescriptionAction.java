@@ -38,7 +38,7 @@ import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * Action to set the user name and description of a node.
+ * Action to set the custom name and description of a node.
  * 
  * @author Christoph Sieb, University of Konstanz
  */
@@ -175,8 +175,8 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
             // if the name or description have been changed
             // the editor must be set dirty
             String description = dialog.getDescription();
-            String userName = dialog.getName();
-            if (userName.trim().equals("")) {
+            String customName = dialog.getName();
+            if (customName.trim().equals("")) {
 
                 if (container.getCustomName() != null
                         || container.getCustomDescription() != null) {
@@ -188,13 +188,13 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
                 container.setCustomDescription(null);
             } else {
                 // if name or description is different mark editor dirty
-                if (!userName.equals(container.getCustomName())
+                if (!customName.equals(container.getCustomName())
                         || !description.equals(container
                                 .getCustomDescription())) {
                     getEditor().markDirty();
                 }
 
-                container.setCustomName(userName);
+                container.setCustomName(customName);
                 container.setCustomDescription(description);
             }
             }
