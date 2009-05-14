@@ -31,7 +31,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 interface NodeContainerMetaPersistor {
 
-    /** Key for this node's user description. */
+    /** Key for this node's custom description. */
     static final String KEY_CUSTOM_DESCRIPTION = "customDescription";
 
     /** Key for this node's user name. */
