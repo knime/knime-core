@@ -72,9 +72,11 @@ public class LoopStartIntervalNodeModel extends NodeModel implements
             throw new InvalidSettingsException("From must be smaller than to");
         }
 
+        m_value = m_settings.from();
         if (m_settings.integerLoop()) {
-            pushScopeVariableInt("loop_from", (int)m_settings.from());
-            pushScopeVariableInt("loop_to", (int)m_settings.to());
+            pushScopeVariableInt("loop_from", (int)Math
+                    .round(m_settings.from()));
+            pushScopeVariableInt("loop_to", (int)Math.round(m_settings.to()));
             pushScopeVariableInt("loop_step", (int)m_settings.step());
             pushScopeVariableInt("loop_value", (int)Math.round(m_value));
         } else {
@@ -110,8 +112,8 @@ public class LoopStartIntervalNodeModel extends NodeModel implements
         // let's also put the counts on the stack for someone else:
 
         if (m_settings.integerLoop()) {
-            pushScopeVariableInt("loop_from", (int)m_settings.from());
-            pushScopeVariableInt("loop_to", (int)m_settings.to());
+            pushScopeVariableInt("loop_from", (int)Math.round(m_settings.from()));
+            pushScopeVariableInt("loop_to", (int)Math.round(m_settings.to()));
             pushScopeVariableInt("loop_step", (int)m_settings.step());
             pushScopeVariableInt("loop_value", (int)Math.round(m_value));
         } else {
@@ -131,7 +133,7 @@ public class LoopStartIntervalNodeModel extends NodeModel implements
      */
     @Override
     public boolean terminateLoop() {
-        return m_value >= m_settings.to();
+        return m_value > m_settings.to();
     }
 
     /**
