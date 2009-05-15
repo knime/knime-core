@@ -1,30 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?pde version="3.1"?>
+<?pde version="3.4"?>
 
-<product name="KNIME Static Reporting (runtime)" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" useFeatures="true">
+<product name="KNIME Static Reporting (runtime)" id="org.eclipse.birt.report.engine.ReportEngineSDK" application="org.knime.product.KNIME_APPLICATION" useFeatures="true">
 
    <aboutInfo>
       <image path="icons/gif/knime128.gif"/>
       <text>
-         Welcome to KNIME v2.0.2.0020587
-the Konstanz Information Miner
-Copyright, 2003 - 2009
-email: contact@knime.org
-
-This version of KNIME is licensed under the Aladdin License.
-Please see the license file in the installation directory and 
-contact us if you cannot locate it. More details can be found at
-http://www.knime.org
-
-Based on Eclipse, www.eclipse.org 
-Uses: Java, GEF, Log4J
-
-KNIME is a registered trademark of KNIME GmbH, Germany.
-All other trademarks are the property of their respective owners.
+         Welcome to KNIME Static Report Designer.
       </text>
    </aboutInfo>
 
-   <configIni use="default"/>
+   <configIni use="default">
+   </configIni>
 
    <launcherArgs>
       <vmArgs>-XX:MaxPermSize=256M
@@ -32,14 +19,17 @@ All other trademarks are the property of their respective owners.
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
-   <windowImages i16="icons/gif/knime16.gif" i32="icons/gif/knime32.gif" i48="icons/gif/knime64.gif"/>
+   <windowImages i16="icons/gif/knime16.gif" i32="icons/gif/knime32.gif" i48="icons/gif/knime48.gif"/>
 
+   <splash
+      location="com.knime.staticreporting.designer" />
    <launcher>
       <solaris/>
       <win useIco="false">
          <bmp/>
       </win>
    </launcher>
+
 
    <vm>
    </vm>
@@ -57,10 +47,10 @@ All other trademarks are the property of their respective owners.
       <plugin id="org.eclipse.core.filesystem.win32.x86" fragment="true"/>
       <plugin id="org.eclipse.core.jobs"/>
       <plugin id="org.eclipse.core.net"/>
-      <plugin id="org.eclipse.core.net.win32.x86"/>
+      <plugin id="org.eclipse.core.net.win32.x86" fragment="true"/>
       <plugin id="org.eclipse.core.resources"/>
       <plugin id="org.eclipse.core.resources.compatibility" fragment="true"/>
-      <plugin id="org.eclipse.core.resources.win32.x86"/>
+      <plugin id="org.eclipse.core.resources.win32.x86" fragment="true"/>
       <plugin id="org.eclipse.core.runtime"/>
       <plugin id="org.eclipse.core.runtime.compatibility.registry" fragment="true"/>
       <plugin id="org.eclipse.core.variables"/>
@@ -70,7 +60,7 @@ All other trademarks are the property of their respective owners.
       <plugin id="org.eclipse.equinox.preferences"/>
       <plugin id="org.eclipse.equinox.registry"/>
       <plugin id="org.eclipse.equinox.security"/>
-      <plugin id="org.eclipse.equinox.security.win32.x86"/>
+      <plugin id="org.eclipse.equinox.security.win32.x86" fragment="true"/>
       <plugin id="org.eclipse.gef"/>
       <plugin id="org.eclipse.help"/>
       <plugin id="org.eclipse.help.base"/>
