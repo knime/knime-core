@@ -862,6 +862,7 @@
       </node>
       <node
             category-path="/loopsupport"
+            expert-flag="true"
             factory-class="org.knime.base.node.meta.looper.LoopStartIntervalNodeFactory"
             id="org.knime.base.node.meta.looper.LoopStartIntervalNodeFactory">
       </node>
