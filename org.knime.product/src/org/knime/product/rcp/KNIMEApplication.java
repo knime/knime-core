@@ -40,6 +40,7 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.internal.ide.ChooseWorkspaceData;
 import org.eclipse.ui.internal.ide.ChooseWorkspaceDialog;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
@@ -109,7 +110,7 @@ public class KNIMEApplication implements IApplication {
             // PlatformUI.getWorkbench() or AbstractUIPlugin.getWorkbench()
             int returnCode =
                     PlatformUI.createAndRunWorkbench(display,
-                            new KNIMEApplicationWorkbenchAdvisor());
+                            getWorkbenchAdvisor());
 
             // the workbench doesn't support relaunch yet (bug 61809) so
             // for now restart is used, and exit data properties are checked
@@ -127,6 +128,11 @@ public class KNIMEApplication implements IApplication {
                 display.dispose();
             }
         }
+    }
+    
+    
+    protected WorkbenchAdvisor getWorkbenchAdvisor() {
+        return new KNIMEApplicationWorkbenchAdvisor();
     }
 
     /**
