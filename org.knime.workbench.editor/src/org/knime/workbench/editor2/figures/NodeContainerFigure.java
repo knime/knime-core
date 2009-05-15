@@ -108,29 +108,6 @@ public class NodeContainerFigure extends RectangleFigure {
     /** State: Node not configured. * */
     public static final int STATE_NOT_CONFIGURED = 0;
 
-    /** State: Node ready, but idle. * */
-    public static final int STATE_READY = 1;
-
-    /**
-     * State: The node is in the workflow manager queue wating for execution.
-     */
-    public static final int STATE_WAITING_FOR_EXEC = 2;
-
-    /** State: Node is currently being executed. * */
-    public static final int STATE_EXECUTING = 3;
-
-    /** State: Node was executed sucessfully. * */
-    public static final int STATE_EXECUTED = 4;
-
-    /** State: Warning. * */
-    public static final int STATE_WARNING = 5;
-
-    /** State: Error. * */
-    public static final int STATE_ERROR = 6;
-
-    /** State: Node queued for execution (waiting). * */
-    public static final int STATE_QUEUED = 7;
-
     private static final Font FONT_NORMAL;
 
     private static final Font FONT_SMALL;
@@ -511,8 +488,10 @@ public class NodeContainerFigure extends RectangleFigure {
             setStatusAmple();
             m_statusFigure.setIcon(GREEN);
             break;
+        case PREEXECUTE:
         case EXECUTING:
         case EXECUTINGREMOTELY:
+        case POSTEXECUTE:
             setProgressBar(true);
             break;
         case MARKEDFOREXEC:

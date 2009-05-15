@@ -30,13 +30,17 @@ import org.knime.core.node.workflow.NodeExecutionJob;
 import org.knime.core.node.workflow.SingleNodeContainer;
 
 /**
- *
- * @author wiswedel, University of Konstanz
+ * A locally executed node job. It can only execute {@link SingleNodeContainer}.
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public class LocalNodeExecutionJob extends NodeExecutionJob {
 
     private Future<?> m_future;
 
+    /** Creates new local job.
+     * @param snc The node container to execute.
+     * @param data Its input port object.
+     */
     public LocalNodeExecutionJob(
             final SingleNodeContainer snc, final PortObject[] data) {
         super(snc, data);
@@ -64,7 +68,8 @@ public class LocalNodeExecutionJob extends NodeExecutionJob {
     /** {@inheritDoc} */
     @Override
     public boolean mainExecute() {
-        return getNodeContainer().performExecuteNode(getPortObjects());
+        SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer();
+        return snc.performExecuteNode(getPortObjects());
     }
 
     /**
@@ -75,10 +80,4 @@ public class LocalNodeExecutionJob extends NodeExecutionJob {
         return false;
     }
     
-    /** {@inheritDoc} */
-    @Override
-    public SingleNodeContainer getNodeContainer() {
-        return (SingleNodeContainer)super.getNodeContainer();
-    }
-
 }

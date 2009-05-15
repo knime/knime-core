@@ -269,11 +269,11 @@ public final class SingleNodeContainer extends NodeContainer {
         synchronized (m_nodeMutex) {
             switch (getState()) {
             case QUEUED:
+            case PREEXECUTE:
             case EXECUTING:
             case EXECUTINGREMOTELY:
-                throw new IllegalStateException("Illegal state " + getState()
-                        + " in setJobExecutor - "
-                        + "can not change a running node.");
+            case POSTEXECUTE:
+                throwIllegalStateException();
             default:
             }
             super.setJobManager(je);
@@ -351,8 +351,7 @@ public final class SingleNodeContainer extends NodeContainer {
                 }
                 break;
             default:
-                throw new IllegalStateException("Illegal state " + getState()
-                        + " encountered in configureNode(), node " + getID());
+                throwIllegalStateException();
             }
             // compare old and new specs
             for (int i = 0; i < prevSpecs.length; i++) {
@@ -381,8 +380,8 @@ public final class SingleNodeContainer extends NodeContainer {
         final NodeExecutionJobManager jobMgr = findJobManager();
 
         NodePostConfigure npc = new NodePostConfigure() {
-            public PortObjectSpec[] configure(PortObjectSpec[] inObjSpecs,
-                    PortObjectSpec[] nodeModelOutSpecs)
+            public PortObjectSpec[] configure(final PortObjectSpec[] inObjSpecs,
+                    final PortObjectSpec[] nodeModelOutSpecs)
                     throws InvalidSettingsException {
                 return jobMgr.configure(inObjSpecs, nodeModelOutSpecs);
             }
@@ -397,10 +396,15 @@ public final class SingleNodeContainer extends NodeContainer {
      */
     @Override
     boolean isResetable() {
-        return (getState().equals(State.EXECUTED)
-                || getState().equals(State.MARKEDFOREXEC)
-                || getState().equals(State.CONFIGURED) || getState().equals(
-                State.UNCONFIGURED_MARKEDFOREXEC));
+        switch (getState()) {
+        case EXECUTED:
+        case MARKEDFOREXEC:
+        case UNCONFIGURED_MARKEDFOREXEC:
+        case CONFIGURED:
+            return true;
+        default:
+            return false;
+        }
     }
 
     /** Reset underlying node and update state accordingly.
@@ -426,8 +430,7 @@ public final class SingleNodeContainer extends NodeContainer {
                 setState(State.IDLE);
                 return;
             default:
-                throw new IllegalStateException("Illegal state " + getState()
-                        + " encountered in resetNode().");
+                throwIllegalStateException();
             }
         }
     }
@@ -452,9 +455,7 @@ public final class SingleNodeContainer extends NodeContainer {
                     setState(State.UNCONFIGURED_MARKEDFOREXEC);
                     return;
                 default:
-                    throw new IllegalStateException("Illegal state "
-                            + getState()
-                            + " encountered in markForExecution(true).");
+                    throwIllegalStateException();
                 }
             } else {  // we want to remove the mark for execution
                 switch (getState()) {
@@ -465,9 +466,7 @@ public final class SingleNodeContainer extends NodeContainer {
                     setState(State.IDLE);
                     return;
                 default:
-                    throw new IllegalStateException("Illegal state "
-                            + getState()
-                            + " encountered in markForExecution(false).");
+                    throwIllegalStateException();
                 }
             }
         }
@@ -486,8 +485,7 @@ public final class SingleNodeContainer extends NodeContainer {
                 setState(State.MARKEDFOREXEC);
                 return;
             default:
-                throw new IllegalStateException("Illegal state " + getState()
-                        + " encountered in enableReQueuing().");
+                throwIllegalStateException();
             }
         }
     }
@@ -522,6 +520,8 @@ public final class SingleNodeContainer extends NodeContainer {
                     + "the execution task (is null)";
                 job.cancel();
                 break;
+            case PREEXECUTE:   // locally executing nodes are not really in
+            case POSTEXECUTE:  // one of these two states
             case EXECUTINGREMOTELY:
                 // execute remotely can be both truly executing remotely
                 // (job will be non-null) or marked as executing remotely
@@ -555,31 +555,77 @@ public final class SingleNodeContainer extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    void markAsRemoteExecuting() {
-        switch (getState()) {
-        case MARKEDFOREXEC:
-        case UNCONFIGURED_MARKEDFOREXEC:
-            setState(State.EXECUTINGREMOTELY);
-            break;
-        case EXECUTED:
-            // ignore executed nodes
-            break;
-        default:
-            throw new IllegalStateException("Illegal state " + getState()
-                    + " encountered in markAsRemoteExecuting(). Node "
-                    + getNameWithID());
+    void mimicRemotePreExecute() {
+        synchronized (m_nodeMutex) {
+            switch (getState()) {
+            case MARKEDFOREXEC:
+            case UNCONFIGURED_MARKEDFOREXEC:
+                setState(State.PREEXECUTE);
+                break;
+            case EXECUTED:
+                // ignore executed nodes
+                break;
+            default:
+                throwIllegalStateException();
+            }
+        }
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    void mimicRemoteExecuting() {
+        synchronized (m_nodeMutex) {
+            switch (getState()) {
+            case PREEXECUTE:
+                setState(State.EXECUTINGREMOTELY);
+                break;
+            case EXECUTED:
+                // ignore executed nodes
+                break;
+            default:
+                throwIllegalStateException();
+            }
+        }
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    void mimicRemotePostExecute() {
+        synchronized (m_nodeMutex) {
+            switch (getState()) {
+            case EXECUTINGREMOTELY:
+                setState(State.POSTEXECUTE);
+                break;
+            case EXECUTED:
+                // ignore executed nodes
+                break;
+            default:
+                throwIllegalStateException();
+            }
+        }
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    void performStateTransitionPREEXECUTE() {
+        synchronized (m_nodeMutex) {
+            switch (getState()) {
+            case QUEUED:
+                setState(State.PREEXECUTE);
+                break;
+            default:
+                throwIllegalStateException();
+            }
         }
     }
 
     /** {@inheritDoc} */
     @Override
-    void preExecuteNode() {
+    void performStateTransitionEXECUTING() {
         synchronized (m_nodeMutex) {
             switch (getState()) {
-            case QUEUED:
-                // clear loop status
+            case PREEXECUTE:
                 m_node.clearLoopStatus();
-                // change state to avoid more than one executor
                 if (findJobManager() instanceof ThreadNodeExecutionJobManager) {
                     setState(State.EXECUTING);
                 } else {
@@ -587,33 +633,53 @@ public final class SingleNodeContainer extends NodeContainer {
                 }
                 break;
             default:
-                throw new IllegalStateException("Illegal state " + getState()
-                        + " encountered in executeNode(), node: " + getID());
+                throwIllegalStateException();
+            }
+        }
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    void performStateTransitionPOSTEXECUTE() {
+        synchronized (m_nodeMutex) {
+            switch (getState()) {
+            case EXECUTING:
+            case EXECUTINGREMOTELY:
+                setState(State.POSTEXECUTE);
+                break;
+            default:
+                throwIllegalStateException();
             }
         }
     }
 
     /** {@inheritDoc} */
     @Override
-    void postExecuteNode(final boolean success) {
+    void performStateTransitionEXECUTED(final boolean success) {
         synchronized (m_nodeMutex) {
-            if (success) {
-                if (m_node.getLoopStatus() == null) {
-                    setState(State.EXECUTED);
-
+            switch (getState()) {
+            case POSTEXECUTE:
+                if (success) {
+                    if (m_node.getLoopStatus() == null) {
+                        setState(State.EXECUTED);
+                        
+                    } else {
+                        // loop not yet done - "stay" configured until done.
+                        setState(State.CONFIGURED);
+                    }
                 } else {
-                    // loop not yet done - "stay" configured until done.
+                    // also clean loop status:
+                    m_node.clearLoopStatus();
+                    // note was already reset/configured in doAfterExecute.
+                    // in theory this should always be the correct state...
+                    // TODO do better - also handle catastrophes
                     setState(State.CONFIGURED);
                 }
-            } else {
-                // also clean loop status:
-                m_node.clearLoopStatus();
-                // note was already reset/configured in doAfterExecute.
-                // in theory this should always be the correct state...
-                // TODO do better - also handle catastrophes
-                setState(State.CONFIGURED);
+                setExecutionJob(null);
+                break;
+            default:
+                throwIllegalStateException();
             }
-            setExecutionJob(null);
         }
     }
 

@@ -77,8 +77,10 @@ public abstract class NodeContainer implements NodeProgressListener {
         UNCONFIGURED_MARKEDFOREXEC,
         MARKEDFOREXEC,
         QUEUED,
+        PREEXECUTE,
         EXECUTING,
         EXECUTINGREMOTELY,
+        POSTEXECUTE,
         EXECUTED;
 
         /** @return Whether this state represents an intermediate state,
@@ -152,8 +154,8 @@ public abstract class NodeContainer implements NodeProgressListener {
     private final CopyOnWriteArraySet<NodeUIInformationListener> m_uiListeners =
         new CopyOnWriteArraySet<NodeUIInformationListener>();
 
-    private final CopyOnWriteArraySet<JobManagerChangedListener> m_jobManagerListeners
-            = new CopyOnWriteArraySet<JobManagerChangedListener>();
+    private final CopyOnWriteArraySet<JobManagerChangedListener> m_jobManagerListeners =
+            new CopyOnWriteArraySet<JobManagerChangedListener>();
 
     private UIInformation m_uiInformation;
 
@@ -216,9 +218,9 @@ public abstract class NodeContainer implements NodeProgressListener {
             if ( m_jobManager != null) {
                 m_jobManager.closeAllViews();
             }
-            m_jobManager = je;
-            notifyJobManagerChangedListener();
-        }
+        m_jobManager = je;
+        notifyJobManagerChangedListener();
+    }
     }
 
     /**
@@ -322,18 +324,18 @@ public abstract class NodeContainer implements NodeProgressListener {
                     setNodeMessage(new NodeMessage(
                             NodeMessage.Type.ERROR, error));
                     LOGGER.error(error, t);
+                    notifyParentPreExecuteStart();
                     try {
                         notifyParentExecuteStart();
                     } catch (IllegalContextStackObjectException e) {
                         // ignore, we have something more serious to deal with
                     }
+                    notifyParentPostExecuteStart();
                     notifyParentExecuteFinished(false);
                 }
                 return;
             default:
-                throw new IllegalStateException("Illegal state " + getState()
-                        + " encountered in queue(). Node "
-                        + getNameWithID());
+                throwIllegalStateException();
             }
         }
     }
@@ -342,8 +344,21 @@ public abstract class NodeContainer implements NodeProgressListener {
      * (sub-) flow that this node is part of is executed remotely.
      * @throws IllegalStateException In case of an illegal state transition.
      */
-    abstract void markAsRemoteExecuting();
-
+    abstract void mimicRemoteExecuting();
+    
+    /** Puts this node (and all its children) into the {@link State#PREEXECUTE}
+     * state. This method is used when a workflow is executed remotely.
+     * @throws IllegalStateException In case of an illegal state (e.g. a node
+     * is already executing). 
+     */
+    abstract void mimicRemotePreExecute();
+    
+    /** Puts this node (and all its children) into the {@link State#POSTEXECUTE}
+     * state. This method is used when a workflow is executed remotely.
+     * @throws IllegalStateException In case of an illegal state. 
+     */
+    abstract void mimicRemotePostExecute();
+    
     /** Called upon load when the node has been saved as remotely executing.
      * @param inData The input data for continued execution.
      * @param settings the reconnect settings.
@@ -373,9 +388,7 @@ public abstract class NodeContainer implements NodeProgressListener {
                 }
                 return;
             default:
-                throw new IllegalStateException("Illegal state " + getState()
-                        + " encountered in continueExecutionOnLoad(). Node "
-                        + getNameWithID());
+                throwIllegalStateException();
             }
         }
     }
@@ -405,6 +418,17 @@ public abstract class NodeContainer implements NodeProgressListener {
             cancelExecution();
         }
     }
+    
+    /**
+     * Invoked by job manager when the execution starts. This method will invoke
+     * the {@link WorkflowManager#doBeforePreExecution(NodeContainer)} method in
+     * this node's parent. It will then call back on 
+     * {@link #performStateTransitionPREEXECUTE()} to allow for a synchronized 
+     * state transition.
+     */
+    void notifyParentPreExecuteStart() {
+        getParent().doBeforePreExecution(this);
+    }
 
     /**
      * Invoked by the job executor immediately before the execution is
@@ -417,15 +441,26 @@ public abstract class NodeContainer implements NodeProgressListener {
         // this will allow the parent to call state changes etc properly
         // synchronized. The main execution is done asynchronously.
         try {
-            getParent().doBeforeExecution(NodeContainer.this);
+            getParent().doBeforeExecution(this);
         } catch (IllegalContextStackObjectException e) {
-            LOGGER.warn(e.getMessage());
+            LOGGER.warn(e.getMessage(), e);
             setNodeMessage(new NodeMessage(
                     NodeMessage.Type.ERROR, e.getMessage()));
             throw e;
         }
     }
 
+    /**
+     * Invoked by job manager when the execution is finishing. This method will
+     * invoke the {@link WorkflowManager#doBeforePostExecution(NodeContainer)}
+     * method in this node's parent. It will then call back on
+     * {@link #performStateTransitionPOSTEXECUTE()} to allow for a synchronized
+     * state transition.
+     */
+    void notifyParentPostExecuteStart() {
+        getParent().doBeforePostExecution(this);
+    }
+    
     /**
      * Called immediately after the execution took place in the job executor. It
      * will trigger an doAfterExecution on the parent wfm.
@@ -434,8 +469,13 @@ public abstract class NodeContainer implements NodeProgressListener {
      */
     void notifyParentExecuteFinished(final boolean success) {
         // clean up stuff and especially change states synchronized again
-        getParent().doAfterExecution(NodeContainer.this, success);
+        getParent().doAfterExecution(this, success);
     }
+    
+    /** Called when the state of a node should switch from 
+     * {@link State#QUEUED} to {@link State#PREEXECUTE}. The method is to be
+     * called from the node's parent in a synchronized environment. */
+    abstract void performStateTransitionPREEXECUTE();
 
     /**
      * This should be used to change the nodes states correctly (and likely
@@ -443,7 +483,13 @@ public abstract class NodeContainer implements NodeProgressListener {
      * node as well!) BEFORE the actual execution. The main reason is that the
      * actual execution should be performed unsynchronized!
      */
-    abstract void preExecuteNode();
+    abstract void performStateTransitionEXECUTING();
+    
+    /** Called when the state of a node should switch from 
+     * {@link State#EXECUTING} (or {@link State#EXECUTINGREMOTELY}) to 
+     * {@link State#PREEXECUTE}. The method is to be called from the node's 
+     * parent in a synchronized environment. */
+    abstract void performStateTransitionPOSTEXECUTE();
 
     /**
      * This should be used to change the nodes states correctly (and likely
@@ -453,7 +499,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      *
      * @param success indicates if execution was successful
      */
-    abstract void postExecuteNode(final boolean success);
+    abstract void performStateTransitionEXECUTED(final boolean success);
 
     /////////////////////////////////////////////////
     // List Management of Waiting Loop Head Nodes
@@ -736,6 +782,28 @@ public abstract class NodeContainer implements NodeProgressListener {
         }
         LOGGER.debug(this.getNameWithID() + " has new state: " + m_state);
         return changesMade;
+    }
+    
+    /** Throws a new IllegalStateException with a meaningful error message
+     * containing node name, current state and method name. This method is used
+     * from the different state transition methods in 
+     * {@link SingleNodeContainer} and {@link WorkflowManager}.  
+     */
+    protected void throwIllegalStateException() {
+        String name = getNameWithID();
+        String state = "\"" + getState().toString() + "\"";
+        String methodName = "<unknown>";
+        String clazz = "";
+        StackTraceElement[] callStack = Thread.currentThread().getStackTrace();
+        // top most element is this method, at index [1] we find the calling
+        // method name.
+        if (callStack.length > 2) {
+            clazz = "\"" + callStack[1].getClassName() + "#";
+            methodName = callStack[1].getMethodName() + "\"";
+        }
+        throw new IllegalStateException("Illegal state " + state 
+                + " encountered in method " + clazz + methodName 
+                + " in node " + name);
     }
 
     /* ------------ dialog -------------- */
@@ -1131,7 +1199,7 @@ public abstract class NodeContainer implements NodeProgressListener {
         result.setState(getState());
         result.setMessage(m_nodeMessage);
     }
-
+    
     /** Helper class that defines load/save routines for general NodeContainer
      * properties. This is currently only the job manager. */
     public static final class NodeContainerSettings {
