@@ -61,8 +61,7 @@ import org.knime.core.node.workflow.ScopeVariable.Type;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class LoopEndConditionNodeModel extends NodeModel implements
-        LoopEndNode {
+public class LoopEndConditionNodeModel extends NodeModel implements LoopEndNode {
     private final LoopEndConditionSettings m_settings =
             new LoopEndConditionSettings();
 
@@ -70,13 +69,18 @@ public class LoopEndConditionNodeModel extends NodeModel implements
 
     private BufferedDataContainer m_variableContainer;
 
-    private static DataTableSpec createSpec1(final DataTableSpec inSpec) {
-        DataColumnSpecCreator crea =
-                new DataColumnSpecCreator(DataTableSpec.getUniqueColumnName(
-                        inSpec, "Iteration"), IntCell.TYPE);
-        DataTableSpec newSpec = new DataTableSpec(crea.createSpec());
+    private DataTableSpec createSpec1(final DataTableSpec inSpec) {
+        if (m_settings.addIterationColumn()) {
+            DataColumnSpecCreator crea =
+                    new DataColumnSpecCreator(DataTableSpec
+                            .getUniqueColumnName(inSpec, "Iteration"),
+                            IntCell.TYPE);
+            DataTableSpec newSpec = new DataTableSpec(crea.createSpec());
 
-        return new DataTableSpec(inSpec, newSpec);
+            return new DataTableSpec(inSpec, newSpec);
+        } else {
+            return inSpec;
+        }
     }
 
     private DataTableSpec createSpec2() {
@@ -161,9 +165,10 @@ public class LoopEndConditionNodeModel extends NodeModel implements
             m_variableContainer = exec.createDataContainer(createSpec2());
         } else if (!spec1.equalStructure(m_collectContainer.getTableSpec())) {
             DataTableSpec predSpec = m_collectContainer.getTableSpec();
-            StringBuilder error = new StringBuilder(
-                    "Input table's structure differs from reference " 
-                    + "(first iteration) table: ");
+            StringBuilder error =
+                    new StringBuilder(
+                            "Input table's structure differs from reference "
+                                    + "(first iteration) table: ");
             if (spec1.getNumColumns() != predSpec.getNumColumns()) {
                 error.append("different column counts ");
                 error.append(spec1.getNumColumns());
@@ -173,15 +178,15 @@ public class LoopEndConditionNodeModel extends NodeModel implements
                     DataColumnSpec inCol = spec1.getColumnSpec(i);
                     DataColumnSpec predCol = predSpec.getColumnSpec(i);
                     if (!inCol.equalStructure(predCol)) {
-                      error.append("Column ").append(i).append(" [");
-                      error.append(inCol).append("] vs. [");
-                      error.append(predCol).append("]");
+                        error.append("Column ").append(i).append(" [");
+                        error.append(inCol).append("] vs. [");
+                        error.append(predCol).append("]");
                     }
                 }
             }
             throw new IllegalArgumentException(error.toString());
         }
-        
+
         RowKey rk = new RowKey("Iteration " + count);
         if (m_settings.variableType() == Type.DOUBLE) {
             m_variableContainer.addRowToTable(new DefaultRow(rk,
@@ -198,9 +203,10 @@ public class LoopEndConditionNodeModel extends NodeModel implements
 
         LoopStartNode lsn = getLoopStartNode();
 
-        boolean stop = checkCondition()
-            || ((lsn instanceof LoopStartNodeTerminator)
-                    && ((LoopStartNodeTerminator) lsn).terminateLoop());
+        boolean stop =
+                checkCondition()
+                        || ((lsn instanceof LoopStartNodeTerminator) && ((LoopStartNodeTerminator)lsn)
+                                .terminateLoop());
 
         if ((m_settings.addLastRows() && !m_settings.addLastRowsOnly())
                 || ((stop == m_settings.addLastRows()) && (stop == m_settings
@@ -214,10 +220,12 @@ public class LoopEndConditionNodeModel extends NodeModel implements
                 if (k++ % 10 == 0) {
                     exec.setProgress(k / max);
                 }
-                AppendedColumnRow newRow =
-                        new AppendedColumnRow(new DefaultRow(new RowKey(row
-                                .getKey()
-                                + "#" + count), row), currIterCell);
+                DataRow newRow =
+                        new DefaultRow(new RowKey(row.getKey() + "#" + count),
+                                row);
+                if (m_settings.addIterationColumn()) {
+                    newRow = new AppendedColumnRow(newRow, currIterCell);
+                }
                 m_collectContainer.addRowToTable(newRow);
             }
         }
@@ -332,8 +340,8 @@ public class LoopEndConditionNodeModel extends NodeModel implements
             throw new InvalidSettingsException(
                     "No comparison operator selected");
         }
-        if ((s.variableType() != Type.STRING) && ((s.value() == null)
-                || (s.value().length() < 1))) {
+        if ((s.variableType() != Type.STRING)
+                && ((s.value() == null) || (s.value().length() < 1))) {
             throw new InvalidSettingsException("No comparison value given");
         }
     }

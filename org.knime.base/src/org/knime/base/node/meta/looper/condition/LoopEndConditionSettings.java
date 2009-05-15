@@ -85,6 +85,8 @@ public class LoopEndConditionSettings {
 
     private boolean m_addLastRowsOnly = false;
 
+    private boolean m_addIterationColumn = true;
+
     /**
      * Returns if the rows from the loop's last iteration should be added to the
      * output table or not.
@@ -127,6 +129,28 @@ public class LoopEndConditionSettings {
      */
     public void addLastRows(final boolean b) {
         m_addLastRows = b;
+    }
+
+    /**
+     * Sets if a column containing the iteration number should be appended to
+     * the output table.
+     *
+     * @param add <code>true</code> if a column should be added,
+     *            <code>false</code> otherwise
+     */
+    public void addIterationColumn(final boolean add) {
+        m_addIterationColumn = add;
+    }
+
+    /**
+     * Returns if a column containing the iteration number should be appended to
+     * the output table.
+     *
+     * @return <code>true</code> if a column should be added,
+     *            <code>false</code> otherwise
+     */
+    public boolean addIterationColumn() {
+        return m_addIterationColumn;
     }
 
     /**
@@ -228,6 +252,7 @@ public class LoopEndConditionSettings {
 
         m_addLastRows = settings.getBoolean("addLastRows");
         m_addLastRowsOnly = settings.getBoolean("addLastRowsOnly");
+        m_addIterationColumn = settings.getBoolean("addIterationColumn", true);
     }
 
     /**
@@ -255,6 +280,7 @@ public class LoopEndConditionSettings {
 
         m_addLastRows = settings.getBoolean("addLastRows", true);
         m_addLastRowsOnly = settings.getBoolean("addLastRowsOnly", false);
+        m_addIterationColumn = settings.getBoolean("addIterationColumn", true);
     }
 
     /**
@@ -277,5 +303,6 @@ public class LoopEndConditionSettings {
         }
         settings.addBoolean("addLastRows", m_addLastRows);
         settings.addBoolean("addLastRowsOnly", m_addLastRowsOnly);
+        settings.addBoolean("addIterationColumn", m_addIterationColumn);
     }
 }

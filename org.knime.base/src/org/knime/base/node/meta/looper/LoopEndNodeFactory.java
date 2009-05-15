@@ -39,7 +39,7 @@ public class LoopEndNodeFactory extends NodeFactory<LoopEndNodeModel> {
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return null;
+        return new LoopEndNodeDialog();
     }
 
     /**
@@ -63,7 +63,7 @@ public class LoopEndNodeFactory extends NodeFactory<LoopEndNodeModel> {
      */
     @Override
     protected boolean hasDialog() {
-        return false;
+        return true;
     }
 
     /**

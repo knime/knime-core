@@ -25,6 +25,9 @@
         <option name="Collect rows from last iteration only">
             If only the rows from the very last iteration should be collected, you have to enable this option.
         </option>
+        <option name="Add iteration column">
+            Allows you to add a column containing the iteration number to the output table.
+        </option>
     </fullDescription>
 
     <ports>

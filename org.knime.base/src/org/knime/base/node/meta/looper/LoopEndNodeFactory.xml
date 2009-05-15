@@ -11,6 +11,7 @@
             the loop you need LoopStart, where you can defined how many times the loop should be executed. All
             nodes in between are executed that many times.
         </intro>
+        <option name="Add iteration column">Allows you to add a column containing the iteration number to the output table.</option>
     </fullDescription>
 
     <ports>

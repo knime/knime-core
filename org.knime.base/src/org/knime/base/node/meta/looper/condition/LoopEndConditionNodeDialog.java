@@ -39,8 +39,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import org.knime.base.node.meta.looper.condition.LoopEndConditionSettings.Operator;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
@@ -81,6 +81,10 @@ public class LoopEndConditionNodeDialog extends NodeDialogPane {
 
     private final JCheckBox m_addLastRowsOnly =
             new JCheckBox("Collect rows from last iteration only");
+
+    private final JCheckBox m_addIterationColumn =
+        new JCheckBox("Add iteration column");
+
 
     /**
      * Creates a new dialog.
@@ -156,6 +160,9 @@ public class LoopEndConditionNodeDialog extends NodeDialogPane {
             }
         });
 
+        c.gridy++;
+        p.add(m_addIterationColumn, c);
+
         addTab("Default settings", p);
     }
 
@@ -181,6 +188,7 @@ public class LoopEndConditionNodeDialog extends NodeDialogPane {
                 || m_settings.addLastRowsOnly());
         m_addLastRowsOnly.setSelected(m_settings.addLastRowsOnly());
         m_addLastRows.setEnabled(!m_settings.addLastRowsOnly());
+        m_addIterationColumn.setSelected(m_settings.addIterationColumn());
     }
 
     /**
@@ -200,6 +208,7 @@ public class LoopEndConditionNodeDialog extends NodeDialogPane {
         m_settings.value(m_value.getText());
         m_settings.addLastRows(m_addLastRows.isSelected());
         m_settings.addLastRowsOnly(m_addLastRowsOnly.isSelected());
+        m_settings.addIterationColumn(m_addIterationColumn.isSelected());
 
         m_settings.saveSettings(settings);
     }

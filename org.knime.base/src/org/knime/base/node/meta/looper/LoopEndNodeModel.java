@@ -53,9 +53,11 @@ import org.knime.core.node.workflow.LoopStartNodeTerminator;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
-
     private BufferedDataContainer m_resultContainer;
+
     private int m_count;
+
+    private final LoopEndNodeSettings m_settings = new LoopEndNodeSettings();
 
     /**
      * Creates a new model.
@@ -73,13 +75,18 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
         return new DataTableSpec[]{createSpec(inSpecs[0])};
     }
 
-    private static DataTableSpec createSpec(final DataTableSpec inSpec) {
-        DataColumnSpecCreator crea =
-                new DataColumnSpecCreator(DataTableSpec.getUniqueColumnName(
-                        inSpec, "Iteration"), IntCell.TYPE);
-        DataTableSpec newSpec = new DataTableSpec(crea.createSpec());
+    private DataTableSpec createSpec(final DataTableSpec inSpec) {
+        if (m_settings.addIterationColumn()) {
+            DataColumnSpecCreator crea =
+                    new DataColumnSpecCreator(DataTableSpec
+                            .getUniqueColumnName(inSpec, "Iteration"),
+                            IntCell.TYPE);
+            DataTableSpec newSpec = new DataTableSpec(crea.createSpec());
 
-        return new DataTableSpec(inSpec, newSpec);
+            return new DataTableSpec(inSpec, newSpec);
+        } else {
+            return inSpec;
+        }
     }
 
     /**
@@ -91,19 +98,21 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
 
         if (!(this.getLoopStartNode() instanceof LoopStartNodeTerminator)) {
             throw new IllegalStateException("Loop End is not connected"
-                   + " to matching/corresponding Loop Start node. You"
-                   + " are trying to create an infinite loop!");
+                    + " to matching/corresponding Loop Start node. You"
+                    + " are trying to create an infinite loop!");
         }
         BufferedDataTable in = inData[0];
         DataTableSpec amendedSpec = createSpec(in.getDataTableSpec());
         if (m_resultContainer == null) {
             // first time we are getting to this: open container
             m_resultContainer = exec.createDataContainer(amendedSpec);
-        } else if (!amendedSpec.equalStructure(m_resultContainer.getTableSpec())) {
+        } else if (!amendedSpec
+                .equalStructure(m_resultContainer.getTableSpec())) {
             DataTableSpec predSpec = m_resultContainer.getTableSpec();
-            StringBuilder error = new StringBuilder(
-                    "Input table's structure differs from reference " 
-                    + "(first iteration) table: ");
+            StringBuilder error =
+                    new StringBuilder(
+                            "Input table's structure differs from reference "
+                                    + "(first iteration) table: ");
             if (amendedSpec.getNumColumns() != predSpec.getNumColumns()) {
                 error.append("different column counts ");
                 error.append(amendedSpec.getNumColumns());
@@ -113,9 +122,9 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
                     DataColumnSpec inCol = amendedSpec.getColumnSpec(i);
                     DataColumnSpec predCol = predSpec.getColumnSpec(i);
                     if (!inCol.equalStructure(predCol)) {
-                      error.append("Column ").append(i).append(" [");
-                      error.append(inCol).append("] vs. [");
-                      error.append(predCol).append("]");
+                        error.append("Column ").append(i).append(" [");
+                        error.append(inCol).append("] vs. [");
+                        error.append(predCol).append("]");
                     }
                 }
             }
@@ -123,15 +132,24 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
         }
 
         IntCell currIterCell = new IntCell(m_count);
-        for (DataRow row : in) {
-            AppendedColumnRow newRow =
-                    new AppendedColumnRow(new DefaultRow(new RowKey(row.getKey()
-                    + "#" + m_count), row), currIterCell);
-            m_resultContainer.addRowToTable(newRow);
+        if (m_settings.addIterationColumn()) {
+            for (DataRow row : in) {
+                AppendedColumnRow newRow =
+                        new AppendedColumnRow(new DefaultRow(new RowKey(row
+                                .getKey()
+                                + "#" + m_count), row), currIterCell);
+                m_resultContainer.addRowToTable(newRow);
+            }
+        } else {
+            for (DataRow row : in) {
+                m_resultContainer.addRowToTable(new DefaultRow(new RowKey(row
+                        .getKey() + "#" + m_count), row));
+            }
         }
 
-        boolean terminateLoop = 
-            ((LoopStartNodeTerminator)this.getLoopStartNode()).terminateLoop();
+        boolean terminateLoop =
+                ((LoopStartNodeTerminator)this.getLoopStartNode())
+                        .terminateLoop();
         if (terminateLoop) {
             // this was the last iteration - close container and continue
             m_resultContainer.close();
@@ -162,6 +180,7 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        m_settings.loadSettings(settings);
     }
 
     /**
@@ -187,6 +206,7 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        m_settings.saveSettings(settings);
     }
 
     /**
@@ -195,5 +215,7 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        LoopEndNodeSettings s = new LoopEndNodeSettings();
+        s.loadSettings(settings);
     }
 }
