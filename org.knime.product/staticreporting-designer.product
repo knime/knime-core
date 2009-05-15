@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?pde version="3.4"?>
+<?pde version="3.1"?>
 
-<product name="KNIME Static Reporting (runtime)" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" version="2.1.0.0018128" useFeatures="true">
+<product name="KNIME Static Reporting (runtime)" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" useFeatures="true">
 
    <aboutInfo>
       <image path="icons/gif/knime128.gif"/>
@@ -24,10 +24,11 @@ All other trademarks are the property of their respective owners.
       </text>
    </aboutInfo>
 
-   <configIni use="default">
-   </configIni>
+   <configIni use="default"/>
 
    <launcherArgs>
+      <vmArgs>-XX:MaxPermSize=256M
+-Xmx512M</vmArgs>
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
@@ -56,10 +57,10 @@ All other trademarks are the property of their respective owners.
       <plugin id="org.eclipse.core.filesystem.win32.x86" fragment="true"/>
       <plugin id="org.eclipse.core.jobs"/>
       <plugin id="org.eclipse.core.net"/>
-      <plugin id="org.eclipse.core.net.win32.x86" fragment="true"/>
+      <plugin id="org.eclipse.core.net.win32.x86"/>
       <plugin id="org.eclipse.core.resources"/>
       <plugin id="org.eclipse.core.resources.compatibility" fragment="true"/>
-      <plugin id="org.eclipse.core.resources.win32.x86" fragment="true"/>
+      <plugin id="org.eclipse.core.resources.win32.x86"/>
       <plugin id="org.eclipse.core.runtime"/>
       <plugin id="org.eclipse.core.runtime.compatibility.registry" fragment="true"/>
       <plugin id="org.eclipse.core.variables"/>
@@ -69,7 +70,7 @@ All other trademarks are the property of their respective owners.
       <plugin id="org.eclipse.equinox.preferences"/>
       <plugin id="org.eclipse.equinox.registry"/>
       <plugin id="org.eclipse.equinox.security"/>
-      <plugin id="org.eclipse.equinox.security.win32.x86" fragment="true"/>
+      <plugin id="org.eclipse.equinox.security.win32.x86"/>
       <plugin id="org.eclipse.gef"/>
       <plugin id="org.eclipse.help"/>
       <plugin id="org.eclipse.help.base"/>
