@@ -101,8 +101,10 @@ public final class WorkflowManager extends NodeContainer {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(WorkflowManager.class);
 
+    private static final String DEFAULT_NAME = "Workflow Manager";
+    
     /** Name of this workflow (usually displayed at top of the node figure). */
-    private String m_name = "Workflow Manager";
+    private String m_name = DEFAULT_NAME;
 
     /** Executor for asynchronous event notification. */
     private static final Executor WORKFLOW_NOTIFIER =
@@ -239,12 +241,12 @@ public final class WorkflowManager extends NodeContainer {
 
     /** Create new project - which is the same as creating a new subworkflow
      * at this level with no in- or outports.
-     *
+     * @param name The name of the workflow (null value is ok)
      * @return newly created workflow
      */
-    public WorkflowManager createAndAddProject() {
+    public WorkflowManager createAndAddProject(final String name) {
         WorkflowManager wfm = createAndAddSubWorkflow(new PortType[0],
-                new PortType[0]);
+                new PortType[0], name);
         LOGGER.debug("Created project " + ((NodeContainer)wfm).getID());
         return wfm;
     }
@@ -374,10 +376,11 @@ public final class WorkflowManager extends NodeContainer {
      * free index for the new node within this workflow.
      * @param inPorts types of external inputs (going into this workflow)
      * @param outPorts types of external outputs (exiting this workflow)
+     * @param name Name of the workflow (null values will be handled)
      * @return newly created WorflowManager
      */
     public WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts,
-            final PortType[] outPorts) {
+            final PortType[] outPorts, final String name) {
         if (this == ROOT && (inPorts.length != 0 || outPorts.length != 0)) {
             throw new IllegalStateException("Can't create sub workflow on "
                 + "root workflow manager, use createProject() instead");
@@ -387,6 +390,9 @@ public final class WorkflowManager extends NodeContainer {
         synchronized (m_workflowMutex) {
             newID = createUniqueID();
             wfm = new WorkflowManager(this, newID, inPorts, outPorts);
+            if (name != null) {
+                wfm.m_name = name;
+            }
             addNodeContainer(wfm, true);
             LOGGER.debug("Added new subworkflow " + newID);
         }
@@ -859,7 +865,20 @@ public final class WorkflowManager extends NodeContainer {
             return outConsForPort;
         }
     }
-
+    
+    /** Get all outgoing connections for a node.
+     * @param id The requested node
+     * @return All current outgoing connections in a new set.
+     * @throws IllegalArgumentException If the node is unknown or null.
+     */
+    public Set<ConnectionContainer> getOutgoingConnectionsFor(final NodeID id) {
+        synchronized (m_workflowMutex) {
+            getNodeContainer(id); // for exception handling
+            return new LinkedHashSet<ConnectionContainer>(
+                    m_workflow.getConnectionsBySource(id));
+        }
+    }
+    
     /**
      * Returns the incoming connection of the node with the passed node id at
      * the specified port.
@@ -870,7 +889,8 @@ public final class WorkflowManager extends NodeContainer {
     public ConnectionContainer getIncomingConnectionFor(final NodeID id,
             final int portIdx) {
         synchronized (m_workflowMutex) {
-            Set<ConnectionContainer>inConns = m_workflow.getConnectionsByDest(id);
+            Set<ConnectionContainer>inConns = 
+                m_workflow.getConnectionsByDest(id);
             if (inConns != null) {
                 for (ConnectionContainer cont : inConns) {
                     if (cont.getDestPort() == portIdx) {
@@ -882,6 +902,20 @@ public final class WorkflowManager extends NodeContainer {
         return null;
     }
 
+    /** Get all incoming connections for a node.
+     * @param id The requested node
+     * @return All current incoming connections in a new set.
+     * @throws IllegalArgumentException If the node is unknown or null.
+     */
+    public Set<ConnectionContainer> getIncomingConnectionsFor(final NodeID id) {
+        synchronized (m_workflowMutex) {
+            getNodeContainer(id); // for exception handling
+            return new LinkedHashSet<ConnectionContainer>(
+                    m_workflow.getConnectionsByDest(id));
+        }
+    }
+    
+    
     /////////////////////
     // Node Settings
     /////////////////////

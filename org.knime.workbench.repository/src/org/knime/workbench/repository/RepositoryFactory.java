@@ -73,8 +73,8 @@ public final class RepositoryFactory {
     public static final WorkflowManager META_NODE_ROOT;
     
     static {        
-        META_NODE_ROOT = WorkflowManager.ROOT.createAndAddProject();
-        META_NODE_ROOT.setName("KNIME MetaNode Repository");
+        META_NODE_ROOT = WorkflowManager.ROOT.createAndAddProject(
+                "KNIME MetaNode Repository");
     }
     
 

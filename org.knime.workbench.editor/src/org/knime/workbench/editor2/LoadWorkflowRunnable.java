@@ -96,13 +96,18 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
         // indicates whether to create an empty workflow
         // this is done if the file is empty
         boolean createEmptyWorkflow = false;
+        
+        // name of the workflow in case a new one is created (not loaded)
+        String name = null;
+        if (m_workflowFile != null) {
+            name = m_workflowFile.getParentFile().getName();
+        }
 
         // set the loading canceled variable to false
         m_editor.setLoadingCanceled(false);
         m_throwable = null;
-        
-        try {
 
+        try {
             // create progress monitor
             ProgressHandler progressHandler = new ProgressHandler(pm, 101,
                     "Loading workflow...");
@@ -190,7 +195,7 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
             // (empty workflow file)
             if (createEmptyWorkflow) {
                 m_editor.setWorkflowManager(WorkflowManager.ROOT
-                        .createAndAddProject());
+                        .createAndAddProject(name));
                 // save empty project immediately
                 // bugfix 1341 -> see WorkflowEditor line 1294 
                 // (resource delta visitor movedTo)
