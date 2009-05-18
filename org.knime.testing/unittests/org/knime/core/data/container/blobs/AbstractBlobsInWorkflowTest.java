@@ -73,7 +73,8 @@ public abstract class AbstractBlobsInWorkflowTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         m_wfmDir = FileUtil.createTempDir(getClass().getSimpleName());
-        WorkflowManager m = WorkflowManager.ROOT.createAndAddProject();
+        WorkflowManager m = 
+            WorkflowManager.ROOT.createAndAddProject("Blob test");
         RuntimeNodeModel createModel = new RuntimeNodeModel(0, 1) {
             /** {@inheritDoc} */
             @Override
