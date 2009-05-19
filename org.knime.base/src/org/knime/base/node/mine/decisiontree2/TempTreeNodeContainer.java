@@ -194,10 +194,23 @@ class TempTreeNodeContainer {
     /**
      * @return split values for binary nominal parent split node
      */
-    List<String> getSplitValues(){
+    List<String> getSplitValues() {
         return m_splitValues;
     }
 
-
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder("Class: " + m_class);
+        b.append("; attribute: " + m_splitAttribute);
+        if (m_splitValue != null) {
+            b.append("; split value: " + m_splitValue);
+        } else if (m_splitValues != null) {
+            b.append("; split values: " + m_splitValues);
+        } else if (m_threshold != null) {
+            b.append("; threshold: " + m_threshold);
+        }
+        return b.toString();
+    }
 
 }

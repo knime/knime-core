@@ -690,8 +690,10 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                 return new DecisionTreeNodeSplitNominalBinary(nodeId,
                         majorityClass, frequencies, split
                                 .getSplitAttributeName(), splitValues,
-                        splitNominalBinary.getIntMappingsLeftPartition(),
+                        // right partition is the "true" case
                         splitNominalBinary.getIntMappingsRightPartition(),
+                        // left partition is the "false" case
+                        splitNominalBinary.getIntMappingsLeftPartition(),
                         children);
             }
         }

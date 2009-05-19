@@ -23,6 +23,7 @@
 package org.knime.base.node.mine.decisiontree2;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
@@ -91,7 +92,6 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
     @Override
     public void endElement(final String uri, final String localName,
             final String name) throws SAXException {
-
         m_stack.pop();
         if (name.equals("Array") && m_stack.peek().equals("SimpleSetPredicate")) {
             String[] temp = m_buffer.toString().trim().split("\\s+");
@@ -99,6 +99,7 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
             for (String currentClass : temp) {
                 splitValues.add(currentClass);
             }
+            m_buffer.setLength(0);
             m_nodeStack.peek().addSplitValues(splitValues);
         }
         if (name.equals("Node")) {
@@ -121,24 +122,32 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
             else {
                 ArrayList<TempTreeNodeContainer> containerChildren =
                         new ArrayList<TempTreeNodeContainer>();
+                ArrayList<DecisionTreeNode> childrenList = 
+                    new ArrayList<DecisionTreeNode>();
                 while (m_nodeStack.peek().getLevel() > m_level) {
-                    containerChildren.add(m_nodeStack.pop());
+                    TempTreeNodeContainer top = m_nodeStack.pop();
+                    if (top.getLevel() > m_level + 1) {
+                        assert false : "Level count inconsistent";
+                    }
+                    containerChildren.add(top);
+                    childrenList.add(m_childStack.pop());
                 }
-
-                int nodeId = m_nodeStack.peek().getOwnIndex();
-                DataCell majorityClass = m_nodeStack.peek().getMajorityClass();
+                // has to be reversed to reflect original ordering in xml
+                Collections.reverse(containerChildren);
+                Collections.reverse(childrenList);
+                
+                DecisionTreeNode[] children = childrenList.toArray(
+                        new DecisionTreeNode[childrenList.size()]);
+                
+                TempTreeNodeContainer currentParent = m_nodeStack.peek();
+                int nodeId = currentParent.getOwnIndex();
+                DataCell majorityClass = currentParent.getMajorityClass();
                 HashMap<DataCell, Double> classCounts =
-                        m_nodeStack.peek().getClassCounts();
+                    currentParent.getClassCounts();
 
-                String splitAttribute =
-                        getSplitAttributeFromChildren(containerChildren);
+                String splitAttribute = 
+                    getSplitAttributeFromChildren(containerChildren);
                 assert splitAttribute != null;
-
-                DecisionTreeNode[] children =
-                        new DecisionTreeNode[containerChildren.size()];
-                for (int i = children.length - 1; i >= 0; i--) {
-                    children[i] = m_childStack.pop();
-                }
 
                 ParentNodeType type =
                         findNodeTypeFromChildren(containerChildren);
@@ -197,7 +206,6 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
     @Override
     public void startElement(final String uri, final String localName,
             final String name, final Attributes atts) throws SAXException {
-
         m_stack.push(name);
         if (name.equals("Node")) {
             int ownIndex = Integer.parseInt(atts.getValue("id"));
@@ -253,7 +261,12 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
             final ArrayList<TempTreeNodeContainer> children) {
         String result = null;
         for (TempTreeNodeContainer c : children) {
-            if (result != null && !result.equals(c.getSplitAttribute())) {
+            String splitAttr = c.getSplitAttribute();
+            if (splitAttr == null) {
+                // <True/> -- ignore true case
+            } else if (result != null && !result.equals(splitAttr)) {
+                // this should never occur -- it means that the child elements
+                // have different attributes to test 
                 return null;
             } else {
                 result = c.getSplitAttribute();
