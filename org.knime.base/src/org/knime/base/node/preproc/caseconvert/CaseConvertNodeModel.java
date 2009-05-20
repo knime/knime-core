@@ -26,7 +26,7 @@ package org.knime.base.node.preproc.caseconvert;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
 
@@ -269,7 +269,7 @@ public class CaseConvertNodeModel extends NodeModel {
             for (int i = 0; i < newcolspecs.length; i++) {
                 DataColumnSpec colspec = m_spec.getColumnSpec(m_colindices[i]);
                 DataColumnDomain domain = colspec.getDomain();
-                Set<DataCell> newdomainvalues = new HashSet<DataCell>();
+                Set<DataCell> newdomainvalues = new LinkedHashSet<DataCell>();
                 DataColumnSpecCreator colspeccreator =
                         new DataColumnSpecCreator(colspec);
                 if (domain.hasValues()) {
