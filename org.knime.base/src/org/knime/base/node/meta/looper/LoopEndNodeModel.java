@@ -41,6 +41,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -53,8 +54,13 @@ import org.knime.core.node.workflow.LoopStartNodeTerminator;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(LoopEndNodeModel.class);
+
+    private long m_startTime;
 
     private BufferedDataContainer m_resultContainer;
+
     private int m_count;
 
     /**
@@ -91,19 +97,22 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
 
         if (!(this.getLoopStartNode() instanceof LoopStartNodeTerminator)) {
             throw new IllegalStateException("Loop End is not connected"
-                   + " to matching/corresponding Loop Start node. You"
-                   + " are trying to create an infinite loop!");
+                    + " to matching/corresponding Loop Start node. You"
+                    + " are trying to create an infinite loop!");
         }
         BufferedDataTable in = inData[0];
         DataTableSpec amendedSpec = createSpec(in.getDataTableSpec());
         if (m_resultContainer == null) {
             // first time we are getting to this: open container
+            m_startTime = System.currentTimeMillis();
             m_resultContainer = exec.createDataContainer(amendedSpec);
-        } else if (!amendedSpec.equalStructure(m_resultContainer.getTableSpec())) {
+        } else if (!amendedSpec
+                .equalStructure(m_resultContainer.getTableSpec())) {
             DataTableSpec predSpec = m_resultContainer.getTableSpec();
-            StringBuilder error = new StringBuilder(
-                    "Input table's structure differs from reference " 
-                    + "(first iteration) table: ");
+            StringBuilder error =
+                    new StringBuilder(
+                            "Input table's structure differs from reference "
+                                    + "(first iteration) table: ");
             if (amendedSpec.getNumColumns() != predSpec.getNumColumns()) {
                 error.append("different column counts ");
                 error.append(amendedSpec.getNumColumns());
@@ -113,9 +122,9 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
                     DataColumnSpec inCol = amendedSpec.getColumnSpec(i);
                     DataColumnSpec predCol = predSpec.getColumnSpec(i);
                     if (!inCol.equalStructure(predCol)) {
-                      error.append("Column ").append(i).append(" [");
-                      error.append(inCol).append("] vs. [");
-                      error.append(predCol).append("]");
+                        error.append("Column ").append(i).append(" [");
+                        error.append(inCol).append("] vs. [");
+                        error.append(predCol).append("]");
                     }
                 }
             }
@@ -125,13 +134,15 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
         IntCell currIterCell = new IntCell(m_count);
         for (DataRow row : in) {
             AppendedColumnRow newRow =
-                    new AppendedColumnRow(new DefaultRow(new RowKey(row.getKey()
-                    + "#" + m_count), row), currIterCell);
+                    new AppendedColumnRow(new DefaultRow(new RowKey(row
+                            .getKey()
+                            + "#" + m_count), row), currIterCell);
             m_resultContainer.addRowToTable(newRow);
         }
 
-        boolean terminateLoop = 
-            ((LoopStartNodeTerminator)this.getLoopStartNode()).terminateLoop();
+        boolean terminateLoop =
+                ((LoopStartNodeTerminator)this.getLoopStartNode())
+                        .terminateLoop();
         if (terminateLoop) {
             // this was the last iteration - close container and continue
             m_resultContainer.close();
@@ -139,6 +150,9 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
             m_resultContainer.close();
             m_resultContainer = null;
             m_count = 0;
+            LOGGER.debug("Total loop execution time: "
+                    + (System.currentTimeMillis() - m_startTime) + "ms");
+            m_startTime = 0;
             return new BufferedDataTable[]{outTable};
         } else {
             continueLoop();
@@ -171,6 +185,7 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
     protected void reset() {
         m_resultContainer = null;
         m_count = 0;
+        m_startTime = 0;
     }
 
     /**

@@ -45,6 +45,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -63,6 +64,11 @@ import org.knime.core.node.workflow.ScopeVariable.Type;
  */
 public class LoopEndConditionNodeModel extends NodeModel implements
         LoopEndNode {
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(LoopEndConditionNodeModel.class);
+
+    private long m_startTime;
+
     private final LoopEndConditionSettings m_settings =
             new LoopEndConditionSettings();
 
@@ -156,13 +162,14 @@ public class LoopEndConditionNodeModel extends NodeModel implements
         DataTableSpec spec1 = createSpec1(inData[0].getDataTableSpec());
         if (m_collectContainer == null) {
             assert m_variableContainer == null;
+            m_startTime = System.currentTimeMillis();
             // first time we are getting to this: open container
             m_collectContainer = exec.createDataContainer(spec1);
             m_variableContainer = exec.createDataContainer(createSpec2());
         } else if (!spec1.equalStructure(m_collectContainer.getTableSpec())) {
             DataTableSpec predSpec = m_collectContainer.getTableSpec();
             StringBuilder error = new StringBuilder(
-                    "Input table's structure differs from reference " 
+                    "Input table's structure differs from reference "
                     + "(first iteration) table: ");
             if (spec1.getNumColumns() != predSpec.getNumColumns()) {
                 error.append("different column counts ");
@@ -181,7 +188,7 @@ public class LoopEndConditionNodeModel extends NodeModel implements
             }
             throw new IllegalArgumentException(error.toString());
         }
-        
+
         RowKey rk = new RowKey("Iteration " + count);
         if (m_settings.variableType() == Type.DOUBLE) {
             m_variableContainer.addRowToTable(new DefaultRow(rk,
@@ -225,8 +232,14 @@ public class LoopEndConditionNodeModel extends NodeModel implements
         if (stop) {
             m_collectContainer.close();
             m_variableContainer.close();
-            return new BufferedDataTable[]{m_collectContainer.getTable(),
-                    m_variableContainer.getTable()};
+
+            BufferedDataTable out1 = m_collectContainer.getTable();
+            BufferedDataTable out2 = m_variableContainer.getTable();
+
+            LOGGER.debug("Total loop execution time: "
+                    + (System.currentTimeMillis() - m_startTime) + "ms");
+            m_startTime = 0;
+            return new BufferedDataTable[]{out1, out2};
         } else {
             continueLoop();
             return new BufferedDataTable[2];
@@ -300,6 +313,7 @@ public class LoopEndConditionNodeModel extends NodeModel implements
     protected void reset() {
         m_variableContainer = null;
         m_collectContainer = null;
+        m_startTime = 0;
     }
 
     /**
