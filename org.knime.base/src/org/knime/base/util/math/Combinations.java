@@ -23,6 +23,8 @@
  */
 package org.knime.base.util.math;
 
+import java.math.BigInteger;
+
 import org.knime.core.util.ThreadPool;
 
 /**
@@ -160,6 +162,10 @@ public final class Combinations {
      * @param n the size of the set
      * @param k the number of selected elements
      * @return the number of possible combinations
+     *
+     * @throws ArithmeticException if an overflow occurs during computing. In
+     * this case you can use {@link #getNumberOfCombinationsBig(int, int)}
+     * instead (which is slower, but works for arbitrary big numbers).
      */
     public static long getNumberOfCombinations(final int n, final int k) {
         if ((k > n) || (k < 0)) {
@@ -176,6 +182,10 @@ public final class Combinations {
             t[i] = 1;
             for (int j = i - 1; j > 0; j--) {
                 t[j] = t[j] + t[j - 1];
+                if (t[j] < 0) {
+                    throw new ArithmeticException(
+                            "Overflow, n and k are too large");
+                }
             }
             t[0] = 1;
         }
@@ -184,8 +194,51 @@ public final class Combinations {
         for (int j = n - 1; j >= k; j--) {
             t[j] = t[j] + t[j - 1];
         }
+        if (t[k] < 0) {
+            throw new ArithmeticException("Overflow, n and k are too large");
+        }
+
         return t[k];
     }
+
+
+    /**
+     * Returns the number of possible combinations when selecting <em>k</em>
+     * elements from a set of <em>n</em> elements (without repetition).
+     *
+     * @param n the size of the set
+     * @param k the number of selected elements
+     * @return the number of possible combinations
+     */
+    public static BigInteger getNumberOfCombinationsBig(final int n, final int k) {
+        if ((k > n) || (k < 0)) {
+            return new BigInteger("0");
+        }
+        if ((k == 0) || (k == n)) {
+            return new BigInteger("1");
+        }
+
+        final BigInteger one = new BigInteger("1");
+
+        BigInteger[] t = new BigInteger[n + 1];
+        t[0] = one;
+
+        for (int i = 0; i < n; i++) {
+            t[i] = one;
+            for (int j = i - 1; j > 0; j--) {
+                t[j] = t[j].add(t[j - 1]);
+            }
+            t[0] = one;
+        }
+
+        t[n] = one;
+        for (int j = n - 1; j >= k; j--) {
+            t[j] = t[j].add(t[j - 1]);
+        }
+
+        return t[k];
+    }
+
 
     /**
      * Enumerates all combinations and calls the callback for each combination.
@@ -270,7 +323,7 @@ public final class Combinations {
      * @param callback the callback class
      *
      * @throws InterruptedException if this thread was interrupted while waiting
-     * for the enumeration to finish
+     *             for the enumeration to finish
      */
     public void enumerate(final int threads, final Callback callback)
             throws InterruptedException {
