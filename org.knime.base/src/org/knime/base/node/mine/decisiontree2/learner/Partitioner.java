@@ -86,7 +86,7 @@ public class Partitioner {
                     useSplitAttributeFurther);
         }
 
-        // iterate over the rows and assigne them to the correspondign
+        // iterate over the rows and assign them to the corresponding
         // partition table
         // for the missing values get the partition weights from the split
         double[] partitionWeights = split.getPartitionWeights();

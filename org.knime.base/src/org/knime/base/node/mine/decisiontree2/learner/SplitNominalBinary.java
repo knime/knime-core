@@ -35,9 +35,13 @@ import java.util.List;
  */
 public class SplitNominalBinary extends SplitNominal {
 
-    private static final int TRUE_PARTITION = 0;
+    /** index for left partition of a binary nominal split. */
+    // used to be TRUE_PARTITION
+    public static final int LEFT_PARTITION = 0;
 
-    private static final int FALSE_PARTITION = 1;
+    /** index for right partition of a binary nominal split. */
+    //used to be FALSE_PARTITION
+    public static final int RIGHT_PARTITION = 1;
 
     /**
      * The partition count for the valid (non-missing) nominal values.
@@ -56,13 +60,17 @@ public class SplitNominalBinary extends SplitNominal {
     private int[][] m_nominalValuePartitioning;
 
     /**
-     * Holds the partitioning as gray code.
+     * Holds the partitioning as gray code. Sounds complicated but allows
+     * to iterate over all possible partitions moving only one value in (or
+     * out) at each step which makes the new entropy calculations easier.
      */
     private long m_grayCodeValuePartitioning;
 
     /**
      * The number of nominal values. Also represents the number of bits relevant
-     * for the gray code partitioning codeing.
+     * for the gray code partitioning encoding. Note that this only works for
+     * up to 63 bits (=nominal values) which is gigantic enough for a full
+     * search anyway.
      */
     private int m_numNominalValues;
 
@@ -75,7 +83,7 @@ public class SplitNominalBinary extends SplitNominal {
      *            the split
      * @param splitQualityMeasure the split quality measure (e.g. gini or gain
      *            ratio)
-     * @param minObjectsCount the minimumn number of objects in at least two
+     * @param minObjectsCount the minimum number of objects in at least two
      *            partitions
      * @param maxNumDifferentValues the maximum number of different nominal
      *            values for which all possible subsets are calculated; if above
@@ -97,23 +105,24 @@ public class SplitNominalBinary extends SplitNominal {
         // get the underlying basic 2D array
         double[][] histogram = nominalHistogram.getHistogram();
         m_numNominalValues = histogram.length;
-        // calculate the partition count array and the allover count
+        // calculate the partition count array and the total count
         double alloverCount = 0.0;
         double[] partitionCounter = new double[2];
         double[] classCounter =
                 new double[table.getClassFrequencyArray().length];
         m_valuePartitionValidCount = new double[2];
         double[][] partitionHistogram = new double[2][];
-        partitionHistogram[TRUE_PARTITION] =
+        partitionHistogram[LEFT_PARTITION] =
                 new double[nominalHistogram.getNumClassValues()];
-        partitionHistogram[FALSE_PARTITION] =
+        partitionHistogram[RIGHT_PARTITION] =
                 new double[nominalHistogram.getNumClassValues()];
         for (double[] oneNominalValueHisto : histogram) {
             int i = 0;
             for (double classCount : oneNominalValueHisto) {
-                // initially all data rows belong to the false partition
-                partitionHistogram[FALSE_PARTITION][i] += classCount;
-                partitionCounter[FALSE_PARTITION] += classCount;
+                // initially all data rows belong to the right (false) partition
+                // that is our left set contains no values at all at start.
+                partitionHistogram[RIGHT_PARTITION][i] += classCount;
+                partitionCounter[RIGHT_PARTITION] += classCount;
                 classCounter[i] += classCount;
                 alloverCount += classCount;
                 i++;
@@ -132,40 +141,42 @@ public class SplitNominalBinary extends SplitNominal {
             GrayCodeCounter counter =
                     new GrayCodeCounter(m_numNominalValues, true);
             long bestGrayCode = counter.getGrayCode();
-            // imediately switch to the next increment, as the empty subset
-            // makes no sense
+            // immediately switch to the next increment, as the empty subset
+            // on the left side makes no sense
             counter.increment();
             while (counter.hasNext()) {
                 // calculate the split quality and remember this split
                 // if it is the best
 
-                // for this first get the last change index of the nominal
-                // value (represented by the gray code counter)
+                // for this first get the last changed index of the nominal
+                // value (represented by the gray code counter). We know that
+                // only one value was moved from left to right (or vice versa)
+                // since this is the beauty of gray code counting!
                 int nominalValueIndex =
                         counter.getLastChangedGrayCodeBitIndex();
                 boolean truePartition = counter.lastBitSetTrue();
-                // the partition prefix is set according to, whether the
-                // values must be added to the true partition or to the false
-                // one
+                // the partition prefix tells us whether the
+                // values must be added to the left or right
+                // partition
                 int partitionPrefix;
                 if (truePartition) {
-                    // remove from the false partition and add to the true
+                    // remove from the right partition and add to the left
                     // partition, i.e. prefix is 1
                     partitionPrefix = 1;
                 } else {
-                    // remove fromt the true partition and add to the false
-                    // partition, i.e. prefix is -1
+                    // remove from the left partition and add to the right
+                    // partition (prefix -1)
                     partitionPrefix = -1;
                 }
                 int i = 0;
                 for (double classCount : histogram[nominalValueIndex]) {
-                    partitionHistogram[FALSE_PARTITION][i] -=
+                    partitionHistogram[RIGHT_PARTITION][i] -=
                             partitionPrefix * classCount;
-                    partitionCounter[FALSE_PARTITION] -=
+                    partitionCounter[RIGHT_PARTITION] -=
                             partitionPrefix * classCount;
-                    partitionHistogram[TRUE_PARTITION][i] +=
+                    partitionHistogram[LEFT_PARTITION][i] +=
                             partitionPrefix * classCount;
-                    partitionCounter[TRUE_PARTITION] +=
+                    partitionCounter[LEFT_PARTITION] +=
                             partitionPrefix * classCount;
                     i++;
                 }
@@ -185,10 +196,10 @@ public class SplitNominalBinary extends SplitNominal {
                         // also remember the subsets
                         bestGrayCode = counter.getGrayCode();
                         // save the partition count to the member variable
-                        m_valuePartitionValidCount[FALSE_PARTITION] =
-                                partitionCounter[FALSE_PARTITION];
-                        m_valuePartitionValidCount[TRUE_PARTITION] =
-                                partitionCounter[TRUE_PARTITION];
+                        m_valuePartitionValidCount[RIGHT_PARTITION] =
+                                partitionCounter[RIGHT_PARTITION];
+                        m_valuePartitionValidCount[LEFT_PARTITION] =
+                                partitionCounter[LEFT_PARTITION];
                     }
                 }
 
@@ -231,13 +242,13 @@ public class SplitNominalBinary extends SplitNominal {
                 // is permanently adapted for the next iteration
                 for (int nominalValueMapping : setFalse) {
                     // remove / add the current chosen nominal value counts from
-                    // / to the false / true partition
+                    // / to the right / left partition
                     int i = 0;
                     for (double classCount : histogram[nominalValueMapping]) {
-                        partitionHistogram[FALSE_PARTITION][i] -= classCount;
-                        partitionCounter[FALSE_PARTITION] -= classCount;
-                        partitionHistogram[TRUE_PARTITION][i] += classCount;
-                        partitionCounter[TRUE_PARTITION] += classCount;
+                        partitionHistogram[RIGHT_PARTITION][i] -= classCount;
+                        partitionCounter[RIGHT_PARTITION] -= classCount;
+                        partitionHistogram[LEFT_PARTITION][i] += classCount;
+                        partitionCounter[LEFT_PARTITION] += classCount;
                         i++;
                     }
 
@@ -257,22 +268,22 @@ public class SplitNominalBinary extends SplitNominal {
                             currentBestNominalValueMapping =
                                     nominalValueMapping;
                             // save the partition count to the member variable
-                            m_valuePartitionValidCount[FALSE_PARTITION] =
-                                    partitionCounter[FALSE_PARTITION];
-                            m_valuePartitionValidCount[TRUE_PARTITION] =
-                                    partitionCounter[TRUE_PARTITION];
+                            m_valuePartitionValidCount[RIGHT_PARTITION] =
+                                    partitionCounter[RIGHT_PARTITION];
+                            m_valuePartitionValidCount[LEFT_PARTITION] =
+                                    partitionCounter[LEFT_PARTITION];
                         }
                     }
 
                     // remove / add the current chosen nominal value counts from
-                    // / to the true / false partition such that the situation
+                    // / to the left / right partition such that the situation
                     // for the next nominal value is as before
                     i = 0;
                     for (double classCount : histogram[nominalValueMapping]) {
-                        partitionHistogram[FALSE_PARTITION][i] += classCount;
-                        partitionCounter[FALSE_PARTITION] += classCount;
-                        partitionHistogram[TRUE_PARTITION][i] -= classCount;
-                        partitionCounter[TRUE_PARTITION] -= classCount;
+                        partitionHistogram[RIGHT_PARTITION][i] += classCount;
+                        partitionCounter[RIGHT_PARTITION] += classCount;
+                        partitionHistogram[LEFT_PARTITION][i] -= classCount;
+                        partitionCounter[LEFT_PARTITION] -= classCount;
                         i++;
                     }
                 }
@@ -281,18 +292,18 @@ public class SplitNominalBinary extends SplitNominal {
                 if (currentBestNominalValueMapping < 0) {
                     break;
                 }
-                // after one iteration over all nominal values of the false
-                // partition, get the best one and adapt the partition and histo
-                // counts for the next iteration
+                // after one iteration over all nominal values of the right
+                // partition, get the best one and adapt the partition and
+                // histogram counts for the next iteration
                 int i = 0;
                 for (double cCnt : histogram[currentBestNominalValueMapping]) {
-                    partitionHistogram[FALSE_PARTITION][i] -= cCnt;
-                    partitionCounter[FALSE_PARTITION] -= cCnt;
-                    partitionHistogram[TRUE_PARTITION][i] += cCnt;
-                    partitionCounter[TRUE_PARTITION] += cCnt;
+                    partitionHistogram[RIGHT_PARTITION][i] -= cCnt;
+                    partitionCounter[RIGHT_PARTITION] -= cCnt;
+                    partitionHistogram[LEFT_PARTITION][i] += cCnt;
+                    partitionCounter[LEFT_PARTITION] += cCnt;
                     i++;
                 }
-                // also adapt the false and true set
+                // also adapt the right and left set
                 setFalse.remove(new Integer(currentBestNominalValueMapping));
                 if (setTrue.contains(currentBestNominalValueMapping)) {
                     throw new RuntimeException("Nominal value already added: "
@@ -303,8 +314,8 @@ public class SplitNominalBinary extends SplitNominal {
                     || splitQualityMeasure.isBetter(
                             currentBestQualityMeasure, bestQualityMeasure));
 
-            // now we know that (according to the heuristic) the current false /
-            // true partition are the best split sets, so convert the
+            // now we know that (according to the heuristic) the current left /
+            // right partition are the best split sets, so convert the
             // lists to a grey code (long number) representation, then convert
             // this to the array representation
             m_grayCodeValuePartitioning = 0;
@@ -338,28 +349,28 @@ public class SplitNominalBinary extends SplitNominal {
     private void convertGrayCodeToPartitioning(final long grayCode,
             final int numNominalValues) {
         m_nominalValuePartitioning = new int[2][];
-        List<Integer> trueList = new ArrayList<Integer>();
-        List<Integer> falseList = new ArrayList<Integer>();
+        List<Integer> leftList = new ArrayList<Integer>();  // was trueList
+        List<Integer> rightList = new ArrayList<Integer>();  // was falseList
         long mask = 1;
         for (int i = 0; i < numNominalValues; i++) {
             if ((grayCode & mask) > 0) {
-                // this nominal mapping belongs to the true partition
-                trueList.add(i);
+                // this nominal mapping belongs to the left (true) partition
+                leftList.add(i);
             } else {
-                falseList.add(i);
+                rightList.add(i);
             }
             mask = mask << 1;
         }
 
         // convert the lists to the 2D array
-        m_nominalValuePartitioning[TRUE_PARTITION] = new int[trueList.size()];
-        for (int i = 0; i < trueList.size(); i++) {
-            m_nominalValuePartitioning[TRUE_PARTITION][i] = trueList.get(i);
+        m_nominalValuePartitioning[LEFT_PARTITION] = new int[leftList.size()];
+        for (int i = 0; i < leftList.size(); i++) {
+            m_nominalValuePartitioning[LEFT_PARTITION][i] = leftList.get(i);
         }
 
-        m_nominalValuePartitioning[FALSE_PARTITION] = new int[falseList.size()];
-        for (int i = 0; i < falseList.size(); i++) {
-            m_nominalValuePartitioning[FALSE_PARTITION][i] = falseList.get(i);
+        m_nominalValuePartitioning[RIGHT_PARTITION] = new int[rightList.size()];
+        for (int i = 0; i < rightList.size(); i++) {
+            m_nominalValuePartitioning[RIGHT_PARTITION][i] = rightList.get(i);
         }
     }
 
@@ -394,7 +405,7 @@ public class SplitNominalBinary extends SplitNominal {
     }
 
     /**
-     * Binary nominal splits can be furhter used.
+     * Binary nominal splits can be further used.
      *
      * {@inheritDoc}
      */
@@ -415,35 +426,36 @@ public class SplitNominalBinary extends SplitNominal {
         int valueMapping = (int)value;
         // create the mask that corresponds to the bit at the position of
         // the valueMapping, then check if the gray code is true at that
-        // position; if yes, the true partition is returned else the false one
+        // position; if yes, the index of the left partition is returned
+        // otherwise the right one
         int mask = 1 << valueMapping;
         if ((m_grayCodeValuePartitioning & mask) > 0) {
-            return TRUE_PARTITION;
+            return LEFT_PARTITION;
         } else {
-            return FALSE_PARTITION;
+            return RIGHT_PARTITION;
         }
     }
 
     /**
-     * Returns an array of integer mappings corresponding to the false partition
-     * nominal values.
+     * Returns an array of integer mappings corresponding to the right partition
+     * nominal values. (This used to be the "false" partition.)
      *
-     * @return an array of integer mappings corresponding to the false partition
-     *         nominal values
-     */
-    public int[] getIntMappingsLeftPartition() {
-        return m_nominalValuePartitioning[FALSE_PARTITION];
-    }
-
-    /**
-     * Returns an array of integer mappings corresponding to the true partition
-     * nominal values.
-     *
-     * @return an array of integer mappings corresponding to the true partition
+     * @return an array of integer mappings corresponding to the right partition
      *         nominal values
      */
     public int[] getIntMappingsRightPartition() {
-        return m_nominalValuePartitioning[TRUE_PARTITION];
+        return m_nominalValuePartitioning[RIGHT_PARTITION];
+    }
+
+    /**
+     * Returns an array of integer mappings corresponding to the left partition
+     * nominal values. (This used to be the "true" partition.)
+     *
+     * @return an array of integer mappings corresponding to the left partition
+     *         nominal values
+     */
+    public int[] getIntMappingsLeftPartition() {
+        return m_nominalValuePartitioning[LEFT_PARTITION];
     }
 
     /**
@@ -484,7 +496,7 @@ public class SplitNominalBinary extends SplitNominal {
         private int m_lastChangedGrayCodeBitIndex;
 
         /**
-         * Creates a gray code counter with the specified bit lenngth. The
+         * Creates a gray code counter with the specified bit length. The
          * maximum length is 63 (the 64th bit is used as counting border). I.e.
          * at most for 63 different nominal values the subsets can be
          * calculated. This is enough, as the calculation time for more than 15
@@ -510,8 +522,6 @@ public class SplitNominalBinary extends SplitNominal {
         }
 
         /**
-         * Returns true, if this counter has not reached its maximum value yet.
-         *
          * @return true, if this counter has not reached its maximum value yet
          */
         public boolean hasNext() {
@@ -531,6 +541,7 @@ public class SplitNominalBinary extends SplitNominal {
         /**
          * Returns the position of this counter. The position is the number of
          * increments that have been taken place so far.
+         * 
          * @return current position of this counter
          */
         public long getNumIncrements() {
@@ -553,9 +564,6 @@ public class SplitNominalBinary extends SplitNominal {
         }
 
         /**
-         * Returns the index of the bit that was changed during the last
-         * increment operation.
-         *
          * @return the index of the bit that was changed during the last
          *         increment operation
          */
@@ -564,11 +572,8 @@ public class SplitNominalBinary extends SplitNominal {
         }
 
         /**
-         * Returns true, if the last changed bit in the gray code was changed to
-         * true (1). Fals, if the bit was set to false (0).
-         *
          * @return true, if the last changed bit in the gray code was changed to
-         *         true (1), fals, if the bit was set to false (0)
+         *         true (1), false, if the bit was set to false (0)
          */
         public boolean lastBitSetTrue() {
             int lastChangedIndex = getLastChangedGrayCodeBitIndex();
@@ -594,7 +599,8 @@ public class SplitNominalBinary extends SplitNominal {
     }
 
     /**
-     * Main.
+     * Main. Small test for GrayCodeCounter.
+     * 
      * @param args command line arguments
      */
     public static void main(final String[] args) {

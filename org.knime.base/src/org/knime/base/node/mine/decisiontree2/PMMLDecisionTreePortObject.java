@@ -32,6 +32,7 @@ import java.util.Map.Entry;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.sax.TransformerHandler;
 
+import org.knime.base.node.mine.decisiontree2.learner.SplitNominalBinary;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeLeaf;
@@ -69,7 +70,7 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
 
     /**
      * @param tree underlying decision tree
-     * @param spec 
+     * @param spec pmml mining schema of the tree
      */
     public PMMLDecisionTreePortObject(final DecisionTree tree,
             final PMMLPortObjectSpec spec) {
@@ -113,6 +114,8 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
     /**
      * @return
      */
+    // FIXME: very, very likely wrong (mb): the recursive call does
+    // not dig into NominalBinary splits.
     private boolean treeIsMultisplit(final DecisionTreeNode node) {
         if (node instanceof DecisionTreeNodeSplitContinuous) {
             boolean leftSide =
@@ -211,10 +214,11 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
             handler.startElement(null, null, "Array", arrayAtts);
             DataCell[] splitValues = splitNode.getSplitValues();
             List<Integer> indices = null;
-            if (splitNode.getIndex(node) == 0) {
-                indices = splitNode.getChildIndices0();
-            } else if (splitNode.getIndex(node) == 1) {
-                indices = splitNode.getChildIndices1();
+            if (splitNode.getIndex(node) == SplitNominalBinary.LEFT_PARTITION) {
+                indices = splitNode.getLeftChildIndices();
+            } else if (splitNode.getIndex(node) 
+                    == SplitNominalBinary.RIGHT_PARTITION) {
+                indices = splitNode.getRightChildIndices();
             }
             StringBuilder classSet = new StringBuilder();
             for (Integer i : indices) {

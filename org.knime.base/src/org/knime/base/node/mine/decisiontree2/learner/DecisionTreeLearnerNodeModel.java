@@ -622,7 +622,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             // get the just created partitions
             InMemoryTable[] partitionTables = partitioner.getPartitionTables();
 
-            // recursively build the child nodes
+            // recursively build the  child nodes
             DecisionTreeNode[] children =
                     new DecisionTreeNode[partitionTables.length];
 
@@ -690,11 +690,9 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                 return new DecisionTreeNodeSplitNominalBinary(nodeId,
                         majorityClass, frequencies, split
                                 .getSplitAttributeName(), splitValues,
-                        // right partition is the "true" case
-                        splitNominalBinary.getIntMappingsRightPartition(),
-                        // left partition is the "false" case
                         splitNominalBinary.getIntMappingsLeftPartition(),
-                        children);
+                        splitNominalBinary.getIntMappingsRightPartition(),
+                        children/* children[0]=left, ..[1] right */);
             }
         }
     }

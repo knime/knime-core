@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.knime.base.data.util.DataCellStringMapper;
+import org.knime.base.node.mine.decisiontree2.learner.SplitNominalBinary;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -55,9 +56,9 @@ public class DecisionTreeNodeSplitNominalBinary extends
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(DecisionTreeNodeSplitNominalBinary.class);
 
-    private List<Integer> m_childIndices0 = new ArrayList<Integer>();
+    private List<Integer> m_leftChildIndices = new ArrayList<Integer>();
 
-    private List<Integer> m_childIndices1 = new ArrayList<Integer>();
+    private List<Integer> m_rightChildIndices = new ArrayList<Integer>();
 
     private static int[] toIntArray(final List<Integer> intList) {
         int[] result = new int[intList.size()];
@@ -109,10 +110,10 @@ public class DecisionTreeNodeSplitNominalBinary extends
      * @param majorityClass the majority class of the records in this node
      * @param classCounts the class distribution of the data in this node
      * @param splitAttribute the attribute name on which to split
-     * @param splitMappingsLeft the integer mapping values for the nominal
-     *            values that fall into the left partition
      * @param splitValues all nominal split values in the order of their integer
      *            mapping
+     * @param splitMappingsLeft the integer mapping values for the nominal
+     *            values that fall into the left partition
      * @param splitMappingsRight the integer mapping values for the nominal
      *            values that fall into the right partition
      * @param children the children split according to the split values
@@ -132,39 +133,41 @@ public class DecisionTreeNodeSplitNominalBinary extends
         assert (nrSplits >= 1);
         super.makeRoomForKids(nrSplits);
 
-        // set the left child
-        super.setChildNodeIndex(0, children[1].getOwnIndex());
-        addNode(children[1], 0);
-        children[1].setParent(this);
+        // set the left child (at index 0 - no need to force "left" or "right"
+        // index consistency here since the child knows which values to check
+        // for. But the partitioning and mapping relies on proper indexing!
+        DecisionTreeNode leftChild = 
+            children[SplitNominalBinary.LEFT_PARTITION];
+        super.setChildNodeIndex(0, leftChild.getOwnIndex());
+        addNode(leftChild, 0);
+        leftChild.setParent(this);
         // and its indices
-        m_childIndices0 = new ArrayList<Integer>();
+        m_leftChildIndices = new ArrayList<Integer>();
         for (int mapping : splitMappingsLeft) {
-            m_childIndices0.add(mapping);
+            m_leftChildIndices.add(mapping);
         }
         // and its prefix
-        super.getChildNodeAt(0)
-                .setPrefix(
-                        getSplitAttr()
-                                + " = "
-                                + getNominalValueString(splitValues,
-                                        splitMappingsLeft));
+        super.getChildNodeAt(0).setPrefix(
+                      getSplitAttr()
+                    + " = "
+                    + getNominalValueString(splitValues, splitMappingsLeft));
 
-        // set the right child
-        super.setChildNodeIndex(1, children[0].getOwnIndex());
-        addNode(children[0], 1);
-        children[0].setParent(this);
+        // set the right child - at index 1, see above.
+        DecisionTreeNode rightChild = 
+            children[SplitNominalBinary.RIGHT_PARTITION];
+        super.setChildNodeIndex(1, rightChild.getOwnIndex());
+        addNode(rightChild, 1);
+        rightChild.setParent(this);
         // and its indices
-        m_childIndices1 = new ArrayList<Integer>();
+        m_rightChildIndices = new ArrayList<Integer>();
         for (int mapping : splitMappingsRight) {
-            m_childIndices1.add(mapping);
+            m_rightChildIndices.add(mapping);
         }
         // and its prefix
-        super.getChildNodeAt(1)
-                .setPrefix(
-                        getSplitAttr()
-                                + " = "
-                                + getNominalValueString(splitValues,
-                                        splitMappingsRight));
+        super.getChildNodeAt(1).setPrefix(
+                      getSplitAttr()
+                    + " = "
+                    + getNominalValueString(splitValues, splitMappingsRight));
 
     }
 
@@ -267,9 +270,9 @@ public class DecisionTreeNodeSplitNominalBinary extends
     private int getIndexOfChild(final DataCell value) {
         for (int i = 0; i < getSplitValues().length; i++) {
             if (getSplitValues()[i].equals(value)) {
-                if (m_childIndices0.contains(i)) {
+                if (m_leftChildIndices.contains(i)) {
                     return 0;
-                } else if (m_childIndices1.contains(i)) {
+                } else if (m_rightChildIndices.contains(i)) {
                     return 1;
                 } else {
                     return -1;
@@ -315,13 +318,13 @@ public class DecisionTreeNodeSplitNominalBinary extends
         if (super.getChildNodeAt(0) != null) {
             super.getChildNodeAt(0).setPrefix(
                     getSplitAttr() + " in "
-                            + getConcatenatedValues(m_childIndices0));
+                            + getConcatenatedValues(m_leftChildIndices));
         }
 
         if (super.getChildNodeAt(1) != null) {
             super.getChildNodeAt(1).setPrefix(
                     getSplitAttr() + " in "
-                            + getConcatenatedValues(m_childIndices1));
+                            + getConcatenatedValues(m_rightChildIndices));
         }
 
         return true;
@@ -342,8 +345,8 @@ public class DecisionTreeNodeSplitNominalBinary extends
     @Override
     public void saveNodeSplitInternalsToPredParams(final ModelContentWO pConf) {
         super.saveNodeSplitInternalsToPredParams(pConf);
-        pConf.addIntArray("childIndices0", toIntArray(m_childIndices0));
-        pConf.addIntArray("childIndices1", toIntArray(m_childIndices1));
+        pConf.addIntArray("childIndices0", toIntArray(m_leftChildIndices));
+        pConf.addIntArray("childIndices1", toIntArray(m_rightChildIndices));
     }
 
     /**
@@ -353,21 +356,21 @@ public class DecisionTreeNodeSplitNominalBinary extends
     public void loadNodeSplitInternalsFromPredParams(final ModelContentRO pConf)
             throws InvalidSettingsException {
         super.loadNodeSplitInternalsFromPredParams(pConf);
-        m_childIndices0 = toArrayList(pConf.getIntArray("childIndices0"));
-        m_childIndices1 = toArrayList(pConf.getIntArray("childIndices1"));
+        m_leftChildIndices = toArrayList(pConf.getIntArray("childIndices0"));
+        m_rightChildIndices = toArrayList(pConf.getIntArray("childIndices1"));
     }
 
     /**
-     * @return indices of patterns that fall into child node 0.
+     * @return indices of patterns that fall into child node 0 (left).
      */
-    public List<Integer> getChildIndices0(){
-        return m_childIndices0;
+    public List<Integer> getLeftChildIndices() {
+        return m_leftChildIndices;
     }
 
     /**
-     * @return indices of patterns that fall into child node 1.
+     * @return indices of patterns that fall into child node 1 (right).
      */
-    public List<Integer> getChildIndices1(){
-        return m_childIndices1;
+    public List<Integer> getRightChildIndices() {
+        return m_rightChildIndices;
     }
 }

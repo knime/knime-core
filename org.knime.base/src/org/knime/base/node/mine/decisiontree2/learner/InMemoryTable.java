@@ -182,12 +182,12 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
         m_attributeNameMapper = tableTemplate.m_attributeNameMapper;
         m_minNumberRowsPerNode = tableTemplate.m_minNumberRowsPerNode;
         // the initial size of the class frequency counter array is
-        // the same as in the tamplate but the values are initilized with 0
+        // the same as in the template but the values are initialized with 0
         m_classFrequencyArray =
                 new double[tableTemplate.m_classFrequencyArray.length];
         m_rows = new DataRowWeighted[INITIAL_ROWVECTOR_SIZE];
         m_size = 0;
-        // create the historgram array for the nominal attributes
+        // create the histogram array for the nominal attributes
         m_nominalValueClassFrequencyHisto =
                 new NominalValueHistogram[m_nominalAttributeValueMapper.length];
         for (int i = 0; i < m_nominalValueClassFrequencyHisto.length; i++) {
@@ -548,7 +548,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
     /**
      * Returns the nominal values for the given attribute index. The value array
      * is ordered according to the integer mapping, i.e. the {@link DataCell}
-     * mapped with integer 0 is palced first, and so on.
+     * mapped with integer 0 is placed first, and so on.
      *
      * @param attributeIndex the attribute index for which to return the nominal
      *            values; <code>null</code> if the attribute is not nomnial
@@ -570,7 +570,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
     }
 
     /**
-     * Sorts the data rows of this table in acending order on the given
+     * Sorts the data rows of this table in ascending order on the given
      * attribute index. The missing values are put at the end of the table.
      *
      * @param attributeIndex the index of the attribute on which to sort the

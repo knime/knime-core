@@ -64,7 +64,7 @@ public class NominalValueHistogram {
      *            histogram
      */
     public NominalValueHistogram(final NominalValueHistogram template) {
-        // the histogram is initiallized from the template
+        // the histogram is initialized from the template
         m_histogram = new double[template.m_histogram.length][];
         for (int i = 0; i < m_histogram.length; i++) {
             m_histogram[i] = new double[template.m_histogram[i].length];
@@ -72,7 +72,7 @@ public class NominalValueHistogram {
     }
 
     /**
-     * Increments the histogram count at the given possition for the given
+     * Increments the histogram count at the given position for the given
      * weight.
      *
      * @param nominalValueMapping the nominal index for which to increment the

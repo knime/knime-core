@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
 
+import org.knime.base.node.mine.decisiontree2.learner.SplitNominalBinary;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeLeaf;
@@ -93,7 +94,8 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
     public void endElement(final String uri, final String localName,
             final String name) throws SAXException {
         m_stack.pop();
-        if (name.equals("Array") && m_stack.peek().equals("SimpleSetPredicate")) {
+        if (name.equals("Array")
+                && m_stack.peek().equals("SimpleSetPredicate")) {
             String[] temp = m_buffer.toString().trim().split("\\s+");
             List<String> splitValues = new ArrayList<String>();
             for (String currentClass : temp) {
@@ -116,10 +118,7 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
                         new DecisionTreeNodeLeaf(nodeId, majorityClass,
                                 classCounts);
                 newNode = leafNode;
-            }
-
-            //
-            else {
+            } else {
                 ArrayList<TempTreeNodeContainer> containerChildren =
                         new ArrayList<TempTreeNodeContainer>();
                 ArrayList<DecisionTreeNode> childrenList = 
@@ -175,11 +174,13 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
                 } else if (type == ParentNodeType.NOMINAL_SPLIT_NODE_BINARY) {
                     assert containerChildren.size() == 2;
                     DataCell[] splitValues =
-                            getSplitValuesFromChildrenBinary(containerChildren);
+                          getSplitValuesFromChildrenBinary(containerChildren);
                     int[][] splitMappings =
-                            getSplitMappingsFromChildren(containerChildren);
-                    int[] splitMappingsLeft = splitMappings[0];
-                    int[] splitMappingsRight = splitMappings[1];
+                          getSplitMappingsFromChildrenBinary(containerChildren);
+                    int[] splitMappingsLeft =
+                        splitMappings[SplitNominalBinary.LEFT_PARTITION];
+                    int[] splitMappingsRight =
+                        splitMappings[SplitNominalBinary.RIGHT_PARTITION];
                     DecisionTreeNodeSplitNominalBinary splitNode =
                             new DecisionTreeNodeSplitNominalBinary(nodeId,
                                     majorityClass, classCounts, splitAttribute,
@@ -223,10 +224,9 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
             DataCell className = new StringCell(atts.getValue("value"));
             double value = Double.parseDouble(atts.getValue("recordCount"));
             m_nodeStack.peek().addClassCount(className, value);
-        }
-        else if (name.equals("MiningField")){
+        } else if (name.equals("MiningField")) {
             String type = atts.getValue("usageType");
-            if(type != null && type.equals("predicted")){
+            if (type != null && type.equals("predicted")) {
                 m_classColumn = atts.getValue("name");
             }
         }
@@ -298,8 +298,10 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
 
     private DataCell[] getSplitValuesFromChildrenBinary(
             final ArrayList<TempTreeNodeContainer> children) {
-        List<String> leftSplitValues = children.get(0).getSplitValues();
-        List<String> rightSplitValues = children.get(1).getSplitValues();
+        List<String> leftSplitValues = 
+            children.get(SplitNominalBinary.LEFT_PARTITION).getSplitValues();
+        List<String> rightSplitValues = 
+            children.get(SplitNominalBinary.RIGHT_PARTITION).getSplitValues();
         DataCell[] result =
                 new DataCell[leftSplitValues.size() + rightSplitValues.size()];
         for (int i = 0; i < leftSplitValues.size(); i++) {
@@ -312,18 +314,23 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
         return result;
     }
 
-    private int[][] getSplitMappingsFromChildren(
+    private int[][] getSplitMappingsFromChildrenBinary(
             final ArrayList<TempTreeNodeContainer> children) {
-        List<String> leftSplitValues = children.get(0).getSplitValues();
-        List<String> rightSplitValues = children.get(1).getSplitValues();
+        List<String> leftSplitValues = 
+            children.get(SplitNominalBinary.LEFT_PARTITION).getSplitValues();
+        List<String> rightSplitValues = 
+            children.get(SplitNominalBinary.RIGHT_PARTITION).getSplitValues();
         int[][] result = new int[2][];
-        result[0] = new int[leftSplitValues.size()];
-        result[1] = new int[rightSplitValues.size()];
+        result[SplitNominalBinary.LEFT_PARTITION] = 
+            new int[leftSplitValues.size()];
+        result[SplitNominalBinary.RIGHT_PARTITION] = 
+            new int[rightSplitValues.size()];
         for (int i = 0; i < leftSplitValues.size(); i++) {
-            result[0][i] = i;
+            result[SplitNominalBinary.LEFT_PARTITION][i] = i;
         }
         for (int i = 0; i < rightSplitValues.size(); i++) {
-            result[1][i] = i + leftSplitValues.size();
+            result[SplitNominalBinary.RIGHT_PARTITION][i] =
+                i + leftSplitValues.size();
         }
         return result;
     }
