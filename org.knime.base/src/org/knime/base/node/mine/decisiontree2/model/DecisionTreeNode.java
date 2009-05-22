@@ -30,6 +30,7 @@ import java.io.Serializable;
 import java.text.NumberFormat;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.Map.Entry;
 
@@ -74,7 +75,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
                 = new HashMap<Color, Double>();
     private boolean m_newColors = false;
 
-    private HashMap<DataCell, Double> m_classCounts;
+    private LinkedHashMap<DataCell, Double> m_classCounts;
 
     private int m_ownIndex = -1;
 
@@ -121,7 +122,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
         m_ownClassFreq = 0.0;
         m_allClassFreq = 0.0;
         // init HashTable and write Class-Frequency pairs
-        m_classCounts = new HashMap<DataCell, Double>();
+        m_classCounts = new LinkedHashMap<DataCell, Double>();
         for (int i = 0; i < childNodes.getLength(); i++) {
             if (childNodes.item(i).getNodeName().equals("CLASSES")) {
                 NodeList classesNodes = childNodes.item(i).getChildNodes();
@@ -161,7 +162,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * @param classCounts the class distribution of the data in this node
      */
     protected DecisionTreeNode(final int nodeId, final DataCell majorityClass,
-            final HashMap<DataCell, Double> classCounts) {
+            final LinkedHashMap<DataCell, Double> classCounts) {
 
         // read index of this node
         m_ownIndex = nodeId;
@@ -251,7 +252,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      *
      * @return class counts
      */
-    public HashMap<DataCell, Double> getClassCounts() {
+    public LinkedHashMap<DataCell, Double> getClassCounts() {
         return m_classCounts;
     }
 
@@ -266,7 +267,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      */
     public final DataCell classifyPattern(final DataRow row,
             final DataTableSpec spec) throws Exception {
-        HashMap<DataCell, Double> classCounts = getClassCounts(row, spec);
+        LinkedHashMap<DataCell, Double> classCounts = getClassCounts(row, spec);
         double winnerCount = -1.0;
         DataCell winner = null;
         for (DataCell classCell : classCounts.keySet()) {
@@ -292,7 +293,8 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * @return HashMap class/count
      * @throws Exception if something went wrong (unknown attriubte for example)
      */
-    public abstract HashMap<DataCell, Double> getClassCounts(final DataRow row,
+    public abstract LinkedHashMap<DataCell, Double> getClassCounts(
+            final DataRow row,
             final DataTableSpec spec) throws Exception;
 
     /**
@@ -533,7 +535,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
             throw new InvalidSettingsException("DecisionTreeNode: Can't read"
                     + " class frequencies, array-lenghts don't match!");
         }
-        m_classCounts = new HashMap<DataCell, Double>();
+        m_classCounts = new LinkedHashMap<DataCell, Double>();
         for (int i = 0; i < keys.length; i++) {
             m_classCounts.put(keys[i], values[i]);
         }

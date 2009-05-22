@@ -27,8 +27,8 @@ package org.knime.base.node.mine.decisiontree2.model;
 
 import java.awt.Color;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 import javax.swing.tree.TreeNode;
@@ -57,7 +57,8 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
 
     private static final String CONFIG_KEY_PATTERN = "pattern";
 
-    private HashSet<RowKey> m_coveredPattern = new HashSet<RowKey>();
+    private HashSet<RowKey> m_coveredPattern = 
+        new HashSet<RowKey>();
 
     private boolean m_pureEnough = false;
 
@@ -90,7 +91,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
      * @param classCounts the class distribution of the data in this node
      */
     public DecisionTreeNodeLeaf(final int nodeId, final DataCell majorityClass,
-            final HashMap<DataCell, Double> classCounts) {
+            final LinkedHashMap<DataCell, Double> classCounts) {
 
         // everything is done in the super constructor up to now
         super(nodeId, majorityClass, classCounts);
@@ -120,7 +121,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
      * @throws Exception if something went wrong (unknown attriubte for example)
      */
     @Override
-    public HashMap<DataCell, Double> getClassCounts(final DataRow row,
+    public LinkedHashMap<DataCell, Double> getClassCounts(final DataRow row,
             final DataTableSpec spec) throws Exception {
         return getClassCounts();
     }

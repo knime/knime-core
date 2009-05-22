@@ -26,8 +26,8 @@
 package org.knime.base.node.mine.decisiontree2.model;
 
 import java.awt.Color;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 import org.knime.base.data.util.DataCellStringMapper;
@@ -117,7 +117,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
      */
     public DecisionTreeNodeSplitNominal(final int nodeId,
             final DataCell majorityClass,
-            final HashMap<DataCell, Double> classCounts,
+            final LinkedHashMap<DataCell, Double> classCounts,
             final String splitAttribute, final DataCell[] splitValues,
             final DecisionTreeNode[] children) {
         super(nodeId, majorityClass, classCounts, splitAttribute);
@@ -152,7 +152,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
      * {@inheritDoc}
      */
     @Override
-    public HashMap<DataCell, Double> getClassCounts(final DataCell cell,
+    public LinkedHashMap<DataCell, Double> getClassCounts(final DataCell cell,
             final DataRow row, final DataTableSpec spec) throws Exception {
         for (int i = 0; i < m_splitValues.length; i++) {
             if (m_splitValues[i].equals(cell)) {

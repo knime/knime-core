@@ -26,7 +26,7 @@
 package org.knime.base.node.mine.decisiontree2.model;
 
 import java.util.Enumeration;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 import javax.swing.tree.TreeNode;
@@ -98,7 +98,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
      */
     protected DecisionTreeNodeSplit(final int nodeId,
             final DataCell majorityClass,
-            final HashMap<DataCell, Double> classCounts,
+            final LinkedHashMap<DataCell, Double> classCounts,
             final String splitAttribute) {
         super(nodeId, majorityClass, classCounts);
         makeRoomForKids(2);
@@ -215,7 +215,8 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
      * {@inheritDoc}
      */
     @Override
-    public final HashMap<DataCell, Double> getClassCounts(final DataRow row,
+    public final LinkedHashMap<DataCell, Double> getClassCounts(
+            final DataRow row,
             final DataTableSpec spec) throws Exception {
         assert (spec != null);
         if (m_splitAttr != null) {
@@ -236,11 +237,11 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
                 // value is missing, we have to combine all class weights
                 // from _all_ branches
                 // initialize result HashMap
-                HashMap<DataCell, Double> result =
-                        new HashMap<DataCell, Double>();
+                LinkedHashMap<DataCell, Double> result =
+                        new LinkedHashMap<DataCell, Double>();
                 // check each branch for it's counts and add them up
                 for (DecisionTreeNode nodeIt : m_child) {
-                    HashMap<DataCell, Double> thisNodeCounts =
+                    LinkedHashMap<DataCell, Double> thisNodeCounts =
                             nodeIt.getClassCounts();
                     for (DataCell cellIt : thisNodeCounts.keySet()) {
                         // if entry for this class already exist, modify
@@ -274,7 +275,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
      * @return HashMap class/count
      * @throws Exception if something went wrong (unknown attriubte for example)
      */
-    public abstract HashMap<DataCell, Double> getClassCounts(
+    public abstract LinkedHashMap<DataCell, Double> getClassCounts(
             final DataCell cell, final DataRow row, final DataTableSpec spec)
             throws Exception;
 

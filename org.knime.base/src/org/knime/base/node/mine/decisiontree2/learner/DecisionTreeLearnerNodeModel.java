@@ -29,8 +29,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -552,7 +552,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         LOGGER.info("At depth " + depth);
 
         DataCell majorityClass = table.getMajorityClassAsCell();
-        HashMap<DataCell, Double> frequencies = table.getClassFrequencies();
+        LinkedHashMap<DataCell, Double> frequencies =
+            table.getClassFrequencies();
         // if the distribution allows for a leaf
         if (table.isPureEnough()) {
             // free memory

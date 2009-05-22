@@ -25,8 +25,8 @@
 package org.knime.base.node.mine.decisiontree2.learner;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 
 import org.knime.core.data.DataCell;
 
@@ -423,16 +423,17 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
     }
 
     /**
-     * Returns the class frequencies as a {@link HashMap}
+     * Returns the class frequencies as a {@link LinkedHashMap}
      *
      * mapping class values ({@link DataCell}) to the frequency as doubles.
      *
-     * @return the class frequencies as a {@link HashMap}
+     * @return the class frequencies as a {@link LinkedHashMap}
      *
      * mapping class values ({@link DataCell}) to the frequency as doubles
      */
-    public HashMap<DataCell, Double> getClassFrequencies() {
-        HashMap<DataCell, Double> resultMap = new HashMap<DataCell, Double>();
+    public LinkedHashMap<DataCell, Double> getClassFrequencies() {
+        LinkedHashMap<DataCell, Double> resultMap = 
+            new LinkedHashMap<DataCell, Double>();
         int i = 0;
         for (double frequency : m_classFrequencyArray) {
             resultMap.put(m_classValueMapper.getMappedObject(i), frequency);

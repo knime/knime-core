@@ -27,8 +27,8 @@ package org.knime.base.node.mine.decisiontree2.model;
 
 import java.awt.Color;
 import java.text.NumberFormat;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 import org.knime.base.data.util.DataCellStringMapper;
@@ -134,7 +134,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
      */
     public DecisionTreeNodeSplitContinuous(final int nodeId,
             final DataCell majorityClass,
-            final HashMap<DataCell, Double> classCounts,
+            final LinkedHashMap<DataCell, Double> classCounts,
             final String splitAttribute, final DecisionTreeNode[] children,
             final double splitThreshold) {
 
@@ -180,7 +180,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
      * @throws Exception if something went wrong (unknown attriubte for example)
      */
     @Override
-    public HashMap<DataCell, Double> getClassCounts(final DataCell cell,
+    public LinkedHashMap<DataCell, Double> getClassCounts(final DataCell cell,
             final DataRow row, final DataTableSpec spec) throws Exception {
         assert cell.getType().isCompatible(DoubleValue.class);
         double value = ((DoubleValue)cell).getDoubleValue();

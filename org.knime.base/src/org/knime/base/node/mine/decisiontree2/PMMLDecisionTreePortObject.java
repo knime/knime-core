@@ -112,52 +112,27 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
     }
 
     /**
-     * @return
+     * @return true if the tree contains at least one non binary split
      */
-    // FIXME: very, very likely wrong (mb): the recursive call does
-    // not dig into NominalBinary splits.
     private boolean treeIsMultisplit(final DecisionTreeNode node) {
-        if (node instanceof DecisionTreeNodeSplitContinuous) {
+        if (node instanceof DecisionTreeNodeLeaf) {
+            return false;
+        }
+        if ((node instanceof DecisionTreeNodeSplitContinuous)
+            || (node instanceof DecisionTreeNodeSplitNominalBinary)) {
             boolean leftSide =
                     treeIsMultisplit((DecisionTreeNode)node.getChildAt(0));
             boolean rightSide =
                     treeIsMultisplit((DecisionTreeNode)node.getChildAt(1));
-            if (leftSide || rightSide) {
-                return true;
-            } else {
-                return false;
-            }
-        } else if (node instanceof DecisionTreeNodeSplitNominalBinary) {
-            return false;
-        } else if (node instanceof DecisionTreeNodeSplitNominal) {
-            return true;
-        } else {
-            return false;
+            return (leftSide || rightSide);
         }
+        if (node instanceof DecisionTreeNodeSplitNominal) {
+            return true;
+        }
+        // and we should never reach this point
+        assert false;
+        return false;
     }
-
-    // /**
-    // * Writes the used columns as PMML mining schema.
-    // *
-    // * @param handler to write to
-    // * @param colSpecs specs of the used columns
-    // * @throws SAXException if something goes wrong
-    // */
-    // protected void addMiningSchema(final TransformerHandler handler,
-    // final DataColumnSpec... colSpecs) throws SAXException {
-    // // open mining schema
-    // handler.startElement(null, null, "MiningSchema", null);
-    // // for each column add it as a mining field
-    // for (DataColumnSpec colSpec : colSpecs) {
-    // // add mining field name
-    // AttributesImpl atts = new AttributesImpl();
-    // atts.addAttribute(null, null, "name", CDATA, colSpec.getName());
-    // handler.startElement(null, null, "MiningField", atts);
-    // handler.endElement(null, null, "MiningField");
-    // }
-    // // close mining schema
-    // handler.endElement(null, null, "MiningSchema");
-    // }
 
     /**
      * @param handler
@@ -292,7 +267,7 @@ public class PMMLDecisionTreePortObject extends PMMLPortObject implements
     }
 
     /**
-     * @return loaded regression tree object
+     * @return loaded classification tree object
      */
     public DecisionTree getTree() {
         return m_tree;

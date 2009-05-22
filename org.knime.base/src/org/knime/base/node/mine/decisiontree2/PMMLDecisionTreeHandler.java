@@ -23,8 +23,7 @@
 package org.knime.base.node.mine.decisiontree2;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Stack;
 
@@ -112,7 +111,7 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
                     || m_nodeStack.peek().getLevel() <= m_level) {
                 int nodeId = m_nodeStack.peek().getOwnIndex();
                 DataCell majorityClass = m_nodeStack.peek().getMajorityClass();
-                HashMap<DataCell, Double> classCounts =
+                LinkedHashMap<DataCell, Double> classCounts =
                         m_nodeStack.peek().getClassCounts();
                 DecisionTreeNodeLeaf leafNode =
                         new DecisionTreeNodeLeaf(nodeId, majorityClass,
@@ -128,12 +127,10 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
                     if (top.getLevel() > m_level + 1) {
                         assert false : "Level count inconsistent";
                     }
-                    containerChildren.add(top);
-                    childrenList.add(m_childStack.pop());
+                    // add new elements to start of both lists (at index 0)!
+                    containerChildren.add(0, top);
+                    childrenList.add(0, m_childStack.pop());
                 }
-                // has to be reversed to reflect original ordering in xml
-                Collections.reverse(containerChildren);
-                Collections.reverse(childrenList);
                 
                 DecisionTreeNode[] children = childrenList.toArray(
                         new DecisionTreeNode[childrenList.size()]);
@@ -141,7 +138,7 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
                 TempTreeNodeContainer currentParent = m_nodeStack.peek();
                 int nodeId = currentParent.getOwnIndex();
                 DataCell majorityClass = currentParent.getMajorityClass();
-                HashMap<DataCell, Double> classCounts =
+                LinkedHashMap<DataCell, Double> classCounts =
                     currentParent.getClassCounts();
 
                 String splitAttribute = 
@@ -216,8 +213,19 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
             m_nodeStack.push(new TempTreeNodeContainer(ownIndex, majorityClass,
                     allClassFrequency, ++m_level));
         } else if (name.equals("SimplePredicate")) {
-            m_nodeStack.peek().addSplitAttribute(atts.getValue("field"));
-            m_nodeStack.peek().addSplitValue(atts.getValue("value"));
+            // retrieve parent of the current node
+            TempTreeNodeContainer parent = m_nodeStack.peek();
+            // determine name of attribute the simple predicate works on
+            String attrName = atts.getValue("field");
+            // determine class of the attribute
+            String attrOp = atts.getValue("operator");
+            parent.addSplitAttribute(attrName);
+            try {
+                parent.addSimplePredicateSplitValue(atts.getValue("value"),
+                        attrOp);
+            } catch (IllegalArgumentException iae) {
+                throw new SAXException(iae);
+            }
         } else if (name.equals("SimpleSetPredicate")) {
             m_nodeStack.peek().addSplitAttribute(atts.getValue("field"));
         } else if (name.equals("ScoreDistribution")) {

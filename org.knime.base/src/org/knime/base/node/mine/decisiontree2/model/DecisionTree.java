@@ -25,7 +25,7 @@
 package org.knime.base.node.mine.decisiontree2.model;
 
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -130,7 +130,7 @@ public class DecisionTree implements Serializable {
      * @return HashMap class/count
      * @throws Exception if something went wrong (unknown attriubte for example)
      */
-    public HashMap<DataCell, Double> getClassCounts(final DataRow row,
+    public LinkedHashMap<DataCell, Double> getClassCounts(final DataRow row,
             final DataTableSpec spec) throws Exception {
         return m_rootNode.getClassCounts(row, spec);
     }
