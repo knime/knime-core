@@ -41,6 +41,7 @@ import org.knime.core.node.NodeView;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.util.KNIMETimer;
 
 // TODO: check, that the number of correct results corresponds to the number
@@ -155,18 +156,19 @@ public class KnimeTestCase extends TestCase {
                     new ExecutionMonitor());
 
             boolean mustReportErrors;
-            if (loadRes.hasErrorDuringNonDataLoad()) {
-                mustReportErrors = true;
-            } else if (loadRes.getGUIMustReportDataLoadErrors()
-                    && loadRes.hasErrors()) {
-                // these can only be data load errors but no
-                // warning messages (node XY switch from IDLE to CONFIGURED)
-                mustReportErrors = true;
-            } else {
+            switch (loadRes.getType()) {
+            case Ok:
                 mustReportErrors = false;
+                break;
+            case DataLoadError:
+                mustReportErrors = loadRes.getGUIMustReportDataLoadErrors();
+                break;
+            default:
+                mustReportErrors = true;
             }
             if (mustReportErrors) {
-                logger.error(loadRes.getErrors());
+                logger.error(loadRes.getFilteredError(
+                        "", LoadResultEntryType.Warning));
             }
             m_manager = loadRes.getWorkflowManager();
             logger.debug("Workflow loaded ----------------------------"

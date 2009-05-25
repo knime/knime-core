@@ -46,6 +46,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowOutPort;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 
 /**
  * 
@@ -83,10 +84,16 @@ public class WorkflowTestCase extends TestCase {
         WorkflowManager m = loadResult.getWorkflowManager();
         if (m == null) {
             throw new Exception("Errors reading workflow: " 
-                    + loadResult.getErrors());
-        } else if (loadResult.hasEntries()) {
-            m_logger.info("Errors reading workflow (proceeding anyway): ");
-            dumpLineBreakStringToLog(loadResult.getErrors());
+                    + loadResult.getFilteredError("", LoadResultEntryType.Ok));
+        } else {
+            switch (loadResult.getType()) {
+            case Ok:
+                break;
+            default:
+                m_logger.info("Errors reading workflow (proceeding anyway): ");
+                dumpLineBreakStringToLog(loadResult.getFilteredError("",
+                    LoadResultEntryType.Warning));
+            }
         }
         setManager(m);
         return m.getID();
