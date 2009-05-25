@@ -81,6 +81,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplat
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
 import org.knime.core.util.FileUtil;
@@ -3115,7 +3116,7 @@ public final class WorkflowManager extends NodeContainer {
         }
         synchronized (m_workflowMutex) {
             Map<Integer, NodeID> resultIDs = loadNodesAndConnections(
-                    loaderMap, connTemplates, new LoadResult());
+                    loaderMap, connTemplates, new LoadResult("ignore"));
             Map<NodeID, NodeContainerPersistor> newLoaderMap =
                 new TreeMap<NodeID, NodeContainerPersistor>();
             NodeID[] result = new NodeID[nodeIDs.length];
@@ -3129,7 +3130,7 @@ public final class WorkflowManager extends NodeContainer {
             try {
                 postLoad(newLoaderMap,
                         new HashMap<Integer, BufferedDataTable>(),
-                        true, new ExecutionMonitor());
+                        true, new ExecutionMonitor(), new LoadResult("ignore"));
             } catch (CanceledExecutionException e) {
                 LOGGER.fatal("Unexpected exception", e);
             }
@@ -3186,9 +3187,9 @@ public final class WorkflowManager extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    public LoadResult loadExecutionResult(
+    public void loadExecutionResult(
             final NodeContainerExecutionResult result,
-            final ExecutionMonitor exec) {
+            final ExecutionMonitor exec, final LoadResult loadResult) {
         if (!(result instanceof WorkflowExecutionResult)) {
             throw new IllegalArgumentException("Argument must be instance "
                     + "of \"" + WorkflowExecutionResult.class.getSimpleName()
@@ -3196,7 +3197,7 @@ public final class WorkflowManager extends NodeContainer {
         }
         WorkflowExecutionResult r = (WorkflowExecutionResult)result;
         synchronized (m_workflowMutex) {
-            LoadResult loadResult = super.loadExecutionResult(result, exec);
+            super.loadExecutionResult(result, exec, loadResult);
             Map<NodeID, NodeContainerExecutionResult> map =
                 r.getExecutionResultMap();
             final int count = map.size();
@@ -3220,17 +3221,26 @@ public final class WorkflowManager extends NodeContainer {
                 }
                 exec.setMessage(nc.getNameWithID());
                 ExecutionMonitor subExec = exec.createSubProgress(1.0 / count);
-                LoadResult subLR = nc.loadExecutionResult(exResult, subExec);
-                loadResult.addError(subLR);
+                nc.loadExecutionResult(exResult, subExec, loadResult);
                 subExec.setProgress(1.0);
             }
-            return loadResult;
         }
     }
 
-    public WorkflowLoadResult load(final File directory, final ExecutionMonitor exec)
-        throws IOException, InvalidSettingsException,
-        CanceledExecutionException {
+    /** Loads the workflow contained in the directory as node into this 
+     * workflow instance. Loading a whole new project is usually done using
+     * <code>WorkflowManager.ROOT.load(File, ExecutionMonitor)</code>. 
+     * @param directory to load from
+     * @param exec For progress/cancellation (currently not supported)
+     * @return A workflow load result, which also contains the loaded workflow.
+     * @throws IOException If errors reading the "important" files fails due to
+     *         I/O problems (file not present, e.g.)
+     * @throws InvalidSettingsException If parsing the "important" files fails.
+     * @throws CanceledExecutionException If canceled.
+     */
+    public WorkflowLoadResult load(final File directory, 
+            final ExecutionMonitor exec) throws IOException, 
+            InvalidSettingsException, CanceledExecutionException {
         if (directory == null || exec == null) {
             throw new NullPointerException("Arguments must not be null.");
         }
@@ -3289,18 +3299,24 @@ public final class WorkflowManager extends NodeContainer {
         // data files are loaded using a repository of reference tables;
         Map<Integer, BufferedDataTable> tblRep =
             new HashMap<Integer, BufferedDataTable>();
-        WorkflowLoadResult result = new WorkflowLoadResult();
-        result.addError(persistor.preLoadNodeContainer(
-                workflowknimeRef, settings));
-        WorkflowManager manager;
+        WorkflowLoadResult result = new WorkflowLoadResult(
+                workflowDirRef.getFile().getName());
+        persistor.preLoadNodeContainer(workflowknimeRef, settings, result);
+        WorkflowManager manager = null;
         boolean fixDataLoadProblems = false;
         InsertWorkflowPersistor insertPersistor =
             new InsertWorkflowPersistor(persistor);
         synchronized (m_workflowMutex) {
-            WorkflowLoadResult subR = loadContent(
-                    insertPersistor, tblRep, null, exec);
-            result.addError(subR);
-            manager = subR.getWorkflowManager();
+            Set<NodeID> oldNodes = new HashSet<NodeID>(m_workflow.getNodeIDs());
+            loadContent(insertPersistor, tblRep, null, exec, result);
+            Set<NodeID> diffNode = new HashSet<NodeID>(m_workflow.getNodeIDs());
+            diffNode.removeAll(oldNodes);
+            for (NodeID newNode : diffNode) {
+                NodeContainer nc = getNodeContainer(newNode);
+                if (nc instanceof WorkflowManager) {
+                    manager = (WorkflowManager)nc;
+                }
+            }
             if (manager == null) {
                 throw new InvalidSettingsException("Loading workflow failed, "
                         + "couldn't identify child sub flow (typically "
@@ -3309,51 +3325,62 @@ public final class WorkflowManager extends NodeContainer {
             // if all errors during the load process are related to data loading
             // it might be that the flow is ex/imported without data;
             // check for it and silently overwrite the workflow
-            if (result.hasEntries() && (!result.hasErrorDuringNonDataLoad()
-                    && !persistor.mustWarnOnDataLoadError())) {
-                LOGGER.debug("Workflow was apparently ex/imported without "
+            switch (result.getType()) {
+            case DataLoadError:
+                if (!persistor.mustWarnOnDataLoadError()) {
+                    LOGGER.debug("Workflow was apparently ex/imported without "
                         + "data, silently fixing states and writing changes");
-                try {
-                    manager.save(directory, new ExecutionMonitor(), true);
-                    fixDataLoadProblems = true;
-                } catch (Throwable t) {
-                    LOGGER.warn("Failed in an attempt to write workflow to "
+                    try {
+                        manager.save(directory, new ExecutionMonitor(), true);
+                        fixDataLoadProblems = true;
+                    } catch (Throwable t) {
+                        LOGGER.warn("Failed in an attempt to write workflow to "
                             + "file (workflow was ex/imported without data; "
                             + "could not write the \"corrected\" flow.)", t);
+                    }
                 }
+                break;
+            default:
+                // errors are handled elsewhere
             }
         }
         exec.setProgress(1.0);
         result.setWorkflowManager(manager);
-        String message;
         result.setGUIMustReportDataLoadErrors(
                 persistor.mustWarnOnDataLoadError());
-        if (result.hasEntries() && (result.hasErrorDuringNonDataLoad()
-                || persistor.mustWarnOnDataLoadError())) {
-            message = "Loaded workflow from \"" + directory.getAbsolutePath()
-                + "\" with errors";
-            LOGGER.debug(result.getErrors());
-        } else if (result.hasEntries() && !result.hasErrorDuringNonDataLoad()) {
-            message = "Loaded workflow from \"" + directory.getAbsolutePath()
-                + "\" with errors during data load. ";
+        StringBuilder message = new StringBuilder("Loaded workflow from \"");
+        message.append(directory.getAbsolutePath()).append("\" ");
+        switch (result.getType()) {
+        case Ok:
+            message.append(" with no errors");
+            break;
+        case Warning:
+            message.append(" with warnings");
+            break;
+        case DataLoadError:
+            message.append(" with errors during data load. ");
             if (fixDataLoadProblems) {
-                message += "Problems were fixed and (silently) saved.";
+                message.append("Problems were fixed and (silently) saved.");
             } else {
-                message += "Problems were fixed but could not be saved.";
+                message.append("Problems were fixed but not saved!");
             }
-        } else {
-            message = "Successfully loaded workflow from \""
-                + directory.getAbsolutePath() + "\"";
+            break;
+        case Error:
+            message.append(" with errors");
+            break;
+        default:
+            message.append("with ").append(result.getType());
         }
-        LOGGER.debug(message);
+        LOGGER.debug(message.toString());
         return result;
     }
 
     /** {@inheritDoc} */
     @Override
-    WorkflowLoadResult loadContent(final NodeContainerPersistor nodePersistor,
+    void loadContent(final NodeContainerPersistor nodePersistor,
             final Map<Integer, BufferedDataTable> tblRep,
-            final ScopeObjectStack ignoredStack, final ExecutionMonitor exec)
+            final ScopeObjectStack ignoredStack, final ExecutionMonitor exec,
+            final LoadResult loadResult)
         throws CanceledExecutionException {
         if (!(nodePersistor instanceof WorkflowPersistor)) {
             throw new IllegalStateException("Expected "
@@ -3362,7 +3389,6 @@ public final class WorkflowManager extends NodeContainer {
                     + nodePersistor.getClass().getSimpleName());
         }
         WorkflowPersistor persistor = (WorkflowPersistor)nodePersistor;
-        WorkflowLoadResult loadResult = new WorkflowLoadResult();
         assert this != ROOT || persistor.getConnectionSet().isEmpty()
         : "ROOT workflow has no connections: " + persistor.getConnectionSet();
         Map<NodeID, NodeContainerPersistor> persistorMap =
@@ -3379,38 +3405,31 @@ public final class WorkflowManager extends NodeContainer {
             NodeContainerPersistor p = nodeLoaderMap.get(e.getKey());
             assert p != null : "Deficient translation map";
             persistorMap.put(id, p);
-            NodeContainer nc = m_workflow.getNode(id);
-            if (nc instanceof WorkflowManager) {
-                loadResult.setWorkflowManager((WorkflowManager)nc);
-            }
         }
 
         m_inPortsBarUIInfo = persistor.getInPortsBarUIInfo();
         m_outPortsBarUIInfo = persistor.getOutPortsBarUIInfo();
-        LoadResult postLoadResult = postLoad(persistorMap,
-                tblRep, persistor.mustWarnOnDataLoadError(), exec);
-        if (postLoadResult.hasEntries()) {
-            loadResult.addError(postLoadResult);
-        }
+        postLoad(persistorMap, 
+                tblRep, persistor.mustWarnOnDataLoadError(), exec, loadResult);
         // set dirty if this wm should be reset (for instance when the state
         // of the workflow can't be properly read from the workflow.knime)
         if (persistor.needsResetAfterLoad() || persistor.isDirtyAfterLoad()) {
             setDirty();
         }
-        return loadResult;
     }
 
-    private LoadResult postLoad(
+    private void postLoad(
             final Map<NodeID, NodeContainerPersistor> persistorMap,
             final Map<Integer, BufferedDataTable> tblRep,
-            final boolean mustWarnOnDataLoadError, final ExecutionMonitor exec)
-        throws CanceledExecutionException {
-        LoadResult loadResult = new LoadResult();
+            final boolean mustWarnOnDataLoadError, final ExecutionMonitor exec,
+            final LoadResult loadResult) throws CanceledExecutionException {
         // linked set because we need reverse order later on
         Collection<NodeID> failedNodes = new LinkedHashSet<NodeID>();
+        boolean isStateChangePredictable = false;
         for (NodeID bfsID : m_workflow.createBreadthFirstSortedList(
                         persistorMap.keySet(), true).keySet()) {
             NodeContainer cont = getNodeContainer(bfsID);
+            LoadResult subResult = new LoadResult(cont.getNameWithID());
             boolean isFullyConnected = isFullyConnected(bfsID);
             boolean needsReset;
             switch (cont.getState()) {
@@ -3444,7 +3463,7 @@ public final class WorkflowManager extends NodeContainer {
             try {
                 inStack = new ScopeObjectStack(cont.getID(), predStacks);
             } catch (IllegalContextStackObjectException ex) {
-                loadResult.addError("Errors creating scope object stack for "
+                subResult.addError("Errors creating scope object stack for "
                         + "node \"" + cont.getNameWithID() + "\", (resetting "
                         + "scope variables): " + ex.getMessage());
                 needsReset = true;
@@ -3458,10 +3477,8 @@ public final class WorkflowManager extends NodeContainer {
                 exec.createSubProgress(1.0 / (2 * m_workflow.getNrNodes()));
             ExecutionMonitor sub2 =
                 exec.createSubProgress(1.0 / (2 * m_workflow.getNrNodes()));
-            LoadResult subResult = new LoadResult();
             try {
-                subResult.addError(
-                        persistor.loadNodeContainer(tblRep, sub1));
+                persistor.loadNodeContainer(tblRep, sub1, subResult);
             } catch (CanceledExecutionException e) {
                 throw e;
             } catch (Exception e) {
@@ -3471,8 +3488,7 @@ public final class WorkflowManager extends NodeContainer {
                             + e.getClass().getSimpleName()
                             + "\" during node loading", e);
                 }
-                loadResult.addError("Errors loading node \""
-                        + cont.getNameWithID() + "\", skipping it: "
+                subResult.addError("Errors loading, skipping it: "
                         + e.getMessage());
                 needsReset = true;
             }
@@ -3483,8 +3499,7 @@ public final class WorkflowManager extends NodeContainer {
             Object mutex = cont instanceof WorkflowManager
                 ? ((WorkflowManager)cont).m_workflowMutex : m_workflowMutex;
             synchronized (mutex) {
-                subResult.addError(cont.loadContent(
-                        persistor, tblRep, inStack, sub2));
+                cont.loadContent(persistor, tblRep, inStack, sub2, subResult);
             }
             sub2.setProgress(1.0);
             if (persistor.isDirtyAfterLoad()) {
@@ -3529,16 +3544,29 @@ public final class WorkflowManager extends NodeContainer {
             if (persistor.mustComplainIfStateDoesNotMatch()
                     && !cont.getState().equals(loadState)
                     && !hasPredecessorFailed) {
-                String warning = "State of node " + cont.getNameWithID()
-                + " has changed from " + loadState + " to " + cont.getState();
-                if (subResult.hasEntries()
-                        && !subResult.hasErrorDuringNonDataLoad()) {
-                    // node was loaded with data load errors only ... then
-                    // this state change is a predictable error (caused
-                    // by the data loss)
+                isStateChangePredictable = true;
+                String warning = "State has changed from " 
+                    + loadState + " to " + cont.getState();
+                switch (subResult.getType()) {
+                case Ok:
+                case Warning:
+                    if (cont.getNrInPorts() == 0) {
+                        // source nodes may have problems when, e.g. their
+                        // input file is gone
+                        subResult.addWarning(warning);
+                    } else {
+                        subResult.addError(warning);
+                    }
+                    break;
+                case DataLoadError:
                     subResult.addError(warning, true);
-                } else {
+                    break;
+                case Error:
+                    // assume it's a subsequent error
                     subResult.addWarning(warning);
+                    break;
+                default:
+                    subResult.addError(warning);
                 }
             }
             // saved in executing state (e.g. grid job), request to reconnect
@@ -3575,15 +3603,19 @@ public final class WorkflowManager extends NodeContainer {
                     subResult.addError(error.toString());
                 }
             }
-            if (subResult.hasEntries()) {
-                loadResult.addError("Errors loading node \""
-                        + cont.getNameWithID() + "\":", subResult);
-            }
+            loadResult.addChildError(subResult);
             // set warning message on node if we have loading errors
             // do this only if these are critical errors or data-load errors,
             // which must be reported.
-            if (subResult.hasEntries() && (subResult.hasErrorDuringNonDataLoad()
-                    || mustWarnOnDataLoadError)) {
+            switch (subResult.getType()) {
+            case Ok:
+            case Warning:
+                break;
+            case DataLoadError:
+                if (!mustWarnOnDataLoadError) {
+                    break;
+                }
+            default:
                 NodeMessage oldMessage = cont.getNodeMessage();
                 StringBuilder messageBuilder =
                     new StringBuilder(oldMessage.getMessage());
@@ -3599,15 +3631,15 @@ public final class WorkflowManager extends NodeContainer {
                 default:
                     type = NodeMessage.Type.ERROR;
                 }
-                messageBuilder.append(subResult.peekErrors());
+                messageBuilder.append(subResult.getFilteredError(
+                        "", LoadResultEntryType.Warning));
                 cont.setNodeMessage(
                         new NodeMessage(type, messageBuilder.toString()));
             }
         }
-        if (!sweep(false)) {
+        if (!sweep(false) && !isStateChangePredictable) {
             loadResult.addError("Some node states were invalid");
         }
-        return loadResult;
     }
 
     private Map<Integer, NodeID> loadNodesAndConnections(

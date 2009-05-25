@@ -68,9 +68,10 @@ interface NodeContainerMetaPersistor {
      * ignored in any version after that.
      * @param settings The settings object that is usually read from
      * @param parentSettings The parent settings, mostly ignored. 
-     * @return The load result representing the load task.
+     * @param loadResult Where to add errors and warnings to.
+     * @return Whether errors occured that require a reset of the node.
      */
-    LoadResult load(final NodeSettingsRO settings, 
-            final NodeSettingsRO parentSettings);
+    boolean load(final NodeSettingsRO settings, 
+            final NodeSettingsRO parentSettings, final LoadResult loadResult);
     
 }

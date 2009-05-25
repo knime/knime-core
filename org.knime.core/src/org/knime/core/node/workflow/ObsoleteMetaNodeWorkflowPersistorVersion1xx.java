@@ -86,10 +86,9 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
     
     /** {@inheritDoc} */
     @Override
-    public LoadResult preLoadNodeContainer(final ReferencedFile nodeFileRef,
-            final NodeSettingsRO parentSettings) 
+    public void preLoadNodeContainer(final ReferencedFile nodeFileRef,
+            final NodeSettingsRO parentSettings, final LoadResult result) 
     throws IOException, InvalidSettingsException {
-        LoadResult result = new LoadResult();
         File setFile = nodeFileRef.getFile();
         if (!setFile.getName().equals("settings.xml")) {
             String warn = "Settings file of obsolete meta node is not "
@@ -124,21 +123,18 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         NodeSettingsRO modelSet = settings.getNodeSettings("model");
         m_dataInNodeIDs = modelSet.getIntArray("dataInContainerIDs");
         m_dataOutNodeIDs = modelSet.getIntArray("dataOutContainerIDs");
-        result.addError(super.preLoadNodeContainer(
-                workflowKnimeRef, parentSettings));
+        super.preLoadNodeContainer(workflowKnimeRef, parentSettings, result);
         String name = "Looper";
         switch (m_metaNodeType) {
         case CROSSVALIDATION:
             name = "Cross Validation";
         case LOOPER:
-            result = new LoadResult();
             result.addError("Workflow contains obsolete \"" + name 
                     + "\" meta node implementation, not all settings could "
                     + "be restored, please re-configure and execute again.");
             setNeedsResetAfterLoad();
         default: 
         }
-        return result;
     }
     
     /** {@inheritDoc} */

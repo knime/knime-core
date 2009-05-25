@@ -24,7 +24,6 @@
  */
 package org.knime.core.node.workflow;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -34,9 +33,7 @@ import java.util.Set;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 
 /**
@@ -162,11 +159,8 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public LoadResult loadNodeContainer(
-            final Map<Integer, BufferedDataTable> tblRep,
-            final ExecutionMonitor exec) throws InvalidSettingsException,
-            CanceledExecutionException, IOException {
-        return new LoadResult();
+    public void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep,
+            final ExecutionMonitor exec, final LoadResult loadResult) {
     }
 
     /** {@inheritDoc} */
@@ -189,9 +183,8 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public LoadResult preLoadNodeContainer(final ReferencedFile nodeFileRef,
-            final NodeSettingsRO parentSettings) {
-        return new LoadResult();
+    public void preLoadNodeContainer(final ReferencedFile nodeFileRef,
+            final NodeSettingsRO parentSettings, final LoadResult loadResult) {
     }
     
     /** {@inheritDoc} */

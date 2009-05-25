@@ -149,9 +149,10 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     }
 
    /** {@inheritDoc} */
-    public LoadResult load(final NodeSettingsRO settings, 
-            final NodeSettingsRO parentSettings) {
-        LoadResult loadResult = new LoadResult();
+    @Override
+    public boolean load(final NodeSettingsRO settings, 
+            final NodeSettingsRO parentSettings, final LoadResult loadResult) {
+        boolean isResetRequired = false;
         try {
             m_customName = loadCustomName(settings, parentSettings);
         } catch (InvalidSettingsException e) {
@@ -179,6 +180,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
                 + e.getMessage();
             loadResult.addError(error);
             getLogger().debug(error, e);
+            isResetRequired = true;
             setDirtyAfterLoad();
         }
         boolean hasJobManagerLoadFailed = m_jobManager == null;
@@ -193,6 +195,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             loadResult.addError(error);
             getLogger().debug(error, e);
             setDirtyAfterLoad();
+            isResetRequired = true;
             hasJobManagerLoadFailed = true;
         }
         try {
@@ -226,6 +229,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             loadResult.addError(error);
             getLogger().debug(error, e);
             setDirtyAfterLoad();
+            isResetRequired = true;
             m_state = State.IDLE;
         }
         try {
@@ -236,7 +240,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             getLogger().warn(e, ise);
         }
         m_isDeletable = loadIsDeletable(settings);
-        return loadResult;
+        return isResetRequired;
     }
     
     /** Read the custom name.

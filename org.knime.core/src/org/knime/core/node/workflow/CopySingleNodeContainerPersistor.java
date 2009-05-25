@@ -24,7 +24,6 @@
  */
 package org.knime.core.node.workflow;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,9 +31,7 @@ import java.util.Map;
 
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
@@ -103,11 +100,9 @@ final class CopySingleNodeContainerPersistor implements
 
     /** {@inheritDoc} */
     @Override
-    public LoadResult loadNodeContainer(
+    public void loadNodeContainer(
             final Map<Integer, BufferedDataTable> tblRep,
-            final ExecutionMonitor exec) throws InvalidSettingsException,
-            CanceledExecutionException, IOException {
-        return new LoadResult();
+            final ExecutionMonitor exec, final LoadResult loadResult) {
     }
 
     /** {@inheritDoc} */
@@ -136,9 +131,8 @@ final class CopySingleNodeContainerPersistor implements
 
     /** {@inheritDoc} */
     @Override
-    public LoadResult preLoadNodeContainer(final ReferencedFile nodeFileRef,
-            final NodeSettingsRO parentSettings) {
-        return new LoadResult();
+    public void preLoadNodeContainer(final ReferencedFile nodeFileRef,
+            final NodeSettingsRO parentSettings, final LoadResult loadResult) {
     }
 
 }

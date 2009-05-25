@@ -1142,45 +1142,44 @@ public abstract class NodeContainer implements NodeProgressListener {
      * @param tblRep A table repository to restore BufferedDatTables
      * @param inStack Incoming scope object stack.
      * @param exec For progress
-     * @return A result representing the load process.
+     * @param loadResult Where to report errors/warnings to
      * @throws CanceledExecutionException If canceled.
      */
-    abstract LoadResult loadContent(final NodeContainerPersistor persistor,
+    abstract void loadContent(final NodeContainerPersistor persistor,
             final Map<Integer, BufferedDataTable> tblRep,
-            final ScopeObjectStack inStack, final ExecutionMonitor exec)
+            final ScopeObjectStack inStack, final ExecutionMonitor exec,
+            final LoadResult loadResult)
             throws CanceledExecutionException;
 
     /** Load information from execution result. Subclasses will override this
      * method and will call this implementation as <code>super.loadEx...</code>.
      * @param result The execution result (contains port objects, messages, etc)
      * @param exec For progress information (no cancelation supported)
-     * @return A load result that contains, e.g. error messages.
+     * @param loadResult A load result that contains, e.g. error messages.
      */
-    public LoadResult loadExecutionResult(
+    public void loadExecutionResult(
             final NodeContainerExecutionResult result,
-            final ExecutionMonitor exec) {
+            final ExecutionMonitor exec, final LoadResult loadResult) {
         /* Ideally this code would go into a separate final method that calls
          * an abstract method .... however, this is risky as subclasses may
          * wish to synchronize the entire load procedure.
          */
-        LoadResult r = new LoadResult();
         if (result.shouldStateBeLoaded()) {
             State newState = result.getState();
             if (newState == null) {
-                r.addError("Can't restore state because it's null");
+                loadResult.addError("Can't restore state because it's null");
             } else {
                 setState(newState);
             }
         }
         setNodeMessage(result.getNodeMessage());
-        return r;
     }
 
     /** Saves all internals that are necessary to mimic the computed result
      * into a new execution result object. This method is called on node
      * instances, which are, e.g. executed on a server and later on read back
      * into a true KNIME instance (upon which {@link #loadExecutionResult(
-     * NodeContainerExecutionResult, ExecutionMonitor) is called).
+     * NodeContainerExecutionResult, ExecutionMonitor, LoadResult) is called).
      * @param exec For progress information (this method will copy port
      *        objects).
      * @return A new execution result instance.

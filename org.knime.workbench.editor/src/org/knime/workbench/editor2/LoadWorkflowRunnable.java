@@ -32,17 +32,22 @@ import java.util.StringTokenizer;
 import javax.swing.UIManager;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
+import org.knime.workbench.KNIMEEditorPlugin;
 
 /**
  * A runnable which is used by the {@link WorkflowEditor} to load a workflow
@@ -129,35 +134,34 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
                 m_editor.markDirty();
             }
             
-            boolean mustReportErrors;
-            if (result.hasWarningEntries()) {
-                mustReportErrors = true;
-            } else if (result.hasErrorDuringNonDataLoad()) {
-                mustReportErrors = true;
-            } else if (result.getGUIMustReportDataLoadErrors()
-                    && result.hasEntries()) {
-                mustReportErrors = true;
-            } else {
-                mustReportErrors = false;
+            final IStatus status = createStatus(result, 
+                    !result.getGUIMustReportDataLoadErrors());
+            final String message;
+            switch (status.getSeverity()) {
+            case IStatus.OK:
+                message = "No problems during load.";
+                break;
+            case IStatus.WARNING:
+                message = "Warnings during load";
+                logPreseveLineBreaks("Warning during load: " 
+                        + result.getFilteredError(
+                                "", LoadResultEntryType.Warning), false);
+                break;
+            default:
+                message = "Errors during load";
+                logPreseveLineBreaks("Errors during load: " 
+                        + result.getFilteredError(
+                                "", LoadResultEntryType.Warning), true);
             }
-            if (mustReportErrors) {
-                assert result.hasEntries() : "No errors in workflow result";
-                logErrorPreseveLineBreaks(
-                        "Errors during load: " + result.getErrors());
-                Display.getDefault().asyncExec(new Runnable() {
- 
-                    public void run() {
-                        MessageDialog.openError(new Shell(
-                                Display.getDefault().getActiveShell()),
-                                "Errors during load: ", 
-                                "Not all nodes/connections could be restored.\n"
-                                + "Please refer to the log for detailed " 
-                                + "information.");
-                    }
-                    
-                });
-            }
-
+            Display.getDefault().asyncExec(new Runnable() {
+                public void run() {
+                    // will not open if status is OK.
+                    ErrorDialog.openError(
+                            Display.getDefault().getActiveShell(), 
+                            "Workflow Load", message, status);
+                }
+                
+            });
         } catch (FileNotFoundException fnfe) {
             m_throwable = fnfe;
             LOGGER.fatal("File not found", fnfe);
@@ -218,13 +222,50 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
     /** Logs the argument error to LOGGER, preserving line breaks.
      * This method will hopefully go into the NodeLogger facilities (and hence
      * be public API).
+     * @param isError Whether to report to LOGGER.error (otherwise warn only).
      * @param error The error string to log.
      */
-    private static final void logErrorPreseveLineBreaks(final String error) {
+    private static final void logPreseveLineBreaks(
+            final String error, final boolean isError) {
         StringTokenizer t = new StringTokenizer(error, "\n");
         while (t.hasMoreTokens()) {
-            LOGGER.error(t.nextToken());
+            if (isError) {
+                LOGGER.error(t.nextToken());
+            } else {
+                LOGGER.warn(t.nextToken());
+            }
         }
     }
+    
+    private static IStatus createStatus(final LoadResultEntry loadResult, 
+            final boolean treatDataLoadErrorsAsOK) {
+        LoadResultEntry[] children = loadResult.getChildren();
+        if (children.length == 0) {
+            int severity;
+            switch (loadResult.getType()) {
+            case DataLoadError:
+                severity = treatDataLoadErrorsAsOK 
+                ? IStatus.OK : IStatus.ERROR;
+                break;
+            case Error:
+                severity = IStatus.ERROR;
+                break;
+            case Warning:
+                severity = IStatus.WARNING;
+                break;
+            default:
+                severity = IStatus.OK;
+            }
+            return new Status(severity, KNIMEEditorPlugin.PLUGIN_ID, 
+                    loadResult.getMessage(), null);
+        }
+        IStatus[] subStatus = new IStatus[children.length];
+        for (int i = 0; i < children.length; i++) {
+            subStatus[i] = createStatus(children[i], treatDataLoadErrorsAsOK);
+        }
+        return new MultiStatus(KNIMEEditorPlugin.PLUGIN_ID, Status.OK, 
+                subStatus, loadResult.getMessage(), null);
+    }
+    
 }
 

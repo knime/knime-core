@@ -243,9 +243,14 @@ public final class Node implements NodeModelWarningListener {
         }
     }
 
-    LoadResult load(final NodePersistor loader, final ExecutionMonitor exec)
-            throws CanceledExecutionException {
-        LoadResult result = new LoadResult();
+    /** Load settings and data + internals from a loader instance.
+     * @param loader To load from
+     * @param exec For progress information/cancelation
+     * @param loadResult Where to report errors/warnings to
+     * @throws CanceledExecutionException If canceled.
+     */
+    void load(final NodePersistor loader, final ExecutionMonitor exec, 
+            final LoadResult loadResult) throws CanceledExecutionException {
         try {
             // this also validates the settings
             loadSettingsFrom(loader.getSettings());
@@ -275,24 +280,25 @@ public final class Node implements NodeModelWarningListener {
                 }
                 break;
             case FAIL:
-                result.addError(error);
+                loadResult.addError(error);
                     createErrorMessageAndNotify(error, e);
                 loader.setNeedsResetAfterLoad();
                 break;
             case WARN:
-                    createWarningMessageAndNotify(error, e);
+                createWarningMessageAndNotify(error, e);
+                loader.setDirtyAfterLoad();
                 break;
             }
         }
-        result.addError(loadDataAndInternals(loader, exec));
+        loadDataAndInternals(loader, exec, loadResult);
         exec.setProgress(1.0);
-        return result;
     }
 
     /**
      * Creates an execution result containing all calculated values in a
      * execution. The returned value is suitable to be used in
-     * {@link #loadDataAndInternals(NodeContentPersistor, ExecutionMonitor)}.
+     * {@link #loadDataAndInternals(
+     * NodeContentPersistor, ExecutionMonitor, LoadResult)}.
      * If this node is not executed, it will assign null values to the fields
      * in the returned execution result.
      * @param exec For progress information.
@@ -336,11 +342,10 @@ public final class Node implements NodeModelWarningListener {
     /** Loads data from an argument persistor.
      * @param loader To load from.
      * @param exec For progress.
-     * @return The load result object containing errors and warnings (if any).
+     * @param loadResult to add errors and warnings to (if any)
      */
-    public LoadResult loadDataAndInternals(
-            final NodeContentPersistor loader, final ExecutionMonitor exec) {
-        LoadResult result = new LoadResult();
+    public void loadDataAndInternals(final NodeContentPersistor loader, 
+            final ExecutionMonitor exec, final LoadResult loadResult) {
         boolean hasContent = loader.hasContent();
         m_model.setHasContent(hasContent);
         for (int i = 0; i < getNrOutPorts(); i++) {
@@ -348,7 +353,7 @@ public final class Node implements NodeModelWarningListener {
                 m_outputs[i].type.getPortObjectSpecClass();
             PortObjectSpec spec = loader.getPortObjectSpec(i);
             if (spec != null && !specClass.isInstance(spec)) {
-                result.addError("Loaded PortObjectSpec of class \""
+                loadResult.addError("Loaded PortObjectSpec of class \""
                         + spec.getClass().getSimpleName() + ", expected "
                         + specClass.getSimpleName());
                 loader.setNeedsResetAfterLoad();
@@ -360,7 +365,7 @@ public final class Node implements NodeModelWarningListener {
                 m_outputs[i].type.getPortObjectClass();
             PortObject obj = loader.getPortObject(i);
             if (obj != null && !objClass.isInstance(obj)) {
-                result.addError("Loaded PortObject of class \""
+                loadResult.addError("Loaded PortObject of class \""
                         + obj.getClass().getSimpleName() + ", expected "
                         + objClass.getSimpleName());
                 loader.setNeedsResetAfterLoad();
@@ -379,7 +384,7 @@ public final class Node implements NodeModelWarningListener {
                         : "Loaded PortObjectSpec of class \""
                             + spec.getClass().getSimpleName() + ", expected "
                             + specClass.getSimpleName();
-                    result.addError(error);
+                    loadResult.addError(error);
                     loader.setNeedsResetAfterLoad();
                 }
                 m_outputs[i].spec = spec;
@@ -407,7 +412,7 @@ public final class Node implements NodeModelWarningListener {
                         + "Loading model internals failed: " + e.getMessage();
                     m_logger.coding(error, e);
                 }
-                result.addError(error, true);
+                loadResult.addError(error, true);
             } finally {
                 internDirRef.unlock();
             }
@@ -420,7 +425,6 @@ public final class Node implements NodeModelWarningListener {
                 ((BufferedDataTableHolder)m_model).setInternalTables(copy);
             }
         }
-        return result;
     }
 
     /**

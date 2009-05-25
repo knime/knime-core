@@ -155,10 +155,9 @@ public class SingleNodeContainerPersistorVersion1xx
 
     /** {@inheritDoc} */
     @Override
-    public LoadResult preLoadNodeContainer(final ReferencedFile settingsFileRef,
-            final NodeSettingsRO parentSettings) 
+    public void preLoadNodeContainer(final ReferencedFile settingsFileRef,
+            final NodeSettingsRO parentSettings, final LoadResult result) 
     throws InvalidSettingsException, IOException {
-        LoadResult result = new LoadResult();
         File settingsFile = settingsFileRef.getFile();
         String error;
         if (!settingsFile.isFile()) {
@@ -201,23 +200,24 @@ public class SingleNodeContainerPersistorVersion1xx
         m_node = new Node(nodeFactory);
         m_metaPersistor = createNodeContainerMetaPersistor(
                 settingsFileRef.getParent());
-        LoadResult metaResult = m_metaPersistor.load(settings, parentSettings);
-        result.addError(metaResult);
+        boolean resetRequired = m_metaPersistor.load(
+                settings, parentSettings, result);
         m_nodeSettings = settings;
         m_nodeDir = settingsFileRef.getParent();
-        if (result.hasEntries() || m_metaPersistor.isDirtyAfterLoad()) {
+        if (resetRequired) {
+            setNeedsResetAfterLoad();
             setDirtyAfterLoad();
         }
-        return result;
+        if (m_metaPersistor.isDirtyAfterLoad()) {
+            setDirtyAfterLoad();
+        }
     }
     
     /** {@inheritDoc} */
     @Override
-    public LoadResult loadNodeContainer(
-            final Map<Integer, BufferedDataTable> tblRep, 
-            final ExecutionMonitor exec) throws InvalidSettingsException, 
-            CanceledExecutionException, IOException {
-        LoadResult result = new LoadResult();
+    public void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep, 
+            final ExecutionMonitor exec, final LoadResult result) 
+    throws InvalidSettingsException, CanceledExecutionException, IOException {
         String nodeFileName;
         try {
             nodeFileName = loadNodeFile(m_nodeSettings);
@@ -229,7 +229,7 @@ public class SingleNodeContainerPersistorVersion1xx
             result.addError(error);
             getLogger().debug(error, e);
             setDirtyAfterLoad();
-            return result;
+            return;
         }
         ReferencedFile nodeFile = new ReferencedFile(m_nodeDir, nodeFileName);
         m_settingsFailPolicy = 
@@ -238,9 +238,8 @@ public class SingleNodeContainerPersistorVersion1xx
         try {
             HashMap<Integer, ContainerTable> globalTableRepository =
                 getWorkflowManagerPersistor().getGlobalTableRepository();
-            LoadResult nodeLoadResult = nodePersistor.load(
-                    m_node, nodeFile, exec, tblRep, globalTableRepository);
-            result.addError(nodeLoadResult);
+            nodePersistor.load(m_node, nodeFile, 
+                    exec, tblRep, globalTableRepository, result);
         } catch (final Exception e) {
             String error = "Error loading node content: " + e.getMessage();
             getLogger().warn(error, e);
@@ -265,16 +264,15 @@ public class SingleNodeContainerPersistorVersion1xx
             getLogger().debug(error, e);
             m_sncSettings = new SingleNodeContainerSettings();
             setDirtyAfterLoad();
-            return result;
+            return;
+        }
+        if (nodePersistor.isDirtyAfterLoad()) {
+            setDirtyAfterLoad();
         }
         if (nodePersistor.needsResetAfterLoad()) {
             setNeedsResetAfterLoad();
         }
         exec.setProgress(1.0);
-        if (result.hasEntries()) {
-            setDirtyAfterLoad();
-        }
-        return result;
     }
     
     protected NodeContainerMetaPersistorVersion1xx 

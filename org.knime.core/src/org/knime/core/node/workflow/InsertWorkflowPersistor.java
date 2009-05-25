@@ -32,7 +32,6 @@ import java.util.Set;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -144,11 +143,8 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public LoadResult loadNodeContainer(
-            final Map<Integer, BufferedDataTable> tblRep,
-            final ExecutionMonitor exec) throws InvalidSettingsException,
-            CanceledExecutionException, IOException {
-        return null;
+    public void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep,
+            final ExecutionMonitor exec, final LoadResult loadResult) {
     }
 
     /** {@inheritDoc} */
@@ -159,8 +155,8 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public LoadResult preLoadNodeContainer(final ReferencedFile nodeFileRef,
-            final NodeSettingsRO parentSettings)
+    public void preLoadNodeContainer(final ReferencedFile nodeFileRef,
+            final NodeSettingsRO parentSettings, final LoadResult loadResult)
             throws InvalidSettingsException, IOException {
         throw new IllegalStateException("root can't be loaded");
     }

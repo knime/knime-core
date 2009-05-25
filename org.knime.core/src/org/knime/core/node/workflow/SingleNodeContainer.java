@@ -781,11 +781,11 @@ public final class SingleNodeContainer extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    LoadResult loadContent(final NodeContainerPersistor nodePersistor,
+    void loadContent(final NodeContainerPersistor nodePersistor,
             final Map<Integer, BufferedDataTable> tblRep,
-            final ScopeObjectStack inStack, final ExecutionMonitor exec)
+            final ScopeObjectStack inStack, final ExecutionMonitor exec,
+            final LoadResult loadResult)
             throws CanceledExecutionException {
-        LoadResult result = new LoadResult();
         synchronized (m_nodeMutex) {
             if (!(nodePersistor instanceof SingleNodeContainerPersistor)) {
                 throw new IllegalStateException("Expected "
@@ -814,14 +814,13 @@ public final class SingleNodeContainer extends NodeContainer {
             }
             m_settings = sncSettings;
         }
-        return result;
     }
 
     /** {@inheritDoc} */
     @Override
-    public LoadResult loadExecutionResult(
+    public void loadExecutionResult(
             final NodeContainerExecutionResult execResult,
-            final ExecutionMonitor exec) {
+            final ExecutionMonitor exec, final LoadResult loadResult) {
         synchronized (m_nodeMutex) {
             if (!(execResult instanceof SingleNodeContainerExecutionResult)) {
                 throw new IllegalArgumentException("Argument must be instance "
@@ -829,22 +828,19 @@ public final class SingleNodeContainer extends NodeContainer {
                         class.getSimpleName() + "\": "
                         + execResult.getClass().getSimpleName());
             }
-            LoadResult errors = super.loadExecutionResult(execResult, exec);
+            super.loadExecutionResult(execResult, exec, loadResult);
             SingleNodeContainerExecutionResult sncExecResult =
                 (SingleNodeContainerExecutionResult)execResult;
             NodeExecutionResult nodeExecResult =
                 sncExecResult.getNodeExecutionResult();
-            LoadResult nodeErrors = m_node.loadDataAndInternals(
-                    nodeExecResult, new ExecutionMonitor());
-            if (nodeErrors.hasEntries()) {
-                errors.addError(nodeErrors);
-            }
+            m_node.loadDataAndInternals(
+                    nodeExecResult, new ExecutionMonitor(), loadResult);
             boolean needsReset = nodeExecResult.needsResetAfterLoad();
             if (!needsReset && State.EXECUTED.equals(
                     sncExecResult.getState())) {
                 for (int i = 0; i < getNrOutPorts(); i++) {
                     if (m_node.getOutputObject(i) == null) {
-                        errors.addError(
+                        loadResult.addError(
                                 "Output object at port " + i + " is null");
                         needsReset = true;
                     }
@@ -853,7 +849,6 @@ public final class SingleNodeContainer extends NodeContainer {
             if (needsReset) {
                 execResult.setNeedsResetAfterLoad();
             }
-            return errors;
         }
     }
 
