@@ -51,7 +51,6 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.workflow.JobManagerChangedEvent;
 import org.knime.core.node.workflow.JobManagerChangedListener;
-import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessageEvent;
@@ -61,6 +60,7 @@ import org.knime.core.node.workflow.NodeProgressEvent;
 import org.knime.core.node.workflow.NodeProgressListener;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -113,12 +113,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     private boolean m_figureInitialized;
 
     /**
-     * this is set while executing. DeleteCommands mustn't be executed while
-     * node is busy *
-     */
-    private boolean m_isLocked;
-
-    /**
      * The manager for the direct editing of the node name.
      */
     private NodeEditManager m_directEditManager;
@@ -137,15 +131,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     public WorkflowManager getWorkflowManager() {
         return (WorkflowManager)getParent().getModel();
-    }
-
-    /**
-     * @return Returns if this edit part is locked (=busy). Important for
-     *         commands because e.g. the node mustn't be deleted while
-     *         executing.
-     */
-    public boolean isLocked() {
-        return m_isLocked;
     }
 
     /**

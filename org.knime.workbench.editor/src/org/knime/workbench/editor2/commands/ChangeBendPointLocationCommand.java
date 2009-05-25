@@ -79,7 +79,7 @@ public class ChangeBendPointLocationCommand extends Command {
     @Override
     public void execute() {
         NodeLogger.getLogger(ChangeBendPointLocationCommand.class).debug(
-                " execute chenge bendpoint location command...");
+                " execute change bendpoint location command...");
         changeBendpointsExtraInfo(false);
     }
 
