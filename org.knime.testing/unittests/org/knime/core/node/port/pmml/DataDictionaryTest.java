@@ -29,6 +29,7 @@ import org.knime.core.data.StringValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 public class DataDictionaryTest extends TestCase {
     
@@ -98,33 +99,25 @@ public class DataDictionaryTest extends TestCase {
         double upperBound = ((DoubleValue)colSpec.getDomain().getUpperBound()).getDoubleValue();
         assertTrue(upperBound == 54);
     }
-    
+
+    /**
+     * This test should fail (column of type double, lower and upper boundes 
+     * defined by values, values contains Strings).
+     * 
+     * @throws Exception
+     */
     public void testValueParsingNumberValuesContainingStrings()throws Exception {
         DataDictionaryContentHandler hdl = new DataDictionaryContentHandler();
         SAXParserFactory saxFac = SAXParserFactory.newInstance();
         SAXParser parser = saxFac.newSAXParser();
-        parser.parse(new InputSource(this.getClass().getResourceAsStream(
-                "datadict_values_number_error.txt")), hdl);
-        DataColumnSpec colSpec = hdl.getDataTableSpec().getColumnSpec(0);
-        // this should be true in any case
-        assertTrue(colSpec != null);
-        assertTrue(colSpec.getName().equals("PETALLEN"));
-        assertTrue(colSpec.getType().isCompatible(DoubleValue.class));
-        // now check whether lower and upper bound was correctly extracted from 
-        // the values (14, 54, -14, 11)
-        // LOWER BOUND
-        assertTrue(colSpec.getDomain().hasLowerBound());
-        // since "optype" is "continuous" the column type is "double"
-        assertTrue(colSpec.getDomain().getLowerBound().getType().equals(DoubleCell.TYPE));
-        double lowerBound = ((DoubleValue)colSpec.getDomain().getLowerBound()).getDoubleValue();
-        assertTrue(lowerBound == -14);
-        // UPPER BOUND
-        assertTrue(colSpec.getDomain().hasUpperBound());
-        // since "optype" is "continuous" the column type is "double"
-        assertTrue(colSpec.getDomain().getUpperBound().getType().equals(DoubleCell.TYPE));
-        double upperBound = ((DoubleValue)colSpec.getDomain().getUpperBound()).getDoubleValue();
-        assertTrue(upperBound == 54);
-        
+        try {
+            parser.parse(new InputSource(this.getClass().getResourceAsStream(
+                    "datadict_values_number_error.txt")), hdl);
+            // no exception -> fail!
+            assertTrue(false);
+        } catch (SAXException saxe) {
+            // we reach the exception -> expected
+            assertTrue(true);
+        }
     }
-    
 }
