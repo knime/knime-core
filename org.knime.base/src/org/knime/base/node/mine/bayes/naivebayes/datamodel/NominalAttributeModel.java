@@ -25,6 +25,12 @@
 
 package org.knime.base.node.mine.bayes.naivebayes.datamodel;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.NominalValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.config.Config;
+import org.knime.core.util.MutableInteger;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,12 +38,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.knime.core.data.DataCell;
-import org.knime.core.data.NominalValue;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.config.Config;
-import org.knime.core.util.MutableInteger;
 
 
 /**
@@ -401,7 +401,7 @@ class NominalAttributeModel extends AttributeModel {
      */
     @Override
     String getHTMLViewHeadLine() {
-        return "P(class=? | " + getAttributeName() + ")";
+        return "P(" + getAttributeName() + " | class=?)";
     }
 
     /**
