@@ -23,6 +23,7 @@ package org.knime.base.util.kdtree;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.PriorityQueue;
 
 /**
@@ -69,9 +70,12 @@ public class KDTree<T> {
     }
 
     /**
-     * Searches for the <code>k</code> nearest neigbours of the
+     * Searches for the <code>k</code> nearest neighbours of the
      * <code>query</code> pattern. The returned list is sorted by the distance
-     * to the query pattern in increasing order.
+     * to the query pattern in increasing order. The returned list may contain
+     * more than <code>k</code> patterns if the patterns from <code>k</code> to
+     * the end have equal distance to the query pattern.
+     *
      *
      * @param query the query pattern, must have the same dimensionality as the
      *            patterns inside the tree
@@ -114,12 +118,34 @@ public class KDTree<T> {
             results.addFirst(nn);
         }
 
-        assert (results.size() == k);
+        // The final list may contain much more than k elements and even
+        // elements farther away than the k-th. So we need to remove the
+        // superflous elements.
+        ListIterator<NearestNeighbour<T>> it = results.listIterator();
+        // take the first k elements
+        for (int i = 0; i < k; i++) {
+            it.next();
+        }
+        if (it.hasNext()) {
+            // take all following elements having the same distance as the k-th
+            double lastDist = it.previous().getDistance();
+            while (it.hasNext() && (it.next().getDistance() == lastDist)) {
+                //
+            }
+            // remove all remaining elements
+            if (it.hasNext()) {
+                it.remove();
+                while (it.hasNext()) {
+                    it.next();
+                    it.remove();
+                }
+            }
+        }
+
+
+        // assert (results.size() == k);
         return results;
     }
-
-
-
 
     /**
      * Searches for all neighbours of the <code>query</code> pattern that are
@@ -168,23 +194,22 @@ public class KDTree<T> {
         return results;
     }
 
-
     /**
      * Adds a new nearest neighbour to the candidate list, of the passed
      * terminal node is nearer to the query pattern than the currently farthest
      * neighbour. This method can be used for two purposes: First during the
      * search for the k nearest neighbours of the query pattern. For this the
-     * <code>maxDistanceMode</code> parameter must be set to
-     * <code>false</code>. Second during a search for all patterns up to a
-     * maximum distance from the query pattern, if <code>maxDistanceMode</code>
-     * is set to <code>true</code>.
+     * <code>maxDistanceMode</code> parameter must be set to <code>false</code>.
+     * Second during a search for all patterns up to a maximum distance from the
+     * query pattern, if <code>maxDistanceMode</code> is set to
+     * <code>true</code>.
      *
      * @param tn the terminal node under consideration
      * @param pq the list of nearest neighbours
      * @param query the query pattern
      * @param maxDistanceMode <code>true</code> if all nodes up to a maximal
-     *            distance should be added, <code>false</code> if the k
-     *            nearest neighbours should be found
+     *            distance should be added, <code>false</code> if the k nearest
+     *            neighbours should be found
      *
      * @return <code>true</code> if a new nearest neighbour has been found,
      *         <code>false</code> otherwise
@@ -195,13 +220,20 @@ public class KDTree<T> {
         m_testedPatterns++;
         double distance = tn.getDistance(query);
 
-        if (pq.peek().getDistance() > distance) {
+        double d = pq.peek().getDistance();
+
+        if (d > distance) {
             NearestNeighbour<T> qr =
                     new NearestNeighbour<T>(tn.getData(), distance);
             pq.offer(qr);
             if (!maxDistanceMode) {
                 pq.poll();
             }
+            return true;
+        } else if (d == distance) {
+            NearestNeighbour<T> qr =
+                    new NearestNeighbour<T>(tn.getData(), distance);
+            pq.offer(qr);
             return true;
         }
         return false;
@@ -210,10 +242,10 @@ public class KDTree<T> {
     /**
      * Does the recursive search. This method can be used for two purposes:
      * First during the search for the k nearest neighbours of the query
-     * pattern. For this the <code>maxDistanceMode</code> parameter must be
-     * set to <code>false</code>. Second during a search for all patterns up
-     * to a maximum distance from the query pattern, if
-     * <code>maxDistanceMode</code> is set to <code>true</code>.
+     * pattern. For this the <code>maxDistanceMode</code> parameter must be set
+     * to <code>false</code>. Second during a search for all patterns up to a
+     * maximum distance from the query pattern, if <code>maxDistanceMode</code>
+     * is set to <code>true</code>.
      *
      * @param node the current node under consideration
      * @param query the query pattern
@@ -221,8 +253,8 @@ public class KDTree<T> {
      * @param lowerBounds the lower bounds array
      * @param upperBounds the upper bounds array
      * @param maxDistanceMode <code>true</code> if all nodes up to a maximal
-     *            distance should be added, <code>false</code> if the k
-     *            nearest neighbours should be found
+     *            distance should be added, <code>false</code> if the k nearest
+     *            neighbours should be found
      *
      * @return <code>true</code> if the search can be aborted,
      *         <code>false</code> if it should be continued

@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.base.node.mine.knn;
 
@@ -52,17 +52,21 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.util.MutableDouble;
+import org.knime.core.util.MutableInteger;
 
 /**
  * This is the model for the k Nearest Neighbor node. In contrast to most
  * learner/predictor combinations this is "all in one" since the model here
  * really stores all of the training data.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  * @author Thorsten Meinl, University of Konstanz
  */
 public class KnnNodeModel extends NodeModel {
     private KnnSettings m_settings = new KnnSettings();
+
+    private final Map<DataCell, MutableInteger> m_classDistribution =
+            new HashMap<DataCell, MutableInteger>();
 
     /**
      * Creates a new model for the kNN node.
@@ -74,7 +78,7 @@ public class KnnNodeModel extends NodeModel {
     /**
      * Checks if the two input tables are correct and fills the last two
      * arguments with sensible values.
-     * 
+     *
      * @param inSpecs the input tables' specs
      * @param featureColumns a list that gets filled with the feature columns'
      *            indices; all columns with {@link DoubleValue}s are used as
@@ -157,7 +161,7 @@ public class KnnNodeModel extends NodeModel {
             setWarningMessage("Auto-selected column '" + colSpec.getName()
                     + "' as class column.");
             classColIndex =
-                inSpecs[0].findColumnIndex(m_settings.classColumn());
+                    inSpecs[0].findColumnIndex(m_settings.classColumn());
         }
 
         List<Integer> featureColumns = new ArrayList<Integer>();
@@ -194,8 +198,7 @@ public class KnnNodeModel extends NodeModel {
         List<Integer> featureColumns = new ArrayList<Integer>();
         Map<Integer, Integer> firstToSecond = new HashMap<Integer, Integer>();
         checkInputTables(new DataTableSpec[]{inData[0].getDataTableSpec(),
-                inData[1].getDataTableSpec()}, featureColumns,
-                firstToSecond);
+                inData[1].getDataTableSpec()}, featureColumns, firstToSecond);
 
         KDTreeBuilder<DataCell> treeBuilder =
                 new KDTreeBuilder<DataCell>(featureColumns.size());
@@ -213,6 +216,15 @@ public class KnnNodeModel extends NodeModel {
                 DataCell thisClassCell = currentRow.getCell(classColIndex);
                 // and finally add data
                 treeBuilder.addPattern(features, thisClassCell);
+
+                // compute the majority class for breaking possible ties later
+                MutableInteger t = m_classDistribution.get(thisClassCell);
+                if (t == null) {
+                    m_classDistribution.put(thisClassCell,
+                            new MutableInteger(1));
+                } else {
+                    t.inc();
+                }
             }
         }
 
@@ -224,14 +236,14 @@ public class KnnNodeModel extends NodeModel {
         exec.setMessage("Building kd-tree");
         KDTree<DataCell> tree =
                 treeBuilder.buildTree(exec.createSubProgress(0.3));
-        
+
         if (tree.size() < m_settings.k()) {
             throw new InvalidSettingsException("There are only " + tree.size()
                     + " patterns in the input table, but " + m_settings.k()
                     + " nearest neighbours were requested for classification. "
                     + "Please select at most " + tree.size() + " neighbours.");
         }
-        
+
         exec.setMessage("Classifying");
         ColumnRearranger c =
                 createRearranger(inSpec, classColumnSpec, featureColumns,
@@ -247,7 +259,7 @@ public class KnnNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        // nothing to do
+        m_classDistribution.clear();
     }
 
     /**
@@ -368,13 +380,25 @@ public class KnnNodeModel extends NodeModel {
                 winnerCell = e.getKey();
             }
         }
+
+        // check if there are other classes with the same weight
+        for (Map.Entry<DataCell, MutableDouble> e : classWeights.entrySet()) {
+            double weight = e.getValue().doubleValue();
+            if (weight == winnerWeight) {
+                if (m_classDistribution.get(winnerCell).intValue() < m_classDistribution
+                        .get(e.getKey()).intValue()) {
+                    winnerCell = e.getKey();
+                }
+            }
+        }
+
         return winnerCell;
 
     }
 
     /**
      * Creates a double array with the features of one data row.
-     * 
+     *
      * @param row the row
      * @param featureColumns the indices of the column with the features to use
      * @return a double array with the features' values
@@ -400,7 +424,7 @@ public class KnnNodeModel extends NodeModel {
     /**
      * Creates a double array with the features of one data row used for
      * querying the tree.
-     * 
+     *
      * @param row the row
      * @param featureColumns the indices of the column with the features to use
      * @param firstToSecond a map that maps the indices of the feature columns
