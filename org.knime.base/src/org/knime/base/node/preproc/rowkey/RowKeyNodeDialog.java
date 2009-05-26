@@ -23,9 +23,6 @@
  */
 package org.knime.base.node.preproc.rowkey;
 
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -39,6 +36,9 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelectio
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 
 /**
@@ -76,6 +76,13 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
         "Replaces missing values with '"
         + RowKeyUtil.MISSING_VALUE_REPLACEMENT + "'.";
 
+    /**The label of the enable hilite values check box.*/
+    private static final String ENABLE_HILITE_LABEL =
+        "Enable hiliting";
+    /**The tool tip of the enable hilite value check box.*/
+    private static final String ENABLE_HILITE_TOOLTIP =
+        "Enabling leads to more memory consumtion.";
+
     /**The label of the uniqueness check box.*/
     protected static final String ENSURE_UNIQUENESS_LABEL =
         "Ensure uniqueness";
@@ -110,6 +117,8 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
 
     private final SettingsModelString m_newColumnName;
 
+    private final SettingsModelBoolean m_enableHilite;
+
     private DataTableSpec m_tableSpec = null;
 
     /**
@@ -132,6 +141,10 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
         m_handleMissingVals = new SettingsModelBoolean(
                 RowKeyNodeModel.HANDLE_MISSING_VALS, false);
         m_handleMissingVals.setEnabled(m_replaceKey.getBooleanValue());
+        m_enableHilite = new SettingsModelBoolean(
+                RowKeyNodeModel.CFG_ENABLE_HILITE, false);
+        m_enableHilite.setEnabled(m_replaceKey.getBooleanValue());
+
         m_appendRowKey = new SettingsModelBoolean(
                 RowKeyNodeModel.APPEND_ROWKEY_COLUMN, false);
         m_newColumnName = new SettingsModelString(
@@ -145,6 +158,7 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
                 m_removeRowKeyCol.setEnabled(b);
                 m_ensureUniqueness.setEnabled(b);
                 m_handleMissingVals.setEnabled(b);
+                m_enableHilite.setEnabled(b);
             }
         });
         m_appendRowKey.addChangeListener(new ChangeListener() {
@@ -178,6 +192,11 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
                 m_handleMissingVals, HANDLE_MISSING_VALUES_LABEL);
         replaceMissingvals.setToolTipText(HANDLEMISSING_VALUES_TOOLTIP);
         addDialogComponent(replaceMissingvals);
+        final DialogComponent enableHilite = new DialogComponentBoolean(
+                m_enableHilite, ENABLE_HILITE_LABEL);
+        enableHilite.setToolTipText(ENABLE_HILITE_TOOLTIP);
+        addDialogComponent(enableHilite);
+
 
         createNewGroup(APPEND_ROW_KEY_GROUP_LABEL);
         final DialogComponent appendRowKeyCol = new DialogComponentBoolean(

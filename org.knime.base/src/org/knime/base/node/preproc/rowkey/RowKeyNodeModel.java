@@ -23,12 +23,6 @@
  */
 package org.knime.base.node.preproc.rowkey;
 
-import java.io.File;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -41,11 +35,24 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.property.hilite.HiLiteTranslator;
+
+import org.knime.base.data.append.column.AppendedColumnTable;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 /**
  * The node model of the row key manipulation node. The node allows the user
@@ -65,6 +72,8 @@ public class RowKeyNodeModel extends NodeModel {
 
     /** The port which the model uses to return the data. */
     public static final int DATA_OUT_PORT = 0;
+
+    private static final String INTERNALS_FILE_NAME = "hilite_mapping.xml.gz";
 
     /**
      * The name of the settings tag which holds the boolean if the user
@@ -109,6 +118,9 @@ public class RowKeyNodeModel extends NodeModel {
     public static final String NEW_COL_NAME_4_ROWKEY_VALS =
         "newColumnName4RowKeyValues";
 
+    /**Configuration key for the enable hilite option.*/
+    protected static final String CFG_ENABLE_HILITE = "enableHilite";
+
     /**If<code>true</code> the user wants to replace the existing row key
      * with the values of the selected column.*/
     private final SettingsModelBoolean m_replaceKey;
@@ -126,15 +138,17 @@ public class RowKeyNodeModel extends NodeModel {
     /**If <code>true</code> the user wants the values of the row key copied
      * to a new column with the given name.*/
     private final SettingsModelBoolean m_appendRowKey;
+
+    private final SettingsModelBoolean m_enableHilite;
+
     /**The name of the new column which should contain the row key values. Could
      * be <code>null</code>.*/
     private final SettingsModelString m_newColumnName;
 
     /**
-     * The output HiLite handler.
+     * Node returns a new hilite handler instance.
      */
-    private final HiLiteHandler m_hiLiteHandler;
-
+    private final HiLiteTranslator m_hilite = new HiLiteTranslator();
     /**
      * Constructor for class RowKeyNodeModel.
      */
@@ -142,7 +156,6 @@ public class RowKeyNodeModel extends NodeModel {
         // we have one data in and one data out port
         super(1, 1);
         //initialise the settings models
-        m_hiLiteHandler = new HiLiteHandler();
         m_replaceKey = new SettingsModelBoolean(
                 RowKeyNodeModel.REPLACE_ROWKEY, true);
         m_newRowKeyColumn = new SettingsModelString(
@@ -157,12 +170,15 @@ public class RowKeyNodeModel extends NodeModel {
         m_handleMissingVals = new SettingsModelBoolean(
                 RowKeyNodeModel.HANDLE_MISSING_VALS, false);
         m_handleMissingVals.setEnabled(m_replaceKey.getBooleanValue());
+        m_enableHilite = new SettingsModelBoolean(CFG_ENABLE_HILITE, false);
+        m_enableHilite.setEnabled(m_replaceKey.getBooleanValue());
 
         m_appendRowKey = new SettingsModelBoolean(
                 RowKeyNodeModel.APPEND_ROWKEY_COLUMN, false);
         m_newColumnName = new SettingsModelString(
                 RowKeyNodeModel.NEW_COL_NAME_4_ROWKEY_VALS, (String)null);
         m_newColumnName.setEnabled(m_appendRowKey.getBooleanValue());
+
 
         m_replaceKey.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
@@ -171,6 +187,7 @@ public class RowKeyNodeModel extends NodeModel {
                 m_removeRowKeyCol.setEnabled(b);
                 m_ensureUniqueness.setEnabled(b);
                 m_handleMissingVals.setEnabled(b);
+                m_enableHilite.setEnabled(b);
             }
         });
         m_appendRowKey.addChangeListener(new ChangeListener() {
@@ -219,7 +236,12 @@ public class RowKeyNodeModel extends NodeModel {
                     m_appendRowKey.getBooleanValue(), newColSpec,
                     m_ensureUniqueness.getBooleanValue(),
                     m_handleMissingVals.getBooleanValue(),
-                    m_removeRowKeyCol.getBooleanValue());
+                    m_removeRowKeyCol.getBooleanValue(),
+                    m_enableHilite.getBooleanValue());
+            if (m_enableHilite.getBooleanValue()) {
+                m_hilite.setMapper(new DefaultHiLiteMapper(
+                        util.getHiliteMapping()));
+            }
             final int missingValueCounter = util.getMissingValueCounter();
             final int duplicatesCounter = util.getDuplicatesCounter();
             final StringBuilder warningMsg = new StringBuilder();
@@ -327,7 +349,25 @@ public class RowKeyNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_hiLiteHandler.fireClearHiLiteEvent();
+        m_hilite.setMapper(null);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void setInHiLiteHandler(final int inIndex,
+            final HiLiteHandler hiLiteHdl) {
+        m_hilite.removeAllToHiliteHandlers();
+        m_hilite.addToHiLiteHandler(hiLiteHdl);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
+        return m_hilite.getFromHiLiteHandler();
     }
 
     /**
@@ -365,15 +405,6 @@ public class RowKeyNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    public HiLiteHandler getOutHiLiteHandler(final int outPortID) {
-        assert (outPortID == 0);
-        return m_hiLiteHandler;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         assert (settings != null);
         m_replaceKey.saveSettingsTo(settings);
@@ -383,6 +414,7 @@ public class RowKeyNodeModel extends NodeModel {
         m_handleMissingVals.saveSettingsTo(settings);
         m_appendRowKey.saveSettingsTo(settings);
         m_newColumnName.saveSettingsTo(settings);
+        m_enableHilite.saveSettingsTo(settings);
     }
 
     /**
@@ -404,6 +436,12 @@ public class RowKeyNodeModel extends NodeModel {
         m_handleMissingVals.loadSettingsFrom(settings);
         m_appendRowKey.loadSettingsFrom(settings);
         m_newColumnName.loadSettingsFrom(settings);
+        try {
+            m_enableHilite.loadSettingsFrom(settings);
+        } catch (final InvalidSettingsException e) {
+         // this option was introduced in KNIME version 2.0.3
+            m_enableHilite.setBooleanValue(false);
+        }
     }
 
     /**
@@ -434,8 +472,18 @@ public class RowKeyNodeModel extends NodeModel {
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) {
-        // nothing to do since the dialog settings are stored by the framework
+            final ExecutionMonitor exec) throws IOException  {
+        if (m_enableHilite.getBooleanValue()) {
+            final NodeSettingsRO config = NodeSettings.loadFromXML(
+                    new FileInputStream(new File(nodeInternDir,
+                            INTERNALS_FILE_NAME)));
+            try {
+                m_hilite.setMapper(DefaultHiLiteMapper.load(config));
+                m_hilite.addToHiLiteHandler(getInHiLiteHandler(0));
+            } catch (final InvalidSettingsException ex) {
+                throw new IOException(ex.getMessage());
+            }
+        }
     }
 
     /**
@@ -443,8 +491,18 @@ public class RowKeyNodeModel extends NodeModel {
      */
     @Override
     protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) {
-        // nothing to do since the dialog settings are stored by the framework
+            final ExecutionMonitor exec) throws IOException  {
+        if (m_enableHilite.getBooleanValue()) {
+            final NodeSettings config = new NodeSettings("hilite_mapping");
+            final DefaultHiLiteMapper mapper =
+                (DefaultHiLiteMapper) m_hilite.getMapper();
+            if (mapper != null) {
+                mapper.save(config);
+            }
+            config.saveToXML(
+                    new FileOutputStream(new File(nodeInternDir,
+                            INTERNALS_FILE_NAME)));
+        }
     }
 
 }

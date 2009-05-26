@@ -37,6 +37,11 @@
 			All missing values are replaced with '?' if this check box is ticked.
 			We recommend activating the 'Ensure uniqueness' check box to handle any duplicate missing values.
 	    </option>
+	    <option name="Enable hiliting">
+            If enabled, a map is maintained joining the old with the new RowID. 
+            Depending of the number of rows, enabling this feature might 
+            consume a lot of memory.
+        </option>
 		<option name="Create new column with the RowID values">
 			If this is selected the node creates a new column with the value of the 
 			current RowID.

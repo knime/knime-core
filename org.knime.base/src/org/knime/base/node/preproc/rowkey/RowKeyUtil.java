@@ -71,6 +71,8 @@ public class RowKeyUtil {
 
     private int m_missingValueCounter = 0;
 
+    private Map<RowKey, Set<RowKey>> m_hiliteMapping = null;
+
 
     /**
      * Creates the {@link ColumnRearranger} that appends a new column with the
@@ -127,6 +129,8 @@ public class RowKeyUtil {
      * replaces missing values with ?
      * @param removeRowKeyCol removes the selected row key column if set
      * to <code>true</code>
+     * @param hiliteMap <code>true</code> if a map should be maintained that
+     * maps the new row id to the old row id
      * @return the {@link BufferedDataTable} with the replaced row key and
      * the optional appended new column with the old row keys.
      * @throws Exception if the cancel button was pressed or the input data
@@ -136,7 +140,7 @@ public class RowKeyUtil {
             final ExecutionContext exec, final String selRowKeyColName,
             final boolean appendColumn, final DataColumnSpec newColSpec,
             final boolean ensureUniqueness, final boolean replaceMissingVals,
-            final boolean removeRowKeyCol)
+            final boolean removeRowKeyCol, final boolean hiliteMap)
     throws Exception {
         LOGGER.debug("Entering changeRowKey(inData, exec, selRowKeyColName, "
                 + "newColName) of class RowKeyUtil.");
@@ -160,6 +164,9 @@ public class RowKeyUtil {
             throw new InvalidSettingsException("Column name not found.");
         }
         final int totalNoOfRows = inData.getRowCount();
+        if (hiliteMap) {
+            m_hiliteMapping = new HashMap<RowKey, Set<RowKey>>(totalNoOfRows);
+        }
         final Map<String, MutableInteger> vals =
             new HashMap<String, MutableInteger>(totalNoOfRows);
         final double progressPerRow = 1.0 / totalNoOfRows;
@@ -232,6 +239,11 @@ public class RowKeyUtil {
             final RowKey newKeyVal = new RowKey(key);
             final DefaultRow newRow = new DefaultRow(newKeyVal, cells);
             newContainer.addRowToTable(newRow);
+            if (hiliteMap) {
+                final Set<RowKey> oldKeys = new HashSet<RowKey>(1);
+                oldKeys.add(row.getKey());
+                m_hiliteMapping.put(newKeyVal, oldKeys);
+            }
             exec.checkCanceled();
             if (rowCounter % checkPoint == 0) {
                 exec.setProgress(progressPerRow * rowCounter,
@@ -260,6 +272,19 @@ public class RowKeyUtil {
      */
     public int getDuplicatesCounter() {
         return m_duplicatesCounter;
+    }
+
+    /**
+     * The hilite translation <code>Map</code> or <code>null</code> if
+     * the enableHilte flag in the constructor was set to <code>false</code>.
+     * The key of the <code>Map</code> is the row key of the new row and
+     * the corresponding value is the <code>Set</code> with the corresponding
+     * old row key.
+     * @return the hilite translation <code>Map</code> or <code>null</code> if
+     * the enableHilte flag in the constructor was set to <code>false</code>.
+     */
+    public Map<RowKey, Set<RowKey>> getHiliteMapping() {
+        return m_hiliteMapping;
     }
 
     /**
