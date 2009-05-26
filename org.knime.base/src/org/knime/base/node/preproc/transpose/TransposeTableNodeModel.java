@@ -130,6 +130,21 @@ final class TransposeTableNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
+        // input column spec that will be transposed the output row IDs
+        DataTableSpec spec = inData[0].getDataTableSpec();
+        // if the input table does not contain any column, create empty rows
+        // only using the column header as row IDs
+        if (inData[0].getRowCount() == 0) {
+            BufferedDataContainer cont = 
+                exec.createDataContainer(new DataTableSpec());
+            for (int i = 0; i < spec.getNumColumns(); i++) {
+                String colName = spec.getColumnSpec(i).getName();
+                cont.addRowToTable(new DefaultRow(colName, new DataCell[0]));
+            }
+            cont.close();
+            return new BufferedDataTable[]{cont.getTable()};
+            
+        }
         // new number of columns = number of rows
         final int newNrCols = inData[0].getRowCount();
         // new column names
@@ -157,7 +172,6 @@ final class TransposeTableNodeModel extends NodeModel {
             colNames.add(row.getKey().getString().toString());
             colTypes.add(type);
         }
-        DataTableSpec spec = inData[0].getDataTableSpec();
         // new number of rows
         int newNrRows = spec.getNumColumns();
         // create new specs
