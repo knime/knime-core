@@ -94,13 +94,13 @@ public class LearnerScoreComperator implements TestEvaluator {
      * @return - the error in percent.
      */
     private double getError(DataTable scoreTable) {
-        int matchCount = 0;
-        int errorCount = 0;
+        double matchCount = 0;
+        double errorCount = 0;
         int rowIndex = 0;
         int colIndex = 0;
         for (DataRow row : scoreTable) {
             for (DataCell cell : row) {
-                int value = Integer.parseInt(cell.toString());
+                double value = Double.parseDouble(cell.toString());
                 if (rowIndex == colIndex) {
                     matchCount += value;
                 } else {
@@ -112,7 +112,7 @@ public class LearnerScoreComperator implements TestEvaluator {
             rowIndex++;
         }
         double error = 0.0d;
-        long allCount = matchCount + errorCount;
+        double allCount = matchCount + errorCount;
         error = (100.0d / allCount) * errorCount;
         return error;
     }

@@ -55,7 +55,7 @@ public class PMMLDataDictionaryParser extends TestCase {
     
     public void testOwnClusterModel() throws Exception {
         File f = new File(getClass().getResource(
-                "files/model.pmml").toURI());
+                "files/iris_kMeans.pmml").toURI());
         m_parser.parse(f, m_handler);
         DataTableSpec spec = m_handler.getDataTableSpec();
         assertEquals(5, spec.getNumColumns());
@@ -134,25 +134,25 @@ public class PMMLDataDictionaryParser extends TestCase {
         assertEquals(DoubleCell.TYPE, spec.getColumnSpec(3).getType());
         assertEquals(StringCell.TYPE, spec.getColumnSpec(4).getType());
         // lower and upper bound (col 0)
-        assertTrue(spec.getColumnSpec(0).getDomain().hasValues());
+        assertTrue(spec.getColumnSpec(0).getDomain().hasBounds());
         assertEquals(((DoubleValue)spec.getColumnSpec(0).getDomain()
                 .getLowerBound()).getDoubleValue(), 10.0);
         assertEquals(((DoubleValue)spec.getColumnSpec(0).getDomain()
                 .getUpperBound()).getDoubleValue(), 69.0);
         // lower and upper bound (col 1)
-        assertTrue(spec.getColumnSpec(1).getDomain().hasValues());
+        assertTrue(spec.getColumnSpec(1).getDomain().hasBounds());
         assertEquals(((DoubleValue)spec.getColumnSpec(1).getDomain()
                 .getLowerBound()).getDoubleValue(), 1.0);
         assertEquals(((DoubleValue)spec.getColumnSpec(1).getDomain()
-                .getUpperBound()).getDoubleValue(), 6.0);
+                .getUpperBound()).getDoubleValue(), 25.0);
         // lower and upper bound (col 2)
-        assertTrue(spec.getColumnSpec(2).getDomain().hasValues());
+        assertTrue(spec.getColumnSpec(2).getDomain().hasBounds());
         assertEquals(((DoubleValue)spec.getColumnSpec(2).getDomain()
                 .getLowerBound()).getDoubleValue(), 43.0);
         assertEquals(((DoubleValue)spec.getColumnSpec(2).getDomain()
                 .getUpperBound()).getDoubleValue(), 79.0);
         // lower and upper bound (col 3)
-        assertTrue(spec.getColumnSpec(3).getDomain().hasValues());
+        assertTrue(spec.getColumnSpec(3).getDomain().hasBounds());
         assertEquals(((DoubleValue)spec.getColumnSpec(3).getDomain()
                 .getLowerBound()).getDoubleValue(), 20.0);
         assertEquals(((DoubleValue)spec.getColumnSpec(3).getDomain()
@@ -226,19 +226,19 @@ public class PMMLDataDictionaryParser extends TestCase {
         assertEquals(spec.getColumnSpec(16).getType(), 
                 DoubleCell.TYPE);
         // values and bounds
-        assertTrue(spec.getColumnSpec(0).getDomain().hasValues());
+        assertTrue(spec.getColumnSpec(0).getDomain().hasBounds());
         assertEquals(((DoubleValue)spec.getColumnSpec(0).getDomain()
                 .getLowerBound()).getDoubleValue(), 0.0);
         assertEquals(((DoubleValue)spec.getColumnSpec(0).getDomain()
                 .getUpperBound()).getDoubleValue(), 1.0);
         
-        assertTrue(spec.getColumnSpec(1).getDomain().hasValues());
+        assertTrue(spec.getColumnSpec(1).getDomain().hasBounds());
         assertEquals(((DoubleValue)spec.getColumnSpec(1).getDomain()
                 .getLowerBound()).getDoubleValue(), 1.0);
         assertEquals(((DoubleValue)spec.getColumnSpec(1).getDomain()
                 .getUpperBound()).getDoubleValue(), 1.0);
         
-        assertTrue(spec.getColumnSpec(2).getDomain().hasValues());
+        assertTrue(spec.getColumnSpec(2).getDomain().hasBounds());
         assertEquals(0.0, ((DoubleValue)spec.getColumnSpec(2).getDomain()
                 .getLowerBound()).getDoubleValue());
         assertEquals(((DoubleValue)spec.getColumnSpec(2).getDomain()
