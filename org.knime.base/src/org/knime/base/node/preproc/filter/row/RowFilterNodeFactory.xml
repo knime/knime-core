@@ -46,7 +46,8 @@
 			added individually like <tt>[0123456789]</tt>, or by range). This set
 			matches any (one) character included in the set.<br />
             For a complete explanation of regular expressions see e.g. the JavaDoc
-            of the <tt>java.util.regex.Pattern</tt> class.
+            of the <a href="http://java.sun.com/javase/6/docs/api/java/util/regex/Pattern.html#sum">
+            java.util.regex.Pattern</a> class.
 		</option>
 	    <option name="Row number range">If filter by range is selected, specify
 		    the first row number to in/exclude. The end of the range can either 
