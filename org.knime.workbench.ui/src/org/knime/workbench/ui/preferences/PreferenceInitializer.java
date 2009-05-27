@@ -49,6 +49,9 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         
         store.setDefault(PreferenceConstants.P_CONFIRM_RECONNECT, true);
         
+        store.setDefault(
+                PreferenceConstants.P_CONFIRM_EXEC_NODES_NOT_SAVED, true);
+        
         store.setDefault(PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE, 10);
         
         store.setDefault(PreferenceConstants.P_FAV_LAST_USED_SIZE, 10);

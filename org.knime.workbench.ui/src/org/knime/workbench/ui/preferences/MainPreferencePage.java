@@ -94,6 +94,10 @@ IWorkbenchPreferencePage {
         addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_RECONNECT,
                 "Confirm reconnection of already connected nodes", parent));
 
+        addField(new BooleanFieldEditor(
+                PreferenceConstants.P_CONFIRM_EXEC_NODES_NOT_SAVED,
+                "Confirm if executing nodes are not saved", parent));
+        
 
         IntegerFieldEditor freqHistorySizeEditor = new IntegerFieldEditor(
                 PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE,

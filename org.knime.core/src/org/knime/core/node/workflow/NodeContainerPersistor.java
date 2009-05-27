@@ -49,11 +49,21 @@ public interface NodeContainerPersistor {
     
     boolean isDirtyAfterLoad();
     
-    LoadResult preLoadNodeContainer(final ReferencedFile nodeFileRef,
-            final NodeSettingsRO parentSettings)
+    /** Does this persistor complain if its persisted state 
+     * {@link NodeContainer#getState() state} does not match the state after
+     * loading (typically all non-executed nodes are configured after load). 
+     * This is true for all SingleNodeContainer and newer meta nodes,
+     * but it will be false for meta nodes, which are loaded from 1.x workflow.
+     * @return Such a property.
+     */
+    boolean mustComplainIfStateDoesNotMatch();
+    
+    void preLoadNodeContainer(final ReferencedFile nodeFileRef,
+            final NodeSettingsRO parentSettings, LoadResult loadResult)
             throws InvalidSettingsException, IOException;
 
-    LoadResult loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec)
+    void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep, 
+            final ExecutionMonitor exec, final LoadResult loadResult)
             throws InvalidSettingsException, CanceledExecutionException,
             IOException;
 }

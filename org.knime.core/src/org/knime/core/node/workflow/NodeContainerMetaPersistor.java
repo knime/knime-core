@@ -31,7 +31,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 interface NodeContainerMetaPersistor {
 
-    /** Key for this node's user description. */
+    /** Key for this node's custom description. */
     static final String KEY_CUSTOM_DESCRIPTION = "customDescription";
 
     /** Key for this node's user name. */
@@ -46,6 +46,10 @@ interface NodeContainerMetaPersistor {
     String getCustomName();
 
     String getCustomDescription();
+
+    NodeExecutionJobManager getExecutionJobManager();
+    
+    NodeSettingsRO getExecutionJobSettings();
 
     State getState();
 
@@ -64,9 +68,10 @@ interface NodeContainerMetaPersistor {
      * ignored in any version after that.
      * @param settings The settings object that is usually read from
      * @param parentSettings The parent settings, mostly ignored. 
-     * @return The load result representing the load task.
+     * @param loadResult Where to add errors and warnings to.
+     * @return Whether errors occured that require a reset of the node.
      */
-    LoadResult load(final NodeSettingsRO settings, 
-            final NodeSettingsRO parentSettings);
+    boolean load(final NodeSettingsRO settings, 
+            final NodeSettingsRO parentSettings, final LoadResult loadResult);
     
 }

@@ -239,7 +239,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
             exec.setProgress(0.36);
             exec.checkCanceled();
         } catch (ArithmeticException ex) {
-            throw new ArithmeticException("The attributes of the data samples "
+            throw new ArithmeticException("The attributes of the data samples"
                     + " are not mutually independent.");
         }
 

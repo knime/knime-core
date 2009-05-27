@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-Name: KNIME Base Nodes
 Bundle-SymbolicName: org.knime.base;singleton:=true
 Bundle-ManifestVersion: 2
-Bundle-Version: 2.0.2.0020616
+Bundle-Version: 2.1.0.0018128
 Bundle-ClassPath: knime-base-patches.jar,
  knime-base.jar
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
@@ -81,8 +81,8 @@ Export-Package: org.knime.base.collection.list.create,
  org.knime.base.node.mine.regression.polynomial.learner,
  org.knime.base.node.mine.regression.polynomial.predictor,
  org.knime.base.node.mine.regression.predict,
+ org.knime.base.node.mine.scorer.accuracy,
  org.knime.base.node.mine.scorer.entrop,
- org.knime.base.node.mine.scorer.hilitescorer,
  org.knime.base.node.mine.smote,
  org.knime.base.node.mine.sota,
  org.knime.base.node.mine.sota.distances,

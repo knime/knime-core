@@ -137,13 +137,6 @@ public class ResetAction extends AbstractNodeAction {
         try {
             for (int i = 0; i < nodeParts.length; i++) {
                 // skip locked nodes
-                if (nodeParts[i].isLocked()) {
-                    LOGGER.debug("Node #"
-                            + nodeParts[i].getNodeContainer().getID()
-                            + " is locked and can't be reset now");
-                    continue;
-                }
-
                 getManager().resetAndConfigureNode(
                         nodeParts[i].getNodeContainer().getID());
             }

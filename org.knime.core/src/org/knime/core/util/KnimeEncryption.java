@@ -20,9 +20,6 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
- * History
- *   Nov 3, 2006 (sieb): created
  */
 package org.knime.core.util;
 

@@ -38,9 +38,9 @@ org.eclipse.platform</programArgs>
       <feature id="org.eclipse.jdt" version="0.0.0"/>
       <feature id="org.eclipse.pde" version="0.0.0"/>
       <feature id="org.eclipse.sdk" version="0.0.0"/>
-      <feature id="org.knime.features.base" version="2.0.2.0020616"/>
-      <feature id="org.knime.features.wizard" version="2.0.2.0020616"/>
-      <feature id="org.knime.features.product" version="2.0.2.0020616"/>
+      <feature id="org.knime.features.base" version="2.0.2.0020587"/>
+      <feature id="org.knime.features.wizard" version="2.0.2.0020587"/>
+      <feature id="org.knime.features.product" version="2.0.2.0020587"/>
    </features>
 
 </product>

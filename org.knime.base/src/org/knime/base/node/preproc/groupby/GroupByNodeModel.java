@@ -316,12 +316,12 @@ public class GroupByNodeModel extends NodeModel {
     protected void reset() {
         m_hilite.setMapper(null);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void setInHiLiteHandler(final int inIndex, 
+    protected void setInHiLiteHandler(final int inIndex,
             final HiLiteHandler hiLiteHdl) {
         m_hilite.removeAllToHiliteHandlers();
         m_hilite.addToHiLiteHandler(hiLiteHdl);
@@ -358,7 +358,10 @@ public class GroupByNodeModel extends NodeModel {
         final List<ColumnAggregator> invalidColAggrs =
             new LinkedList<ColumnAggregator>();
         for (final ColumnAggregator colAggr : m_columnAggregators) {
-            if (!origSpec.containsName(colAggr.getColName())) {
+            final DataColumnSpec colSpec =
+                origSpec.getColumnSpec(colAggr.getColName());
+            if (colSpec == null
+                    || !colSpec.getType().equals(colAggr.getDataType())) {
                 invalidColAggrs.add(colAggr);
             }
         }

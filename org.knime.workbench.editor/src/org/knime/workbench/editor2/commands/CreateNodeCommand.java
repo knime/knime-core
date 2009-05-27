@@ -26,14 +26,15 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.commands.Command;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -68,20 +69,15 @@ public class CreateNodeCommand extends Command {
         m_location = location;
     }
 
-    /**
-     * We can execute, if all components were 'non-null' in the constructor.
-     *
-     * @see org.eclipse.gef.commands.Command#canExecute()
-     */
+    /** We can execute, if all components were 'non-null' in the constructor.
+     * {@inheritDoc} */
     @Override
     public boolean canExecute() {
         return (m_manager != null) && (m_factory != null)
                 && (m_location != null);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public void execute() {
         // Add node to workflow and get the container
@@ -106,14 +102,11 @@ public class CreateNodeCommand extends Command {
 
     }
 
-    /**
-     * This can always be undone.
-     *
-     * @see org.eclipse.gef.commands.Command#canUndo()
-     */
+    /** {@inheritDoc} */
     @Override
     public boolean canUndo() {
-        return false;
+        return m_container != null 
+            && m_manager.canRemoveNode(m_container.getID());
     }
 
     /**
@@ -121,19 +114,21 @@ public class CreateNodeCommand extends Command {
      */
     @Override
     public void undo() {
-        // TODO: functionality disabled
-        /*
         LOGGER.debug("Undo: Removing node #" + m_container.getID());
-        try {
-            m_manager.removeNode(m_container);
-        } catch (WorkflowInExecutionException ex) {
-            MessageBox mb = new MessageBox(Display.getDefault()
-                    .getActiveShell(), SWT.ICON_INFORMATION | SWT.OK);
-            mb.setText("Operation not allowed");
-            mb.setMessage("You cannot remove a node while the workflow is in"
-                    + " execution.");
-            mb.open();
+        if (canUndo()) {
+            m_manager.removeNode(m_container.getID());
+        } else {
+            MessageDialog.openInformation(Display.getDefault().getActiveShell(),
+                    "Operation no allowed", "The node " 
+                    + m_container.getNameWithID() 
+                    + " can currently not be removed");
         }
-        */
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void dispose() {
+        super.dispose();
+        m_container = null;
     }
 }

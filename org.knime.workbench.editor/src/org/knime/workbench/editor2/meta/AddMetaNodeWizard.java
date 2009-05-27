@@ -157,10 +157,9 @@ public class AddMetaNodeWizard extends Wizard {
     private void createMetaNodeFromPorts(final PortType[] inPorts,
             final PortType[] outPorts, final String name) {
         WorkflowManager meta = m_wfEditor.getWorkflowManager()
-        .createAndAddSubWorkflow(inPorts, outPorts);
+        .createAndAddSubWorkflow(inPorts, outPorts, name);
         NodeContainer cont = m_wfEditor.getWorkflowManager().getNodeContainer(
                 meta.getID());
-        ((WorkflowManager)cont).setName(name);
         // create extra info and set it
         NodeUIInformation info = new NodeUIInformation();
 

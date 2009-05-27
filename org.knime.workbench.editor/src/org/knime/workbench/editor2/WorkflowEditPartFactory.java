@@ -110,6 +110,7 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
      * 
      * {@inheritDoc}
      */
+    @Override
     public EditPart createEditPart(final EditPart context, final Object model) {
         // instantiated here
         // correct type in the if statement

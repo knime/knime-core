@@ -36,6 +36,8 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.KnimeEncryption;
+import org.knime.workbench.core.KNIMECorePlugin;
+import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
 import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.ui.favorites.FavoriteNodesManager;
 import org.knime.workbench.ui.masterkey.MasterKeyPreferencePage;
@@ -85,13 +87,30 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
-
+        IPreferenceStore prefStore = getPreferenceStore();
+        // for backward compatibility we need to ensure that the master key 
+        // pref. store values are copied from the ui into the core plugin
+        // FIXME: remove with 2.1+ version of KNIME
+        // fix: master key settings are saved in core plugin only
+        IPreferenceStore corePrefStore = 
+            KNIMECorePlugin.getDefault().getPreferenceStore();
+        if (!corePrefStore.contains(HeadlessPreferencesConstants.P_MASTER_KEY_DEFINED)
+             && prefStore.contains(HeadlessPreferencesConstants.P_MASTER_KEY_DEFINED)) {
+            corePrefStore.setValue(
+                    HeadlessPreferencesConstants.P_MASTER_KEY_DEFINED, 
+                    prefStore.getString(HeadlessPreferencesConstants.P_MASTER_KEY_DEFINED));
+            corePrefStore.setValue(HeadlessPreferencesConstants.P_MASTER_KEY_ENABLED,
+                    prefStore.getString(HeadlessPreferencesConstants.P_MASTER_KEY_ENABLED));
+            corePrefStore.setValue(HeadlessPreferencesConstants.P_MASTER_KEY_SAVED,
+                    prefStore.getString(HeadlessPreferencesConstants.P_MASTER_KEY_SAVED));
+            corePrefStore.setValue(HeadlessPreferencesConstants.P_MASTER_KEY,
+                    prefStore.getString(HeadlessPreferencesConstants.P_MASTER_KEY));
+        }
         // create a knime encryption supplier that reads in an encryption key
         // from the user via a dialog or directly from the preference page
         KnimeEncryption.setEncryptionKeySupplier(
                 MasterKeyPreferencePage.SUPPLIER);
 
-        IPreferenceStore prefStore = getPreferenceStore();
         getImageRegistry().put("knime",
                 imageDescriptorFromPlugin(PLUGIN_ID, 
                         "/icons/knime_default.png"));
@@ -253,7 +272,7 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
      * Load a image from the given location from within the plugin.
      *
      * @param pluginID The ID of the hosting plugin
-     * @param filename The elative filename
+     * @param filename The relative filename
      * @return The image, a default will be returned if file was missing.
      */
     public Image getImage(final String pluginID, final String filename) {
@@ -265,12 +284,12 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
      * Returns a image descriptor.
      *
      * @param pluginID The plugin ID
-     * @param filename Th relative filename
+     * @param filename The relative filename
      * @return The descriptor, or null
      */
     public ImageDescriptor getImageDescriptor(final String pluginID,
             final String filename) {
         return AbstractUIPlugin.imageDescriptorFromPlugin(pluginID, filename);
-    }
+    } 
 
 }

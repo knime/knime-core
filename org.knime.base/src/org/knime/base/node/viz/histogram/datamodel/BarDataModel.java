@@ -25,6 +25,19 @@
 
 package org.knime.base.node.viz.histogram.datamodel;
 
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.config.Config;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.aggregation.AggregationValModel;
+import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
+
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
@@ -34,19 +47,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.aggregation.AggregationValModel;
-import org.knime.base.node.viz.histogram.HistogramLayout;
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.config.Config;
-import org.knime.core.node.config.ConfigRO;
-import org.knime.core.node.config.ConfigWO;
 
 /**
  * This class represents one bar in the histogram. A bar corresponds to one
@@ -136,7 +136,7 @@ implements Serializable {
      * the given bar ranges for the given layout
      */
     private static boolean elementsFitInBar(final HistogramLayout layout,
-            final SortedSet<Color> barElementColors, final int noOfElements,
+            final List<Color> barElementColors, final int noOfElements,
             final int barWidth, final int barHeight) {
         if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
             final int noOfColors = barElementColors.size();
@@ -226,7 +226,7 @@ implements Serializable {
      * @param calculator the hilite shape calculator
      */
     protected void setBarRectangle(final Rectangle2D barRect,
-            final int baseLine, final SortedSet<Color> barElementColors,
+            final int baseLine, final List<Color> barElementColors,
             final HistogramHiliteCalculator calculator) {
         setRectangle(barRect, baseLine, calculator);
         setElementRectangle(baseLine, barElementColors, calculator);
@@ -248,7 +248,7 @@ implements Serializable {
      * the elements should be drawn
      */
     private void setElementRectangle(final int baseLine,
-            final SortedSet<Color> barElementColors,
+            final List<Color> barElementColors,
             final HistogramHiliteCalculator calculator) {
         final Rectangle2D barRectangle = getShape();
         if (barRectangle == null) {
@@ -297,7 +297,7 @@ implements Serializable {
     }
 
     private void setSideBySideRectangles(final Rectangle2D bounds,
-            final SortedSet<Color> barElementColors, final double valRange,
+            final List<Color> barElementColors, final double valRange,
             final AggregationMethod aggrMethod, final int baseLine,
             final HistogramHiliteCalculator calculator) {
         LOGGER.debug("Entering setSideBySideRectangles"
@@ -348,7 +348,7 @@ implements Serializable {
     }
 
     private void setStackedRectangles(final Rectangle2D bounds,
-            final SortedSet<Color> barElementColors, final double valRange,
+            final List<Color> barElementColors, final double valRange,
             final AggregationMethod aggrMethod,
             final HistogramHiliteCalculator calculator) {
             //the user wants the elements on top of each other
@@ -466,7 +466,7 @@ implements Serializable {
      * @param calculator the hilite shape calculator
      */
     public void updateBarWidth(final int startX, final int newWidth,
-            final SortedSet<Color> barElementColors, final int baseLine,
+            final List<Color> barElementColors, final int baseLine,
             final HistogramHiliteCalculator calculator) {
         final Rectangle2D barRectangle = getShape();
         if (barRectangle == null) {
@@ -544,7 +544,7 @@ implements Serializable {
     }
 
     private static int calculateSideBySideElementWidth(
-            final SortedSet<Color> barElementColors, final int barWidth) {
+            final List<Color> barElementColors, final int barWidth) {
         final int noOfColors = barElementColors.size();
         return Math.max((barWidth
                 - (AbstractHistogramVizModel.SPACE_BETWEEN_ELEMENTS

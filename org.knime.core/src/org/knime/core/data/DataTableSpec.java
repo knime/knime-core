@@ -119,7 +119,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
                 throws IOException {
                 ZipEntry entry = in.getNextEntry();
                 if (!FILENAME.equals(entry.getName())) {
-                    throw new IOException("Excpected '" + FILENAME 
+                    throw new IOException("Expected '" + FILENAME 
                             + "' zip entry, got " + entry.getName());
                 }
                 ModelContentRO cnt = ModelContent.loadFromXML(in);
@@ -943,7 +943,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
                 new StringBuilder("name=" + m_name + ",columns=[");
         for (int i = 0; i < getNumColumns(); i++) {
             DataColumnSpec spec = getColumnSpec(i);
-            buffer.append(i > 0 ? ", " : "");
+            buffer.append(i > 0 ? "; " : "");
             buffer.append(spec.getName().toString());
         }
         buffer.append("]");

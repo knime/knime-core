@@ -35,12 +35,16 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
+import org.knime.core.node.NodePersistorVersion1xx;
 import org.knime.core.node.NodePersistorVersion200;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.ScopeLoopContext.RestoredScopeLoopContext;
 import org.knime.core.node.workflow.ScopeVariable.Type;
+import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
+import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -53,8 +57,9 @@ public class SingleNodeContainerPersistorVersion200 extends
     private static final String NODE_FILE = "node.xml";
 
     public SingleNodeContainerPersistorVersion200(
-            final WorkflowPersistorVersion200 workflowPersistor) {
-        super(workflowPersistor);
+            final WorkflowPersistorVersion200 workflowPersistor,
+            final String versionString) {
+        super(workflowPersistor, versionString);
     }
     
     /** {@inheritDoc} */
@@ -74,6 +79,42 @@ public class SingleNodeContainerPersistorVersion200 extends
     protected String loadNodeFile(NodeSettingsRO settings) 
         throws InvalidSettingsException {
         return settings.getString("node_file");
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected SingleNodeContainerSettings loadSNCSettings(
+            final NodeSettingsRO settings, 
+            final NodePersistorVersion1xx nodePersistor)
+    throws InvalidSettingsException {
+        // TODO : don't use hard-coded strings here (what about "2.0.3"?)
+        if ("2.0.0".equals(getVersionString())) {
+            return super.loadSNCSettings(settings, nodePersistor);
+        } else {
+            // any version after 2.0 saves the snc settings in the settings.xml
+            // (previously these settings were saves as part of the node.xml)
+            SingleNodeContainerSettings sncs = 
+                new SingleNodeContainerSettings();
+            MemoryPolicy p;
+            NodeSettingsRO sub =
+                    settings.getNodeSettings(Node.CFG_MISC_SETTINGS);
+            String memoryPolicy =
+                    sub.getString(SingleNodeContainer.CFG_MEMORY_POLICY,
+                            MemoryPolicy.CacheSmallInMemory.toString());
+            if (memoryPolicy == null) {
+                throw new InvalidSettingsException(
+                        "Can't use null memory policy.");
+            }
+            try {
+                p = MemoryPolicy.valueOf(memoryPolicy);
+            } catch (IllegalArgumentException iae) {
+                throw new InvalidSettingsException(
+                        "Invalid memory policy: " + memoryPolicy);
+            }
+            sncs.setMemoryPolicy(p);
+            return sncs;
+        }
+            
     }
     
     /** {@inheritDoc} */
@@ -162,8 +203,9 @@ public class SingleNodeContainerPersistorVersion200 extends
         saveNodeFactoryClassName(settings, snc);
         ReferencedFile nodeXMLFileRef = saveNodeFileName(settings, nodeDirRef);
         saveScopeObjectStack(settings, snc);
+        saveSNCSettings(settings, snc);
         NodeContainerMetaPersistorVersion200 metaPersistor = 
-            createNodeContainerMetaPersistor(null);
+            createNodeContainerMetaPersistor(nodeDirRef);
         metaPersistor.save(snc, settings);
         NodePersistorVersion200 persistor = createNodePersistor();
         persistor.save(snc.getNode(), nodeXMLFileRef, exec, isSaveData 
@@ -191,6 +233,11 @@ public class SingleNodeContainerPersistorVersion200 extends
         String fileName = NODE_FILE;
         settings.addString("node_file", fileName);
         return new ReferencedFile(nodeDirectoryRef, fileName);
+    }
+    
+    protected void saveSNCSettings(final NodeSettingsWO settings, 
+            final SingleNodeContainer snc) {
+        snc.saveSNCSettings(settings);
     }
     
     protected void saveScopeObjectStack(final NodeSettingsWO settings,

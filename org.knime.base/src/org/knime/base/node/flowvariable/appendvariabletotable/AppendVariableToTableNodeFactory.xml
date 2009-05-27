@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="append_variable.png" type="Other">
-	<name>Variable To Column</name>
+	<name>Variable To TableColumn</name>
 
 	<shortDescription>
 		Appends one or more variables as new column(s) to the data table.

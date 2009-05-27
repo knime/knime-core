@@ -27,6 +27,8 @@ import org.eclipse.core.resources.IProject;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeMessageEvent;
+import org.knime.core.node.workflow.NodeMessageListener;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowEvent;
@@ -42,8 +44,8 @@ import org.knime.core.node.workflow.WorkflowManager;
  * this information to display opened instances differently. 
  * 
  * @see KnimeResourceNavigator
- * @see KnimeContentProvider
- * @see KnimeResourceLableProvider
+ * @see KnimeResourceContentProvider
+ * @see KnimeResourceLabelProvider
  * @see KnimeResourcePatternFilter
  * 
  * @author Fabian Dill, University of Konstanz
@@ -86,6 +88,21 @@ public final class ProjectWorkflowMap {
             public void stateChanged(final NodeStateEvent state) {
                 for (NodeStateChangeListener listener : NSC_LISTENERS) {
                     listener.stateChanged(state);
+                }
+            }
+        
+    };
+    
+    private static final Set<NodeMessageListener> MSG_LISTENERS 
+        = new LinkedHashSet<NodeMessageListener>();
+    
+    private static final NodeMessageListener MSG_LISTENER 
+        = new NodeMessageListener() {
+
+            @Override
+            public void messageChanged(final NodeMessageEvent messageEvent) {
+                for (NodeMessageListener l : MSG_LISTENERS) {
+                    l.messageChanged(messageEvent);
                 }
             }
         
@@ -168,6 +185,7 @@ public final class ProjectWorkflowMap {
                     manager, null));
             manager.removeListener(WF_LISTENER);
             manager.removeNodeStateChangeListener(NSC_LISTENER);
+            manager.removeNodeMessageListener(MSG_LISTENER);
         }
     }
     
@@ -185,9 +203,10 @@ public final class ProjectWorkflowMap {
         PROJECTS.put(name, manager);
         manager.addNodeStateChangeListener(NSC_LISTENER);
         manager.addListener(WF_LISTENER);
+        manager.addNodeMessageListener(MSG_LISTENER);
         WF_LISTENER.workflowChanged(new WorkflowEvent(
                 WorkflowEvent.Type.NODE_ADDED, manager.getID(), null, 
-                (NodeContainer)manager));
+                manager));
     }
     
     /**
@@ -196,8 +215,8 @@ public final class ProjectWorkflowMap {
      * Might be <code>null</code> if the {@link WorkflowManager} was not 
      * registered under this name or is already closed.
      * 
-     * @see KnimeContentProvider
-     * @see KnimeResourceLableProvider
+     * @see KnimeResourceContentProvider
+     * @see KnimeResourceLabelProvider
      * 
      * @param projectName name of the project file resource (usually the 
      *  directory name)
@@ -265,6 +284,22 @@ public final class ProjectWorkflowMap {
     public static void removeStateListener(
             final NodeStateChangeListener listener) {
         NSC_LISTENERS.remove(listener);
+    }
+    
+    /**
+     * 
+     * @param l listener to be informed about message changes
+     */
+    public static void addNodeMessageListener(final NodeMessageListener l) {
+        MSG_LISTENERS.add(l);
+    }
+    
+    /**
+     * 
+     * @param l listener to be removed 
+     */
+    public static void removeNodeMessageListener(final NodeMessageListener l) {
+        MSG_LISTENERS.remove(l);
     }
 
 }

@@ -24,7 +24,6 @@
  */
 package org.knime.core.node.workflow;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,11 +31,10 @@ import java.util.Map;
 
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
@@ -47,6 +45,7 @@ final class CopySingleNodeContainerPersistor implements
         SingleNodeContainerPersistor {
     
     private final SingleNodeContainer m_original;
+    private final SingleNodeContainerSettings m_sncSettings;
     private final Node m_node;
     private final boolean m_preserveDeletableFlag;
     
@@ -58,6 +57,7 @@ final class CopySingleNodeContainerPersistor implements
             final boolean preserveDeletableFlag) {
         m_original = original;
         m_node = new Node(m_original.getNode());
+        m_sncSettings = original.getSingleNodeContainerSettings().clone();
         m_preserveDeletableFlag = preserveDeletableFlag;
     }
 
@@ -100,11 +100,9 @@ final class CopySingleNodeContainerPersistor implements
 
     /** {@inheritDoc} */
     @Override
-    public LoadResult loadNodeContainer(
+    public void loadNodeContainer(
             final Map<Integer, BufferedDataTable> tblRep,
-            final ExecutionMonitor exec) throws InvalidSettingsException,
-            CanceledExecutionException, IOException {
-        return new LoadResult();
+            final ExecutionMonitor exec, final LoadResult loadResult) {
     }
 
     /** {@inheritDoc} */
@@ -118,12 +116,23 @@ final class CopySingleNodeContainerPersistor implements
     public boolean isDirtyAfterLoad() {
         return false;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public boolean mustComplainIfStateDoesNotMatch() {
+        return true;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public SingleNodeContainerSettings getSNCSettings() {
+        return m_sncSettings;
+    }
 
     /** {@inheritDoc} */
     @Override
-    public LoadResult preLoadNodeContainer(final ReferencedFile nodeFileRef,
-            final NodeSettingsRO parentSettings) {
-        return new LoadResult();
+    public void preLoadNodeContainer(final ReferencedFile nodeFileRef,
+            final NodeSettingsRO parentSettings, final LoadResult loadResult) {
     }
 
 }

@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   10.08.2005 (bernd): created
  */
@@ -33,21 +33,21 @@ import org.knime.core.internal.KNIMEPath;
 import org.knime.core.util.ThreadPool;
 
 /**
- * Class that hold static values about the knime platform. This includes, 
+ * Class that hold static values about the knime platform. This includes,
  * among others, the welcome message and an icon.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class KNIMEConstants {
     /** KNIME's major release number. */
     public static final int MAJOR = 2;
     /** KNIME's minor release number. */
-    public static final int MINOR = 0;
+    public static final int MINOR = 1;
     /** KNIME's revision number. */
-    public static final int REV = 2;
+    public static final int REV = 0;
     /** KNIME's build id. */
-    public static final String BUILD = ".0020616";
-    
+    public static final String BUILD = ".0018128";
+
     // IMPORTANT: Remember to also update the NodeLogger welcome screen with
     // the current version and the prerequisites
     /** Workflow file version. */
@@ -55,15 +55,15 @@ public final class KNIMEConstants {
         + BUILD;
 
     /** The build date, is set automatically by the build scripts. */
-    public static final String BUILD_DATE = "April 07, 2009";
-    
+    public static final String BUILD_DATE = "June 20, 2008";
+
     /** Name of the environment variable that is used to identify whether
      * we are in expert mode or not (e.g. whether to show loop nodes or not).
-     * This field is also used for the preference pages. 
+     * This field is also used for the preference pages.
      * <p>Values of this field must be either "true" or "false". */
     public static final String PROPERTY_EXPERT_MODE = "knime.expert.mode";
-        
-    
+
+
     /**
      * The name of the system property whose value is - if set - used as knime
      * home directory. If no (or an invalid) value is set, ~user/knime will be
@@ -82,7 +82,7 @@ public final class KNIMEConstants {
      */
     public static final String WELCOME_MESSAGE;
 
-    
+
     static {
         String line1 =
                 "***  Welcome to KNIME v" + VERSION
@@ -110,7 +110,7 @@ public final class KNIMEConstants {
                         + "\n";
         WELCOME_MESSAGE = s;
     }
-    
+
     /** Path to the <i>knime.png</i> icon. */
     private static final String KNIME_ICON_PATH =
             KNIMEConstants.class.getPackage().getName().replace('.', '/')
@@ -139,7 +139,7 @@ public final class KNIMEConstants {
         }
 
         int maxThreads = Runtime.getRuntime().availableProcessors() + 2;
-        String maxThreadsString = 
+        String maxThreadsString =
             System.getProperty("org.knime.core.maxThreads");
         try {
             if (maxThreadsString != null && maxThreadsString.length() > 0) {
@@ -152,7 +152,7 @@ public final class KNIMEConstants {
         } catch (NumberFormatException nfe) {
             // no NodeLogger available yet!
             System.err.println("Unable to parse system property "
-                    + "\"org.knime.core.maxThreads\" (\"" + maxThreadsString 
+                    + "\"org.knime.core.maxThreads\" (\"" + maxThreadsString
                     + "\") as number: " + nfe.getMessage());
         }
         GLOBAL_THREAD_POOL = new ThreadPool(maxThreads);
@@ -168,7 +168,7 @@ public final class KNIMEConstants {
 
     /** The global thread pool from which all threads should be taken. */
     public static final ThreadPool GLOBAL_THREAD_POOL;
-    
+
     /** Global flag indicating whether assertions are enabled or disabled. */
     public static final boolean ASSERTIONS_ENABLED;
 
@@ -177,7 +177,7 @@ public final class KNIMEConstants {
      * started in eclipse, this is usually ${workspace_path}/.metadata/knime.
      * Otherwise it's in the current working directory. This variable does not
      * have a trailing file separator character.
-     * 
+     *
      * @return The KNIME home dir.
      */
     public static final String getKNIMEHomeDir() {

@@ -82,7 +82,7 @@ public class ChangeWorkflowPortBarCommand extends Command {
     @Override
     public void execute() {
         WorkflowPortBar barModel = (WorkflowPortBar)m_bar.getModel();
-        m_extraInfo = (NodeUIInformation) barModel.getUIInfo();
+        m_extraInfo = barModel.getUIInfo();
         if (m_extraInfo == null) {
             m_extraInfo = new NodeUIInformation();
         }

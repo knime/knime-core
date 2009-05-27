@@ -137,7 +137,9 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
             BinningUtil.calculateIntegerMaxNoOfBins(m_noOfBins.getIntValue(),
                     getXColSpec());
         m_model =
-            new FixedHistogramDataModel(getXColSpec(), aggrColumns, noOfBins);
+            new FixedHistogramDataModel(getXColSpec(),
+                    AggregationMethod.getDefaultMethod(), aggrColumns,
+                    noOfBins);
         if (noOfRows < 1) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("No rows available");
@@ -235,7 +237,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
                 m_model.getRowColors(), m_model.getClonedBins(),
                 m_model.getClonedMissingValueBin(), m_model.getXColumnSpec(),
                 m_model.getAggrColumns(),
-                AggregationMethod.getDefaultMethod(),
+                m_model.getAggrMethod(),
                 HistogramLayout.getDefaultLayout());
         return vizModel;
     }

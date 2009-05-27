@@ -27,10 +27,8 @@ package org.knime.base.node.viz.histogram.datamodel;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -48,10 +46,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -73,64 +70,14 @@ public class InteractiveHistogramDataModel implements Iterable<DataRow> {
 
     private final DataArray m_data;
 
-    private final SortedSet<Color> m_rowColors;
-
-
-
-    /**Constructor for class InteractiveHistogramDataModel.
-     * @param exec {@link ExecutionMonitor}
-     * @param data the data
-     * @param noOfRows the number of rows
-     * @throws CanceledExecutionException if the operation was canceled
-     */
-    public InteractiveHistogramDataModel(final ExecutionMonitor exec,
-            final BufferedDataTable data, final int noOfRows)
-    throws CanceledExecutionException {
-        if (exec == null) {
-            throw new NullPointerException("exec must not be null");
-        }
-        if (data == null) {
-            throw new IllegalArgumentException(
-                    "Table sholdn't be null");
-        }
-        ExecutionMonitor subExec = exec.createSubProgress(0.5);
-        exec.setMessage("Adding rows to histogram model...");
-        m_data = new DefaultDataArray(data, 1, noOfRows, subExec);
-        exec.setMessage("Adding row color to histogram...");
-        m_rowColors = new TreeSet<Color>(HSBColorComparator.getInstance());
-        subExec = exec.createSubProgress(0.5);
-        final double progressPerRow = 1.0 / noOfRows;
-        double progress = 0.0;
-        final CloseableRowIterator rowIterator = data.iterator();
-        try {
-            for (int i = 0; i < noOfRows && rowIterator.hasNext();
-                i++) {
-                final DataRow row = rowIterator.next();
-                final Color color = m_data.getDataTableSpec().
-                    getRowColor(row).getColor(false, false);
-                if (!m_rowColors.contains(color)) {
-                    m_rowColors.add(color);
-                }
-                progress += progressPerRow;
-                subExec.setProgress(progress,
-                        "Adding data rows to histogram...");
-                subExec.checkCanceled();
-            }
-        } finally {
-            if (rowIterator != null) {
-                rowIterator.close();
-            }
-        }
-        exec.setProgress(1.0, "Histogram finished.");
-
-    }
+    private final List<Color> m_rowColors;
 
     /**Constructor for class InteractiveHistogramDataModel.
      * @param array the data array
      * @param rowColors the row colors
      */
-    public InteractiveHistogramDataModel(final DefaultDataArray array,
-            final SortedSet<Color> rowColors) {
+    public InteractiveHistogramDataModel(final DataArray array,
+            final List<Color> rowColors) {
         m_data = array;
         m_rowColors = rowColors;
     }
@@ -147,7 +94,7 @@ public class InteractiveHistogramDataModel implements Iterable<DataRow> {
         final FileOutputStream os = new FileOutputStream(settingFile);
         final GZIPOutputStream dataOS = new GZIPOutputStream(os);
         final Config config = new NodeSettings(CFG_SETTING);
-        final SortedSet<Color> rowColors = getRowColors();
+        final List<Color> rowColors = getRowColors();
         final ConfigWO colorColsConf = config.addConfig(CFG_COLOR_COLS);
         colorColsConf.addInt(CFG_ROW_COLOR_COUNTER, rowColors.size());
         int idx = 0;
@@ -178,8 +125,8 @@ public class InteractiveHistogramDataModel implements Iterable<DataRow> {
         final ConfigRO config = NodeSettings.loadFromXML(inData);
         final ConfigRO colorColsConf = config.getConfig(CFG_COLOR_COLS);
         final int counter = colorColsConf.getInt(CFG_ROW_COLOR_COUNTER);
-        final SortedSet<Color> rowColors =
-            new TreeSet<Color>(HSBColorComparator.getInstance());
+        final List<Color> rowColors =
+            new ArrayList<Color>();
         for (int i = 0; i < counter; i++) {
             rowColors.add(new Color(colorColsConf.getInt(CFG_ROW_COLOR + i)));
         }
@@ -197,8 +144,8 @@ public class InteractiveHistogramDataModel implements Iterable<DataRow> {
     /**
      * @return the rowColors
      */
-    public SortedSet<Color> getRowColors() {
-        return m_rowColors;
+    public List<Color> getRowColors() {
+        return Collections.unmodifiableList(m_rowColors);
     }
 
     /**

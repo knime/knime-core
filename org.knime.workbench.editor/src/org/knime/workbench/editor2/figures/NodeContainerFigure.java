@@ -26,7 +26,6 @@ package org.knime.workbench.editor2.figures;
 
 import java.util.List;
 
-import org.eclipse.draw2d.BorderLayout;
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.DelegatingLayout;
 import org.eclipse.draw2d.Figure;
@@ -109,29 +108,6 @@ public class NodeContainerFigure extends RectangleFigure {
     /** State: Node not configured. * */
     public static final int STATE_NOT_CONFIGURED = 0;
 
-    /** State: Node ready, but idle. * */
-    public static final int STATE_READY = 1;
-
-    /**
-     * State: The node is in the workflow manager queue wating for execution.
-     */
-    public static final int STATE_WAITING_FOR_EXEC = 2;
-
-    /** State: Node is currently being executed. * */
-    public static final int STATE_EXECUTING = 3;
-
-    /** State: Node was executed sucessfully. * */
-    public static final int STATE_EXECUTED = 4;
-
-    /** State: Warning. * */
-    public static final int STATE_WARNING = 5;
-
-    /** State: Error. * */
-    public static final int STATE_ERROR = 6;
-
-    /** State: Node queued for execution (waiting). * */
-    public static final int STATE_QUEUED = 7;
-
     private static final Font FONT_NORMAL;
 
     private static final Font FONT_SMALL;
@@ -193,15 +169,17 @@ public class NodeContainerFigure extends RectangleFigure {
     private final Label m_name;
 
     /**
-     * Tooltip for displaying the user description. This tooltip is displayed
-     * with the user name
+     * Tooltip for displaying the custom description. This tooltip is displayed
+     * with the custom name
      */
     private final NewToolTipFigure m_nameTooltip;
 
     /**
-     * An optional user description.
+     * An optional custom description.
      */
     private String m_description;
+    
+    private Image m_jobExec;
 
     /**
      * Creates a new node figure.
@@ -303,6 +281,11 @@ public class NodeContainerFigure extends RectangleFigure {
     public void setType(final NodeType type) {
         m_contentFigure.setType(type);
 
+    }
+    
+    public void setJobExecutorIcon(final Image jobExecIcon) {
+        m_jobExec = jobExecIcon;
+        m_contentFigure.refreshJobManagerIcon();
     }
 
     /**
@@ -492,22 +475,30 @@ public class NodeContainerFigure extends RectangleFigure {
      * @param state new state of underlying node
      */
     public void setState(final NodeContainer.State state) {
-        if (state.equals(NodeContainer.State.IDLE)) {
+        switch (state) {
+        case IDLE:
             setStatusAmple();
             m_statusFigure.setIcon(RED);
-        } else if (state.equals(NodeContainer.State.CONFIGURED)) {
+            break;
+        case CONFIGURED:
             setStatusAmple();
             m_statusFigure.setIcon(YELLOW);
-        } else if (state.equals(NodeContainer.State.EXECUTING)) {
-            setProgressBar(true);
-        } else if (state.equals(NodeContainer.State.EXECUTED)) {
+            break;
+        case EXECUTED:
             setStatusAmple();
             m_statusFigure.setIcon(GREEN);
-        } else if (state.equals(
-                NodeContainer.State.UNCONFIGURED_MARKEDFOREXEC)
-                || state.equals(NodeContainer.State.QUEUED)
-                || state.equals(NodeContainer.State.MARKEDFOREXEC)) {
+            break;
+        case PREEXECUTE:
+        case EXECUTING:
+        case EXECUTINGREMOTELY:
+        case POSTEXECUTE:
+            setProgressBar(true);
+            break;
+        case MARKEDFOREXEC:
+        case UNCONFIGURED_MARKEDFOREXEC:
+        case QUEUED:
             setProgressBar(false);
+            break;
         }
         m_statusFigure.repaint();
     }
@@ -708,6 +699,8 @@ public class NodeContainerFigure extends RectangleFigure {
          * Is used once the overlay has to be undone
          */
         private Image m_baseIcon;
+        
+        private Label m_jobExecutorLabel;
 
         /**
          * Creates a new content figure.
@@ -738,16 +731,38 @@ public class NodeContainerFigure extends RectangleFigure {
 
             // center the icon figure
             add(m_backgroundIcon);
-            m_backgroundIcon.setLayoutManager(new BorderLayout());
-            m_backgroundIcon.add(m_iconFigure, BorderLayout.CENTER);
-            setConstraint(m_backgroundIcon, new RelativeLocator(this, 0.5, 0.5));
+            m_backgroundIcon.setLayoutManager(new DelegatingLayout());
+            m_backgroundIcon.add(m_iconFigure);
+            m_backgroundIcon.setConstraint(m_iconFigure, 
+                    new RelativeLocator(m_backgroundIcon, 0.5, 0.5));
 
+            setConstraint(m_backgroundIcon, 
+                    new RelativeLocator(this, 0.5, 0.5));
         }
 
+        
+        protected void refreshJobManagerIcon() {
+            // do we have to remove it?
+            if (m_jobExecutorLabel != null && m_jobExec == null) {
+                m_backgroundIcon.remove(m_jobExecutorLabel);
+                m_jobExecutorLabel = null;
+                return;
+            }
+            // job executor icon
+            m_jobExecutorLabel = new Label();
+            m_jobExecutorLabel.setOpaque(false);
+            m_jobExecutorLabel.setIcon(m_jobExec);
+            m_backgroundIcon.add(m_jobExecutorLabel);
+            m_backgroundIcon.setConstraint(m_jobExecutorLabel,
+                    new RelativeLocator(m_backgroundIcon, 0.85, 0.9));
+            repaint();
+        }
+        
+        
         /**
          * This determines the background image according to the "type" of the
          * node as stored in the repository model.
-         *
+         * 
          * @param type The Type
          * @return Image that should be uses as background for this node
          */
@@ -1219,9 +1234,11 @@ public class NodeContainerFigure extends RectangleFigure {
      * @see NodeContainerFigure#unmark()
      */
     public void mark() {
-
-        m_contentFigure.m_backgroundIcon.add(m_contentFigure.m_deleteIcon,
-                BorderLayout.CENTER);
+        m_contentFigure.m_backgroundIcon.add(m_contentFigure.m_deleteIcon);
+        m_contentFigure.m_backgroundIcon.setConstraint(
+                m_contentFigure.m_deleteIcon, 
+                new RelativeLocator(m_contentFigure.m_backgroundIcon,
+                        0.5, 0.5));
     }
 
     /**
