@@ -158,6 +158,7 @@ public class KnimeTestCase extends TestCase {
             boolean mustReportErrors;
             switch (loadRes.getType()) {
             case Ok:
+            case Warning:
                 mustReportErrors = false;
                 break;
             case DataLoadError:
