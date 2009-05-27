@@ -185,8 +185,7 @@ public class ROCNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        final double maxProgress =
-                m_settings.getCurves().size() * inData[0].getRowCount();
+        final int curvesSize = m_settings.getCurves().size();
         BufferedDataContainer outCont = exec.createDataContainer(OUT_SPEC);
 
         int classIndex =
@@ -197,15 +196,16 @@ public class ROCNodeModel extends NodeModel {
             setWarningMessage("Input table contains no rows");
         }
 
-        for (int i = 0; i < m_settings.getCurves().size(); i++) {
+        for (int i = 0; i < curvesSize; i++) {
             exec.checkCanceled();
-            int localProgress = i * inData[0].getRowCount();
-            exec.setProgress(localProgress / maxProgress);
             String c = m_settings.getCurves().get(i);
 
+            ExecutionContext subExec = exec.createSubExecutionContext(
+                    1.0 / curvesSize);
             SortedTable sortedTable =
                     new SortedTable(inData[0], Collections.singletonList(c),
-                            new boolean[]{false}, exec);
+                            new boolean[]{false}, subExec);
+            subExec.setProgress(1.0);
 
             int tp = 0, fp = 0;
             // these contain the coordinates for the plot
@@ -216,6 +216,7 @@ public class ROCNodeModel extends NodeModel {
                     sortedTable.getDataTableSpec().findColumnIndex(c);
             DataCell lastScore = null;
             for (DataRow row : sortedTable) {
+                exec.checkCanceled();
                 DataCell realClass = row.getCell(classIndex);
                 if (realClass.equals(m_settings.getPositiveClass())) {
                     tp++;
