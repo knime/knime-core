@@ -114,11 +114,12 @@ public final class TIDItemSet {
      * @return the support of this set
      */
     public double getSupport() {
-        if (m_items.size() > 0) {
-            return (double)m_commonTIDs.cardinality() / (double)m_dbsize;
-        } else {
-            return 0.0;
-        }
+        // we do not have to take the itemset into account but only the 
+        // commonTIDs (amount of items in this node)
+        // if no items are in this node the cardinality - and the support - 
+        // will be 0.
+        // The root node is a node with no items but all TIDs in the commonTIDs
+        return (double)m_commonTIDs.cardinality() / (double)m_dbsize;
     }
 
     /**
