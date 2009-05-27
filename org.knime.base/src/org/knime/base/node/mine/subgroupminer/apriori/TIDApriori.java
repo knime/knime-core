@@ -62,8 +62,6 @@ public class TIDApriori implements AprioriAlgorithm {
 
     private List<TIDItemSet> m_repository;
 
-    private FrequentItemSet.Type m_type;
-
     private TIDPrefixTreeNode m_prefixTree;
     
     private int m_idCounter = 0;
@@ -162,10 +160,6 @@ public class TIDApriori implements AprioriAlgorithm {
             }
         }
         m_frequentItems.removeAll(m_alwaysFrequentItems);
-
-        // for(TIDItem i : m_frequentItems){
-        // System.out.println(i);
-        // }
     }
 
     private void addToClosedRepository(final TIDItemSet i) {
@@ -217,10 +211,9 @@ public class TIDApriori implements AprioriAlgorithm {
         }
         // if all children of one node are processed, the set can be added to
         // the repository
-        if (m_type.equals(FrequentItemSet.Type.CLOSED)
-                || m_type.equals(FrequentItemSet.Type.MAXIMAL)) {
-            addToClosedRepository(node.getItemSet());
-        }
+        // this is also done for free sets (in case of association rules output 
+        // the repository will be used later on
+        addToClosedRepository(node.getItemSet());
     }
 
     /**
@@ -233,7 +226,6 @@ public class TIDApriori implements AprioriAlgorithm {
         m_minSupport = minSupport;
         m_maxLength = maxDepth;
         m_dbsize = transactions.size();
-        m_type = type;
 
         LOGGER.debug("dbsize: " + m_dbsize);
 
@@ -248,7 +240,6 @@ public class TIDApriori implements AprioriAlgorithm {
      */
     public List<FrequentItemSet> getFrequentItemSets(
             final FrequentItemSet.Type type) {
-        m_type = type;
         List<FrequentItemSet> freqSets = new ArrayList<FrequentItemSet>();
         List<Integer> tids = new ArrayList<Integer>();
         for (int i = 0; i < m_dbsize; i++) {
@@ -259,7 +250,7 @@ public class TIDApriori implements AprioriAlgorithm {
             id.add(i.getId());
             TIDFrequentItemSet freqSet = new TIDFrequentItemSet(
                     "" + m_idCounter++,
-                    id, m_dbsize,
+                    id, 1.0,
                     tids);
             freqSets.add(freqSet);
         }
