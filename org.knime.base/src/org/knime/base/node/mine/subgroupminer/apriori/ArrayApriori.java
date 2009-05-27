@@ -294,7 +294,7 @@ public class ArrayApriori implements AprioriAlgorithm {
      */
     public List<AssociationRule> getAssociationRules(final double confidence) {
         List<FrequentItemSet> frequentItemSets = getFrequentItemSets(
-                FrequentItemSet.Type.FREE);
+                FrequentItemSet.Type.CLOSED);
         List<AssociationRule> associationRules 
             = new ArrayList<AssociationRule>();
         /*
