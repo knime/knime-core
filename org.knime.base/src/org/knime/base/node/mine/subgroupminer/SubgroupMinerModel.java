@@ -232,6 +232,10 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
         for (RowIterator itr = inData.iterator(); itr.hasNext();) {
             exec.checkCanceled();
             DataRow currRow = itr.next();
+            DataCell dc = currRow.getCell(bitVectorIndex);
+            if (dc.isMissing()) {
+                continue;
+            }
             BitVectorValue currCell = ((BitVectorValue)currRow
                     .getCell(bitVectorIndex));
             if (currCell.length() > Integer.MAX_VALUE) {
