@@ -3548,25 +3548,12 @@ public final class WorkflowManager extends NodeContainer {
                 String warning = "State has changed from " 
                     + loadState + " to " + cont.getState();
                 switch (subResult.getType()) {
-                case Ok:
-                case Warning:
-                    if (cont.getNrInPorts() == 0) {
-                        // source nodes may have problems when, e.g. their
-                        // input file is gone
-                        subResult.addWarning(warning);
-                    } else {
-                        subResult.addError(warning);
-                    }
-                    break;
                 case DataLoadError:
+                    // data load errors cause state changes
                     subResult.addError(warning, true);
                     break;
-                case Error:
-                    // assume it's a subsequent error
-                    subResult.addWarning(warning);
-                    break;
                 default:
-                    subResult.addError(warning);
+                    subResult.addWarning(warning);
                 }
             }
             // saved in executing state (e.g. grid job), request to reconnect
