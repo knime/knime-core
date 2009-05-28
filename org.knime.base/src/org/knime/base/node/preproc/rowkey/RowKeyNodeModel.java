@@ -23,6 +23,15 @@
  */
 package org.knime.base.node.preproc.rowkey;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -43,16 +52,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
-
-import org.knime.base.data.append.column.AppendedColumnTable;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 /**
  * The node model of the row key manipulation node. The node allows the user
@@ -367,7 +366,13 @@ public class RowKeyNodeModel extends NodeModel {
      */
     @Override
     protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
-        return m_hilite.getFromHiLiteHandler();
+        if (m_appendRowKey.getBooleanValue()
+                && !m_replaceKey.getBooleanValue()) {
+            // use the original hilite handler if the row keys do not change
+            return getInHiLiteHandler(outIndex);
+        } else {
+            return m_hilite.getFromHiLiteHandler();
+        }
     }
 
     /**
