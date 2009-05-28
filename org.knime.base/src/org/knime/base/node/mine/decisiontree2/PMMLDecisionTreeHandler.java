@@ -232,13 +232,18 @@ public class PMMLDecisionTreeHandler extends PMMLContentHandler {
             DataCell className = new StringCell(atts.getValue("value"));
             double value = Double.parseDouble(atts.getValue("recordCount"));
             m_nodeStack.peek().addClassCount(className, value);
+        } else if (name.equals("CompoundPredicate")) {
+            // FIXME: handle all elements as specified in the PMML spec
+            throw new SAXException("PMML element \"" + name 
+                    + "\" not yet supported by decision tree handler.");
         } else if (name.equals("MiningField")) {
             String type = atts.getValue("usageType");
             if (type != null && type.equals("predicted")) {
                 m_classColumn = atts.getValue("name");
             }
+        } else if (name.equals("Extension")) {
+            // ignored
         }
-
     }
 
     /**
