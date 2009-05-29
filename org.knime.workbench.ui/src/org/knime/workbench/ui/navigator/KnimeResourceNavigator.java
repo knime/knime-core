@@ -33,7 +33,6 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.IContributionItem;
@@ -57,7 +56,6 @@ import org.eclipse.ui.actions.CloseResourceAction;
 import org.eclipse.ui.actions.CloseUnrelatedProjectsAction;
 import org.eclipse.ui.actions.OpenFileAction;
 import org.eclipse.ui.actions.OpenInNewWindowAction;
-import org.eclipse.ui.internal.ide.model.WorkbenchAdapterBuilder;
 import org.eclipse.ui.views.framelist.GoIntoAction;
 import org.eclipse.ui.views.navigator.ResourceNavigator;
 import org.knime.core.node.NodeLogger;
@@ -106,9 +104,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
 
     public KnimeResourceNavigator() {
         super();
-        
-        WorkbenchAdapterBuilder.registerAdapters(); 
-        
+
         LOGGER.debug("KNIME resource navigator created");
 
         ResourcesPlugin.getWorkspace().addResourceChangeListener(
