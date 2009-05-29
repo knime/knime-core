@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?pde version="3.1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<?pde version="3.4"?>
 
-<product application="org.eclipse.ui.ide.workbench" id="org.eclipse.sdk.ide" name="Eclipse platform" useFeatures="true">
+<product name="Eclipse platform" id="org.eclipse.platform.ide" application="org.eclipse.ui.ide.workbench" useFeatures="true">
 
-
-   <configIni use="default"/>
+   <configIni use="default">
+   </configIni>
 
    <launcherArgs>
       <programArgs>-showsplash
@@ -16,14 +16,17 @@ org.eclipse.platform</programArgs>
 
    <windowImages/>
 
-   <splash location="org.eclipse.platform" startupForegroundColor="000000" startupMessageRect="7,252,445,20" startupProgressRect="5,275,445,15"/>
+   <splash
+      location="org.eclipse.platform"
+      startupProgressRect="5,275,445,15"
+      startupMessageRect="7,252,445,20"
+      startupForegroundColor="000000" />
    <launcher name="eclipse">
       <solaris/>
       <win useIco="false">
          <bmp/>
       </win>
    </launcher>
-
 
    <vm>
    </vm>
