@@ -4,7 +4,7 @@
 <product name="KNIME Static Reporting (runtime)" id="com.knime.staticreporting.designer.Designer" application="com.knime.staticreporting.designer.Static-Report-Designer" useFeatures="true">
 
    <aboutInfo>
-      <image path="icons/gif/knime128.gif"/>
+      <image path="/org.knime.product/icons/gif/knime128.gif"/>
       <text>
          Welcome to KNIME Static Report Designer.
       </text>
@@ -19,14 +19,21 @@
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
-   <windowImages i16="icons/gif/knime16.gif" i32="icons/gif/knime32.gif" i48="icons/gif/knime48.gif"/>
+   <windowImages i16="/org.knime.product/icons/gif/knime16.gif" i32="/org.knime.product/icons/gif/knime32.gif" i48="/org.knime.product/icons/gif/knime48.gif" i64="/org.knime.product/icons/gif/knime64.gif"/>
 
    <splash
       location="com.knime.staticreporting.designer" />
-   <launcher>
+   <launcher name="knime-report-designer">
+      <linux icon="/org.knime.product/icons/knime128.xpm"/>
       <solaris/>
       <win useIco="false">
-         <bmp/>
+         <bmp
+            winSmallHigh="/org.knime.product/icons/bmp/knime16.bmp"
+            winSmallLow="/org.knime.product/icons/bmp/knime16x8.bmp"
+            winMediumHigh="/org.knime.product/icons/bmp/knime32.bmp"
+            winMediumLow="/org.knime.product/icons/bmp/knime32x8.bmp"
+            winLargeHigh="/org.knime.product/icons/bmp/knime48.bmp"
+            winLargeLow="/org.knime.product/icons/bmp/knime48x8.bmp"/>
       </win>
    </launcher>
 
