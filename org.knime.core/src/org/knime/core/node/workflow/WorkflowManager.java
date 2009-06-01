@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -131,6 +132,9 @@ public final class WorkflowManager extends NodeContainer {
     private final WorkflowOutPort[] m_outPorts;
     private UIInformation m_outPortsBarUIInfo;
 
+    /** Vector holding workflow specific variables. */
+    private Vector<ScopeVariable> m_workflowVariables;
+    
     // Misc members:
 
     /** for internal usage, holding output table references. */
@@ -2621,14 +2625,15 @@ public final class WorkflowManager extends NodeContainer {
             final int inCount = snc.getNrInPorts();
             NodeOutPort[] predPorts = assemblePredecessorOutPorts(snc.getID());
             final PortObjectSpec[] inSpecs = new PortObjectSpec[inCount];
-            final ScopeObjectStack[] scscs = new ScopeObjectStack[inCount];
+            final ScopeObjectStack[] sos = new ScopeObjectStack[inCount];
             final HiLiteHandler[] hiliteHdls = new HiLiteHandler[inCount];
-            // check for presence of input specs
+            // check for presence of input specs and collects inport
+            // TableSpecs, ScopeObjectStacks and HiLiteHandlers
             boolean allSpecsExists = true;
             for (int i = 0; i < predPorts.length; i++) {
                 if (predPorts[i] != null) {
                     inSpecs[i] = predPorts[i].getPortObjectSpec();
-                    scscs[i] = predPorts[i].getScopeContextStackContainer();
+                    sos[i] = predPorts[i].getScopeObjectStack();
                     hiliteHdls[i] = predPorts[i].getHiLiteHandler();
                 }
                 allSpecsExists &= inSpecs[i] != null;
@@ -2655,13 +2660,21 @@ public final class WorkflowManager extends NodeContainer {
                 oldSOS = snc.getScopeObjectStack();
                 ScopeObjectStack scsc;
                 boolean scopeStackConflict = false;
-                try {
-                    scsc = new ScopeObjectStack(snc.getID(), scscs);
-                } catch (IllegalContextStackObjectException e) {
-                    LOGGER.warn("Unable to merge scope object stacks: "
-                            + e.getMessage(), e);
-                    scsc = new ScopeObjectStack(snc.getID());
-                    scopeStackConflict = true;
+                if (inCount == 0) {
+                    // no input ports - create new stack, prefilled with
+                    // Workflow variables:
+                    scsc = new ScopeObjectStack(snc.getID(), 
+                            getWorkflowVariableStack());
+                } else {
+                    assert inCount >= 1;
+                    try {
+                        scsc = new ScopeObjectStack(snc.getID(), sos);
+                    } catch (IllegalContextStackObjectException e) {
+                        LOGGER.warn("Unable to merge scope object stacks: "
+                                + e.getMessage(), e);
+                        scsc = new ScopeObjectStack(snc.getID());
+                        scopeStackConflict = true;
+                    }
                 }
                 if (snc.getLoopRole().equals(LoopRole.BEGIN)) {
                     // the stack will automatically add the ID of the
@@ -3454,7 +3467,7 @@ public final class WorkflowManager extends NodeContainer {
                     snc.setInHiLiteHandler(i, p.getHiLiteHandler());
                 }
                 if (p != null) {
-                    predStacks[i] = p.getScopeContextStackContainer();
+                    predStacks[i] = p.getScopeObjectStack();
                     portObjects[i] = p.getPortObject();
                     inPortsContainNull &= portObjects[i] == null;
                 }
@@ -4025,7 +4038,7 @@ public final class WorkflowManager extends NodeContainer {
     public NodeInPort getWorkflowOutgoingPort(final int i) {
         return m_outPorts[i].getSimulatedInPort();
     }
-
+    
     /** Set UI information for workflow's input ports
      * (typically aligned as a bar).
      * @param inPortsBarUIInfo The new UI info.
@@ -4064,4 +4077,66 @@ public final class WorkflowManager extends NodeContainer {
     public UIInformation getOutPortsBarUIInfo() {
         return m_outPortsBarUIInfo;
     }
+
+    /////////////////////////////
+    // Workflow Variable handling
+    /////////////////////////////
+    
+    /* Private routine which assembles a stack of workflow variables all
+     * the way to the top of the workflow hierarchy.
+     */
+    private void pushWorkflowVariablesOnStack(ScopeObjectStack sos) {
+        if (getID().equals(ROOT.getID())) {
+            // reach top of tree, return
+            return;
+        }
+        // otherwise push variables of parent...
+        getParent().pushWorkflowVariablesOnStack(sos);
+        // ... and then our own
+        if (m_workflowVariables != null) {
+            // if we have some vars, put them on stack
+            for (ScopeVariable sv : m_workflowVariables) {
+                sos.push(sv);
+            }
+        }
+        return;
+    }
+
+    /* @return stack of workflow variables. */
+    private ScopeObjectStack getWorkflowVariableStack() {
+        // assemble new stack
+        ScopeObjectStack sos = new ScopeObjectStack(getID());
+        // push own variables and the ones of the parent(s):
+        pushWorkflowVariablesOnStack(sos);
+        return sos;
+    }
+    
+    /** Set a new workflow variable. All nodes within
+     * this workflow will have access to this variable.
+     * 
+     * @param newVar new variable to be set
+     */
+    public void setWorkflowVariable(final ScopeVariable newVar) {
+        if (m_workflowVariables == null) {
+            // create new set of vars if none exists
+            m_workflowVariables = new Vector<ScopeVariable>();
+        }
+        // make sure old variables of the same name are removed first
+        removeWorkflowVariable(newVar.getName());
+        m_workflowVariables.add(newVar);
+    }
+    
+    /** Remove workflow variable of given name.
+     * 
+     * @param name of variable to be removed.
+     */
+    public void removeWorkflowVariable(final String name) {
+        for (int i = 0; i < m_workflowVariables.size(); i++) {
+            ScopeVariable sv = m_workflowVariables.elementAt(i);
+            if (sv.getName().equals(name)) {
+                m_workflowVariables.remove(i);
+            }
+        }
+    }
+
 }

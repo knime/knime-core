@@ -81,7 +81,7 @@ public interface NodeOutPort extends NodePort, NodeStateChangeListener {
      *
      * @return the scope obj stack container
      */
-    public ScopeObjectStack getScopeContextStackContainer();
+    public ScopeObjectStack getScopeObjectStack();
 
     /**
      * Opens the port view for this port with the given name.

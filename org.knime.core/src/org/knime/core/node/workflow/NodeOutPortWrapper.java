@@ -116,11 +116,12 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
     /**
      * {@inheritDoc}
      */
-    public ScopeObjectStack getScopeContextStackContainer() {
+    public ScopeObjectStack getScopeObjectStack() {
         if (m_underlyingPort == null) {
             return null;
         }
-        return m_underlyingPort.getScopeContextStackContainer();
+        ScopeObjectStack sos = m_underlyingPort.getScopeObjectStack();
+        return sos;
     }
     
     /**
