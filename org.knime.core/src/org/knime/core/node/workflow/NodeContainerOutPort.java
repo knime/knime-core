@@ -116,7 +116,8 @@ public class NodeContainerOutPort extends NodePortAdaptor
     /**
      * {@inheritDoc}
      */
-    public ScopeObjectStack getScopeContextStackContainer() {
+    @Override
+    public ScopeObjectStack getScopeObjectStack() {
         ScopeObjectStack st = m_snc.getNode().getScopeContextStackContainer();
         if (m_snc.getLoopRole().equals(LoopRole.END)) {
             // FIXME: this also pops variables, which were added from the loop
