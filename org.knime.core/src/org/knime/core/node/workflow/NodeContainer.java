@@ -487,7 +487,7 @@ public abstract class NodeContainer implements NodeProgressListener {
     
     /** Called when the state of a node should switch from 
      * {@link State#EXECUTING} (or {@link State#EXECUTINGREMOTELY}) to 
-     * {@link State#PREEXECUTE}. The method is to be called from the node's 
+     * {@link State#POSTEXECUTE}. The method is to be called from the node's 
      * parent in a synchronized environment. */
     abstract void performStateTransitionPOSTEXECUTE();
 
@@ -797,9 +797,9 @@ public abstract class NodeContainer implements NodeProgressListener {
         StackTraceElement[] callStack = Thread.currentThread().getStackTrace();
         // top most element is this method, at index [1] we find the calling
         // method name.
-        if (callStack.length > 2) {
-            clazz = "\"" + callStack[1].getClassName() + "#";
-            methodName = callStack[1].getMethodName() + "\"";
+        if (callStack.length > 3) {
+            clazz = "\"" + callStack[2].getClassName() + "#";
+            methodName = callStack[2].getMethodName() + "\"";
         }
         throw new IllegalStateException("Illegal state " + state 
                 + " encountered in method " + clazz + methodName 
