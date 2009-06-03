@@ -34,6 +34,8 @@ package org.knime.core.node.workflow;
  * @author M. Berthold, University of Konstanz
  */
 public final class ScopeVariable extends ScopeObject {
+    
+    public static final String GLOBAL_CONST_ID = "knime";
 
     public static enum Type {DOUBLE, INTEGER, STRING};
     
@@ -42,21 +44,22 @@ public final class ScopeVariable extends ScopeObject {
     private String m_valueS = null;
     private double m_valueD = Double.NaN;
     private int m_valueI = 0;
+    
 
     private ScopeVariable(final String name, final Type type,
             final boolean isGlobalConstant) {
         if (name == null || type == null) {
             throw new NullPointerException("Argument must not be null");
         }
-        if (!isGlobalConstant && name.startsWith("knime.")) {
+        if (!isGlobalConstant && name.startsWith(GLOBAL_CONST_ID)) {
             throw new IllegalContextStackObjectException(
-                    "Name of scope variables must not start with \"knime.\": "
-                    + name);
+                    "Name of scope variables must not start with \""
+                    + GLOBAL_CONST_ID + "\": " + name);
         }
-        if (isGlobalConstant && !name.startsWith("knime.")) {
+        if (isGlobalConstant && !name.startsWith(GLOBAL_CONST_ID)) {
             throw new IllegalContextStackObjectException(
-                    "Name of global scope constant must start with \"knime.\": "
-                    + name);
+                    "Name of global scope constant must start with \"" 
+                    + GLOBAL_CONST_ID + "\": " + name);
         }
         m_name = name;
         m_type = type;
@@ -94,6 +97,10 @@ public final class ScopeVariable extends ScopeObject {
     
     public String getName() {
         return m_name;
+    }
+    
+    public boolean isGlobalConstant() {
+        return m_name.startsWith(GLOBAL_CONST_ID);
     }
     
     /** @return the type */
