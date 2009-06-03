@@ -19,6 +19,7 @@
 package org.knime.workbench.ui.navigator.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
@@ -58,7 +59,8 @@ public class ResetWorkflowAction extends AbstractWorkflowAction {
     @Override
     public boolean isEnabled() {
         if (super.isEnabled()) {
-            return WorkflowManager.ROOT.canResetNode(getWorkflow().getID());
+            return getWorkflow().getState().equals(NodeContainer.State.EXECUTED)
+                && WorkflowManager.ROOT.canResetNode(getWorkflow().getID());
         }
         return false;
     }
