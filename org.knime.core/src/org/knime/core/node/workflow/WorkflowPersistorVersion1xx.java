@@ -29,8 +29,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
@@ -81,6 +83,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     private UIInformation m_outPortsBarUIInfo;
     
     private String m_name;
+    private List<ScopeVariable> m_workflowVariables;
     
     private boolean m_needsResetAfterLoad;
     private boolean m_isDirtyAfterLoad;
@@ -160,6 +163,12 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     /** {@inheritDoc} */
     public String getName() {
         return m_name;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public List<ScopeVariable> getWorkflowVariables() {
+        return m_workflowVariables;
     }
     
     /** {@inheritDoc} */
@@ -267,6 +276,19 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             loadResult.addError(error);
             m_name = "Workflow";
         }
+        
+        try {
+            m_workflowVariables = loadWorkflowVariables(m_workflowSett);
+        } catch (InvalidSettingsException e) {
+            String error = 
+                "Unable to load workflow variables: " + e.getMessage();
+            getLogger().debug(error, e);
+            setDirtyAfterLoad();
+            loadResult.addError(error);
+            m_workflowVariables = Collections.emptyList();
+        }
+        
+        
         NodeSettingsRO metaFlowParentSettings = 
             new NodeSettings("fake_parent_settings");
         try {
@@ -867,6 +889,17 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     protected String loadWorkflowName(final NodeSettingsRO set)
             throws InvalidSettingsException {
         return "Workflow Manager";
+    }
+
+    /**
+     * Load workflow variables (not available in 1.3.x flows).
+     * @param settings To load from.
+     * @return The variables in a list.
+     * @throws InvalidSettingsException If any settings-related error occurs.
+     */
+    protected List<ScopeVariable> loadWorkflowVariables(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        return Collections.emptyList();
     }
 
     protected NodeSettingsRO loadInPortsSetting(final NodeSettingsRO settings)

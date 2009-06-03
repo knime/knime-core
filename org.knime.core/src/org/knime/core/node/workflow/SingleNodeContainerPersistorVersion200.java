@@ -42,7 +42,6 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.ScopeLoopContext.RestoredScopeLoopContext;
-import org.knime.core.node.workflow.ScopeVariable.Type;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.util.FileUtil;
@@ -128,31 +127,7 @@ public class SingleNodeContainerPersistorVersion200 extends
             NodeSettingsRO sub = stackSet.getNodeSettings(key);
             String type = sub.getString("type");
             if ("variable".equals(type)) {
-                String name = sub.getString("name");
-                String typeS = sub.getString("class");
-                if (typeS == null || name == null) {
-                    throw new InvalidSettingsException("name or type is null");
-                }
-                Type varType;
-                try {
-                    varType = Type.valueOf(typeS);
-                } catch (final IllegalArgumentException e) {
-                    throw new InvalidSettingsException("invalid type " + typeS);
-                }
-                ScopeVariable v;
-                switch (varType) {
-                case DOUBLE:
-                    v = new ScopeVariable(name, sub.getDouble("value"));
-                    break;
-                case INTEGER:
-                    v = new ScopeVariable(name, sub.getInt("value"));
-                    break;
-                case STRING:
-                    v = new ScopeVariable(name, sub.getString("value"));
-                    break;
-                default:
-                    throw new InvalidSettingsException("Unknown type " + type);
-                }
+                ScopeVariable v = ScopeVariable.load(sub);
                 result.add(v);
             } else if ("loopcontext".equals(type)) {
                 result.add(new RestoredScopeLoopContext());
@@ -253,21 +228,7 @@ public class SingleNodeContainerPersistorVersion200 extends
                 ScopeVariable v = (ScopeVariable)s;
                 NodeSettingsWO sub = stackSet.addNodeSettings("Variable_" + c);
                 sub.addString("type", "variable");
-                sub.addString("name", v.getName());
-                sub.addString("class", v.getType().name());
-                switch (v.getType()) {
-                case INTEGER:
-                    sub.addInt("value", v.getIntValue());
-                    break;
-                case DOUBLE:
-                    sub.addDouble("value", v.getDoubleValue());
-                    break;
-                case STRING:
-                    sub.addString("value", v.getStringValue());
-                    break;
-                default:
-                    assert false : "Unknown variable type: " + v.getType();
-                }
+                v.save(sub);
             } else if (s instanceof ScopeLoopContext) {
                 NodeSettingsWO sub = stackSet.addNodeSettings("Loop_" + c);
                 sub.addString("type", "loopcontext");

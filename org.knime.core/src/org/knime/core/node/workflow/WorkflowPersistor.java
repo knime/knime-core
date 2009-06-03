@@ -68,6 +68,13 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     
     String getName();
     
+    /** Get the workflow variables associated with this meta node/workflow.
+     * This method must not return null (but possibly an empty list). The result
+     * may be unmodifiable.
+     * @return The workflow variables. 
+     */
+    List<ScopeVariable> getWorkflowVariables();
+    
     WorkflowPortTemplate[] getInPortTemplates();
     
     WorkflowPortTemplate[] getOutPortTemplates();
@@ -431,5 +438,5 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             return b.toString();
         }
     }
-    
+
 }

@@ -216,6 +216,8 @@ public final class WorkflowManager extends NodeContainer {
         super(parent, id, persistor.getMetaPersistor());
         m_workflow = new Workflow(id);
         m_name = persistor.getName();
+        m_workflowVariables = 
+            new Vector<ScopeVariable>(persistor.getWorkflowVariables());
         WorkflowPortTemplate[] inPortTemplates = persistor.getInPortTemplates();
         m_inPorts = new WorkflowInPort[inPortTemplates.length];
         for (int i = 0; i < inPortTemplates.length; i++) {
@@ -4101,6 +4103,15 @@ public final class WorkflowManager extends NodeContainer {
         }
         return;
     }
+    
+    /** Get read-only access on the current workflow variables.
+     * @return the current workflow variables, never null.
+     */
+    @SuppressWarnings("unchecked")
+    public List<ScopeVariable> getWorkflowVariables() {
+        return m_workflowVariables == null ? Collections.EMPTY_LIST 
+                : Collections.unmodifiableList(m_workflowVariables);
+    }
 
     /* @return stack of workflow variables. */
     private ScopeObjectStack getWorkflowVariableStack() {
@@ -4115,8 +4126,10 @@ public final class WorkflowManager extends NodeContainer {
      * this workflow will have access to this variable.
      * 
      * @param newVar new variable to be set
+     * @param skipReset if false the workflow will be re-configured
      */
-    public void setWorkflowVariable(final ScopeVariable newVar) {
+    public void addWorkflowVariable(final ScopeVariable newVar, 
+            final boolean skipReset) {
         if (m_workflowVariables == null) {
             // create new set of vars if none exists
             m_workflowVariables = new Vector<ScopeVariable>();
@@ -4124,6 +4137,7 @@ public final class WorkflowManager extends NodeContainer {
         // make sure old variables of the same name are removed first
         removeWorkflowVariable(newVar.getName());
         m_workflowVariables.add(newVar);
+        setDirty();
     }
     
     /** Remove workflow variable of given name.

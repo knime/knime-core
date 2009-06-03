@@ -27,9 +27,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
@@ -51,6 +54,9 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     private static final String CFG_UIINFO_SUB_CONFIG = "ui_settings";
     /** Key for UI info's class name. */
     private static final String CFG_UIINFO_CLASS = "ui_classname";
+    
+    /** Key for workflow variables. */
+    private static final String CFG_WKF_VARIABLES = "workflow_variables";
     
     static final String VERSION_LATEST = "2.0.1";
     
@@ -78,8 +84,24 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         return true;
     }
     
+    /** {@inheritDoc} */
     @Override
-    protected String loadWorkflowName(NodeSettingsRO set)
+    public List<ScopeVariable> loadWorkflowVariables(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        if (!settings.containsKey(CFG_WKF_VARIABLES)) {
+            return Collections.emptyList();
+        }
+        NodeSettingsRO wfmVarSub = settings.getNodeSettings(CFG_WKF_VARIABLES);
+        List<ScopeVariable> result = new ArrayList<ScopeVariable>();
+        for (String key : wfmVarSub.keySet()) {
+            result.add(ScopeVariable.load(wfmVarSub.getNodeSettings(key)));
+        }
+        return result;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected String loadWorkflowName(final NodeSettingsRO set)
             throws InvalidSettingsException {
         return set.getString("name");
     }
@@ -285,6 +307,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         NodeContainerMetaPersistorVersion200 metaPersistor = 
             createNodeContainerMetaPersistor(workflowDirRef);
         metaPersistor.save(wm, settings);
+        saveWorkflowVariables(wm, settings); 
         
         NodeSettingsWO nodesSettings = saveSettingsForNodes(settings);
         Collection<NodeContainer> nodes = wm.getNodeContainers();
@@ -367,6 +390,19 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     protected void saveWorkflowName(
             final NodeSettingsWO settings, final String name) {
         settings.addString("name", name);
+    }
+    
+    protected void saveWorkflowVariables(final WorkflowManager wfm,
+            final NodeSettingsWO settings) {
+        List<ScopeVariable> vars = wfm.getWorkflowVariables();
+        if (!vars.isEmpty()) {
+            NodeSettingsWO wfmVarSub = 
+                settings.addNodeSettings(CFG_WKF_VARIABLES);
+            int i = 0;
+            for (ScopeVariable v : vars) {
+                v.save(wfmVarSub.addNodeSettings("Var_" + (i++)));
+            }
+        }
     }
 
     /**

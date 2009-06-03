@@ -26,6 +26,7 @@ package org.knime.core.node.workflow;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -88,6 +89,12 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
     @Override
     public String getName() {
         throw new IllegalStateException("can't set name on root");
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public List<ScopeVariable> getWorkflowVariables() {
+        throw new IllegalStateException("can't set workflow variables on root");
     }
 
     /** {@inheritDoc} */
