@@ -426,6 +426,10 @@ public final class SingleNodeContainer extends NodeContainer {
                 setState(State.IDLE);
                 return;
             case CONFIGURED:
+                /*
+                 * Also configured nodes must be reset in order to handle 
+                 * nodes subsequent to meta nodes with through-connections.
+                 */
                 m_node.reset();
                 setState(State.IDLE);
                 return;
