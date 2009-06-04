@@ -257,8 +257,11 @@ public class SortedTable implements DataTable {
         // split the input table into chunks
         BufferedDataContainer[] cont = new BufferedDataContainer[contCount];
         DataRow[] rows = new DataRow[(int)Math.ceil(maxRowsPerContainer)];
+        // if only one container left (final output container), leave it to the
+        // system to do the caching (bug 1809)
         cont[0] =
-                exec.createDataContainer(dataTable.getDataTableSpec(), true, 0);
+                exec.createDataContainer(dataTable.getDataTableSpec(), true,
+                        (contCount == 1) ? -1 : 0);
         m_counter = 0;
         int k = 0, j = 0;
         double max =
@@ -307,7 +310,7 @@ public class SortedTable implements DataTable {
                 cont[l++] =
                         merge(cont, i,
                                 Math.min(i + MAX_OPEN_CONTAINERS, k + 1), exec,
-                                max);
+                                max, (l == 1) && (k < MAX_OPEN_CONTAINERS));
             }
             k = l - 1;
         }
@@ -370,15 +373,20 @@ public class SortedTable implements DataTable {
      * @param right the last container in the array to merge (exclusive)
      * @param exec an execution context
      * @param max the maximum progress (number of processed rows)
+     * @param isLastContainer <code>true</code> if this created container is the
+     *            last one and should obey the memory settings from the
+     *            execution context
      * @return a merged and sorted data container
      * @throws CanceledExecutionException if execution has been canceled by the
      *             user
      */
     private BufferedDataContainer merge(final BufferedDataContainer[] cont,
             final int left, final int right, final ExecutionContext exec,
-            final double max) throws CanceledExecutionException {
+            final double max, final boolean isLastContainer)
+            throws CanceledExecutionException {
         BufferedDataContainer out =
-                exec.createDataContainer(cont[left].getTableSpec(), true, 0);
+                exec.createDataContainer(cont[left].getTableSpec(), true,
+                        isLastContainer ? -1 : 0);
 
         // open iterators for all containers
         MergeIterator[] it = new MergeIterator[right - left];
