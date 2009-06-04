@@ -83,4 +83,17 @@ public class WorkflowExecutionResult extends NodeContainerExecutionResult {
         }
         return m_execResultMap.put(id, execResult) == null;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public NodeContainerExecutionStatus getChildStatus(final int idSuffix) {
+        NodeID id = new NodeID(m_baseID, idSuffix);
+        NodeContainerExecutionStatus status = m_execResultMap.get(id);
+        if (status == null) {
+            getLogger().debug("No execution status for node with suffix " 
+                    + idSuffix + "; return FAILURE");
+            status = NodeContainerExecutionStatus.FAILURE;
+        }
+        return status;
+    }
 }

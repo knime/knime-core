@@ -56,6 +56,7 @@ import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
+import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 
 /**
  * Abstract super class for containers holding node or just structural
@@ -331,7 +332,8 @@ public abstract class NodeContainer implements NodeProgressListener {
                         // ignore, we have something more serious to deal with
                     }
                     notifyParentPostExecuteStart();
-                    notifyParentExecuteFinished(false);
+                    notifyParentExecuteFinished(
+                            NodeContainerExecutionStatus.FAILURE);
                 }
                 return;
             default:
@@ -358,6 +360,15 @@ public abstract class NodeContainer implements NodeProgressListener {
      * @throws IllegalStateException In case of an illegal state. 
      */
     abstract void mimicRemotePostExecute();
+    
+    /** Put this node into either the {@link State#EXECUTED} or 
+     * {@link State#IDLE} state depending on the argument. This method is 
+     * applied recursively on all of this node's children (if a meta node). 
+     * @param status Where to get the success flag from. 
+     * @throws IllegalStateException In case of an illegal state.
+     */ 
+    abstract void mimicRemoteExecuted(
+            final NodeContainerExecutionStatus status);
     
     /** Called upon load when the node has been saved as remotely executing.
      * @param inData The input data for continued execution.
@@ -392,33 +403,30 @@ public abstract class NodeContainer implements NodeProgressListener {
             }
         }
     }
+    
+    /** Called when the workflow is to be disposed. It will cancel this node
+     * if it is still running. If this node is being executed remotely (cluster
+     * execution) and has been saved, it will just disconnect it. */
+    abstract void performShutdown();
 
     /** Cancel execution of a marked, queued, or executing node. (Tolerate
      * execute as this may happen throughout cancelation).
      * @throws IllegalStateException
      */
     abstract void cancelExecution();
-
-    /**
-     * Cancel execution of a marked, queued, or executing node. (Tolerate
-     * execute as this may happen throughout cancelation).
-     *
-     * @throws IllegalStateException
-     */
-    void cancelOrDisconnectExecution() {
-        synchronized (m_nodeMutex) {
-            if (getState().equals(State.EXECUTINGREMOTELY)) {
-                NodeExecutionJobManager jobMgr = findJobManager();
-                NodeExecutionJob job = getExecutionJob();
-                if (jobMgr.canDisconnect(job)) {
-                    jobMgr.disconnect(job);
-                    return;
-                }
-            }
-            cancelExecution();
-        }
-    }
     
+    void saveNodeExecutionJobReconnectInfo(final NodeSettingsWO settings) {
+        assert getState().equals(State.EXECUTINGREMOTELY)
+        : "Can't save node execution job, node is not executing "
+            + "remotely but " + getState();
+        NodeExecutionJobManager jobManager = findJobManager();
+        NodeExecutionJob job = getExecutionJob();
+        assert jobManager.canDisconnect(job) 
+        : "Execution job can be saved/disconnected";
+        jobManager.saveReconnectSettings(job, settings);
+        job.setSavedForDisconnect(true);
+    }
+
     /**
      * Invoked by job manager when the execution starts. This method will invoke
      * the {@link WorkflowManager#doBeforePreExecution(NodeContainer)} method in
@@ -465,11 +473,12 @@ public abstract class NodeContainer implements NodeProgressListener {
      * Called immediately after the execution took place in the job executor. It
      * will trigger an doAfterExecution on the parent wfm.
      *
-     * @param success Whether the execution was successful.
+     * @param status Whether the execution was successful.
      */
-    void notifyParentExecuteFinished(final boolean success) {
+    final void notifyParentExecuteFinished(
+            final NodeContainerExecutionStatus status) {
         // clean up stuff and especially change states synchronized again
-        getParent().doAfterExecution(this, success);
+        getParent().doAfterExecution(this, status);
     }
     
     /** Called when the state of a node should switch from 
@@ -497,9 +506,10 @@ public abstract class NodeContainer implements NodeProgressListener {
      * node as well!) AFTER the actual execution. The main reason is that the
      * actual execution should be performed unsynchronized!
      *
-     * @param success indicates if execution was successful
+     * @param status indicates if execution was successful
      */
-    abstract void performStateTransitionEXECUTED(final boolean success);
+    abstract void performStateTransitionEXECUTED(
+            final NodeContainerExecutionStatus status);
 
     /////////////////////////////////////////////////
     // List Management of Waiting Loop Head Nodes
@@ -1037,9 +1047,14 @@ public abstract class NodeContainer implements NodeProgressListener {
     }
 
     public void setCustomName(final String customName) {
-        if (!ConvenienceMethods.areEqual(customName, m_customName)) {
-            m_customName = customName;
-            setDirty();
+        boolean notify = false;
+        synchronized (m_nodeMutex) {
+            if (!ConvenienceMethods.areEqual(customName, m_customName)) {
+                m_customName = customName;
+                setDirty();
+            }
+        }
+        if (notify) {
             notifyUIListeners(new NodeUIInformationEvent(m_id, m_uiInformation,
                     m_customName, m_customDescription));
         }
@@ -1050,10 +1065,15 @@ public abstract class NodeContainer implements NodeProgressListener {
     }
 
     public void setCustomDescription(final String customDescription) {
-        if (!ConvenienceMethods.areEqual(
-                customDescription, m_customDescription)) {
-            m_customDescription = customDescription;
-            setDirty();
+        boolean notify = false;
+        synchronized (m_nodeMutex) {
+            if (!ConvenienceMethods.areEqual(
+                    customDescription, m_customDescription)) {
+                m_customDescription = customDescription;
+                setDirty();
+            }
+        }
+        if (notify) {
             notifyUIListeners(new NodeUIInformationEvent(m_id, m_uiInformation,
                     m_customName, m_customDescription));
         }
@@ -1164,14 +1184,6 @@ public abstract class NodeContainer implements NodeProgressListener {
          * an abstract method .... however, this is risky as subclasses may
          * wish to synchronize the entire load procedure.
          */
-        if (result.shouldStateBeLoaded()) {
-            State newState = result.getState();
-            if (newState == null) {
-                loadResult.addError("Can't restore state because it's null");
-            } else {
-                setState(newState);
-            }
-        }
         setNodeMessage(result.getNodeMessage());
     }
 
@@ -1195,7 +1207,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      */
     protected void saveExecutionResult(
             final NodeContainerExecutionResult result) {
-        result.setState(getState());
+        result.setSuccess(getState().equals(State.EXECUTED));
         result.setMessage(m_nodeMessage);
     }
     

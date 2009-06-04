@@ -28,6 +28,7 @@ import java.util.concurrent.Future;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.NodeExecutionJob;
 import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 
 /**
  * A locally executed node job. It can only execute {@link SingleNodeContainer}.
@@ -67,7 +68,7 @@ public class LocalNodeExecutionJob extends NodeExecutionJob {
 
     /** {@inheritDoc} */
     @Override
-    public boolean mainExecute() {
+    public NodeContainerExecutionStatus mainExecute() {
         SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer();
         return snc.performExecuteNode(getPortObjects());
     }

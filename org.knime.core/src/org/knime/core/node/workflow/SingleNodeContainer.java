@@ -54,6 +54,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
+import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
 import org.knime.core.node.workflow.execresult.SingleNodeContainerExecutionResult;
 import org.w3c.dom.Element;
@@ -551,6 +552,20 @@ public final class SingleNodeContainer extends NodeContainer {
             }
         }
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    void performShutdown() {
+        synchronized (m_nodeMutex) {
+            NodeExecutionJob job = getExecutionJob();
+            if (job != null && job.isSavedForDisconnect()) {
+                assert getState().executionInProgress();
+                findJobManager().disconnect(job);
+            } else if (getState().executionInProgress()) {
+                cancelExecution();
+            }
+        }
+    }
 
 
     //////////////////////////////////////
@@ -611,6 +626,24 @@ public final class SingleNodeContainer extends NodeContainer {
     
     /** {@inheritDoc} */
     @Override
+    void mimicRemoteExecuted(final NodeContainerExecutionStatus status) {
+        boolean success = status.isSuccess();
+        synchronized (m_nodeMutex) {
+            switch (getState()) {
+            case POSTEXECUTE:
+                setState(success ? State.EXECUTED : State.IDLE);
+                break;
+            case EXECUTED:
+                // ignore executed nodes
+                break;
+            default:
+                throwIllegalStateException();
+            }
+        }
+    }
+    
+    /** {@inheritDoc} */
+    @Override
     void performStateTransitionPREEXECUTE() {
         synchronized (m_nodeMutex) {
             switch (getState()) {
@@ -659,11 +692,12 @@ public final class SingleNodeContainer extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    void performStateTransitionEXECUTED(final boolean success) {
+    void performStateTransitionEXECUTED(
+            final NodeContainerExecutionStatus status) {
         synchronized (m_nodeMutex) {
             switch (getState()) {
             case POSTEXECUTE:
-                if (success) {
+                if (status.isSuccess()) {
                     if (m_node.getLoopStatus() == null) {
                         setState(State.EXECUTED);
                         
@@ -696,7 +730,8 @@ public final class SingleNodeContainer extends NodeContainer {
      * @return whether execution was successful.
      * @throws IllegalStateException in case of illegal entry state.
      */
-    public boolean performExecuteNode(final PortObject[] inObjects) {
+    public NodeContainerExecutionStatus performExecuteNode(
+            final PortObject[] inObjects) {
         ExecutionContext ec = createExecutionContext();
         boolean success;
         try {
@@ -729,7 +764,8 @@ public final class SingleNodeContainer extends NodeContainer {
             // TODO don't remove the stack conflict message (if any)
             setNodeMessage(orgMessage);
         }
-        return success;
+        return success ? NodeContainerExecutionStatus.SUCCESS 
+                : NodeContainerExecutionStatus.FAILURE;
     }
 
     /**
@@ -837,11 +873,13 @@ public final class SingleNodeContainer extends NodeContainer {
                 (SingleNodeContainerExecutionResult)execResult;
             NodeExecutionResult nodeExecResult =
                 sncExecResult.getNodeExecutionResult();
-            m_node.loadDataAndInternals(
-                    nodeExecResult, new ExecutionMonitor(), loadResult);
+            boolean success = sncExecResult.isSuccess();
+            if (success) {
+                m_node.loadDataAndInternals(
+                        nodeExecResult, new ExecutionMonitor(), loadResult);
+            }
             boolean needsReset = nodeExecResult.needsResetAfterLoad();
-            if (!needsReset && State.EXECUTED.equals(
-                    sncExecResult.getState())) {
+            if (!needsReset && success) {
                 for (int i = 0; i < getNrOutPorts(); i++) {
                     if (m_node.getOutputObject(i) == null) {
                         loadResult.addError(

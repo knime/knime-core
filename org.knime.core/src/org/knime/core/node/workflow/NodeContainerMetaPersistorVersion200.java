@@ -163,16 +163,18 @@ class NodeContainerMetaPersistorVersion200 extends
 
     public void save(final NodeContainer nc, final NodeSettingsWO settings)
         throws IOException {
-        saveCustomName(settings, nc);
-        saveCustomDescription(settings, nc);
-        saveNodeExecutionJobManager(settings, nc);
-        boolean mustAlsoSaveExecutorSettings = saveState(settings, nc);
-        if (mustAlsoSaveExecutorSettings) {
-            saveNodeExecutionJob(settings, nc);
+        synchronized (nc.m_nodeMutex) {
+            saveCustomName(settings, nc);
+            saveCustomDescription(settings, nc);
+            saveNodeExecutionJobManager(settings, nc);
+            boolean mustAlsoSaveExecutorSettings = saveState(settings, nc);
+            if (mustAlsoSaveExecutorSettings) {
+                saveNodeExecutionJob(settings, nc);
+            }
+            saveJobManagerInternalsDirectory(settings, nc);
+            saveNodeMessage(settings, nc);
+            saveIsDeletable(settings, nc);
         }
-        saveJobManagerInternalsDirectory(settings, nc);
-        saveNodeMessage(settings, nc);
-        saveIsDeletable(settings, nc);
     }
 
     protected void saveNodeExecutionJobManager(final NodeSettingsWO settings,
@@ -186,15 +188,10 @@ class NodeContainerMetaPersistorVersion200 extends
 
     protected void saveNodeExecutionJob(
             final NodeSettingsWO settings, final NodeContainer nc) {
-        assert nc.getState().equals(State.EXECUTINGREMOTELY)
-            : "Can't save node execution job, node is not executing "
-                + "remotely but " + nc.getState();
-        NodeExecutionJobManager jobManager = nc.getJobManager();
-        NodeExecutionJob job = nc.getExecutionJob();
         assert nc.findJobManager().canDisconnect(nc.getExecutionJob())
         : "Execution job can be saved/disconnected";
-        NodeSettingsWO sub = settings.addNodeSettings(CFG_JOB_CONFIG);
-        jobManager.saveReconnectSettings(job, sub);
+        nc.saveNodeExecutionJobReconnectInfo(
+                settings.addNodeSettings(CFG_JOB_CONFIG));
     }
 
     protected void saveJobManagerInternalsDirectory(

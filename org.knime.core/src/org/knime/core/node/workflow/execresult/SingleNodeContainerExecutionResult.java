@@ -51,4 +51,11 @@ public class SingleNodeContainerExecutionResult
         m_nodeExecutionResult = nodeExecutionResult;
     }
     
+    /** {@inheritDoc} */
+    @Override
+    public NodeContainerExecutionStatus getChildStatus(final int idSuffix) {
+        throw new IllegalStateException(
+                getClass().getSimpleName() + " has no children");
+    }
+    
 }

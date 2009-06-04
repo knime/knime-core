@@ -72,8 +72,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
@@ -345,6 +343,17 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // TODO: we only have to do it on the parent
         if (m_parentEditor == null) {
+            // bugfix 799: not possible to stop closing earlier if user 
+            // decides to NOT save it. Thus we have at least to try to 
+            // cancel all running nodes
+            try {
+                m_manager.shutdown();
+            } catch (Throwable t) {
+                // at least we have tried it
+                LOGGER.error(
+                        "Could not cancel workflow manager for project "
+                        + m_fileResource.getProject().getName(), t);
+            }
             WorkflowManager.ROOT.removeProject(m_manager.getID());
         }
 
@@ -526,33 +535,6 @@ public class WorkflowEditor extends GraphicalEditor implements
                 .getChildren().get(0))
                 .createToolTipHelper(getSite().getShell());
         
-        parent.addDisposeListener(new DisposeListener() {
-
-            @Override
-            public void widgetDisposed(final DisposeEvent e) {
-                if (m_parentEditor != null) {
-                    return; // we are subflow editor.
-                }
-                // bugfix 799: not possible to stop closing earlier if user 
-                // decides to NOT save it. Thus we have at least to try to 
-                // cancel all running nodes
-                try {
-                    if (m_manager.getState().executionInProgress()) {
-                        for (NodeContainer container 
-                                    : m_manager.getNodeContainers()) {
-                            // TODO this need to be revised
-                            m_manager.cancelOrDisconnectExecution(container);
-                        }
-                    }
-                } catch (Throwable t) {
-                    // at least we have tried it
-                    LOGGER.error(
-                            "Could not cancel workflow manager for project "
-                            + m_fileResource.getProject().getName(), t);
-                }
-            }
-            
-        });
     }
 
     /**

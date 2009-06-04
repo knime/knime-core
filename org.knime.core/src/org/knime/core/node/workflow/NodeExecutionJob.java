@@ -27,6 +27,7 @@ import java.util.Arrays;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 
 /** Runnable that represents the execution of a node. This abstract class 
  * defines the overall procedure of an execution including setup (e.g. to copy
@@ -40,6 +41,11 @@ public abstract class NodeExecutionJob implements Runnable {
     
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
+    /** Whether this job has been saved using the saveReconnectSettings
+     * method in the corresponding {@link NodeExecutionJobManager}. This flag
+     * can never be true if the job manager does not allow a disconnect. */
+    private boolean m_isSavedForDisconnect = false;
+    
     private final NodeContainer m_nc;
     private final PortObject[] m_data;
 
@@ -65,41 +71,41 @@ public abstract class NodeExecutionJob implements Runnable {
     /** {@inheritDoc} */
     @Override
     public final void run() {
-        boolean success = true;
+        NodeContainerExecutionStatus status = null;
         if (!isReConnecting()) {
             try {
                 m_nc.notifyParentPreExecuteStart();
                 beforeExecute();
             } catch (Throwable throwable) {
                 logError(throwable);
-                success = false;
+                status = NodeContainerExecutionStatus.FAILURE;
             }
             try {
                 m_nc.notifyParentExecuteStart();
             } catch (IllegalContextStackObjectException e) {
-                success = false;
+                status = NodeContainerExecutionStatus.FAILURE;
             } catch (Throwable throwable) {
-                success = false;
+                status = NodeContainerExecutionStatus.FAILURE;
                 logError(throwable);
             }
         }
         try {
-            if (success) {
-                success = mainExecute();
+            if (status == null) {
+                status = mainExecute();
             }
         } catch (Throwable throwable) {
-            success = false;
+            status = NodeContainerExecutionStatus.FAILURE;
             logError(throwable);
         }
         try {
             m_nc.notifyParentPostExecuteStart();
             afterExecute();
         } catch (Throwable throwable) {
-            success = false;
+            status = NodeContainerExecutionStatus.FAILURE;
             logError(throwable);
         }
         try {
-            m_nc.notifyParentExecuteFinished(success);
+            m_nc.notifyParentExecuteFinished(status);
         } catch (Throwable throwable) {
             logError(throwable);
         }
@@ -130,7 +136,7 @@ public abstract class NodeExecutionJob implements Runnable {
      * {@link State#EXECUTINGREMOTELY} when this method is called.
      * @return Whether the execution was successful.
      */
-    protected abstract boolean mainExecute();
+    protected abstract NodeContainerExecutionStatus mainExecute();
     
     /** Called to finalize the execution. For instance, remote executors will 
      * copy the result data onto the local machine. This method is called no 
@@ -156,6 +162,20 @@ public abstract class NodeExecutionJob implements Runnable {
      */
     protected final NodeContainer getNodeContainer() {
         return m_nc;
+    }
+
+    /** 
+     * @param isSavedForDisconnect the isSavedForDisconnect to set
+     */
+    void setSavedForDisconnect(final boolean isSavedForDisconnect) {
+        m_isSavedForDisconnect = isSavedForDisconnect;
+    }
+
+    /**
+     * @return the isSavedForDisconnect
+     */
+    boolean isSavedForDisconnect() {
+        return m_isSavedForDisconnect;
     }
 
 }

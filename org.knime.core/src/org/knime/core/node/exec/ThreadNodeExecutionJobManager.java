@@ -111,7 +111,6 @@ public class ThreadNodeExecutionJobManager implements NodeExecutionJobManager {
      * {@inheritDoc}
      */
     public boolean canDisconnect(final NodeExecutionJob job) {
-        // threaded jobs can disconnect - but not reconnect...
         return false;
     }
 
