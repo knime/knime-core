@@ -60,6 +60,8 @@ import org.eclipse.ui.views.framelist.GoIntoAction;
 import org.eclipse.ui.views.navigator.ResourceNavigator;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.JobManagerChangedEvent;
+import org.knime.core.node.workflow.JobManagerChangedListener;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessageEvent;
@@ -85,11 +87,12 @@ import org.knime.workbench.ui.navigator.actions.WFShowJobMgrViewAction;
  * This class is a filtered view on a knime project which hides utitility files
  * from the tree. Such files include the data files, pmml files and files being
  * used to save the internals of a node.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class KnimeResourceNavigator extends ResourceNavigator implements
-        IResourceChangeListener, NodeStateChangeListener, NodeMessageListener {
+        IResourceChangeListener, NodeStateChangeListener, NodeMessageListener,
+        JobManagerChangedListener {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(KnimeResourceNavigator.class);
 
@@ -111,6 +114,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
 
         ProjectWorkflowMap.addStateListener(this);
         ProjectWorkflowMap.addNodeMessageListener(this);
+        ProjectWorkflowMap.addJobManagerChangedListener(this);
         // WorkflowManager.ROOT.addListener(
         ProjectWorkflowMap.addWorkflowListener(new WorkflowListener() {
 
@@ -162,7 +166,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     public void stateChanged(final NodeStateEvent state) {
@@ -171,13 +175,20 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public void messageChanged(final NodeMessageEvent messageEvent) {
         LOGGER.debug("Node message changed: " + messageEvent.getMessage());
         doRefresh(messageEvent.getSource());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void jobManagerChanged(final JobManagerChangedEvent e) {
+        LOGGER.debug("Job Manager changed for node  " + e.getSource());
+        doRefresh(e.getSource());
     }
 
     private void doRefresh(final NodeID nodeResource) {
@@ -241,7 +252,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -256,7 +267,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -268,7 +279,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
 
     /**
      * Adds the filters to the viewer.
-     * 
+     *
      * @param viewer the viewer
      * @since 2.0
      */
@@ -281,7 +292,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
 
     /**
      * Sets the label provider for the viewer.
-     * 
+     *
      * @param viewer the viewer
      * @since 2.0
      */
@@ -294,7 +305,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     /**
      * Handles an open event from the viewer. Opens an editor on the selected
      * knime project.
-     * 
+     *
      * @param event the open event
      */
     @Override
@@ -338,7 +349,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      * subgroups. Additionally the close project item is removed as not intended
      * for the kinme projects. Note: Projects which are closed in the default
      * navigator are not shown in the knime navigator any more.
-     * 
+     *
      * @param menu the context menu
      */
     @Override
@@ -438,7 +449,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
 
     /**
      * Sets the content provider for the viewer.
-     * 
+     *
      * @param viewer the viewer
      * @since 2.0
      */
