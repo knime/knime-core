@@ -63,19 +63,27 @@ public interface NodeContainerExecutionStatus {
     public static final NodeContainerExecutionStatus FAILURE = 
         new NodeContainerExecutionStatus() {
 
-            /** @param idSuffix ignored
-             * @return {@link NodeContainerExecutionStatus#FAILURE} (this) */
-            @Override
-            public NodeContainerExecutionStatus getChildStatus(
-                    final int idSuffix) {
-                return FAILURE;
-            }
+        /**
+         * @param idSuffix ignored
+         * @return {@link NodeContainerExecutionStatus#FAILURE} (this)
+         */
+        @Override
+        public NodeContainerExecutionStatus getChildStatus(
+                final int idSuffix) {
+            return FAILURE;
+        }
 
-            /** @return false */
-            @Override
-            public boolean isSuccess() {
-                return false;
-            }
+        /** @return false */
+        @Override
+        public boolean isSuccess() {
+            return false;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return "Failure execution status";
+        }
     };
 
     /** Represents a successful execution. */
@@ -96,6 +104,12 @@ public interface NodeContainerExecutionStatus {
         @Override
         public boolean isSuccess() {
             return true;
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return "Success execution status";
         }
     };
     

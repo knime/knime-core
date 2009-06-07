@@ -82,5 +82,12 @@ public abstract class NodeContainerExecutionResult
     protected NodeLogger getLogger() {
         return m_logger;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + ": "
+            + (isSuccess() ? "success" : "failure");
+    }
 
 }
