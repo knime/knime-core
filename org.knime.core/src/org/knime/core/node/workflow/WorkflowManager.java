@@ -106,7 +106,7 @@ public final class WorkflowManager extends NodeContainer {
         NodeLogger.getLogger(WorkflowManager.class);
 
     private static final String DEFAULT_NAME = "Workflow Manager";
-    
+
     /** Name of this workflow (usually displayed at top of the node figure). */
     private String m_name = DEFAULT_NAME;
 
@@ -136,7 +136,7 @@ public final class WorkflowManager extends NodeContainer {
 
     /** Vector holding workflow specific variables. */
     private Vector<ScopeVariable> m_workflowVariables;
-    
+
     // Misc members:
 
     /** for internal usage, holding output table references. */
@@ -218,7 +218,7 @@ public final class WorkflowManager extends NodeContainer {
         super(parent, id, persistor.getMetaPersistor());
         m_workflow = new Workflow(id);
         m_name = persistor.getName();
-        m_workflowVariables = 
+        m_workflowVariables =
             new Vector<ScopeVariable>(persistor.getWorkflowVariables());
         WorkflowPortTemplate[] inPortTemplates = persistor.getInPortTemplates();
         m_inPorts = new WorkflowInPort[inPortTemplates.length];
@@ -874,7 +874,7 @@ public final class WorkflowManager extends NodeContainer {
             return outConsForPort;
         }
     }
-    
+
     /** Get all outgoing connections for a node.
      * @param id The requested node
      * @return All current outgoing connections in a new set.
@@ -887,7 +887,7 @@ public final class WorkflowManager extends NodeContainer {
                     m_workflow.getConnectionsBySource(id));
         }
     }
-    
+
     /**
      * Returns the incoming connection of the node with the passed node id at
      * the specified port.
@@ -898,7 +898,7 @@ public final class WorkflowManager extends NodeContainer {
     public ConnectionContainer getIncomingConnectionFor(final NodeID id,
             final int portIdx) {
         synchronized (m_workflowMutex) {
-            Set<ConnectionContainer>inConns = 
+            Set<ConnectionContainer>inConns =
                 m_workflow.getConnectionsByDest(id);
             if (inConns != null) {
                 for (ConnectionContainer cont : inConns) {
@@ -923,8 +923,8 @@ public final class WorkflowManager extends NodeContainer {
                     m_workflow.getConnectionsByDest(id));
         }
     }
-    
-    
+
+
     /////////////////////
     // Node Settings
     /////////////////////
@@ -1000,7 +1000,7 @@ public final class WorkflowManager extends NodeContainer {
                         default:
                             // either executed or to-be-executed
                         }
-                        
+
                     } else {
                         switch (nc.getState()) {
                         case MARKEDFOREXEC:
@@ -1110,7 +1110,7 @@ public final class WorkflowManager extends NodeContainer {
             default:
                 // ignore all other states (but touch successors)
             }
-            for (ConnectionContainer cc 
+            for (ConnectionContainer cc
                     : m_workflow.getConnectionsBySource(id)) {
                 NodeID succId = cc.getDest();
                 if (succId.equals(this.getID())) {
@@ -1412,7 +1412,7 @@ public final class WorkflowManager extends NodeContainer {
 
     /* -------------- State changing actions and testers ----------- */
 
-    /** 
+    /**
      * Callback from NodeContainer to request a safe transition into the
      * {@link NodeContainer.State#PREEXECUTE} state. This method is mostly
      * only called with {@link SingleNodeContainer} as argument but may also be
@@ -1427,13 +1427,13 @@ public final class WorkflowManager extends NodeContainer {
             checkForNodeStateChanges(true);
         }
     }
-    
-    /** 
+
+    /**
      * Callback from NodeContainer to request a safe transition into the
      * {@link NodeContainer.State#POSTEXECUTE} state. This method is mostly
      * only called with {@link SingleNodeContainer} as argument but may also be
      * called with a remotely executed meta node.
-     * @param nc node whose execution is ending (and is now copying 
+     * @param nc node whose execution is ending (and is now copying
      *   result data, e.g.)
      */
     void doBeforePostExecution(final NodeContainer nc) {
@@ -1444,7 +1444,7 @@ public final class WorkflowManager extends NodeContainer {
             checkForNodeStateChanges(true);
         }
     }
-    
+
     /** Call-back from NodeContainer called before node is actually executed.
      * The argument node is in usually a {@link SingleNodeContainer}, although
      * it can also be a meta node (i.e. a <code>WorkflowManager</code>), which
@@ -1500,7 +1500,7 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     /** Cleanup a node after execution. This will also permit the argument node
-     * to change its state in 
+     * to change its state in
      * {@link NodeContainer#performStateTransitionEXECUTED(NodeContainerExecutionStatus)}.
      * This method also takes care of restarting loops, if there are any to be
      * continued.
@@ -1513,7 +1513,7 @@ public final class WorkflowManager extends NodeContainer {
      * @param status indicates if node execution was finished successfully
      *    (note that this does not imply State=EXECUTED e.g. for loop ends)
      */
-    void doAfterExecution(final NodeContainer nc, 
+    void doAfterExecution(final NodeContainer nc,
             final NodeContainerExecutionStatus status) {
         assert isLocalWFM() : "doAfterExecute not allowed for "
             + "remotely executing workflows";
@@ -1779,7 +1779,7 @@ public final class WorkflowManager extends NodeContainer {
             checkForNodeStateChanges(false);
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     void mimicRemotePreExecute() {
@@ -1791,7 +1791,7 @@ public final class WorkflowManager extends NodeContainer {
             checkForNodeStateChanges(false);
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     void mimicRemotePostExecute() {
@@ -1803,7 +1803,7 @@ public final class WorkflowManager extends NodeContainer {
             checkForNodeStateChanges(false);
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     void mimicRemoteExecuted(final NodeContainerExecutionStatus status) {
@@ -1815,13 +1815,16 @@ public final class WorkflowManager extends NodeContainer {
                     assert false : "Execution status is null for child " + i;
                     sub = NodeContainerExecutionStatus.FAILURE;
                 }
+                // will be ignored on already executed nodes
+                // (think of an executed file reader in a meta node that is
+                // submitted onto a cluster in the executed state already)
                 nc.mimicRemoteExecuted(sub);
             }
             // do not propagate -- method is (indirectly) called from parent
             checkForNodeStateChanges(false);
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     void performStateTransitionPREEXECUTE() {
@@ -1849,7 +1852,7 @@ public final class WorkflowManager extends NodeContainer {
             checkForNodeStateChanges(false);
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     void performStateTransitionPOSTEXECUTE() {
@@ -1883,7 +1886,7 @@ public final class WorkflowManager extends NodeContainer {
                 LOGGER.debug(printNodeSummary(getID(), 0));
             }
             // allow failed nodes (IDLE) to be configured
-            configureAllNodesInWFM();
+            configureAllNodesInWFM(/*keepNodeMessage=*/true);
         }
     }
 
@@ -2200,16 +2203,56 @@ public final class WorkflowManager extends NodeContainer {
             checkForNodeStateChanges(true);
         }
     }
-    
+
+    /** Is the node with the given ID ready to take a new job manager. This
+     * is generally true if the node is currently not executing.
+     * @param nodeID The node in question.
+     * @return Whether it's save to invoke the
+     * {@link #setJobManager(NodeID, NodeExecutionJobManager)} method.
+     */
+    public boolean canSetJobManager(final NodeID nodeID) {
+        synchronized (m_workflowMutex) {
+            if (!m_workflow.containsNodeKey(nodeID)) {
+                return false;
+            }
+            NodeContainer nc = getNodeContainer(nodeID);
+            switch (nc.getState()) {
+            case QUEUED:
+            case PREEXECUTE:
+            case EXECUTING:
+            case EXECUTINGREMOTELY:
+            case POSTEXECUTE:
+                return false;
+            default:
+                return true;
+            }
+        }
+    }
+
+    /** Sets a new job manager on the node with the given ID.
+     * @param nodeID The node in question.
+     * @param jobMgr The new job manager (may be null to use parent's one).
+     * @throws IllegalStateException If the node is not ready
+     * @throws IllegalArgumentException If the node is unknown
+     * @see #canSetJobManager(NodeID)
+     */
+    public void setJobManager(
+            final NodeID nodeID, final NodeExecutionJobManager jobMgr) {
+        synchronized (m_workflowMutex) {
+            NodeContainer nc = getNodeContainer(nodeID);
+            nc.setJobManager(jobMgr);
+        }
+    }
+
     /** Attempts to cancel or running nodes in preparation for a removal of
-     * this node (or its parent) from the root. Executing nodes, which can be 
-     * disconnected from the execution (e.g. remote cluster execution) are 
+     * this node (or its parent) from the root. Executing nodes, which can be
+     * disconnected from the execution (e.g. remote cluster execution) are
      * disconnected if their status has been saved before.
      */
     public void shutdown() {
         performShutdown();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     void performShutdown() {
@@ -2432,7 +2475,7 @@ public final class WorkflowManager extends NodeContainer {
         assert nrNodes == m_workflow.getNrNodes();
         NodeContainer.State newState = State.IDLE;
         // check if all outports are connected
-        boolean allOutPortsConnected =  
+        boolean allOutPortsConnected =
             getNrOutPorts() == m_workflow.getConnectionsByDest(
                     this.getID()).size();
         // check if we have complete Objects on outports
@@ -2598,9 +2641,11 @@ public final class WorkflowManager extends NodeContainer {
 
     /** Attempts to configure all nodes in the workflow. It will also try to
      * configure nodes whose predecessors did not change their output specs.
-     * This method does not call for {@link #checkForNodeStateChanges(boolean)}.
+     * This method checks the new state of the meta node but
+     * does not propagate it (since called recursively).
+     * @param keepNodeMessage Whether to retain the previously set node message.
      */
-    private void configureAllNodesInWFM() {
+    private void configureAllNodesInWFM(final boolean keepNodeMessage) {
         assert Thread.holdsLock(m_workflowMutex);
         Set<NodeID> bfsSortedSet = m_workflow.createBreadthFirstSortedList(
                 m_workflow.getNodeIDs(), true).keySet();
@@ -2611,12 +2656,17 @@ public final class WorkflowManager extends NodeContainer {
                 case EXECUTED:
                     break;
                 default:
+                    NodeMessage oldMessage = nc.getNodeMessage();
                     configureSingleNodeContainer((SingleNodeContainer)nc);
+                    if (keepNodeMessage) {
+                        nc.setNodeMessage(oldMessage);
+                    }
                 }
             } else {
-                ((WorkflowManager)nc).configureAllNodesInWFM();
+                ((WorkflowManager)nc).configureAllNodesInWFM(keepNodeMessage);
             }
         }
+        checkForNodeStateChanges(false);
     }
 
     /*
@@ -2699,7 +2749,7 @@ public final class WorkflowManager extends NodeContainer {
                 if (inCount == 0) {
                     // no input ports - create new stack, prefilled with
                     // Workflow variables:
-                    scsc = new ScopeObjectStack(snc.getID(), 
+                    scsc = new ScopeObjectStack(snc.getID(),
                             getWorkflowVariableStack());
                 } else {
                     assert inCount >= 1;
@@ -3132,6 +3182,18 @@ public final class WorkflowManager extends NodeContainer {
         });
     }
 
+    // bug fix 1810, nofify children about possible job manager changes
+    /** {@inheritDoc} */
+    @Override
+    protected void notifyJobManagerChangedListener() {
+        super.notifyJobManagerChangedListener();
+        // TODO protect for intermediate changes to the node list
+        // TODO only notify affected children
+        for (NodeContainer nc : getNodeContainers()) {
+            nc.notifyJobManagerChangedListener();
+        }
+    }
+
     //////////////////////////////////////
     // copy & paste & collapse & expand
     //////////////////////////////////////
@@ -3228,7 +3290,7 @@ public final class WorkflowManager extends NodeContainer {
                 exec.setMessage(nc.getNameWithID());
                 ExecutionMonitor subExec = exec.createSubProgress(
                         1.0 / bfsSortedSet.size());
-                NodeContainerExecutionResult subResult = 
+                NodeContainerExecutionResult subResult =
                     getNodeContainer(id).createExecutionResult(subExec);
                 if (subResult.isSuccess()) {
                     success = true;
@@ -3236,8 +3298,8 @@ public final class WorkflowManager extends NodeContainer {
                 result.addNodeExecutionResult(id, subResult);
             }
             // if at least one child was an success, this is also a success for
-            // this node; force it -- otherwise take old success flag 
-            // (important for no-child workflows) 
+            // this node; force it -- otherwise take old success flag
+            // (important for no-child workflows)
             if (success) {
                 result.setSuccess(true);
             }
@@ -3290,9 +3352,9 @@ public final class WorkflowManager extends NodeContainer {
         }
     }
 
-    /** Loads the workflow contained in the directory as node into this 
+    /** Loads the workflow contained in the directory as node into this
      * workflow instance. Loading a whole new project is usually done using
-     * <code>WorkflowManager.ROOT.load(File, ExecutionMonitor)</code>. 
+     * <code>WorkflowManager.ROOT.load(File, ExecutionMonitor)</code>.
      * @param directory to load from
      * @param exec For progress/cancellation (currently not supported)
      * @return A workflow load result, which also contains the loaded workflow.
@@ -3301,8 +3363,8 @@ public final class WorkflowManager extends NodeContainer {
      * @throws InvalidSettingsException If parsing the "important" files fails.
      * @throws CanceledExecutionException If canceled.
      */
-    public WorkflowLoadResult load(final File directory, 
-            final ExecutionMonitor exec) throws IOException, 
+    public WorkflowLoadResult load(final File directory,
+            final ExecutionMonitor exec) throws IOException,
             InvalidSettingsException, CanceledExecutionException {
         if (directory == null || exec == null) {
             throw new NullPointerException("Arguments must not be null.");
@@ -3472,7 +3534,7 @@ public final class WorkflowManager extends NodeContainer {
 
         m_inPortsBarUIInfo = persistor.getInPortsBarUIInfo();
         m_outPortsBarUIInfo = persistor.getOutPortsBarUIInfo();
-        postLoad(persistorMap, 
+        postLoad(persistorMap,
                 tblRep, persistor.mustWarnOnDataLoadError(), exec, loadResult);
         // set dirty if this wm should be reset (for instance when the state
         // of the workflow can't be properly read from the workflow.knime)
@@ -3608,7 +3670,7 @@ public final class WorkflowManager extends NodeContainer {
                     && !cont.getState().equals(loadState)
                     && !hasPredecessorFailed) {
                 isStateChangePredictable = true;
-                String warning = "State has changed from " 
+                String warning = "State has changed from "
                     + loadState + " to " + cont.getState();
                 switch (subResult.getType()) {
                 case DataLoadError:
@@ -3618,6 +3680,7 @@ public final class WorkflowManager extends NodeContainer {
                 default:
                     subResult.addWarning(warning);
                 }
+                cont.setDirty();
             }
             // saved in executing state (e.g. grid job), request to reconnect
             if (remoteExec) {
@@ -3653,7 +3716,7 @@ public final class WorkflowManager extends NodeContainer {
                     }
                     LOGGER.error(error, exc);
                     cont.cancelExecution();
-                    cont.setDirty(); 
+                    cont.setDirty();
                     subResult.addError(error.toString());
                 }
             }
@@ -4044,7 +4107,7 @@ public final class WorkflowManager extends NodeContainer {
         super.saveSettings(settings);
 
         // TODO: as we don't have a node model associated with the wfm, we must
-        // do the same thing a dialog does when saving settings (it assumes 
+        // do the same thing a dialog does when saving settings (it assumes
         // existance of a node).
 //        Node.SettingsLoaderAndWriter l = new Node.SettingsLoaderAndWriter();
 //        NodeSettings model = new NodeSettings("field_ignored");
@@ -4108,7 +4171,7 @@ public final class WorkflowManager extends NodeContainer {
     public NodeInPort getWorkflowOutgoingPort(final int i) {
         return m_outPorts[i].getSimulatedInPort();
     }
-    
+
     /** Set UI information for workflow's input ports
      * (typically aligned as a bar).
      * @param inPortsBarUIInfo The new UI info.
@@ -4151,11 +4214,11 @@ public final class WorkflowManager extends NodeContainer {
     /////////////////////////////
     // Workflow Variable handling
     /////////////////////////////
-    
+
     /* Private routine which assembles a stack of workflow variables all
      * the way to the top of the workflow hierarchy.
      */
-    private void pushWorkflowVariablesOnStack(ScopeObjectStack sos) {
+    private void pushWorkflowVariablesOnStack(final ScopeObjectStack sos) {
         if (getID().equals(ROOT.getID())) {
             // reach top of tree, return
             return;
@@ -4177,7 +4240,7 @@ public final class WorkflowManager extends NodeContainer {
      */
     @SuppressWarnings("unchecked")
     public List<ScopeVariable> getWorkflowVariables() {
-        return m_workflowVariables == null ? Collections.EMPTY_LIST 
+        return m_workflowVariables == null ? Collections.EMPTY_LIST
                 : Collections.unmodifiableList(m_workflowVariables);
     }
 
@@ -4189,14 +4252,14 @@ public final class WorkflowManager extends NodeContainer {
         pushWorkflowVariablesOnStack(sos);
         return sos;
     }
-    
+
     /** Set a new workflow variable. All nodes within
      * this workflow will have access to this variable.
-     * 
+     *
      * @param newVar new variable to be set
      * @param skipReset if false the workflow will be re-configured
      */
-    public void addWorkflowVariable(final ScopeVariable newVar, 
+    public void addWorkflowVariable(final ScopeVariable newVar,
             final boolean skipReset) {
         if (m_workflowVariables == null) {
             // create new set of vars if none exists
@@ -4207,9 +4270,9 @@ public final class WorkflowManager extends NodeContainer {
         m_workflowVariables.add(newVar);
         setDirty();
     }
-    
+
     /** Remove workflow variable of given name.
-     * 
+     *
      * @param name of variable to be removed.
      */
     public void removeWorkflowVariable(final String name) {

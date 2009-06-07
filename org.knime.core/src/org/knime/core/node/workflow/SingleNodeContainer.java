@@ -259,14 +259,9 @@ public final class SingleNodeContainer extends NodeContainer {
         }
     }
 
-    /**
-     * Set a new NodeExecutionJobManager for this node but before check for
-     * valid state.
-     *
-     * @param je the new NodeExecutionJobManager.
-     */
+    /** {@inheritDoc} */
     @Override
-    public void setJobManager(final NodeExecutionJobManager je) {
+    void setJobManager(final NodeExecutionJobManager je) {
         synchronized (m_nodeMutex) {
             switch (getState()) {
             case QUEUED:
@@ -428,7 +423,7 @@ public final class SingleNodeContainer extends NodeContainer {
                 return;
             case CONFIGURED:
                 /*
-                 * Also configured nodes must be reset in order to handle 
+                 * Also configured nodes must be reset in order to handle
                  * nodes subsequent to meta nodes with through-connections.
                  */
                 m_node.reset();
@@ -552,7 +547,7 @@ public final class SingleNodeContainer extends NodeContainer {
             }
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     void performShutdown() {
@@ -589,7 +584,7 @@ public final class SingleNodeContainer extends NodeContainer {
             }
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     void mimicRemoteExecuting() {
@@ -606,7 +601,7 @@ public final class SingleNodeContainer extends NodeContainer {
             }
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     void mimicRemotePostExecute() {
@@ -623,7 +618,7 @@ public final class SingleNodeContainer extends NodeContainer {
             }
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     void mimicRemoteExecuted(final NodeContainerExecutionStatus status) {
@@ -641,7 +636,7 @@ public final class SingleNodeContainer extends NodeContainer {
             }
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     void performStateTransitionPREEXECUTE() {
@@ -674,7 +669,7 @@ public final class SingleNodeContainer extends NodeContainer {
             }
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     void performStateTransitionPOSTEXECUTE() {
@@ -700,7 +695,7 @@ public final class SingleNodeContainer extends NodeContainer {
                 if (status.isSuccess()) {
                     if (m_node.getLoopStatus() == null) {
                         setState(State.EXECUTED);
-                        
+
                     } else {
                         // loop not yet done - "stay" configured until done.
                         setState(State.CONFIGURED);
@@ -764,7 +759,7 @@ public final class SingleNodeContainer extends NodeContainer {
             // TODO don't remove the stack conflict message (if any)
             setNodeMessage(orgMessage);
         }
-        return success ? NodeContainerExecutionStatus.SUCCESS 
+        return success ? NodeContainerExecutionStatus.SUCCESS
                 : NodeContainerExecutionStatus.FAILURE;
     }
 
@@ -862,6 +857,11 @@ public final class SingleNodeContainer extends NodeContainer {
             final NodeContainerExecutionResult execResult,
             final ExecutionMonitor exec, final LoadResult loadResult) {
         synchronized (m_nodeMutex) {
+            if (State.EXECUTED.equals(getState())) {
+                LOGGER.debug(getNameWithID()
+                        + " is alredy executed; won't load execution result");
+                return;
+            }
             if (!(execResult instanceof SingleNodeContainerExecutionResult)) {
                 throw new IllegalArgumentException("Argument must be instance "
                         + "of \"" + SingleNodeContainerExecutionResult.
