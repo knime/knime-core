@@ -31,6 +31,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -75,9 +76,10 @@ public class DatabaseConnectionSettings {
     private static final ExecutorService CONNECTION_CREATOR_EXECUTOR = 
         Executors.newCachedThreadPool();
     
-    static {
-        DriverManager.setLoginTimeout(5);
-    }
+    /** DriverManager login timeout for database connection; not implemented/
+     * used by all databases.
+     */
+    private static final int LOGIN_TIMEOUT = 5;
 
     private String m_driver;
     private String m_dbName;
@@ -145,20 +147,26 @@ public class DatabaseConnectionSettings {
             /** {@inheritDoc} */
             @Override
             public Connection call() throws Exception {
+                LOGGER.debug("Opening database connection to \"" 
+                        + dbName + "\"...");
+                DriverManager.setLoginTimeout(LOGIN_TIMEOUT);
                 return DriverManager.getConnection(dbName, user, password);
             }
         };
         Future<Connection> task = CONNECTION_CREATOR_EXECUTOR.submit(callable);
         try {
-            return task.get(DriverManager.getLoginTimeout() + 1, 
-                    TimeUnit.SECONDS);
+            LOGGER.debug("Setting database login timeout to " 
+                    + LOGIN_TIMEOUT + "sec.");
+            return task.get(LOGIN_TIMEOUT + 1, TimeUnit.SECONDS);
+        } catch (ExecutionException ee) {
+            throw new SQLException(ee.getCause());
         } catch (Exception ie) {
             throw new SQLException(ie);
         }
     }
     
     /**
-     * Load settings.
+     * Save settings.
      * @param settings connection settings
      */
     public void saveConnection(final ConfigWO settings) {
