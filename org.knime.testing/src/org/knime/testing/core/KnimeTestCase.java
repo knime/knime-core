@@ -322,9 +322,6 @@ public class KnimeTestCase extends TestCase {
         } finally {
             m_testConfig.close();
 
-            // throw the workflow away so that the GC can do its work
-            m_manager = null;
-
             logger.info("<End> Test='"
                     + m_knimeWorkFlow.getParentFile().getName()
                     + "' ----------------------------------------------------");
@@ -358,5 +355,17 @@ public class KnimeTestCase extends TestCase {
         } else {
             logger.info("Didn't save workflow -------------------------------");
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        m_manager.shutdown();
+        m_manager.getParent().removeNode(m_manager.getID());
+        // throw the workflow away so that the GC can do its work
+        m_manager = null;
     }
 }
