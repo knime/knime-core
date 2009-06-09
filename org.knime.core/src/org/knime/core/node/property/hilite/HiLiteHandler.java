@@ -18,8 +18,6 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
- * 2006-06-08 (tm): reviewed 
  */
 package org.knime.core.node.property.hilite;
 
@@ -28,10 +26,9 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.swing.SwingUtilities;
-
 import org.knime.core.data.RowKey;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.ViewUtils;
 
 /**
  * <code>HiLiteHandler</code> implementation which receives hilite change
@@ -271,15 +268,7 @@ public class HiLiteHandler {
                     }
                 }
             };
-            if (SwingUtilities.isEventDispatchThread()) {
-                r.run();
-            } else {
-                if (SwingUtilities.isEventDispatchThread()) {
-                    r.run();
-                } else {
-                    SwingUtilities.invokeLater(r);
-                }
-            }
+            ViewUtils.runOrInvokeLaterInEDT(r);
         }
     }
 
@@ -325,11 +314,7 @@ public class HiLiteHandler {
                     }
                 }
             };
-            if (SwingUtilities.isEventDispatchThread()) {
-                r.run();
-            } else {
-                SwingUtilities.invokeLater(r);
-            }
+            ViewUtils.invokeAndWaitInEDT(r);
         }
     }
     
@@ -357,15 +342,7 @@ public class HiLiteHandler {
                     }
                 }
             };
-            if (SwingUtilities.isEventDispatchThread()) {
-                r.run();
-            } else {
-                if (SwingUtilities.isEventDispatchThread()) {
-                    r.run();
-                } else {
-                    SwingUtilities.invokeLater(r);
-                }
-            }
+            ViewUtils.invokeAndWaitInEDT(r);
         }
     }
 
