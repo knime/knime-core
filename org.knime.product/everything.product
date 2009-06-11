@@ -86,6 +86,7 @@ All other trademarks are the property of their respective owners.
       <feature id="org.knime.features.distmatrix" version="2.0.2.0020587"/>
       <feature id="org.knime.features.neighborgram" version="2.0.2.0020587"/>
       <feature id="com.knime.features.cluster.sge" version="2.1.0.0019385"/>
+      <feature id="com.knime.features.cluster.ssh" version="2.1.0.0019385"/>
       <feature id="org.knime.features.ext.chem.shapes" version="2.1.0"/>
       <feature id="org.knime.features.bison" version="1.0.0"/>
       <feature id="org.knime.features.bison.viz" version="1.0.0"/>
