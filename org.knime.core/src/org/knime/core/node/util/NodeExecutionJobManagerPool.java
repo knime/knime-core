@@ -137,7 +137,8 @@ public final class NodeExecutionJobManagerPool {
      * that new type of job manager.
      *
      * @param instance the "old" job manager that will be updated if its type
-     *            fits the type in the settings, or null to create a new instance.
+     *            fits the type in the settings, or null to create a new
+     *            instance.
      * @param ncSettings the new settings to apply
      * @return either the specified instance with new settings, or a new
      *         instance of a new type with the new settings.
@@ -240,9 +241,8 @@ public final class NodeExecutionJobManagerPool {
             } catch (UnsatisfiedLinkError ule) {
                 // in case an implementation tries to load an external lib
                 // when the factory class gets loaded
-                LOGGER.error("Unable to load a library required for "
-                        + NodeExecutionJobManagerFactory.class.getSimpleName()
-                        + "'" + jobMgr + "'");
+                LOGGER.error("Unable to load a library required for '" + jobMgr
+                        + "'");
                 LOGGER.error("Either specify it in the -Djava.library.path "
                         + "option at the program's command line, or");
                 LOGGER.error("include it in the LD_LIBRARY_PATH variable.");
@@ -250,9 +250,10 @@ public final class NodeExecutionJobManagerPool {
                         + "') ignored.", ule);
             } catch (Throwable t) {
                 LOGGER.error("Problems during initialization of "
-                        + NodeExecutionJobManagerFactory.class.getSimpleName()
-                        + " '" + jobMgr + "'.");
-                LOGGER.error("Extension " + decl + " ignored.", t);
+                        + "job manager (with id '" + jobMgr + "'.)");
+                if (decl != null) {
+                    LOGGER.error("Extension " + decl + " ignored.", t);
+                }
             }
 
             if (instance != null) {
