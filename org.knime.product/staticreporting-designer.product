@@ -28,15 +28,14 @@
       <solaris/>
       <win useIco="false">
          <bmp
-            winSmallHigh="/org.knime.product/icons/bmp/knime16.bmp"
-            winSmallLow="/org.knime.product/icons/bmp/knime16x8.bmp"
-            winMediumHigh="/org.knime.product/icons/bmp/knime32.bmp"
-            winMediumLow="/org.knime.product/icons/bmp/knime32x8.bmp"
-            winLargeHigh="/org.knime.product/icons/bmp/knime48.bmp"
-            winLargeLow="/org.knime.product/icons/bmp/knime48x8.bmp"/>
+            winSmallHigh="/com.knime.staticreporting.designer/icons/bmp/report_designer16.bmp"
+            winSmallLow="/com.knime.staticreporting.designer/icons/bmp/knime16x8.bmp"
+            winMediumHigh="/com.knime.staticreporting.designer/icons/bmp/report_designer32.bmp"
+            winMediumLow="/com.knime.staticreporting.designer/icons/bmp/knime32x8.bmp"
+            winLargeHigh="/com.knime.staticreporting.designer/icons/bmp/report_designer48.bmp"
+            winLargeLow="/com.knime.staticreporting.designer/icons/bmp/report_designer48x8.bmp"/>
       </win>
    </launcher>
-
 
    <vm>
    </vm>
