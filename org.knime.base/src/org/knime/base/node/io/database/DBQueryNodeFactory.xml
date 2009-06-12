@@ -10,7 +10,7 @@
 	<fullDescription>
 		<intro>
 		 Modifies the input SQL query from a incoming database connection.
-		 The SQL query is represented by the place holder #view# and will
+		 The SQL query is represented by the place holder #table# and will
 		 replaced during execute. The new database connection then available
 		 at the out-port. The database connection settings itself are not 
 		 modified. 
