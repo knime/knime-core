@@ -1054,6 +1054,7 @@ public abstract class NodeContainer implements NodeProgressListener {
             if (!ConvenienceMethods.areEqual(customName, m_customName)) {
                 m_customName = customName;
                 setDirty();
+                notify = true;
             }
         }
         if (notify) {
@@ -1073,6 +1074,7 @@ public abstract class NodeContainer implements NodeProgressListener {
                     customDescription, m_customDescription)) {
                 m_customDescription = customDescription;
                 setDirty();
+                notify = true;
             }
         }
         if (notify) {
