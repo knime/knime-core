@@ -114,7 +114,7 @@ public class CancelAllAction extends AbstractNodeAction {
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
-                SWT.ICON_QUESTION | SWT.YES | SWT.NO | SWT.CANCEL);
+                SWT.ICON_QUESTION | SWT.YES | SWT.NO);
         mb.setText("Confirm cancel all...");
         mb.setMessage("Do you really want to cancel all running node(s) ?");
         if (mb.open() != SWT.YES) {
