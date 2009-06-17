@@ -13,7 +13,9 @@
 			If the node fails to parse a string, it will generate a missing cell and append
 	    	a warning message to the KNIME Console with detailed information.
 		</intro>
-		<option name="Decimal Separator">Choose a decimal separator, 
+		  <option name="Type">Choose the DataType that your string should
+		  be converted to.</option>
+    	<option name="Decimal Separator">Choose a decimal separator, 
 		which is used to mark the boundary between the integral and the 
 		fractional parts of the decimal string.</option>
 		<option name="Thousands Separator">Choose a thousands separator 

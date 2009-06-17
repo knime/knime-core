@@ -1,4 +1,4 @@
-/* 
+/*
  * --------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------
- * 
+ *
  * History
  *   03.07.2007 (cebron): created
  */
@@ -26,16 +26,16 @@ package org.knime.base.node.preproc.colconvert.stringtonumber;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * NodeFactory for the String to Number Node that converts strings
- * to double values.
- * 
+ * NodeFactory for the String to Number Node that converts strings to double
+ * values.
+ *
  * @author cebron, University of Konstanz
  */
-public class StringToNumberNodeFactory extends NodeFactory {
+public class StringToNumberNodeFactory extends
+        NodeFactory<StringToNumberNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -49,7 +49,7 @@ public class StringToNumberNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public StringToNumberNodeModel createNodeModel() {
         return new StringToNumberNodeModel();
     }
 
@@ -57,8 +57,8 @@ public class StringToNumberNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public NodeView<StringToNumberNodeModel> createNodeView(
+            final int viewIndex, final StringToNumberNodeModel nodeModel) {
         return null;
     }
 

@@ -41,6 +41,7 @@ import org.knime.core.data.StringValue;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -58,6 +59,12 @@ import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
  * @author cebron, University of Konstanz
  */
 public class StringToNumberNodeModel extends NodeModel {
+
+    /**
+     * The possible types that the string can be converted to.
+     */
+    public static final DataType[] POSSIBLETYPES =
+        new DataType[]{DoubleCell.TYPE, IntCell.TYPE};
 
     /* Node Logger of this class. */
     private static final NodeLogger LOGGER =
@@ -77,6 +84,11 @@ public class StringToNumberNodeModel extends NodeModel {
      * Key for the thousands separator in the NodeSettings.
      */
     public static final String CFG_THOUSANDSSEP = "thousands_separator";
+
+    /**
+     * Key for the parsing type in the NodeSettings.
+     */
+    public static final String CFG_PARSETYPE = "parse_type";
 
     /**
      * The default decimal separator.
@@ -103,6 +115,8 @@ public class StringToNumberNodeModel extends NodeModel {
      * The thousands separator
      */
     private String m_thousandsSep = DEFAULT_THOUSANDS_SEPARATOR;
+
+    private DataType m_parseType = POSSIBLETYPES[0];
 
     /**
      * Constructor with one inport and one outport.
@@ -149,7 +163,7 @@ public class StringToNumberNodeModel extends NodeModel {
             indices[i] = indicesvec.get(i);
         }
         ConverterFactory converterFac =
-                new ConverterFactory(indices, inSpecs[0]);
+                new ConverterFactory(indices, inSpecs[0], m_parseType);
         ColumnRearranger colre = new ColumnRearranger(inSpecs[0]);
         colre.replace(converterFac, indices);
         DataTableSpec newspec = colre.createSpec();
@@ -194,7 +208,8 @@ public class StringToNumberNodeModel extends NodeModel {
         for (int i = 0; i < indices.length; i++) {
             indices[i] = indicesvec.get(i);
         }
-        ConverterFactory converterFac = new ConverterFactory(indices, inspec);
+        ConverterFactory converterFac =
+                new ConverterFactory(indices, inspec, m_parseType);
         ColumnRearranger colre = new ColumnRearranger(inspec);
         colre.replace(converterFac, indices);
 
@@ -218,6 +233,7 @@ public class StringToNumberNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
+        // empty
     }
 
     /**
@@ -232,6 +248,7 @@ public class StringToNumberNodeModel extends NodeModel {
         m_thousandsSep =
                 settings.getString(CFG_THOUSANDSSEP,
                         DEFAULT_THOUSANDS_SEPARATOR);
+        m_parseType = settings.getDataType(CFG_PARSETYPE, POSSIBLETYPES[0]);
     }
 
     /**
@@ -242,6 +259,7 @@ public class StringToNumberNodeModel extends NodeModel {
         m_inclCols.saveSettingsTo(settings);
         settings.addString(CFG_DECIMALSEP, m_decimalSep);
         settings.addString(CFG_THOUSANDSSEP, m_thousandsSep);
+        settings.addDataType(CFG_PARSETYPE, m_parseType);
     }
 
     /**
@@ -268,6 +286,17 @@ public class StringToNumberNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "Decimal and thousands separator must not be the same.");
         }
+        DataType myType = settings.getDataType(CFG_PARSETYPE, POSSIBLETYPES[0]);
+        boolean found = false;
+        for (DataType type : POSSIBLETYPES) {
+            if (type.equals(myType)) {
+                found = true;
+            }
+        }
+        if (!found) {
+            throw new InvalidSettingsException("Illegal parse type: " + myType);
+        }
+
     }
 
     /**
@@ -277,6 +306,7 @@ public class StringToNumberNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // empty.
     }
 
     /**
@@ -286,6 +316,7 @@ public class StringToNumberNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // empty.
     }
 
     /**
@@ -313,14 +344,19 @@ public class StringToNumberNodeModel extends NodeModel {
         /** Number of parsing errors. */
         private int m_parseErrorCount;
 
+        private DataType m_type;
+
         /**
          *
          * @param colindices the column indices to use.
          * @param spec the original DataTableSpec.
+         * @param type the {@link DataType} to convert to.
          */
-        ConverterFactory(final int[] colindices, final DataTableSpec spec) {
+        ConverterFactory(final int[] colindices, final DataTableSpec spec,
+                final DataType type) {
             m_colindices = colindices;
             m_spec = spec;
+            m_type = type;
             m_parseErrorCount = 0;
         }
 
@@ -360,8 +396,16 @@ public class StringToNumberNodeModel extends NodeModel {
                                                 .quote(m_decimalSep), ".");
                             }
                         }
-                        double d = Double.parseDouble(corrected);
-                        newcells[i] = new DoubleCell(d);
+
+                        if (m_type.equals(DoubleCell.TYPE)) {
+                            double parsedDouble = Double.parseDouble(corrected);
+                            newcells[i] = new DoubleCell(parsedDouble);
+                        } else if (m_type.equals(IntCell.TYPE)) {
+                            int parsedInteger = Integer.parseInt(corrected);
+                            newcells[i] = new IntCell(parsedInteger);
+                        } else {
+                            m_error = "No valid parse type.";
+                        }
                     } catch (NumberFormatException e) {
                         if (m_parseErrorCount == 0) {
                             m_error =
@@ -390,10 +434,21 @@ public class StringToNumberNodeModel extends NodeModel {
             for (int i = 0; i < newcolspecs.length; i++) {
                 DataColumnSpec colspec = m_spec.getColumnSpec(m_colindices[i]);
                 DataColumnSpecCreator colspeccreator = null;
-                // change DataType to DoubleCell
-                colspeccreator =
-                        new DataColumnSpecCreator(colspec.getName(),
-                                DoubleCell.TYPE);
+                if (m_type.equals(DoubleCell.TYPE)) {
+                    // change DataType to DoubleCell
+                    colspeccreator =
+                            new DataColumnSpecCreator(colspec.getName(),
+                                    DoubleCell.TYPE);
+                } else if (m_type.equals(IntCell.TYPE)) {
+                    // change DataType to IntCell
+                    colspeccreator =
+                            new DataColumnSpecCreator(colspec.getName(),
+                                    IntCell.TYPE);
+                } else {
+                    colspeccreator =
+                            new DataColumnSpecCreator("Invalid parse mode",
+                                    DataType.getMissingCell().getType());
+                }
                 newcolspecs[i] = colspeccreator.createSpec();
             }
             return newcolspecs;
