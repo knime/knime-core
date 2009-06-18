@@ -1267,10 +1267,13 @@ public final class WorkflowManager extends NodeContainer {
         synchronized (m_workflowMutex) {
             NodeContainer nc = getNodeContainer(id);
             // first check some basic facts about this node:
-            // 1) executed or executing? - done (and happy)
-            if (nc.getState().equals(State.EXECUTED)
-                    || nc.getState().executionInProgress()) {
-                // everything fine: found "source" of chain in execution
+            // 1) executed? - done (and happy)
+            if (nc.getState().equals(State.EXECUTED)) {
+                // everything fine: found "source" of chain executed
+                // Note that we can not assume that an executing metanode
+                // is also a good thing: the port this one is connected
+                // to may still be idle! So we test for "executing" later
+                // for SNC's only (step 3)
                 return true;
             }
             // 2) its a to-be-locally-executed WFM:
@@ -1281,7 +1284,12 @@ public final class WorkflowManager extends NodeContainer {
                 WorkflowManager wfm = (WorkflowManager)nc;
                 return wfm.markForExecutionAllAffectedNodes(outPortIndex);
             }
-            // 3) now we check if we are dealing with a source (there is no
+            // 3) executing SingleNodeContainer? - done (and happy)
+            if (nc.getState().executionInProgress()) {
+                // everything fine: found "source" of chain in execution
+                return true;
+            }
+            // 4) now we check if we are dealing with a source (there is no
             //   need to traverse further up then and we can cancel the
             //   operation if the source is in a non-executable condition.
             Set<ConnectionContainer> predConn =
@@ -1301,12 +1309,12 @@ public final class WorkflowManager extends NodeContainer {
                     return false;
                 }
             }
-            // 4) we fail on nodes which are not fully connected:
+            // 5) we fail on nodes which are not fully connected:
             if (predConn.size() < nc.getNrInPorts()) {
                 // do not deal with incompletely connected nodes!
                 return false;
             }
-            // 5) now let's see if we can mark the predecessors of this node
+            // 6) now let's see if we can mark the predecessors of this node
             //  (and this way trigger the backwards traversal)
             // handle nodes which are in the middle of a pipeline
             // (A) recurse up to all predecessors of this node (mark/queue them)
