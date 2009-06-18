@@ -191,8 +191,7 @@ class ColorManager2NodeModel extends NodeModel {
         BufferedDataTable changedSpecTable = 
             exec.createSpecReplacerTable(in, newSpec);
         ColorHandlerPortObject viewModel = new ColorHandlerPortObject(
-                modelSpec, colorHandler.toString() 
-                + " based on column \"" + m_column + "\"");
+                modelSpec, "Coloring on \"" + m_column + "\"");
         return new PortObject[]{changedSpecTable, viewModel};
     }
     
