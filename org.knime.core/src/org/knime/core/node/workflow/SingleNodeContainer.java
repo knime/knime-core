@@ -819,7 +819,7 @@ public final class SingleNodeContainer extends NodeContainer {
     void loadContent(final NodeContainerPersistor nodePersistor,
             final Map<Integer, BufferedDataTable> tblRep,
             final ScopeObjectStack inStack, final ExecutionMonitor exec,
-            final LoadResult loadResult)
+            final LoadResult loadResult, final boolean preserveNodeMessage)
             throws CanceledExecutionException {
         synchronized (m_nodeMutex) {
             if (!(nodePersistor instanceof SingleNodeContainerPersistor)) {

@@ -222,7 +222,8 @@ public final class MetaNodeTemplateRepositoryManager {
                                 + FileLocator.toFileURL(url));
                         File f = new File(FileLocator.toFileURL(url).getFile());
                         WorkflowManager metaNode = m_workflowmanager.load(f, 
-                                new ExecutionMonitor()).getWorkflowManager();
+                                new ExecutionMonitor(), false)
+                                .getWorkflowManager();
                         MetaNodeTemplateRepositoryItem preItem 
                             = new MetaNodeTemplateRepositoryItem(f.getName(), 
                                     metaNode.getID());

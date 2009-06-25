@@ -2664,11 +2664,8 @@ public final class WorkflowManager extends NodeContainer {
                 case EXECUTED:
                     break;
                 default:
-                    NodeMessage oldMessage = nc.getNodeMessage();
-                    configureSingleNodeContainer((SingleNodeContainer)nc);
-                    if (keepNodeMessage) {
-                        nc.setNodeMessage(oldMessage);
-                    }
+                    configureSingleNodeContainer(
+                            (SingleNodeContainer)nc, keepNodeMessage);
                 }
             } else {
                 ((WorkflowManager)nc).configureAllNodesInWFM(keepNodeMessage);
@@ -2710,12 +2707,15 @@ public final class WorkflowManager extends NodeContainer {
     /** Configure a SingleNodeContainer.
      *
      * @param snc node to be configured
+     * @param keepNodeMessage Whether to keep previously set node messages
+     *        (important during load sometimes)
      * @return true if the configuration did change something.
      */
     private boolean configureSingleNodeContainer(
-            final SingleNodeContainer snc) {
+            final SingleNodeContainer snc, final boolean keepNodeMessage) {
         boolean configurationChanged = false;
         synchronized (m_workflowMutex) {
+            NodeMessage oldMessage = snc.getNodeMessage();
             final int inCount = snc.getNrInPorts();
             NodeOutPort[] predPorts = assemblePredecessorOutPorts(snc.getID());
             final PortObjectSpec[] inSpecs = new PortObjectSpec[inCount];
@@ -2734,6 +2734,7 @@ public final class WorkflowManager extends NodeContainer {
             }
             if (!allSpecsExists) {
                 // only configure nodes with all Input Specs present
+                // (NodeMessage did not change -- can exit here) 
                 return false;
             }
             // configure node only if it's not yet running, queued or done.
@@ -2852,6 +2853,13 @@ public final class WorkflowManager extends NodeContainer {
                 LOGGER.error("configure found weird state (" + snc.getState()
                         + "): " + snc.getNameWithID());
             }
+            if (keepNodeMessage) {
+                NodeMessage newMessage = snc.getNodeMessage();
+                if (!oldMessage.equals(newMessage))  {
+                    newMessage = NodeMessage.merge(oldMessage, newMessage);
+                    snc.setNodeMessage(newMessage);
+                }
+            }
         }
 //        return configurationChanged;
         // we have a problem here. Subsequent metanodes with through connections
@@ -2926,11 +2934,11 @@ public final class WorkflowManager extends NodeContainer {
             final NodeContainer nc = getNodeContainer(currNode);
             synchronized (m_workflowMutex) {
                 if (nc instanceof SingleNodeContainer) {
-                    if (configureSingleNodeContainer((SingleNodeContainer)nc)) {
+                    if (configureSingleNodeContainer((SingleNodeContainer)nc, 
+                            /*keepNodeMessage=*/false)) {
                         freshlyConfiguredNodes.add(nc.getID());
                     }
                 } else {
-                    assert nc instanceof WorkflowManager;
                     configureNodesConnectedToPortInWFM((WorkflowManager)nc, -1);
                     freshlyConfiguredNodes.add(nc.getID());
                 }
@@ -3003,7 +3011,8 @@ public final class WorkflowManager extends NodeContainer {
             final NodeContainer nc = getNodeContainer(currNode);
             synchronized (m_workflowMutex) {
                 if (nc instanceof SingleNodeContainer) {
-                    if (configureSingleNodeContainer((SingleNodeContainer)nc)) {
+                    if (configureSingleNodeContainer((SingleNodeContainer)nc, 
+                            /*keepNodeMessage=*/false)) {
                         freshlyConfiguredNodes.add(nc.getID());
                     }
                 } else {
@@ -3247,9 +3256,10 @@ public final class WorkflowManager extends NodeContainer {
                     : "Deficient map, no entry for suffix " + oldSuffix;
             }
             try {
-                postLoad(newLoaderMap,
+                postLoad(newLoaderMap, 
                         new HashMap<Integer, BufferedDataTable>(),
-                        true, new ExecutionMonitor(), new LoadResult("ignore"));
+                        true, new ExecutionMonitor(), 
+                        new LoadResult("ignore"), false);
             } catch (CanceledExecutionException e) {
                 LOGGER.fatal("Unexpected exception", e);
             }
@@ -3279,7 +3289,7 @@ public final class WorkflowManager extends NodeContainer {
     public static WorkflowLoadResult loadProject(final File directory,
             final ExecutionMonitor exec) throws IOException,
             InvalidSettingsException, CanceledExecutionException {
-        return ROOT.load(directory, exec);
+        return ROOT.load(directory, exec, false);
     }
 
     /** {@inheritDoc} */
@@ -3365,6 +3375,9 @@ public final class WorkflowManager extends NodeContainer {
      * <code>WorkflowManager.ROOT.load(File, ExecutionMonitor)</code>.
      * @param directory to load from
      * @param exec For progress/cancellation (currently not supported)
+     * @param keepNodeMessages Whether to keep the messages that are associated
+     * with the nodes in the loaded workflow (mostly false but true when 
+     * remotely computed results are loaded).
      * @return A workflow load result, which also contains the loaded workflow.
      * @throws IOException If errors reading the "important" files fails due to
      *         I/O problems (file not present, e.g.)
@@ -3372,7 +3385,8 @@ public final class WorkflowManager extends NodeContainer {
      * @throws CanceledExecutionException If canceled.
      */
     public WorkflowLoadResult load(final File directory,
-            final ExecutionMonitor exec) throws IOException,
+            final ExecutionMonitor exec, 
+            final boolean keepNodeMessages) throws IOException,
             InvalidSettingsException, CanceledExecutionException {
         if (directory == null || exec == null) {
             throw new NullPointerException("Arguments must not be null.");
@@ -3441,7 +3455,8 @@ public final class WorkflowManager extends NodeContainer {
             new InsertWorkflowPersistor(persistor);
         synchronized (m_workflowMutex) {
             Set<NodeID> oldNodes = new HashSet<NodeID>(m_workflow.getNodeIDs());
-            loadContent(insertPersistor, tblRep, null, exec, result);
+            loadContent(insertPersistor, tblRep, null, 
+                    exec, result, keepNodeMessages);
             Set<NodeID> diffNode = new HashSet<NodeID>(m_workflow.getNodeIDs());
             diffNode.removeAll(oldNodes);
             for (NodeID newNode : diffNode) {
@@ -3513,7 +3528,7 @@ public final class WorkflowManager extends NodeContainer {
     void loadContent(final NodeContainerPersistor nodePersistor,
             final Map<Integer, BufferedDataTable> tblRep,
             final ScopeObjectStack ignoredStack, final ExecutionMonitor exec,
-            final LoadResult loadResult)
+            final LoadResult loadResult, final boolean preserveNodeMessage)
         throws CanceledExecutionException {
         if (!(nodePersistor instanceof WorkflowPersistor)) {
             throw new IllegalStateException("Expected "
@@ -3542,8 +3557,8 @@ public final class WorkflowManager extends NodeContainer {
 
         m_inPortsBarUIInfo = persistor.getInPortsBarUIInfo();
         m_outPortsBarUIInfo = persistor.getOutPortsBarUIInfo();
-        postLoad(persistorMap,
-                tblRep, persistor.mustWarnOnDataLoadError(), exec, loadResult);
+        postLoad(persistorMap, tblRep, persistor.mustWarnOnDataLoadError(), 
+                exec, loadResult, preserveNodeMessage);
         // set dirty if this wm should be reset (for instance when the state
         // of the workflow can't be properly read from the workflow.knime)
         if (persistor.needsResetAfterLoad() || persistor.isDirtyAfterLoad()) {
@@ -3555,7 +3570,8 @@ public final class WorkflowManager extends NodeContainer {
             final Map<NodeID, NodeContainerPersistor> persistorMap,
             final Map<Integer, BufferedDataTable> tblRep,
             final boolean mustWarnOnDataLoadError, final ExecutionMonitor exec,
-            final LoadResult loadResult) throws CanceledExecutionException {
+            final LoadResult loadResult, final boolean keepNodeMessage)
+    throws CanceledExecutionException {
         // linked set because we need reverse order later on
         Collection<NodeID> failedNodes = new LinkedHashSet<NodeID>();
         boolean isStateChangePredictable = false;
@@ -3632,7 +3648,8 @@ public final class WorkflowManager extends NodeContainer {
             Object mutex = cont instanceof WorkflowManager
                 ? ((WorkflowManager)cont).m_workflowMutex : m_workflowMutex;
             synchronized (mutex) {
-                cont.loadContent(persistor, tblRep, inStack, sub2, subResult);
+                cont.loadContent(persistor, tblRep, inStack, 
+                        sub2, subResult, keepNodeMessage);
             }
             sub2.setProgress(1.0);
             if (persistor.isDirtyAfterLoad()) {
@@ -3672,7 +3689,8 @@ public final class WorkflowManager extends NodeContainer {
                 failedNodes.add(bfsID);
             }
             if (!isExecuted && cont instanceof SingleNodeContainer) {
-                configureSingleNodeContainer((SingleNodeContainer)cont);
+                configureSingleNodeContainer((SingleNodeContainer)cont, 
+                        keepNodeMessage);
             }
             if (persistor.mustComplainIfStateDoesNotMatch()
                     && !cont.getState().equals(loadState)

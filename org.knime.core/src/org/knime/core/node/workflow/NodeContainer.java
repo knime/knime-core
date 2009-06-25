@@ -642,7 +642,7 @@ public abstract class NodeContainer implements NodeProgressListener {
    }
 
    /** Get the message to be displayed to the user.
-    * @return the node message consisting of type and message */
+    * @return the node message consisting of type and message, never null. */
    public final NodeMessage getNodeMessage() {
        return m_nodeMessage;
    }
@@ -1167,12 +1167,15 @@ public abstract class NodeContainer implements NodeProgressListener {
      * @param inStack Incoming scope object stack.
      * @param exec For progress
      * @param loadResult Where to report errors/warnings to
+     * @param preserveNodeMessage Whether possible node messages in the 
+     *        persistor are to be preserved (parameter to configure method
+     *        that is called during load).
      * @throws CanceledExecutionException If canceled.
      */
     abstract void loadContent(final NodeContainerPersistor persistor,
             final Map<Integer, BufferedDataTable> tblRep,
             final ScopeObjectStack inStack, final ExecutionMonitor exec,
-            final LoadResult loadResult)
+            final LoadResult loadResult, final boolean preserveNodeMessage)
             throws CanceledExecutionException;
 
     /** Load information from execution result. Subclasses will override this
