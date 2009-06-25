@@ -1038,6 +1038,18 @@ public final class SingleNodeContainer extends NodeContainer {
         }
         return dlgSettings.equals(nodeSettings);
     }
+    
+    /** Get the tables that are kept by the underlying node. The return value
+     * is null if (a) the underlying node is not a 
+     * {@link org.knime.core.node.BufferedDataTableHolder} or (b) the node 
+     * is not executed.
+     * @return The internally held tables.
+     * @see org.knime.core.node.BufferedDataTableHolder
+     * @see Node#getInternalHeldTables()
+     */
+    public BufferedDataTable[] getInternalHeldTables() {
+        return getNode().getInternalHeldTables();
+    }
 
     /** {@inheritDoc} */
     @Override
