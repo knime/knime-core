@@ -746,16 +746,17 @@ public class NodeContainerFigure extends RectangleFigure {
             if (m_jobExecutorLabel != null && m_jobExec == null) {
                 m_backgroundIcon.remove(m_jobExecutorLabel);
                 m_jobExecutorLabel = null;
-                return;
+            } else {
+                if (m_jobExecutorLabel == null) {
+                    m_jobExecutorLabel = new Label();
+                    m_jobExecutorLabel.setOpaque(false);
+                    m_backgroundIcon.add(m_jobExecutorLabel);
+                    m_backgroundIcon.setConstraint(m_jobExecutorLabel,
+                            new RelativeLocator(m_backgroundIcon, 0.85, 0.9));
+                }
+                m_jobExecutorLabel.setIcon(m_jobExec);
+                repaint();
             }
-            // job executor icon
-            m_jobExecutorLabel = new Label();
-            m_jobExecutorLabel.setOpaque(false);
-            m_jobExecutorLabel.setIcon(m_jobExec);
-            m_backgroundIcon.add(m_jobExecutorLabel);
-            m_backgroundIcon.setConstraint(m_jobExecutorLabel,
-                    new RelativeLocator(m_backgroundIcon, 0.85, 0.9));
-            repaint();
         }
         
         
