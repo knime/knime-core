@@ -229,6 +229,11 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 // expansion/collaps of the double clicked project
                 // strangly enough it opens anyway and the collopased or
                 // expanded state remains
+                // Update: 2.0.3 call handle open in order to enable 
+                // open on double-click on the Mac. So far no side-effects on 
+                // Windows
+                KnimeResourceNavigator.this.handleOpen(new OpenEvent(this,
+                        getSelection()));
             }
         };
         viewer.setUseHashlookup(true);
