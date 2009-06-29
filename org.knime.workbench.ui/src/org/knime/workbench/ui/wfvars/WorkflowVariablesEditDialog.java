@@ -37,48 +37,48 @@ import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.workflow.ScopeVariable;
 
 /**
- * Let the user add or edit a workflow variable with name, type and default 
- * value. The ScopeVariable is created here, but actually added to the workflow 
+ * Let the user add or edit a workflow variable with name, type and default
+ * value. The ScopeVariable is created here, but actually added to the workflow
  * in the {@link WorkflowVariablesDialog}.
- *  
+ *
  * @author Fabian Dill, KNIME.com GmbH
  */
 public class WorkflowVariablesEditDialog extends Dialog {
-    
+
     private Text m_varNameCtrl;
     private Combo m_typeSelectionCtrl;
     private Text m_varDefaultValueCtrl;
-    
+
     private ScopeVariable m_variable;
     private ScopeVariable.Type m_type;
-    
+
     /**
-     * 
+     *
      */
     public WorkflowVariablesEditDialog() {
         super(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
     }
-    
+
 
     /**
      * It is resizable.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     protected boolean isResizable() {
         return true;
     }
-    
+
     /**
-     * 
-     * @param var {@link ScopeVariable} to fill the fields of the dialog from 
+     *
+     * @param var {@link ScopeVariable} to fill the fields of the dialog from
      */
     public void loadFrom(final ScopeVariable var) {
         m_varNameCtrl.setText(var.getName());
         String typeString = var.getType().name();
         if (typeString == null) {
-            throw new IllegalArgumentException("Type of variable " 
+            throw new IllegalArgumentException("Type of variable "
                     + var.getName() + " must not be null!");
         }
         for (int i = 0; i < m_typeSelectionCtrl.getItemCount(); i++) {
@@ -92,7 +92,7 @@ public class WorkflowVariablesEditDialog extends Dialog {
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -100,7 +100,7 @@ public class WorkflowVariablesEditDialog extends Dialog {
         parent.getShell().setText("Add/Edit Workflow Variable");
         Composite twoColComp = new Composite(parent, SWT.NONE);
         twoColComp.setLayout(new GridLayout(2, true));
-        
+
         GridData horizontalFill = new GridData(GridData.FILL_HORIZONTAL);
 
         // first row: node settings name
@@ -120,13 +120,13 @@ public class WorkflowVariablesEditDialog extends Dialog {
                     m_varNameCtrl.setText("");
                 }
             }
-            
+
         });
-        // second row: parameter type 
+        // second row: parameter type
         Label typeLabel = new Label(twoColComp, SWT.NONE);
         typeLabel.setText("Variable Type:");
-    
-        m_typeSelectionCtrl = new Combo(twoColComp, 
+
+        m_typeSelectionCtrl = new Combo(twoColComp,
                 SWT.DROP_DOWN | SWT.READ_ONLY);
         m_typeSelectionCtrl.add(ScopeVariable.Type.STRING.name());
         m_typeSelectionCtrl.add(ScopeVariable.Type.DOUBLE.name());
@@ -146,15 +146,15 @@ public class WorkflowVariablesEditDialog extends Dialog {
         m_typeSelectionCtrl.select(0);
         // third row: data set parameter name
         Label defaultValueLabel = new Label(twoColComp, SWT.NONE);
-        defaultValueLabel.setText("Default value (optional): ");
-        
+        defaultValueLabel.setText("Default value: ");
+
         m_varDefaultValueCtrl = new Text(twoColComp, SWT.BORDER);
         m_varDefaultValueCtrl.setLayoutData(horizontalFill);
         return twoColComp;
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -163,7 +163,7 @@ public class WorkflowVariablesEditDialog extends Dialog {
         String value = m_varDefaultValueCtrl.getText();
         int selectionIdx = m_typeSelectionCtrl.getSelectionIndex();
         if (selectionIdx < 0) {
-            String msg = "No type selected for variable " 
+            String msg = "No type selected for variable "
                 + varName;
             showError(msg);
             throw new IllegalArgumentException(msg);
@@ -173,7 +173,7 @@ public class WorkflowVariablesEditDialog extends Dialog {
         if (ScopeVariable.Type.DOUBLE.equals(m_type)) {
             if (value != null && value.length() > 0) {
                 try {
-                   m_variable = new ScopeVariable(varName, 
+                   m_variable = new ScopeVariable(varName,
                            Double.parseDouble(value));
                 } catch (NumberFormatException nfe) {
                     m_variable = null;
@@ -192,7 +192,7 @@ public class WorkflowVariablesEditDialog extends Dialog {
                     + " for variable " + varName + "!";
                 showError(msg);
                 throw new OperationCanceledException(msg);
-            }            
+            }
         } else if (ScopeVariable.Type.INTEGER.equals(m_type)) {
             if (value != null && value.length() > 0) {
                 try {
@@ -205,17 +205,17 @@ public class WorkflowVariablesEditDialog extends Dialog {
                     showError(msg);
                     throw new OperationCanceledException(msg);
                 }
-            }            
+            }
         }
         super.okPressed();
     }
-    
+
     private void showError(final String message) {
         MessageDialog.openError(getParentShell(), "Error", message);
     }
-    
+
     /**
-     * 
+     *
      * @return the created {@link ScopeVariable} or <code>null</code>
      */
     ScopeVariable getScopeVariable() {

@@ -20,6 +20,8 @@ package org.knime.workbench.ui.wfvars;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -31,16 +33,17 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Table;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.ScopeVariable;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * Dialog that let the user add, edit or remove workflow variables. Existing 
+ * Dialog that let the user add, edit or remove workflow variables. Existing
  * variables are listed in a {@link WorkflowVariableTable} with name, type and
  * default (current) value. Workflow variables can be added or edited with the
  * {@link WorkflowVariablesEditDialog}.
- * 
+ *
  * @author Fabian Dill, KNIME.com GmbH
  */
 public class WorkflowVariablesDialog extends Dialog {
@@ -50,7 +53,7 @@ public class WorkflowVariablesDialog extends Dialog {
     private final WorkflowManager m_workflow;
 
     /**
-     * 
+     *
      * @param shell parent shell
      * @param workflow selected workflow to create the workflow variables for
      */
@@ -61,7 +64,7 @@ public class WorkflowVariablesDialog extends Dialog {
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -70,7 +73,7 @@ public class WorkflowVariablesDialog extends Dialog {
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -96,6 +99,19 @@ public class WorkflowVariablesDialog extends Dialog {
             m_table.add(var);
         }
         m_table.getViewer().refresh();
+        m_table.getViewer().addDoubleClickListener(new IDoubleClickListener() {
+            /**
+             *
+             * {@inheritDoc}
+             */
+            public void doubleClick(final DoubleClickEvent event) {
+                Table table = m_table.getViewer().getTable();
+                int index = table.getSelectionIndex();
+                // we only get a double-click event for existing items
+                ScopeVariable var = m_table.get(index);
+                replaceWorkflowVariable(var, index);
+            }
+        });
 
         // second column: 3 buttons
         Composite btnsComp = new Composite(tableAndBtnsComp, SWT.NONE);
@@ -135,7 +151,15 @@ public class WorkflowVariablesDialog extends Dialog {
 
             @Override
             public void widgetSelected(final SelectionEvent arg0) {
-                replaceWorkflowVariable();
+                int selectionIdx = m_table.getViewer().getTable()
+                    .getSelectionIndex();
+                if (selectionIdx < 0) {
+                    MessageDialog.openError(getShell(), "No selection",
+                            "Please select the parameter you want to edit");
+                    return;
+                }
+                ScopeVariable selectedVar = m_table.get(selectionIdx);
+                replaceWorkflowVariable(selectedVar, selectionIdx);
             }
         });
 
@@ -150,7 +174,7 @@ public class WorkflowVariablesDialog extends Dialog {
 
             @Override
             public void widgetSelected(final SelectionEvent arg0) {
-                ScopeVariable selectedParam = 
+                ScopeVariable selectedParam =
                     (ScopeVariable)((IStructuredSelection)m_table
                         .getViewer().getSelection()).getFirstElement();
                 if (selectedParam.isGlobalConstant()) {
@@ -171,17 +195,17 @@ public class WorkflowVariablesDialog extends Dialog {
         });
         return composite;
     }
-    
+
     private int openConfirmationDialog() {
         // if there are nodes to be reset -> ask for it
-        if (containsExecutedNodes(m_workflow) 
+        if (containsExecutedNodes(m_workflow)
                 && m_workflow.getParent().canResetNode(m_workflow.getID())) {
             MessageDialog dialog = new MessageDialog(getShell(),
                     "Add Workflow Variable Confirmation", getShell()
                             .getDisplay().getSystemImage(SWT.ICON_QUESTION),
                     "Workflow variables will only be available if the nodes are"
-                            + " reset. You may skip reset if you are aware " 
-                            + "that the workflow variable will not be " 
+                            + " reset. You may skip reset if you are aware "
+                            + "that the workflow variable will not be "
                             + "accessible then. Reset workflow now?",
                     MessageDialog.QUESTION, new String[]{"Skip reset", "Reset",
                             "Cancel"}, 1);
@@ -192,19 +216,19 @@ public class WorkflowVariablesDialog extends Dialog {
             return 1;
         }
     }
-    
+
     private boolean containsExecutedNodes(final WorkflowManager workflow) {
         for (NodeContainer node : workflow.getNodeContainers()) {
             if (node.getState().equals(NodeContainer.State.EXECUTED)) {
                 // we only check for executed nodes
-                // and not for canReset node (should be checked by the caller 
+                // and not for canReset node (should be checked by the caller
                 // of this method
                 return true;
             }
         }
         return false;
     }
-    
+
     private void addWorkflowVariable() {
         WorkflowVariablesEditDialog dialog = new WorkflowVariablesEditDialog();
         if (dialog.open() == Dialog.CANCEL) {
@@ -217,7 +241,7 @@ public class WorkflowVariablesDialog extends Dialog {
         case 0:
             m_workflow.addWorkflowVariable(var, true);
             break;
-        case 1: 
+        case 1:
             m_workflow.addWorkflowVariable(var, false);
             break;
         default:
@@ -227,24 +251,18 @@ public class WorkflowVariablesDialog extends Dialog {
         m_table.getViewer().refresh();
         getShell().forceFocus();
     }
-    
-    private void replaceWorkflowVariable() {
-        int selectionIdx = m_table.getViewer().getTable().getSelectionIndex();
-        if (selectionIdx < 0) {
-            MessageDialog.openError(getShell(), "No selection",
-                    "Please select the parameter you want to edit");
-            return;
-        }
-        ScopeVariable param = m_table.get(selectionIdx);
-        if (param.isGlobalConstant()) {
-            MessageDialog.openError(getParentShell(), "Global Constant", param
-                    .getName()
+
+    private void replaceWorkflowVariable(final ScopeVariable selectedVar,
+            final int selectionIdx) {
+        if (selectedVar.isGlobalConstant()) {
+            MessageDialog.openError(getParentShell(), "Global Constant",
+                    selectedVar.getName()
                     + " is a global constant " + "and can not be modified!");
             return;
         }
         WorkflowVariablesEditDialog dialog = new WorkflowVariablesEditDialog();
         dialog.create();
-        dialog.loadFrom(param);
+        dialog.loadFrom(selectedVar);
         if (dialog.open() == Dialog.CANCEL) {
             // if the user has canceled the dialog there is nothing left to do
             return;
@@ -255,5 +273,5 @@ public class WorkflowVariablesDialog extends Dialog {
         m_table.replace(selectionIdx, var);
         m_table.getViewer().refresh();
     }
-    
+
 }
