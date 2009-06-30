@@ -303,8 +303,9 @@ public final class DataType {
         }
         DataCellSerializer<T> result = null;
         try {
-            result = SerializerMethodLoader.getSerializer(
-                    cl, DataCellSerializer.class, "getCellSerializer", false);
+            result = (DataCellSerializer<T>)SerializerMethodLoader.
+            getSerializer(cl, DataCellSerializer.class, 
+                    "getCellSerializer", false);
         } catch (NoSuchMethodException nsme) {
             if (KNIMEConstants.ASSERTIONS_ENABLED) {
                 LOGGER.warn("Class \"" + cl.getSimpleName() + "\" does not " 

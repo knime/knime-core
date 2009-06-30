@@ -68,9 +68,9 @@ public final class PortUtil {
         }
         PortObjectSpecSerializer<T> result;
         try {
-            result =
-                    SerializerMethodLoader.getSerializer(cl,
-                            PortObjectSpecSerializer.class,
+            result = (PortObjectSpecSerializer<T>)
+            SerializerMethodLoader.getSerializer(cl, 
+                    PortObjectSpecSerializer.class,
                             "getPortObjectSpecSerializer", true);
         } catch (NoSuchMethodException e) {
             LOGGER.coding("Errors while accessing serializer object", e);
@@ -104,9 +104,8 @@ public final class PortUtil {
         }
         PortObjectSerializer<T> result;
         try {
-            result =
-                    SerializerMethodLoader.getSerializer(cl,
-                            PortObjectSerializer.class,
+            result = (PortObjectSerializer<T>)
+            SerializerMethodLoader.getSerializer(cl, PortObjectSerializer.class,
                             "getPortObjectSerializer", true);
         } catch (NoSuchMethodException e) {
             LOGGER.coding("Errors while accessing serializer object", e);
