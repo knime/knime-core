@@ -290,7 +290,7 @@ terms of this License.
       <import plugin="org.eclipse.update.ui"/>
    </requires>
 
-   <plugin download-size="0" id="org.knime.features.base.source" install-size="0" version="0.0.0"/>
+   <includes id="org.knime.features.base.source" version="0.0.0"/>
 
    <plugin download-size="0" id="org.knime.base" install-size="0" version="0.0.0"/>
 
