@@ -375,21 +375,24 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * plotters dimension.
      */
     public final void fitToScreen() {
-        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
-            /** {@inheritDoc} */
-            @Override
-            public void run() {
+        // has to remove these lines because of NullPointerExceptions due to
+        // race conditions: especially line plotter (line 362)
+        // reproduce: add these lines, open (executed) line plotter view
+//        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+//            /** {@inheritDoc} */
+//            @Override
+//            public void run() {
                 m_width = m_scroller.getViewport().getWidth();
                 m_height = m_scroller.getViewport().getHeight();
                 Dimension newDim = new Dimension(m_width, m_height);
                 m_drawingPane.setPreferredSize(newDim);
-                // updatePaintModel();
+//                 updatePaintModel();
                 updateAxisLength();
                 updateSize();
                 m_scroller.getViewport().revalidate();
                 m_drawingPane.repaint();
-            }
-        });
+//            }
+//        });
     }
 
     /* ---------- relevant mouse methods ----------- */
