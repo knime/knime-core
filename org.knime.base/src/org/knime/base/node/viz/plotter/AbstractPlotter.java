@@ -66,7 +66,6 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteListener;
 import org.knime.core.node.property.hilite.KeyEvent;
-import org.knime.core.node.util.ViewUtils;
 
 /**
  * Provides functionality for zooming, moving and selection and is designed to
