@@ -339,8 +339,9 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     /** Remove node if possible. Throws an exception if node is "busy" and can
-     * not be removed at this time.
-     *
+     * not be removed at this time. If the node does not exist, this method
+     * returns without exception.
+     * 
      * @param nodeID id of node to be removed
      */
     public void removeNode(final NodeID nodeID) {
