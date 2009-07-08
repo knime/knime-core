@@ -152,9 +152,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         //
         //
         if (getNodeContainer().getUIInformation() != null) {
-            initFigureFromExtraInfo((NodeUIInformation)getNodeContainer()
+            initFigureFromUIInfo((NodeUIInformation)getNodeContainer()
                     .getUIInformation());
-            m_figureInitialized = true;
         } else {
             // set the initial settings to the figure on the next "stateChanged"
             // event.
@@ -367,10 +366,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
                     // provide some info from the extra info object to the
                     // figure
-                    NodeUIInformation ei = null;
-                    ei =
-                            (NodeUIInformation)getNodeContainer()
-                                    .getUIInformation();
+                    NodeUIInformation ei = (NodeUIInformation)
+                        getNodeContainer().getUIInformation();
 
                     //
                     // if not already initialized, do this now.
@@ -381,7 +378,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                     // creation
                     // (icon, type)
                     if (!m_figureInitialized) {
-                        initFigureFromExtraInfo(ei);
+                        initFigureFromUIInfo(ei);
                         m_figureInitialized = true;
                     }
                     // set the new constraints in the parent edit part
@@ -424,32 +421,33 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * Initializes the figure with data from the node extra info object. This
+     * Initializes the figure with data from the node ui info object. This
      * must be done only once, but after the node has been added to the WFM
-     * (otherwise the extra info object is not available).
+     * (otherwise the ui info object is not available).
      *
-     * @param ei Extra info to provide to the figure
+     * @param uiInfo UI info to provide to the figure
      */
-    private void initFigureFromExtraInfo(final NodeUIInformation ei) {
+    private void initFigureFromUIInfo(final NodeUIInformation uiInfo) {
 
         LOGGER.debug("Initializing figure from NodeExtraInfo..");
-        m_figureInitialized = true;
 
         /*
-         * If the figure wasn't yet initialized 
-         * (see that the width and height are -1)
+         * If the figure wasn't yet initialized (has relative coords)
          * convert from absolute to take scrolling into account 
          */
         NodeContainerFigure f = (NodeContainerFigure)getFigure();
-        int[] b = ei.getBounds();
-        if (b[2] == -1 || b[2] == -1) {
+        int[] b = uiInfo.getBounds(); // this is a copy
+        if (!uiInfo.hasAbsoluteCoordinates()) { // make it absolute coordinates
             Point p = new Point(b[0], b[1]);
             f.translateToRelative(p);
-//            LOGGER.debug("after: " + p);
             b[0] = p.x;
             b[1] = p.y;
+            NodeUIInformation newUI = new NodeUIInformation(
+                    b[0], b[1], b[2], b[3], true);
+            getNodeContainer().setUIInformation(newUI);
         }
         f.setBounds(new Rectangle(b[0], b[1], b[2], b[3]));
+        m_figureInitialized = true;
         
         // String plugin = ei.getPluginID();
         // String iconPath = ei.getIconPath();
@@ -684,7 +682,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
     
     @Override
-    public void jobManagerChanged(JobManagerChangedEvent e) {
+    public void jobManagerChanged(final JobManagerChangedEvent e) {
         URL iconURL = getNodeContainer().findJobManager().getIcon();
         setJobManagerIcon(iconURL);
     }

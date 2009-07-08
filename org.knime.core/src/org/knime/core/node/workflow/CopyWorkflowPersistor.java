@@ -186,7 +186,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     /** {@inheritDoc} */
     @Override
     public boolean isDirtyAfterLoad() {
-        return false;
+        return true;
     }
     
     /** {@inheritDoc} */

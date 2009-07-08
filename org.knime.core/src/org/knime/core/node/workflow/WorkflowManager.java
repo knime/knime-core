@@ -218,6 +218,7 @@ public final class WorkflowManager extends NodeContainer {
         super(parent, id, persistor.getMetaPersistor());
         m_workflow = new Workflow(id);
         m_name = persistor.getName();
+        m_loadVersion = persistor.getLoadVersion();
         m_workflowVariables =
             new Vector<ScopeVariable>(persistor.getWorkflowVariables());
         WorkflowPortTemplate[] inPortTemplates = persistor.getInPortTemplates();
@@ -3211,12 +3212,39 @@ public final class WorkflowManager extends NodeContainer {
         }
     }
 
+    /** {@inheritDoc} */
+    @Override
+    protected NodeContainerPersistor getCopyPersistor(
+            final HashMap<Integer, ContainerTable> tableRep,
+            final boolean preserveDeletableFlags) {
+        return new CopyWorkflowPersistor(
+                this, tableRep, preserveDeletableFlags);
+    }
+
     //////////////////////////////////////
-    // copy & paste & collapse & expand
+    // copy & paste
     //////////////////////////////////////
 
-    public NodeID[] copy(final WorkflowManager sourceManager,
+    /** Copies the nodes with the given ids from the argument workflow manager
+     * into this wfm instance. All nodes wil be reset (and configured id 
+     * possible). Connections among the nodes are kept.
+     * @param sourceManager The wfm to copy from
+     * @param nodeIDs The node ids to copy (must exist in sourceManager)
+     * @return The new ids of the nodes in this wfm.
+     */
+    public NodeID[] copyFromAndPasteHere(final WorkflowManager sourceManager,
             final NodeID... nodeIDs) {
+        WorkflowPersistor copyPersistor = 
+            sourceManager.copy(nodeIDs);
+        return paste(copyPersistor);
+    }
+
+    /** Copy the nodes with the given ids. 
+     * @param nodeIDs The nodes to copy (must exist).
+     * @return A workflow persistor hosting the node templates, ready to be
+     * used in the {@link #paste(WorkflowPersistor)} method.
+     */
+    public WorkflowPersistor copy(final NodeID... nodeIDs) {
         HashSet<NodeID> idsHashed = new HashSet<NodeID>(Arrays.asList(nodeIDs));
         if (idsHashed.size() != nodeIDs.length) {
             throw new IllegalArgumentException(
@@ -3226,54 +3254,40 @@ public final class WorkflowManager extends NodeContainer {
             new TreeMap<Integer, NodeContainerPersistor>();
         Set<ConnectionContainerTemplate> connTemplates =
             new HashSet<ConnectionContainerTemplate>();
-        synchronized (sourceManager.m_workflowMutex) {
+        synchronized (m_workflowMutex) {
             for (int i = 0; i < nodeIDs.length; i++) {
                 // throws exception if not present in workflow
-                NodeContainer cont = sourceManager.getNodeContainer(nodeIDs[i]);
+                NodeContainer cont = getNodeContainer(nodeIDs[i]);
                 loaderMap.put(cont.getID().getIndex(),
                         cont.getCopyPersistor(m_globalTableRepository, false));
-                for (ConnectionContainer out
-                        : sourceManager.m_workflow.getConnectionsBySource(
-                                nodeIDs[i])) {
+                for (ConnectionContainer out 
+                        : m_workflow.getConnectionsBySource(nodeIDs[i])) {
                     if (idsHashed.contains(out.getDest())) {
                         connTemplates.add(
                                 new ConnectionContainerTemplate(out, false));
                     }
                 }
             }
-        }
-        synchronized (m_workflowMutex) {
-            Map<Integer, NodeID> resultIDs = loadNodesAndConnections(
-                    loaderMap, connTemplates, new LoadResult("ignore"));
-            Map<NodeID, NodeContainerPersistor> newLoaderMap =
-                new TreeMap<NodeID, NodeContainerPersistor>();
-            NodeID[] result = new NodeID[nodeIDs.length];
-            for (int i = 0; i < nodeIDs.length; i++) {
-                int oldSuffix = nodeIDs[i].getIndex();
-                result[i] = resultIDs.get(oldSuffix);
-                newLoaderMap.put(result[i], loaderMap.get(oldSuffix));
-                assert result[i] != null
-                    : "Deficient map, no entry for suffix " + oldSuffix;
-            }
-            try {
-                postLoad(newLoaderMap, 
-                        new HashMap<Integer, BufferedDataTable>(),
-                        true, new ExecutionMonitor(), 
-                        new LoadResult("ignore"), false);
-            } catch (CanceledExecutionException e) {
-                LOGGER.fatal("Unexpected exception", e);
-            }
-            return result;
+            return new PasteWorkflowContentPersistor(loaderMap, connTemplates);
         }
     }
-
-    /** {@inheritDoc} */
-    @Override
-    protected NodeContainerPersistor getCopyPersistor(
-            final HashMap<Integer, ContainerTable> tableRep,
-            final boolean preserveDeletableFlags) {
-        return new CopyWorkflowPersistor(
-                this, tableRep, preserveDeletableFlags);
+    
+    /** Pastes the contents of the argument persistor into this wfm.
+     * @param persistor The persistor created with {@link #copy(NodeID...)}.
+     * @return The new node ids of the inserted nodes.
+     */
+    public NodeID[] paste(final WorkflowPersistor persistor) {
+        synchronized (m_workflowMutex) {
+            try {
+                return loadContent(persistor,
+                        new HashMap<Integer, BufferedDataTable>(),
+                        new ScopeObjectStack(getID()), new ExecutionMonitor(),
+                        new LoadResult("Paste into Workflow"), false);
+            } catch (CanceledExecutionException e) {
+                throw new IllegalStateException("Cancelation although no access"
+                        + " on execution monitor");
+            }
+        }
     }
 
     ///////////////////////////////
@@ -3454,22 +3468,15 @@ public final class WorkflowManager extends NodeContainer {
         InsertWorkflowPersistor insertPersistor =
             new InsertWorkflowPersistor(persistor);
         synchronized (m_workflowMutex) {
-            Set<NodeID> oldNodes = new HashSet<NodeID>(m_workflow.getNodeIDs());
-            loadContent(insertPersistor, tblRep, null, 
+            m_loadVersion = persistor.getLoadVersion();
+            NodeID[] newIDs = loadContent(insertPersistor, tblRep, null, 
                     exec, result, keepNodeMessages);
-            Set<NodeID> diffNode = new HashSet<NodeID>(m_workflow.getNodeIDs());
-            diffNode.removeAll(oldNodes);
-            for (NodeID newNode : diffNode) {
-                NodeContainer nc = getNodeContainer(newNode);
-                if (nc instanceof WorkflowManager) {
-                    manager = (WorkflowManager)nc;
-                }
-            }
-            if (manager == null) {
+            if (newIDs.length != 1) {
                 throw new InvalidSettingsException("Loading workflow failed, "
                         + "couldn't identify child sub flow (typically "
                         + "a project)");
             }
+            manager = (WorkflowManager)getNodeContainer(newIDs[0]);
             // if all errors during the load process are related to data loading
             // it might be that the flow is ex/imported without data;
             // check for it and silently overwrite the workflow
@@ -3525,7 +3532,7 @@ public final class WorkflowManager extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    void loadContent(final NodeContainerPersistor nodePersistor,
+    NodeID[] loadContent(final NodeContainerPersistor nodePersistor,
             final Map<Integer, BufferedDataTable> tblRep,
             final ScopeObjectStack ignoredStack, final ExecutionMonitor exec,
             final LoadResult loadResult, final boolean preserveNodeMessage)
@@ -3539,11 +3546,10 @@ public final class WorkflowManager extends NodeContainer {
         WorkflowPersistor persistor = (WorkflowPersistor)nodePersistor;
         assert this != ROOT || persistor.getConnectionSet().isEmpty()
         : "ROOT workflow has no connections: " + persistor.getConnectionSet();
-        Map<NodeID, NodeContainerPersistor> persistorMap =
-            new HashMap<NodeID, NodeContainerPersistor>();
+        LinkedHashMap<NodeID, NodeContainerPersistor> persistorMap =
+            new LinkedHashMap<NodeID, NodeContainerPersistor>();
         Map<Integer, NodeContainerPersistor> nodeLoaderMap =
             persistor.getNodeLoaderMap();
-        m_loadVersion = persistor.getLoadVersion();
         exec.setMessage("node & connection information");
         Map<Integer, NodeID> translationMap =
             loadNodesAndConnections(nodeLoaderMap,
@@ -3564,6 +3570,8 @@ public final class WorkflowManager extends NodeContainer {
         if (persistor.needsResetAfterLoad() || persistor.isDirtyAfterLoad()) {
             setDirty();
         }
+        Collection<NodeID> resultColl = persistorMap.keySet();
+        return resultColl.toArray(new NodeID[resultColl.size()]);
     }
 
     private void postLoad(

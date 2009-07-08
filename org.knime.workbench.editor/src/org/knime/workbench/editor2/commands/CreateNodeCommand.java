@@ -96,8 +96,8 @@ public class CreateNodeCommand extends Command {
             return;
         }
         // create extra info and set it
-        NodeUIInformation info = new NodeUIInformation();
-        info.setNodeLocation(m_location.x, m_location.y, -1, -1);
+        NodeUIInformation info = new NodeUIInformation(
+                m_location.x, m_location.y, -1, -1, false);
         m_container.setUIInformation(info);
 
     }

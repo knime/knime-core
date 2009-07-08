@@ -1132,7 +1132,7 @@ public abstract class NodeContainer implements NodeProgressListener {
         m_isDirty = false;
     }
 
-    /** Get a new persistor that is used to copy this node (copy& paste action).
+    /** Get a new persistor that is used to copy this node (copy&paste action).
      * @param tableRep Table repository of the destination.
      * @param preserveDeletableFlags Whether the "isdeleteable" annotation
      * should be copied also (false when individual nodes are copied
@@ -1170,9 +1170,11 @@ public abstract class NodeContainer implements NodeProgressListener {
      * @param preserveNodeMessage Whether possible node messages in the 
      *        persistor are to be preserved (parameter to configure method
      *        that is called during load).
+     * @return The list of nodes that were inserted, for single node containers
+     *         the result is an empty array.
      * @throws CanceledExecutionException If canceled.
      */
-    abstract void loadContent(final NodeContainerPersistor persistor,
+    abstract NodeID[] loadContent(final NodeContainerPersistor persistor,
             final Map<Integer, BufferedDataTable> tblRep,
             final ScopeObjectStack inStack, final ExecutionMonitor exec,
             final LoadResult loadResult, final boolean preserveNodeMessage)

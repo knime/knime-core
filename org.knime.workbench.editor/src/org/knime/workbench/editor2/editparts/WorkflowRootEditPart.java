@@ -73,20 +73,10 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(WorkflowRootEditPart.class);
 
-    /** Static parent workflow for all undo redo operations. Each workflow
-     * editor will have its own private child in this static instance. */
-    private static WorkflowManager undoRedoWFMRoot;
-
     private ProgressToolTipHelper m_toolTipHelper;
     
     private WorkflowPortBar m_inBar;
     private WorkflowPortBar m_outBar;
-    
-    /** Child of the static undoRedoWFMRoot instance, in which deleted nodes
-     * are kept. This object is only used by this WorkflowEditor instance. 
-     * (Necessary to avoid NodeID conflicts in the clipper.)
-     */
-    private WorkflowManager m_undoRedoClipperWFM;
     
     // TODO: maybe also connections, workflow ports, etc, should be stored
     /*
@@ -245,11 +235,6 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         getWorkflowManager().removeListener(this);
         getViewer().getEditDomain().getCommandStack()
                 .removeCommandStackListener(this);
-        if (m_undoRedoClipperWFM != null) {
-            m_undoRedoClipperWFM.getParent().removeNode(
-                    m_undoRedoClipperWFM.getID());
-            m_undoRedoClipperWFM = null;
-        }
     }
 
     /**
@@ -389,21 +374,4 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         return part;
     }
     
-    /** Get the shadow workflow manager that is used for undo/redo operations.
-     * The returned instance is only used by this WorkflowEditor. 
-     * @return The undo/redo shadow workflow.
-     */
-    public WorkflowManager getUndoRedoWFM() {
-        if (m_undoRedoClipperWFM == null) {
-            if (undoRedoWFMRoot == null) {
-                undoRedoWFMRoot = 
-                    WorkflowManager.ROOT.createAndAddProject("Undo/Redo Root");
-            }
-            m_undoRedoClipperWFM = undoRedoWFMRoot.createAndAddProject(
-                    ((WorkflowManager)getModel()).getNameWithID());
-        }
-        return m_undoRedoClipperWFM;
-    }
-
-
 }

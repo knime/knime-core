@@ -147,7 +147,7 @@ public final class MetaNodeTemplateRepositoryManager {
      */
     public void createMetaNodeTemplate(final String name, 
             final WorkflowManager source, final NodeID nodeID) {
-        NodeID newNode = m_workflowmanager.copy(
+        NodeID newNode = m_workflowmanager.copyFromAndPasteHere(
                 source, new NodeID[] {nodeID})[0];
         MetaNodeTemplateRepositoryItem item 
             = new MetaNodeTemplateRepositoryItem(

@@ -70,7 +70,7 @@ public final class ClipboardWorkflowManager {
      */
     public static void put(final WorkflowManager source, final NodeID... ids) {
         clear();
-        CLIP_BOARD.copy(source, ids);
+        CLIP_BOARD.copyFromAndPasteHere(source, ids);
     }
     
     /**

@@ -38,9 +38,9 @@ import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.WorkflowManagerInput;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 
 /**
@@ -57,7 +57,7 @@ public class DeleteNodeContainerCommand extends Command {
 
     private final WorkflowManager m_manager;
     
-    private NodeContainer m_shadowNode;
+    private WorkflowPersistor m_undoPersitor;
     
     private Set<ConnectionContainer> m_inConnections;
     private Set<ConnectionContainer> m_outConnections;
@@ -89,13 +89,7 @@ public class DeleteNodeContainerCommand extends Command {
         // removed.
         try {
             NodeContainer nc = m_part.getNodeContainer();
-            WorkflowRootEditPart parent = 
-                (WorkflowRootEditPart)m_part.getParent();
-            WorkflowManager undoRedoWFM = parent.getUndoRedoWFM();
-            WorkflowManager shadowWFM = undoRedoWFM.createAndAddProject(
-                    "Shadow copy of " + nc.getNameWithID());
-            NodeID shadowID = shadowWFM.copy(m_manager, nc.getID())[0];
-            m_shadowNode = shadowWFM.getNodeContainer(shadowID);
+            m_undoPersitor = m_manager.copy(nc.getID());
             m_outConnections = m_manager.getOutgoingConnectionsFor(nc.getID());
             m_inConnections = m_manager.getIncomingConnectionsFor(nc.getID());
             m_manager.removeNode(nc.getID());
@@ -135,9 +129,7 @@ public class DeleteNodeContainerCommand extends Command {
     /** {@inheritDoc} */
     @Override
     public void undo() {
-        WorkflowManager temp = m_shadowNode.getParent();
-        NodeID newNode = m_manager.copy(temp, m_shadowNode.getID())[0];
-        temp.removeNode(m_shadowNode.getID());
+        NodeID newNode = m_manager.paste(m_undoPersitor)[0];
         boolean hasFailure = false;
         for (ConnectionContainer in : m_inConnections) {
             if (m_manager.canAddConnection(in.getSource(), in.getSourcePort(),
@@ -168,16 +160,6 @@ public class DeleteNodeContainerCommand extends Command {
                             "Not all connections could be restored");
                 }
             });
-        }
-    }
-    
-    /** {@inheritDoc} */
-    @Override
-    public void dispose() {
-        if (m_shadowNode != null) {
-            WorkflowManager shadowWFM = m_shadowNode.getParent();
-            shadowWFM.removeNode(m_shadowNode.getID());
-            shadowWFM.getParent().removeNode(shadowWFM.getID());
         }
     }
     
