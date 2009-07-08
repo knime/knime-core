@@ -70,36 +70,41 @@ final class ScopeObjectStackView extends JPanel {
     /** Updates the view to display the given stack.
      * @param stack Whose values are to be displayed. */
     public void update(final ScopeObjectStack stack) {
-        Object[][] values = new Object[stack.size()][];
-        int loopCount = 0;
-        int counter = 0;
-        for (ScopeObject s : stack) {
-            Object[] obj = new Object[4];
-            obj[0] = Integer.valueOf(counter);
-            obj[1] = s.getOwner();
-            if (s instanceof ScopeVariable) {
-                ScopeVariable v = (ScopeVariable)s;
-                obj[2] = s;
-                Object o;
-                switch (v.getType()) {
-                case DOUBLE:
-                    o = Double.valueOf(v.getDoubleValue());
-                    break;
-                case INTEGER:
-                    o = Integer.valueOf(v.getIntValue());
-                    break;
-                case STRING:
-                    o = v.getStringValue();
-                    break;
-                default:
-                    o = "Unknown Type: " + v.getType();
+        Object[][] values;
+        if (stack != null) {
+            values = new Object[stack.size()][];
+            int loopCount = 0;
+            int counter = 0;
+            for (ScopeObject s : stack) {
+                Object[] obj = new Object[4];
+                obj[0] = Integer.valueOf(counter);
+                obj[1] = s.getOwner();
+                if (s instanceof ScopeVariable) {
+                    ScopeVariable v = (ScopeVariable)s;
+                    obj[2] = s;
+                    Object o;
+                    switch (v.getType()) {
+                    case DOUBLE:
+                        o = Double.valueOf(v.getDoubleValue());
+                        break;
+                    case INTEGER:
+                        o = Integer.valueOf(v.getIntValue());
+                        break;
+                    case STRING:
+                        o = v.getStringValue();
+                        break;
+                    default:
+                        o = "Unknown Type: " + v.getType();
+                    }
+                    obj[3] = o;
+                } else {
+                    obj[2] = "Loop (" + (loopCount++) + ")";
+                    obj[3] = null;
                 }
-                obj[3] = o;
-            } else {
-                obj[2] = "Loop (" + (loopCount++) + ")";
-                obj[3] = null;
+                values[counter++] = obj;
             }
-            values[counter++] = obj;
+        } else {
+            values = new Object[0][4];
         }
         String[] colNames = new String[]{"Index", "Owner ID", "Type", "Value"};
         DefaultTableModel model = (DefaultTableModel)m_table.getModel();
