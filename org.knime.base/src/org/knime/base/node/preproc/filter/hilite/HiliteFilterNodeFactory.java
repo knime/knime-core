@@ -26,14 +26,14 @@ package org.knime.base.node.preproc.filter.hilite;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
  * 
  * @author thiel, University of Konstanz
  */
-public class HiliteFilterNodeFactory extends NodeFactory {
+public class HiliteFilterNodeFactory 
+        extends NodeFactory<HiliteFilterNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -47,7 +47,7 @@ public class HiliteFilterNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public HiliteFilterNodeModel createNodeModel() {
         return new HiliteFilterNodeModel();
     }
 
@@ -55,8 +55,8 @@ public class HiliteFilterNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex, 
-            final NodeModel nodeModel) {
+    public NodeView<HiliteFilterNodeModel> createNodeView(final int viewIndex, 
+            final HiliteFilterNodeModel nodeModel) {
         return null;
     }
 
