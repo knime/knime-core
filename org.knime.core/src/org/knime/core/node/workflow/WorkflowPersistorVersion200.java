@@ -113,7 +113,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     }
     
     @Override
-    protected boolean loadIsMetaNode(NodeSettingsRO settings) 
+    protected boolean loadIsMetaNode(final NodeSettingsRO settings) 
             throws InvalidSettingsException {
         return settings.getBoolean("node_is_meta");
     }
@@ -142,18 +142,19 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     
     /** {@inheritDoc} */
     @Override
-    protected int loadConnectionDestID(NodeSettingsRO settings)
+    protected int loadConnectionDestID(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return settings.getInt("destID");
     }
     
     /** {@inheritDoc} */
     @Override
-    protected int loadConnectionDestPort(NodeSettingsRO settings)
+    protected int loadConnectionDestPort(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return settings.getInt("destPort");
     }
     
+    @Override
     protected NodeSettingsRO loadInPortsSetting(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         if (settings.containsKey("meta_in_ports")) {
@@ -164,7 +165,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     
     /** {@inheritDoc} */
     @Override
-    protected NodeSettingsRO loadInPortsSettingsEnum(NodeSettingsRO settings) 
+    protected NodeSettingsRO loadInPortsSettingsEnum(final NodeSettingsRO settings) 
         throws InvalidSettingsException {
         return settings.getNodeSettings("port_enum");
     }
@@ -210,6 +211,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         loadUIInfoSettings(uiInfo, settings);
     }
     
+    @Override
     protected NodeSettingsRO loadOutPortsSetting(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         if (settings.containsKey("meta_out_ports")) {
@@ -220,7 +222,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     
     /** {@inheritDoc} */
     @Override
-    protected NodeSettingsRO loadOutPortsSettingsEnum(NodeSettingsRO settings) 
+    protected NodeSettingsRO loadOutPortsSettingsEnum(final NodeSettingsRO settings) 
         throws InvalidSettingsException {
         return settings.getNodeSettings("port_enum");
     }
@@ -495,8 +497,8 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         saveUIInfoSettings(settings, uiInfo);
     }
     
-    protected void saveInPort(NodeSettingsWO settings, 
-            WorkflowManager wm, final int portIndex) {
+    protected void saveInPort(final NodeSettingsWO settings, 
+            final WorkflowManager wm, final int portIndex) {
         WorkflowInPort inport = wm.getInPort(portIndex);
         settings.addInt("index", portIndex);
         settings.addString("name", inport.getPortName());
@@ -529,8 +531,8 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         return settings.addNodeSettings("outport_" + portIndex);
     }
     
-    protected void saveOutPort(NodeSettingsWO settings, 
-            WorkflowManager wm, final int portIndex) {
+    protected void saveOutPort(final NodeSettingsWO settings, 
+            final WorkflowManager wm, final int portIndex) {
         WorkflowOutPort outport = wm.getOutPort(portIndex);
         settings.addInt("index", portIndex);
         settings.addString("name", outport.getPortName());
