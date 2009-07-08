@@ -24,21 +24,23 @@ package org.knime.ext.sun.nodes.script;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.def.TimestampCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -49,9 +51,6 @@ import org.knime.ext.sun.nodes.script.expression.Expression;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class JavaScriptingNodeModel extends NodeModel {
-
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(JavaScriptingNodeModel.class);
 
     private final JavaScriptingSettings m_settings;
 
@@ -64,8 +63,6 @@ public class JavaScriptingNodeModel extends NodeModel {
     
     /** The current row count or -1 if not in execute(). */
     private int m_rowCount = -1;
-
-    private File m_tempFile;
 
     /** One input, one output. */
     public JavaScriptingNodeModel() {
@@ -167,11 +164,7 @@ public class JavaScriptingNodeModel extends NodeModel {
             if ((m_compiledExpression == null)
                     || (!m_inputSpec.equalStructure(spec))) {
                 // if the spec changes, we need to re-compile the expression
-                if (m_tempFile == null) {
-                    m_tempFile = createTempFile();
-                }
-                m_compiledExpression =
-                    Expression.compile(m_settings, spec, m_tempFile);
+                m_compiledExpression = Expression.compile(m_settings, spec);
                 m_inputSpec = spec;
             }
             assert m_inputSpec != null;
@@ -217,6 +210,13 @@ public class JavaScriptingNodeModel extends NodeModel {
     Class<?> getReturnType() {
         return m_settings.getReturnType();
     }
+    
+    /**
+     * @return true if the return value of the expression represents an array.
+     */
+    boolean isArrayReturn() {
+        return m_settings.isArrayReturn();
+    }
 
     /**
      * @return the compiledExpression
@@ -237,44 +237,6 @@ public class JavaScriptingNodeModel extends NodeModel {
         return m_rowCount;
     }
     
-    /** Creates an returns a temp java file, for which no .class file exists
-     * yet.
-     * @return The temporary java file to use.
-     * @throws IOException If that fails for whatever reason.
-     */
-    static File createTempFile() throws IOException {
-        // what follows: create a temp file, check if the corresponding
-        // class file exists and if so, generate the next temp file
-        // (we can't use a temp file, for which a class file already exists).
-        while (true) {
-            File tempFile = File.createTempFile("Expression", ".java");
-            File classFile = getAccompanyingClassFile(tempFile);
-            if (classFile.exists()) {
-                tempFile.delete();
-            } else {
-                tempFile.deleteOnExit();
-                return tempFile;
-            }
-        }
-    }
-
-    /** Determine the class file name of the javaFile argument. Needed to
-     * check if temp file is ok and on exit (to delete all traces of this node).
-     * @param javaFile The file name of java file
-     * @return The class file (may not exist (yet)).
-     */
-    static File getAccompanyingClassFile(final File javaFile) {
-        if (javaFile == null || !javaFile.getName().endsWith(".java")) {
-            throw new IllegalArgumentException("Can't determine class file for"
-                    + " non-java file: " + javaFile);
-        }
-        File parent = javaFile.getParentFile();
-        String prefixName = javaFile.getName().substring(
-                0, javaFile.getName().length() - ".java".length());
-        String classFileName = prefixName + ".class";
-        return new File(parent, classFileName);
-    }
-
     private DataColumnSpec getNewColSpec() throws InvalidSettingsException {
         Class<?> returnType = m_settings.getReturnType();
         String colName = m_settings.getColName();
@@ -283,34 +245,17 @@ public class JavaScriptingNodeModel extends NodeModel {
             cellReturnType = IntCell.TYPE;
         } else if (returnType.equals(Double.class)) {
             cellReturnType = DoubleCell.TYPE;
+        } else if (returnType.equals(Date.class)) {
+            cellReturnType = TimestampCell.TYPE;
         } else if (returnType.equals(String.class)) {
             cellReturnType = StringCell.TYPE;
         } else {
             throw new InvalidSettingsException("Illegal return type: "
                     + returnType.getName());
         }
-        return new DataColumnSpecCreator(colName, cellReturnType)
-                .createSpec();
+        DataType type = !m_settings.isArrayReturn() ? cellReturnType 
+                : DataType.getType(ListCell.class, cellReturnType);
+        return new DataColumnSpecCreator(colName, type).createSpec();
     }
 
-    /** Attempts to delete temp files.
-     * {@inheritDoc} */
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            if ((m_tempFile != null) && m_tempFile.exists()) {
-                if (!m_tempFile.delete()) {
-                    LOGGER.warn("Unable to delete temp file "
-                            + m_tempFile.getAbsolutePath());
-                }
-                File classFile = getAccompanyingClassFile(m_tempFile);
-                if (classFile.exists() && !classFile.delete()) {
-                    LOGGER.warn("Unable to delete temp class file "
-                            + classFile.getAbsolutePath());
-                }
-            }
-        } finally {
-            super.finalize();
-        }
-    }
 }

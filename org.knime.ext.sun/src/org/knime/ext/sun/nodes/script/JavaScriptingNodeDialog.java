@@ -26,7 +26,10 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -34,7 +37,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.io.IOException;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
@@ -46,6 +49,7 @@ import javax.swing.ButtonModel;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -57,6 +61,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -96,6 +101,8 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
     private final JList m_scopeVarsList;
 
     private final JEditorPane m_expEdit;
+    
+    private final JEditorPane m_headerEdit;
 
     private final JRadioButton m_appendRadio;
 
@@ -107,11 +114,13 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
 
     private final ButtonGroup m_returnTypeButtonGroup;
     
+    private final JCheckBox m_isArrayReturnChecker;
+    
     private final JCheckBox m_compileOnCloseChecker;
     
     private final JList m_addJarList;
 
-    private DataTableSpec m_currenteSpec = null;
+    private DataTableSpec m_currentSpec = null;
     
     private int m_currentVersion;
 
@@ -175,8 +184,13 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         m_scopeVarsList.setCellRenderer(new ScopeVariableListCellRenderer());
         m_expEdit = new JEditorPane();
         Font font = m_expEdit.getFont();
-        m_expEdit.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 
-                (font == null ? 12 : font.getSize())));
+        Font newFont = new Font(Font.MONOSPACED, Font.PLAIN, 
+                (font == null ? 12 : font.getSize()));
+        m_expEdit.setFont(newFont);
+        
+        m_headerEdit = new JEditorPane();
+        m_headerEdit.setFont(newFont);
+        
         m_newColNameField = new JTextField(10);
         m_appendRadio = new JRadioButton("Append Column: ");
         m_appendRadio.setToolTipText("Appends a new column to the input "
@@ -210,10 +224,15 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         doubleReturnRadio.setActionCommand(Double.class.getName());
         JRadioButton stringReturnRadio = new JRadioButton("String");
         stringReturnRadio.setActionCommand(String.class.getName());
+        JRadioButton dateReturnRadio = new JRadioButton("Date");
+        dateReturnRadio.setActionCommand(Date.class.getName());
         m_returnTypeButtonGroup = new ButtonGroup();
         m_returnTypeButtonGroup.add(intReturnRadio);
         m_returnTypeButtonGroup.add(doubleReturnRadio);
         m_returnTypeButtonGroup.add(stringReturnRadio);
+        m_returnTypeButtonGroup.add(dateReturnRadio);
+        
+        m_isArrayReturnChecker = new JCheckBox("Array Return");
         
         m_addJarList = new JList(new DefaultListModel()) {
             /** {@inheritDoc} */
@@ -277,50 +296,107 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         final JSplitPane varSplitPane = 
             new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         JScrollPane pane = new JScrollPane(m_colList);
-        pane.setBorder(BorderFactory.createTitledBorder(" Column List "));
+        pane.setBorder(createEmptyTitledBorder("Column List"));
         varSplitPane.setTopComponent(pane);
         // set variable panel only if expert mode is enabled.
         if (Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE)) {
             pane = new JScrollPane(m_scopeVarsList);
-            pane.setBorder(BorderFactory.createTitledBorder(
-            " Flow Variable List "));
+            pane.setBorder(createEmptyTitledBorder("Flow Variable List"));
             varSplitPane.setBottomComponent(pane);
             varSplitPane.setOneTouchExpandable(true);
             varSplitPane.setResizeWeight(0.9);
         }
+        JComponent editorMainPanel = createEditorPanel();
+        
         JPanel centerPanel = new JPanel(new GridLayout(0, 1));
         JSplitPane mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         mainSplitPane.setLeftComponent(varSplitPane);
-        mainSplitPane.setRightComponent(new JScrollPane(m_expEdit));
+        mainSplitPane.setRightComponent(editorMainPanel);
         centerPanel.add(mainSplitPane);
     
         JPanel southPanel = new JPanel(new GridLayout(0, 2));
-        JPanel replaceOrAppend = new JPanel(new GridLayout(0, 2));
-        replaceOrAppend.setBorder(BorderFactory
-                .createTitledBorder("Replace or append result"));
-        replaceOrAppend.add(m_appendRadio);
-        replaceOrAppend.add(m_newColNameField);
-        replaceOrAppend.add(m_replaceRadio);
-        replaceOrAppend.add(m_replaceCombo);
+        JPanel replaceOrAppend = createAndOrReplaceColumnPanel();
         southPanel.add(replaceOrAppend);
     
+        JPanel returnTypeAndCompilation = createReturnTypeAndCompilationPanel();
+        southPanel.add(returnTypeAndCompilation);
+
+        southPanel.add(returnTypeAndCompilation);
+        finalPanel.add(centerPanel, BorderLayout.CENTER);
+        finalPanel.add(southPanel, BorderLayout.SOUTH);
+        return finalPanel;
+    }
+    
+    private JComponent createEditorPanel() {
+        final JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        split.setOneTouchExpandable(true);
+        
+        JScrollPane headerScroller = new JScrollPane(m_headerEdit);
+        String borderTitle = "Global Variable Declaration";
+        headerScroller.setBorder(createEmptyTitledBorder(borderTitle));
+        split.setTopComponent(headerScroller);
+        
+        JScrollPane bodyScroller = new JScrollPane(m_expEdit);
+        borderTitle = "Method Body";
+        bodyScroller.setBorder(createEmptyTitledBorder(borderTitle));
+
+        split.setBottomComponent(bodyScroller);
+        split.setResizeWeight(0.2);
+        return split;
+    }
+
+    private JPanel createAndOrReplaceColumnPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        panel.setBorder(BorderFactory
+                .createTitledBorder("Replace or append result"));
+        m_appendRadio.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                m_newColNameField.requestFocus();
+                m_newColNameField.selectAll();
+            }
+        });
+        
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panel.add(m_appendRadio, gbc);
+        
+        gbc.gridx += 1;
+        panel.add(m_newColNameField, gbc);
+        
+        gbc.gridy += 1;
+        gbc.gridx = 0;
+        panel.add(m_replaceRadio, gbc);
+        
+        gbc.gridx += 1;
+        panel.add(m_replaceCombo, gbc);
+        return panel;
+    }
+    
+    private JPanel createReturnTypeAndCompilationPanel() {
         JPanel returnTypeAndCompilation = new JPanel(new BorderLayout());
         JPanel compilationPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         compilationPanel.add(m_compileOnCloseChecker);
         returnTypeAndCompilation.add(compilationPanel, BorderLayout.NORTH);
         
-        JPanel returnType = new JPanel(new GridLayout(0, 2));
+        JPanel returnType = new JPanel(new BorderLayout());
         returnType.setBorder(BorderFactory.createTitledBorder("Return type"));
+        JPanel returnFieldType = new JPanel(new GridLayout(0, 2));
         for (Enumeration<?> e = m_returnTypeButtonGroup.getElements(); e
                 .hasMoreElements();) {
-            returnType.add((AbstractButton)e.nextElement());
+            returnFieldType.add((AbstractButton)e.nextElement());
         }
-        returnTypeAndCompilation.add(returnType, BorderLayout.CENTER);
+        returnType.add(returnFieldType, BorderLayout.CENTER);
+        JPanel returnArrayPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        returnArrayPanel.add(m_isArrayReturnChecker);
+        returnType.add(returnArrayPanel, BorderLayout.SOUTH);
         
-        southPanel.add(returnTypeAndCompilation);
-        finalPanel.add(centerPanel, BorderLayout.CENTER);
-        finalPanel.add(southPanel, BorderLayout.SOUTH);
-        return finalPanel;
+        returnTypeAndCompilation.add(returnType, BorderLayout.CENTER);
+        return returnTypeAndCompilation;
+
     }
 
     private JPanel createJarPanel() {
@@ -422,8 +498,10 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         JavaScriptingSettings s = new JavaScriptingSettings();
         s.loadSettingsInDialog(settings, specs[0]);
         String exp = s.getExpression();
+        String header = s.getHeader();
         
         String rType = s.getReturnType().getName();
+        boolean isArrayReturn = s.isArrayReturn();
         String defaultColName = "new column";
         String newColName = s.getColName();
         boolean isReplace = s.isReplace();
@@ -438,7 +516,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         m_newColNameField.setText("");
         // will select newColName only if it is in the spec list
         m_replaceCombo.update(specs[0], newColName);
-        m_currenteSpec = specs[0];
+        m_currentSpec = specs[0];
         if (isReplace && m_replaceCombo.getNrItemsInList() > 0) {
             m_replaceRadio.doClick();
         } else {
@@ -448,6 +526,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
             m_newColNameField.setText(newColString);
         }
         m_replaceRadio.setEnabled(m_replaceCombo.getNrItemsInList() > 0);
+        m_headerEdit.setText(header);
         m_expEdit.setText(exp);
         m_expEdit.requestFocus();
         ButtonModel firstButton = null;
@@ -464,6 +543,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         if (m_returnTypeButtonGroup.getSelection() == null) {
             m_returnTypeButtonGroup.setSelected(firstButton, true);
         }
+        m_isArrayReturnChecker.setSelected(isArrayReturn);
         DefaultListModel listModel = (DefaultListModel)m_colList.getModel();
         listModel.removeAllElements();
         if (m_currentVersion == Expression.VERSION_1X) {
@@ -511,8 +591,10 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         s.setColName(newColName);
         String type = m_returnTypeButtonGroup.getSelection().getActionCommand();
         s.setReturnType(type);
+        s.setArrayReturn(m_isArrayReturnChecker.isSelected());
         String exp = m_expEdit.getText();
         s.setExpression(exp);
+        s.setHeader(m_headerEdit.getText());
         s.setExpressionVersion(m_currentVersion);
         boolean isTestCompilation = m_compileOnCloseChecker.isSelected();
         s.setTestCompilationOnDialogClose(isTestCompilation);
@@ -523,29 +605,24 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
             jarListModel.copyInto(copy);
             s.setJarFiles(copy);
         }
-        if (isTestCompilation && m_currenteSpec != null) {
-            File tempFile = null;
-            File classFile = null;
+        if (isTestCompilation && m_currentSpec != null) {
             try {
-                tempFile = JavaScriptingNodeModel.createTempFile();
-                classFile = 
-                    JavaScriptingNodeModel.getAccompanyingClassFile(tempFile);
-                Expression.compile(s, m_currenteSpec, tempFile);
+                Expression.compile(s, m_currentSpec);
             } catch (CompilationFailedException cfe) {
                 throw new InvalidSettingsException(cfe.getMessage());
-            } catch (IOException ioe) {
-                // do nothing, leave it up to the caller to validate the
-                // settings
-            } finally {
-                if (tempFile != null) {
-                    tempFile.delete();
-                }
-                if (classFile != null) {
-                    classFile.delete();
-                }
             }
         }
         s.saveSettingsTo(settings);
+    }
+    
+    /** Create an empty, titled border.
+     * @param string Title of the border.
+     * @return Such a new border.
+     */
+    private static final Border createEmptyTitledBorder(final String string) {
+        return BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(
+                5, 0, 0, 0), string, TitledBorder.DEFAULT_JUSTIFICATION,
+                TitledBorder.BELOW_TOP);
     }
 
     /**

@@ -23,7 +23,10 @@
 package org.knime.ext.sun.nodes.script;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.knime.core.data.DataCell;
@@ -35,11 +38,15 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.TimestampValue;
+import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.CollectionDataValue;
+import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.def.TimestampCell;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.ext.sun.nodes.script.expression.EvaluationFailedException;
@@ -136,6 +143,7 @@ class ColumnCalculator implements CellFactory {
         }
         DataTableSpec spec = m_model.getInputSpec();
         Class<?> returnType = m_model.getReturnType();
+        boolean isArrayReturn = m_model.isArrayReturn();
         Map<InputField, Object> nameValueMap = 
             new HashMap<InputField, Object>();
         nameValueMap.put(new InputField(Expression.ROWINDEX, 
@@ -173,6 +181,13 @@ class ColumnCalculator implements CellFactory {
                         cellVal = new Double(
                                 ((DoubleValue)cell).getDoubleValue());
                     }
+                } else if (cellType.isCompatible(TimestampValue.class)) {
+                    if (isArray) {
+                        cellVal = asDateArray((CollectionDataValue)cell);
+                    } else {
+                        // keep it read-only and clone it
+                        cellVal = ((TimestampValue)cell).getDate().clone();
+                    }
                 } else if (cellType.isCompatible(StringValue.class)) {
                     if (isArray) {
                         cellVal = asStringArray((CollectionDataValue)cell);
@@ -195,13 +210,7 @@ class ColumnCalculator implements CellFactory {
         try {
             m_expression.set(nameValueMap);
             o = m_expression.evaluate();
-            if (o != null && !returnType.isAssignableFrom(o.getClass())) {
-                LOGGER.warn("Unable to cast return type of expression \""
-                        + o.getClass().getName() + "\" to desired output \"" 
-                        + returnType.getName() 
-                        + "\" - putting missing value instead.");
-                o = null;
-            }
+            // class correctness is asserted by compiler
         } catch (EvaluationFailedException ee) {
             Throwable cause = ee.getCause();
             if (cause instanceof InvocationTargetException) {
@@ -219,18 +228,34 @@ class ColumnCalculator implements CellFactory {
         if (returnType.equals(Integer.class)) {
             if (o == null) {
                 result = DataType.getMissingCell();
+            } else if (isArrayReturn) {
+                result = asListCell((Integer[])o);
             } else {
                 result = new IntCell(((Integer)o).intValue());
             }
         } else if (returnType.equals(Double.class)) {
-            if (o == null || ((Double)o).isNaN()) {
+            if (o == null) {
+                result = DataType.getMissingCell();
+            } else if (isArrayReturn) {
+                result = asListCell((Double[])o);
+            } else if (((Double)o).isNaN()) {
                 result = DataType.getMissingCell();
             } else {
                 result = new DoubleCell(((Double)o).doubleValue());
             }
+        } else if (returnType.equals(Date.class)) {
+            if (o == null) {
+                result = DataType.getMissingCell();
+            } else if (isArrayReturn) {
+                result = asListCell((Date[])o);
+            } else {
+                result = new TimestampCell((Date)o);
+            }
         } else if (returnType.equals(String.class)) {
             if (o == null) {
                 result = DataType.getMissingCell();
+            } else if (isArrayReturn) {
+                result = asListCell((String[])o);
             } else {
                 result = new StringCell((String)o);
             }
@@ -240,39 +265,86 @@ class ColumnCalculator implements CellFactory {
         return result;
     }
 
-    private static int[] asIntArray(final CollectionDataValue cellValue) {
-        int[] result = new int[cellValue.size()];
+    private static Integer[] asIntArray(final CollectionDataValue cellValue) {
+        Integer[] result = new Integer[cellValue.size()];
         int i = 0;
         for (DataCell c : cellValue) {
-            if (c.isMissing()) {
-                return null;
-            }
-            result[i++] = ((IntValue)c).getIntValue();
+            result[i++] = c.isMissing() ? null : ((IntValue)c).getIntValue();
         }
         return result;
     }
     
-    private static double[] asDoubleArray(final CollectionDataValue cellValue) {
-        double[] result = new double[cellValue.size()];
+    private static ListCell asListCell(final Integer[] result) {
+        List<DataCell> asCellColl = new ArrayList<DataCell>();
+        for (Integer i : result) {
+            asCellColl.add(i == null 
+                    ? DataType.getMissingCell() : new IntCell(i));
+        }
+        return CollectionCellFactory.createListCell(asCellColl);
+    }
+    
+    private static Double[] asDoubleArray(final CollectionDataValue cellValue) {
+        Double[] result = new Double[cellValue.size()];
+        int i = 0;
+        for (DataCell c : cellValue) {
+            result[i++] = 
+                c.isMissing() ? null : ((DoubleValue)c).getDoubleValue();
+        }
+        return result;
+    }
+    
+    private static ListCell asListCell(final Double[] result) {
+        List<DataCell> asCellColl = new ArrayList<DataCell>();
+        for (Double d : result) {
+            if (d == null || Double.isNaN(d)) {
+                asCellColl.add(DataType.getMissingCell()); 
+            } else {
+                asCellColl.add(new DoubleCell(d));
+            }
+        }
+        return CollectionCellFactory.createListCell(asCellColl);
+    }
+    
+    private static Date[] asDateArray(final CollectionDataValue cellValue) {
+        Date[] result = new Date[cellValue.size()];
         int i = 0;
         for (DataCell c : cellValue) {
             if (c.isMissing()) {
-                return null;
+                result[i] = null;
+            } else {
+                // clone to ensure immutable property of cell
+                result[i++] = (Date)((TimestampCell)c).getDate().clone();
             }
-            result[i++] = ((DoubleValue)c).getDoubleValue();
+            i++;
         }
         return result;
+    }
+    
+    private static ListCell asListCell(final Date[] result) {
+        List<DataCell> asCellColl = new ArrayList<DataCell>();
+        for (Date s : result) {
+            asCellColl.add(s == null 
+                    ? DataType.getMissingCell() : new TimestampCell(s));
+        }
+        return CollectionCellFactory.createListCell(asCellColl);
     }
     
     private static String[] asStringArray(final CollectionDataValue cellValue) {
         String[] result = new String[cellValue.size()];
         int i = 0;
         for (DataCell c : cellValue) {
-            if (c.isMissing()) {
-                return null;
-            }
-            result[i++] = c.toString();
+            result[i++] = c.isMissing() ? null : c.toString();
         }
         return result;
     }
+    
+    private static ListCell asListCell(final String[] result) {
+        List<DataCell> asCellColl = new ArrayList<DataCell>();
+        for (String s : result) {
+            asCellColl.add(s == null 
+                    ? DataType.getMissingCell() : new StringCell(s));
+        }
+        return CollectionCellFactory.createListCell(asCellColl);
+    }
+    
 }
