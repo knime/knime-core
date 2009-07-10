@@ -41,7 +41,7 @@ import org.eclipse.ui.views.navigator.ResourceNavigator;
  */
 public class KnimeResourceChangeListener implements IResourceChangeListener {
     
-    private IResourceDeltaVisitor m_visitor;
+    private final IResourceDeltaVisitor m_visitor;
     
     /**
      * 
@@ -98,9 +98,11 @@ public class KnimeResourceChangeListener implements IResourceChangeListener {
                         doRemove(res);
                         break;
                     case IResourceDelta.CHANGED:
-                        // TODO: look for .knime file name
+                        // might be the workspace root that has changed
+                        // new projects added!
+                        doRefresh(parent);
                         if (res instanceof IFile) {
-                            doRefresh(res);
+                            return false;
                         }
                         break;
                     }

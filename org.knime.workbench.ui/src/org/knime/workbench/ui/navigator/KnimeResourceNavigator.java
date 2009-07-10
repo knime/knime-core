@@ -27,12 +27,7 @@ package org.knime.workbench.ui.navigator;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IResourceChangeEvent;
-import org.eclipse.core.resources.IResourceChangeListener;
-import org.eclipse.core.resources.IResourceDelta;
-import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.IContributionItem;
@@ -91,13 +86,14 @@ import org.knime.workbench.ui.navigator.actions.WFShowJobMgrViewAction;
  * @author Christoph Sieb, University of Konstanz
  */
 public class KnimeResourceNavigator extends ResourceNavigator implements
-        IResourceChangeListener, NodeStateChangeListener, NodeMessageListener,
+        NodeStateChangeListener, NodeMessageListener, 
         JobManagerChangedListener {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(KnimeResourceNavigator.class);
 
     /** ID as defined in plugin.xml. */
-    public static final String ID = "org.knime.workbench.ui.navigator.KnimeResourceNavigator";
+    public static final String ID 
+        = "org.knime.workbench.ui.navigator.KnimeResourceNavigator";
 
     /**
      * Creates a new <code>KnimeResourceNavigator</code> with an final
@@ -174,6 +170,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         doRefresh(state.getSource());
     }
 
+    
     /**
      *
      * {@inheritDoc}
@@ -268,7 +265,8 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 FileTransfer.getInstance()}, new WorkflowMoveDragListener());
         viewer.addDropSupport(DND.DROP_MOVE, new Transfer[]{
                 LocalSelectionTransfer.getTransfer(),
-                FileTransfer.getInstance()}, new WorkflowMoveDropListener());
+                FileTransfer.getInstance()}, 
+                new WorkflowMoveDropListener());
     }
 
     /**
@@ -379,7 +377,8 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 } else if (aItem.getAction() instanceof OpenInNewWindowAction) {
 
                     menu.remove(aItem);
-                } else if (aItem.getAction() instanceof CloseUnrelatedProjectsAction) {
+                } else if (aItem.getAction() 
+                        instanceof CloseUnrelatedProjectsAction) {
                     menu.remove(aItem);
                 }
 
@@ -462,101 +461,4 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     protected void initContentProvider(final TreeViewer viewer) {
         viewer.setContentProvider(new KnimeResourceContentProvider());
     }
-
-    // / NOT REGISTERED!!!
-
-    /**
-     * {@inheritDoc}
-     */
-    public void resourceChanged(final IResourceChangeEvent event) {
-        try {
-            if (event == null || event.getDelta() == null) {
-                return;
-            }
-            event.getDelta().accept(new ResourceVisitor());
-        } catch (CoreException e) {
-            // should never happen, I think...
-            e.printStackTrace();
-        }
-
-        /*
-         * // do nothing try { LOGGER.debug("refreshing " +
-         * event.getResource().getName());
-         * event.getResource().refreshLocal(IResource.DEPTH_INFINITE, null); }
-         * catch (CoreException ce) { // TODO: what to do?
-         * LOGGER.error("exception during resource change event", ce); }
-         */
-    }
-
-    private class ResourceVisitor implements IResourceDeltaVisitor {
-        private String getTypeString(final IResourceDelta delta) {
-            StringBuffer buffer = new StringBuffer();
-
-            if ((delta.getKind() & IResourceDelta.ADDED) != 0) {
-                buffer.append("ADDED|");
-            }
-            if ((delta.getKind() & IResourceDelta.ADDED_PHANTOM) != 0) {
-                buffer.append("ADDED_PHANTOM|");
-            }
-            if ((delta.getKind() & IResourceDelta.ALL_WITH_PHANTOMS) != 0) {
-                buffer.append("ALL_WITH_PHANTOMS|");
-            }
-            if ((delta.getKind() & IResourceDelta.CHANGED) != 0) {
-                buffer.append("CHANGED|");
-            }
-            if ((delta.getKind() & IResourceDelta.CONTENT) != 0) {
-                buffer.append("CONTENT|");
-            }
-            if ((delta.getFlags() & IResourceDelta.DESCRIPTION) != 0) {
-                buffer.append("DESCRIPTION|");
-            }
-            if ((delta.getKind() & IResourceDelta.ENCODING) != 0) {
-                buffer.append("ENCODING|");
-            }
-            if ((delta.getKind() & IResourceDelta.MARKERS) != 0) {
-                buffer.append("MARKERS|");
-            }
-            if ((delta.getFlags() & IResourceDelta.MOVED_FROM) != 0) {
-                buffer.append("MOVED_FROM|");
-            }
-            if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
-                buffer.append("MOVED_TO|");
-            }
-            if ((delta.getKind() & IResourceDelta.NO_CHANGE) != 0) {
-                buffer.append("NO_CHANGE|");
-            }
-            if ((delta.getKind() & IResourceDelta.OPEN) != 0) {
-                buffer.append("OPEN|");
-            }
-            if ((delta.getKind() & IResourceDelta.REMOVED) != 0) {
-                buffer.append("REMOVED|");
-            }
-            if ((delta.getKind() & IResourceDelta.REMOVED_PHANTOM) != 0) {
-                buffer.append("REMOVED_PHANTOM|");
-            }
-            if ((delta.getKind() & IResourceDelta.REPLACED) != 0) {
-                buffer.append("REPLACED|");
-            }
-            if ((delta.getKind() & IResourceDelta.SYNC) != 0) {
-                buffer.append("SYNC|");
-            }
-            if ((delta.getKind() & IResourceDelta.TYPE) != 0) {
-                buffer.append("TYPE|");
-            }
-            return buffer.toString();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public boolean visit(final IResourceDelta delta) throws CoreException {
-
-            LOGGER.debug("resource changed: " + getTypeString(delta));
-            if ((delta.getKind() & IResourceDelta.ADDED) != 0) {
-                LOGGER.debug("refreshing: " + delta.getResource());
-            }
-            return true;
-        }
-    }
-
 }
