@@ -178,7 +178,7 @@
       </builder>
    </extension>
    <extension
-         id="org.knime.workbench.ui.KNIMEProjectNature"
+         id="KNIMEProjectNature"
          name="KNIME project nature"
          point="org.eclipse.core.resources.natures">
       <runtime>
