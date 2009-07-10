@@ -27,6 +27,7 @@ package org.knime.workbench.ui.navigator;
 import java.net.URL;
 
 import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -56,12 +57,14 @@ import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
 
 /**
  * Implements the label provider for the knime navigator. Mainly projects get
  * another image.
  *
  * @author Christoph Sieb, University of Konstanz
+ * @author Fabian Dill, KNIME.com GmbH
  */
 public class KnimeResourceLabelProvider extends LabelProvider implements
         IColorProvider, IFontProvider {
@@ -86,14 +89,17 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     private static final Image WORKFLOW_SET 
         = KNIMEUIPlugin.imageDescriptorFromPlugin(KNIMEUIPlugin.PLUGIN_ID, 
                 "icons/wf_set.png").createImage(); 
-
+        
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(
 //            KnimeResourceLableProvider.class);
 
-    
-    private static final Path WORKFLOW_FILE = new Path(
+    /** Path representation of the workflow file. */
+    public static final Path WORKFLOW_FILE = new Path(
             WorkflowPersistor.WORKFLOW_FILE);
 
+    /** Path representation of the meta info file. */
+    public static final Path METAINFO_FILE = new Path(
+            MetaInfoFile.METAINFO_FILE);
     /**
      * Returns a workbench label provider that is hooked up to the decorator
      * mechanism.
@@ -112,7 +118,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
      * update when it changes, since many workbench adapters derive their icon
      * from the file associations in the registry.
      */
-    private IPropertyListener m_editorRegistryListener =
+    private final IPropertyListener m_editorRegistryListener =
             new IPropertyListener() {
                 public void propertyChanged(final Object source,
                         final int propId) {
@@ -184,12 +190,8 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     public void dispose() {
         PlatformUI.getWorkbench().getEditorRegistry().removePropertyListener(
                 m_editorRegistryListener);
-        EXECUTED.dispose();
-        EXECUTING.dispose();
-        CONFIGURED.dispose();
-        NODE.dispose();
-        CLOSED.dispose();
-        WORKFLOW_SET.dispose();
+        // had to remove the disposal of the images in order to make deriving 
+        // label provider work otherwise these images were already disposed 
         ProjectWorkflowMap.clearMap();
         super.dispose();
     }
@@ -234,21 +236,21 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
         if (element instanceof IContainer) {
             IContainer container = (IContainer)element;
             if (container.exists(WORKFLOW_FILE)) {
-                // in any case a knime workflow
+                // in any case a knime workflow or meta node (!)
                 projectNode = ProjectWorkflowMap.getWorkflow(
                         container.getFullPath().toString());
-                if (projectNode == null) {
+                if (projectNode == null && !isMetaNode(container)) {
                     return CLOSED;
                 }
-            } else if (container.getParent().exists(WORKFLOW_FILE)) {
+            }
+            if (isMetaNode(container)) {
                 return NODE;
-            } else {
-                // no workflow file -> workflow set
+            } else if (container.exists(METAINFO_FILE)) {
                 return WORKFLOW_SET;
             }
         } else if (element instanceof NodeContainer) {
                 projectNode = (NodeContainer)element;
-        }
+        } 
         if (projectNode != null) {
             if (projectNode instanceof WorkflowManager
                     // display state only for projects
@@ -279,15 +281,24 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
         }
         return img;
     }
+    
+    private boolean isMetaNode(final IContainer container) {
+        return (!(container instanceof IProject)) 
+            && container.getParent().exists(WORKFLOW_FILE);
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
     public String getText(final Object element) {
+
         if (element instanceof NodeContainer) {
-            return ((NodeContainer)element).getName()
+            String output =  ((NodeContainer)element).getName()
                 + " (#" + ((NodeContainer)element).getID().getIndex() + ")";
+            // meta nodes are as object (workflow open) represented with ":" 
+            // then it can not be found  
+            return output.replace(":", "_");
         }
         // query the element for its label
         IWorkbenchAdapter adapter = getAdapter(element);

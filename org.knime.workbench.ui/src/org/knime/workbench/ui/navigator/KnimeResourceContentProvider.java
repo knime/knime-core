@@ -34,9 +34,11 @@ import java.util.TreeSet;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.ui.model.WorkbenchContentProvider;
+import org.eclipse.jface.viewers.ITreeContentProvider;
+import org.eclipse.jface.viewers.Viewer;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -45,8 +47,9 @@ import org.knime.core.node.workflow.WorkflowPersistor;
 /**
  * 
  * @author Christoph Sieb, University of Konstanz
+ * @author Fabian Dill, KNIME.com GmbH
  */
-public class KnimeResourceContentProvider extends WorkbenchContentProvider {
+public class KnimeResourceContentProvider implements ITreeContentProvider {
     
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             KnimeResourceContentProvider.class);
@@ -70,7 +73,7 @@ public class KnimeResourceContentProvider extends WorkbenchContentProvider {
                 // the number of contained nodes is returned
                 return ((WorkflowManager)workflow).getNodeContainers()
                     .size() > 0;
-            } 
+            }
         } else if (element instanceof WorkflowManager) {
             return ((WorkflowManager)element).getNodeContainers().size() > 0;
         } 
@@ -158,5 +161,48 @@ public class KnimeResourceContentProvider extends WorkbenchContentProvider {
         });
         copy.addAll(nodes);
         return copy.toArray();
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Object getParent(final Object element) {
+        if (element instanceof IResource) {
+            return ((IResource)element).getParent();
+        }
+        if (element instanceof NodeContainer) {
+            return ((NodeContainer)element).getParent();
+        }
+        return ResourcesPlugin.getWorkspace().getRoot();
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Object[] getElements(final Object inputElement) {
+        return getChildren(inputElement);
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void dispose() {
+        // nothing to do
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void inputChanged(final Viewer viewer, final Object oldInput, 
+            final Object newInput) {
+        // nothing to do
     }
 }
