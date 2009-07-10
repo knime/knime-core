@@ -27,6 +27,7 @@ package org.knime.workbench.ui.nature;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectNature;
 import org.eclipse.core.runtime.CoreException;
+import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * Project nature for KNIME projects, not used by now.
@@ -35,7 +36,9 @@ import org.eclipse.core.runtime.CoreException;
  */
 public class KNIMEProjectNature implements IProjectNature {
     
-    public static final String ID = "org.knime.workbench.ui.KNIMEProjectNature";
+    /** Project nature ID as defined in plugin.xml. */
+    public static final String ID = KNIMEUIPlugin.PLUGIN_ID 
+        + ".KNIMEProjectNature";
     
     private IProject m_project;
 
