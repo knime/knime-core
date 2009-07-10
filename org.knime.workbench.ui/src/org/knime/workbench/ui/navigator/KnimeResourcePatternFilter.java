@@ -25,6 +25,7 @@
 package org.knime.workbench.ui.navigator;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.ui.views.navigator.ResourcePatternFilter;
 /**
@@ -42,6 +43,15 @@ public class KnimeResourcePatternFilter extends ResourcePatternFilter {
             final Object element) {
         if (element instanceof IFile) {
             return false;
+        }
+        if (element instanceof IProject) {
+            IProject project = (IProject)element;
+            boolean isKnimeProject = false;
+            isKnimeProject = project.exists(
+                    KnimeResourceLabelProvider.WORKFLOW_FILE);
+            isKnimeProject |= project.exists(
+                    KnimeResourceLabelProvider.METAINFO_FILE);
+            return isKnimeProject;
         }
         return true;
     }
