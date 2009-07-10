@@ -35,23 +35,22 @@ import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
 import org.knime.workbench.ui.navigator.KnimeResourceLabelProvider;
-import org.knime.workbench.ui.navigator.KnimeResourceNavigator;
 
 /**
- * 
+ *
  * @author Fabian Dill, KNIME.com GmbH
  */
 public class EditMetaInfoAction extends Action {
-    
+
     /** Action ID. */
     public static final String ID = KNIMEUIPlugin.PLUGIN_ID + "edit-meta-info";
-    
+
     private static ImageDescriptor icon;
-    
+
     private IContainer m_parent;
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -64,25 +63,25 @@ public class EditMetaInfoAction extends Action {
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public String getText() {
         return "Edit Meta Information...";
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public String getDescription() {
         return "Opens the editor for the meta information";
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -109,7 +108,7 @@ public class EditMetaInfoAction extends Action {
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -119,7 +118,7 @@ public class EditMetaInfoAction extends Action {
             isWorkflow = true;
         }
         // if no meta file is available
-        File metaFileTest = new File(m_parent.getLocation().toFile(), 
+        File metaFileTest = new File(m_parent.getLocation().toFile(),
                 MetaInfoFile.METAINFO_FILE);
         if (!metaFileTest.exists()) {
             // create one
@@ -134,14 +133,16 @@ public class EditMetaInfoAction extends Action {
         openFile.selectionChanged(new StructuredSelection(metaFile));
         openFile.run();
     }
-    
+
     private Object getSelection() {
         ISelectionService service  = PlatformUI.getWorkbench()
             .getActiveWorkbenchWindow().getSelectionService();
-        IStructuredSelection selection 
-            = (IStructuredSelection)service.getSelection(
-                    KnimeResourceNavigator.ID);
+        IStructuredSelection selection
+            = (IStructuredSelection)service.getSelection();
+        if (selection == null) {
+            return null;
+        }
         return selection.getFirstElement();
     }
-    
+
 }

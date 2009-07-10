@@ -25,27 +25,31 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
-import org.knime.workbench.ui.navigator.KnimeResourceNavigator;
 import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
 
 /**
- * 
+ *
  * @author Fabian Dill, KNIME.com GmbH
  */
 public abstract class AbstractWorkflowAction extends Action {
-    
+
     private WorkflowManager m_workflow;
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public boolean isEnabled() {
+        // does not work to ask for the selection service and get the selection
+        // by part id: might be a derived class with different ID
         // get selection
         IStructuredSelection s = (IStructuredSelection)PlatformUI
                 .getWorkbench().getActiveWorkbenchWindow()
-                .getSelectionService().getSelection(KnimeResourceNavigator.ID);
+                .getSelectionService().getSelection();
+        if (s == null) {
+            return false;
+        }
         Object element = s.getFirstElement();
         // check if is KNIME workflow
         if (element instanceof IContainer) {
@@ -59,9 +63,13 @@ public abstract class AbstractWorkflowAction extends Action {
             }
         }
         return false;
-    }    
+    }
 
-    
+
+    /**
+     *
+     * @return the underlying workflow
+     */
     public WorkflowManager getWorkflow() {
         return m_workflow;
     }

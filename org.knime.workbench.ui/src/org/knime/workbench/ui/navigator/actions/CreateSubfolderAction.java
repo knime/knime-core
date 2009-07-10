@@ -44,10 +44,9 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
-import org.knime.workbench.ui.navigator.KnimeResourceNavigator;
 
 /**
- * 
+ *
  * @author Fabian Dill, KNIME.com GmbH
  */
 public class CreateSubfolderAction extends Action {
@@ -58,14 +57,14 @@ public class CreateSubfolderAction extends Action {
     private IContainer m_parent;
 
     private static ImageDescriptor icon;
-    
+
     private boolean m_isWorkflow = false;
-    
+
     private static final Path WF_PATH = new Path(
             WorkflowPersistor.WORKFLOW_FILE);
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -78,26 +77,26 @@ public class CreateSubfolderAction extends Action {
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public String getText() {
         return "Create Workflow Group...";
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public String getDescription() {
-        return "Creates a hierarchical folder structure " 
+        return "Creates a hierarchical folder structure "
             + "to group KNIME workflows in";
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -106,8 +105,13 @@ public class CreateSubfolderAction extends Action {
         // getSelection from navigator
         IWorkbenchPage page = PlatformUI.getWorkbench()
                 .getActiveWorkbenchWindow().getActivePage();
-        ISelection sel = page.getSelection(KnimeResourceNavigator.ID);
+        ISelection sel = page.getSelection();
+        if (sel == null) {
+            // nothing selected -> can create subfolder anyway...
+            return true;
+        }
         if (!(sel instanceof IStructuredSelection)) {
+            // this is weird
             return false;
         }
         IStructuredSelection strucSel = (IStructuredSelection)sel;
@@ -126,7 +130,7 @@ public class CreateSubfolderAction extends Action {
             if (cont.exists(WF_PATH)) {
                 m_isWorkflow = true;
                 return false;
-            } else if (cont.getParent() != null 
+            } else if (cont.getParent() != null
                         && cont.getParent().exists(WF_PATH)) {
                 // then it is a node
                     return false;
@@ -139,9 +143,9 @@ public class CreateSubfolderAction extends Action {
         return false;
     }
 
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -154,12 +158,12 @@ public class CreateSubfolderAction extends Action {
         } else {
             parentName = m_parent.getName();
         }
-        String dialogMsg = "Enter name of new workflow group " 
+        String dialogMsg = "Enter name of new workflow group "
             + "(will be created in: " + parentName + ")";
         InputDialog dialog = new InputDialog(PlatformUI.getWorkbench()
                 .getActiveWorkbenchWindow().getShell(),
                 "Enter Workflow Group Name",
-                dialogMsg, 
+                dialogMsg,
                 "", new IInputValidator() {
 
                     @Override
@@ -175,7 +179,7 @@ public class CreateSubfolderAction extends Action {
                     }
 
                 });
-        if (dialog.open() == Window.OK) { 
+        if (dialog.open() == Window.OK) {
             String name = dialog.getValue();
             if (name == null) {
                 throw new IllegalArgumentException(
