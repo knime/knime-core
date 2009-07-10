@@ -25,7 +25,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -35,6 +34,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
 import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
 
 /**
@@ -46,11 +46,11 @@ public class MoveWorkflowAction extends Action
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(MoveWorkflowAction.class);
+    
+    private final IPath m_source;
 
-    private IPath m_source;
-
-    private IPath m_target;
-
+    private final IPath m_target;
+    
     /**
      * 
      * @param source path to the source (which sould be moved)
@@ -87,9 +87,9 @@ public class MoveWorkflowAction extends Action
             PlatformUI.getWorkbench().getProgressService()
                     .busyCursorWhile(this);
         } catch (InvocationTargetException e) {
-            LOGGER.error(e);
+            LOGGER.error("Error while moving resource " + getSource(), e);
         } catch (InterruptedException e) {
-            LOGGER.error(e);
+            LOGGER.error("Error while moving resource " + getSource(), e);
         }
 
     }
@@ -99,6 +99,7 @@ public class MoveWorkflowAction extends Action
             f.renameTo(new File(target, f.getName()));
         }
     }
+
 
     /**
      * 
@@ -111,7 +112,10 @@ public class MoveWorkflowAction extends Action
         final IResource source = root.findMember(getSource());
         IPath target = getTarget();
         IResource targetRes = root.findMember(target);
-        
+        if (source == null || target == null) {
+            return;
+        }
+        // check whether the target is contained in source 
         if (getSource().isPrefixOf(getTarget())) {
             LOGGER.debug("Operation not allowed. " + source.getName() 
                     + " is parent resource of target " 
@@ -138,7 +142,7 @@ public class MoveWorkflowAction extends Action
             File targetDir = new File(targetFile, getSource().toFile()
                     .getName());
             if (!targetDir.mkdir()) {
-                LOGGER.error("target dir could not be created!");
+                LOGGER.debug("target dir could not be created!");
                 showAlreadyExists(targetDir.getName(), targetFile.getName());
                 return;
             }
@@ -154,15 +158,15 @@ public class MoveWorkflowAction extends Action
                         showAlreadyExists(newProject.getName(), 
                                 "workspace root");
                         return;
-                    }
-                    newProject.create(monitor);
-                    newProject.open(monitor);
+                    }                            
+                     newProject = MetaInfoFile.createWorkflowSetProject(
+                                    newProject.getName());
                 }
-                // TODO: exception handling
+                // exception handling
                 targetRes.refreshLocal(IResource.DEPTH_ONE, monitor);
                 source.delete(true, monitor);
-            } catch (CoreException e) {
-                LOGGER.error(e);
+            } catch (Exception e) {
+                LOGGER.error("Error while moving resource " + source,  e);
                 throw new InvocationTargetException(e);
             }
         }
@@ -228,5 +232,6 @@ public class MoveWorkflowAction extends Action
             }
         });        
     }
+
 
 }

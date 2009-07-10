@@ -34,6 +34,7 @@ import org.eclipse.ui.actions.OpenFileAction;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
+import org.knime.workbench.ui.navigator.KnimeResourceLabelProvider;
 import org.knime.workbench.ui.navigator.KnimeResourceNavigator;
 
 /**
@@ -42,6 +43,7 @@ import org.knime.workbench.ui.navigator.KnimeResourceNavigator;
  */
 public class EditMetaInfoAction extends Action {
     
+    /** Action ID. */
     public static final String ID = KNIMEUIPlugin.PLUGIN_ID + "edit-meta-info";
     
     private static ImageDescriptor icon;
@@ -94,7 +96,13 @@ public class EditMetaInfoAction extends Action {
         // if we are here only IProjects and IFolders left as IContainer's
         if (element instanceof IContainer) {
             m_parent = (IContainer)element;
-            return true;
+            // check whether it contains a meta.info file
+            if (m_parent.exists(KnimeResourceLabelProvider.METAINFO_FILE)
+                    || m_parent.exists(
+                            KnimeResourceLabelProvider.WORKFLOW_FILE)) {
+                return true;
+            }
+            return false;
         }
         // as long as a IContainer is selected (not root)
         return false;

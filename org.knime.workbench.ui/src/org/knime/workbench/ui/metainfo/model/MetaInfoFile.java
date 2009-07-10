@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Calendar;
 
 import javax.xml.transform.OutputKeys;
@@ -31,9 +32,19 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IProjectDescription;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.progress.IProgressService;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
 import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.nature.KNIMEWorkflowSetProjectNature;
 import org.xml.sax.helpers.AttributesImpl;
 
 /**
@@ -45,18 +56,26 @@ public final class MetaInfoFile {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             MetaInfoFile.class);
     
+    /** Preference key for a workflow template. */
     public static final String PREF_KEY_META_INFO_TEMPLATE_WF 
         = "org.knime.ui.metainfo.template.workflow";
 
+    /** Preference key for a workflow group template. */
     public static final String PREF_KEY_META_INFO_TEMPLATE_WFS 
         = "org.knime.ui.metainfo.template.workflowset";
     
     private MetaInfoFile() {
         // utility class
     }
-
+    
+    /** Constant for the meta info file name. */
     public static final String METAINFO_FILE = "workflowset.meta";
     
+    /**
+     * Creates a meta info file with default content.
+     * @param parent parent file
+     * @param isWorkflow true if it is a meta info for a workflow
+     */
     public static void createMetaInfoFile(final File parent, 
             final boolean isWorkflow) {
         // look into preference store
@@ -162,5 +181,69 @@ public final class MetaInfoFile {
                         + "meta info file for" + parent.getName(), e);
             }
     }
+    
+    /**
+     * Creates a new workflow group project (with the referring nature).
+     * @param name name of the project
+     * @return the created project (already open and with description)
+     * @throws Exception if something goes wrong
+     * 
+     * @see {@link KNIMEWorkflowSetProjectNature}
+     */
+    public static IProject createWorkflowSetProject(final String name) 
+        throws Exception {
+        final IProgressService ps = PlatformUI.getWorkbench()
+            .getProgressService();
+        final ProjectCreationRunnable runnable = new ProjectCreationRunnable(
+                name);
+        // we have to run the runnable with progress in the UI thread
+        Display.getDefault().syncExec(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ps.busyCursorWhile(runnable);
+                } catch (Exception e) {
+                    LOGGER.error("Error while creating project "  + name, e);
+                }
+            }
+        });        
+        return runnable.getNewProject();
+    }
+    
+    private static class ProjectCreationRunnable 
+        implements IRunnableWithProgress {
+        
+        private IProject m_newProject;
+        private final String m_newProjectName;
+        
+        public ProjectCreationRunnable(final String newProjectName) {
+            m_newProjectName = newProjectName;
+        }
+        
+        public IProject getNewProject() {
+            return m_newProject;
+        }
+
+        @Override
+        public void run(final IProgressMonitor monitor)
+                throws InvocationTargetException, InterruptedException {
+            try {
+                IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+                m_newProject = root.getProject(m_newProjectName);
+                m_newProject.create(monitor);
+                m_newProject.open(monitor);
+                IProjectDescription desc = m_newProject
+                    .getDescription();
+                desc.setNatureIds(
+                        new String[] {
+                        KNIMEWorkflowSetProjectNature.ID});
+                m_newProject.setDescription(desc, null);
+            } catch (Throwable e) {
+                e.printStackTrace();
+                throw new InvocationTargetException(e);
+            }    
+        }
+    }
+    
     
 }

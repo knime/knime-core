@@ -63,7 +63,7 @@ public class CreateSubfolderAction extends Action {
     
     private static final Path WF_PATH = new Path(
             WorkflowPersistor.WORKFLOW_FILE);
-
+    
     /**
      * 
      * {@inheritDoc}
@@ -83,7 +83,7 @@ public class CreateSubfolderAction extends Action {
      */
     @Override
     public String getText() {
-        return "Create Workflow Set...";
+        return "Create Workflow Group...";
     }
     
     /**
@@ -116,12 +116,16 @@ public class CreateSubfolderAction extends Action {
             return false;
         }
         Object o = strucSel.getFirstElement();
+        if (o == null) {
+            // nothing selected
+            return true;
+        }
         if (o instanceof IContainer) {
             IContainer cont = (IContainer)o;
             // check if its a KNIME workflow
             if (cont.exists(WF_PATH)) {
                 m_isWorkflow = true;
-                return true;
+                return false;
             } else if (cont.getParent() != null 
                         && cont.getParent().exists(WF_PATH)) {
                 // then it is a node
@@ -143,14 +147,20 @@ public class CreateSubfolderAction extends Action {
     @Override
     public void run() {
         // if no folder is selected its root
+        String parentName;
         if (m_parent == null || m_isWorkflow) {
             m_parent = ResourcesPlugin.getWorkspace().getRoot();
+            parentName = "Root";
+        } else {
+            parentName = m_parent.getName();
         }
+        String dialogMsg = "Enter name of new workflow group " 
+            + "(will be created in: " + parentName + ")";
         InputDialog dialog = new InputDialog(PlatformUI.getWorkbench()
                 .getActiveWorkbenchWindow().getShell(),
-                "Enter Workflow Set Name",
-                "Name of new workflow group: ", "",
-                new IInputValidator() {
+                "Enter Workflow Group Name",
+                dialogMsg, 
+                "", new IInputValidator() {
 
                     @Override
                     public String isValid(final String newText) {
@@ -165,16 +175,6 @@ public class CreateSubfolderAction extends Action {
                     }
 
                 });
-        /*
-         * Uncommented: if a workflow was selected, the workflow group will be 
-         * created in ROOT. We may or may not inform the user about it...
-         */
-// if (m_isWorkflow) {
-// MessageDialog.openInformation(Display.getDefault().getActiveShell(),
-// "Invalid Parent", 
-// "A workflow set cannot be created inside a KNIME workflow." 
-// + " Will be created in ROOT.");
-//        }
         if (dialog.open() == Window.OK) { 
             String name = dialog.getValue();
             if (name == null) {
@@ -187,22 +187,8 @@ public class CreateSubfolderAction extends Action {
                 File subFolder;
                 if (m_parent instanceof IWorkspaceRoot) {
                     // we have to create a project
-                    IWorkspaceRoot root = ((IWorkspaceRoot)m_parent);
-                    final IProject newProject = root.getProject(name);
-                    PlatformUI.getWorkbench().getProgressService()
-                            .busyCursorWhile(new IRunnableWithProgress() {
-                                @Override
-                                public void run(final IProgressMonitor monitor)
-                                        throws InvocationTargetException,
-                                        InterruptedException {
-                                    try {
-                                        newProject.create(monitor);
-                                        newProject.open(monitor);
-                                    } catch (CoreException e) {
-                                        throw new InvocationTargetException(e);
-                                    }
-                                }
-                            });
+                    IProject newProject = MetaInfoFile
+                        .createWorkflowSetProject(name);
                     subFolder = new File(newProject.getLocationURI());
                 } else {
                     subFolder = new File(parent, name);
@@ -217,16 +203,17 @@ public class CreateSubfolderAction extends Action {
                                     InterruptedException {
                                 try {
                                     m_parent.refreshLocal(
-                                            IResource.DEPTH_ONE, monitor);
+                                            IResource.DEPTH_INFINITE, monitor);
                                 } catch (CoreException ce) {
-                                    System.err.println(ce);
+                                    LOGGER.error(
+                                            "Error while refreshing workspace!",
+                                            ce);
                                 }
-
                             }
                         });
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 LOGGER.error("Error occured while creating KNIME workflow set "
-                        + name);
+                        + name, e);
             }
         }
     }

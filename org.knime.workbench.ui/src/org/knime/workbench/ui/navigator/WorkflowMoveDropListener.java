@@ -47,40 +47,13 @@ import org.knime.workbench.ui.navigator.actions.MoveWorkflowAction;
  * @author Fabian Dill, KNIME.com GmbH
  */
 public class WorkflowMoveDropListener implements DropTargetListener {
+
+
+    private static final Path WORKFLOW_FILE = new Path(
+            WorkflowPersistor.WORKFLOW_FILE);
+    
     
     private final List<IAction> m_actions = new ArrayList<IAction>();
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void dragEnter(final DropTargetEvent event) {
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void dragLeave(final DropTargetEvent event) {
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void dragOperationChanged(final DropTargetEvent event) {
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void dragOver(final DropTargetEvent event) {
-
-    }
 
     /**
      * {@inheritDoc}
@@ -119,12 +92,18 @@ public class WorkflowMoveDropListener implements DropTargetListener {
                             MessageDialog.openInformation(
                                     Display.getDefault().getActiveShell(), 
                                     "Invalid Target Location", 
-                                    "A KNIME workflow cannot contain a KNIME workflow");
+                                    "A KNIME workflow cannot contain " 
+                                    + "a KNIME workflow");
                         }
                     });
                     event.feedback = DND.DROP_NONE;
                     return;
                 }
+            }
+            // the target must not be a node
+            if (isNode(r)) {
+                event.feedback = DND.DROP_NONE;
+                return;
             }
             targetPath = r.getFullPath();
         }
@@ -133,6 +112,12 @@ public class WorkflowMoveDropListener implements DropTargetListener {
         TreeItem[] selections = tree.getSelection();
         for (TreeItem sourceItem : selections) {
             IPath p = getPathFor(sourceItem);
+            IResource source = ResourcesPlugin.getWorkspace().getRoot()
+                .findMember(p);
+            if (isNode(source)) {
+                event.feedback = DND.DROP_NONE;
+                return;
+            }
             m_actions.add(new MoveWorkflowAction(p, targetPath));
         }
         event.feedback = DND.DROP_MOVE;
@@ -147,6 +132,43 @@ public class WorkflowMoveDropListener implements DropTargetListener {
             item2 = item2.getParentItem();
         }
         return new Path(path);
+    }
+    
+    
+    private boolean isNode(final IResource source) {
+        if (source instanceof IFolder) {
+            IFolder dir = (IFolder)source;
+            return dir.getParent().exists(WORKFLOW_FILE);
+        }
+        return false;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void dragEnter(final DropTargetEvent event) {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void dragLeave(final DropTargetEvent event) {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void dragOperationChanged(final DropTargetEvent event) {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void dragOver(final DropTargetEvent event) {
     }
     
 }
