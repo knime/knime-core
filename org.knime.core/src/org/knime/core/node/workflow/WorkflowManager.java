@@ -3901,7 +3901,7 @@ public final class WorkflowManager extends NodeContainer {
                         if (f.exists()) {
                             if (FileUtil.deleteRecursively(f)) {
                                 LOGGER.debug(
-                                        "Deleted obsolote node directory \""
+                                        "Deleted obsolete node directory \""
                                         + f.getAbsolutePath() + "\"");
                             } else {
                                 LOGGER.warn(
@@ -3910,6 +3910,8 @@ public final class WorkflowManager extends NodeContainer {
                             }
                         }
                     }
+                    // bug fix 1857: this list must be cleared upon save
+                    m_deletedNodesFileLocations.clear();
                     m_loadVersion = saveVersion;
                 }
                 new WorkflowPersistorVersion200().save(
