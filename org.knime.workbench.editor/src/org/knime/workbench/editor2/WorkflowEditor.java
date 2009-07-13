@@ -676,7 +676,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     
 
     @Override
-    protected void setTitleToolTip(String toolTip) {
+    protected void setTitleToolTip(final String toolTip) {
         m_manuallySetToolTip = toolTip;
         super.setTitleToolTip(toolTip);
     }
@@ -991,7 +991,9 @@ public class WorkflowEditor extends GraphicalEditor implements
 
             public void run() {
                 try {
-                m_fileResource.getProject().refreshLocal(
+                    String projectName = m_fileResource.getProject().getName();
+                    monitor.setTaskName("Refreshing " + projectName + "...");
+                    m_fileResource.getProject().refreshLocal(
                         IResource.DEPTH_INFINITE,
                         monitor);
                 } catch (CoreException ce) {
@@ -1515,7 +1517,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * 
      * {@inheritDoc}
      */
-    public void stateChanged(NodeStateEvent state) {
+    public void stateChanged(final NodeStateEvent state) {
         markDirty();
     }
 }
