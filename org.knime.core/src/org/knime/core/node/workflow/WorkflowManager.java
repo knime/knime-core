@@ -4298,14 +4298,21 @@ public final class WorkflowManager extends NodeContainer {
      */
     public void addWorkflowVariable(final ScopeVariable newVar,
             final boolean skipReset) {
-        if (m_workflowVariables == null) {
-            // create new set of vars if none exists
-            m_workflowVariables = new Vector<ScopeVariable>();
+        synchronized (m_workflowMutex) {
+            if (m_workflowVariables == null) {
+                // create new set of vars if none exists
+                m_workflowVariables = new Vector<ScopeVariable>();
+            }
+            // make sure old variables of the same name are removed first
+            removeWorkflowVariable(newVar.getName());
+            m_workflowVariables.add(newVar);
+            if (!skipReset) {
+                // usually one needs to reset the Workflow to make sure the
+                // new variable settings are used by all nodes!
+                resetAll();
+            }
+            setDirty();
         }
-        // make sure old variables of the same name are removed first
-        removeWorkflowVariable(newVar.getName());
-        m_workflowVariables.add(newVar);
-        setDirty();
     }
 
     /** Remove workflow variable of given name.
