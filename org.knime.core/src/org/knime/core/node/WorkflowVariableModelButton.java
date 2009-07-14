@@ -24,19 +24,19 @@
  */
 package org.knime.core.node;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Map;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
+import javax.swing.border.LineBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-
-import org.knime.core.node.workflow.ScopeVariable;
 
 
 
@@ -65,18 +65,37 @@ implements ChangeListener, ActionListener {
         wvm.addChangeListener(this);
         // add us as listener for actions on the underlying JButton
         this.addActionListener(this);
-        this.setText("v?");
+        // and make sure we start with the right button layout.
+        stateChanged(null);
     }
 
     /** React to state changes in the underlying WorkflowVariableModel
      * and set tool tip accordingly.
      * 
-     * @param e event
+     * @param evt event
      */
     @Override
-    public void stateChanged(final ChangeEvent e) {
-        this.setToolTipText(m_model.getInputVariableName() != null
-                ? m_model.getInputVariableName() : "N/A");
+    public void stateChanged(final ChangeEvent evt) {
+        boolean enabled = m_model.isVariableReplacementEnabled();
+        this.setToolTipText(enabled ? m_model.getInputVariableName() : "N/A");
+        try {
+            // try to load icon(s)
+            ImageIcon icon;
+            ClassLoader loader = this.getClass().getClassLoader(); 
+            String packagePath = 
+                this.getClass().getPackage().getName().replace('.', '/');
+            String correctedPath = "/icon/"
+                + (enabled ? "variable_dialog_active.png"
+                            : "variable_dialog_inactive.png");
+            icon = new ImageIcon(
+                    loader.getResource(packagePath + correctedPath));
+            this.setText("");
+            this.setBorder(new LineBorder(Color.gray, 0));
+            this.setIcon(icon);
+        } catch (Exception e) {
+            this.setText(enabled ? "v!" : "v?");
+            return;
+        }
     }
 
     /** React to clicks on the underlying button: open dialog which enables
@@ -93,8 +112,8 @@ implements ChangeListener, ActionListener {
         comps[3] = new JTextField();
         JOptionPane.showInputDialog(this, comps);
         Object[] selObs = ((JComboBox)comps[1]).getSelectedObjects();
-        m_model.setInputVariableName(selObs == null || selObs.length == 0 ? null : 
-            (selObs[0] == null ? null : selObs[0].toString()));
+        m_model.setInputVariableName(selObs == null || selObs.length == 0
+                ? null : (selObs[0] == null ? null : selObs[0].toString()));
         m_model.setOutputVariableName(((JTextField)comps[3]).getText());
     }
     
