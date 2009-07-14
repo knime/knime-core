@@ -850,6 +850,30 @@ public abstract class NodeDialogPane {
         return m_pane.indexOfTab(title);
     }
 
+    /** Create model and register a new variable for a specific settings entry.
+     * This can serve two purposes:
+     * 1) replace the actual value in the settings object by the value of
+     *    the variable
+     * 2) and/or put the current value of the settings object into the
+     *    specified variable.
+     * 
+     * @param key of corresponding settings object
+     * @param type of variable/settings object
+     * @param exposeToParent indicate if variable is visible in parent dialog
+     * @return new WorkflowVariableModel which is already registered
+     */
+    protected WorkflowVariableModel createWorkflowVariableModel(
+            final String key,
+            final ScopeVariable.Type type,
+            final boolean exposeToParent) {
+        WorkflowVariableModel wvm = new WorkflowVariableModel(
+                this, key, type, exposeToParent);
+        
+        // TODO (bw) add somewhere and use them, too :-)
+        
+        return wvm;
+    }
+    
     private void onVariablesTabSelected() {
         m_scopeVariableTab.setErrorLabel("");
         NodeSettings settings = new NodeSettings("save");
