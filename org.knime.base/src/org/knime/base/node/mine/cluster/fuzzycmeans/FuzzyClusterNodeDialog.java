@@ -169,7 +169,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
                 WorkflowVariableModel wvm =
                     (WorkflowVariableModel)(evt.getSource());
                 m_nrClustersSpinner.setEnabled(
-                        wvm.isVariableReplacementEnabled());
+                        !wvm.isVariableReplacementEnabled());
             }
         });
         clusterPropPane.add(new WorkflowVariableModelButton(wvm));
