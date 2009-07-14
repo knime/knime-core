@@ -41,6 +41,8 @@ import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.Border;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -50,7 +52,10 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.WorkflowVariableModel;
+import org.knime.core.node.WorkflowVariableModelButton;
 import org.knime.core.node.util.ColumnFilterPanel;
+import org.knime.core.node.workflow.ScopeVariable;
 
 
 /**
@@ -139,6 +144,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         GridBagConstraints c = new GridBagConstraints();
         c.anchor = GridBagConstraints.WEST;
         c.insets = new Insets(10, 10, 10, 10);
+        // Option: Number of clusters
         JLabel nrClustersLabel = new JLabel("Number of clusters: ");
         c.gridx = 0;                      
         c.gridy = 0;             
@@ -151,6 +157,23 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         gbl.setConstraints(m_nrClustersSpinner, c);   
         clusterPropPane.add(nrClustersLabel);
         clusterPropPane.add(m_nrClustersSpinner);
+        // also add a variable Model + corresponding icon to make this
+        // option controllable via a variable
+        WorkflowVariableModel wvm = createWorkflowVariableModel(
+                FuzzyClusterNodeModel.NRCLUSTERS_KEY,
+                ScopeVariable.Type.INTEGER,
+                false);
+        wvm.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent evt) {
+                WorkflowVariableModel wvm =
+                    (WorkflowVariableModel)(evt.getSource());
+                m_nrClustersSpinner.setEnabled(
+                        wvm.isVariableReplacementEnabled());
+            }
+        });
+        clusterPropPane.add(new WorkflowVariableModelButton(wvm));
+        // Option: Upper limit for number of iterations
         JLabel maxNrIterationsLabel = new JLabel("Max. number of iterations: ");
         c.gridx = 0;                      
         c.gridy = 1;                      
