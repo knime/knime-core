@@ -18,22 +18,27 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 29, 2008 (wiswedel): created
  */
 package org.knime.core.node.config;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.WorkflowVariableModel;
+import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.ScopeVariable;
 
 /**
@@ -41,29 +46,30 @@ import org.knime.core.node.workflow.ScopeVariable;
  * This class is used to modify node settings with values assigned from
  * scope variables. It also keeps a list of &quot;exposed variables&quot;, that
  * is each individual setting can be exported as a new variable.
- * <p>This class is not meant to be used anywhere else than in the KNIME 
+ * <p>This class is not meant to be used anywhere else than in the KNIME
  * framework classes.
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class ConfigEditTreeModel extends DefaultTreeModel {
 
-    /** Factory method that parses the settings tree and constructs a new 
-     * object of this class. It will use the mask as given by the second 
+    private final CopyOnWriteArrayList<ConfigEditTreeEventListener> m_listeners;
+
+    /** Factory method that parses the settings tree and constructs a new
+     * object of this class. It will use the mask as given by the second
      * argument (which may be null, however).
      * @param settingsTree The original settings object.
      * @param variableTree The variables mask.
      * @return a new object of this class.
      * @throws InvalidSettingsException If setting can't be parsed
      */
-    public static ConfigEditTreeModel create(final Config settingsTree, 
+    public static ConfigEditTreeModel create(final Config settingsTree,
             final Config variableTree) throws InvalidSettingsException {
         ConfigEditTreeModel result = create(settingsTree);
-        ((ConfigEditTreeNode)result.getRoot()).readVariablesFrom(
-                variableTree, false);
+        result.getRoot().readVariablesFrom(variableTree, false);
         return result;
     }
-    
-    /** Parses a settings tree and creates an empty mask 
+
+    /** Parses a settings tree and creates an empty mask
      * (for later modification).
      * @param settingsTree to be parsed.
      * @return a new object of this class.
@@ -71,16 +77,18 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
     public static ConfigEditTreeModel create(final Config settingsTree) {
         ConfigEditTreeNode rootNode = new ConfigEditTreeNode(settingsTree);
         recursiveAdd(rootNode, settingsTree);
-        return new ConfigEditTreeModel(rootNode);
+        ConfigEditTreeModel result = new ConfigEditTreeModel(rootNode);
+        rootNode.setTreeModel(result); // allows event propagation
+        return result;
     }
-    
+
     /** Recursive construction of tree. */
-    private static void recursiveAdd(final ConfigEditTreeNode treeNode, 
+    private static void recursiveAdd(final ConfigEditTreeNode treeNode,
             final Config configValue) {
         assert (configValue == treeNode.getUserObject().m_configEntry);
         for (String s : configValue.keySet()) {
             AbstractConfigEntry childValue = configValue.getEntry(s);
-            ConfigEditTreeNode childTreeNode = 
+            ConfigEditTreeNode childTreeNode =
                 new ConfigEditTreeNode(childValue);
             if (childValue.getType().equals(ConfigEntries.config)) {
                 recursiveAdd(childTreeNode, (Config)childValue);
@@ -88,107 +96,195 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             treeNode.add(childTreeNode);
         }
     }
-    
+
     /** @param rootNode root node. */
     private ConfigEditTreeModel(final ConfigEditTreeNode rootNode) {
         super(rootNode);
+        m_listeners = new CopyOnWriteArrayList<ConfigEditTreeEventListener>();
     }
-    
+
     /** @return true if there is any mask (overwriting settings) below this
      * branch of the tree. */
     public boolean hasConfiguration() {
-        return ((ConfigEditTreeNode)getRoot()).hasConfiguration();
+        return getRoot().hasConfiguration();
     }
-    
+
     /** Write the mask to a config object (for storage in node settings object).
      * @param config To save to. */
     public void writeVariablesTo(final Config config) {
         // false = do not write "model" as root
-        ((ConfigEditTreeNode)getRoot()).writeVariablesTo(config, false);
+        getRoot().writeVariablesTo(config, false);
     }
-    
-    /** Modifies the first argument to reflect the values of the mask 
+
+    /** Modifies the first argument to reflect the values of the mask
      * represented by this object.
-     * @param settingsTree settings tree to modify (supposed to have 
+     * @param settingsTree settings tree to modify (supposed to have
      * equivalent tree structure)
      * @param variables The has of variables-values to apply.
      * @return A list of exposed variables
      * @throws InvalidSettingsException If reading fails
      */
-    public List<ScopeVariable> overwriteSettings(final Config settingsTree, 
-            final Map<String, ScopeVariable> variables) 
+    public List<ScopeVariable> overwriteSettings(final Config settingsTree,
+            final Map<String, ScopeVariable> variables)
         throws InvalidSettingsException {
-        return ((ConfigEditTreeNode)getRoot()).overwriteSettings(
-                settingsTree, variables, false);
+        return getRoot().overwriteSettings(settingsTree, variables, false);
     }
-    
+
+    /** {@inheritDoc} */
+    @Override
+    public ConfigEditTreeNode getRoot() {
+        return (ConfigEditTreeNode)super.getRoot();
+    }
+
+    /** Updates this tree with the settings available in the argument list. This
+     * becomes necessary if a dialog provides its "expert" settings also via
+     * small button attached to different controls. This method ensures that the
+     * tree and the button model are in sync.
+     * @param variableModels The models that were registered at the dialog.
+     */
+    public void update(final Collection<WorkflowVariableModel> variableModels) {
+        ConfigEditTreeNode rootNode = getRoot();
+        for (WorkflowVariableModel model : variableModels) {
+            rootNode.update(model);
+        }
+    }
+
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return ((ConfigEditTreeNode)getRoot()).toString();
+        return getRoot().toString();
     }
-    
+
+    /** Adds new listener.
+     * @param listener to be added.
+     */
+    public void addConfigEditTreeEventListener(
+            final ConfigEditTreeEventListener listener) {
+        m_listeners.add(listener);
+    }
+
+    /** Removes a registered listener.
+     * @param listener to be removed.
+     */
+    public void removeConfigEditTreeEventListener(
+            final ConfigEditTreeEventListener listener) {
+        m_listeners.remove(listener);
+    }
+
+    /** Fire an event.
+     * @param treePath The tree path that has changed.
+     * @param useVariable The new variable, which overwrites the user settings.
+     * @param exposeVariableName The variable name to expose.
+     */
+    void fireConfigEditTreeEvent(final String[] treePath,
+            final String useVariable, final String exposeVariableName) {
+        ConfigEditTreeEvent event = new ConfigEditTreeEvent(
+                this, treePath, useVariable, exposeVariableName);
+        for (ConfigEditTreeEventListener l : m_listeners) {
+            l.configEditTreeChanged(event);
+        }
+    }
+
     /** Single Tree node implementation. */
     static final class ConfigEditTreeNode extends DefaultMutableTreeNode {
-        
+
+        /** The tree model, which is null for all nodes accept for the root.
+         * It is set after the tree nodes are constructed. Used to propagate
+         * events. */
+        private ConfigEditTreeModel m_treeModel;
+
         /** Constructs new tree node based on a representative config entry.
          * @param entry To wrap. */
         ConfigEditTreeNode(final AbstractConfigEntry entry) {
             super(new Wrapper(entry));
             setAllowsChildren(!getUserObject().isLeaf());
         }
-        
+
+        /**
+         * @param treeModel the treeModel to set
+         */
+        void setTreeModel(final ConfigEditTreeModel treeModel) {
+            m_treeModel = treeModel;
+        }
+
         /** {@inheritDoc} */
         @Override
         public void setUserObject(final Object arg) {
             throw new IllegalStateException("Not intended to be called");
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public Wrapper getUserObject() {
             return (Wrapper)super.getUserObject();
         }
-        
+
+        /** {@inheritDoc} */
+        @Override
+        public ConfigEditTreeNode getRoot() {
+            return (ConfigEditTreeNode)super.getRoot();
+        }
+
         /** @return associated config entry. */
         public AbstractConfigEntry getConfigEntry() {
             return getUserObject().m_configEntry;
         }
-        
+
         /** @param value the new variable to use. */
         public void setUseVariableName(final String value) {
+            String newValue = value;
             if (value == null || value.length() == 0) {
-                getUserObject().m_useVarName = null;
-            } else {
+                newValue = null;
+            }
+            if (!ConvenienceMethods.areEqual(
+                    getUserObject().m_useVarName, newValue)) {
                 getUserObject().m_useVarName = value;
+                fireEvent();
             }
         }
-        
+
         /** @return the new variable to use. */
         public String getUseVariableName() {
             return getUserObject().m_useVarName;
         }
-        
+
         /** @param variableName The name of the variable, which represents this
          * node's value. */
         public void setExposeVariableName(final String variableName) {
+            String newValue = variableName;
             if (variableName == null || variableName.length() == 0) {
-                getUserObject().m_exposeVarName = null; 
-            } else {
-                getUserObject().m_exposeVarName = variableName;
+                newValue = null;
+            }
+            if (!ConvenienceMethods.areEqual(getUserObject().m_exposeVarName,
+                    newValue)) {
+                getUserObject().m_exposeVarName = newValue;
+                fireEvent();
             }
         }
-        
+
         /** @return the exported variable name. */
         public String getExposeVariableName() {
             return getUserObject().m_exposeVarName;
         }
-        
+
+        private void fireEvent() {
+            TreeNode[] path = getPath();
+            String[] keyPath = new String[path.length - 1];
+            for (int i = 0; i < keyPath.length; i++) {
+                ConfigEditTreeNode node = (ConfigEditTreeNode)path[i + 1];
+                keyPath[i] = node.getConfigEntry().getKey();
+            }
+            if (getRoot().m_treeModel != null) {
+                getRoot().m_treeModel.fireConfigEditTreeEvent(
+                        keyPath, getUseVariableName(), getExposeVariableName());
+            }
+        }
+
         /** Implementation of {@link ConfigEditTreeModel#hasConfiguration()}.
          * @return if mask exists in this node or any child node. */
         public boolean hasConfiguration() {
             if (getUserObject().isLeaf()) {
-                return getUseVariableName() != null 
+                return getUseVariableName() != null
                     || getExposeVariableName() != null;
             }
             for (Enumeration<?> e = children(); e.hasMoreElements();) {
@@ -199,12 +295,26 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             }
             return false;
         }
-        
+
+        /** Implements the functionality described in the
+         * {@link ConfigEditTreeNode#update(WorkflowVariableModel)} method.
+         * @param model The model that provides the update.
+         */
+        void update(final WorkflowVariableModel model) {
+            for (Enumeration<?> e = children(); e.hasMoreElements();) {
+                ConfigEditTreeNode c = (ConfigEditTreeNode)e.nextElement();
+                if (c.getConfigEntry().getKey().equals(model.getKey())) {
+                    c.setUseVariableName(model.getInputVariableName());
+                    c.setExposeVariableName(model.getOutputVariableName());
+                }
+            }
+        }
+
         private static final String CFG_USED_VALUE = "used_variable";
         private static final String CFG_EXPOSED_VALUE = "exposed_variable";
-        
+
         /** Persistence method to restore the tree. */
-        private void readVariablesFrom(final Config variableTree, 
+        private void readVariablesFrom(final Config variableTree,
                 final boolean readThisEntry) throws InvalidSettingsException {
             Config subConfig;
             if (readThisEntry) {
@@ -226,9 +336,9 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                 }
             }
         }
-        
+
         /** Persistence method to save the tree. */
-        private void writeVariablesTo(final Config variableTree, 
+        private void writeVariablesTo(final Config variableTree,
                 final boolean writeThisEntry) {
             if (!hasConfiguration()) {
                 return;
@@ -250,12 +360,12 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                 }
             }
         }
-        
+
         /** Implementation of {@link ConfigEditTreeModel#overwriteSettings(
          * Config, Map)}, see above method description for details. */
         private List<ScopeVariable> overwriteSettings(final Config counterpart,
-                final Map<String, ScopeVariable> variables, 
-                final boolean isCounterpartParent) 
+                final Map<String, ScopeVariable> variables,
+                final boolean isCounterpartParent)
             throws InvalidSettingsException {
             if (!hasConfiguration()) {
                 return Collections.emptyList();
@@ -282,10 +392,10 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             if (varName != null) {
                 switch (original.getType()) {
                 case xboolean:
-                    String bool = 
+                    String bool =
                         getStringVariable(varName, variables);
                     if (bool == null) {
-                        throw new InvalidSettingsException("Value of \"" 
+                        throw new InvalidSettingsException("Value of \""
                                 + varName + "\" is null");
                     }
                     bool = bool.toLowerCase();
@@ -347,9 +457,9 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                     }
                     if (value < min || value > max) {
                         throw new InvalidSettingsException(
-                                "Value of variable \"" + varName 
-                                + "\" can't be cast to " + original.getType() 
-                                + "(settings parameter " + "\"" + key 
+                                "Value of variable \"" + varName
+                                + "\" can't be cast to " + original.getType()
+                                + "(settings parameter " + "\"" + key
                                 + "\"), out of range: " + value);
                     }
                     break;
@@ -400,7 +510,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                     long l = ((ConfigLongEntry)newValue).getLong();
                     if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
                         throw new InvalidSettingsException(
-                                "Can't export value \"" + l + "\" as " 
+                                "Can't export value \"" + l + "\" as "
                                 + "variable \"" + newVar + "\", out of range");
                     }
                     exposed = new ScopeVariable(newVar, (int)l);
@@ -414,8 +524,8 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                     exposed = new ScopeVariable(newVar, d);
                     break;
                 default:
-                    throw new InvalidSettingsException("Can't export " 
-                            + newValue.getType() + " as variable \"" 
+                    throw new InvalidSettingsException("Can't export "
+                            + newValue.getType() + " as variable \""
                             + newVar + "\"");
                 }
                 result = new ArrayList<ScopeVariable>();
@@ -440,7 +550,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             }
             return result;
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public String toString() {
@@ -448,7 +558,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             toString(b, "");
             return b.toString();
         }
-        
+
         /** Recursion method to get a string representation of this tree.
          * @param b to append to
          * @param indent indentation.
@@ -463,11 +573,11 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                 c.toString(b, indent + "  ");
             }
         }
-        
+
         /** Getter method throws excpetion of variable name does not exist
          * in map. */
         private static ScopeVariable getVariable(final String varString,
-                final Map<String, ScopeVariable> variables) 
+                final Map<String, ScopeVariable> variables)
             throws InvalidSettingsException {
             ScopeVariable var = variables.get(varString);
             if (var == null) {
@@ -476,10 +586,10 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             }
             return var;
         }
-        
+
         /** Getter method to get double value. */
         private static double getDoubleVariable(final String varString,
-                final Map<String, ScopeVariable> variables) 
+                final Map<String, ScopeVariable> variables)
             throws InvalidSettingsException {
             ScopeVariable v = getVariable(varString, variables);
             switch (v.getType()) {
@@ -493,10 +603,10 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                         + v.getType() + " (\"" + v + "\")");
             }
         }
-        
+
         /** Getter method to get int value. */
         private static int getIntVariable(final String varString,
-                final Map<String, ScopeVariable> variables) 
+                final Map<String, ScopeVariable> variables)
         throws InvalidSettingsException {
             ScopeVariable v = getVariable(varString, variables);
             switch (v.getType()) {
@@ -508,10 +618,10 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                         + v.getType() + " (\"" + v + "\")");
             }
         }
-        
+
         /** Getter method to get string value. */
         private static String getStringVariable(final String varString,
-                final Map<String, ScopeVariable> variables) 
+                final Map<String, ScopeVariable> variables)
         throws InvalidSettingsException {
             ScopeVariable v = getVariable(varString, variables);
             switch (v.getType()) {
@@ -528,29 +638,29 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             }
         }
     }
-    
+
     /** User object in tree node wrapping config entry, used variable name and
      * possibly a variable name for exporting the value as variable. */
     private static final class Wrapper {
         private final AbstractConfigEntry m_configEntry;
         private String m_useVarName;
         private String m_exposeVarName;
-        
+
         /** @param entry Entry to wrap. */
         public Wrapper(final AbstractConfigEntry entry) {
             m_configEntry = entry;
         }
-        
+
         /** @return true if this represents a leaf (not a config object) */
         boolean isLeaf() {
             return !(m_configEntry instanceof Config);
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public String toString() {
             return m_configEntry.toString();
         }
     }
-    
+
 }

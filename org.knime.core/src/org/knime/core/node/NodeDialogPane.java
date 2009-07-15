@@ -34,9 +34,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.ParseException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -56,6 +59,8 @@ import javax.swing.plaf.basic.BasicComboPopup;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.Node.SettingsLoaderAndWriter;
 import org.knime.core.node.config.ConfigEditJTree;
+import org.knime.core.node.config.ConfigEditTreeEvent;
+import org.knime.core.node.config.ConfigEditTreeEventListener;
 import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ViewUtils;
@@ -117,8 +122,19 @@ public abstract class NodeDialogPane {
      */
     private NodeExecutorJobManagerDialogTab m_jobMgrTab;
 
+    /** List of registered models. (Model for little buttons attached to a
+     * selected set of components -- used to customize variables in place.)
+     */
+    private final List<WorkflowVariableModel> m_scopeVariablesModelList;
+    
+    /** Flag whether the settings in any of the scope variable models have 
+     * changed. If so, we need to update the scope variable tab before saving
+     * the settings. We can't directly modify the tab during the event because
+     * it might not show the current settings tree. */
+    private boolean m_scopeVariablesModelChanged;
+
     /** The tab containing the flow variables. */
-    private ScopeVariablesTab m_scopeVariableTab;
+    private final ScopeVariablesTab m_scopeVariableTab;
 
     /** The variables tab settings as loaded from the model. We'll use them as
      * soon as the tab gets activated to update the tree. */
@@ -151,6 +167,9 @@ public abstract class NodeDialogPane {
         // init tabbed pane and at it to the underlying panel
         m_pane = new JTabbedPane();
         m_panel.add(m_pane, BorderLayout.CENTER);
+        m_scopeVariablesModelList =
+            new CopyOnWriteArrayList<WorkflowVariableModel>();
+        m_scopeVariableTab = new ScopeVariablesTab();
     }
 
     /**
@@ -226,24 +245,22 @@ public abstract class NodeDialogPane {
         } catch (Throwable e) {
             m_logger.error("Error loading model settings", e);
         }
-         if (m_scopeVariableTab == null) {
-            m_scopeVariableTab = new ScopeVariablesTab();
-            boolean isExpertMode =
-                Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE);
-            if (isExpertMode) {
-                addTab(TAB_NAME_VARIABLES, m_scopeVariableTab);
-                m_pane.addChangeListener(new ChangeListener() {
-                    /** {@inheritDoc} */
-                    public void stateChanged(final ChangeEvent e) {
-                        if (m_pane.getSelectedComponent()
-                                == m_scopeVariableTab) {
-                            onVariablesTabSelected();
-                        }
+        boolean isExpertMode =
+            Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE);
+        if (isExpertMode) {
+            addTab(TAB_NAME_VARIABLES, m_scopeVariableTab);
+            m_pane.addChangeListener(new ChangeListener() {
+                /** {@inheritDoc} */
+                public void stateChanged(final ChangeEvent e) {
+                    if (m_pane.getSelectedComponent()
+                            == m_scopeVariableTab) {
+                        onVariablesTabSelected();
                     }
-                });
-            }
+                }
+            });
         }
-        m_scopeVariableTab.setWasAtLeastOnceVisible(false);
+        m_scopeVariableTab.setModified(false);
+        m_scopeVariablesModelChanged = false;
         if (m_pane.getSelectedComponent() == m_scopeVariableTab) {
             onVariablesTabSelected();
         }
@@ -295,7 +312,10 @@ public abstract class NodeDialogPane {
             m_logger.error("Failed to save dialog settings", e);
         }
         NodeSettings variables;
-        if (m_scopeVariableTab.wasAtLeastOnceVisible()) {
+        if (m_scopeVariablesModelChanged) {
+            onVariablesTabSelected();
+        }
+        if (m_scopeVariableTab.isModified()) {
             variables = m_scopeVariableTab.getVariableSettings();
         } else {
             variables = m_scopeVariablesSettings;
@@ -856,7 +876,7 @@ public abstract class NodeDialogPane {
      *    the variable
      * 2) and/or put the current value of the settings object into the
      *    specified variable.
-     * 
+     *
      * @param key of corresponding settings object
      * @param type of variable/settings object
      * @param exposeToParent indicate if variable is visible in parent dialog
@@ -868,12 +888,16 @@ public abstract class NodeDialogPane {
             final boolean exposeToParent) {
         WorkflowVariableModel wvm = new WorkflowVariableModel(
                 this, key, type, exposeToParent);
-        
-        // TODO (bw) add somewhere and use them, too :-)
-        
+        m_scopeVariablesModelList.add(wvm);
+        wvm.addChangeListener(new ChangeListener() {
+            /** {@inheritDoc} */
+            public void stateChanged(final ChangeEvent e) {
+                m_scopeVariablesModelChanged = true;
+            }
+        });
         return wvm;
     }
-    
+
     private void onVariablesTabSelected() {
         m_scopeVariableTab.setErrorLabel("");
         NodeSettings settings = new NodeSettings("save");
@@ -881,7 +905,7 @@ public abstract class NodeDialogPane {
         commitComponentsRecursively(getPanel());
         try {
             saveSettingsTo(settings);
-            variableSettings = m_scopeVariableTab.wasAtLeastOnceVisible()
+            variableSettings = m_scopeVariableTab.isModified()
                 ? m_scopeVariableTab.getVariableSettings()
                 : m_scopeVariablesSettings;
         } catch (Throwable e) {
@@ -894,18 +918,20 @@ public abstract class NodeDialogPane {
             m_scopeVariableTab.setErrorLabel(error);
             return;
         }
-        m_scopeVariableTab.setWasAtLeastOnceVisible(true);
-        m_scopeVariableTab.setVariableSettings(
-                settings, variableSettings, m_scopeObjectStack);
+        m_scopeVariableTab.setModified(true);
+        m_scopeVariableTab.setVariableSettings(settings, variableSettings,
+                m_scopeObjectStack, m_scopeVariablesModelList);
     }
 
     /** The tab currently called "Flow Variables". It allows the user to mask
      * certain settings of the dialog (for instance to use variables instead
-     * of hard-coded values. */
-    private static class ScopeVariablesTab extends JPanel {
+     * of hard-coded values.) */
+    private class ScopeVariablesTab extends JPanel 
+        implements ConfigEditTreeEventListener {
+
         private final ConfigEditJTree m_tree;
         private final JLabel m_errorLabel;
-        private boolean m_wasAtLeastOnceVisible;
+        private boolean m_isModified;
 
         /** Creates new tab. */
         public ScopeVariablesTab() {
@@ -925,10 +951,13 @@ public abstract class NodeDialogPane {
          * @param nodeSettings Settings of the node (or currently entered in
          *  the remaining tabs of the dialog.
          * @param variableSettings  The variable mask.
-         * @param stack the stack to get the variables from. */
-        public void setVariableSettings(final NodeSettings nodeSettings,
+         * @param stack the stack to get the variables from.
+         * @param variableModels The models that may be used in the main panels
+         * of the dialog to overwrite settings in place. */
+        void setVariableSettings(final NodeSettings nodeSettings,
                 final NodeSettings variableSettings,
-                final ScopeObjectStack stack) {
+                final ScopeObjectStack stack,
+                final Collection<WorkflowVariableModel> variableModels) {
             NodeSettings nodeSetsCopy = nodeSettings == null
                     ? new NodeSettings("variables") : nodeSettings;
             ConfigEditTreeModel model;
@@ -945,8 +974,11 @@ public abstract class NodeDialogPane {
                         JOptionPane.ERROR_MESSAGE);
                 model = ConfigEditTreeModel.create(nodeSetsCopy);
             }
+            model.update(variableModels);
             m_tree.setScopeStack(stack);
+            m_tree.getModel().removeConfigEditTreeEventListener(this);
             m_tree.setModel(model);
+            model.addConfigEditTreeEventListener(this);
         }
 
         /**
@@ -968,10 +1000,10 @@ public abstract class NodeDialogPane {
             return null;
         }
 
-        /** @param wasVisible the wasVisible property.
-         * @see #wasAtLeastOnceVisible() */
-        public void setWasAtLeastOnceVisible(final boolean wasVisible) {
-            m_wasAtLeastOnceVisible = wasVisible;
+        /** @param isModified the isModified property.
+         * @see #isModified() */
+        public void setModified(final boolean isModified) {
+            m_isModified = isModified;
         }
 
         /** If true, the tab was at least once loaded after a load settings.
@@ -979,10 +1011,21 @@ public abstract class NodeDialogPane {
          * settings mask or the mask from this tab.
          * @return the above described property.
          */
-        public boolean wasAtLeastOnceVisible() {
-            return m_wasAtLeastOnceVisible;
+        public boolean isModified() {
+            return m_isModified;
         }
 
+        /** {@inheritDoc} */
+        @Override
+        public void configEditTreeChanged(final ConfigEditTreeEvent event) {
+            String[] keyPath = event.getKeyPath();
+            for (WorkflowVariableModel m : m_scopeVariablesModelList) {
+                if (m.getKey().equals(keyPath[0])) {
+                    m.setInputVariableName(event.getUseVariable());
+                    m.setOutputVariableName(event.getExposeVariableName());
+                }
+            }
+        }
     }
 
 }
