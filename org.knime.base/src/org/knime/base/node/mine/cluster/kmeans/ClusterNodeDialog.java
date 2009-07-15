@@ -27,6 +27,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.workflow.ScopeVariable;
 
 
 /**
@@ -61,7 +62,11 @@ public class ClusterNodeDialog extends DefaultNodeSettingsPane {
                 new SettingsModelIntegerBounded(
                         ClusterNodeModel.CFG_NR_OF_CLUSTERS, 
                         ClusterNodeModel.INITIAL_NR_CLUSTERS, 
-                        1, Integer.MAX_VALUE), "number of clusters: ", 1);
+                        1, Integer.MAX_VALUE), "number of clusters: ", 1,
+                        createWorkflowVariableModel(
+                                ClusterNodeModel.CFG_NR_OF_CLUSTERS,
+                                ScopeVariable.Type.INTEGER,
+                                false));
         m_maxNrOfIterations = new DialogComponentNumber(
                 new SettingsModelIntegerBounded(
                         ClusterNodeModel.CFG_MAX_ITERATIONS,
