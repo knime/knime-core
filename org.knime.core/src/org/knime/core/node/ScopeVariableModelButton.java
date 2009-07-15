@@ -47,7 +47,7 @@ import javax.swing.event.ChangeListener;
 
 
 
-/** Button for a WorkflowVariableModel, launching a dialog which allows to
+/** Button for a @link ScopeVariableModel, launching a dialog which allows to
  * control the settings.
  *
  * This allows NodeDialogPane implementations to easily use Variables
@@ -115,7 +115,7 @@ implements ChangeListener, ActionListener {
         // make sure dialog is modal with respect to the "nearest" frame
         Container c = SwingUtilities.getAncestorOfClass(Frame.class, this);
         Frame parentFrame = (Frame)c;
-        VarEditDialog ved = new VarEditDialog(parentFrame);
+        ScopeVarEditDialog ved = new ScopeVarEditDialog(parentFrame);
 
         if (m_model.getInputVariableName() != null) {
             ved.setInputVariableName(m_model.getInputVariableName());
@@ -127,9 +127,9 @@ implements ChangeListener, ActionListener {
         ved.setVisible(true);
     }
 
-    private class VarEditDialog extends JDialog {
+    private class ScopeVarEditDialog extends JDialog {
         
-        VarEditDialog(final Frame f) {
+        ScopeVarEditDialog(final Frame f) {
             super(f, "Variable Settings", true);
             this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             initComponents();
