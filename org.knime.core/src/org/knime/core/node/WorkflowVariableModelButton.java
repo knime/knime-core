@@ -28,7 +28,6 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Frame;
 import java.awt.GridLayout;
-import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -122,7 +121,7 @@ implements ChangeListener, ActionListener {
             ved.setInputVariableName(m_model.getInputVariableName());
         }
         if (m_model.getOutputVariableName() != null) {
-            ved.setOutputVariableName(m_model.getInputVariableName());
+            ved.setOutputVariableName(m_model.getOutputVariableName());
         }
         ved.setLocationRelativeTo(this);
         ved.setVisible(true);
