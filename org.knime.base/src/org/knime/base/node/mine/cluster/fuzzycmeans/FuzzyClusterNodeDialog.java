@@ -52,8 +52,8 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.WorkflowVariableModel;
-import org.knime.core.node.WorkflowVariableModelButton;
+import org.knime.core.node.ScopeVariableModel;
+import org.knime.core.node.ScopeVariableModelButton;
 import org.knime.core.node.util.ColumnFilterPanel;
 import org.knime.core.node.workflow.ScopeVariable;
 
@@ -159,20 +159,20 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         clusterPropPane.add(m_nrClustersSpinner);
         // also add a variable Model + corresponding icon to make this
         // option controllable via a variable
-        WorkflowVariableModel wvm = createWorkflowVariableModel(
+        ScopeVariableModel wvm = createWorkflowVariableModel(
                 FuzzyClusterNodeModel.NRCLUSTERS_KEY,
                 ScopeVariable.Type.INTEGER,
                 false);
         wvm.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent evt) {
-                WorkflowVariableModel wvm =
-                    (WorkflowVariableModel)(evt.getSource());
+                ScopeVariableModel wvm =
+                    (ScopeVariableModel)(evt.getSource());
                 m_nrClustersSpinner.setEnabled(
                         !wvm.isVariableReplacementEnabled());
             }
         });
-        clusterPropPane.add(new WorkflowVariableModelButton(wvm));
+        clusterPropPane.add(new ScopeVariableModelButton(wvm));
         // Option: Upper limit for number of iterations
         JLabel maxNrIterationsLabel = new JLabel("Max. number of iterations: ");
         c.gridx = 0;                      
