@@ -38,8 +38,8 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.WorkflowVariableModel;
-import org.knime.core.node.WorkflowVariableModelButton;
+import org.knime.core.node.ScopeVariableModel;
+import org.knime.core.node.ScopeVariableModelButton;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
@@ -78,7 +78,7 @@ public class DialogComponentNumber extends DialogComponent {
 
     public DialogComponentNumber(final SettingsModelNumber numberModel,
             final String label, final Number stepSize,
-            final WorkflowVariableModel wvm) {
+            final ScopeVariableModel wvm) {
         this(numberModel, label, stepSize, calcDefaultWidth(numberModel),
                 wvm);
     }
@@ -99,7 +99,7 @@ public class DialogComponentNumber extends DialogComponent {
 
     public DialogComponentNumber(final SettingsModelNumber numberModel,
             final String label, final Number stepSize, final int compWidth,
-            final WorkflowVariableModel wvm) {
+            final ScopeVariableModel wvm) {
         super(numberModel);
 
         if (compWidth < 1) {
@@ -175,13 +175,13 @@ public class DialogComponentNumber extends DialogComponent {
             wvm.addChangeListener(new ChangeListener() {
                 @Override
                 public void stateChanged(final ChangeEvent evt) {
-                    WorkflowVariableModel wvm =
-                        (WorkflowVariableModel)(evt.getSource());
+                    ScopeVariableModel wvm =
+                        (ScopeVariableModel)(evt.getSource());
                     m_spinner.setEnabled(
                             !wvm.isVariableReplacementEnabled());
                 }
             });
-            getComponentPanel().add(new WorkflowVariableModelButton(wvm));
+            getComponentPanel().add(new ScopeVariableModelButton(wvm));
         }
 
         //call this method to be in sync with the settings model

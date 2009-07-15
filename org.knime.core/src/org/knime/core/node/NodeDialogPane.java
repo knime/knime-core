@@ -125,7 +125,7 @@ public abstract class NodeDialogPane {
     /** List of registered models. (Model for little buttons attached to a
      * selected set of components -- used to customize variables in place.)
      */
-    private final List<WorkflowVariableModel> m_scopeVariablesModelList;
+    private final List<ScopeVariableModel> m_scopeVariablesModelList;
     
     /** Flag whether the settings in any of the scope variable models have 
      * changed. If so, we need to update the scope variable tab before saving
@@ -168,7 +168,7 @@ public abstract class NodeDialogPane {
         m_pane = new JTabbedPane();
         m_panel.add(m_pane, BorderLayout.CENTER);
         m_scopeVariablesModelList =
-            new CopyOnWriteArrayList<WorkflowVariableModel>();
+            new CopyOnWriteArrayList<ScopeVariableModel>();
         m_scopeVariableTab = new ScopeVariablesTab();
     }
 
@@ -882,11 +882,11 @@ public abstract class NodeDialogPane {
      * @param exposeToParent indicate if variable is visible in parent dialog
      * @return new WorkflowVariableModel which is already registered
      */
-    protected WorkflowVariableModel createWorkflowVariableModel(
+    protected ScopeVariableModel createWorkflowVariableModel(
             final String key,
             final ScopeVariable.Type type,
             final boolean exposeToParent) {
-        WorkflowVariableModel wvm = new WorkflowVariableModel(
+        ScopeVariableModel wvm = new ScopeVariableModel(
                 this, key, type, exposeToParent);
         m_scopeVariablesModelList.add(wvm);
         wvm.addChangeListener(new ChangeListener() {
@@ -957,7 +957,7 @@ public abstract class NodeDialogPane {
         void setVariableSettings(final NodeSettings nodeSettings,
                 final NodeSettings variableSettings,
                 final ScopeObjectStack stack,
-                final Collection<WorkflowVariableModel> variableModels) {
+                final Collection<ScopeVariableModel> variableModels) {
             NodeSettings nodeSetsCopy = nodeSettings == null
                     ? new NodeSettings("variables") : nodeSettings;
             ConfigEditTreeModel model;
@@ -1019,7 +1019,7 @@ public abstract class NodeDialogPane {
         @Override
         public void configEditTreeChanged(final ConfigEditTreeEvent event) {
             String[] keyPath = event.getKeyPath();
-            for (WorkflowVariableModel m : m_scopeVariablesModelList) {
+            for (ScopeVariableModel m : m_scopeVariablesModelList) {
                 if (m.getKey().equals(keyPath[0])) {
                     m.setInputVariableName(event.getUseVariable());
                     m.setOutputVariableName(event.getExposeVariableName());

@@ -42,7 +42,7 @@ import org.knime.core.node.workflow.ScopeVariable;
  * 
  * @author Michael Berthold, University of Konstanz
  */
-public class WorkflowVariableModel {
+public class ScopeVariableModel {
 
     // private members
     private NodeDialogPane m_parent;
@@ -66,7 +66,7 @@ public class WorkflowVariableModel {
      * @param type of variable/settings object
      * @param exposeToParent indicate if variable is visible in parent dialog
      */
-    WorkflowVariableModel(final NodeDialogPane parent, final String key,
+    ScopeVariableModel(final NodeDialogPane parent, final String key,
             final ScopeVariable.Type type, final boolean exposeToParent) {
         m_parent = parent;
         m_key = key;

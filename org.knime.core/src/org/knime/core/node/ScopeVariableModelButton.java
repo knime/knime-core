@@ -56,17 +56,17 @@ import javax.swing.event.ChangeListener;
  * @author Michael Berthold, University of Konstanz
  */
 @SuppressWarnings("serial")
-public class WorkflowVariableModelButton extends JButton
+public class ScopeVariableModelButton extends JButton
 implements ChangeListener, ActionListener {
 
     /* remember underlying model (to track changes) */
-    private WorkflowVariableModel m_model;
+    private ScopeVariableModel m_model;
 
     /**
      * @param wvm the underlying model
      */
-    public WorkflowVariableModelButton(
-            final WorkflowVariableModel wvm) {
+    public ScopeVariableModelButton(
+            final ScopeVariableModel wvm) {
         m_model = wvm;
         // add us as listener for changes to the WorkflowVariableModel
         wvm.addChangeListener(this);

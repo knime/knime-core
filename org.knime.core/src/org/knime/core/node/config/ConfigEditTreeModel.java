@@ -37,7 +37,7 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.WorkflowVariableModel;
+import org.knime.core.node.ScopeVariableModel;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.ScopeVariable;
 
@@ -142,9 +142,9 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
      * tree and the button model are in sync.
      * @param variableModels The models that were registered at the dialog.
      */
-    public void update(final Collection<WorkflowVariableModel> variableModels) {
+    public void update(final Collection<ScopeVariableModel> variableModels) {
         ConfigEditTreeNode rootNode = getRoot();
-        for (WorkflowVariableModel model : variableModels) {
+        for (ScopeVariableModel model : variableModels) {
             rootNode.update(model);
         }
     }
@@ -297,10 +297,10 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
         }
 
         /** Implements the functionality described in the
-         * {@link ConfigEditTreeNode#update(WorkflowVariableModel)} method.
+         * {@link ConfigEditTreeNode#update(ScopeVariableModel)} method.
          * @param model The model that provides the update.
          */
-        void update(final WorkflowVariableModel model) {
+        void update(final ScopeVariableModel model) {
             for (Enumeration<?> e = children(); e.hasMoreElements();) {
                 ConfigEditTreeNode c = (ConfigEditTreeNode)e.nextElement();
                 if (c.getConfigEntry().getKey().equals(model.getKey())) {
