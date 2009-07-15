@@ -30,6 +30,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.ScopeVariable;
 
 
@@ -114,7 +115,8 @@ public class WorkflowVariableModel {
      * if no replacement is wanted.
      */
     public void setInputVariableName(final String variableName) {
-        if (!variableName.equals(m_inputVariableName)) {
+        
+        if (!ConvenienceMethods.areEqual(variableName, m_inputVariableName)) {
             m_inputVariableName = variableName;
             notifyChangeListeners();
         }
@@ -139,7 +141,7 @@ public class WorkflowVariableModel {
      * if no replacement is wanted.
      */
     public void setOutputVariableName(final String variableName) {
-        if (!variableName.equals(m_outputVariableName)) {
+        if (!ConvenienceMethods.areEqual(variableName, m_outputVariableName)) {
             m_outputVariableName = variableName;
             notifyChangeListeners();
         }
